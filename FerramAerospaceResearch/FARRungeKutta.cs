@@ -1,0 +1,201 @@
+﻿/*
+Ferram Aerospace Research v0.13.1
+Copyright 2013, Michael Ferrara, aka Ferram4
+
+    This file is part of Ferram Aerospace Research.
+
+    Ferram Aerospace Research is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Kerbal Joint Reinforcement is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Ferram Aerospace Research.  If not, see <http://www.gnu.org/licenses/>.
+
+ * 
+ * Kerbal Engineer Redux created by Cybutek, Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
+ *      Referenced for starting point for fixing the "editor click-through-GUI" bug
+ *
+ * Part.cfg changes powered by sarbian & ialdabaoth's ModuleManager plugin; used with permission
+ *	http://forum.kerbalspaceprogram.com/threads/55219
+ *
+ * Toolbar integration powered by blizzy78's Toolbar plugin; used with permission
+ *	http://forum.kerbalspaceprogram.com/threads/60863
+ */
+
+
+using System;
+using System.Collections.Generic;
+using System.Text;
+using UnityEngine;
+
+namespace ferram4
+{
+    class FARRungeKutta4
+    {
+//        Vector4 a = new Vector4(0, 0.5f, 0.5f, 1);
+        Vector4 c = new Vector4(1f / 6, 1f / 3, 1f / 3, 1f / 6);
+
+//        FARMatrix b = new FARMatrix(3, 4);
+
+        float dt;
+        float endTime;
+        float[] initCond;
+
+        FARMatrix stateEquations;
+
+        public float[,] soln;
+        public float[] time;
+
+        public FARRungeKutta4(float endTime, float dt, FARMatrix eqns, float[] initCond)
+        {
+//            b.Add(0.5f, 0, 1);
+//            b.Add(0.5f, 1, 2);
+//            b.Add(1, 2, 3);
+            this.endTime = endTime;
+            this.dt = dt;
+            this.stateEquations = eqns;
+            this.initCond = initCond;
+            soln = new float[initCond.Length, Mathf.CeilToInt(endTime / dt)];
+            time = new float[Mathf.CeilToInt(endTime / dt)];
+        }
+
+        public void Solve()
+        {
+            float t = 0;
+            float[] currentState = initCond;
+            int j = 0;
+
+            while (j < time.Length)
+            {
+                for (int i = 0; i < currentState.Length; i++)
+                    soln[i, j] = currentState[i];
+                time[j] = t;
+
+                currentState = NextState(currentState);
+
+                for(int k = 0; k < currentState.Length; k++)
+                    if (float.IsNaN(currentState[k]) || float.IsInfinity(currentState[k]))
+                    {
+                        currentState[k] = 0;
+                        j = time.Length;
+                        t = endTime;
+                    }
+                j++;
+                t += dt;
+            }
+        }
+
+        public float[] GetSolution(int i)
+        {
+            if (i + 1 > soln.GetLength(0))
+            {
+                MonoBehaviour.print("Error; Index out of bounds");
+                return new float[time.Length];
+            }
+
+            float[] solution = new float[time.Length];
+            for (int j = 0; j < solution.Length; j++)
+                solution[j] = soln[i, j];
+            return solution;
+        }
+
+
+        private float[] NextState(float[] currentState)
+        {
+            float[] next = new float[currentState.Length];
+            float[] f1, f2, f3, f4;
+            f1 = f2 = f3 = f4 = new float[currentState.Length];
+
+            for (int j = 0; j < next.Length; j++)
+            {
+                for (int i = 0; i < currentState.Length; i++)
+                {
+                    f1[j] += currentState[i] * stateEquations.Value(i, j);
+                }
+            }
+
+            for (int j = 0; j < next.Length; j++)
+            {
+                for (int i = 0; i < currentState.Length; i++)
+                {
+                    f2[j] += (currentState[i] + 0.5f * dt * f1[i]) * stateEquations.Value(i, j);
+                }
+            }
+
+            for (int j = 0; j < next.Length; j++)
+            {
+                for (int i = 0; i < currentState.Length; i++)
+                {
+                    f3[j] += (currentState[i] + 0.5f * dt * f2[i]) * stateEquations.Value(i, j);
+                }
+            }
+
+            for (int j = 0; j < next.Length; j++)
+            {
+                for (int i = 0; i < currentState.Length; i++)
+                {
+                    f4[j] += (currentState[i] + dt * f3[i]) * stateEquations.Value(i, j);
+                }
+            }
+
+            for (int i = 0; i < next.Length; i++)
+            {
+                next[i] = currentState[i] + dt * (c[0] * f1[i] + c[1] * f2[i] + c[2] * f3[i] + c[3] * f4[i]);
+            }
+
+
+            return next;
+        }
+    }
+
+    class FARMatrix
+    {
+        private float[,] matrix;
+        public int m;
+        public int n;
+        
+        public FARMatrix(int m, int n)
+        {
+            matrix = new float[m,n];
+            this.m = m;
+            this.n = n;
+        }
+
+        public float Value(int i, int j)
+        {
+            return matrix[i, j];
+        }
+
+
+        public void Add(float Element, int i, int j)
+        {
+            matrix[i,j] = Element;
+        }
+
+        public void PrintToConsole()
+        {
+            StringBuilder MatrixDump = new StringBuilder();
+            for (int j = 0; j < n; j++)
+            {
+                MatrixDump.Append("[");
+                for (int i = 0; i < m; i++)
+                {
+                    MatrixDump.Append(matrix[i, j]);
+                    if (i < m - 1)
+                        MatrixDump.Append(",");
+                    else
+                        MatrixDump.Append("]\n\r");
+                }
+            }
+            MonoBehaviour.print(MatrixDump.ToString());
+
+
+        }
+    }
+}
