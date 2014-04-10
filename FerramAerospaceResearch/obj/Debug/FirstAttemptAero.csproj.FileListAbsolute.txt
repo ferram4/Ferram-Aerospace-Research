@@ -1,0 +1,12 @@
+C:\Users\ferram4\Documents\Visual Studio 2010\Projects\FirstAttemptAero\FirstAttemptAero\bin\Debug\FirstAttemptAero.dll
+C:\Users\ferram4\Documents\Visual Studio 2010\Projects\FirstAttemptAero\FirstAttemptAero\bin\Debug\FirstAttemptAero.pdb
+C:\Users\ferram4\Documents\Visual Studio 2010\Projects\FirstAttemptAero\FirstAttemptAero\bin\Debug\Assembly-CSharp.dll
+C:\Users\ferram4\Documents\Visual Studio 2010\Projects\FirstAttemptAero\FirstAttemptAero\bin\Debug\UnityEngine.dll
+C:\Users\ferram4\Documents\Visual Studio 2010\Projects\FirstAttemptAero\FirstAttemptAero\bin\Debug\Ionic.Zip.dll
+C:\Users\ferram4\Documents\Visual Studio 2010\Projects\FirstAttemptAero\FirstAttemptAero\bin\Debug\Mono.Cecil.dll
+C:\Users\ferram4\Documents\Visual Studio 2010\Projects\FirstAttemptAero\FirstAttemptAero\bin\Debug\Assembly-CSharp-firstpass.dll
+C:\Users\ferram4\Documents\Visual Studio 2010\Projects\FirstAttemptAero\FirstAttemptAero\bin\Debug\Mono.Security.dll
+C:\Users\ferram4\Documents\Visual Studio 2010\Projects\FirstAttemptAero\FirstAttemptAero\bin\Debug\Assembly-CSharp.xml
+C:\Users\ferram4\Documents\Visual Studio 2010\Projects\FirstAttemptAero\FirstAttemptAero\obj\Debug\ResolveAssemblyReference.cache
+C:\Users\ferram4\Documents\Visual Studio 2010\Projects\FirstAttemptAero\FirstAttemptAero\obj\Debug\FirstAttemptAero.dll
+C:\Users\ferram4\Documents\Visual Studio 2010\Projects\FirstAttemptAero\FirstAttemptAero\obj\Debug\FirstAttemptAero.pdb
