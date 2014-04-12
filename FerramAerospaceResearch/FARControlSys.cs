@@ -17,6 +17,11 @@ Copyright 2013, Michael Ferrara, aka Ferram4
     You should have received a copy of the GNU General Public License
     along with Ferram Aerospace Research.  If not, see <http://www.gnu.org/licenses/>.
 
+    Serious thanks:		a.g., for tons of bugfixes and code-refactorings
+            			Taverius, for correcting a ton of incorrect values
+            			sarbian, for refactoring code for working with MechJeb, and the Module Manager 1.5 updates
+            			ialdabaoth (who is awesome), who originally created Module Manager
+            			Duxwing, for copy editing the readme
  * 
  * Kerbal Engineer Redux created by Cybutek, Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
  *      Referenced for starting point for fixing the "editor click-through-GUI" bug
@@ -1041,24 +1046,24 @@ namespace ferram4
             StartedGUI = true;
             if (!minimize)
             {
-                windowPos = GUILayout.Window(250, windowPos, WindowGUI, "FAR Flight Systems, v0.13", GUILayout.MinWidth(150));
+                windowPos = GUILayout.Window(250, windowPos, WindowGUI, "FAR Flight Systems, v0.13.1", GUILayout.MinWidth(150));
                 if (AutopilotWindow)
                 {
-                    AutoPilotWindowPos = GUILayout.Window(251, AutoPilotWindowPos, AutopilotWindowGUI, "FAR Flight Assistance System Options, v0.13", GUILayout.MinWidth(330));
+                    AutoPilotWindowPos = GUILayout.Window(251, AutoPilotWindowPos, AutopilotWindowGUI, "FAR Flight Assistance System Options, v0.13.1", GUILayout.MinWidth(330));
                     if (AutoPilotHelp)
-                        HelpWindowPos = GUILayout.Window(252, HelpWindowPos, HelpWindowGUI, "FAR FAS Help, v0.13", GUILayout.MinWidth(150));
+                        HelpWindowPos = GUILayout.Window(252, HelpWindowPos, HelpWindowGUI, "FAR FAS Help, v0.13.1", GUILayout.MinWidth(150));
                 }
                 if (FlightDataWindow)
                 {
-                    FlightDataPos = GUILayout.Window(253, FlightDataPos, FlightDataGUI, "FAR Flight Data, v0.13", GUILayout.MinWidth(250));
+                    FlightDataPos = GUILayout.Window(253, FlightDataPos, FlightDataGUI, "FAR Flight Data, v0.13.1", GUILayout.MinWidth(250));
                     if(FlightDataHelp)
-                        FlightDataHelpPos = GUILayout.Window(254, FlightDataHelpPos, FlightDataHelpGUI, "FAR Flight Data Help, v0.13", GUILayout.MinWidth(150));
+                        FlightDataHelpPos = GUILayout.Window(254, FlightDataHelpPos, FlightDataHelpGUI, "FAR Flight Data Help, v0.13.1", GUILayout.MinWidth(150));
                 }
                 if (AirSpeedWindow)
                 {
-                    AirSpeedPos = GUILayout.Window(255, AirSpeedPos, AirSpeedGUI, "FAR Airspeed Settings, v0.13", GUILayout.MinWidth(200));
+                    AirSpeedPos = GUILayout.Window(255, AirSpeedPos, AirSpeedGUI, "FAR Airspeed Settings, v0.13.1", GUILayout.MinWidth(200));
                     if (AirSpeedHelp)
-                        AirSpeedHelpPos = GUILayout.Window(256, AirSpeedHelpPos, AirSpeedHelpGUI, "FAR Airspeed Settings Help, v0.13", GUILayout.MinWidth(150));
+                        AirSpeedHelpPos = GUILayout.Window(256, AirSpeedHelpPos, AirSpeedHelpGUI, "FAR Airspeed Settings Help, v0.13.1", GUILayout.MinWidth(150));
                 }
 
             }

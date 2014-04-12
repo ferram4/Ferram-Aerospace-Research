@@ -17,6 +17,11 @@ Copyright 2013, Michael Ferrara, aka Ferram4
     You should have received a copy of the GNU General Public License
     along with Ferram Aerospace Research.  If not, see <http://www.gnu.org/licenses/>.
 
+    Serious thanks:		a.g., for tons of bugfixes and code-refactorings
+            			Taverius, for correcting a ton of incorrect values
+            			sarbian, for refactoring code for working with MechJeb, and the Module Manager 1.5 updates
+            			ialdabaoth (who is awesome), who originally created Module Manager
+            			Duxwing, for copy editing the readme
  * 
  * Kerbal Engineer Redux created by Cybutek, Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
  *      Referenced for starting point for fixing the "editor click-through-GUI" bug
