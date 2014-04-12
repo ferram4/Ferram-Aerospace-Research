@@ -112,7 +112,7 @@ namespace ferram4
         [KSPField(guiName = "Control Max Deflection", isPersistant = true)]
         public float maxdeflect = 15;
 
-        [UI_FloatRange(maxValue = 75, minValue = -30, scene = UI_Scene.Editor, stepIncrement = 0.5f)]
+        [UI_FloatRange(maxValue = 85, minValue = -30, scene = UI_Scene.Editor, stepIncrement = 0.5f)]
         [KSPField(guiName = "Flap/Brake Max Deflection", isPersistant = true)]
         public float maxdeflectFlap = 15; 
         
@@ -287,9 +287,10 @@ namespace ferram4
                     roll2 = Vector3.Dot(part.transform.forward, vessel.ReferenceTransform.right) * Mathf.Sign(Vector3.Dot(CoMoffset, vessel.ReferenceTransform.forward));
                     AoAsign = Mathf.Sign(Vector3.Dot(part.transform.up, vessel.transform.up));
                 }
-                PitchLocation *= PitchLocation * Mathf.Sign(PitchLocation);
-                YawLocation *= YawLocation * Mathf.Sign(YawLocation);
-                RollLocation = RollLocation * RollLocation * Mathf.Sign(RollLocation) + roll2 * roll2 * Mathf.Sign(roll2);
+                //PitchLocation *= PitchLocation * Mathf.Sign(PitchLocation);
+                //YawLocation *= YawLocation * Mathf.Sign(YawLocation);
+                //RollLocation = RollLocation * RollLocation * Mathf.Sign(RollLocation) + roll2 * roll2 * Mathf.Sign(roll2);
+                RollLocation += roll2;
             }
         }
 
