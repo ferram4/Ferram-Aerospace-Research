@@ -136,7 +136,7 @@ For both of these, set MaxDrag and MinDrag to 0
 CHANGELOG
 =======================================================
 
-0.13v------------------------------------  
+0.13.1v------------------------------------  
 Features:  
 License change to GPL v3.  
 Moved source to Github.  All glory to the Octocat!  
