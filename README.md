@@ -1,19 +1,28 @@
-Ferram Aerospace Research
+Ferram Aerospace Research v0.13.1
 =========================
 
 Aerodynamics model for Kerbal Space Program
 
+   Serious thanks:		a.g., for tons of bugfixes and code-refactorings  
+            			Taverius, for correcting a ton of incorrect values  
+            			sarbian, for refactoring code for working with MechJeb, and the Module Manager 1.5 updates  
+            			ialdabaoth (who is awesome), who originally created Module Manager  
+            			Duxwing, for copy editing the readme  
+ 
+   Kerbal Engineer Redux created by Cybutek, Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License  
+        Referenced for starting point for fixing the "editor click-through-GUI" bug
 
-Serious thanks:		a.g., for tons of bugfixes and code-refactorings  
-			Taverius, for correcting a ton of incorrect values  
-			sarbian, for refactoring code for working with MechJeb, and the Module Manager 1.5 updates  
-			ialdabaoth (who is awesome), who originally created Module Manager  
-			Duxwing, for copy editing the readme  
+   Part.cfg changes powered by sarbian & ialdabaoth's ModuleManager plugin; used with permission  
+	http://forum.kerbalspaceprogram.com/threads/55219
+
+   Toolbar integration powered by blizzy78's Toolbar plugin; used with permission  
+	http://forum.kerbalspaceprogram.com/threads/60863
+
+Source available at: https://github.com/ferram4/Ferram-Aerospace-Research
 
 ----------------------------------------------
 ---------------- INSTALLATION ----------------
 ----------------------------------------------
-
 
 Install by merging the GameData folder in the zip with the GameData folder in your KSP install
 
