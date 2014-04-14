@@ -3,6 +3,7 @@
 /FerramAerospaceResearch/bin/Release/Assembly-CSharp-firstpass.dll
 /FerramAerospaceResearch/bin/Release/UnityEngine.dll
 /FerramAerospaceResearch/obj/Debug/*
+
 /ferramGraph/bin/Debug/*
 /ferramGraph/bin/Release/Assembly-CSharp.dll
 /ferramGraph/bin/Release/Assembly-CSharp-firstpass.dll
