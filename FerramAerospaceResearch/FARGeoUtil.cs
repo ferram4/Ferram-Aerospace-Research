@@ -511,6 +511,16 @@ namespace ferram4
                     Transform.AddRange(p.FindModelComponents<Transform>(transformString));
                 }
             }
+            foreach (Transform t in p.FindModelComponents<Transform>())
+            {
+                if (Transform.Contains(t))
+                    continue;
+
+                string tag = t.tag.ToLowerInvariant();
+                if (tag == "ladder" || tag == "airlock")
+                    Transform.Add(t);
+            }
+                
             return Transform;
         }
 
