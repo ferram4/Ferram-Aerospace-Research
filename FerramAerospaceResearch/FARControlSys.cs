@@ -1094,7 +1094,7 @@ namespace ferram4
             }
             OnVesselPartsChange += GetNavball;
             startSequenceFinished = true;
-            invKerbinSLDensity = 0.8319f;
+            invKerbinSLDensity = 1 / FARAeroUtil.GetCurrentDensity(FlightGlobals.Bodies[1], 0);
         }
 
 
