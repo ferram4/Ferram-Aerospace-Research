@@ -36,7 +36,7 @@
   <ItemGroup>
     <Reference Include="Assembly-CSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\Games\KSP 0.23 Real Life\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>bin\Release\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -50,7 +50,7 @@
     </Reference>
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\Games\KSP 0.23 Real Life\KSP_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>bin\Release\UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

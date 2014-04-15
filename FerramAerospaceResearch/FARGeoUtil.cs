@@ -322,6 +322,24 @@ namespace ferram4
                     if (node.nodeType == AttachNode.NodeType.Surface)
                         continue;
 
+                    bool cont = false;
+                    //Struts add additional attach nodes to parts; this must be accounted for
+                    foreach(Part possibleStrut in part.children)
+                        if (possibleStrut is StrutConnector)
+                        {
+                            StrutConnector strut = possibleStrut as StrutConnector;
+
+                            Vector3 diffPos = strut.strutJoint.HostAnchor - node.position;
+                            if (Mathf.Abs(diffPos.x) <= 0.1f && Mathf.Abs(diffPos.y) <= 0.1f && Mathf.Abs(diffPos.z) <= 0.1f)
+                            {
+                                cont = true;
+                                break;
+                            }
+
+                        }
+                    if (cont)
+                        continue;
+
                     // If all node orientations agree, use that axis
                     String name = UpVectorFromDir(node.orientation);
 
@@ -335,7 +353,7 @@ namespace ferram4
                         return Vector3.up;
                 }
 
-                MonoBehaviour.print(part.partInfo.title + ": Choosing " + (dirname == null ? "heuristic forward" : dirname) + " axis for FAR drag model.");
+                Debug.Log(part.partInfo.title + ": Choosing " + (dirname == null ? "heuristic forward" : dirname) + " axis for FAR drag model.");
                 return dir;
             }
             else

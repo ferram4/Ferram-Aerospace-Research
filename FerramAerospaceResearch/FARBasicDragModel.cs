@@ -114,6 +114,7 @@ namespace ferram4
         [KSPField(isPersistant = false, guiActive = true, guiName = "Current drag", guiUnits = "kN", guiFormat = "F3")]
         protected float currentDrag = 0.0f;
 
+
         private void AnimationSetup()
         {
             foreach (PartModule m in part.Modules)
@@ -416,6 +417,7 @@ namespace ferram4
                     force = moment = CoDshift = globalCoDShift = Vector3.zero;
                     return force;
                 }
+
                 //part.Rigidbody.AddTorque(moment);
                 return force;
             }

@@ -42,14 +42,11 @@ C:\Users\ferram4\Ferram-Aerospace-Research\Ferram-Aerospace-Research\obj\Release
 C:\Users\ferram4\Ferram-Aerospace-Research\Ferram-Aerospace-Research\obj\Release\FerramAerospaceResearch.pdb
 C:\Users\ferram4\Ferram-Aerospace-Research\FerramAerospaceResearch\bin\Release\FerramAerospaceResearch.dll
 C:\Users\ferram4\Ferram-Aerospace-Research\FerramAerospaceResearch\bin\Release\FerramAerospaceResearch.pdb
-C:\Users\ferram4\Ferram-Aerospace-Research\FerramAerospaceResearch\bin\Release\Assembly-CSharp.dll
 C:\Users\ferram4\Ferram-Aerospace-Research\FerramAerospaceResearch\bin\Release\ferramGraph.dll
 C:\Users\ferram4\Ferram-Aerospace-Research\FerramAerospaceResearch\bin\Release\Toolbar.dll
-C:\Users\ferram4\Ferram-Aerospace-Research\FerramAerospaceResearch\bin\Release\UnityEngine.dll
 C:\Users\ferram4\Ferram-Aerospace-Research\FerramAerospaceResearch\bin\Release\Mono.Cecil.dll
 C:\Users\ferram4\Ferram-Aerospace-Research\FerramAerospaceResearch\bin\Release\Assembly-CSharp-firstpass.dll
 C:\Users\ferram4\Ferram-Aerospace-Research\FerramAerospaceResearch\bin\Release\TDx.TDxInput.dll
-C:\Users\ferram4\Ferram-Aerospace-Research\FerramAerospaceResearch\bin\Release\Mono.Security.dll
 C:\Users\ferram4\Ferram-Aerospace-Research\FerramAerospaceResearch\bin\Release\ferramGraph.pdb
 C:\Users\ferram4\Ferram-Aerospace-Research\FerramAerospaceResearch\obj\Release\ResolveAssemblyReference.cache
 C:\Users\ferram4\Ferram-Aerospace-Research\FerramAerospaceResearch\obj\Release\FerramAerospaceResearch.dll
