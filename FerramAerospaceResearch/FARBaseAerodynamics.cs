@@ -127,11 +127,11 @@ namespace ferram4
 
     public abstract class FARBaseAerodynamics : FARPartModule
     {
-        //[KSPField(isPersistant = false, guiActive = true)]
+        [KSPField(isPersistant = false, guiActive = false)]
         public float Cl;
-        //[KSPField(isPersistant = false, guiActive = true)]
+        [KSPField(isPersistant = false, guiActive = false)]
         public float Cd;
-        //[KSPField(isPersistant = false, guiActive = true)]
+        [KSPField(isPersistant = false, guiActive = false)]
         public float Cm;
 
         
@@ -147,7 +147,7 @@ namespace ferram4
         [KSPField(isPersistant = false)]
         public float S;
 
-        [KSPField(isPersistant = false, guiActive = true, guiActiveEditor = true)]
+        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
         public bool isShielded = false;
 
         public static bool GlobalCoLReady = false;
@@ -164,6 +164,13 @@ namespace ferram4
         {
             start = state;
             base.OnStart(state);
+            Fields["isShielded"].guiActive = FARDebugValues.displayShielding;
+            if (!(this is FARControlSys))
+            {
+                Fields["Cl"].guiActive = FARDebugValues.displayCoefficients;
+                Fields["Cd"].guiActive = FARDebugValues.displayCoefficients;
+                Fields["Cm"].guiActive = FARDebugValues.displayCoefficients;
+            }
         }
 
         private void ClearShielding()

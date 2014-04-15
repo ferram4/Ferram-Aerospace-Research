@@ -110,10 +110,10 @@ namespace ferram4
         //[KSPField(isPersistant = false, guiActive = true)]
         protected float effective_AR = 4;
 
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Current lift", guiUnits = "kN", guiFormat = "F3")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Current lift", guiUnits = "kN", guiFormat = "F3")]
         protected float currentLift = 0.0f;
 
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Current drag", guiUnits = "kN", guiFormat = "F3")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Current drag", guiUnits = "kN", guiFormat = "F3")]
         protected float currentDrag = 0.0f;
 
         private float liftslope = 0;
@@ -330,6 +330,8 @@ namespace ferram4
             }           
             
             MathAndFunctionInitialization();
+            Fields["currentLift"].guiActive = FARDebugValues.displayForces;
+            Fields["currentDrag"].guiActive = FARDebugValues.displayForces;
         }
 
         public void MathAndFunctionInitialization()

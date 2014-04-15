@@ -60,6 +60,7 @@
     <Compile Include="FARBasicDragModel.cs" />
     <Compile Include="FARCargoBayModule.cs" />
     <Compile Include="FARControllableSurface.cs" />
+    <Compile Include="FARDebugOptions.cs" />
     <Compile Include="FAREditorGUI.cs" />
     <Compile Include="FARControlSys.cs" />
     <Compile Include="FARGeoUtil.cs" />

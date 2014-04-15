@@ -197,6 +197,10 @@ namespace ferram4
 
             FARControllableSurface.timeConstant = Convert.ToSingle(config.GetValue("ctrlSurfTimeConstant", "0.05"));
 
+            FARDebugValues.displayForces = Convert.ToBoolean(config.GetValue("displayForces", "false"));
+            FARDebugValues.displayCoefficients = Convert.ToBoolean(config.GetValue("displayCoefficients", "false"));
+            FARDebugValues.displayShielding = Convert.ToBoolean(config.GetValue("displayShielding", "false"));
+
             FAREditorGUI.windowPos = config.GetValue("windowPos", new Rect());
             FAREditorGUI.minimize = config.GetValue("EditorGUIBool", true);
             if (FAREditorGUI.windowPos.y < 75)

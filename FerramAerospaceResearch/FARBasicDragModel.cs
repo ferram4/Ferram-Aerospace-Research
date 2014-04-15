@@ -111,7 +111,7 @@ namespace ferram4
         public Transform[] PartModelTransforms = null;
         public Transform[] VesselModelTransforms = null;
 
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Current drag", guiUnits = "kN", guiFormat = "F3")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Current drag", guiUnits = "kN", guiFormat = "F3")]
         protected float currentDrag = 0.0f;
 
 
@@ -192,6 +192,7 @@ namespace ferram4
             PartModelTransforms = FARGeoUtil.PartModelTransformArray(part);
             AttachNodeCdAdjust();
             AnimationSetup();
+            Fields["currentDrag"].guiActive = FARDebugValues.displayForces;
         }
 
         public Vector3 GetLiftDirection()
