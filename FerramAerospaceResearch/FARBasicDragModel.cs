@@ -843,6 +843,9 @@ namespace ferram4
                     {
                         continue;
                     }
+                    if (Attach.id.ToLowerInvariant() == "strut")
+                        continue;
+
 /*                    string attachId = Attach.id.ToLowerInvariant();
                     bool leaveAttachLoop = false;
                     foreach (string s in FARMiscData.exemptAttachNodes)

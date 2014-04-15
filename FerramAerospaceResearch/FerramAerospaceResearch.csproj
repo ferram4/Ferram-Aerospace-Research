@@ -54,6 +54,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CompatibilityChecker.cs" />
     <Compile Include="FARAeroUtil.cs" />
     <Compile Include="FARBaseAerodynamics.cs" />
     <Compile Include="FARBasicDragModel.cs" />

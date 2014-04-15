@@ -8,9 +8,8 @@ Aerodynamics model for Kerbal Space Program
             			sarbian, for refactoring code for working with MechJeb, and the Module Manager 1.5 updates  
             			ialdabaoth (who is awesome), who originally created Module Manager  
             			Duxwing, for copy editing the readme  
- 
-   Kerbal Engineer Redux created by Cybutek, Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License  
-        Referenced for starting point for fixing the "editor click-through-GUI" bug
+   
+   CompatibilityChecker by Majiir, BSD 2-clause http://opensource.org/licenses/BSD-2-Clause
 
    Part.cfg changes powered by sarbian & ialdabaoth's ModuleManager plugin; used with permission  
 	http://forum.kerbalspaceprogram.com/threads/55219
