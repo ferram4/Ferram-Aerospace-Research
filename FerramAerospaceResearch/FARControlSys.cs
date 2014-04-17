@@ -52,11 +52,11 @@ namespace ferram4
         public static Rect windowPos;
 
 
-        public float MachNumber;
+        public double MachNumber;
 
         private static string mach;
 
-        public static float activeMach
+        public static double activeMach
         {
             get
             {
@@ -67,55 +67,55 @@ namespace ferram4
         private static string AirDensity;
         private static bool DensityRelative = true;
         private static string DensityRelative_str = "REL";
-        private static float invKerbinSLDensity = 0;
+        private static double invKerbinSLDensity = 0;
 
         private static bool AutopilotWindow = false;
         public static Rect AutopilotWinPos;
 
         private static bool WingLevelerOn = false;
         public static string k_wingleveler_str = "0.05";
-        public static float k_wingleveler = 0.05f;
+        public static double k_wingleveler = 0.05;
         public static string kd_wingleveler_str = "0.002";
-        public static float kd_wingleveler = 0.002f;
-        private static float lastPhi = 0;
+        public static double kd_wingleveler = 0.002;
+        private static double lastPhi = 0;
 
         private static bool YawDamperOn = false;
         public static string k_yawdamper_str = "0.1";
-        public static float k_yawdamper = 0.1f;
+        public static double k_yawdamper = 0.1;
 
-        private static float lastBeta = 0;
+        private static double lastBeta = 0;
 
         private static bool PitchDamperOn = false;
         public static string k_pitchdamper_str = "0.25";
-        public static float k_pitchdamper = 0.25f;
+        public static double k_pitchdamper = 0.25;
 
-        private static float lastAlpha = 0;
+        private static double lastAlpha = 0;
 
         private static bool ControlReducer = false;
         public static string scaleVelocity_str = "150";
-        public static float scaleVelocity = 150f;
+        public static double scaleVelocity = 150;
         public static string alt_str = "0";
-        public static float alt = 0f;
+        public static double alt = 0;
 
         private static bool AoALimiter = false;
         public static string upperLim_str = "25";
-        public static float upperLim = 25;
+        public static double upperLim = 25;
         public static string lowerLim_str = "-25";
-        public static float lowerLim = -25;
+        public static double lowerLim = -25;
         public static string k_limiter_str = "0.25";
-        public static float k_limiter = 0.25f;
-        
-        private static float lastDt = 1;
+        public static double k_limiter = 0.25;
 
-        private Vector3 lastAngVelocity = Vector3.zero;
+        private static double lastDt = 1;
+
+        private Vector3d lastAngVelocity = Vector3.zero;
 
 /*        private bool AltHold = false;
         private string holdAltitude_str = "5000";
         private float holdAltitude = 5000;*/
-        
-        private float q;
 
-        private float scalingfactor = 1;
+        private double q;
+
+        private double scalingfactor = 1;
 
         public static Rect AutoPilotWindowPos;
 
@@ -161,21 +161,21 @@ namespace ferram4
 
         //private float Cl;
         //private float Cd;
-        private static float stallPercentage;
-        private static float mass;
-        private static float fuelmass;
-        public static float termVel;
-        public static float ballisticCoeff;
-        private static float TSFC;
-        private static float L_W;
+        private static double stallPercentage;
+        private static double mass;
+        private static double fuelmass;
+        public static double termVel;
+        public static double ballisticCoeff;
+        private static double TSFC;
+        private static double L_W;
 
-        private static float AoA;
-        private static float pitch;
-        private static float roll;
-        private static float heading;
-        private static float yaw;
+        private static double AoA;
+        private static double pitch;
+        private static double roll;
+        private static double heading;
+        private static double yaw;
 
-        private static float intakeDeficit = 0;
+        private static double intakeDeficit = 0;
 
         public static bool StartedGUI = false;
         private static FARControlSys activeControlSys;
@@ -190,7 +190,7 @@ namespace ferram4
 
         private bool startSequenceFinished = false;
 
-        private static float timeSinceSave = 0;
+        private static double timeSinceSave = 0;
 
         private static NavBall ball;
 
@@ -241,31 +241,31 @@ namespace ferram4
         private void GetFlightCondition()
         {
 
-            float DragArea = 0;
-            float LiftArea = 0;
-            float stallArea = 0;
+            double DragArea = 0;
+            double LiftArea = 0;
+            double stallArea = 0;
 
-            float wingArea = 0;
-            float otherArea = 0;
+            double wingArea = 0;
+            double otherArea = 0;
             mass = 0;
             fuelmass = 0;
 
-            float totalthrust = 0;
-            float fuelconsumption = 0;
-            float airAvailable = 0;
-            float airDemand = 0;
+            double totalthrust = 0;
+            double fuelconsumption = 0;
+            double airAvailable = 0;
+            double airDemand = 0;
             PartResourceLibrary l = PartResourceLibrary.Instance;
 
             Vector3 tmpVec = vessel.ReferenceTransform.up * Vector3.Dot(vessel.ReferenceTransform.up, vessel.srf_velocity.normalized) + vessel.ReferenceTransform.forward * Vector3.Dot(vessel.ReferenceTransform.forward, vessel.srf_velocity.normalized);   //velocity vector projected onto a plane that divides the airplane into left and right halves
             AoA = Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.forward);
-            AoA = Mathf.Rad2Deg * Mathf.Asin(AoA);
-            if (float.IsNaN(AoA))
+            AoA = FARMathUtil.rad2deg * Math.Asin(AoA);
+            if (double.IsNaN(AoA))
                 AoA = 0;
 
             tmpVec = vessel.ReferenceTransform.up * Vector3.Dot(vessel.ReferenceTransform.up, vessel.srf_velocity.normalized) + vessel.ReferenceTransform.right * Vector3.Dot(vessel.ReferenceTransform.right, vessel.srf_velocity.normalized);     //velocity vector projected onto the vehicle-horizontal plane
             yaw = Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.right);
-            yaw = Mathf.Rad2Deg * Mathf.Asin(yaw);
-            if (float.IsNaN(yaw))
+            yaw = FARMathUtil.rad2deg * Math.Asin(yaw);
+            if (double.IsNaN(yaw))
                 yaw = 0;
 
 
@@ -283,13 +283,13 @@ namespace ferram4
                 roll = (vesselRot.eulerAngles.z > 180) ? (360 - vesselRot.eulerAngles.z) : -vesselRot.eulerAngles.z;
             }
 
-            float soundspeed;
-            float density = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
-            float realToStockDensityRatio = (float)vessel.atmDensity / density;
+            double soundspeed;
+            double density = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
+            double realToStockDensityRatio = vessel.atmDensity / density;
 
-            bool zero_q = Mathf.Approximately(0, q);
-            float drag_coeff = FlightGlobals.DragMultiplier * 1000 * realToStockDensityRatio;
-            float fixedDeltaTime = TimeWarp.fixedDeltaTime;
+            bool zero_q = FARMathUtil.Approximately(0, q);
+            double drag_coeff = FlightGlobals.DragMultiplier * 1000 * realToStockDensityRatio;
+            double fixedDeltaTime = TimeWarp.fixedDeltaTime;
 
             Vector3 lift_axis = -vessel.transform.forward;
 
@@ -300,7 +300,7 @@ namespace ferram4
                     continue;
                 if (p.Resources.Count > 0)
                 {
-                    float rmass = p.GetResourceMass();
+                    double rmass = p.GetResourceMass();
                     fuelmass += rmass;
                     mass += rmass;
                 }
@@ -320,10 +320,10 @@ namespace ferram4
                                 PartResourceDefinition r = l.resourceDefinitions[propName];
                                 if (propName == "IntakeAir")
                                 {
-                                    airDemand += (float)v.currentRequirement;
+                                    airDemand += v.currentRequirement;
                                     continue;
                                 }
-                                fuelconsumption += r.density * (float)v.currentRequirement / fixedDeltaTime;
+                                fuelconsumption += r.density * v.currentRequirement / fixedDeltaTime;
 
                             }
                         }
@@ -340,10 +340,10 @@ namespace ferram4
                                 PartResourceDefinition r = l.resourceDefinitions[propName];
                                 if (propName == "IntakeAir")
                                 {
-                                    airDemand += (float)v.currentRequirement;
+                                    airDemand += v.currentRequirement;
                                     continue;
                                 }
-                                fuelconsumption += r.density * (float)v.currentRequirement / fixedDeltaTime;
+                                fuelconsumption += r.density * v.currentRequirement / fixedDeltaTime;
 
                             }
                         }
@@ -385,18 +385,18 @@ namespace ferram4
             TSFC = 0;
 
             if (totalthrust != 0)
-                TSFC = fuelconsumption / totalthrust * 3600 * 9.81f;
+                TSFC = fuelconsumption / totalthrust * 3600 * 9.81;
 
-            float geeForce = (float)FlightGlobals.getGeeForceAtPosition(vessel.CoM).magnitude;
+            double geeForce = FlightGlobals.getGeeForceAtPosition(vessel.CoM).magnitude;
 
-            if (!Mathf.Approximately(0, q))
+            if (!FARMathUtil.Approximately(0, q))
             {
-                if (!Mathf.Approximately(wingArea, 0))
+                if (!FARMathUtil.Approximately(wingArea, 0))
                     S = wingArea;
                 else
                     S = otherArea;
 
-                float recip_S = 1 / S;
+                double recip_S = 1 / S;
                 Cl = LiftArea * recip_S;
                 Cd = DragArea * recip_S;
                 stallPercentage = stallArea * recip_S;
@@ -415,7 +415,7 @@ namespace ferram4
 
             termVel = 2 * ballisticCoeff * geeForce;
             termVel /= density;
-            termVel = Mathf.Sqrt(termVel);
+            termVel = Math.Sqrt(termVel);
         }
 
 
@@ -443,14 +443,14 @@ namespace ferram4
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical();
-            float L_D = Cl / Cd;
-            float VL_D = (float)this.vessel.srf_velocity.magnitude * L_D;
-            float L_D_TSFC = 0;
-            float VL_D_TSFC = 0;
+            double L_D = Cl / Cd;
+            double VL_D = this.vessel.srf_velocity.magnitude * L_D;
+            double L_D_TSFC = 0;
+            double VL_D_TSFC = 0;
             if (TSFC != 0)
             {
                 L_D_TSFC = L_D / TSFC;
-                VL_D_TSFC = VL_D / TSFC * 0.001f;
+                VL_D_TSFC = VL_D / TSFC * 0.001;
             }
 
             StringBuilder readoutString = new StringBuilder();
@@ -1030,8 +1030,8 @@ namespace ferram4
             if (velMode == SurfaceVelMode.EAS)
             {
                 UI.spdCaption.text = "EAS";
-                float densityRatio = (FARAeroUtil.GetCurrentDensity(vessel.mainBody, (float)vessel.altitude) * invKerbinSLDensity);
-                UI.speed.text = (vessel.srf_velocity.magnitude * Mathf.Sqrt(densityRatio)).ToString("F1") + "m/s";
+                double densityRatio = (FARAeroUtil.GetCurrentDensity(vessel.mainBody, vessel.altitude) * invKerbinSLDensity);
+                UI.speed.text = (vessel.srf_velocity.magnitude * Math.Sqrt(densityRatio)).ToString("F1") + "m/s";
             }
             else if (velMode == SurfaceVelMode.MACH)
             {
@@ -1130,9 +1130,9 @@ namespace ferram4
                     {
                         if (vessel.staticPressure > 0)
                         {
-                            float soundspeed;
-                            float density = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
-                            MachNumber = (float)this.vessel.srf_velocity.magnitude / soundspeed;
+                            double soundspeed;
+                            double density = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
+                            MachNumber = this.vessel.srf_velocity.magnitude / soundspeed;
 
                             if (DensityRelative)
                                 AirDensity = (density * invKerbinSLDensity).ToString("F3");
@@ -1140,7 +1140,7 @@ namespace ferram4
                                 AirDensity = (density).ToString("F3");
 
 
-                            q = density * (float)vessel.srf_velocity.sqrMagnitude * 0.5f;
+                            q = density * vessel.srf_velocity.sqrMagnitude * 0.5;
 
                             mach = MachNumber.ToString("F3");
                         }
@@ -1179,37 +1179,37 @@ namespace ferram4
 
         public void StabilityAugmentation(FlightCtrlState state)
         {
-            
-            float tmp = 0;
-            float dt = (TimeWarp.fixedDeltaTime + lastDt) * 0.5f;      //Not really proper, but since dT jumps around a lot this should lower the jitters
-            float recipDt = 1 / dt;
-            float ctrlTimeConst = FARControllableSurface.timeConstant * recipDt;
+
+            double tmp = 0;
+            double dt = (TimeWarp.fixedDeltaTime + lastDt) * 0.5;      //Not really proper, but since dT jumps around a lot this should lower the jitters
+            double recipDt = 1 / dt;
+            double ctrlTimeConst = FARControllableSurface.timeConstant * recipDt;
             if (WingLevelerOn)
             {
                 if (k_wingleveler > 0)
                 {
-                    float phi = -roll * Mathf.Deg2Rad;
-                    float d_phi = (phi - lastPhi) * recipDt;
-                    if (Mathf.Abs(state.roll - state.rollTrim) < 0.01f)
+                    double phi = -roll * FARMathUtil.deg2rad;
+                    double d_phi = (phi - lastPhi) * recipDt;
+                    if (Math.Abs(state.roll - state.rollTrim) < 0.01)
                     {
-                        tmp = k_wingleveler * phi + Mathf.Abs(kd_wingleveler) * d_phi;
-                        tmp = tmp * ctrlTimeConst / (1 - Mathf.Abs(tmp) * ctrlTimeConst);
-                        state.roll = Mathf.Clamp(state.roll + tmp, -1, 1);
+                        tmp = k_wingleveler * phi + Math.Abs(kd_wingleveler) * d_phi;
+                        tmp = tmp * ctrlTimeConst / (1 - Math.Abs(tmp) * ctrlTimeConst);
+                        state.roll = (float)FARMathUtil.Clamp(state.roll + tmp, -1, 1);
                     }
                     lastPhi = phi;
                 }
                 else
                 {
-                    float phi = roll + 180;
+                    double phi = roll + 180;
                     if (phi > 180)
                         phi -= 360;
-                    phi = -phi * Mathf.Deg2Rad;
-                    float d_phi = (phi - lastPhi) * recipDt;
+                    phi = -phi * FARMathUtil.deg2rad;
+                    double d_phi = (phi - lastPhi) * recipDt;
                     if (Mathf.Abs(state.roll - state.rollTrim) < 0.01f)
                     {
-                        tmp = -k_wingleveler * phi + Mathf.Abs(kd_wingleveler) * d_phi;
-                        tmp = tmp * ctrlTimeConst / (1 - Mathf.Abs(tmp) * ctrlTimeConst);
-                        state.roll = Mathf.Clamp(state.roll + tmp, -1, 1);
+                        tmp = -k_wingleveler * phi + Math.Abs(kd_wingleveler) * d_phi;
+                        tmp = tmp * ctrlTimeConst / (1 - Math.Abs(tmp) * ctrlTimeConst);
+                        state.roll = (float)FARMathUtil.Clamp(state.roll + tmp, -1, 1);
                     }
                     lastPhi = phi;
                 }
@@ -1217,14 +1217,14 @@ namespace ferram4
 
             if (YawDamperOn)
             {
-                float beta = (yaw * Mathf.Deg2Rad + 0.5f * lastBeta) * 0.66666667f;
-                float d_beta = (beta - lastBeta) * recipDt;
+                double beta = (yaw * FARMathUtil.deg2rad + 0.5 * lastBeta) * 0.66666667;
+                double d_beta = (beta - lastBeta) * recipDt;
                 //float dd_beta =  (d_beta - lastD_beta)/ dt;
-                if (Mathf.Abs(state.yaw - state.yawTrim) < 0.01f)
+                if (Math.Abs(state.yaw - state.yawTrim) < 0.01)
                 {
                     tmp = k_yawdamper * d_beta;// +k_yawdamper / 5 * dd_beta;
-                    tmp = tmp * ctrlTimeConst / (1 - Mathf.Abs(tmp) * ctrlTimeConst);
-                    state.yaw = Mathf.Clamp(state.yaw + tmp, -1, 1);
+                    tmp = tmp * ctrlTimeConst / (1 - Math.Abs(tmp) * ctrlTimeConst);
+                    state.yaw = (float)FARMathUtil.Clamp(state.yaw + tmp, -1, 1);
                 }
                 lastBeta = beta;
                 //lastD_beta = d_beta;
@@ -1232,14 +1232,14 @@ namespace ferram4
             if (PitchDamperOn)
             {
 
-                float alpha = (-AoA * Mathf.Deg2Rad + 0.5f * lastAlpha) * 0.66666667f;
-                float d_alpha = (alpha - lastAlpha) * recipDt;
+                double alpha = (-AoA * FARMathUtil.deg2rad + 0.5 * lastAlpha) * 0.66666667;
+                double d_alpha = (alpha - lastAlpha) * recipDt;
                 //float dd_alpha = (d_alpha - lastD_alpha) / dt;
-                if (Mathf.Abs(state.pitch - state.pitchTrim) < 0.01f)
+                if (Math.Abs(state.pitch - state.pitchTrim) < 0.01)
                 {
                     tmp = k_pitchdamper * d_alpha;// +k_pitchdamper / 5 * dd_alpha;
-                    tmp = tmp * ctrlTimeConst / (1 - Mathf.Abs(tmp) * ctrlTimeConst);
-                    state.pitch = Mathf.Clamp(tmp + state.pitch, -1, 1);
+                    tmp = tmp * ctrlTimeConst / (1 - Math.Abs(tmp) * ctrlTimeConst);
+                    state.pitch = (float)FARMathUtil.Clamp(tmp + state.pitch, -1, 1);
                 }
                 lastAlpha = alpha;
                 //lastD_alpha = d_alpha;
@@ -1247,13 +1247,13 @@ namespace ferram4
             if (AoALimiter)
             {
                 if (AoA > upperLim)
-                    state.pitch = Mathf.Clamp(state.pitch - k_limiter * (AoA - upperLim), -1, 1);
+                    state.pitch = (float)FARMathUtil.Clamp(state.pitch - k_limiter * (AoA - upperLim), -1, 1);
                 else if (AoA < lowerLim)
-                    state.pitch = Mathf.Clamp(state.pitch + k_limiter * (lowerLim - AoA), -1, 1);
+                    state.pitch = (float)FARMathUtil.Clamp(state.pitch + k_limiter * (lowerLim - AoA), -1, 1);
             }
             if (ControlReducer)
             {
-                float std_q = (float)FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(alt, vessel.mainBody)) * scaleVelocity * scaleVelocity * 0.5f;
+                double std_q = FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(alt, vessel.mainBody)) * scaleVelocity * scaleVelocity * 0.5;
 
                 if (q < std_q)
                 {
@@ -1262,9 +1262,9 @@ namespace ferram4
                 }
                 scalingfactor = std_q / q;
 
-                state.pitch = state.pitchTrim + (state.pitch - state.pitchTrim) * scalingfactor;
-                state.yaw = state.yawTrim + (state.yaw - state.yawTrim) * scalingfactor;
-                state.roll = state.rollTrim + (state.roll - state.rollTrim) * scalingfactor;
+                state.pitch = state.pitchTrim + (state.pitch - state.pitchTrim) * (float)scalingfactor;
+                state.yaw = state.yawTrim + (state.yaw - state.yawTrim) * (float)scalingfactor;
+                state.roll = state.rollTrim + (state.roll - state.rollTrim) * (float)scalingfactor;
             }
             lastDt = dt;
         }

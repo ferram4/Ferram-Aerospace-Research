@@ -46,135 +46,100 @@ using UnityEngine;
 
 namespace ferram4
 {
-    
+
     public class FARWingAerodynamicModel : FARBaseAerodynamics
     {
-        
-        /// <summary>
-        /// S Planform Area
-        /// AoAmax Stall Angle
-        /// MAC (Mean Aerodynamic Chord)
-        /// AR (aspect ratio)
-        /// e (Oswald's efficiency)
-        /// Control axis
-        /// Maximum control deflection
-        /// </summary>
-        /// 
-
-//        [KSPField(isPersistant = false)]
-//        public float S;
-
-        public float AoAmax = 15;
+        public double AoAmax = 15;
 
         [KSPField(isPersistant = false)]
-        public float MAC;
+        public double MAC;
 
         [KSPField(isPersistant = false)]
-        public float e;
+        public double e;
 
         [KSPField(isPersistant = false)]
-        public float nonSideAttach;           //This is for ailerons and the small ctrl surf
+        public double nonSideAttach;           //This is for ailerons and the small ctrl surf
 
 
         [KSPField(isPersistant = false)]
-        public float TaperRatio;
+        public double TaperRatio;
 
         [KSPField(isPersistant = false, guiActive = true, guiName = "Stalled %", guiFormat = "F2")]
-        protected float stall = 0;
+        protected double stall = 0;
 
-        private float minStall = 0;
+        private double minStall = 0;
 
-        private const float twopi = Mathf.PI * 2;   //lift slope
-        private float piARe = 1;    //induced drag factor
-
-        [KSPField(isPersistant = false)]
-        public float b_2 = 4;        //span
-
+        private const double twopi = Mathf.PI * 2;   //lift slope
+        private double piARe = 1;    //induced drag factor
 
         [KSPField(isPersistant = false)]
-        public float MidChordSweep;
+        public double b_2;        //span
 
-        private float MidChordSweepSideways = 0;
 
-        //[KSPField(isPersistant = false, guiActive = true)]
-        private float SweepAngle = 0;
+        [KSPField(isPersistant = false)]
+        public double MidChordSweep;
+        private double MidChordSweepSideways = 0;
 
-//        [KSPField(isPersistant = false, guiActive = true)]
-//        protected float AoA = 0;              //Angle of attack
+        private double SweepAngle = 0;
 
-        //[KSPField(guiActive = true, isPersistant = false)]
-        private float effective_b_2 = 1f;
-        //[KSPField(guiActive = true, isPersistant = false)]
-        private float effective_MAC = 1f;
+        private double effective_b_2 = 1f;
+        private double effective_MAC = 1f;
 
-        //[KSPField(isPersistant = false, guiActive = true)]
-        protected float effective_AR = 4;
+        protected double effective_AR = 4;
 
         [KSPField(isPersistant = false, guiActive = false, guiName = "Current lift", guiUnits = "kN", guiFormat = "F3")]
-        protected float currentLift = 0.0f;
+        protected double currentLift = 0.0;
 
         [KSPField(isPersistant = false, guiActive = false, guiName = "Current drag", guiUnits = "kN", guiFormat = "F3")]
-        protected float currentDrag = 0.0f;
+        protected double currentDrag = 0.0;
 
-        private float liftslope = 0;
-//        [KSPField(isPersistant = false, guiActive = true)]
-        protected float ClCdInterference = 1;
+        private double liftslope = 0;
+        protected double ClCdInterference = 1;
 
-        private float forwardexposure;
-        private float backwardexposure;
-        private float outwardexposure;
-        private float inwardexposure;
+        private double forwardexposure;
+        private double backwardexposure;
+        private double outwardexposure;
+        private double inwardexposure;
 
-//        protected float LeExposure = 0;
-//        protected float TeExposure = 0;
-        protected float WingtipExposure = 0;
-        protected float WingrootExposure = 0;
+        protected double WingtipExposure = 0;
+        protected double WingrootExposure = 0;
 
-        protected float zeroLiftCdIncrement = 0;
+        protected double zeroLiftCdIncrement = 0;
 
 
-        public Vector3 AerodynamicCenter = Vector3.zero;
-        private Vector3 CurWingCentroid = Vector3.zero;
-        private Vector3 ParallelInPlane = Vector3.zero;
-        private Vector3 perp = Vector3.zero;
-        private Vector3 liftDirection = Vector3.zero;
+        public Vector3d AerodynamicCenter = Vector3.zero;
+        private Vector3d CurWingCentroid = Vector3.zero;
+        private Vector3d ParallelInPlane = Vector3.zero;
+        private Vector3d perp = Vector3.zero;
+        private Vector3d liftDirection = Vector3.zero;
 
         // in local coordinates
-        private Vector3 localWingCentroid = Vector3.zero;
-        private Vector3 sweepPerpLocal, sweepPerp2Local;
-        private Vector3 ParallelInPlaneLocal = Vector3.zero;
+        private Vector3d localWingCentroid = Vector3.zero;
+        private Vector3d sweepPerpLocal, sweepPerp2Local;
+        private Vector3d ParallelInPlaneLocal = Vector3.zero;
 
         private Int16 srfAttachNegative = 1;
 
-        private Vector3 LastInFrontRaycast = Vector3.zero;
+        private Vector3d LastInFrontRaycast = Vector3.zero;
         private int LastInFrontRaycastCount = 0;
         private Part PartInFrontOf = null;
         private FARWingAerodynamicModel WingInFrontOf = null;
 
-        //[KSPField(guiActive = true, isPersistant = false)]
-        protected float ClIncrementFromRear = 0f;
+        protected double ClIncrementFromRear = 0f;
 
-        /*[KSPField(guiActive = true, isPersistant = false)]
-        protected float debug1 = 0;
-        [KSPField(guiActive = true, isPersistant = false)]
-        protected float debug2 = 0;*/
-
-//        [KSPField(guiActive = true)]
-//        private string PartInfrontOfName = "";
-
-        private float rho = 1;
+        private double rho = 1;
 
         #region GetFunctions
 
-        public float GetStall()
+        public double GetStall()
         {
             return stall;
         }
 
-        public float GetCl()
+        public double GetCl()
         {
 
-            float ClUpwards = 1;
+            double ClUpwards = 1;
             if (start != StartState.Editor)
                 ClUpwards = Vector3.Dot(liftDirection, -vessel.transform.forward);
             ClUpwards *= Cl;
@@ -182,7 +147,7 @@ namespace ferram4
             return ClUpwards;
         }
 
-        public float GetCd()
+        public double GetCd()
         {
             return Cd;
         }
@@ -193,25 +158,25 @@ namespace ferram4
             Cd = 0;
             if (reset_stall)
                 stall = 0;
-//            LastAoA = AoA;
-//            LastAoADot = AoADot;
+            //            LastAoA = AoA;
+            //            LastAoADot = AoADot;
             //downWash = 0;
         }
 
-        public Vector3 GetAerodynamicCenter()
+        public Vector3d GetAerodynamicCenter()
         {
             return AerodynamicCenter;
         }
 
         private void PrecomputeCentroid()
         {
-            Vector3 WC = Vector3.zero;
+            Vector3d WC = Vector3d.zero;
             if (nonSideAttach <= 0)
             {
-                WC = - b_2 * 0.5f * (Vector3.right * srfAttachNegative + Vector3.up * Mathf.Tan(MidChordSweep * Mathf.Deg2Rad));
+                WC = -b_2 * 0.5 * (Vector3d.right * srfAttachNegative + Vector3d.up * Math.Tan(MidChordSweep * FARMathUtil.deg2rad));
             }
             else
-                WC = - MAC * 0.7f * Vector3.up;
+                WC = (-MAC * 0.7) * Vector3d.up;
 
             localWingCentroid = WC;
         }
@@ -221,7 +186,7 @@ namespace ferram4
             return part_transform.TransformPoint(localWingCentroid);
         }
 
-        public override Vector3 GetVelocity()
+        public override Vector3d GetVelocity()
         {
             if (start != StartState.Editor)
                 return part.Rigidbody.GetPointVelocity(WingCentroid()) + Krakensbane.GetFrameVelocityV3f();
@@ -229,24 +194,24 @@ namespace ferram4
                 return velocityEditor;
         }
 
-        private Vector3 CalculateAerodynamicCenter(float MachNumber, float AoA, Vector3 WC)
+        private Vector3d CalculateAerodynamicCenter(double MachNumber, double AoA, Vector3d WC)
         {
-            Vector3 AC_offset = Vector3.zero;
+            Vector3d AC_offset = Vector3d.zero;
             if (nonSideAttach <= 0)
             {
-                if (MachNumber < 0.85f)
-                    AC_offset = effective_MAC * 0.25f * ParallelInPlane;
+                if (MachNumber < 0.85)
+                    AC_offset = effective_MAC * 0.25 * ParallelInPlane;
                 else if (MachNumber > 1)
-                    AC_offset = effective_MAC * 0.10f * ParallelInPlane;
+                    AC_offset = effective_MAC * 0.10 * ParallelInPlane;
                 else
                 {
-                    if(MachNumber < 0.95)
-                        AC_offset = effective_MAC * (0.5f * MachNumber - 0.175f) * ParallelInPlane;
+                    if (MachNumber < 0.95)
+                        AC_offset = effective_MAC * (0.5 * MachNumber - 0.175) * ParallelInPlane;
                     else
-                        AC_offset = effective_MAC * (-4f * MachNumber + 4.1f) * ParallelInPlane;
+                        AC_offset = effective_MAC * (-4 * MachNumber + 4.1) * ParallelInPlane;
                 }
 
-                float tmp = FARMathUtil.FastCos(AoA);
+                double tmp = Math.Cos(AoA);
 
                 AC_offset *= tmp * tmp;
 
@@ -260,26 +225,26 @@ namespace ferram4
             return WC;      //WC updated to AC
         }
 
-        public float GetMAC()
+        public double GetMAC()
         {
             return effective_MAC;
         }
-        public float Getb_2()
+        public double Getb_2()
         {
             return effective_b_2;
         }
 
-        public void ComputeClCdEditor(Vector3 velocityVector, float M)
+        public void ComputeClCdEditor(Vector3d velocityVector, double M)
         {
             velocityEditor = velocityVector;
 
             rho = 1;
 
-            float AoA = CalculateAoA(velocityVector);
+            double AoA = CalculateAoA(velocityVector);
             CalculateForces(velocityVector, M, AoA);
         }
 
-        public Vector3 GetLiftDirection()
+        public Vector3d GetLiftDirection()
         {
             return liftDirection;
         }
@@ -290,11 +255,11 @@ namespace ferram4
             stall = 0;
         }
 
-        protected override Vector3 PrecomputeCenterOfLift(Vector3 velocity, float MachNumber, FARCenterQuery center)
+        protected override Vector3d PrecomputeCenterOfLift(Vector3d velocity, double MachNumber, FARCenterQuery center)
         {
-            float AoA = CalculateAoA(velocity);
+            double AoA = CalculateAoA(velocity);
 
-            Vector3 force = CalculateForces(velocity, MachNumber, AoA);
+            Vector3d force = CalculateForces(velocity, MachNumber, AoA);
             center.AddForce(AerodynamicCenter, force);
 
             return force;
@@ -327,8 +292,8 @@ namespace ferram4
                 w.angularDrag = 0;
                 w.maximum_drag = 0;
                 w.minimum_drag = 0;
-            }           
-            
+            }
+
             MathAndFunctionInitialization();
             Fields["currentLift"].guiActive = FARDebugValues.displayForces;
             Fields["currentDrag"].guiActive = FARDebugValues.displayForces;
@@ -336,7 +301,7 @@ namespace ferram4
 
         public void MathAndFunctionInitialization()
         {
-            float lengthScale = Mathf.Sqrt(FARAeroUtil.areaFactor);
+            double lengthScale = Math.Sqrt(FARAeroUtil.areaFactor);
 
             b_2 *= lengthScale;
             MAC *= lengthScale;
@@ -350,12 +315,12 @@ namespace ferram4
 
             MidChordSweepSideways = (1 - TaperRatio) / (1 + TaperRatio);
 
-            MidChordSweepSideways = (Mathf.PI * 0.5f - Mathf.Atan(FARMathUtil.FastTan(MidChordSweep * Mathf.Deg2Rad) + MidChordSweepSideways * 2 / effective_AR)) * MidChordSweepSideways * 0.5f;
+            MidChordSweepSideways = (Math.PI * 0.5 - Math.Atan(Math.Tan(MidChordSweep * FARMathUtil.deg2rad) + MidChordSweepSideways * 2 / effective_AR)) * MidChordSweepSideways * 0.5;
 
-            float sweepHalfChord = MidChordSweep * Mathf.Deg2Rad;
+            double sweepHalfChord = MidChordSweep * FARMathUtil.deg2rad;
 
-            sweepPerpLocal = Vector3.up * FARMathUtil.FastCos(sweepHalfChord) + Vector3.right * FARMathUtil.FastSin(sweepHalfChord) * srfAttachNegative; //Vector perpendicular to midChord line
-            sweepPerp2Local = Vector3.up * FARMathUtil.FastSin(MidChordSweepSideways) - Vector3.right * FARMathUtil.FastCos(MidChordSweepSideways) * srfAttachNegative; //Vector perpendicular to midChord line2
+            sweepPerpLocal = Vector3d.up * Math.Cos(sweepHalfChord) + Vector3d.right * Math.Sin(sweepHalfChord) * srfAttachNegative; //Vector perpendicular to midChord line
+            sweepPerp2Local = Vector3d.up * Math.Sin(MidChordSweepSideways) - Vector3d.right * Math.Cos(MidChordSweepSideways) * srfAttachNegative; //Vector perpendicular to midChord line2
 
             PrecomputeCentroid();
             RunExposureAndGetControlSys();
@@ -389,21 +354,21 @@ namespace ferram4
                 {
                     CurWingCentroid = WingCentroid();
 
-                    Vector3 velocity = rb.GetPointVelocity(CurWingCentroid) + Krakensbane.GetFrameVelocityV3f();
-                    float soundspeed, v_scalar = velocity.magnitude;
+                    Vector3d velocity = rb.GetPointVelocity(CurWingCentroid) + Krakensbane.GetFrameVelocity();
+                    double soundspeed, v_scalar = velocity.magnitude;
 
                     rho = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
-                    if (rho > 0f && v_scalar > 0.1f)
+                    if (rho > 0 && v_scalar > 0.1)
                     {
-                        float MachNumber = v_scalar / soundspeed;
-                        float AoA = CalculateAoA(velocity);
-                        Vector3 force = DoCalculateForces(velocity, MachNumber, AoA);
+                        double MachNumber = v_scalar / soundspeed;
+                        double AoA = CalculateAoA(velocity);
+                        Vector3d force = DoCalculateForces(velocity, MachNumber, AoA);
 
-/*                        if ((object)part.parent != null)
-                        {
-                            set_vel = true;
-                            rb.maxAngularVelocity = ((object)WingInFrontOf != null ? 700 : 400);
-                        }*/
+                        /*                        if ((object)part.parent != null)
+                                                {
+                                                    set_vel = true;
+                                                    rb.maxAngularVelocity = ((object)WingInFrontOf != null ? 700 : 400);
+                                                }*/
 
                         rb.AddForceAtPosition(force, AerodynamicCenter);            //and apply force
                     }
@@ -418,14 +383,14 @@ namespace ferram4
             }
         }
 
-        public Vector3 CalculateForces(Vector3 velocity, float MachNumber, float AoA)
+        public Vector3d CalculateForces(Vector3d velocity, double MachNumber, double AoA)
         {
             CurWingCentroid = WingCentroid();
 
-            return DoCalculateForces(velocity,  MachNumber, AoA);
+            return DoCalculateForces(velocity, MachNumber, AoA);
         }
 
-        private Vector3 DoCalculateForces(Vector3 velocity, float MachNumber, float AoA)
+        private Vector3d DoCalculateForces(Vector3d velocity, double MachNumber, double AoA)
         {
             //This calculates the angle of attack, adjusting the part's orientation for any deflection
             //CalculateAoA();
@@ -433,21 +398,21 @@ namespace ferram4
             if (isShielded)
             {
                 Cl = Cd = Cm = stall = 0;
-                return Vector3.zero;
+                return Vector3d.zero;
             }
 
-            float v_scalar = velocity.magnitude;
-            if (v_scalar <= 0.1f)
-                return Vector3.zero;
+            double v_scalar = velocity.magnitude;
+            if (v_scalar <= 0.1)
+                return Vector3d.zero;
 
             Vector3 forward = part_transform.forward;
-            Vector3 velocity_normalized = velocity / v_scalar;
+            Vector3d velocity_normalized = velocity / v_scalar;
 
-            float q = rho * v_scalar * v_scalar * 0.5f;   //dynamic pressure, q
+            double q = rho * v_scalar * v_scalar * 0.5;   //dynamic pressure, q
 
-            ParallelInPlane = Vector3.Exclude(forward, velocity).normalized;  //Projection of velocity vector onto the plane of the wing
-            perp = Vector3.Cross(forward, ParallelInPlane).normalized;       //This just gives the vector to cross with the velocity vector
-            liftDirection = Vector3.Cross(perp, velocity).normalized;
+            ParallelInPlane = Vector3d.Exclude(forward, velocity).normalized;  //Projection of velocity vector onto the plane of the wing
+            perp = Vector3d.Cross(forward, ParallelInPlane).normalized;       //This just gives the vector to cross with the velocity vector
+            liftDirection = Vector3d.Cross(perp, velocity).normalized;
 
             ParallelInPlaneLocal = part_transform.InverseTransformDirection(ParallelInPlane);
 
@@ -460,25 +425,25 @@ namespace ferram4
 
 
             //lift and drag vectors
-            Vector3 L = liftDirection * (q * Cl * S);    //lift;
-            Vector3 D = velocity_normalized * (-q * Cd * S) ;                         //drag is parallel to velocity vector
-            currentLift = L.magnitude * 0.001f;
-            currentDrag = D.magnitude * 0.001f;
-            Vector3 force = (L + D) * 0.001f;
-            if (float.IsNaN(force.sqrMagnitude) || float.IsNaN(AerodynamicCenter.sqrMagnitude))// || float.IsNaN(moment.magnitude))
+            Vector3d L = liftDirection * (q * Cl * S);    //lift;
+            Vector3d D = velocity_normalized * (-q * Cd * S);                         //drag is parallel to velocity vector
+            currentLift = L.magnitude * 0.001;
+            currentDrag = D.magnitude * 0.001;
+            Vector3d force = (L + D) * 0.001;
+            if (double.IsNaN(force.sqrMagnitude) || double.IsNaN(AerodynamicCenter.sqrMagnitude))// || float.IsNaN(moment.magnitude))
             {
                 Debug.LogWarning("FAR Error: Aerodynamic force = " + force.magnitude + " AC Loc = " + AerodynamicCenter.magnitude + " AoA = " + AoA + "\n\rMAC = " + effective_MAC + " B_2 = " + effective_b_2 + " sweepAngle = " + SweepAngle + "\n\rMidChordSweep = " + MidChordSweep + " MidChordSweepSideways = " + MidChordSweepSideways + "\n\r at " + part.name);
-                force = AerodynamicCenter = Vector3.zero;
+                force = AerodynamicCenter = Vector3d.zero;
             }
 
             return force;
-            
+
         }
 
-        protected virtual float CalculateAoA(Vector3 velocity)
+        protected virtual double CalculateAoA(Vector3d velocity)
         {
-            float PerpVelocity = Vector3.Dot(part_transform.forward, velocity.normalized);
-            return Mathf.Asin(Mathf.Clamp(PerpVelocity, -1, 1));
+            double PerpVelocity = Vector3d.Dot(part_transform.forward, velocity.normalized);
+            return Math.Asin(FARMathUtil.Clamp(PerpVelocity, -1, 1));
         }
 
         #region Interactive Effects
@@ -489,7 +454,7 @@ namespace ferram4
             {
                 // Don't repeat traces until count expires or > 5 degree angle change
                 if (LastInFrontRaycastCount-- > 0 &&
-                    Vector3.Dot(ParallelInPlaneLocal, LastInFrontRaycast) > 0.996f)
+                    Vector3d.Dot(ParallelInPlaneLocal, LastInFrontRaycast) > 0.996)
                     return;
 
                 LastInFrontRaycastCount = 10;
@@ -500,11 +465,11 @@ namespace ferram4
             WingInFrontOf = null;
             //PartInfrontOfName = "";
 
-            if (ParallelInPlane != Vector3.zero)
+            if (ParallelInPlane != Vector3d.zero)
             {
                 // Special case for control surfaces attached to a wing:
                 // If the ray direction is within 60 degrees of up, just use parent.
-                if (nonSideAttach > 0 && ParallelInPlaneLocal.y > 0.5f &&
+                if (nonSideAttach > 0 && ParallelInPlaneLocal.y > 0.5 &&
                     (part.parent || start == StartState.Editor && part.potentialParent))
                 {
                     Part parent = part.parent ?? part.potentialParent;
@@ -520,7 +485,7 @@ namespace ferram4
                 }
 
                 RaycastHit hit = new RaycastHit();
-                float distance = Mathf.Max(3 * effective_MAC, 0.1f);
+                float distance = Mathf.Max((float)(3 * effective_MAC), 0.1f);
                 RaycastHit[] hits = Physics.RaycastAll(CurWingCentroid, ParallelInPlane, distance, FARAeroUtil.RaycastMask);
 
                 foreach (RaycastHit h in hits)
@@ -565,7 +530,7 @@ namespace ferram4
             }
         }
 
-        private void GetWingInFrontOf(float MachNumber, float AoA, out float ACshift, out float ACweight, out float wStall)
+        private void GetWingInFrontOf(double MachNumber, double AoA, out double ACshift, out double ACweight, out double wStall)
         {
             ACshift = 0;
             ACweight = 0;
@@ -577,40 +542,41 @@ namespace ferram4
             {
                 var w = WingInFrontOf;
 
-                float flapRatio = Mathf.Clamp01(this.effective_MAC / (this.effective_MAC + w.effective_MAC));
-                float flapFactor = FARAeroUtil.WingCamberFactor.Evaluate(flapRatio);        //Flap Effectiveness Factor
-                float dCm_dCl = FARAeroUtil.WingCamberMoment.Evaluate(flapRatio);           //Change in moment due to change in lift from flap
+                double flapRatio = FARMathUtil.Clamp(this.effective_MAC / (this.effective_MAC + w.effective_MAC), 0, 1);
+                float flt_flapRatio = (float)flapRatio;
+                double flapFactor = FARAeroUtil.WingCamberFactor.Evaluate(flt_flapRatio);        //Flap Effectiveness Factor
+                double dCm_dCl = FARAeroUtil.WingCamberMoment.Evaluate(flt_flapRatio);           //Change in moment due to change in lift from flap
 
-                float angle = Vector3.Dot(w.liftDirection, this.liftDirection);        //This deals with the effect of a part being attached at a strange angle and reducing the effect, so that a vertical stabilizer placed on a wing doesn't affect the lift of the wing
-                float liftDirVal = angle;
-                float wAoA = w.CalculateAoA(w.GetVelocity()) * Mathf.Sign(liftDirVal);
-                angle = (AoA - wAoA) * Mathf.Abs(angle);                //First, make sure that the AoA are wrt the same direction; then account for any strange angling of the part that shouldn't be there
+                double angle = Vector3.Dot(w.liftDirection, this.liftDirection);        //This deals with the effect of a part being attached at a strange angle and reducing the effect, so that a vertical stabilizer placed on a wing doesn't affect the lift of the wing
+                double liftDirVal = angle;
+                double wAoA = w.CalculateAoA(w.GetVelocity()) * Math.Sign(liftDirVal);
+                angle = (AoA - wAoA) * Math.Abs(angle);                //First, make sure that the AoA are wrt the same direction; then account for any strange angling of the part that shouldn't be there
 
                 //This accounts for the wing possibly having a longer span than the flap
-                float WingFraction = Mathf.Clamp01(this.effective_b_2 / w.effective_b_2);
+                double WingFraction = FARMathUtil.Clamp(this.effective_b_2 / w.effective_b_2, 0, 1);
                 //This accounts for the flap possibly having a longer span than the wing it's attached to
-                float FlapFraction = Mathf.Clamp01(w.effective_b_2 / this.effective_b_2);
+                double FlapFraction = FARMathUtil.Clamp(w.effective_b_2 / this.effective_b_2, 0, 1);
 
-                float ClIncrement = flapFactor * w.liftslope * FARMathUtil.FastSin(2 * angle) * 0.5f;   //Lift created by the flap interaction
+                double ClIncrement = flapFactor * w.liftslope * Math.Sin(2 * angle) * 0.5;   //Lift created by the flap interaction
                 ClIncrement *= (this.S * FlapFraction + w.S * WingFraction) / this.S;                   //Increase the Cl so that even though we're working with the flap's area, it accounts for the added lift across the entire object
 
-                float MachCoeff = Mathf.Sqrt(Mathf.Clamp01(1 - MachNumber * MachNumber));
+                double MachCoeff = Math.Sqrt(FARMathUtil.Clamp(1 - MachNumber * MachNumber, 0, 1));
                 ACweight = ClIncrement * MachCoeff; // Total flap Cl for the purpose of applying ACshift, including the bit subtracted below
 
-                ClIncrement -= FlapFraction * w.liftslope * FARMathUtil.FastSin(2 * angle) * 0.5f;        //Removing additional angle so that lift of the flap is calculated as lift at wing angle + lift due to flap interaction rather than being greater
+                ClIncrement -= FlapFraction * w.liftslope * Math.Sin(2 * angle) * 0.5;        //Removing additional angle so that lift of the flap is calculated as lift at wing angle + lift due to flap interaction rather than being greater
 
-                ACshift = (dCm_dCl + 0.75f * (1 - flapRatio)) * (effective_MAC + w.effective_MAC);      //Change in Cm with change in Cl
+                ACshift = (dCm_dCl + 0.75 * (1 - flapRatio)) * (effective_MAC + w.effective_MAC);      //Change in Cm with change in Cl
 
                 this.ClIncrementFromRear = ClIncrement * MachCoeff;
 
                 liftslope = w.liftslope;
                 SweepAngle = w.SweepAngle;
 
-                wStall = w.stall * Mathf.Abs(liftDirVal);
-                if (Mathf.Abs(liftDirVal) > 0.5f)
+                wStall = w.stall * Math.Abs(liftDirVal);
+                if (Math.Abs(liftDirVal) > 0.5)
                 {
-                    this.AoAmax = (w.AoAmax + GetAoAmax()) * 0.5f;
-                    this.AoAmax += (AoA - wAoA) * Mathf.Sign(AoA); //  less efficient than before since we calculate AoA again
+                    this.AoAmax = (w.AoAmax + GetAoAmax()) * 0.5;
+                    this.AoAmax += (AoA - wAoA) * Math.Sign(AoA); //  less efficient than before since we calculate AoA again
                 }
                 else
                     AoAmax = GetAoAmax();
@@ -622,27 +588,27 @@ namespace ferram4
 
         #endregion
 
-        private void DetermineStall(float MachNumber, float AoA, out float ACshift, out float ACweight)
+        private void DetermineStall(double MachNumber, double AoA, out double ACshift, out double ACweight)
         {
-            float lastStall = stall;
-            float tmp = 0;
+            double lastStall = stall;
+            double tmp = 0;
             stall = 0;
 
             GetWingInFrontOf(MachNumber, AoA, out ACshift, out ACweight, out tmp);
 
-            float absAoA = Mathf.Abs(AoA);
+            double absAoA = Math.Abs(AoA);
 
             if (absAoA > AoAmax)
             {
-                stall = Mathf.Clamp01((absAoA - AoAmax) * 10);
+                stall = FARMathUtil.Clamp((absAoA - AoAmax) * 10, 0, 1);
                 stall += tmp;
-                stall = Mathf.Max(stall, lastStall);
+                stall = Math.Max(stall, lastStall);
             }
-            else if (absAoA < AoAmax * 0.75f)
+            else if (absAoA < AoAmax * 0.75)
             {
-                stall = 1 - Mathf.Clamp01((AoAmax * 0.75f - absAoA) * 10);
+                stall = 1 - FARMathUtil.Clamp((AoAmax * 0.75 - absAoA) * 10, 0, 1);
                 stall += tmp;
-                stall = Mathf.Min(stall, lastStall);
+                stall = Math.Min(stall, lastStall);
             }
             else
             {
@@ -650,16 +616,16 @@ namespace ferram4
             }
 
             if (start != StartState.Editor)
-                stall = Mathf.Clamp(stall, lastStall - 2f * TimeWarp.fixedDeltaTime, lastStall + 2f * TimeWarp.fixedDeltaTime);     //Limits stall to increasing at a rate of 2/s
-            
-            stall = Mathf.Clamp01(stall);
+                stall = FARMathUtil.Clamp(stall, lastStall - 2 * TimeWarp.fixedDeltaTime, lastStall + 2 * TimeWarp.fixedDeltaTime);     //Limits stall to increasing at a rate of 2/s
+
+            stall = FARMathUtil.Clamp(stall, 0, 1);
         }
 
 
         /// <summary>
         /// This calculates the lift and drag coefficients
         /// </summary>
-        private void CalculateCoefficients(float MachNumber, float AoA)
+        private void CalculateCoefficients(double MachNumber, double AoA)
         {
 
             minStall = 0;// ShockStall(MachNumber);
@@ -667,18 +633,20 @@ namespace ferram4
             liftslope = GetLiftSlope(MachNumber);// / AoA;     //Prandtl lifting Line
 
             //float SweepOrMiddle = Mathf.Abs(SweepAngle);
-            float sonicLe = 0;
+            double sonicLe = 0;
 
             //if (PartInFrontOf)
             //    SweepOrMiddle = 0;
 
-            float ACshift = 0, ACweight = 0;
+            double ACshift = 0, ACweight = 0;
             DetermineStall(MachNumber, AoA, out ACshift, out ACweight);
 
             if (MachNumber > 1)
             {
-                sonicLe = Mathf.Sqrt(MachNumber * MachNumber - 1);
-                sonicLe /= FARMathUtil.FastTan(Mathf.Clamp(Mathf.Abs(Mathf.Acos(SweepAngle) - Mathf.PI * 0.5f), -1.57f, 1.57f));
+                sonicLe = Math.Sqrt(MachNumber * MachNumber - 1);
+                sonicLe /= Math.Tan(FARMathUtil.Clamp(Math.Abs(Math.Acos(SweepAngle) - Math.PI * 0.5), -1.57, 1.57));
+                if (double.IsNaN(sonicLe))
+                    sonicLe = 0;
                 //print(sonicLe);
             }
 
@@ -690,56 +658,56 @@ namespace ferram4
              * Subsonic nonlinear lift / drag code
              * 
              */
-            if (MachNumber <= 0.8f)
+            if (MachNumber <= 0.8)
             {
-                float Cn = liftslope;
-                Cl = Cn * FARMathUtil.FastSin(2 * AoA) * 0.5f;
-                
+                double Cn = liftslope;
+                Cl = Cn * Math.Sin(2 * AoA) * 0.5;
+
                 Cl += ClIncrementFromRear;
-                if (Mathf.Abs(Cl) > Mathf.Abs(ACweight))
-                    ACshift *= Mathf.Clamp01(Mathf.Abs(ACweight / Cl));
+                if (Math.Abs(Cl) > Math.Abs(ACweight))
+                    ACshift *= FARMathUtil.Clamp(Math.Abs(ACweight / Cl), 0, 1);
                 //Cl += UnsteadyAerodynamicsCl();
-                Cd = (0.006f + Cl * Cl / piARe);     //Drag due to 3D effects on wing and base constant
+                Cd = (0.006 + Cl * Cl / piARe);     //Drag due to 3D effects on wing and base constant
             }
             /*
              * Supersonic nonlinear lift / drag code
              * 
              */
-            else if (MachNumber > 1.2f)
+            else if (MachNumber > 1.2)
             {
-                float axialForce = 0;
-                float coefMult = 1 / (1.4f * MachNumber * MachNumber);
+                double axialForce = 0;
+                double coefMult = 1 / (1.4 * MachNumber * MachNumber);
 
-                float sonicLEFactor = 1;
+                double sonicLEFactor = 1;
 
                 //This handles the effect of wings that have their leading edges inside their own Mach cone / ones outside their own Mach cone
                 if (sonicLe < 1)
-                    sonicLEFactor = liftslope * (Mathf.Clamp01(1 - sonicLe) + 1) * 0.125f;
+                    sonicLEFactor = liftslope * (FARMathUtil.Clamp(1 - sonicLe, 0, 1) + 1) * 0.125;
                 else
-                    sonicLEFactor = (1 - 0.125f * liftslope) * Mathf.Clamp01(1 - 1 / sonicLe) + 0.125f * liftslope;
+                    sonicLEFactor = (1 - 0.125 * liftslope) * FARMathUtil.Clamp(1 - 1 / sonicLe, 0, 1) + 0.125 * liftslope;
 
-                float normalForce = GetSupersonicPressureDifference(MachNumber, AoA, out axialForce);        //get the pressure difference across the airfoil
-                float CosAoA = FARMathUtil.FastCos(AoA);
-                float SinAoA = FARMathUtil.FastSin(AoA);
-                Cl = coefMult * (normalForce * CosAoA * Mathf.Sign(AoA) * sonicLEFactor - axialForce * SinAoA);
-                Cd = coefMult * (Mathf.Abs(normalForce * SinAoA) * sonicLEFactor + axialForce * CosAoA);
-                Cd += 0.006f;
+                double normalForce = GetSupersonicPressureDifference(MachNumber, AoA, out axialForce);        //get the pressure difference across the airfoil
+                double CosAoA = Math.Cos(AoA);
+                double SinAoA = Math.Sin(AoA);
+                Cl = coefMult * (normalForce * CosAoA * Math.Sign(AoA) * sonicLEFactor - axialForce * SinAoA);
+                Cd = coefMult * (Math.Abs(normalForce * SinAoA) * sonicLEFactor + axialForce * CosAoA);
+                Cd += 0.006;
                 Cd += CdCompressibilityZeroLiftIncrement(MachNumber, SweepAngle);
             }
             /*
              * Transonic nonlinear lift / drag code
              * This uses a blend of subsonic and supersonic aerodynamics to try and smooth the gap between the two regimes
-             */ 
+             */
             else
             {
-                float subScale = 3f - 2.5f * MachNumber;            //This determines the weight of subsonic flow; supersonic uses 1-this
-                float Cn = liftslope;
-                Cl = Cn * FARMathUtil.FastSin(2 * AoA) * 0.5f;
+                double subScale = 3f - 2.5f * MachNumber;            //This determines the weight of subsonic flow; supersonic uses 1-this
+                double Cn = liftslope;
+                Cl = Cn * Math.Sin(2 * AoA) * 0.5;
                 if (MachNumber < 1)
                 {
                     Cl += ClIncrementFromRear;
-                    if (Mathf.Abs(Cl) > Mathf.Abs(ACweight))
-                        ACshift *= Mathf.Clamp01(Mathf.Abs(ACweight / Cl));
+                    if (Math.Abs(Cl) > Math.Abs(ACweight))
+                        ACshift *= FARMathUtil.Clamp(Math.Abs(ACweight / Cl), 0, 1);
                 }
                 Cd = Cl * Cl / piARe;     //Drag due to 3D effects on wing and base constant
                 Cl *= subScale;
@@ -747,39 +715,39 @@ namespace ferram4
 
 
 
-                float M = Mathf.Clamp(MachNumber, 1.1f, Mathf.Infinity);
-                float axialForce = 0;
-                float coefMult = 1 / (1.4f * M * M);
-                float sonicLEFactor = 1;
+                double M = FARMathUtil.Clamp(MachNumber, 1.1, double.PositiveInfinity);
+                double axialForce = 0;
+                double coefMult = 1 / (1.4 * M * M);
+                double sonicLEFactor = 1;
 
                 //This handles the effect of wings that have their leading edges inside their own Mach cone / ones outside their own Mach cone
                 if (sonicLe < 1)
-                    sonicLEFactor = liftslope * (Mathf.Clamp01(1 - sonicLe) + 1) * 0.125f;
+                    sonicLEFactor = liftslope * (FARMathUtil.Clamp(1 - sonicLe, 0, 1) + 1) * 0.125;
                 else
-                    sonicLEFactor = (1 - 0.125f * liftslope) * Mathf.Clamp01(1 - 1 / sonicLe) + 0.125f * liftslope;
+                    sonicLEFactor = (1 - 0.125 * liftslope) * FARMathUtil.Clamp(1 - 1 / sonicLe, 0, 1) + 0.125 * liftslope;
 
                 subScale = 1 - subScale; //Adjust for supersonic code
-                float normalForce = GetSupersonicPressureDifference(M, AoA, out axialForce);
-                float CosAoA = FARMathUtil.FastCos(AoA);
-                float SinAoA = FARMathUtil.FastSin(AoA);
-                Cl += coefMult * (normalForce * CosAoA * Mathf.Sign(AoA) * sonicLEFactor - axialForce * SinAoA) * (subScale);
-                Cd += coefMult * (Mathf.Abs(normalForce * SinAoA) * sonicLEFactor + axialForce * CosAoA) * (subScale);
-                Cd += 0.006f;
+                double normalForce = GetSupersonicPressureDifference(M, AoA, out axialForce);
+                double CosAoA = Math.Cos(AoA);
+                double SinAoA = Math.Sin(AoA);
+                Cl += coefMult * (normalForce * CosAoA * Math.Sign(AoA) * sonicLEFactor - axialForce * SinAoA) * (subScale);
+                Cd += coefMult * (Math.Abs(normalForce * SinAoA) * sonicLEFactor + axialForce * CosAoA) * (subScale);
+                Cd += 0.006;
                 Cd += CdCompressibilityZeroLiftIncrement(MachNumber, SweepAngle);
             }
 
-            Vector3 ACShiftVec;
-            if (!float.IsNaN(ACshift))
+            Vector3d ACShiftVec;
+            if (!double.IsNaN(ACshift))
                 ACShiftVec = ACshift * ParallelInPlane;
             else
-                ACShiftVec = Vector3.zero;
+                ACShiftVec = Vector3d.zero;
             AerodynamicCenter = AerodynamicCenter + ACShiftVec;
 
-            stall = Mathf.Clamp(stall, minStall, 1);
+            stall = FARMathUtil.Clamp(stall, minStall, 1);
 
 
-            Cl -= Cl * stall * 0.769f;
-            Cd += Cd * stall * 0.4f;
+            Cl -= Cl * stall * 0.769;
+            Cd += Cd * stall * 0.4;
 
             Cl *= ClCdInterference;
 
@@ -789,7 +757,7 @@ namespace ferram4
 
         #region Supersonic Calculations
 
- /*       //approximations of oblique shock relation; I can't run an iterative search multiple times every physics update :P
+        /*       //approximations of oblique shock relation; I can't run an iterative search multiple times every physics update :P
         //returns beta in degrees
         private float GetBetaMax(float M)
         {
@@ -813,36 +781,36 @@ namespace ferram4
 
         //This models the wing using a symmetric diamond airfoil
 
-        private float GetSupersonicPressureDifference(float M, float AoA, out float axialForce)
+        private double GetSupersonicPressureDifference(double M, double AoA, out double axialForce)
         {
-            float pRatio;
+            double pRatio;
 
-            float maxSinBeta = FARAeroUtil.CalculateSinMaxShockAngle(M, FARAeroUtil.currentBodyAtm.y);//GetBetaMax(M) * Mathf.Deg2Rad;
-            float minSinBeta = 1 / M;
+            double maxSinBeta = FARAeroUtil.CalculateSinMaxShockAngle(M, FARAeroUtil.currentBodyAtm.y);//GetBetaMax(M) * FARMathUtil.deg2rad;
+            double minSinBeta = 1 / M;
 
 
-            float halfAngle = 0.05f;            //Corresponds to ~2.8 degrees or approximately what you would get from a ~4.8% thick diamond airfoil
+            double halfAngle = 0.05;            //Corresponds to ~2.8 degrees or approximately what you would get from a ~4.8% thick diamond airfoil
 
-            float AbsAoA = Mathf.Abs(AoA);
+            double AbsAoA = Math.Abs(AoA);
 
-            float angle1 = halfAngle - AbsAoA;                  //Region 1 is the upper surface ahead of the max thickness
-            float M1;
-            float p1;       //pressure ratio wrt to freestream pressure
+            double angle1 = halfAngle - AbsAoA;                  //Region 1 is the upper surface ahead of the max thickness
+            double M1;
+            double p1;       //pressure ratio wrt to freestream pressure
             if (angle1 >= 0)
                 p1 = ShockWaveCalculation(angle1, M, out M1, maxSinBeta, minSinBeta);
             else
-                p1 = PMExpansionCalculation(Mathf.Abs(angle1), M, out M1, maxSinBeta, minSinBeta);
+                p1 = PMExpansionCalculation(Math.Abs(angle1), M, out M1, maxSinBeta, minSinBeta);
 
-                                                                //Region 2 is the upper surface behind the max thickness
-            float p2 = PMExpansionCalculation(2 * halfAngle, M1, maxSinBeta, minSinBeta) * p1;
+            //Region 2 is the upper surface behind the max thickness
+            double p2 = PMExpansionCalculation(2 * halfAngle, M1, maxSinBeta, minSinBeta) * p1;
 
-            float angle3 = halfAngle + AbsAoA;                  //Region 3 is the lower surface ahead of the max thickness
-            float M3;
-            float p3;       //pressure ratio wrt to freestream pressure
+            double angle3 = halfAngle + AbsAoA;                  //Region 3 is the lower surface ahead of the max thickness
+            double M3;
+            double p3;       //pressure ratio wrt to freestream pressure
             p3 = ShockWaveCalculation(angle3, M, out M3, maxSinBeta, minSinBeta);
 
-                                                                //Region 4 is the lower surface behind the max thickness
-            float p4 = PMExpansionCalculation(2 * halfAngle, M3, maxSinBeta, minSinBeta) * p3;
+            //Region 4 is the lower surface behind the max thickness
+            double p4 = PMExpansionCalculation(2 * halfAngle, M3, maxSinBeta, minSinBeta) * p3;
 
             //float cosHalfAngle = Mathf.Cos(halfAngle);
             //float sinHalfAngle = halfAngle;
@@ -850,82 +818,82 @@ namespace ferram4
             pRatio = (p3 + p4) - (p1 + p2);
 
             axialForce = (p1 + p3) - (p2 + p4);
-            axialForce *= 0.048f;               //Thickness of the airfoil
+            axialForce *= 0.048;               //Thickness of the airfoil
 
             return pRatio;
         }
 
-        
-        private float ShockWaveCalculation(float angle, float inM, out float outM, float maxSinBeta, float minSinBeta)
+
+        private double ShockWaveCalculation(double angle, double inM, out double outM, double maxSinBeta, double minSinBeta)
         {
             //float sinBeta = (maxBeta - minBeta) * angle / maxTheta + minBeta;
-            float sinBeta = FARAeroUtil.CalculateSinWeakObliqueShockAngle(inM, FARAeroUtil.currentBodyAtm.y, angle);
-            if (float.IsNaN(sinBeta))
+            double sinBeta = FARAeroUtil.CalculateSinWeakObliqueShockAngle(inM, FARAeroUtil.currentBodyAtm.y, angle);
+            if (double.IsNaN(sinBeta))
                 sinBeta = maxSinBeta;
 
-            Mathf.Clamp(sinBeta, minSinBeta, maxSinBeta);
+            FARMathUtil.Clamp(sinBeta, minSinBeta, maxSinBeta);
 
-            float normalInM = sinBeta * inM;
-            normalInM = Mathf.Clamp(normalInM, 1f, Mathf.Infinity);
+            double normalInM = sinBeta * inM;
+            normalInM = FARMathUtil.Clamp(normalInM, 1f, Mathf.Infinity);
 
-            float tanM = inM * Mathf.Sqrt(Mathf.Clamp01(1 - sinBeta * sinBeta));
+            double tanM = inM * Math.Sqrt(FARMathUtil.Clamp(1 - sinBeta * sinBeta, 0, 1));
 
-            float normalOutM = FARAeroUtil.MachBehindShock.Evaluate(normalInM);
+            double normalOutM = FARAeroUtil.MachBehindShock.Evaluate((float)normalInM);
 
-            outM = Mathf.Sqrt(normalOutM * normalOutM + tanM * tanM);
+            outM = Math.Sqrt(normalOutM * normalOutM + tanM * tanM);
 
-            float pRatio = FARAeroUtil.PressureBehindShock.Evaluate(normalInM);
+            double pRatio = FARAeroUtil.PressureBehindShock.Evaluate((float)normalInM);
 
             return pRatio;
         }
 
-        private float PMExpansionCalculation(float angle, float inM, out float outM, float maxBeta, float minBeta)
+        private double PMExpansionCalculation(double angle, double inM, out double outM, double maxBeta, double minBeta)
         {
-            inM = Mathf.Clamp(inM, 1, Mathf.Infinity);
-            float nu1 = FARAeroUtil.PrandtlMeyerMach.Evaluate(inM);
-            float theta = angle * Mathf.Rad2Deg;
-            float nu2 = nu1 + theta;
+            inM = FARMathUtil.Clamp(inM, 1, double.PositiveInfinity);
+            double nu1 = FARAeroUtil.PrandtlMeyerMach.Evaluate((float)inM);
+            double theta = angle * FARMathUtil.rad2deg;
+            double nu2 = nu1 + theta;
             if (nu2 >= FARAeroUtil.maxPrandtlMeyerTurnAngle)
             {
                 //minStall += (nu2 - FARAeroUtil.maxPrandtlMeyerTurnAngle) * 0.066666667f;
                 //minStall = Mathf.Clamp01(minStall);
                 nu2 = FARAeroUtil.maxPrandtlMeyerTurnAngle;
             }
-            outM = FARAeroUtil.PrandtlMeyerAngle.Evaluate(nu2);
+            outM = FARAeroUtil.PrandtlMeyerAngle.Evaluate((float)nu2);
 
-            float ratio;
+            double ratio;
 
-            ratio = FARAeroUtil.StagnationPressure.Evaluate(inM) / FARAeroUtil.StagnationPressure.Evaluate(outM);
+            ratio = FARAeroUtil.StagnationPressure.Evaluate((float)inM) / FARAeroUtil.StagnationPressure.Evaluate((float)outM);
             return ratio;
         }
 
-        private float PMExpansionCalculation(float angle, float inM, float maxBeta, float minBeta)
+        private double PMExpansionCalculation(double angle, double inM, double maxBeta, double minBeta)
         {
-            inM = Mathf.Clamp(inM, 1, Mathf.Infinity);
-            float nu1 = FARAeroUtil.PrandtlMeyerMach.Evaluate(inM);
-            float theta = angle * Mathf.Rad2Deg;
-            float nu2 = nu1 + theta;
+            inM = FARMathUtil.Clamp(inM, 1, double.PositiveInfinity);
+            double nu1 = FARAeroUtil.PrandtlMeyerMach.Evaluate((float)inM);
+            double theta = angle * FARMathUtil.rad2deg;
+            double nu2 = nu1 + theta;
             if (nu2 >= FARAeroUtil.maxPrandtlMeyerTurnAngle)
             {
-//                minStall += (nu2 - FARAeroUtil.maxPrandtlMeyerTurnAngle) * 0.066666667f;
-//                minStall = Mathf.Clamp01(minStall);
+                //minStall += (nu2 - FARAeroUtil.maxPrandtlMeyerTurnAngle) * 0.066666667f;
+                //minStall = Mathf.Clamp01(minStall);
                 nu2 = FARAeroUtil.maxPrandtlMeyerTurnAngle;
             }
-            float outM = FARAeroUtil.PrandtlMeyerAngle.Evaluate(nu2);
+            float outM = FARAeroUtil.PrandtlMeyerAngle.Evaluate((float)nu2);
 
-            float ratio;
+            double ratio;
 
-            ratio = FARAeroUtil.StagnationPressure.Evaluate(inM) / FARAeroUtil.StagnationPressure.Evaluate(outM);
+            ratio = FARAeroUtil.StagnationPressure.Evaluate((float)inM) / FARAeroUtil.StagnationPressure.Evaluate(outM);
             return ratio;
         }
-        
+
         #endregion
 
-        protected float GetAoAmax()
+        protected double GetAoAmax()
         {
 
-            
-            float StallAngle;
+
+            double StallAngle;
             /*
             if (MachNumber < 1.1)
             {
@@ -938,39 +906,39 @@ namespace ferram4
                     StallAngle *= 2.5f;
 
 
-                StallAngle = Mathf.Clamp(StallAngle, 15, 45) * Mathf.Deg2Rad;
+                StallAngle = Mathf.Clamp(StallAngle, 15, 45) * FARMathUtil.deg2rad;
             }
             else
                 StallAngle = Mathf.PI / 3;*/
 
-            StallAngle = 1.6f / liftslope;          //Simpler version of above commented out section; just limit the lift coefficient to ~1.6
+            StallAngle = 1.6 / liftslope;          //Simpler version of above commented out section; just limit the lift coefficient to ~1.6
 
             return StallAngle;
 
         }
 
 
-        private float GetLiftSlope(float MachNumber)
+        private double GetLiftSlope(double MachNumber)
         {
-            float sweepHalfChord = MidChordSweep * Mathf.Deg2Rad;
+            double sweepHalfChord = MidChordSweep * FARMathUtil.deg2rad;
 
-            float CosPartAngle = Mathf.Clamp(Vector3.Dot(sweepPerpLocal, ParallelInPlaneLocal), -1, 1);
-            float tmp = Mathf.Clamp(Vector3.Dot(sweepPerp2Local, ParallelInPlaneLocal), -1, 1);
+            double CosPartAngle = Mathf.Clamp(Vector3.Dot(sweepPerpLocal, ParallelInPlaneLocal), -1, 1);
+            double tmp = Mathf.Clamp(Vector3.Dot(sweepPerp2Local, ParallelInPlaneLocal), -1, 1);
 
-            if(Mathf.Abs(CosPartAngle) > Mathf.Abs(tmp))                //Based on perp vector find which line is the right one
-                sweepHalfChord = Mathf.Acos(CosPartAngle);
+            if (Math.Abs(CosPartAngle) > Math.Abs(tmp))                //Based on perp vector find which line is the right one
+                sweepHalfChord = Math.Acos(CosPartAngle);
             else
-                sweepHalfChord = Mathf.Acos(tmp);
+                sweepHalfChord = Math.Acos(tmp);
 
-            if (sweepHalfChord > Mathf.PI * 0.5f)
-                sweepHalfChord -= Mathf.PI;
+            if (sweepHalfChord > Math.PI * 0.5f)
+                sweepHalfChord -= Math.PI;
 
-            CosPartAngle = Mathf.Clamp(ParallelInPlaneLocal.y, -1, 1);
+            CosPartAngle = FARMathUtil.Clamp(ParallelInPlaneLocal.y, -1, 1);
 
             CosPartAngle *= CosPartAngle;
-            float SinPartAngle2 = Mathf.Clamp01(1 - CosPartAngle);               //Get the squared values for the angles
+            double SinPartAngle2 = FARMathUtil.Clamp(1 - CosPartAngle, 0, 1);               //Get the squared values for the angles
 
-            effective_b_2 = Mathf.Max(b_2 * CosPartAngle, MAC * SinPartAngle2);
+            effective_b_2 = Math.Max(b_2 * CosPartAngle, MAC * SinPartAngle2);
             effective_MAC = MAC * CosPartAngle + b_2 * SinPartAngle2;
             effective_AR = 2 * effective_b_2 / effective_MAC;
 
@@ -985,18 +953,18 @@ namespace ferram4
             else
                 tmp = 1 / Mathf.Clamp(MachNumber, 1.09f, Mathf.Infinity);*/
 
-            if(MachNumber < 1)
+            if (MachNumber < 1)
                 tmp = 1 - MachNumber * MachNumber;
             else
                 tmp = MachNumber * MachNumber - 1;
 
-            float sweepTmp = FARMathUtil.FastTan(SweepAngle);
+            double sweepTmp = Math.Tan(SweepAngle);
             sweepTmp *= sweepTmp;
 
             tmp += sweepTmp;
-            tmp = Mathf.Sqrt(tmp) * effective_AR;
+            tmp = Math.Sqrt(tmp) * effective_AR;
 
-            float liftslope = FARAeroUtil.LiftSlope.Evaluate(tmp) * effective_AR;
+            double liftslope = FARAeroUtil.LiftSlope(tmp) * effective_AR;
 
             /*float liftslope = Mathf.Pow(effective_AR / FARAeroUtil.FastCos(sweepHalfChord), 2) + 4 - Mathf.Pow(effective_AR * tmp, 2);
             liftslope = 2 + Mathf.Sqrt(Mathf.Clamp(liftslope, 0, Mathf.Infinity));
@@ -1007,43 +975,43 @@ namespace ferram4
         }
 
 
-        private void SetSweepAngle(float sweepHalfChord)
+        private void SetSweepAngle(double sweepHalfChord)
         {
             SweepAngle = sweepHalfChord;
-            SweepAngle = FARMathUtil.FastTan(SweepAngle);
-            float tmp = (1 - TaperRatio) / (1 + TaperRatio);
+            SweepAngle = Math.Tan(SweepAngle);
+            double tmp = (1 - TaperRatio) / (1 + TaperRatio);
             tmp *= 2 / effective_AR;
             SweepAngle += tmp;
-            SweepAngle = FARMathUtil.FastCos(Mathf.Atan(SweepAngle));
+            SweepAngle = Math.Cos(Math.Atan(SweepAngle));
         }
 
-        
+
         #region Compressibility
 
 
         /// <summary>
         /// This models stall due to shockwaves appearing on the wings during transonic flight
         /// </summary>
-/*        private float ShockStall(float M)
-        {
-            float flowSep = 0;
-            if (Mathf.Abs(AoA) < Mathf.PI / 36)
-                return 0;
-            float CritMach = FARAeroUtil.CriticalMachNumber.Evaluate(Mathf.Abs(AoA));
-            if(M > CritMach)
-            {
-                flowSep = Mathf.Min((M - CritMach) * 0.5f, (1.1f - M) * 0.5f);
-                flowSep = Mathf.Clamp01(flowSep);
-            }
-            return flowSep;
-        }*/
+        /*        private float ShockStall(float M)
+                {
+                    float flowSep = 0;
+                    if (Mathf.Abs(AoA) < Mathf.PI / 36)
+                        return 0;
+                    float CritMach = FARAeroUtil.CriticalMachNumber.Evaluate(Mathf.Abs(AoA));
+                    if(M > CritMach)
+                    {
+                        flowSep = Mathf.Min((M - CritMach) * 0.5f, (1.1f - M) * 0.5f);
+                        flowSep = Mathf.Clamp01(flowSep);
+                    }
+                    return flowSep;
+                }*/
 
 
 
         /// <summary>
         /// This modifies the Cd to account for compressibility effects
         /// </summary>
-        private float CdCompressibilityZeroLiftIncrement(float M, float SweepAngle)
+        private double CdCompressibilityZeroLiftIncrement(double M, double SweepAngle)
         {
 
             if (PartInFrontOf != null)
@@ -1052,27 +1020,27 @@ namespace ferram4
                 return zeroLiftCdIncrement;
             }
 
-            float tmp = 1 / Mathf.Sqrt(SweepAngle);
+            double tmp = 1 / Math.Sqrt(SweepAngle);
 
-            float dd_MachNumber = 0.85f * tmp;               //Find Drag Divergence Mach Number
+            double dd_MachNumber = 0.85 * tmp;               //Find Drag Divergence Mach Number
 
-            if(M < dd_MachNumber)                                               //If below this number, 
+            if (M < dd_MachNumber)                                               //If below this number, 
                 return 0;
 
-            float peak_MachNumber = 1.1f * tmp;
+            double peak_MachNumber = 1.1 * tmp;
 
-            float peak_Increment = 0.025f * Mathf.Pow(SweepAngle, 2.5f);
+            double peak_Increment = 0.025 * Math.Pow(SweepAngle, 2.5);
 
             if (M > peak_MachNumber)
                 return peak_Increment;
 
-            float CdIncrement = (M - dd_MachNumber) / (peak_MachNumber - dd_MachNumber) * peak_Increment;
+            double CdIncrement = (M - dd_MachNumber) / (peak_MachNumber - dd_MachNumber) * peak_Increment;
 
             zeroLiftCdIncrement = CdIncrement;
 
             return CdIncrement;
         }
-        
+
         /*private float CdCompressibilityMultiplier(float M, float SweepOrMiddle, float sonicLE)
         {
             float CdMultiplier;
@@ -1114,29 +1082,32 @@ namespace ferram4
             if (VesselPartList == null)
                 VesselPartList = GetShipPartList();
 
+            float flt_MAC = (float)MAC;
+            float flt_b_2 = (float)b_2;
+
             ray.direction = part.transform.up;
-            forwardexposure = ExposureDirection(ray, hit, VesselPartList, MAC, true);
+            forwardexposure = ExposureDirection(ray, hit, VesselPartList, flt_MAC, true);
 
             ray.direction = -part.transform.up;
-            backwardexposure = ExposureDirection(ray, hit, VesselPartList, MAC, true);
+            backwardexposure = ExposureDirection(ray, hit, VesselPartList, flt_MAC, true);
 
             ray.direction = part.transform.right;
-            inwardexposure = ExposureDirection(ray, hit, VesselPartList, b_2, false);
+            inwardexposure = ExposureDirection(ray, hit, VesselPartList, flt_b_2, false);
 
             ray.direction = -part.transform.right;
-            outwardexposure = ExposureDirection(ray, hit, VesselPartList, b_2, false);
+            outwardexposure = ExposureDirection(ray, hit, VesselPartList, flt_b_2, false);
 
             //This part handles effects of biplanes, triplanes, etc.
             ClCdInterference = 1;
             ray.direction = part.transform.forward;
-            ClCdInterference *= WingInterference(ray, hit, VesselPartList, b_2);
+            ClCdInterference *= WingInterference(ray, hit, VesselPartList, flt_b_2);
             ray.direction = -part.transform.forward;
-            ClCdInterference *= WingInterference(ray, hit, VesselPartList, b_2);
+            ClCdInterference *= WingInterference(ray, hit, VesselPartList, flt_b_2);
         }
 
-        private float WingInterference(Ray ray, RaycastHit hit, List<Part> PartList, float dist)
+        private double WingInterference(Ray ray, RaycastHit hit, List<Part> PartList, float dist)
         {
-            float interferencevalue = 1;
+            double interferencevalue = 1;
 
             ray.origin = WingCentroid();
 
@@ -1154,9 +1125,9 @@ namespace ferram4
                             {
                                 if (h.distance > 0)
                                 {
-                                    float tmp = h.distance / b_2;
-                                    tmp = Mathf.Clamp01(tmp);
-                                    interferencevalue = Mathf.Min(tmp, interferencevalue);
+                                    double tmp = h.distance / dist;
+                                    tmp = FARMathUtil.Clamp(tmp, 0, 1);
+                                    interferencevalue = Math.Min(tmp, interferencevalue);
                                 }
                                 break;
                             }
@@ -1167,22 +1138,22 @@ namespace ferram4
             return interferencevalue;
         }
 
-        private float ExposureDirection(Ray ray, RaycastHit hit, List<Part> PartList, float dist, bool span)
+        private double ExposureDirection(Ray ray, RaycastHit hit, List<Part> PartList, float dist, bool span)
         {
-            float exposure = 1;
+            double exposure = 1;
             if (nonSideAttach == 0)
                 for (int i = 0; i < 5; i++)
                 {
                     //Vector3 centroid = WingCentroid();
                     if (span)
                     {
-                        ray.origin = part.transform.position - b_2 * (i * 0.2f + 0.1f) * part.transform.right.normalized * srfAttachNegative;
+                        ray.origin = part.transform.position - (float)(b_2 * (i * 0.2 + 0.1)) * part.transform.right.normalized * srfAttachNegative;
                     }
                     else
                     {
-                        ray.origin = part.transform.position + (MAC * i * 0.25f - (MAC * 0.5f)) * part.transform.up.normalized * 0.8f;
-//                        ray.origin = part.transform.position + (MAC * i / 4 - (MAC / 2)) * part.transform.up.normalized * 0.8f;
-                        ray.origin -= b_2 / 2 * part.transform.right.normalized * srfAttachNegative;
+                        ray.origin = part.transform.position + (float)(MAC * i * 0.25 - (MAC * 0.5)) * part.transform.up.normalized * 0.8f;
+                        //                        ray.origin = part.transform.position + (MAC * i / 4 - (MAC / 2)) * part.transform.up.normalized * 0.8f;
+                        ray.origin -= (float)(b_2 * 0.5) * part.transform.right.normalized * srfAttachNegative;
                     }
 
                     if (dist <= 0)
@@ -1201,7 +1172,7 @@ namespace ferram4
                                 {
                                     if (h.distance > 0)
                                     {
-                                        exposure -= 0.2f;
+                                        exposure -= 0.2;
                                         gotSomething = true;
                                     }
                                     break;
@@ -1215,8 +1186,8 @@ namespace ferram4
             else
             {
 
-                ray.origin = part.transform.position - MAC * 0.7f * part.transform.up.normalized;
-                
+                ray.origin = part.transform.position - (float)(MAC * 0.7) * part.transform.up.normalized;
+
 
                 if (dist <= 0)
                     dist = 1;
@@ -1234,7 +1205,7 @@ namespace ferram4
                             {
                                 if (h.distance > 0)
                                 {
-                                    exposure -= 1f;
+                                    exposure -= 1;
                                     gotSomething = true;
                                 }
                                 break;
@@ -1251,14 +1222,14 @@ namespace ferram4
         /// This function adjusts the lift and drag coefficients based on the 4 Exposure values
         /// </summary>
 
-        private float EffectOfExposure()
+        private double EffectOfExposure()
         {
-            float forwardbackward = ParallelInPlaneLocal.y;
-            float inwardoutward = ParallelInPlaneLocal.x * srfAttachNegative;
+            double forwardbackward = ParallelInPlaneLocal.y;
+            double inwardoutward = ParallelInPlaneLocal.x * srfAttachNegative;
             //ClExposureModifier = 0;
             //CdExposureModifier = 0;
-//            LeExposure = 0;
-//            TeExposure = 0;
+            //            LeExposure = 0;
+            //            TeExposure = 0;
             WingtipExposure = 0;
             WingrootExposure = 0;
 
@@ -1270,16 +1241,16 @@ namespace ferram4
             if (forwardbackward > 0)
             {
                 forwardbackward *= forwardbackward;
-//                LeExposure += forwardexposure * forwardbackward;
-//                TeExposure += backwardexposure * forwardbackward;
+                //                LeExposure += forwardexposure * forwardbackward;
+                //                TeExposure += backwardexposure * forwardbackward;
                 WingtipExposure += outwardexposure * forwardbackward;
                 WingrootExposure += inwardexposure * forwardbackward;
             }
             else
             {
                 forwardbackward *= forwardbackward;
-//                LeExposure += backwardexposure * forwardbackward;
-//                TeExposure += forwardexposure * forwardbackward;
+                //                LeExposure += backwardexposure * forwardbackward;
+                //                TeExposure += forwardexposure * forwardbackward;
                 WingtipExposure += inwardexposure * forwardbackward;
                 WingrootExposure += outwardexposure * forwardbackward;
             }
@@ -1287,36 +1258,36 @@ namespace ferram4
             if (inwardoutward > 0)
             {
                 inwardoutward *= inwardoutward;
-//                LeExposure += outwardexposure * inwardoutward;
-//                TeExposure += inwardexposure * inwardoutward;
+                //                LeExposure += outwardexposure * inwardoutward;
+                //                TeExposure += inwardexposure * inwardoutward;
                 WingtipExposure += backwardexposure * inwardoutward;
                 WingrootExposure += forwardexposure * inwardoutward;
             }
             else
             {
                 inwardoutward *= inwardoutward;
-//                LeExposure += inwardexposure * inwardoutward;
-//                TeExposure += outwardexposure * inwardoutward;
+                //                LeExposure += inwardexposure * inwardoutward;
+                //                TeExposure += outwardexposure * inwardoutward;
                 WingtipExposure += forwardexposure * inwardoutward;
                 WingrootExposure += backwardexposure * inwardoutward;
             }
 
-            WingtipExposure = 1-WingtipExposure;
-            WingrootExposure = 1-WingrootExposure;
+            WingtipExposure = 1 - WingtipExposure;
+            WingrootExposure = 1 - WingrootExposure;
 
 
-            float effective_AR_modifier = (WingrootExposure + WingtipExposure);
+            double effective_AR_modifier = (WingrootExposure + WingtipExposure);
 
-            
 
-            float e_AR;
+
+            double e_AR;
 
             if (effective_AR_modifier < 1)
                 e_AR = effective_AR * (effective_AR_modifier + 1);
             else
                 e_AR = effective_AR * 2 * (2 - effective_AR_modifier) + 30 * (effective_AR_modifier - 1);
 
-//            print(forwardexposure + " " + backwardexposure + " " + outwardexposure + " " + inwardexposure + " " + e_AR);
+            //            print(forwardexposure + " " + backwardexposure + " " + outwardexposure + " " + inwardexposure + " " + e_AR);
 
             /*//This segment calculates Cl modifiers; uses the same variables for Cd later on
             float LeModifier = 0.2f * LeExposure + 0.8f;
@@ -1336,7 +1307,22 @@ namespace ferram4
 
         #endregion
 
-
+        public override void OnLoad(ConfigNode node)
+        {
+            base.OnLoad(node);
+            if (node.HasValue("b_2"))
+                double.TryParse(node.GetValue("b_2"), out b_2);
+            if (node.HasValue("MAC"))
+                double.TryParse(node.GetValue("MAC"), out MAC);
+            if (node.HasValue("e"))
+                double.TryParse(node.GetValue("e"), out e);
+            if (node.HasValue("TaperRatio"))
+                double.TryParse(node.GetValue("TaperRatio"), out TaperRatio);
+            if (node.HasValue("nonSideAttach"))
+                double.TryParse(node.GetValue("nonSideAttach"), out nonSideAttach);
+            if (node.HasValue("MidChordSweep"))
+                double.TryParse(node.GetValue("MidChordSweep"), out MidChordSweep);
+        }
     }
 
 

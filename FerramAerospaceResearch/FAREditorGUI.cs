@@ -38,6 +38,7 @@ Copyright 2013, Michael Ferrara, aka Ferram4
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Linq;
 using UnityEngine;
 
 namespace ferram4
@@ -59,8 +60,8 @@ namespace ferram4
         public static List<FARWingAerodynamicModel> AllWings = new List<FARWingAerodynamicModel>();
         public static bool minimize = false;
 
-        private static float lastMinBounds = 0;
-        private static float lastMaxBounds = 0;
+        private static double lastMinBounds = 0;
+        private static double lastMaxBounds = 0;
 
         protected static ferramGraph graph = new ferramGraph(400, 275);
 
@@ -71,8 +72,8 @@ namespace ferram4
         private static int flap_setting = 0;
         private static string pitch_str = "0";
 
-        private static float lowerBound = 0;
-        private static float upperBound = 20;
+        private static double lowerBound = 0;
+        private static double upperBound = 20;
         private static uint numPoints = 10;
 
         private static Part.HighlightType defaultHighlightType = Part.HighlightType.Disabled;
@@ -158,16 +159,16 @@ namespace ferram4
         string surfArea = "0";
         string MAC = "0";
         string b = "0";
-        float stable_Cl = 0;
-        float stable_AoA = 0;
+        double stable_Cl = 0;
+        double stable_AoA = 0;
         string stable_AoA_state = "";
 
-        float u0 = 100;
+        double u0 = 100;
 
         string time_end = "10";
         string dT = "0.01";
 
-        float[] MOI_stabDerivs = new float[27];
+        double[] MOI_stabDerivs = new double[27];
 
         private void ControlSurfaceAttributionGUI()
         {
@@ -461,8 +462,8 @@ namespace ferram4
                     θ_init = Regex.Replace(θ_init, @"[^\d+-.]", "");
                     time_end = Regex.Replace(time_end, @"[^\d+-.]", "");
                     dT = Regex.Replace(dT, @"[^\d+-.]", "");
-                    float[] InitCond = new float[4] { Convert.ToSingle(w_init), Convert.ToSingle(u_init), Convert.ToSingle(q_init) * Mathf.PI / 180, Convert.ToSingle(θ_init) * Mathf.PI / 180 };
-                    RunTransientSimLongitudinal(Convert.ToSingle(time_end), Convert.ToSingle(dT), InitCond);
+                    double[] InitCond = new double[4] { Convert.ToDouble(w_init), Convert.ToDouble(u_init), Convert.ToDouble(q_init) * Math.PI / 180, Convert.ToDouble(θ_init) * Math.PI / 180 };
+                    RunTransientSimLongitudinal(Convert.ToDouble(time_end), Convert.ToDouble(dT), InitCond);
                 }
                 GUILayout.EndHorizontal();
             }
@@ -518,8 +519,8 @@ namespace ferram4
                     φ_init = Regex.Replace(φ_init, @"[^\d+-.]", "");
                     time_end = Regex.Replace(time_end, @"[^\d+-.]", "");
                     dT = Regex.Replace(dT, @"[^\d+-.]", "");
-                    float[] InitCond = new float[4] { Convert.ToSingle(beta_init) * Mathf.PI / 180, Convert.ToSingle(p_init) * Mathf.PI / 180, Convert.ToSingle(r_init) * Mathf.PI / 180, Convert.ToSingle(φ_init) * Mathf.PI / 180 };
-                    RunTransientSimLateral(Convert.ToSingle(time_end), Convert.ToSingle(dT), InitCond);
+                    double[] InitCond = new double[4] { Convert.ToDouble(beta_init) * Math.PI / 180, Convert.ToDouble(p_init) * Math.PI / 180, Convert.ToDouble(r_init) * Math.PI / 180, Convert.ToDouble(φ_init) * Math.PI / 180 };
+                    RunTransientSimLateral(Convert.ToDouble(time_end), Convert.ToDouble(dT), InitCond);
                 }
                 GUILayout.EndHorizontal();
             }
@@ -528,7 +529,7 @@ namespace ferram4
             DrawTooltip();
         }
 
-        private void RunTransientSimLateral(float endTime, float initDt, float[] InitCond)
+        private void RunTransientSimLateral(double endTime, double initDt, double[] InitCond)
         {
             FARMatrix A = new FARMatrix(4, 4);
             FARMatrix B = new FARMatrix(1, 4);
@@ -540,7 +541,7 @@ namespace ferram4
             int i = 0;
             int j = 0;
             int num = 0;
-            float[] Derivs = new float[27];
+            double[] Derivs = new double[27];
 
             MOI_stabDerivs.CopyTo(Derivs, 0);
 
@@ -548,14 +549,14 @@ namespace ferram4
             Derivs[18] = Derivs[18] / u0;
             Derivs[21] = Derivs[21] / u0 - 1;
 
-            float Lb = Derivs[16] / (1 - Derivs[26] * Derivs[26] / (Derivs[0] * Derivs[2]));
-            float Nb = Derivs[17] / (1 - Derivs[26] * Derivs[26] / (Derivs[0] * Derivs[2]));
+            double Lb = Derivs[16] / (1 - Derivs[26] * Derivs[26] / (Derivs[0] * Derivs[2]));
+            double Nb = Derivs[17] / (1 - Derivs[26] * Derivs[26] / (Derivs[0] * Derivs[2]));
 
-            float Lp = Derivs[19] / (1 - Derivs[26] * Derivs[26] / (Derivs[0] * Derivs[2]));
-            float Np = Derivs[20] / (1 - Derivs[26] * Derivs[26] / (Derivs[0] * Derivs[2]));
+            double Lp = Derivs[19] / (1 - Derivs[26] * Derivs[26] / (Derivs[0] * Derivs[2]));
+            double Np = Derivs[20] / (1 - Derivs[26] * Derivs[26] / (Derivs[0] * Derivs[2]));
 
-            float Lr = Derivs[22] / (1 - Derivs[26] * Derivs[26] / (Derivs[0] * Derivs[2]));
-            float Nr = Derivs[23] / (1 - Derivs[26] * Derivs[26] / (Derivs[0] * Derivs[2]));
+            double Lr = Derivs[22] / (1 - Derivs[26] * Derivs[26] / (Derivs[0] * Derivs[2]));
+            double Nr = Derivs[23] / (1 - Derivs[26] * Derivs[26] / (Derivs[0] * Derivs[2]));
 
             Derivs[16] = Lb + Derivs[26] / Derivs[0] * Nb;
             Derivs[17] = Nb + Derivs[26] / Derivs[2] * Lb;
@@ -567,7 +568,7 @@ namespace ferram4
             Derivs[23] = Nr + Derivs[26] / Derivs[2] * Lr;
 
 
-            foreach (float f in Derivs)
+            foreach (double f in Derivs)
             {
                 if (num < 15)
                 {
@@ -589,7 +590,7 @@ namespace ferram4
                 }
 
             }
-            A.Add(9.81f * Mathf.Cos(stable_AoA * Mathf.PI / 180f) / u0, 3, 0);
+            A.Add(9.81 * Math.Cos(stable_AoA * FARMathUtil.deg2rad) / u0, 3, 0);
             A.Add(1, 1, 3);
 
 
@@ -615,7 +616,7 @@ namespace ferram4
             transSolve.Solve();
             MonoBehaviour.print("Solved...");
             graph.Clear();
-            float[] yVal = transSolve.GetSolution(0);
+            double[] yVal = transSolve.GetSolution(0);
             MonoBehaviour.print("Got 0");
             for (int k = 0; k < yVal.Length; k++)
             {
@@ -666,7 +667,7 @@ namespace ferram4
             graph.Update();
         }
 
-        private void RunTransientSimLongitudinal(float endTime, float initDt, float[] InitCond)
+        private void RunTransientSimLongitudinal(double endTime, double initDt, double[] InitCond)
         {
             FARMatrix A = new FARMatrix(4, 4);
             FARMatrix B = new FARMatrix(1, 4);
@@ -678,7 +679,7 @@ namespace ferram4
             int i = 0;
             int j = 0;
             int num = 0;
-            foreach (float f in MOI_stabDerivs)
+            foreach (double f in MOI_stabDerivs)
             {
                 if (num < 3 || num >= 15)
                 {
@@ -730,7 +731,7 @@ namespace ferram4
             transSolve.Solve();
             MonoBehaviour.print("Solved...");
             graph.Clear();
-            float[] yVal = transSolve.GetSolution(0);
+            double[] yVal = transSolve.GetSolution(0);
             MonoBehaviour.print("Got 0");
             for (int k = 0; k < yVal.Length; k++)
                 if (yVal[k] > 50)
@@ -802,12 +803,12 @@ namespace ferram4
 
             stabDerivHelp = GUILayout.Toggle(stabDerivHelp, "?", ButtonStyle, GUILayout.Width(200));
 
-            float q;
-            float Mach;
+            double q;
+            double Mach;
 
-            float alpha;
-            float beta;
-            float phi;
+            double alpha;
+            double beta;
+            double phi;
 
             GUILayout.Label("Flight Condition:");
             GUILayout.BeginHorizontal();
@@ -839,10 +840,10 @@ namespace ferram4
                 rho_str = Regex.Replace(rho_str, @"[^\d+-.]", "");
                 Mach_str = Regex.Replace(Mach_str, @"[^\d+-.]", "");
 
-                float temp = Convert.ToSingle(atm_temp_str);
+                double temp = Convert.ToSingle(atm_temp_str);
                 Mach = Convert.ToSingle(Mach_str);
-                float sspeed = Mathf.Sqrt(FARAeroUtil.currentBodyAtm.x * Mathf.Max(0.1f, temp + 273.15f));
-                float vel = sspeed * Mach;
+                double sspeed = Math.Sqrt(FARAeroUtil.currentBodyAtm.x * Math.Max(0.1, temp + 273.15));
+                double vel = sspeed * Mach;
 
                 UpdateControlSettings();
 
@@ -964,7 +965,7 @@ namespace ferram4
             GUI.Box(tooltipRect, GUI.tooltip, toolTipStyle);
         }
 
-        private void StabilityLabel(String text1, float val, String text2, String tooltip, int width, int sign)
+        private void StabilityLabel(String text1, double val, String text2, String tooltip, int width, int sign)
         {
             Color color = Color.white;
             if (sign != 0)
@@ -990,34 +991,34 @@ namespace ferram4
             GUILayout.EndHorizontal();
         }
 
-        private float[] CalculateStabilityDerivs(float u0, float q, float M, float alpha, float beta, float phi)
+        private double[] CalculateStabilityDerivs(double u0, double q, double M, double alpha, double beta, double phi)
         {
-            float[] stabDerivs = new float[27];
-            Vector3 CoM = Vector3.zero;
-            float mass = 0;
-            float MAC = 0;
-            float b = 0;
-            float area = 0;
-            float Ix = 0;
-            float Iy = 0;
-            float Iz = 0;
-            float Ixy = 0;
-            float Iyz = 0;
-            float Ixz = 0;
+            double[] stabDerivs = new double[27];
+            Vector3d CoM = Vector3d.zero;
+            double mass = 0;
+            double MAC = 0;
+            double b = 0;
+            double area = 0;
+            double Ix = 0;
+            double Iy = 0;
+            double Iz = 0;
+            double Ixy = 0;
+            double Iyz = 0;
+            double Ixz = 0;
 
-            float nomCl = 0, nomCd = 0, nomCm = 0, nomCy = 0, nomCn = 0, nomC_roll = 0;
+            double nomCl = 0, nomCd = 0, nomCm = 0, nomCy = 0, nomCn = 0, nomC_roll = 0;
             
 
-            GetClCdCmSteady(Vector3.zero, alpha, beta, phi, 0, 0, 0, M, 0, out nomCl, out nomCd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true);
+            GetClCdCmSteady(Vector3d.zero, alpha, beta, phi, 0, 0, 0, M, 0, out nomCl, out nomCd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true);
 
             foreach (Part p in FARAeroUtil.CurEditorParts)
             {
                 if (FARAeroUtil.IsNonphysical(p))
                     continue;
-                float partMass = p.mass;
+                double partMass = p.mass;
                 if (vehicleFueled && p.Resources.Count > 0)
                     partMass += p.GetResourceMass();
-                CoM += partMass * p.transform.TransformPoint(p.CoMOffset);
+                CoM += partMass * (Vector3d)p.transform.TransformPoint(p.CoMOffset);
                 mass += partMass;
                 FARWingAerodynamicModel w = p.GetComponent<FARWingAerodynamicModel>();
                 if (w != null)
@@ -1050,7 +1051,7 @@ namespace ferram4
                     continue;
                 //This section handles the parallel axis theorem
                 Vector3 relPos = p.transform.TransformPoint(p.CoMOffset) - CoM;
-                float x2, y2, z2, x, y, z;
+                double x2, y2, z2, x, y, z;
                 x2 = relPos.z * relPos.z;
                 y2 = relPos.x * relPos.x;
                 z2 = relPos.y * relPos.y;
@@ -1058,7 +1059,7 @@ namespace ferram4
                 y = relPos.x;
                 z = relPos.y;
 
-                float partMass = p.mass;
+                double partMass = p.mass;
                 if (vehicleFueled && p.Resources.Count > 0)
                     partMass += p.GetResourceMass();
 
@@ -1120,44 +1121,44 @@ namespace ferram4
 
 
 
-            float neededCl = mass * 9.81f / (q * area);
+            double neededCl = mass * 9.81 / (q * area);
 
             //Longitudinal Mess
 
-            float pertCl, pertCd, pertCm, pertCy, pertCn, pertC_roll;
+            double pertCl, pertCd, pertCm, pertCy, pertCn, pertC_roll;
             int iter = 7;
             for(;;)
             {
                 GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M, 0, out nomCl, out nomCd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true);
 
 
-                GetClCdCmSteady(CoM, alpha + 0.1f, beta, phi, 0, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true);
-                pertCl = (pertCl - nomCl) / 0.1f * 180 / Mathf.PI;                   //vert vel derivs
+                GetClCdCmSteady(CoM, alpha + 0.1, beta, phi, 0, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true);
+                pertCl = (pertCl - nomCl) / 0.1 * FARMathUtil.rad2deg;                   //vert vel derivs
 
 
-                if (--iter <= 0 || Mathf.Abs((nomCl - neededCl) / neededCl) < 0.1f)
+                if (--iter <= 0 || Math.Abs((nomCl - neededCl) / neededCl) < 0.1)
                     break;
 
-                float delta = (neededCl - nomCl) / pertCl * 180 / Mathf.PI;
-                delta = Mathf.Sign(delta) * Mathf.Min(0.4f * iter * iter, Mathf.Abs(delta));
-                alpha = Mathf.Max(-5f, Mathf.Min(25f, alpha + delta));
+                double delta = (neededCl - nomCl) / pertCl * FARMathUtil.rad2deg;
+                delta = Math.Sign(delta) * Math.Min(0.4f * iter * iter, Math.Abs(delta));
+                alpha = Math.Max(-5f, Math.Min(25f, alpha + delta));
             };
 
             //alpha_str = (alpha * Mathf.PI / 180).ToString();
 
-            GetClCdCmSteady(CoM, alpha + 0.1f, beta, phi, 0, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true, true);
+            GetClCdCmSteady(CoM, alpha + 0.1, beta, phi, 0, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true, true);
 
             stable_Cl = neededCl;
             stable_AoA = alpha;
             stable_AoA_state = "";
-            if (Mathf.Abs((nomCl - neededCl) / neededCl) > 0.1f)
+            if (Math.Abs((nomCl - neededCl) / neededCl) > 0.1)
                 stable_AoA_state = ((nomCl > neededCl) ? "<" : ">");
 
             MonoBehaviour.print("Cl needed: " + neededCl + ", AoA: " + alpha + ", Cl: " + nomCl);
 
-            pertCl = (pertCl - nomCl) / 0.1f * 180 / Mathf.PI;                   //vert vel derivs
-            pertCd = (pertCd - nomCd) / 0.1f * 180 / Mathf.PI;
-            pertCm = (pertCm - nomCm) / 0.1f * 180 / Mathf.PI;
+            pertCl = (pertCl - nomCl) / 0.1 * FARMathUtil.rad2deg;                   //vert vel derivs
+            pertCd = (pertCd - nomCd) / 0.1 * FARMathUtil.rad2deg;
+            pertCm = (pertCm - nomCm) / 0.1 * FARMathUtil.rad2deg;
 
             pertCl += nomCd;
             pertCd -= nomCl;
@@ -1170,11 +1171,11 @@ namespace ferram4
             stabDerivs[4] = pertCd;
             stabDerivs[5] = pertCm;
 
-            GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M + 0.01f, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true);
+            GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M + 0.01, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true);
 
-            pertCl = (pertCl - nomCl) / 0.01f * M;                   //fwd vel derivs
-            pertCd = (pertCd - nomCd) / 0.01f * M;
-            pertCm = (pertCm - nomCm) / 0.01f * M;
+            pertCl = (pertCl - nomCl) / 0.01 * M;                   //fwd vel derivs
+            pertCd = (pertCd - nomCd) / 0.01 * M;
+            pertCm = (pertCm - nomCm) / 0.01 * M;
 
             pertCl += 2 * nomCl;
             pertCd += 2 * nomCd;
@@ -1188,10 +1189,10 @@ namespace ferram4
             stabDerivs[8] = pertCm;
 
             GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true);
-            GetClCdCmSteady(CoM, alpha, beta, phi, -0.05f, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, false);
-            pertCl = (pertCl - nomCl) / 0.05f;                   //pitch rate derivs
-            pertCd = (pertCd - nomCd) / 0.05f;
-            pertCm = (pertCm - nomCm) / 0.05f;
+            GetClCdCmSteady(CoM, alpha, beta, phi, -0.05, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, false);
+            pertCl = (pertCl - nomCl) / 0.05;                   //pitch rate derivs
+            pertCd = (pertCd - nomCd) / 0.05;
+            pertCm = (pertCm - nomCm) / 0.05;
 
             pertCl *= q * area * MAC / (2 * u0 * mass);
             pertCd *= q * area * MAC / (2 * u0 * mass);
@@ -1201,10 +1202,10 @@ namespace ferram4
             stabDerivs[10] = pertCd;
             stabDerivs[11] = pertCm;
 
-            GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M, 0.1f, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true);
-            pertCl = (pertCl - nomCl) / 0.1f;                   //elevator derivs
-            pertCd = (pertCd - nomCd) / 0.1f;
-            pertCm = (pertCm - nomCm) / 0.1f;
+            GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M, 0.1, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true);
+            pertCl = (pertCl - nomCl) / 0.1;                   //elevator derivs
+            pertCd = (pertCd - nomCd) / 0.1;
+            pertCm = (pertCm - nomCm) / 0.1;
 
             pertCl *= q * area / mass;
             pertCd *= q * area / mass;
@@ -1216,10 +1217,10 @@ namespace ferram4
 
             //Lateral Mess
 
-            GetClCdCmSteady(CoM, alpha, beta + 0.1f, phi, 0, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true);
-            pertCy = (pertCy - nomCy) / 0.1f * 180 / Mathf.PI;                   //sideslip angle derivs
-            pertCn = (pertCn - nomCn) / 0.1f * 180 / Mathf.PI;
-            pertC_roll = (pertC_roll - nomC_roll) / 0.1f * 180 / Mathf.PI;
+            GetClCdCmSteady(CoM, alpha, beta + 0.1, phi, 0, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true);
+            pertCy = (pertCy - nomCy) / 0.1 * FARMathUtil.rad2deg;                   //sideslip angle derivs
+            pertCn = (pertCn - nomCn) / 0.1 * FARMathUtil.rad2deg;
+            pertC_roll = (pertC_roll - nomC_roll) / 0.1 * FARMathUtil.rad2deg;
 
             pertCy *= q * area / mass;
             pertCn *= q * area * b / Iz;
@@ -1231,10 +1232,10 @@ namespace ferram4
 
 
             GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true);
-            GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0.05f, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, false);
-            pertCy = (pertCy - nomCy) / 0.05f;                   //roll rate derivs
-            pertCn = (pertCn - nomCn) / 0.05f;
-            pertC_roll = (pertC_roll - nomC_roll) / 0.05f;
+            GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0.05, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, false);
+            pertCy = (pertCy - nomCy) / 0.05;                   //roll rate derivs
+            pertCn = (pertCn - nomCn) / 0.05;
+            pertC_roll = (pertC_roll - nomC_roll) / 0.05;
 
             pertCy *= q * area * b / (2 * mass * u0);
             pertCn *= q * area * b * b / (2 * Iz * u0);
@@ -1352,17 +1353,17 @@ namespace ferram4
             {
                 lowerBound_str = Regex.Replace(lowerBound_str, @"[^\d+-.]", "");
                 lowerBound = Convert.ToSingle(lowerBound_str);
-                lowerBound = Mathf.Clamp(lowerBound, -90, 90);
+                lowerBound = FARMathUtil.Clamp(lowerBound, -90, 90);
                 lowerBound_str = lowerBound.ToString();
                 upperBound_str = Regex.Replace(upperBound_str, @"[^\d+-.]", "");
                 upperBound = Convert.ToSingle(upperBound_str);
-                upperBound = Mathf.Clamp(upperBound, lowerBound, 90);
+                upperBound = FARMathUtil.Clamp(upperBound, lowerBound, 90);
                 upperBound_str = upperBound.ToString();
                 numPoints_str = Regex.Replace(numPoints_str, @"[^\d+-.]", "");
                 numPoints = Convert.ToUInt32(numPoints_str);
-                float pitch = UpdateControlSettings();
+                double pitch = UpdateControlSettings();
                 extra_str = Regex.Replace(extra_str, @"[^\d+-.]", "");
-                float M = Mathf.Abs(Convert.ToSingle(extra_str));
+                double M = Math.Abs(Convert.ToDouble(extra_str));
                 AngleOfAttackSweep(M, pitch);
             }
 
@@ -1370,17 +1371,17 @@ namespace ferram4
             {
                 lowerBound_str = Regex.Replace(lowerBound_str, @"[^\d+-.]", "");
                 lowerBound = Convert.ToSingle(lowerBound_str);
-                lowerBound = Mathf.Clamp(lowerBound, 0, Mathf.Infinity);
+                lowerBound = FARMathUtil.Clamp(lowerBound, 0, double.PositiveInfinity);
                 lowerBound_str = lowerBound.ToString();
                 upperBound_str = Regex.Replace(upperBound_str, @"[^\d+-.]", "");
                 upperBound = Convert.ToSingle(upperBound_str);
-                upperBound = Mathf.Clamp(upperBound, lowerBound, Mathf.Infinity);
+                upperBound = FARMathUtil.Clamp(upperBound, lowerBound, double.PositiveInfinity);
                 upperBound_str = upperBound.ToString();
                 numPoints_str = Regex.Replace(numPoints_str, @"[^\d+-.]", "");
                 numPoints = Convert.ToUInt32(numPoints_str);
-                float pitch = UpdateControlSettings();
+                double pitch = UpdateControlSettings();
                 extra_str = Regex.Replace(extra_str, @"[^\d+-.]", "");
-                float AoA = Mathf.Abs(Convert.ToSingle(extra_str));
+                double AoA = Math.Abs(Convert.ToDouble(extra_str));
                 MachNumberSweep(AoA, pitch);
             }
             GUILayout.EndHorizontal();
@@ -1469,10 +1470,10 @@ namespace ferram4
         public static int CurrentEditorFlapSetting = 0;
         public static bool CurrentEditorSpoilerSetting = false;
 
-        private float UpdateControlSettings()
+        private double UpdateControlSettings()
         {
-            float pitch = Convert.ToSingle(pitch_str);
-            pitch = Mathf.Clamp(pitch, -1, 1);
+            double pitch = Convert.ToDouble(pitch_str);
+            pitch = FARMathUtil.Clamp(pitch, -1, 1);
             pitch_str = pitch.ToString();
             CurrentEditorFlapSetting = flap_setting;
             CurrentEditorSpoilerSetting = spoilersDeployed;
@@ -1481,10 +1482,10 @@ namespace ferram4
 
         private void AerodynamicTinting(bool lift, bool drag)
         {
-            float[] Cl = new float[FARAeroUtil.CurEditorParts.Count];
-            float[] Cd = new float[FARAeroUtil.CurEditorParts.Count];
+            double[] Cl = new double[FARAeroUtil.CurEditorParts.Count];
+            double[] Cd = new double[FARAeroUtil.CurEditorParts.Count];
             Vector3 velocity = Vector3.forward - 0.1f * Vector3.up;
-            float M = 0.2f;
+            double M = 0.2f;
             int i = 0;
             foreach (Part p in FARAeroUtil.CurEditorParts)
             {
@@ -1511,14 +1512,14 @@ namespace ferram4
             {
                 if (lift || drag)
                 {
-                    float red = 0;
-                    float green = 0;
+                    double red = 0;
+                    double green = 0;
                     if (drag)
-                        red += Mathf.Clamp01(Cd[i] * 2);
+                        red += FARMathUtil.Clamp(Cd[i] * 2, 0, 1);
                     if (lift)
-                        green += Mathf.Clamp01(Cl[i] * 2);
+                        green += FARMathUtil.Clamp(Cl[i] * 2, 0, 1);
                     p.SetHighlightType(Part.HighlightType.AlwaysOn);
-                    p.SetHighlightColor(new Color(red, green, 0));
+                    p.SetHighlightColor(new Color((float)red, (float)green, 0));
                     p.SetHighlight(true);
                 }
                 else
@@ -1533,42 +1534,42 @@ namespace ferram4
         }
 
 
-        private void MachNumberSweep(float AoA, float pitch)
+        private void MachNumberSweep(double AoA, double pitch)
         {
             FARAeroUtil.UpdateCurrentActiveBody(index);
 
-            float Cl = 0;
-            float Cd = 0;
-            float Cm = 0;
-            float mass = 0;
-            Vector3 CoM = Vector3.zero;
+            double Cl = 0;
+            double Cd = 0;
+            double Cm = 0;
+            double mass = 0;
+            Vector3d CoM = Vector3d.zero;
 
             foreach (Part p in FARAeroUtil.CurEditorParts)
             {
                 if (FARAeroUtil.IsNonphysical(p))
                     continue;
 
-                float partMass = p.mass;
+                double partMass = p.mass;
                 if (vehicleFueled && p.Resources.Count > 0)
                     partMass += p.GetResourceMass();
-                CoM += partMass * p.transform.TransformPoint(p.CoMOffset);
+                CoM += partMass * (Vector3d)p.transform.TransformPoint(p.CoMOffset);
                 mass += partMass;
             }
 
             CoM /= mass;
 
-            float[] ClValues = new float[(int)numPoints];
-            float[] CdValues = new float[(int)numPoints];
-            float[] CmValues = new float[(int)numPoints];
-            float[] LDValues = new float[(int)numPoints];
-            float[] AlphaValues = new float[(int)numPoints];
+            double[] ClValues = new double[(int)numPoints];
+            double[] CdValues = new double[(int)numPoints];
+            double[] CmValues = new double[(int)numPoints];
+            double[] LDValues = new double[(int)numPoints];
+            double[] AlphaValues = new double[(int)numPoints];
 
             for (int i = 0; i < numPoints; i++)
             {
 
-                float M = i / (float)numPoints * (upperBound - lowerBound) + lowerBound;
+                double M = i / (double)numPoints * (upperBound - lowerBound) + lowerBound;
 
-                float cy, cn, cr;
+                double cy, cn, cr;
 
                 GetClCdCmSteady(CoM, AoA, 0, 0, 0, 0, 0, M, pitch, out Cl, out Cd, out Cm, out cy, out cn, out cr, true, i == 0);
 
@@ -1583,16 +1584,16 @@ namespace ferram4
             string horizontalLabel = "Mach Number";
             UpdateGraph(AlphaValues, ClValues, CdValues, CmValues, LDValues, horizontalLabel);
         }
-        
-        private void AngleOfAttackSweep(float M, float pitch)
+
+        private void AngleOfAttackSweep(double M, double pitch)
         {
             FARAeroUtil.UpdateCurrentActiveBody(index);
 
-            float Cl = 0;
-            float Cd = 0;
-            float Cm = 0;
-            float mass = 0;
-            Vector3 CoM = Vector3.zero;
+            double Cl = 0;
+            double Cd = 0;
+            double Cm = 0;
+            double mass = 0;
+            Vector3d CoM = Vector3.zero;
 
 
             foreach (Part p in FARAeroUtil.CurEditorParts)
@@ -1600,29 +1601,29 @@ namespace ferram4
                 if (FARAeroUtil.IsNonphysical(p))
                     continue;
 
-                float partMass = p.mass;
+                double partMass = p.mass;
                 if (vehicleFueled && p.Resources.Count > 0)
                     partMass += p.GetResourceMass();
-                CoM += partMass * p.transform.TransformPoint(p.CoMOffset);
+                CoM += partMass * (Vector3d)p.transform.TransformPoint(p.CoMOffset);
                 mass += partMass;
             }
             CoM /= mass;
 
-            float[] ClValues = new float[2*(int)numPoints];
-            float[] CdValues = new float[2*(int)numPoints];
-            float[] CmValues = new float[2*(int)numPoints];
-            float[] LDValues = new float[2*(int)numPoints];
-            float[] AlphaValues = new float[2*(int)numPoints];
+            double[] ClValues = new double[2 * (int)numPoints];
+            double[] CdValues = new double[2 * (int)numPoints];
+            double[] CmValues = new double[2 * (int)numPoints];
+            double[] LDValues = new double[2 * (int)numPoints];
+            double[] AlphaValues = new double[2 * (int)numPoints];
 
             for (int i = 0; i < 2 * numPoints; i++)
             {
-                float angle = 0;
+                double angle = 0;
                 if(i < numPoints)
-                    angle = i / (float)numPoints * (upperBound - lowerBound) + lowerBound;
+                    angle = i / (double)numPoints * (upperBound - lowerBound) + lowerBound;
                 else
-                    angle = (i - (float)numPoints) / (float)numPoints * (lowerBound - upperBound) + upperBound;
+                    angle = (i - (double)numPoints) / (double)numPoints * (lowerBound - upperBound) + upperBound;
 
-                float cy, cn, cr;
+                double cy, cn, cr;
 
                 GetClCdCmSteady(CoM, angle, 0, 0, 0, 0, 0, M, pitch, out Cl, out Cd, out Cm, out cy, out cn, out cr, true, i == 0);
                 
@@ -1638,7 +1639,7 @@ namespace ferram4
             UpdateGraph(AlphaValues, ClValues, CdValues, CmValues, LDValues, horizontalLabel);
         }
 
-        private void GetClCdCmSteady(Vector3 CoM, float alpha, float beta, float phi, float alphaDot, float betaDot, float phiDot, float M, float pitch, out float Cl, out float Cd, out float Cm, out float Cy, out float Cn, out float C_roll, bool clear, bool reset_stall = false)
+        private void GetClCdCmSteady(Vector3d CoM, double alpha, double beta, double phi, double alphaDot, double betaDot, double phiDot, double M, double pitch, out double Cl, out double Cd, out double Cm, out double Cy, out double Cn, out double C_roll, bool clear, bool reset_stall = false)
         {
             Cl = 0;
             Cd = 0;
@@ -1646,17 +1647,17 @@ namespace ferram4
             Cy = 0;
             Cn = 0;
             C_roll = 0;
-            float area = 0;
-            float MAC = 0;
-            float b_2 = 0;
+            double area = 0;
+            double MAC = 0;
+            double b_2 = 0;
 
-            alpha *= Mathf.Deg2Rad;
-            beta *= Mathf.Deg2Rad;
-            phi *= Mathf.Deg2Rad;
+            alpha *= FARMathUtil.deg2rad;
+            beta *= FARMathUtil.deg2rad;
+            phi *= FARMathUtil.deg2rad;
 
-            Vector3 forward = Vector3.forward;
-            Vector3 up = Vector3.up;
-            Vector3 right = Vector3.right;
+            Vector3d forward = Vector3.forward;
+            Vector3d up = Vector3.up;
+            Vector3d right = Vector3.right;
 
             if (EditorLogic.fetch.editorType == EditorLogic.EditorMode.VAB)
             {
@@ -1664,16 +1665,16 @@ namespace ferram4
                 up = -Vector3.forward;
             }
 
-            Vector3 AngVel = (phiDot - Mathf.Sin(alpha) * betaDot) * forward + (Mathf.Cos(phi) * alphaDot + Mathf.Cos(alpha) * Mathf.Sin(phi) * betaDot) * right + (Mathf.Sin(phi) * alphaDot - Mathf.Cos(alpha) * Mathf.Cos(phi) * betaDot) * up;
+            Vector3d AngVel = (phiDot - Math.Sin(alpha) * betaDot) * forward + (Math.Cos(phi) * alphaDot + Math.Cos(alpha) * Math.Sin(phi) * betaDot) * right + (Math.Sin(phi) * alphaDot - Math.Cos(alpha) * Math.Cos(phi) * betaDot) * up;
 
 
-            Vector3 velocity = forward * Mathf.Cos(alpha) * Mathf.Cos(beta) + right * (Mathf.Sin(phi) * Mathf.Sin(alpha) * Mathf.Cos(beta) - Mathf.Cos(phi) * Mathf.Sin(beta)) - up * (Mathf.Cos(phi) * Mathf.Sin(alpha) * Mathf.Cos(beta) - Mathf.Cos(phi) * Mathf.Sin(beta));
+            Vector3d velocity = forward * Math.Cos(alpha) * Math.Cos(beta) + right * (Math.Sin(phi) * Math.Sin(alpha) * Math.Cos(beta) - Math.Cos(phi) * Math.Sin(beta)) - up * (Math.Cos(phi) * Math.Sin(alpha) * Math.Cos(beta) - Math.Cos(phi) * Math.Sin(beta));
 
             velocity.Normalize();
 
-            Vector3 liftVector = -forward * Mathf.Sin(alpha) + right * Mathf.Sin(phi) * Mathf.Cos(alpha) - up * Mathf.Cos(phi) * Mathf.Cos(alpha);
+            Vector3d liftVector = -forward * Math.Sin(alpha) + right * Math.Sin(phi) * Math.Cos(alpha) - up * Math.Cos(phi) * Math.Cos(alpha);
 
-            Vector3 sideways = Vector3.Cross(velocity, liftVector);
+            Vector3d sideways = Vector3.Cross(velocity, liftVector);
 
             foreach (Part p in FARAeroUtil.CurEditorParts)
             {
@@ -1696,7 +1697,7 @@ namespace ferram4
                         if(clear)
                             w.EditorClClear(reset_stall);
                         if (w is FARControllableSurface)
-                            (w as FARControllableSurface).SetControlStateEditor(CoM, pitch, 0, 0, flap_setting, spoilersDeployed);
+                            (w as FARControllableSurface).SetControlStateEditor(CoM, (float)pitch, 0, 0, flap_setting, spoilersDeployed);
                     }
             }
             for (int j = 0; j < 3; j++)
@@ -1730,20 +1731,20 @@ namespace ferram4
                         if (w.isShielded)
                             break;
 
-                        Vector3 relPos = w.GetAerodynamicCenter() - CoM;
+                        Vector3d relPos = w.GetAerodynamicCenter() - CoM;
 
-                        Vector3 vel = velocity + Vector3.Cross(AngVel, relPos);
+                        Vector3d vel = velocity + Vector3d.Cross(AngVel, relPos);
 
                         w.ComputeClCdEditor(vel, M);
 
-                        float tmpCl = w.GetCl() * w.S;
-                        Cl += tmpCl * -Vector3.Dot(w.GetLiftDirection(), liftVector);
-                        Cy += tmpCl * -Vector3.Dot(w.GetLiftDirection(), sideways);
-                        float tmpCd = w.GetCd() * w.S;
+                        double tmpCl = w.GetCl() * w.S;
+                        Cl += tmpCl * -Vector3d.Dot(w.GetLiftDirection(), liftVector);
+                        Cy += tmpCl * -Vector3d.Dot(w.GetLiftDirection(), sideways);
+                        double tmpCd = w.GetCd() * w.S;
                         Cd += tmpCd;
-                        Cm += tmpCl * Vector3.Dot((relPos), velocity) * -Vector3.Dot(w.GetLiftDirection(), liftVector) + tmpCd * -Vector3.Dot((relPos), liftVector);
-                        Cn += tmpCd * Vector3.Dot((relPos), sideways) + tmpCl * Vector3.Dot((relPos), velocity) * -Vector3.Dot(w.GetLiftDirection(), sideways);
-                        C_roll += tmpCl * Vector3.Dot((relPos), sideways) * -Vector3.Dot(w.GetLiftDirection(), liftVector);
+                        Cm += tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(w.GetLiftDirection(), liftVector) + tmpCd * -Vector3d.Dot((relPos), liftVector);
+                        Cn += tmpCd * Vector3d.Dot((relPos), sideways) + tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(w.GetLiftDirection(), sideways);
+                        C_roll += tmpCl * Vector3d.Dot((relPos), sideways) * -Vector3d.Dot(w.GetLiftDirection(), liftVector);
                         area += w.S;
                         MAC += w.GetMAC() * w.S;
                         b_2 += w.Getb_2() * w.S;
@@ -1756,33 +1757,33 @@ namespace ferram4
                         if (d.isShielded)
                             break; 
                         
-                        Vector3 relPos = p.transform.position - CoM;
+                        Vector3d relPos = p.transform.position - CoM;
 
-                        Vector3 vel = velocity + Vector3.Cross(AngVel, relPos);
+                        Vector3d vel = velocity + Vector3d.Cross(AngVel, relPos);
 
-                        float tmpCd = d.GetDragEditor(vel, M);
+                        double tmpCd = d.GetDragEditor(vel, M);
                         Cd += tmpCd;
-                        float tmpCl = d.GetLiftEditor();
-                        Cl += tmpCl * -Vector3.Dot(d.GetLiftDirection(), liftVector);
-                        Cy += tmpCl * -Vector3.Dot(d.GetLiftDirection(), sideways);
+                        double tmpCl = d.GetLiftEditor();
+                        Cl += tmpCl * -Vector3d.Dot(d.GetLiftDirection(), liftVector);
+                        Cy += tmpCl * -Vector3d.Dot(d.GetLiftDirection(), sideways);
                         relPos = d.GetCoDEditor() - CoM;
-                        Cm += d.GetMomentEditor() + tmpCl * Vector3.Dot((relPos), velocity) * -Vector3.Dot(d.GetLiftDirection(), liftVector) + tmpCd * -Vector3.Dot((relPos), liftVector);
-                        Cn += tmpCd * Vector3.Dot((relPos), sideways) + tmpCl * Vector3.Dot((relPos), velocity) * -Vector3.Dot(d.GetLiftDirection(), sideways);
-                        C_roll += tmpCl * Vector3.Dot((relPos), sideways) * -Vector3.Dot(d.GetLiftDirection(), liftVector);
+                        Cm += d.GetMomentEditor() + tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(d.GetLiftDirection(), liftVector) + tmpCd * -Vector3d.Dot((relPos), liftVector);
+                        Cn += tmpCd * Vector3d.Dot((relPos), sideways) + tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(d.GetLiftDirection(), sideways);
+                        C_roll += tmpCl * Vector3d.Dot((relPos), sideways) * -Vector3d.Dot(d.GetLiftDirection(), liftVector);
                         break;
                     }
                 }
 
                 Vector3 part_pos = p.transform.TransformPoint(p.CoMOffset) - CoM;
-                float partMass = p.mass;
+                double partMass = p.mass;
                 if (vehicleFueled && p.Resources.Count > 0)
                     partMass += p.GetResourceMass();
 
                 // All FAR forces are divided by 1000 before applying, so this needs to be multiplied
-                var stock_drag = partMass * p.maximum_drag * FlightGlobals.DragMultiplier * 1000f;
+                double stock_drag = partMass * p.maximum_drag * FlightGlobals.DragMultiplier * 1000;
                 Cd += stock_drag;
-                Cm += stock_drag * -Vector3.Dot(part_pos, liftVector);
-                Cn += stock_drag * Vector3.Dot(part_pos, sideways);
+                Cm += stock_drag * -Vector3d.Dot(part_pos, liftVector);
+                Cn += stock_drag * Vector3d.Dot(part_pos, sideways);
             }
             if (area == 0)
             {
@@ -1791,7 +1792,7 @@ namespace ferram4
                 MAC = 1;
             }
 
-            float recipArea = 1 / area;
+            double recipArea = 1 / area;
 
             MAC *= recipArea;
             b_2 *= recipArea;
@@ -1814,19 +1815,19 @@ namespace ferram4
 
         }
 
-        private void UpdateGraph(float[] AlphaValues, float[] ClValues, float[] CdValues, float[] CmValues, float[] LDValues, string horizontalLabel)
+        private void UpdateGraph(double[] AlphaValues, double[] ClValues, double[] CdValues, double[] CmValues, double[] LDValues, string horizontalLabel)
         {
             // To allow switching between two graph setups to observe differences,
             // use both the current and the previous shown graph to estimate scale
-            float newMinBounds = Mathf.Min(Mathf.Min(LDValues) / 10, Mathf.Min(ClValues), Mathf.Min(CdValues), Mathf.Min(CmValues));
-            float newMaxBounds = Mathf.Max(Mathf.Max(LDValues) / 10, Mathf.Max(ClValues), Mathf.Max(CdValues), Mathf.Max(CmValues));
-            float minBounds = Mathf.Min(lastMinBounds, newMinBounds);
-            float maxBounds = Mathf.Max(lastMaxBounds, newMaxBounds);
+            double newMinBounds = Math.Min(Math.Min(LDValues.Min() / 10, ClValues.Min()), Math.Min(CdValues.Min(), CmValues.Min()));
+            double newMaxBounds = Math.Max(Math.Max(LDValues.Max() / 10, ClValues.Max()), Math.Max(CdValues.Max(), CmValues.Max()));
+            double minBounds = Math.Min(lastMinBounds, newMinBounds);
+            double maxBounds = Math.Max(lastMaxBounds, newMaxBounds);
             lastMaxBounds = newMaxBounds;
             lastMinBounds = newMinBounds;
 
-            float realMin = Mathf.Min(Mathf.FloorToInt(minBounds), -0.25f);
-            float realMax = Mathf.Max(Mathf.CeilToInt(maxBounds), 0.25f);
+            double realMin = Math.Min(Math.Floor(minBounds), -0.25);
+            double realMax = Math.Max(Math.Ceiling(maxBounds), 0.25);
 
             graph.Clear();
             graph.SetBoundaries(lowerBound, upperBound, realMin, realMax);
@@ -1843,7 +1844,7 @@ namespace ferram4
 
         }
 
-        private void AddZeroMarks(String key, float[] x, float[] y, float xsize, float ysize, Color color)
+        private void AddZeroMarks(String key, double[] x, double[] y, double xsize, double ysize, Color color)
         {
             int j = 0;
 
@@ -1858,9 +1859,9 @@ namespace ferram4
                 if (dx <= 2*dy)
                     continue;*/
 
-                float xv = x[i] + Mathf.Abs(y[i]) * (x[i+1]-x[i]) / Mathf.Abs(y[i+1]-y[i]);
-                float yv = ysize*3/275;
-                graph.AddLine(key+(j++), new float[] { xv, xv }, new float[] { -yv, yv }, color, 1, false);
+                double xv = x[i] + Math.Abs(y[i]) * (x[i + 1] - x[i]) / Math.Abs(y[i + 1] - y[i]);
+                double yv = ysize * 3 / 275;
+                graph.AddLine(key + (j++), new double[] { xv, xv }, new double[] { -yv, yv }, color, 1, false);
             }
         }
 

@@ -552,6 +552,7 @@ namespace ferram4
                 i++;
             } while (true);
 
+            FARAeroStress.LoadStressTemplates();
         }
 
         public static void SaveConfigs()

@@ -38,6 +38,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>bin\Release\Assembly-CSharp.dll</HintPath>
     </Reference>
+    <Reference Include="ferramGraph, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\ferramGraph\obj\Release\ferramGraph.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -55,6 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CompatibilityChecker.cs" />
+    <Compile Include="FARAeroStress.cs" />
     <Compile Include="FARAeroUtil.cs" />
     <Compile Include="FARBaseAerodynamics.cs" />
     <Compile Include="FARBasicDragModel.cs" />
@@ -72,12 +77,6 @@
     <Compile Include="FARRungeKutta.cs" />
     <Compile Include="FARWingAerodynamicModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ferramGraph\ferramGraph.csproj">
-      <Project>{0CCFED24-728C-432B-9FDC-30BEF1116EDE}</Project>
-      <Name>ferramGraph</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -42,9 +42,11 @@ using UnityEngine;
 
 namespace ferram4
 {
-    public static class FARMathUtil
+    public unsafe static class FARMathUtil
     {
         private static FloatCurve fastSin = null;
+        public static double deg2rad = Math.PI / 180;
+        public static double rad2deg = 180 / Math.PI;
 
         public static float FastSin(float angle)
         {
@@ -89,6 +91,20 @@ namespace ferram4
 
             return tan;
 
+        }
+
+        public static T Clamp<T>(this T val, T min, T max) where T : IComparable<T>
+        {
+            if (val.CompareTo(min) < 0) return min;
+            else if (val.CompareTo(max) > 0) return max;
+            else return val;
+        }
+
+        public static bool Approximately(double p, double q)
+        {
+            if (Math.Abs(p - q) < double.Epsilon)
+                return true;
+            return false;
         }
     }
 }

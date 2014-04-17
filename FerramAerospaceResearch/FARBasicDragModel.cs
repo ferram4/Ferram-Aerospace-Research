@@ -81,10 +81,10 @@ namespace ferram4
         public Vector3 localForwardVector = Vector3.forward;
 
         [KSPField(isPersistant = false)]
-        public float majorMinorAxisRatio = 1;
+        public double majorMinorAxisRatio = 1;
 
         [KSPField(isPersistant = false)]
-        public float taperCrossSectionAreaRatio = 0;
+        public double taperCrossSectionAreaRatio = 0;
 
         //        public FARBasicDragModel.DragModelType DragEnumType;
 
@@ -98,7 +98,7 @@ namespace ferram4
 
         public Vector3 CoDshift = Vector3.zero;
         public Vector3 globalCoDShift = Vector3.zero;
-        public float cosAngleCutoff = 0;
+        public double cosAngleCutoff = 0;
 
         //private float M = 0;
 
@@ -113,6 +113,9 @@ namespace ferram4
 
         [KSPField(isPersistant = false, guiActive = false, guiName = "Current drag", guiUnits = "kN", guiFormat = "F3")]
         protected float currentDrag = 0.0f;
+
+        public double YmaxForce = double.MaxValue;
+        public double XZmaxForce = double.MaxValue;
 
 
         private void AnimationSetup()
@@ -163,7 +166,7 @@ namespace ferram4
             }
         }
 
-        public void BuildNewDragModel(float newS, FloatCurve newCd, FloatCurve newClPotential, FloatCurve newClViscous, FloatCurve newCm, Vector3 newCoD, float newMajorMinorAxisRatio, float newCosCutoffAngle, float newTaperCrossSectionArea)
+        public void BuildNewDragModel(double newS, FloatCurve newCd, FloatCurve newClPotential, FloatCurve newClViscous, FloatCurve newCm, Vector3 newCoD, double newMajorMinorAxisRatio, double newCosCutoffAngle, double newTaperCrossSectionArea, double newYmaxForce, double newXZmaxForce)
         {
             S = newS;
             CdCurve = newCd;
@@ -174,7 +177,10 @@ namespace ferram4
             majorMinorAxisRatio = newMajorMinorAxisRatio;
             cosAngleCutoff = newCosCutoffAngle;
             taperCrossSectionAreaRatio = newTaperCrossSectionArea / S;
-            //nodeDragMult = new FARStringFloatDict();
+
+            YmaxForce = newYmaxForce;
+            XZmaxForce = newXZmaxForce;
+
             UpdateUpVector(true);
         }
 
@@ -234,14 +240,14 @@ namespace ferram4
                 DragEnumType = DragModelType.CYLINDER;
         }*/
 
-        public float GetCl()
+        public double GetCl()
         {
             Vector3 backward;
             if (start == StartState.Editor)
                 backward = -EditorLogic.startPod.transform.forward;
             else
                 backward = -vessel.transform.forward;
-            float ClUpwards;
+            double ClUpwards;
             ClUpwards = Vector3.Dot(liftDir, backward);
             ClUpwards *= Cl;
 
@@ -253,10 +259,10 @@ namespace ferram4
             return part_transform.TransformPoint(CoDshift) + globalCoDShift;
         }
 
-        protected override Vector3 PrecomputeCenterOfLift(Vector3 velocity, float MachNumber, FARCenterQuery center)
+        protected override Vector3d PrecomputeCenterOfLift(Vector3d velocity, double MachNumber, FARCenterQuery center)
         {
-            Vector3 force = RunDragCalculation(velocity, MachNumber, 1);
-            Vector3 pos = GetCoD();
+            Vector3d force = RunDragCalculation(velocity, MachNumber, 1);
+            Vector3d pos = GetCoD();
             center.AddForce(pos, force);
             return force;
         }
@@ -282,9 +288,9 @@ namespace ferram4
                     if (rb && (object)vessel != null && vessel.atmDensity > 0)
                     {
                         Vector3 velocity = rb.velocity + Krakensbane.GetFrameVelocityV3f();
-                        float soundspeed, v_scalar = velocity.magnitude;
+                        double soundspeed, v_scalar = velocity.magnitude;
 
-                        float rho = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
+                        double rho = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
                         if (rho > 0f && v_scalar > 0.1f)
                         {
                             Vector3 force = RunDragCalculation(velocity, v_scalar / soundspeed, rho);
@@ -301,7 +307,7 @@ namespace ferram4
             return part_transform.TransformPoint(CoDshift);
         }
 
-        public float GetDragEditor(Vector3 velocityVector, float MachNumber)
+        public double GetDragEditor(Vector3 velocityVector, double MachNumber)
         {
             AttachNodeCdAdjust();
             velocityEditor = velocityVector;
@@ -312,7 +318,7 @@ namespace ferram4
 
         }
 
-        public float GetLiftEditor()
+        public double GetLiftEditor()
         {
             // This stuff seems to be redundant due to dot products done in FAREditorGUI
             /*Vector3 vert = Vector3.Cross(velocityEditor, Vector3.right).normalized;
@@ -341,12 +347,12 @@ namespace ferram4
         }
         */
 
-        public float GetMomentEditor()
+        public double GetMomentEditor()
         {
             return Cm * S;
         }
 
-        public Vector3 RunDragCalculation(Vector3 velocity, float MachNumber, float rho)
+        public Vector3 RunDragCalculation(Vector3 velocity, double MachNumber, double rho)
         {
             if (isShielded)
             {
@@ -354,14 +360,14 @@ namespace ferram4
                 return Vector3.zero;
             }
 
-            float v_scalar = velocity.magnitude;
+            double v_scalar = velocity.magnitude;
 
-            if (v_scalar > 0.1f)         //Don't Bother if it's not moving or in space
+            if (v_scalar > 0.1)         //Don't Bother if it's not moving or in space
             {
                 CoDshift = Vector3.zero;
                 Cd = 0;
 
-                Vector3 velocity_normalized = velocity / v_scalar;
+                Vector3 velocity_normalized = velocity / (float)v_scalar;
                 //float Parallel = Vector3.Dot(upVector, velocity_normalized);
 
                 Vector3 upVector = part_transform.TransformDirection(localUpVector);
@@ -380,12 +386,12 @@ namespace ferram4
 
 
 
-                float qS = 0.5f * rho * v_scalar * v_scalar * S;   //dynamic pressure, q
-                Vector3 D = velocity_normalized * (-qS * Cd);                         //drag
-                Vector3 L = liftDir * (qS * Cl);
+                double qS = 0.5 * rho * v_scalar * v_scalar * S;   //dynamic pressure, q
+                Vector3 D = velocity_normalized * (float)(-qS * Cd);                         //drag
+                Vector3 L = liftDir * (float)(qS * Cl);
                 Vector3 force = (L + D) * 0.001f;
-                float force_scalar = currentDrag = force.magnitude;
-                Vector3 moment = perp * (qS * Cm * 0.001f);
+                double force_scalar = currentDrag = force.magnitude;
+                Vector3 moment = perp * (float)(qS * Cm * 0.001);
 
                 Rigidbody rb = part.Rigidbody;
 
@@ -395,7 +401,7 @@ namespace ferram4
                     {
                         Vector3 rot = Vector3.Exclude(velocity_normalized, rb.angularVelocity);  //This prevents aerodynamic damping a spinning object if its spin axis is aligned with the velocity axis
 
-                        rot *= (-0.00001f * qS);
+                        rot *= (float)(-0.00001 * qS);
 
                         // This seems redundant due to the moment addition below?
                         /*
@@ -410,9 +416,9 @@ namespace ferram4
 //                    CoDshift += CenterOfDrag;
                 }
 
-                globalCoDShift = Vector3.Cross(force, moment) / (force_scalar * force_scalar);
+                globalCoDShift = Vector3.Cross(force, moment) / (float)(force_scalar * force_scalar);
 
-                if (float.IsNaN(force_scalar) || float.IsNaN(moment.sqrMagnitude) || float.IsNaN(globalCoDShift.sqrMagnitude))
+                if (double.IsNaN(force_scalar) || float.IsNaN(moment.sqrMagnitude) || float.IsNaN(globalCoDShift.sqrMagnitude))
                 {
                     Debug.LogWarning("FAR Error: Aerodynamic force = " + force.magnitude + " Aerodynamic moment = " + moment.magnitude + " CoD Local = " + CoDshift.magnitude + " CoD Global = " + globalCoDShift.magnitude + " " + part.partInfo.title);
                     force = moment = CoDshift = globalCoDShift = Vector3.zero;
@@ -513,28 +519,28 @@ namespace ferram4
                 //Get area represented by current node
                 Vector2 bounds = FARGeoUtil.NodeBoundaries(part, attachNodeGroup, Vector3.zero, 0.05f, ThisPartModelTransforms);
 
-                float area = (bounds.x + bounds.y);
-                area *= 0.5f;
+                double area = (bounds.x + bounds.y);
+                area *= 0.5;
                 area *= area;
-                area *= Mathf.PI;       //Calculate area based on circular cross-section
+                area *= Math.PI;       //Calculate area based on circular cross-section
 
                 //Get area covered by other parts
                 Transform[] OtherTransforms = FARGeoUtil.ChooseNearbyModelTransforms(part, attachNodeGroup, bounds, ThisPartModelTransforms, AllVesselModelTransforms);
                 Vector2 otherBounds = FARGeoUtil.NodeBoundaries(part, attachNodeGroup, Vector3.zero, 0.05f, OtherTransforms);
 
-                float opposedArea = (otherBounds.x + otherBounds.y);
+                double opposedArea = (otherBounds.x + otherBounds.y);
                 opposedArea *= 0.5f;
                 opposedArea *= opposedArea;
-                opposedArea *= Mathf.PI;       //Calculate area based on circular cross-section
+                opposedArea *= Math.PI;       //Calculate area based on circular cross-section
 
                 //Debug.Log(part.partInfo.title + " Area: " + area + " Opposed area: " + opposedArea + " OtherTransforms: " + OtherTransforms.Length);
 
-                area = Mathf.Clamp(area - opposedArea, 0, Mathf.Infinity);
+                area = FARMathUtil.Clamp(area - opposedArea, 0, double.PositiveInfinity);
 
 
                 //Update attachNodeDragDict with new data
                 attachNodeData newAttachNodeData = new attachNodeData();
-                newAttachNodeData.areaValue = area / Mathf.Clamp(S, 0.01f, Mathf.Infinity);
+                newAttachNodeData.areaValue = area / FARMathUtil.Clamp(S, 0.01, double.PositiveInfinity);
 
                 Vector3 orientation = attachNodeGroup[0].position;
 
@@ -562,27 +568,27 @@ namespace ferram4
                 //Get area represented by current nodes
                 Vector2 bounds = FARGeoUtil.NodeBoundaries(part, attachNodeGroup, Vector3.zero, 0.05f, ThisPartModelTransforms);
 
-                float area = (bounds.x + bounds.y);
-                area *= 0.5f;
+                double area = (bounds.x + bounds.y);
+                area *= 0.5;
                 area *= area;
-                area *= Mathf.PI;       //Calculate area based on circular cross-section
+                area *= Math.PI;       //Calculate area based on circular cross-section
 
                 //Get area covered by other parts
                 Transform[] OtherTransforms = FARGeoUtil.ChooseNearbyModelTransforms(part, attachNodeGroup, bounds, ThisPartModelTransforms, AllVesselModelTransforms);
                 Vector2 otherBounds = FARGeoUtil.NodeBoundaries(part, attachNodeGroup, Vector3.zero, 0.05f, OtherTransforms);
 
-                float opposedArea = (otherBounds.x + otherBounds.y);
-                opposedArea *= 0.5f;
+                double opposedArea = (otherBounds.x + otherBounds.y);
+                opposedArea *= 0.5;
                 opposedArea *= opposedArea;
                 opposedArea *= Mathf.PI;       //Calculate area based on circular cross-section
 
                 //Debug.Log(part.partInfo.title + " Area: " + area + " Opposed area: " + opposedArea + " OtherTransforms: " + OtherTransforms.Length);
 
-                area = Mathf.Clamp(area - opposedArea, 0, Mathf.Infinity);
+                area = FARMathUtil.Clamp(area - opposedArea, 0, double.PositiveInfinity);
 
                 //Update attachNodeDragDict with new data
                 attachNodeData newAttachNodeData = new attachNodeData();
-                newAttachNodeData.areaValue = area / Mathf.Clamp(S, 0.01f, Mathf.Infinity);
+                newAttachNodeData.areaValue = area / FARMathUtil.Clamp(S, 0.01, double.PositiveInfinity);
 
                 Vector3 orientation = Vector3.zero;
                 foreach (AttachNode attach in attachNodeGroup)
@@ -612,7 +618,7 @@ namespace ferram4
                 //This represents a vertical stack of nodes, for different payload heights, multiple payload fairings, etc.  One node being used means that they are all used
             else if (attachGroupType == AttachGroupType.VERTICAL_NODES)
             {
-                float area = 0;
+                double area = 0;
                 AttachNode usedNode;
                 Vector2 bounds = Vector2.zero;
                 Vector3 orientation = Vector3.zero;
@@ -622,10 +628,10 @@ namespace ferram4
                     //Get area represented by current node
                     bounds = FARGeoUtil.NodeBoundaries(part, attach, Vector3.zero, 0.05f, ThisPartModelTransforms);
 
-                    float tmpArea = (bounds.x + bounds.y);
-                    tmpArea *= 0.5f;
+                    double tmpArea = (bounds.x + bounds.y);
+                    tmpArea *= 0.5;
                     tmpArea *= tmpArea;
-                    tmpArea *= Mathf.PI;       //Calculate area based on circular cross-section
+                    tmpArea *= Math.PI;       //Calculate area based on circular cross-section
 
                     if (tmpArea > area)
                     {
@@ -638,16 +644,16 @@ namespace ferram4
                 Transform[] OtherTransforms = FARGeoUtil.ChooseNearbyModelTransforms(part, attachNodeGroup, bounds, ThisPartModelTransforms, AllVesselModelTransforms);
                 Vector2 otherBounds = FARGeoUtil.NodeBoundaries(part, attachNodeGroup, Vector3.zero, 0.05f, OtherTransforms);
 
-                float opposedArea = (otherBounds.x + otherBounds.y);
-                opposedArea *= 0.5f;
+                double opposedArea = (otherBounds.x + otherBounds.y);
+                opposedArea *= 0.5;
                 opposedArea *= opposedArea;
-                opposedArea *= Mathf.PI;       //Calculate area based on circular cross-section
+                opposedArea *= Math.PI;       //Calculate area based on circular cross-section
 
-                area = Mathf.Clamp(area - opposedArea, 0, Mathf.Infinity);
+                area = FARMathUtil.Clamp(area - opposedArea, 0, double.PositiveInfinity);
 
                 //Update attachNodeDragDict with new data
                 attachNodeData newAttachNodeData = new attachNodeData();
-                newAttachNodeData.areaValue = area / Mathf.Clamp(S, 0.01f, Mathf.Infinity);
+                newAttachNodeData.areaValue = area / FARMathUtil.Clamp(S, 0.01, double.PositiveInfinity);
 
                 orientation /= attachNodeGroup.Count;
 
@@ -742,18 +748,18 @@ namespace ferram4
 
                 Vector2 bounds = FARGeoUtil.NodeBoundaries(part, position, position, Vector3.zero, 0.05f, ModelTransforms);
 
-                float area = (bounds.x + bounds.y);
-                area *= 0.5f;
+                double area = (bounds.x + bounds.y);
+                area *= 0.5;
                 area *= area;
-                area *= Mathf.PI;       //Calculate area based on circular cross-section
+                area *= Math.PI;       //Calculate area based on circular cross-section
 
 
-                area = Mathf.Clamp(area, 0, Mathf.Infinity);
+                area = FARMathUtil.Clamp(area, 0, double.PositiveInfinity);
 
 
                 //Update attachNodeDragDict with new data
                 attachNodeData newAttachNodeData = new attachNodeData();
-                newAttachNodeData.areaValue = area / Mathf.Clamp(S, 0.01f, Mathf.Infinity);
+                newAttachNodeData.areaValue = area / FARMathUtil.Clamp(S, 0.01, double.PositiveInfinity);
 
                 Vector3 orientation = position;
 
@@ -779,18 +785,18 @@ namespace ferram4
 
                 Vector2 bounds = FARGeoUtil.NodeBoundaries(part, position, position, Vector3.zero, 0.05f, ModelTransforms);
 
-                float area = (bounds.x + bounds.y);
-                area *= 0.5f;
+                double area = (bounds.x + bounds.y);
+                area *= 0.5;
                 area *= area;
-                area *= Mathf.PI;       //Calculate area based on circular cross-section
+                area *= Math.PI;       //Calculate area based on circular cross-section
 
 
-                area = Mathf.Clamp(area, 0, Mathf.Infinity);
+                area = FARMathUtil.Clamp(area, 0, double.PositiveInfinity);
 
 
                 //Update attachNodeDragDict with new data
                 attachNodeData newAttachNodeData = new attachNodeData();
-                newAttachNodeData.areaValue = area / Mathf.Clamp(S, 0.01f, Mathf.Infinity);
+                newAttachNodeData.areaValue = area / FARMathUtil.Clamp(S, 0.01, double.PositiveInfinity);
 
                 Vector3 orientation = position;
 
@@ -862,19 +868,19 @@ namespace ferram4
                     Ray ray = new Ray();
 
 
-                    Vector3 origToNode = transform.localToWorldMatrix.MultiplyVector(Attach.position + Attach.offset);
+                    Vector3d origToNode = transform.localToWorldMatrix.MultiplyVector(Attach.position + Attach.offset);
 
-                    float mag = (origToNode).magnitude;
+                    double mag = (origToNode).magnitude;
 
                     //print(part.partInfo.title + " Part Loc: " + part.transform.position + " Attach Loc: " + (origToNode + part.transform.position) + " Dist: " + mag);
 
                     ray.direction = origToNode;
                     ray.origin = transform.position;
 
-                    float attachSize = Mathf.Clamp(Attach.size, 0.5f, Mathf.Infinity);
+                    double attachSize = FARMathUtil.Clamp(Attach.size, 0.5, double.PositiveInfinity);
 
                     bool gotIt = false;
-                    RaycastHit[] hits = Physics.RaycastAll(ray, mag + attachSize, FARAeroUtil.RaycastMask);
+                    RaycastHit[] hits = Physics.RaycastAll(ray, (float)(mag + attachSize), FARAeroUtil.RaycastMask);
                     foreach (RaycastHit h in hits)
                     {
                         if (h.collider == part.collider)
@@ -895,14 +901,14 @@ namespace ferram4
                     if (!gotIt)
                     {
 //                            float exposedAttachArea = (Mathf.PI * Mathf.Pow(attachSize * FARAeroUtil.attachNodeRadiusFactor, 2) / Mathf.Clamp(S, 0.01f, Mathf.Infinity));
-                        float exposedAttachArea = attachSize * FARAeroUtil.attachNodeRadiusFactor;
+                        double exposedAttachArea = attachSize * FARAeroUtil.attachNodeRadiusFactor;
                         exposedAttachArea *= exposedAttachArea;
-                        exposedAttachArea *= Mathf.PI * FARAeroUtil.areaFactor;
-                        exposedAttachArea /= Mathf.Clamp(S, 0.01f, Mathf.Infinity);
+                        exposedAttachArea *= Math.PI * FARAeroUtil.areaFactor;
+                        exposedAttachArea /= FARMathUtil.Clamp(S, 0.01, double.PositiveInfinity);
 
                         attachNodeData newAttachNodeData = new attachNodeData();
                         newAttachNodeData.areaValue = exposedAttachArea;
-                        if (Vector3.Dot(origToNode, partUpVector) > 1)
+                        if (Vector3d.Dot(origToNode, partUpVector) > 1)
                             newAttachNodeData.pitchesAwayFromUpVec = true;
                         else
                             newAttachNodeData.pitchesAwayFromUpVec = false;
@@ -926,28 +932,29 @@ namespace ferram4
         /// <summary>
         /// These are just a few different attempts to figure drag for various blunt bodies
         /// </summary>
-        private void DragModel(Vector3 local_velocity, float M)
+        private void DragModel(Vector3d local_velocity, double M)
         {
             // Has the same x/y/z as the vertices in PartMaxBoundaries etc
             Vector3 model_velocity = to_model_rotation * local_velocity;
 
-            float viscousLift, potentialLift, newtonianLift;
+            double viscousLift, potentialLift, newtonianLift;
             viscousLift = potentialLift = newtonianLift = 0;
-            float CdAdd = 0;
+            double CdAdd = 0;
             //float AxialProportion = Vector3.Dot(localUpVector, local_velocity);
-            float AxialProportion = model_velocity.y;
-            float AxialProportion_2 = AxialProportion * AxialProportion;
-            float OneMinusAxial_2 = Mathf.Abs(1 - AxialProportion_2);
-            float M_2 = M * M;
-            float M_2_recip = 1 / M_2;
-            float maxPressureCoeff = FARAeroUtil.MaxPressureCoefficient.Evaluate(M);
-            float sepFlowCd = SeparatedFlowDrag(M, M_2, M_2_recip);
+            double AxialProportion = model_velocity.y;
+            float AxialProportion_flt = model_velocity.y;
+            double AxialProportion_2 = AxialProportion * AxialProportion;
+            double OneMinusAxial_2 = Math.Abs(1 - AxialProportion_2);
+            double M_2 = M * M;
+            double M_2_recip = 1 / M_2;
+            double maxPressureCoeff = FARAeroUtil.MaxPressureCoefficient.Evaluate((float)M);
+            double sepFlowCd = SeparatedFlowDrag(M, M_2, M_2_recip);
 
             //This handles elliptical and other non-circular cross sections
             //float crossflowParameter = Vector3.Dot(localForwardVector, Vector3.Exclude(localUpVector, local_velocity).normalized);
             //crossflowParameter *= crossflowParameter;
-            float crossflowParameter = model_velocity.z * model_velocity.z;
-            float crossflow = model_velocity.x * model_velocity.x + crossflowParameter;
+            double crossflowParameter = model_velocity.z * model_velocity.z;
+            double crossflow = model_velocity.x * model_velocity.x + crossflowParameter;
             if (crossflow != 0)
                 crossflowParameter /= crossflow;
 
@@ -957,43 +964,43 @@ namespace ferram4
                 crossflowParameter *= 50 * OneMinusAxial_2;
             }
 
-            Cd += CdCurve.Evaluate(AxialProportion);
-            viscousLift = ClViscousCurve.Evaluate(AxialProportion);
-            float axialDirectionFactor = cosAngleCutoff * AxialProportion;
+            Cd += CdCurve.Evaluate(AxialProportion_flt);
+            viscousLift = ClViscousCurve.Evaluate(AxialProportion_flt);
+            double axialDirectionFactor = cosAngleCutoff * AxialProportion;
 
             if (axialDirectionFactor > 0)
             {
-                Cd = Mathf.Min(Cd, sepFlowCd * taperCrossSectionAreaRatio) * AxialProportion_2 + Cd * OneMinusAxial_2;
+                Cd = Math.Min(Cd, sepFlowCd * taperCrossSectionAreaRatio) * AxialProportion_2 + Cd * OneMinusAxial_2;
             }
             else
             {
-                Cd = Mathf.Min(Cd, maxPressureCoeff * taperCrossSectionAreaRatio) * AxialProportion_2 + Cd * OneMinusAxial_2;
+                Cd = Math.Min(Cd, maxPressureCoeff * taperCrossSectionAreaRatio) * AxialProportion_2 + Cd * OneMinusAxial_2;
             }
 
             if (M_2 > 1)
             {
-                potentialLift = ClPotentialCurve.Evaluate(AxialProportion) * M_2_recip;
+                potentialLift = ClPotentialCurve.Evaluate(AxialProportion_flt) * M_2_recip;
             }
             else
             {
-                potentialLift = ClPotentialCurve.Evaluate(AxialProportion);
+                potentialLift = ClPotentialCurve.Evaluate(AxialProportion_flt);
             }
-            Cm = CmCurve.Evaluate(AxialProportion) * 0.1f;
+            Cm = CmCurve.Evaluate(AxialProportion_flt) * 0.1;
 
 
             CoDshift = CenterOfDrag;
 
-            float MachMultiplier = MachDragEffect(M);
+            double MachMultiplier = MachDragEffect(M);
 
-            Cd += 0.003f;       //Skin friction drag
+            Cd += 0.003;       //Skin friction drag
 
             Cd *= MachMultiplier;
 
             foreach (KeyValuePair<Vector3, attachNodeData> pair in attachNodeDragDict)
             {
-                float dotProd = Vector3.Dot(pair.Key.normalized, local_velocity);
-                float tmp = 0;
-                float Cltmp = 0;
+                double dotProd = Vector3.Dot(pair.Key.normalized, local_velocity);
+                double tmp = 0;
+                double Cltmp = 0;
                 if (dotProd < 0)
                 {
                     dotProd *= dotProd;
@@ -1009,13 +1016,13 @@ namespace ferram4
 //                    CoDshiftOffset *= Mathf.Sqrt(Mathf.Clamp01(1 - dotProd));
 //                    CoDshiftOffset *= Mathf.Sqrt(1.5f * pair.Value);
 
-                    CoDshift += pair.Key * tmp / (tmp + Cd);
+                    CoDshift += pair.Key * (float)(tmp / (tmp + Cd));
                 }
                 else
                 {
                     Vector3 worldPairVec = part_transform.TransformDirection(pair.Key.normalized);
-                    float dotProd_2 = dotProd * dotProd;
-                    float liftProd = Vector3.Dot(worldPairVec, liftDir);
+                    double dotProd_2 = dotProd * dotProd;
+                    double liftProd = Vector3.Dot(worldPairVec, liftDir);
 
                     tmp = maxPressureCoeff * dotProd_2 * dotProd;
                     tmp *= pair.Value.areaValue;
@@ -1023,17 +1030,17 @@ namespace ferram4
                     Cltmp = maxPressureCoeff * dotProd_2 * liftProd;
                     Cltmp *= -pair.Value.areaValue;
 
-                    float radius = Mathf.Sqrt(pair.Value.areaValue / Mathf.PI);
+                    double radius = Math.Sqrt(pair.Value.areaValue / Math.PI);
                     Vector3 CoDshiftOffset = Vector3.Exclude(pair.Key, local_velocity).normalized;
-                    CoDshiftOffset *= Mathf.Abs(liftProd) * radius;
+                    CoDshiftOffset *= (float)(Math.Abs(liftProd) * radius);
 
-                    float tmpCdCl = tmp + Mathf.Abs(Cltmp);
+                    double tmpCdCl = tmp + Math.Abs(Cltmp);
 
-                    CoDshift += (pair.Key * tmpCdCl) / (tmpCdCl + Cd) + CoDshiftOffset;
+                    CoDshift += pair.Key * (float)((tmpCdCl) / (tmpCdCl + Cd)) + CoDshiftOffset;
                     if(pair.Value.pitchesAwayFromUpVec)
-                        Cm -= 0.25f * radius * pair.Value.areaValue / S * Mathf.Abs(liftProd);
+                        Cm -= 0.25 * radius * pair.Value.areaValue / S * Math.Abs(liftProd);
                     else
-                        Cm += 0.25f * radius * pair.Value.areaValue / S * Mathf.Abs(liftProd);
+                        Cm += 0.25 * radius * pair.Value.areaValue / S * Math.Abs(liftProd);
                 }
 
 
@@ -1053,9 +1060,9 @@ namespace ferram4
 //            Debug.Log("Cd = " + Cd + " Cl = " + Cl + " Cm = " + Cm + "\nPot Lift = " + potentialLift + " Visc Lift = " + viscousLift + " Newt Lift = " + newtonianLift + "\nCdAdd = " + CdAdd + " sepFlowCd = " + sepFlowCd + " maxPressureCoeff = " + maxPressureCoeff + "\ntaperCrossSectionAreaRatio = " + taperCrossSectionAreaRatio + " crossflowParameter = " + crossflowParameter);
         }
 
-        private float SeparatedFlowDrag(float M, float M_2, float M_2_recip)
+        private double SeparatedFlowDrag(double M, double M_2, double M_2_recip)
         {
-            float sepCd = 1;
+            double sepCd = 1;
             if (M > 1)
                 sepCd *= (FARAeroUtil.incompressibleRearAttachDrag + FARAeroUtil.sonicRearAdditionalAttachDrag) * M_2_recip;
             else
@@ -1064,17 +1071,17 @@ namespace ferram4
             return sepCd;
         }
 
-        private float MachDragEffect(float M)
+        private double MachDragEffect(double M)
         {
-            float multiplier = 1;
+            double multiplier = 1;
 
             if (M <= 1)
             {
-                multiplier = 1 + 0.4f * FARAeroUtil.ExponentialApproximation(10 * M - 10);
+                multiplier = 1 + 0.4 * FARAeroUtil.ExponentialApproximation(10 * M - 10);
             }
             //multiplier = 1f + 0.4f * Mathf.Exp(10 * M - 10f);            //Exponentially increases, mostly from 0.8 to 1;  Models Drag divergence due to locally supersonic flow around object at flight Mach Numbers < 1
             else
-                multiplier = 0.15f / M + 1.25f;             //Cd drops after Mach 1
+                multiplier = 0.15 / M + 1.25;             //Cd drops after Mach 1
 
 
             //            if (DragEnumType == DragModelType.NOSECONE)
@@ -1085,7 +1092,7 @@ namespace ferram4
 
         public struct attachNodeData
         {
-            public float areaValue;
+            public double areaValue;
             public bool pitchesAwayFromUpVec;
         }
 

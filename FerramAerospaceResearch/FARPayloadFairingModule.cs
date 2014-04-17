@@ -47,7 +47,7 @@ namespace ferram4
     /// </summary>
     public class FARPayloadFairingModule : FARPartModule
     {
-        [KSPField(guiActive = true, isPersistant = false)]
+        [KSPField(guiActive = false, isPersistant = false)]
         private int partsShielded = 0;
 
 
@@ -68,6 +68,7 @@ namespace ferram4
             state = start;
             base.OnStart(start);
             OnVesselPartsChange += FindShieldedParts;
+            Fields["partsShielded"].guiActive = FARDebugValues.displayShielding;
         }
 
         public override void OnEditorAttach()

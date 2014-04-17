@@ -344,21 +344,21 @@ namespace ferram4
             DeflectionAnimation();
         }
 
-        protected override float CalculateAoA(Vector3 velocity)
+        protected override double CalculateAoA(Vector3d velocity)
         {
             // Use the vector computed by DeflectionAnimation
-            Vector3 perp = part_transform.TransformDirection(deflectedNormal);
-            float PerpVelocity = Vector3.Dot(perp, velocity.normalized);
-            return Mathf.Asin(PerpVelocity);
+            Vector3d perp = part_transform.TransformDirection(deflectedNormal);
+            double PerpVelocity = Vector3d.Dot(perp, velocity.normalized);
+            return Math.Asin(PerpVelocity);
         }
 
         // Had to add this one since the parent class don't use AoAoffset and adding it would break GetWingInFrontOf
-        public float CalculateAoA(Vector3 velocity, float AoAoffset)
+        public double CalculateAoA(Vector3d velocity, double AoAoffset)
         {
-            float radAoAoffset = AoAoffset * Mathf.Deg2Rad * ctrlSurfFrac;
-            Vector3 perp = part_transform.TransformDirection(new Vector3(0, FARMathUtil.FastSin(radAoAoffset), FARMathUtil.FastCos(radAoAoffset)));
-            float PerpVelocity = Vector3.Dot(perp, velocity.normalized);
-            return Mathf.Asin(PerpVelocity);
+            double radAoAoffset = AoAoffset * FARMathUtil.deg2rad * ctrlSurfFrac;
+            Vector3 perp = part_transform.TransformDirection(new Vector3d(0, Math.Sin(radAoAoffset), Math.Cos(radAoAoffset)));
+            double PerpVelocity = Vector3d.Dot(perp, velocity.normalized);
+            return Math.Asin(PerpVelocity);
         }
 
         private void ChangeDeflection(float timeconstant)
@@ -391,8 +391,8 @@ namespace ferram4
             lastAoAoffset = AoAoffset;
 
             // Compute a vector for CalculateAoA
-            float radAoAoffset = AoAoffset * Mathf.Deg2Rad * ctrlSurfFrac;
-            deflectedNormal = new Vector3(0, FARMathUtil.FastSin(radAoAoffset), FARMathUtil.FastCos(radAoAoffset));
+            double radAoAoffset = AoAoffset * FARMathUtil.deg2rad * ctrlSurfFrac;
+            deflectedNormal = new Vector3d(0, Math.Sin(radAoAoffset), Math.Cos(radAoAoffset));
 
             // Visually animate the surface
             MovableSection.localRotation = MovableOrig;

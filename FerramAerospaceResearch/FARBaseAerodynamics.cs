@@ -128,16 +128,16 @@ namespace ferram4
     public abstract class FARBaseAerodynamics : FARPartModule
     {
         [KSPField(isPersistant = false, guiActive = false)]
-        public float Cl;
+        public double Cl;
         [KSPField(isPersistant = false, guiActive = false)]
-        public float Cd;
+        public double Cd;
         [KSPField(isPersistant = false, guiActive = false)]
-        public float Cm;
+        public double Cm;
 
         
         protected FARControlSys FARControl;
         //protected float MachNumber = 0;
-        protected Vector3 velocityEditor = Vector3.zero;
+        protected Vector3d velocityEditor = Vector3.zero;
 
         protected Transform part_transform;
 
@@ -145,13 +145,13 @@ namespace ferram4
         protected static RaycastHit hit;
 
         [KSPField(isPersistant = false)]
-        public float S;
+        public double S;
 
         [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
         public bool isShielded = false;
 
         public static bool GlobalCoLReady = false;
-        private static Vector3 GlobalCoL;
+        private static Vector3d GlobalCoL;
         private Vector3 CoLForce;
 
         public override void OnAwake()
@@ -178,7 +178,7 @@ namespace ferram4
             isShielded = false;
         }
 
-        public virtual Vector3 GetVelocity()
+        public virtual Vector3d GetVelocity()
         {
             if (start != StartState.Editor)
                 return part.Rigidbody.velocity + Krakensbane.GetFrameVelocityV3f();
@@ -186,22 +186,22 @@ namespace ferram4
                 return velocityEditor;
         }
 
-        public Vector3 GetVelocity(Vector3 refPoint)
+        public Vector3d GetVelocity(Vector3 refPoint)
         {
-            Vector3 velocity = Vector3.zero;
+            Vector3d velocity = Vector3.zero;
             if (start != StartState.Editor)
             {
                 if (part.Rigidbody)
                     velocity += part.Rigidbody.GetPointVelocity(refPoint);
 
-                velocity += Krakensbane.GetFrameVelocityV3f() - Krakensbane.GetLastCorrection() * TimeWarp.fixedDeltaTime;
+                velocity += Krakensbane.GetFrameVelocity() - Krakensbane.GetLastCorrection() * TimeWarp.fixedDeltaTime;
                 return velocity;
             }
             else
                 return velocityEditor;
         }
 
-        public float GetMachNumber(CelestialBody body, float altitude, Vector3 velocity)
+        public double GetMachNumber(CelestialBody body, double altitude, Vector3d velocity)
         {
             if (start != StartState.Editor)
             {
@@ -223,9 +223,9 @@ namespace ferram4
             // Clear state when preparing CoL computation
         }
 
-        protected virtual Vector3 PrecomputeCenterOfLift(Vector3 velocity, float MachNumber, FARCenterQuery center)
+        protected virtual Vector3d PrecomputeCenterOfLift(Vector3d velocity, double MachNumber, FARCenterQuery center)
         {
-            return Vector3.zero;
+            return Vector3d.zero;
         }
 
         public static List<FARBaseAerodynamics> GetAllEditorModules()

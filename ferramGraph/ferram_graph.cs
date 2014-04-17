@@ -24,6 +24,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 
@@ -36,16 +37,16 @@ namespace ferram4
             private Texture2D lineDisplay;
             private Texture2D lineLegend;
             public bool displayInLegend;
-            private float[] rawDataX = new float[1];
-            private float[] rawDataY = new float[1];
+            private double[] rawDataX = new double[1];
+            private double[] rawDataY = new double[1];
             private int[] pixelDataX = new int[1];
             private int[] pixelDataY = new int[1];
-            private Vector4 bounds;
+            private Vector4d bounds;
             public int lineThickness;
             public Color lineColor = new Color();
             public Color backgroundColor = new Color();
-            private float verticalScaling;
-            private float horizontalScaling;
+            private double verticalScaling;
+            private double horizontalScaling;
 
             #region Constructor
             public ferramGraphLine(int width, int height)
@@ -63,20 +64,20 @@ namespace ferram4
             #region InputData
 
 
-            public void InputData(float[] xValues, float[] yValues)
+            public void InputData(double[] xValues, double[] yValues)
             {
                 int elements = xValues.Length;
-                rawDataX = new float[elements];
-                rawDataY = new float[elements];
+                rawDataX = new double[elements];
+                rawDataY = new double[elements];
 
                 for (int i = 0; i < elements; i++)
                 {
-                    if (float.IsNaN(xValues[i]))
+                    if (double.IsNaN(xValues[i]))
                     {
                         xValues[i] = 0;
                         MonoBehaviour.print("Warning: NaN in xValues array; value set to zero");
                     }
-                    if (float.IsNaN(yValues[i]))
+                    if (double.IsNaN(yValues[i]))
                     {
                         yValues[i] = 0;
                         MonoBehaviour.print("Warning: NaN in yValues array; value set to zero");
@@ -97,9 +98,9 @@ namespace ferram4
                 pixelDataX = new int[rawDataX.Length];
                 pixelDataY = new int[rawDataY.Length];
 
-                float xScaling = lineDisplay.width / (bounds.y - bounds.x);
-                float yScaling = lineDisplay.height / (bounds.w - bounds.z);
-                float tmpx, tmpy;
+                double xScaling = lineDisplay.width / (bounds.y - bounds.x);
+                double yScaling = lineDisplay.height / (bounds.w - bounds.z);
+                double tmpx, tmpy;
 
                 for(int i = 0; i < rawDataX.Length; i++)
                 {
@@ -108,11 +109,11 @@ namespace ferram4
 
                     tmpx -= bounds.x;
                     tmpx *= xScaling;
-                    tmpx = Mathf.RoundToInt(tmpx);
+                    tmpx = Math.Round(tmpx);
 
                     tmpy -= bounds.z;
                     tmpy *= yScaling;
-                    tmpy = Mathf.RoundToInt(tmpy);
+                    tmpy = Math.Round(tmpy);
 
 //                    MonoBehaviour.print("x: " + tmpx.ToString() + " y: " + tmpy.ToString());
                     pixelDataX[i] = (int)tmpx;
@@ -162,21 +163,21 @@ namespace ferram4
                             yend = tmpy;
                         }
 
-                        float m = ((float)yend - (float)ystart) / ((float)xend - (float)xstart);
-                        if (Mathf.Abs(m) <= 1 && (xstart != xend))
+                        double m = ((double)yend - (double)ystart) / ((double)xend - (double)xstart);
+                        if (Math.Abs(m) <= 1 && (xstart != xend))
                         {
                             for (int i = xstart; i < xend; i++)
                                 for (int j = -tmpThick; j <= tmpThick; j++)
                                 {
-                                    int linear = Mathf.RoundToInt(m * (i - xend) + yend);
+                                    int linear = (int)Math.Round(m * (i - xend) + yend);
                                     if((i >= 0 && i <= lineDisplay.width) && (linear + j >= 0 && linear + j <= lineDisplay.height))
                                         lineDisplay.SetPixel(i, linear + j, lineColor);
                                 }
                         }
                         else
                         {
-                            ystart = Mathf.Min(tmpy, lasty);
-                            yend = Mathf.Max(tmpy, lasty);
+                            ystart = Math.Min(tmpy, lasty);
+                            yend = Math.Max(tmpy, lasty);
 
                             if (ystart == tmpy)
                             {
@@ -189,12 +190,12 @@ namespace ferram4
                                 xend = tmpx;
                             }
 
-                            m = ((float)xend - (float)xstart) / ((float)yend - (float)ystart);
+                            m = ((double)xend - (double)xstart) / ((double)yend - (double)ystart);
 
                             for (int i = ystart; i < yend; i++)
                                 for (int j = -tmpThick; j <= tmpThick; j++)
                                 {
-                                    int linear = Mathf.RoundToInt(m * (i - yend) + xend);
+                                    int linear = (int)Math.Round(m * (i - yend) + xend);
                                     if ((linear + j >= 0 && linear + j <= lineDisplay.width) && (i >= 0 && i <= lineDisplay.height))
                                         lineDisplay.SetPixel(linear + j, i, lineColor);
                                 }
@@ -234,13 +235,13 @@ namespace ferram4
             /// <summary>
             /// XMin, XMax, YMin, YMax
             /// </summary>
-            public Vector4 GetExtremeData()
+            public Vector4d GetExtremeData()
             {
-                Vector4 extremes = Vector4.zero;
-                extremes.x = Mathf.Min(rawDataX);
-                extremes.y = Mathf.Max(rawDataX);
-                extremes.z = Mathf.Min(rawDataY);
-                extremes.w = Mathf.Max(rawDataY);
+                Vector4d extremes = Vector4d.zero;
+                extremes.x = rawDataX.Min();
+                extremes.y = rawDataX.Max();
+                extremes.z = rawDataY.Min();
+                extremes.w = rawDataY.Max();
 
                 return extremes;
             }
@@ -255,12 +256,12 @@ namespace ferram4
                 return lineLegend;
             }
 
-            public void UpdateVerticalScaling(float scaling)
+            public void UpdateVerticalScaling(double scaling)
             {
                 verticalScaling = scaling;
                 ConvertRawToPixels();
             }
-            public void UpdateHorizontalScaling(float scaling)
+            public void UpdateHorizontalScaling(double scaling)
             {
                 horizontalScaling = scaling;
                 ConvertRawToPixels();
@@ -282,7 +283,7 @@ namespace ferram4
 
         private Dictionary<string, ferramGraphLine> allLines = new Dictionary<string, ferramGraphLine>();
 
-        private Vector4 bounds;
+        private Vector4d bounds;
         public bool autoscale = false;
 
         public Color backgroundColor = Color.black;
@@ -306,7 +307,7 @@ namespace ferram4
             GridInit();
         }
 
-        public ferramGraph(int width, int height, float minx, float maxx, float miny, float maxy)
+        public ferramGraph(int width, int height, double minx, double maxx, double miny, double maxy)
         {
             graph = new Texture2D(width, height, TextureFormat.ARGB32, false);
             SetBoundaries(minx, maxx, miny, maxy);
@@ -316,7 +317,7 @@ namespace ferram4
         #endregion
 
         #region Scaling Functions
-        public void SetBoundaries(float minx, float maxx, float miny, float maxy)
+        public void SetBoundaries(double minx, double maxx, double miny, double maxy)
         {
             bounds.x = minx;
             bounds.y = maxx;
@@ -325,7 +326,7 @@ namespace ferram4
             SetBoundaries(bounds);
         }
 
-        public void SetBoundaries(Vector4 boundaries)
+        public void SetBoundaries(Vector4d boundaries)
         {
             bounds = boundaries;
             leftBound = bounds.x.ToString();
@@ -343,19 +344,19 @@ namespace ferram4
             Update();
         }
 
-        public void SetGridScaleUsingValues(float gridWidth, float gridHeight)
+        public void SetGridScaleUsingValues(double gridWidth, double gridHeight)
         {
             int pixelWidth, pixelHeight;
 
-            pixelWidth = Mathf.RoundToInt(((gridWidth * displayRect.width) / (bounds.y - bounds.x)));
-            pixelHeight = Mathf.RoundToInt(((gridHeight * displayRect.height) / (bounds.w - bounds.z)));
+            pixelWidth = (int)Math.Round(((gridWidth * displayRect.width) / (bounds.y - bounds.x)));
+            pixelHeight = (int)Math.Round(((gridHeight * displayRect.height) / (bounds.w - bounds.z)));
 
             SetGridScaleUsingPixels(pixelWidth, pixelHeight);
             
 
         }
 
-        public void SetLineVerticalScaling(string lineName, float scaling)
+        public void SetLineVerticalScaling(string lineName, double scaling)
         {
             if (!allLines.ContainsKey(lineName))
             {
@@ -370,7 +371,7 @@ namespace ferram4
         }
 
 
-        public void SetLineHorizontalScaling(string lineName, float scaling)
+        public void SetLineHorizontalScaling(string lineName, double scaling)
         {
             if (!allLines.ContainsKey(lineName))
             {
@@ -399,8 +400,8 @@ namespace ferram4
 
             int horizontalAxis, verticalAxis;
 
-            horizontalAxis = Mathf.RoundToInt(-bounds.x * displayRect.width / (bounds.y - bounds.x));
-            verticalAxis = Mathf.RoundToInt(-bounds.z * displayRect.height / (bounds.w - bounds.z));
+            horizontalAxis = (int)Math.Round(-bounds.x * displayRect.width / (bounds.y - bounds.x));
+            verticalAxis = (int)Math.Round(-bounds.z * displayRect.height / (bounds.w - bounds.z));
 
             for (int i = 0; i < graph.width; i++)
             {
@@ -436,31 +437,31 @@ namespace ferram4
             Update();
         }
 
-        public void AddLine(string lineName, float[] xValues, float[] yValues)
+        public void AddLine(string lineName, double[] xValues, double[] yValues)
         {
             int lineThickness = 1;
             AddLine(lineName, xValues, yValues, lineThickness);
         }
 
-        public void AddLine(string lineName, float[] xValues, float[] yValues, Color lineColor)
+        public void AddLine(string lineName, double[] xValues, double[] yValues, Color lineColor)
         {
             int lineThickness = 1;
             AddLine(lineName, xValues, yValues, lineColor, lineThickness);
         }
 
-        public void AddLine(string lineName, float[] xValues, float[] yValues, int lineThickness)
+        public void AddLine(string lineName, double[] xValues, double[] yValues, int lineThickness)
         {
             Color lineColor = Color.red;
             AddLine(lineName, xValues, yValues, lineColor, lineThickness);
         }        
 
-        public void AddLine(string lineName, float[] xValues, float[] yValues, Color lineColor, int lineThickness)
+        public void AddLine(string lineName, double[] xValues, double[] yValues, Color lineColor, int lineThickness)
         {
             AddLine(lineName, xValues, yValues, lineColor, lineThickness, true);
 
         }
 
-        public void AddLine(string lineName, float[] xValues, float[] yValues, Color lineColor, int lineThickness, bool display)
+        public void AddLine(string lineName, double[] xValues, double[] yValues, Color lineColor, int lineThickness, bool display)
         {
             if (allLines.ContainsKey(lineName))
             {
@@ -515,7 +516,7 @@ namespace ferram4
 
         #region Update Data Functions
 
-        public void UpdateLineData(string lineName, float[] xValues, float[] yValues)
+        public void UpdateLineData(string lineName, double[] xValues, double[] yValues)
         {
             if (xValues.Length != yValues.Length)
             {
@@ -551,11 +552,11 @@ namespace ferram4
             #region Autoscaling
             if (autoscale)
             {
-                Vector4 extremes = Vector4.zero;
+                Vector4d extremes = Vector4.zero;
                 bool init = false;
                 foreach (KeyValuePair<string, ferramGraphLine> pair in allLines)
                 {
-                    Vector4 tmp = pair.Value.GetExtremeData();
+                    Vector4d tmp = pair.Value.GetExtremeData();
 
                     if (!init)
                     {
@@ -567,17 +568,17 @@ namespace ferram4
                     }
                     else
                     {
-                        extremes.x = Mathf.Min(extremes.x, tmp.x);
-                        extremes.y = Mathf.Max(extremes.y, tmp.y);
-                        extremes.z = Mathf.Min(extremes.z, tmp.z);
-                        extremes.w = Mathf.Max(extremes.w, tmp.w);
+                        extremes.x = Math.Min(extremes.x, tmp.x);
+                        extremes.y = Math.Max(extremes.y, tmp.y);
+                        extremes.z = Math.Min(extremes.z, tmp.z);
+                        extremes.w = Math.Max(extremes.w, tmp.w);
 
                     }
 
-                    extremes.x = Mathf.Floor(extremes.x);
-                    extremes.y = Mathf.Ceil(extremes.y);
-                    extremes.z = Mathf.Floor(extremes.z);
-                    extremes.w = Mathf.Ceil(extremes.w);
+                    extremes.x = Math.Floor(extremes.x);
+                    extremes.y = Math.Ceiling(extremes.y);
+                    extremes.z = Math.Floor(extremes.z);
+                    extremes.w = Math.Ceiling(extremes.w);
                 }
                 SetBoundaries(extremes);
             }

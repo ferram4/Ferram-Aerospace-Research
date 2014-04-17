@@ -76,7 +76,7 @@ namespace ferram4
             thisStyle.padding = new RectOffset(4, 0, 0, 0);
             thisStyle.margin = new RectOffset(4, 0, 0, 0);
 
-            GUILayout.BeginVertical(GUILayout.Height(100));
+            GUILayout.BeginVertical();
             GUILayout.Label("Part Right-Click Menu");
             FARDebugValues.displayForces = GUILayout.Toggle(FARDebugValues.displayForces, "Display Aero Forces", thisStyle);
             FARDebugValues.displayCoefficients = GUILayout.Toggle(FARDebugValues.displayCoefficients, "Display Coefficients", thisStyle);

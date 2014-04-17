@@ -48,16 +48,16 @@ namespace ferram4
 
 //        FARMatrix b = new FARMatrix(3, 4);
 
-        float dt;
-        float endTime;
-        float[] initCond;
+        double dt;
+        double endTime;
+        double[] initCond;
 
         FARMatrix stateEquations;
 
-        public float[,] soln;
-        public float[] time;
+        public double[,] soln;
+        public double[] time;
 
-        public FARRungeKutta4(float endTime, float dt, FARMatrix eqns, float[] initCond)
+        public FARRungeKutta4(double endTime, double dt, FARMatrix eqns, double[] initCond)
         {
 //            b.Add(0.5f, 0, 1);
 //            b.Add(0.5f, 1, 2);
@@ -66,14 +66,14 @@ namespace ferram4
             this.dt = dt;
             this.stateEquations = eqns;
             this.initCond = initCond;
-            soln = new float[initCond.Length, Mathf.CeilToInt(endTime / dt)];
-            time = new float[Mathf.CeilToInt(endTime / dt)];
+            soln = new double[initCond.Length, (int)Math.Ceiling(endTime / dt)];
+            time = new double[(int)Math.Ceiling(endTime / dt)];
         }
 
         public void Solve()
         {
-            float t = 0;
-            float[] currentState = initCond;
+            double t = 0;
+            double[] currentState = initCond;
             int j = 0;
 
             while (j < time.Length)
@@ -85,7 +85,7 @@ namespace ferram4
                 currentState = NextState(currentState);
 
                 for(int k = 0; k < currentState.Length; k++)
-                    if (float.IsNaN(currentState[k]) || float.IsInfinity(currentState[k]))
+                    if (double.IsNaN(currentState[k]) || double.IsInfinity(currentState[k]))
                     {
                         currentState[k] = 0;
                         j = time.Length;
@@ -96,26 +96,26 @@ namespace ferram4
             }
         }
 
-        public float[] GetSolution(int i)
+        public double[] GetSolution(int i)
         {
             if (i + 1 > soln.GetLength(0))
             {
                 MonoBehaviour.print("Error; Index out of bounds");
-                return new float[time.Length];
+                return new double[time.Length];
             }
 
-            float[] solution = new float[time.Length];
+            double[] solution = new double[time.Length];
             for (int j = 0; j < solution.Length; j++)
                 solution[j] = soln[i, j];
             return solution;
         }
 
 
-        private float[] NextState(float[] currentState)
+        private double[] NextState(double[] currentState)
         {
-            float[] next = new float[currentState.Length];
-            float[] f1, f2, f3, f4;
-            f1 = f2 = f3 = f4 = new float[currentState.Length];
+            double[] next = new double[currentState.Length];
+            double[] f1, f2, f3, f4;
+            f1 = f2 = f3 = f4 = new double[currentState.Length];
 
             for (int j = 0; j < next.Length; j++)
             {
@@ -161,24 +161,24 @@ namespace ferram4
 
     class FARMatrix
     {
-        private float[,] matrix;
+        private double[,] matrix;
         public int m;
         public int n;
         
         public FARMatrix(int m, int n)
         {
-            matrix = new float[m,n];
+            matrix = new double[m,n];
             this.m = m;
             this.n = n;
         }
 
-        public float Value(int i, int j)
+        public double Value(int i, int j)
         {
             return matrix[i, j];
         }
 
 
-        public void Add(float Element, int i, int j)
+        public void Add(double Element, int i, int j)
         {
             matrix[i,j] = Element;
         }
