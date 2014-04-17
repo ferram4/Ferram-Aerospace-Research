@@ -149,7 +149,7 @@ namespace ferram4
         }
         
         //This takes a part, a tolerance, an offset, a matrix describing its orientation and a list of model transforms and sets the part's taper data
-        public static Vector2 NodeBoundaries(Part p, List<AttachNode> attachNodeGroup, Vector3 worldOffset, float toleranceForSizing, Transform[] ModelTransforms)
+        public static Vector2 NodeBoundaries(Part p, List<AttachNode> attachNodeGroup, Vector3 worldOffset, double toleranceForSizing, Transform[] ModelTransforms)
         {
             Vector3 nodeUpVector = Vector3.zero;
             Vector3 nodeCenter = Vector3.zero;
@@ -201,7 +201,7 @@ namespace ferram4
             return bounds;
         }
 
-        public static Vector2 NodeBoundaries(Part p, AttachNode attachNode, Vector3 worldOffset, float toleranceForSizing, Transform[] ModelTransforms)
+        public static Vector2 NodeBoundaries(Part p, AttachNode attachNode, Vector3 worldOffset, double toleranceForSizing, Transform[] ModelTransforms)
         {
             Vector3 nodeUpVector = attachNode.orientation;
             Vector3 nodeCenter = attachNode.position;
@@ -244,7 +244,7 @@ namespace ferram4
             return bounds;
         }
 
-        public static Vector2 NodeBoundaries(Part p, Vector3 position, Vector3 orientation, Vector3 worldOffset, float toleranceForSizing, Transform[] ModelTransforms)
+        public static Vector2 NodeBoundaries(Part p, Vector3 position, Vector3 orientation, Vector3 worldOffset, double toleranceForSizing, Transform[] ModelTransforms)
         {
             Quaternion partToNode = Quaternion.FromToRotation(Vector3.up, orientation);        //This is the angle between part up and the node
 
@@ -587,7 +587,7 @@ namespace ferram4
         }
 
         //This takes a part, a tolerance, an offset, a matrix describing its orientation and a list of model transforms and sets the part's taper data
-        private static void PartTaperBoundaries(Part p, float toleranceForTaper, Vector3 worldOffset, Matrix4x4 partUpMatrix, Transform[] ModelTransforms)
+        private static void PartTaperBoundaries(Part p, double toleranceForTaper, Vector3 worldOffset, Matrix4x4 partUpMatrix, Transform[] ModelTransforms)
         {
             foreach (Transform t in ModelTransforms)         //Get the max boundaries of the part
             {
@@ -661,10 +661,10 @@ namespace ferram4
             upperAxis2 = new Vector2(100, 100);               //2 are the "negative" values
             lowerAxis2 = new Vector2(100, 100);
 
-            Vector3 size = maxBounds - minBounds;
+            Vector3d size = maxBounds - minBounds;
 
-            float toleranceForTaper = Mathf.Abs(size.y) / 5f;
-            toleranceForTaper = Mathf.Max(toleranceForTaper, 0.25f);
+            double toleranceForTaper = Mathf.Abs((float)size.y) / 5;
+            toleranceForTaper = Math.Max(toleranceForTaper, 0.25);
 
             if (p.parent != null && p.GetComponent<FARPayloadFairingModule>() != null)
             {
@@ -677,16 +677,16 @@ namespace ferram4
             }
             PartTaperBoundaries(p, toleranceForTaper, Vector3.zero, base_matrix, ModelTransforms);
 
-            Vector3 upperDiameters = upperAxis1 - upperAxis2;
-            Vector3 lowerDiameters = lowerAxis1 - lowerAxis2;
+            Vector3d upperDiameters = (Vector3)(upperAxis1 - upperAxis2);
+            Vector3d lowerDiameters = (Vector3)(lowerAxis1 - lowerAxis2);
 
             //            if (p.Modules.Contains("ModuleJettison"))
             //                upperDiameters = lowerDiameters = size;
             //size *= p.scaleFactor;
-            Vector3 centroid = Vector3.zero;
+            Vector3d centroid = Vector3d.zero;
 
-            float lowerR = lowerDiameters.magnitude * 0.5f;
-            float upperR = upperDiameters.magnitude * 0.5f;
+            double lowerR = lowerDiameters.magnitude * 0.5;
+            double upperR = upperDiameters.magnitude * 0.5;
             centroid.y = 4 * (lowerR * lowerR + lowerR * upperR + upperR * upperR);
             centroid.y = size.y * (lowerR * lowerR + 2 * lowerR * upperR + 3 * upperR * upperR) / centroid.y;
             centroid.y += minBounds.y;
@@ -696,21 +696,21 @@ namespace ferram4
             partGeometry.originToCentroid = centroid;
 
             partGeometry.crossSectionalArea = (size.x * size.z) / 4;                    //avg radius
-            partGeometry.crossSectionalArea *= Mathf.PI;
+            partGeometry.crossSectionalArea *= Math.PI;
             partGeometry.crossSectionalArea /= (symmetryCounterpartNum);
 
-            partGeometry.area = (Mathf.Abs(upperDiameters.x + upperDiameters.y) + Mathf.Abs(lowerDiameters.x + lowerDiameters.y)) / 4 * Mathf.PI * Mathf.Abs(size.y);              //surface area, not counting cross-sectional area
+            partGeometry.area = (Math.Abs(upperDiameters.x + upperDiameters.y) + Math.Abs(lowerDiameters.x + lowerDiameters.y)) / 4 * Math.PI * Math.Abs(size.y);              //surface area, not counting cross-sectional area
             partGeometry.area /= (symmetryCounterpartNum);
 
 
-            partGeometry.finenessRatio = Mathf.Abs(size.x + size.z) / 2;
-            partGeometry.finenessRatio = Mathf.Abs(size.y) / partGeometry.finenessRatio;
+            partGeometry.finenessRatio = Math.Abs(size.x + size.z) / 2;
+            partGeometry.finenessRatio = Math.Abs(size.y) / partGeometry.finenessRatio;
 
-            partGeometry.majorMinorAxisRatio = Mathf.Abs(size.x / size.z);
+            partGeometry.majorMinorAxisRatio = Math.Abs(size.x / size.z);
 
-            partGeometry.taperRatio = Mathf.Abs(upperDiameters.x + upperDiameters.y) / Mathf.Abs(lowerDiameters.x + lowerDiameters.y);
+            partGeometry.taperRatio = Math.Abs(upperDiameters.x + upperDiameters.y) / Math.Abs(lowerDiameters.x + lowerDiameters.y);
 
-            partGeometry.taperCrossSectionArea = Mathf.Abs(Mathf.Pow((upperDiameters.x + upperDiameters.y) / 4, 2) - Mathf.Pow((lowerDiameters.x + lowerDiameters.y) / 4, 2)) * Mathf.PI;
+            partGeometry.taperCrossSectionArea = Math.Abs(Math.Pow((upperDiameters.x + upperDiameters.y) / 4, 2) - Math.Pow((lowerDiameters.x + lowerDiameters.y) / 4, 2)) * Math.PI;
 
             //This is the cross-sectional area of the tapered section
 
@@ -721,13 +721,13 @@ namespace ferram4
 
         public struct BodyGeometryForDrag
         {
-            public float area;
-            public float finenessRatio;
-            public float taperRatio;
-            public float crossSectionalArea;
-            public float taperCrossSectionArea;
-            public float majorMinorAxisRatio;
-            public Vector3 originToCentroid;
+            public double area;
+            public double finenessRatio;
+            public double taperRatio;
+            public double crossSectionalArea;
+            public double taperCrossSectionArea;
+            public double majorMinorAxisRatio;
+            public Vector3d originToCentroid;
         }
     }
 }

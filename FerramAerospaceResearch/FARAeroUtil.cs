@@ -593,11 +593,11 @@ namespace ferram4
                 FARGeoUtil.BodyGeometryForDrag data = FARGeoUtil.CalcBodyGeometryFromMesh(p);
 
                 FloatCurve TempCurve1 = new FloatCurve();
-                float cd = 0.2f; //cd based on diameter
-                cd *= Mathf.Sqrt(data.crossSectionalArea / Mathf.PI) * 2 / data.area;
+                double cd = 0.2; //cd based on diameter
+                cd *= Math.Sqrt(data.crossSectionalArea / Math.PI) * 2 / data.area;
 
-                TempCurve1.Add(-1, cd);
-                TempCurve1.Add(1, cd);
+                TempCurve1.Add(-1, (float)cd);
+                TempCurve1.Add(1, (float)cd);
 
                 FloatCurve TempCurve2 = new FloatCurve();
                 TempCurve2.Add(-1, 0);
@@ -613,7 +613,7 @@ namespace ferram4
 
 
 
-                d.BuildNewDragModel(data.area * FARAeroUtil.areaFactor, TempCurve1, TempCurve2, TempCurve4, TempCurve3, data.originToCentroid, data.majorMinorAxisRatio, 0, data.taperCrossSectionArea, float.MaxValue, float.MaxValue);
+                d.BuildNewDragModel(data.area * FARAeroUtil.areaFactor, TempCurve1, TempCurve2, TempCurve4, TempCurve3, data.originToCentroid, data.majorMinorAxisRatio, 0, data.taperCrossSectionArea, double.MaxValue, double.MaxValue);
                 return;
             } 
             else if (p.Modules.Contains("ModuleRCS") || p.Modules.Contains("ModuleDeployableSolarPanel") || p.Modules.Contains("ModuleLandingGear") || title.Contains("heatshield") || (title.Contains("heat") && title.Contains("shield")) || title.Contains("ladder") || title.Contains("mobility") || title.Contains("railing"))
@@ -641,9 +641,9 @@ namespace ferram4
                 TempCurve3.Add(1, 0);
 
 
-                float area = FARGeoUtil.CalcBodyGeometryFromMesh(p).area;
+                double area = FARGeoUtil.CalcBodyGeometryFromMesh(p).area;
 
-                d.BuildNewDragModel(area * FARAeroUtil.areaFactor, TempCurve1, TempCurve2, TempCurve4, TempCurve3, Vector3.zero, 1, 0, 0, float.MaxValue, float.MaxValue);
+                d.BuildNewDragModel(area * FARAeroUtil.areaFactor, TempCurve1, TempCurve2, TempCurve4, TempCurve3, Vector3.zero, 1, 0, 0, double.MaxValue, double.MaxValue);
                 return;
             }
             else
@@ -778,10 +778,19 @@ namespace ferram4
                     TempCurve3.Add(1, cdM);
 
 
+                    if (HighLogic.LoadedSceneIsFlight)
+                    {
+                        FARPartStressTemplate template = FARAeroStress.DetermineStressTemplate(p);
 
-                    //FARPartStressTemplate template = FARAeroStress.DetermineStressTemplate(p);
+                        YmaxForce = template.YmaxStress;    //in MPa
+                        YmaxForce *= data.crossSectionalArea;
 
-                    //YmaxForce = template.YmaxStress;    //in MPa
+                        XZmaxForce = 2 * Math.Sqrt(data.crossSectionalArea / Math.PI);
+                        XZmaxForce = XZmaxForce * data.finenessRatio * XZmaxForce;
+                        XZmaxForce *= template.XZmaxStress;
+
+                        Debug.Log("Template: " + template.name + " YmaxForce: " + YmaxForce + " XZmaxForce: " + XZmaxForce);
+                    }
 
                 }
 //                if (p.Modules.Contains("FARPayloadFairingModule"))

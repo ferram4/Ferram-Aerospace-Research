@@ -75,10 +75,10 @@ namespace ferram4
         public FloatCurve CmCurve;
 
         [KSPField(isPersistant = false)]
-        public Vector3 localUpVector = Vector3.up;
+        public Vector3d localUpVector = Vector3d.up;
 
         [KSPField(isPersistant = false)]
-        public Vector3 localForwardVector = Vector3.forward;
+        public Vector3d localForwardVector = Vector3.forward;
 
         [KSPField(isPersistant = false)]
         public double majorMinorAxisRatio = 1;
@@ -88,16 +88,16 @@ namespace ferram4
 
         //        public FARBasicDragModel.DragModelType DragEnumType;
 
-        private Vector3 perp = Vector3.zero;
-        private Vector3 liftDir = Vector3.zero;
+        private Vector3d perp = Vector3.zero;
+        private Vector3d liftDir = Vector3.zero;
         //private ModuleLandingGear gear = null;
         private Dictionary<Vector3, attachNodeData> attachNodeDragDict = new Dictionary<Vector3, attachNodeData>();
 
         [KSPField(isPersistant = false)]
-        public Vector3 CenterOfDrag = Vector3.zero;
+        public Vector3d CenterOfDrag = Vector3d.zero;
 
-        public Vector3 CoDshift = Vector3.zero;
-        public Vector3 globalCoDShift = Vector3.zero;
+        public Vector3d CoDshift = Vector3d.zero;
+        public Vector3d globalCoDShift = Vector3d.zero;
         public double cosAngleCutoff = 0;
 
         //private float M = 0;
@@ -111,7 +111,7 @@ namespace ferram4
         public Transform[] PartModelTransforms = null;
         public Transform[] VesselModelTransforms = null;
 
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Current drag", guiUnits = "kN", guiFormat = "F3")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Current drag", guiUnits = "kN", guiFormat = "D3")]
         protected float currentDrag = 0.0f;
 
         public double YmaxForce = double.MaxValue;
@@ -212,11 +212,14 @@ namespace ferram4
             {
                 Quaternion rot = FARGeoUtil.GuessUpRotation(part);
 
-                localUpVector = rot * Vector3.up;
-                localForwardVector = rot * Vector3.forward;
+                localUpVector = rot * Vector3d.up;
+                localForwardVector = rot * Vector3d.forward;
             }
+            //Doesn't work with Vector3d
+            //Vector3d.OrthoNormalize(ref localUpVector, ref localForwardVector);
 
-            Vector3.OrthoNormalize(ref localUpVector, ref localForwardVector);
+            localUpVector.Normalize();
+            localForwardVector = Vector3d.Exclude(localUpVector, localForwardVector).normalized;
 
             Quaternion to_local = Quaternion.LookRotation(localForwardVector, localUpVector);
             to_model_rotation = Quaternion.Inverse(to_local);
@@ -287,13 +290,13 @@ namespace ferram4
                     // Check that rb is not destroyed, but vessel is just not null
                     if (rb && (object)vessel != null && vessel.atmDensity > 0)
                     {
-                        Vector3 velocity = rb.velocity + Krakensbane.GetFrameVelocityV3f();
+                        Vector3d velocity = rb.velocity + Krakensbane.GetFrameVelocity();
                         double soundspeed, v_scalar = velocity.magnitude;
 
                         double rho = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
                         if (rho > 0f && v_scalar > 0.1f)
                         {
-                            Vector3 force = RunDragCalculation(velocity, v_scalar / soundspeed, rho);
+                            Vector3d force = RunDragCalculation(velocity, v_scalar / soundspeed, rho);
                             rb.AddForceAtPosition(force, GetCoD());
                         }
                     }
@@ -301,13 +304,13 @@ namespace ferram4
             }
         }
 
-        public Vector3 GetCoDEditor()
+        public Vector3d GetCoDEditor()
         {
             // no globalCoDshift because of separate GetMomentEditor
             return part_transform.TransformPoint(CoDshift);
         }
 
-        public double GetDragEditor(Vector3 velocityVector, double MachNumber)
+        public double GetDragEditor(Vector3d velocityVector, double MachNumber)
         {
             AttachNodeCdAdjust();
             velocityEditor = velocityVector;
@@ -352,29 +355,29 @@ namespace ferram4
             return Cm * S;
         }
 
-        public Vector3 RunDragCalculation(Vector3 velocity, double MachNumber, double rho)
+        public Vector3d RunDragCalculation(Vector3d velocity, double MachNumber, double rho)
         {
             if (isShielded)
             {
                 Cl = Cd = Cm = 0;
-                return Vector3.zero;
+                return Vector3d.zero;
             }
 
             double v_scalar = velocity.magnitude;
 
             if (v_scalar > 0.1)         //Don't Bother if it's not moving or in space
             {
-                CoDshift = Vector3.zero;
+                CoDshift = Vector3d.zero;
                 Cd = 0;
 
-                Vector3 velocity_normalized = velocity / (float)v_scalar;
+                Vector3d velocity_normalized = velocity / (float)v_scalar;
                 //float Parallel = Vector3.Dot(upVector, velocity_normalized);
 
-                Vector3 upVector = part_transform.TransformDirection(localUpVector);
-                perp = Vector3.Cross(upVector, velocity).normalized;
-                liftDir = Vector3.Cross(velocity, perp).normalized;
+                Vector3d upVector = part_transform.TransformDirection(localUpVector);
+                perp = Vector3d.Cross(upVector, velocity).normalized;
+                liftDir = Vector3d.Cross(velocity, perp).normalized;
 
-                Vector3 local_velocity = part_transform.InverseTransformDirection(velocity_normalized);
+                Vector3d local_velocity = part_transform.InverseTransformDirection(velocity_normalized);
                 DragModel(local_velocity, MachNumber);
 
                 //if(gear && start != StartState.Editor)
@@ -387,11 +390,12 @@ namespace ferram4
 
 
                 double qS = 0.5 * rho * v_scalar * v_scalar * S;   //dynamic pressure, q
-                Vector3 D = velocity_normalized * (float)(-qS * Cd);                         //drag
-                Vector3 L = liftDir * (float)(qS * Cl);
-                Vector3 force = (L + D) * 0.001f;
-                double force_scalar = currentDrag = force.magnitude;
-                Vector3 moment = perp * (float)(qS * Cm * 0.001);
+                Vector3d D = velocity_normalized * (-qS * Cd);                         //drag
+                Vector3d L = liftDir * (qS * Cl);
+                Vector3d force = (L + D) * 0.001;
+                double force_scalar = force.magnitude;
+                currentDrag = (float)force_scalar;
+                Vector3d moment = perp * (qS * Cm * 0.001);
 
                 Rigidbody rb = part.Rigidbody;
 
@@ -399,9 +403,9 @@ namespace ferram4
                 {
                     if (rb.angularVelocity.sqrMagnitude != 0)
                     {
-                        Vector3 rot = Vector3.Exclude(velocity_normalized, rb.angularVelocity);  //This prevents aerodynamic damping a spinning object if its spin axis is aligned with the velocity axis
+                        Vector3d rot = Vector3d.Exclude(velocity_normalized, rb.angularVelocity);  //This prevents aerodynamic damping a spinning object if its spin axis is aligned with the velocity axis
 
-                        rot *= (float)(-0.00001 * qS);
+                        rot *= (-0.00001 * qS);
 
                         // This seems redundant due to the moment addition below?
                         /*
@@ -416,20 +420,24 @@ namespace ferram4
 //                    CoDshift += CenterOfDrag;
                 }
 
-                globalCoDShift = Vector3.Cross(force, moment) / (float)(force_scalar * force_scalar);
+                globalCoDShift = Vector3d.Cross(force, moment) / (force_scalar * force_scalar);
 
-                if (double.IsNaN(force_scalar) || float.IsNaN(moment.sqrMagnitude) || float.IsNaN(globalCoDShift.sqrMagnitude))
+                if (double.IsNaN(force_scalar) || double.IsNaN(moment.sqrMagnitude) || double.IsNaN(globalCoDShift.sqrMagnitude))
                 {
                     Debug.LogWarning("FAR Error: Aerodynamic force = " + force.magnitude + " Aerodynamic moment = " + moment.magnitude + " CoD Local = " + CoDshift.magnitude + " CoD Global = " + globalCoDShift.magnitude + " " + part.partInfo.title);
                     force = moment = CoDshift = globalCoDShift = Vector3.zero;
                     return force;
                 }
 
+                if (Math.Abs(Vector3d.Dot(force, upVector)) > YmaxForce || Vector3d.Exclude(upVector, force).magnitude > XZmaxForce)
+                    if(part.parent)
+                        part.decouple(25);
+
                 //part.Rigidbody.AddTorque(moment);
                 return force;
             }
             else
-                return Vector3.zero;
+                return Vector3d.zero;
         }
 
 
@@ -544,7 +552,7 @@ namespace ferram4
 
                 Vector3 orientation = attachNodeGroup[0].position;
 
-                if (Vector3.Dot(orientation, localUpVector) > 1)
+                if (Vector3d.Dot(orientation, localUpVector) > 1)
                     newAttachNodeData.pitchesAwayFromUpVec = true;
                 else
                     newAttachNodeData.pitchesAwayFromUpVec = false;
@@ -597,7 +605,7 @@ namespace ferram4
                 }
                 orientation /= attachNodeGroup.Count;
 
-                if (Vector3.Dot(orientation, localUpVector) > 1)
+                if (Vector3d.Dot(orientation, localUpVector) > 1)
                     newAttachNodeData.pitchesAwayFromUpVec = true;
                 else
                     newAttachNodeData.pitchesAwayFromUpVec = false;
@@ -657,7 +665,7 @@ namespace ferram4
 
                 orientation /= attachNodeGroup.Count;
 
-                if (Vector3.Dot(orientation, localUpVector) > 1)
+                if (Vector3d.Dot(orientation, localUpVector) > 1)
                     newAttachNodeData.pitchesAwayFromUpVec = true;
                 else
                     newAttachNodeData.pitchesAwayFromUpVec = false;
@@ -763,7 +771,7 @@ namespace ferram4
 
                 Vector3 orientation = position;
 
-                if (Vector3.Dot(orientation, localUpVector) > 1)
+                if (Vector3d.Dot(orientation, localUpVector) > 1)
                     newAttachNodeData.pitchesAwayFromUpVec = true;
                 else
                     newAttachNodeData.pitchesAwayFromUpVec = false;
@@ -800,7 +808,7 @@ namespace ferram4
 
                 Vector3 orientation = position;
 
-                if (Vector3.Dot(orientation, localUpVector) > 1)
+                if (Vector3d.Dot(orientation, localUpVector) > 1)
                     newAttachNodeData.pitchesAwayFromUpVec = true;
                 else
                     newAttachNodeData.pitchesAwayFromUpVec = false;
@@ -839,7 +847,7 @@ namespace ferram4
 
             Transform transform = part.partTransform;
 
-            Vector3 partUpVector = transform.TransformDirection(localUpVector);
+            Vector3d partUpVector = transform.TransformDirection(localUpVector);
 
             //print("Updating drag for " + part.partInfo.title);
             foreach (AttachNode Attach in part.attachNodes)

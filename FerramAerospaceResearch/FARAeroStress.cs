@@ -27,7 +27,7 @@ namespace ferram4
             parsedTemplate.YmaxStress = 500;
             parsedTemplate.name = "default";
             parsedTemplate.minNumResources = 0;
-            parsedTemplate.resources = new List<PartResourceDefinition>();
+            parsedTemplate.resources = new List<string>();
             parsedTemplate.rejectUnlistedResources = false;
 
             if (template.HasValue("name"))
@@ -41,18 +41,20 @@ namespace ferram4
             {
                 ConfigNode resources = template.GetNode("Resources");
                 if(resources.HasValue("numReq"))
-                    int.TryParse(template.GetValue("numReq"), out parsedTemplate.minNumResources);
+                    int.TryParse(resources.GetValue("numReq"), out parsedTemplate.minNumResources);
 
                 if (resources.HasValue("rejectUnlistedResources"))
-                    bool.TryParse(template.GetValue("rejectUnlistedResources"), out parsedTemplate.rejectUnlistedResources);
+                    bool.TryParse(resources.GetValue("rejectUnlistedResources"), out parsedTemplate.rejectUnlistedResources);
 
                 PartResourceLibrary l = PartResourceLibrary.Instance;
                 foreach (string resString in resources.GetValues("res"))
                 {
                     if (l.resourceDefinitions.Contains(resString))
-                        parsedTemplate.resources.Add(l.resourceDefinitions[resString]);
+                        parsedTemplate.resources.Add(resString);
                 }
             }
+
+            Debug.Log("Created Template: " + parsedTemplate.name + "\n\rYmaxStress: " + parsedTemplate.YmaxStress + "\n\rXZmaxStress: " + parsedTemplate.XZmaxStress + "\n\rNumResReq: " + parsedTemplate.minNumResources + "\n\rRejectUnlistedRes: " + parsedTemplate.rejectUnlistedResources + "\n\rNumResources: " + parsedTemplate.resources.Count);
 
             return parsedTemplate;
         }
@@ -66,32 +68,36 @@ namespace ferram4
             foreach (FARPartStressTemplate candidate in StressTemplates)
             {
                 //If it doesn't even contain enough resources, it'll never be this template
-                if (resCount < candidate.minNumResources)
+                if (resCount <= candidate.minNumResources)
                     continue;
 
                 if (candidate.rejectUnlistedResources)
                 {
-                    bool cont = false;
-                    foreach (PartResourceDefinition res in p.Resources)
-                        if (!candidate.resources.Contains(res))
-                        {
-                            cont = true;
-                            break;
-                        }
-                    if (cont)
-                        continue;
-                }
-                else
-                {
                     bool cont = true;
                     int numRes = 0;
-                    foreach (PartResourceDefinition res in p.Resources)
-                        if (candidate.resources.Contains(res))
+                    foreach (PartResource res in p.Resources.list)
+                        if (candidate.resources.Contains(res.info.name))
                         {
                             numRes++;
                             cont = false;
                         }
+                        else
+                        {
+                            cont = true;
+                            break;
+                        }
+
                     if (cont || numRes < candidate.minNumResources)
+                        continue;
+                }
+                else
+                {
+                    int numRes = 0;
+                    foreach (PartResource res in p.Resources.list)
+                            numRes++;
+
+                        
+                    if (numRes < candidate.minNumResources)
                         continue;
                 }
 
@@ -109,7 +115,7 @@ namespace ferram4
         public string name;
         public double YmaxStress;
         public double XZmaxStress;
-        public List<PartResourceDefinition> resources;
+        public List<string> resources;
         public int minNumResources;
         public bool rejectUnlistedResources;
     }

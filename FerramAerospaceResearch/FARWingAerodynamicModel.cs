@@ -88,10 +88,10 @@ namespace ferram4
         protected double effective_AR = 4;
 
         [KSPField(isPersistant = false, guiActive = false, guiName = "Current lift", guiUnits = "kN", guiFormat = "F3")]
-        protected double currentLift = 0.0;
+        protected float currentLift = 0.0f;
 
         [KSPField(isPersistant = false, guiActive = false, guiName = "Current drag", guiUnits = "kN", guiFormat = "F3")]
-        protected double currentDrag = 0.0;
+        protected float currentDrag = 0.0f;
 
         private double liftslope = 0;
         protected double ClCdInterference = 1;
@@ -427,8 +427,8 @@ namespace ferram4
             //lift and drag vectors
             Vector3d L = liftDirection * (q * Cl * S);    //lift;
             Vector3d D = velocity_normalized * (-q * Cd * S);                         //drag is parallel to velocity vector
-            currentLift = L.magnitude * 0.001;
-            currentDrag = D.magnitude * 0.001;
+            currentLift = (float)(L.magnitude * 0.001);
+            currentDrag = (float)(D.magnitude * 0.001);
             Vector3d force = (L + D) * 0.001;
             if (double.IsNaN(force.sqrMagnitude) || double.IsNaN(AerodynamicCenter.sqrMagnitude))// || float.IsNaN(moment.magnitude))
             {
