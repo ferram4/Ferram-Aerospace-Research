@@ -111,7 +111,7 @@ namespace ferram4
         public Transform[] PartModelTransforms = null;
         public Transform[] VesselModelTransforms = null;
 
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Current drag", guiUnits = "kN", guiFormat = "D3")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Current drag", guiUnits = "kN", guiFormat = "F3")]
         protected float currentDrag = 0.0f;
 
         public double YmaxForce = double.MaxValue;
