@@ -1,6 +1,6 @@
 ﻿/*
 Ferram Aerospace Research v0.13.1
-Copyright 2013, Michael Ferrara, aka Ferram4
+Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
 
@@ -91,7 +91,7 @@ namespace ferram4
         private Vector3d perp = Vector3.zero;
         private Vector3d liftDir = Vector3.zero;
         //private ModuleLandingGear gear = null;
-        private Dictionary<Vector3, attachNodeData> attachNodeDragDict = new Dictionary<Vector3, attachNodeData>();
+        private Dictionary<Vector3d, attachNodeData> attachNodeDragDict = new Dictionary<Vector3d, attachNodeData>();
 
         [KSPField(isPersistant = false)]
         public Vector3d CenterOfDrag = Vector3d.zero;
@@ -245,13 +245,13 @@ namespace ferram4
 
         public double GetCl()
         {
-            Vector3 backward;
+            Vector3d backward;
             if (start == StartState.Editor)
                 backward = -EditorLogic.startPod.transform.forward;
             else
                 backward = -vessel.transform.forward;
             double ClUpwards;
-            ClUpwards = Vector3.Dot(liftDir, backward);
+            ClUpwards = Vector3d.Dot(liftDir, backward);
             ClUpwards *= Cl;
 
             return ClUpwards;
@@ -294,7 +294,7 @@ namespace ferram4
                         double soundspeed, v_scalar = velocity.magnitude;
 
                         double rho = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
-                        if (rho > 0f && v_scalar > 0.1f)
+                        if (rho > 0 && v_scalar > 0.1)
                         {
                             Vector3d force = RunDragCalculation(velocity, v_scalar / soundspeed, rho);
                             rb.AddForceAtPosition(force, GetCoD());
@@ -370,7 +370,7 @@ namespace ferram4
                 CoDshift = Vector3d.zero;
                 Cd = 0;
 
-                Vector3d velocity_normalized = velocity / (float)v_scalar;
+                Vector3d velocity_normalized = velocity / v_scalar;
                 //float Parallel = Vector3.Dot(upVector, velocity_normalized);
 
                 Vector3d upVector = part_transform.TransformDirection(localUpVector);
@@ -690,7 +690,7 @@ namespace ferram4
                 UpdateShipPartsList();
 
             if (attachNodeDragDict == null)
-                attachNodeDragDict = new Dictionary<Vector3, attachNodeData>();
+                attachNodeDragDict = new Dictionary<Vector3d, attachNodeData>();
 
             attachNodeDragDict.Clear();
 
@@ -841,7 +841,7 @@ namespace ferram4
                 UpdateShipPartsList();
 
             if (attachNodeDragDict == null)
-                attachNodeDragDict = new Dictionary<Vector3, attachNodeData>();
+                attachNodeDragDict = new Dictionary<Vector3d, attachNodeData>();
 
             attachNodeDragDict.Clear();
 
@@ -943,14 +943,14 @@ namespace ferram4
         private void DragModel(Vector3d local_velocity, double M)
         {
             // Has the same x/y/z as the vertices in PartMaxBoundaries etc
-            Vector3 model_velocity = to_model_rotation * local_velocity;
+            Vector3d model_velocity = to_model_rotation * local_velocity;
 
             double viscousLift, potentialLift, newtonianLift;
             viscousLift = potentialLift = newtonianLift = 0;
             double CdAdd = 0;
             //float AxialProportion = Vector3.Dot(localUpVector, local_velocity);
             double AxialProportion = model_velocity.y;
-            float AxialProportion_flt = model_velocity.y;
+            float AxialProportion_flt = (float)model_velocity.y;
             double AxialProportion_2 = AxialProportion * AxialProportion;
             double OneMinusAxial_2 = Math.Abs(1 - AxialProportion_2);
             double M_2 = M * M;
@@ -972,7 +972,7 @@ namespace ferram4
                 crossflowParameter /= crossflow;
 
             crossflowParameter = crossflowParameter * majorMinorAxisRatio + (1 - crossflowParameter) / majorMinorAxisRatio;
-            if (AxialProportion_2 > 0.98f)
+            if (AxialProportion_2 > 0.98)
             {
                 crossflowParameter *= 50 * OneMinusAxial_2;
             }
@@ -1009,9 +1009,9 @@ namespace ferram4
 
             Cd *= MachMultiplier;
 
-            foreach (KeyValuePair<Vector3, attachNodeData> pair in attachNodeDragDict)
+            foreach (KeyValuePair<Vector3d, attachNodeData> pair in attachNodeDragDict)
             {
-                double dotProd = Vector3.Dot(pair.Key.normalized, local_velocity);
+                double dotProd = Vector3d.Dot(pair.Key.normalized, local_velocity);
                 double tmp = 0;
                 double Cltmp = 0;
                 if (dotProd < 0)
@@ -1029,13 +1029,13 @@ namespace ferram4
 //                    CoDshiftOffset *= Mathf.Sqrt(Mathf.Clamp01(1 - dotProd));
 //                    CoDshiftOffset *= Mathf.Sqrt(1.5f * pair.Value);
 
-                    CoDshift += pair.Key * (float)(tmp / (tmp + Cd));
+                    CoDshift += pair.Key * (tmp / (tmp + Cd));
                 }
                 else
                 {
-                    Vector3 worldPairVec = part_transform.TransformDirection(pair.Key.normalized);
+                    Vector3d worldPairVec = part_transform.TransformDirection(pair.Key.normalized);
                     double dotProd_2 = dotProd * dotProd;
-                    double liftProd = Vector3.Dot(worldPairVec, liftDir);
+                    double liftProd = Vector3d.Dot(worldPairVec, liftDir);
 
                     tmp = maxPressureCoeff * dotProd_2 * dotProd;
                     tmp *= pair.Value.areaValue;
@@ -1049,7 +1049,7 @@ namespace ferram4
 
                     double tmpCdCl = tmp + Math.Abs(Cltmp);
 
-                    CoDshift += pair.Key * (float)((tmpCdCl) / (tmpCdCl + Cd)) + CoDshiftOffset;
+                    CoDshift += pair.Key * ((tmpCdCl) / (tmpCdCl + Cd)) + CoDshiftOffset;
                     if(pair.Value.pitchesAwayFromUpVec)
                         Cm -= 0.25 * radius * pair.Value.areaValue / S * Math.Abs(liftProd);
                     else

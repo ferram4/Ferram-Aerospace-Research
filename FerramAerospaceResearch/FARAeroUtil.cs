@@ -1,6 +1,6 @@
 ﻿/*
 Ferram Aerospace Research v0.13.1
-Copyright 2013, Michael Ferrara, aka Ferram4
+Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
 
@@ -34,7 +34,6 @@ Copyright 2013, Michael Ferrara, aka Ferram4
  */
 
 
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -66,6 +65,8 @@ namespace ferram4
 
         public static double MaxPressureCoefficientCalc(double M)
         {
+            if (M <= 0)
+                return 0;
             double value;
             double gamma = currentBodyAtm.y;
             if (M <= 1)
@@ -842,7 +843,7 @@ namespace ferram4
                     TempCurve3.Add(1, cdM);
 
 
-                    if (HighLogic.LoadedSceneIsFlight && !FARAeroStress.PartIsGreeble(p, data.crossSectionalArea, data.finenessRatio, data.area))
+                    if (HighLogic.LoadedSceneIsFlight && !FARAeroStress.PartIsGreeble(p, data.crossSectionalArea, data.finenessRatio, data.area) && FARDebugValues.allowStructuralFailures)
                     {
                         FARPartStressTemplate template = FARAeroStress.DetermineStressTemplate(p);
 
@@ -1155,7 +1156,7 @@ namespace ferram4
         public static double CalculateSinMaxShockAngle(double MachNumber, double gamma)
         {
             double M2 = MachNumber * MachNumber;
-            double gamP1_2_M2 = (gamma + 1) * 0.5f * M2;
+            double gamP1_2_M2 = (gamma + 1) * 0.5 * M2;
 
             double b = gamP1_2_M2;
             b = 2 - b;
@@ -1166,10 +1167,36 @@ namespace ferram4
             double c = gamP1_2_M2 + 1;
             c = -c;
 
-            double sin2def = -b + Math.Sqrt(FARMathUtil.Clamp(b * b - 4 * a * c, 0, double.PositiveInfinity));
+            double tmp = b * b - 4 * a * c;
+
+            double sin2def = -b + Math.Sqrt(FARMathUtil.Clamp(tmp, 0, double.PositiveInfinity));
             sin2def /= (2 * a);
 
             return Math.Sqrt(sin2def);
+        }
+
+        public static double MaxShockAngleCheck(double MachNumber, double gamma, out bool attachedShock)
+        {
+            double M2 = MachNumber * MachNumber;
+            double gamP1_2_M2 = (gamma + 1) * 0.5 * M2;
+
+            double b = gamP1_2_M2;
+            b = 2 - b;
+            b *= M2;
+
+            double a = gamma * M2 * M2;
+
+            double c = gamP1_2_M2 + 1;
+            c = -c;
+
+            double tmp = b * b - 4 * a * c;
+
+            if (tmp > 0)
+                attachedShock = true;
+            else
+                attachedShock = false;
+
+            return tmp;
         }
     }
 }

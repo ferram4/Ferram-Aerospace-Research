@@ -1,6 +1,6 @@
 ﻿/*
 Ferram Aerospace Research v0.13.1
-Copyright 2013, Michael Ferrara, aka Ferram4
+Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
 
@@ -764,6 +764,27 @@ namespace ferram4
 
 
         #region Supersonic Calculations
+
+
+        private void DATCOMSupersonicLiftAndDrag(double M, double cosSweep, double sonicLE, out double Cl, out double Cd)
+        {
+            double perpM = M * cosSweep;
+            bool attachedShock = false;
+            FARAeroUtil.MaxShockAngleCheck(perpM, FARAeroUtil.currentBodyAtm.y, out attachedShock);
+            if (attachedShock)
+            {
+            }
+            else
+            {
+                double Cn;
+
+
+            }
+
+            Cl = Cd = 0;
+        }
+
+
 
         /*       //approximations of oblique shock relation; I can't run an iterative search multiple times every physics update :P
         //returns beta in degrees

@@ -1,6 +1,6 @@
 ﻿/*
 Ferram Aerospace Research v0.13.1
-Copyright 2013, Michael Ferrara, aka Ferram4
+Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
 
@@ -84,6 +84,7 @@ namespace ferram4
             FARDebugValues.displayShielding = GUILayout.Toggle(FARDebugValues.displayShielding, "Display Shielding", thisStyle);
             GUILayout.Label("Debug / Cheat Options");
             FARDebugValues.useSplinesForSupersonicMath = GUILayout.Toggle(FARDebugValues.useSplinesForSupersonicMath, "Use Splines for Supersonic Math", thisStyle);
+            FARDebugValues.allowStructuralFailures = GUILayout.Toggle(FARDebugValues.allowStructuralFailures, "Allow Aero-structural Failures", thisStyle);
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
 
@@ -109,6 +110,7 @@ namespace ferram4
             FARDebugValues.displayCoefficients = Convert.ToBoolean(config.GetValue("displayCoefficients", "false"));
             FARDebugValues.displayShielding = Convert.ToBoolean(config.GetValue("displayShielding", "false"));
             FARDebugValues.useSplinesForSupersonicMath = Convert.ToBoolean(config.GetValue("useSplinesForSupersonicMath", "true"));
+            FARDebugValues.allowStructuralFailures = Convert.ToBoolean(config.GetValue("allowStructuralFailures", "true"));
 
             FARControllableSurface.timeConstant = Convert.ToSingle(config.GetValue("ctrlSurfTimeConstant", "0.05"));
 
@@ -174,6 +176,9 @@ namespace ferram4
             config.SetValue("displayCoefficients", FARDebugValues.displayCoefficients.ToString());
             config.SetValue("displayShielding", FARDebugValues.displayShielding.ToString());
 
+            config.SetValue("useSplinesForSupersonicMath", FARDebugValues.useSplinesForSupersonicMath.ToString());
+            config.SetValue("allowStructuralFailures", FARDebugValues.allowStructuralFailures.ToString());
+
             config.save();
         }
         void OnDestroy()
@@ -192,5 +197,6 @@ namespace ferram4
         public static bool displayShielding = false;
 
         public static bool useSplinesForSupersonicMath = true;
+        public static bool allowStructuralFailures = true;
     }
 }

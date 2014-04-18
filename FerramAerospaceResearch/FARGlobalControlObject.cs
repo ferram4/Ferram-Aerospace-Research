@@ -1,6 +1,6 @@
 ﻿/*
 Ferram Aerospace Research v0.13.1
-Copyright 2013, Michael Ferrara, aka Ferram4
+Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
 
@@ -507,6 +507,8 @@ namespace ferram4
             FARDebugValues.displayForces = Convert.ToBoolean(config.GetValue("displayForces", "false"));
             FARDebugValues.displayCoefficients = Convert.ToBoolean(config.GetValue("displayCoefficients", "false"));
             FARDebugValues.displayShielding = Convert.ToBoolean(config.GetValue("displayShielding", "false"));
+            FARDebugValues.useSplinesForSupersonicMath = Convert.ToBoolean(config.GetValue("useSplinesForSupersonicMath", "true"));
+            FARDebugValues.allowStructuralFailures = Convert.ToBoolean(config.GetValue("allowStructuralFailures", "true"));
 
             FARAeroUtil.bodyAtmosphereConfiguration = new Dictionary<int, Vector3d>();
             int i = 0;
