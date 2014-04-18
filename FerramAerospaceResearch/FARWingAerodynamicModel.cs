@@ -686,7 +686,11 @@ namespace ferram4
                 else
                     sonicLEFactor = (1 - 0.125 * liftslope) * FARMathUtil.Clamp(1 - 1 / sonicLe, 0, 1) + 0.125 * liftslope;
 
-                double normalForce = GetSupersonicPressureDifference(MachNumber, AoA, out axialForce);        //get the pressure difference across the airfoil
+                double normalForce;
+                if (FARDebugValues.useSplinesForSupersonicMath)
+                    normalForce = GetSupersonicPressureDifference(MachNumber, AoA, out axialForce);
+                else
+                    normalForce = GetSupersonicPressureDifferenceNoSpline(MachNumber, AoA, out axialForce);
                 double CosAoA = Math.Cos(AoA);
                 double SinAoA = Math.Sin(AoA);
                 Cl = coefMult * (normalForce * CosAoA * Math.Sign(AoA) * sonicLEFactor - axialForce * SinAoA);
@@ -727,7 +731,11 @@ namespace ferram4
                     sonicLEFactor = (1 - 0.125 * liftslope) * FARMathUtil.Clamp(1 - 1 / sonicLe, 0, 1) + 0.125 * liftslope;
 
                 subScale = 1 - subScale; //Adjust for supersonic code
-                double normalForce = GetSupersonicPressureDifference(M, AoA, out axialForce);
+                double normalForce;
+                if (FARDebugValues.useSplinesForSupersonicMath)
+                    normalForce = GetSupersonicPressureDifference(M, AoA, out axialForce);
+                else
+                    normalForce = GetSupersonicPressureDifferenceNoSpline(M, AoA, out axialForce);
                 double CosAoA = Math.Cos(AoA);
                 double SinAoA = Math.Sin(AoA);
                 Cl += coefMult * (normalForce * CosAoA * Math.Sign(AoA) * sonicLEFactor - axialForce * SinAoA) * (subScale);
@@ -781,6 +789,113 @@ namespace ferram4
 
         //This models the wing using a symmetric diamond airfoil
 
+        private double GetSupersonicPressureDifferenceNoSpline(double M, double AoA, out double axialForce)
+        {
+            double pRatio;
+
+            double maxSinBeta = FARAeroUtil.CalculateSinMaxShockAngle(M, FARAeroUtil.currentBodyAtm.y);//GetBetaMax(M) * FARMathUtil.deg2rad;
+            double minSinBeta = 1 / M;
+
+
+            double halfAngle = 0.05;            //Corresponds to ~2.8 degrees or approximately what you would get from a ~4.8% thick diamond airfoil
+
+            double AbsAoA = Math.Abs(AoA);
+
+            double angle1 = halfAngle - AbsAoA;                  //Region 1 is the upper surface ahead of the max thickness
+            double M1;
+            double p1;       //pressure ratio wrt to freestream pressure
+            if (angle1 >= 0)
+                p1 = ShockWaveCalculationNoSpline(angle1, M, out M1, maxSinBeta, minSinBeta);
+            else
+                p1 = PMExpansionCalculationNoSpline(Math.Abs(angle1), M, out M1, maxSinBeta, minSinBeta);
+
+            //Region 2 is the upper surface behind the max thickness
+            double p2 = PMExpansionCalculationNoSpline(2 * halfAngle, M1, maxSinBeta, minSinBeta) * p1;
+
+            double angle3 = halfAngle + AbsAoA;                  //Region 3 is the lower surface ahead of the max thickness
+            double M3;
+            double p3;       //pressure ratio wrt to freestream pressure
+            p3 = ShockWaveCalculationNoSpline(angle3, M, out M3, maxSinBeta, minSinBeta);
+
+            //Region 4 is the lower surface behind the max thickness
+            double p4 = PMExpansionCalculationNoSpline(2 * halfAngle, M3, maxSinBeta, minSinBeta) * p3;
+
+            //float cosHalfAngle = Mathf.Cos(halfAngle);
+            //float sinHalfAngle = halfAngle;
+
+            pRatio = (p3 + p4) - (p1 + p2);
+
+            axialForce = (p1 + p3) - (p2 + p4);
+            axialForce *= 0.048;               //Thickness of the airfoil
+
+            return pRatio;
+        }
+
+
+        private double ShockWaveCalculationNoSpline(double angle, double inM, out double outM, double maxSinBeta, double minSinBeta)
+        {
+            //float sinBeta = (maxBeta - minBeta) * angle / maxTheta + minBeta;
+            double sinBeta = FARAeroUtil.CalculateSinWeakObliqueShockAngle(inM, FARAeroUtil.currentBodyAtm.y, angle);
+            if (double.IsNaN(sinBeta))
+                sinBeta = maxSinBeta;
+
+            FARMathUtil.Clamp(sinBeta, minSinBeta, maxSinBeta);
+
+            double normalInM = sinBeta * inM;
+            normalInM = FARMathUtil.Clamp(normalInM, 1f, Mathf.Infinity);
+
+            double tanM = inM * Math.Sqrt(FARMathUtil.Clamp(1 - sinBeta * sinBeta, 0, 1));
+
+            double normalOutM = FARAeroUtil.MachBehindShockCalc(normalInM);
+
+            outM = Math.Sqrt(normalOutM * normalOutM + tanM * tanM);
+
+            double pRatio = FARAeroUtil.PressureBehindShockCalc(normalInM);
+
+            return pRatio;
+        }
+
+        private double PMExpansionCalculationNoSpline(double angle, double inM, out double outM, double maxBeta, double minBeta)
+        {
+            inM = FARMathUtil.Clamp(inM, 1, double.PositiveInfinity);
+            double nu1 = FARAeroUtil.PrandtlMeyerMach.Evaluate((float)inM);
+            double theta = angle * FARMathUtil.rad2deg;
+            double nu2 = nu1 + theta;
+            if (nu2 >= FARAeroUtil.maxPrandtlMeyerTurnAngle)
+            {
+                //minStall += (nu2 - FARAeroUtil.maxPrandtlMeyerTurnAngle) * 0.066666667f;
+                //minStall = Mathf.Clamp01(minStall);
+                nu2 = FARAeroUtil.maxPrandtlMeyerTurnAngle;
+            }
+            outM = FARAeroUtil.PrandtlMeyerAngle.Evaluate((float)nu2);
+
+            double ratio;
+
+            ratio = FARAeroUtil.StagnationPressureCalc(inM) / FARAeroUtil.StagnationPressureCalc(outM);
+            return ratio;
+        }
+
+        private double PMExpansionCalculationNoSpline(double angle, double inM, double maxBeta, double minBeta)
+        {
+            inM = FARMathUtil.Clamp(inM, 1, double.PositiveInfinity);
+            double nu1 = FARAeroUtil.PrandtlMeyerMach.Evaluate((float)inM);
+            double theta = angle * FARMathUtil.rad2deg;
+            double nu2 = nu1 + theta;
+            if (nu2 >= FARAeroUtil.maxPrandtlMeyerTurnAngle)
+            {
+                //minStall += (nu2 - FARAeroUtil.maxPrandtlMeyerTurnAngle) * 0.066666667f;
+                //minStall = Mathf.Clamp01(minStall);
+                nu2 = FARAeroUtil.maxPrandtlMeyerTurnAngle;
+            }
+            float outM = FARAeroUtil.PrandtlMeyerAngle.Evaluate((float)nu2);
+
+            double ratio;
+
+            ratio = FARAeroUtil.StagnationPressureCalc(inM) / FARAeroUtil.StagnationPressureCalc(outM);
+            return ratio;
+        }
+
+        
         private double GetSupersonicPressureDifference(double M, double AoA, out double axialForce)
         {
             double pRatio;

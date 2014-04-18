@@ -955,7 +955,12 @@ namespace ferram4
             double OneMinusAxial_2 = Math.Abs(1 - AxialProportion_2);
             double M_2 = M * M;
             double M_2_recip = 1 / M_2;
-            double maxPressureCoeff = FARAeroUtil.MaxPressureCoefficient.Evaluate((float)M);
+            double maxPressureCoeff;
+            if(FARDebugValues.useSplinesForSupersonicMath)
+                maxPressureCoeff = FARAeroUtil.MaxPressureCoefficient.Evaluate((float)M);
+            else
+                maxPressureCoeff = FARAeroUtil.MaxPressureCoefficientCalc(M);
+
             double sepFlowCd = SeparatedFlowDrag(M, M_2, M_2_recip);
 
             //This handles elliptical and other non-circular cross sections

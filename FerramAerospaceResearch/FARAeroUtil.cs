@@ -46,7 +46,7 @@ namespace ferram4
     {
         private static FloatCurve prandtlMeyerMach = null;
         private static FloatCurve prandtlMeyerAngle = null;
-        public static float maxPrandtlMeyerTurnAngle = 0;
+        public static double maxPrandtlMeyerTurnAngle = 0;
         private static FloatCurve pressureBehindShock = null;
         private static FloatCurve machBehindShock = null;
         private static FloatCurve stagnationPressure = null;
@@ -59,10 +59,74 @@ namespace ferram4
         public static double incompressibleRearAttachDrag;
         public static double sonicRearAdditionalAttachDrag;
 
-        public static Dictionary<int, Vector3> bodyAtmosphereConfiguration = null;
+        public static Dictionary<int, Vector3d> bodyAtmosphereConfiguration = null;
         public static int prevBody = -1;
-        public static Vector3 currentBodyAtm = new Vector3();
+        public static Vector3d currentBodyAtm = new Vector3d();
         public static double currentBodyTemp = 273.15;
+
+        public static double MaxPressureCoefficientCalc(double M)
+        {
+            double value;
+            double gamma = currentBodyAtm.y;
+            if (M <= 1)
+                value = StagnationPressureCalc(M);
+            else
+            {
+
+                value = (gamma + 1) * (gamma + 1);                  //Rayleigh Pitot Tube Formula; gives max stagnation pressure behind shock
+                value *= M * M;
+                value /= (4 * gamma * M * M - 2 * (gamma - 1));
+                value = Math.Pow(value, 3.5);
+
+                value *= (1 - gamma + 2 * gamma * M * M);
+                value /= (gamma + 1);
+            }
+            value--;                                //and now to conver to pressure coefficient
+            value *= 2 / (gamma * M * M);
+
+            return value;
+        }
+
+        public static double StagnationPressureCalc(double M)
+        {
+
+            double ratio;
+            double gamma = currentBodyAtm.y;
+            ratio = M * M;
+            ratio *= (gamma - 1);
+            ratio *= 0.5;
+            ratio++;
+
+            ratio = Math.Pow(ratio, gamma / (gamma - 1));
+            return ratio;
+        }
+
+        public static double PressureBehindShockCalc(double M)
+        {
+            double ratio;
+            double gamma = currentBodyAtm.y;
+            ratio = M * M;
+            ratio--;
+            ratio *= 2 * gamma;
+            ratio /= (gamma + 1);
+            ratio++;
+
+            return ratio;
+
+        }
+
+        public static double MachBehindShockCalc(double M)
+        {
+            double ratio;
+            double gamma = currentBodyAtm.y;
+            ratio = (gamma - 1) * 0.5;
+            ratio *= M * M;
+            ratio++;
+            ratio /= (gamma * M * M - (gamma - 1) * 0.5);
+            ratio = Math.Sqrt(ratio);
+
+            return ratio;
+        }
 
         public static FloatCurve MaxPressureCoefficient
         {
@@ -73,31 +137,31 @@ namespace ferram4
                     MonoBehaviour.print("Stagnation Pressure Coefficient Curve Initialized");
                     maxPressureCoefficient = new FloatCurve();
 
-                    float M = 0.05f;
+                    double M = 0.05;
                     //float gamma = 1.4f;
 
                     maxPressureCoefficient.Add(0, 1);
 
-                    if (currentBodyAtm == new Vector3())
+                    if (currentBodyAtm == new Vector3d())
                     {
-                        currentBodyAtm.y = 1.4f;
-                        currentBodyAtm.z = 8.3145f * 1000f / 28.96f;
+                        currentBodyAtm.y = 1.4;
+                        currentBodyAtm.z = 8.3145 * 1000 / 28.96;
                         currentBodyAtm.x = currentBodyAtm.y * currentBodyAtm.z;
                     }
 
                     while (M < 50)
                     {
-                        float value = 0;
+                        double value = 0;
                         if (M <= 1)
                         {
-                            value = StagnationPressure.Evaluate(M);
+                            value = StagnationPressure.Evaluate((float)M);
                         }
                         else
                         {
                             value = (currentBodyAtm.y + 1) * (currentBodyAtm.y + 1);                  //Rayleigh Pitot Tube Formula; gives max stagnation pressure behind shock
                             value *= M * M;
                             value /= (4 * currentBodyAtm.y * M * M - 2 * (currentBodyAtm.y - 1));
-                            value = Mathf.Pow(value, 3.5f);
+                            value = Math.Pow(value, 3.5);
 
                             value *= (1 - currentBodyAtm.y + 2 * currentBodyAtm.y * M * M);
                             value /= (currentBodyAtm.y + 1);
@@ -106,15 +170,15 @@ namespace ferram4
                         value *= 2 / (currentBodyAtm.y * M * M);
 
 
-                        maxPressureCoefficient.Add(M, value);
+                        maxPressureCoefficient.Add((float)M, (float)value);
 
 
                         if (M < 2)
-                            M += 0.1f;
+                            M += 0.1;
                         else if (M < 5)
-                            M += 0.5f;
+                            M += 0.5;
                         else
-                            M += 2.5f;
+                            M += 2.5;
                     }
 
 
@@ -146,32 +210,32 @@ namespace ferram4
                     MonoBehaviour.print("Prandlt-Meyer Expansion Curves Initialized");
                     prandtlMeyerMach = new FloatCurve();
                     prandtlMeyerAngle = new FloatCurve();
-                    float M = 1;
+                    double M = 1;
                     //float gamma = 1.4f;
 
-                    float gamma_ = Mathf.Sqrt((currentBodyAtm.y + 1) / (currentBodyAtm.y - 1));
+                    double gamma_ = Math.Sqrt((currentBodyAtm.y + 1) / (currentBodyAtm.y - 1));
 
                     while (M < 250)
                     {
-                        float mach = Mathf.Sqrt(M * M - 1);
+                        double mach = Math.Sqrt(M * M - 1);
 
-                        float nu = Mathf.Atan(mach / gamma_);
+                        double nu = Math.Atan(mach / gamma_);
                         nu *= gamma_;
-                        nu -= Mathf.Atan(mach);
-                        nu *= 180 / Mathf.PI;
+                        nu -= Math.Atan(mach);
+                        nu *= FARMathUtil.rad2deg;
 
-                        float nu_mach = (currentBodyAtm.y - 1) / 2;
+                        double nu_mach = (currentBodyAtm.y - 1) / 2;
                         nu_mach *= M * M;
                         nu_mach++;
                         nu_mach *= M;
                         nu_mach = mach / nu_mach;
-                        nu_mach *= 180 / Mathf.PI;
+                        nu_mach *= FARMathUtil.rad2deg;
 
-                        prandtlMeyerMach.Add(M, nu, nu_mach, nu_mach);
+                        prandtlMeyerMach.Add((float)M, (float)nu, (float)nu_mach, (float)nu_mach);
 
                         nu_mach = 1 / nu_mach;
 
-                        prandtlMeyerAngle.Add(nu, M, nu_mach, nu_mach);
+                        prandtlMeyerAngle.Add((float)nu, (float)M, (float)nu_mach, (float)nu_mach);
 
                         if (M < 3)
                             M += 0.1f;
@@ -199,43 +263,43 @@ namespace ferram4
                     MonoBehaviour.print("Prandlt-Meyer Expansion Curves Initialized");
                     prandtlMeyerMach = new FloatCurve();
                     prandtlMeyerAngle = new FloatCurve();
-                    float M = 1;
+                    double M = 1;
                     //float gamma = 1.4f;
 
-
-                    float gamma_ = Mathf.Sqrt((currentBodyAtm.y + 1) / (currentBodyAtm.y - 1));
+                    double gamma_ = Math.Sqrt((currentBodyAtm.y + 1) / (currentBodyAtm.y - 1));
 
                     while (M < 250)
                     {
-                        float mach = Mathf.Sqrt(M * M - 1);
+                        double mach = Math.Sqrt(M * M - 1);
 
-                        float nu = Mathf.Atan(mach / gamma_);
+                        double nu = Math.Atan(mach / gamma_);
                         nu *= gamma_;
-                        nu -= Mathf.Atan(mach);
-                        nu *= 180 / Mathf.PI;
+                        nu -= Math.Atan(mach);
+                        nu *= FARMathUtil.rad2deg;
 
-                        float nu_mach = (currentBodyAtm.y - 1) / 2;
+                        double nu_mach = (currentBodyAtm.y - 1) / 2;
                         nu_mach *= M * M;
                         nu_mach++;
                         nu_mach *= M;
                         nu_mach = mach / nu_mach;
-                        nu_mach *= 180 / Mathf.PI;
+                        nu_mach *= FARMathUtil.rad2deg;
 
-                        prandtlMeyerMach.Add(M, nu, nu_mach, nu_mach);
+                        prandtlMeyerMach.Add((float)M, (float)nu, (float)nu_mach, (float)nu_mach);
 
                         nu_mach = 1 / nu_mach;
 
-                        prandtlMeyerAngle.Add(nu, M, nu_mach, nu_mach);
+                        prandtlMeyerAngle.Add((float)nu, (float)M, (float)nu_mach, (float)nu_mach);
 
                         if (M < 3)
-                            M += 0.1f;
+                            M += 0.1;
                         else if (M < 10)
-                            M += 0.5f;
+                            M += 0.5;
                         else if (M < 25)
                             M += 2;
                         else
                             M += 25;
                     }
+
                     maxPrandtlMeyerTurnAngle = gamma_ - 1;
                     maxPrandtlMeyerTurnAngle *= 90;
                 }
@@ -252,9 +316,9 @@ namespace ferram4
                 {
                     MonoBehaviour.print("Normal Shock Pressure Curve Initialized");
                     pressureBehindShock = new FloatCurve();
-                    float ratio;
-                    float d_ratio;
-                    float M = 1;
+                    double ratio;
+                    double d_ratio;
+                    double M = 1;
                     //float gamma = 1.4f;
                     while (M < 250)  //Calculates the pressure behind a normal shock
                     {
@@ -267,11 +331,11 @@ namespace ferram4
                         d_ratio = M * 4 * currentBodyAtm.y;
                         d_ratio /= (currentBodyAtm.y + 1);
 
-                        pressureBehindShock.Add(M, ratio, d_ratio, d_ratio);
+                        pressureBehindShock.Add((float)M, (float)ratio, (float)d_ratio, (float)d_ratio);
                         if (M < 3)
-                            M += 0.1f;
+                            M += 0.1;
                         else if (M < 10)
-                            M += 0.5f;
+                            M += 0.5;
                         else if (M < 25)
                             M += 2;
                         else
@@ -290,9 +354,9 @@ namespace ferram4
                 {
                     MonoBehaviour.print("Normal Shock Mach Number Curve Initialized");
                     machBehindShock = new FloatCurve();
-                    float ratio;
-                    float d_ratio;
-                    float M = 1;
+                    double ratio;
+                    double d_ratio;
+                    double M = 1;
                     //float gamma = 1.4f;
                     while (M < 250)  //Calculates the pressure behind a normal shock
                     {
@@ -301,15 +365,15 @@ namespace ferram4
                         ratio++;
                         ratio /= (currentBodyAtm.y * M * M - (currentBodyAtm.y - 1) / 2);
 
-                        d_ratio = 4 * currentBodyAtm.y * currentBodyAtm.y * Mathf.Pow(M, 4) - 4 * (currentBodyAtm.y - 1) * currentBodyAtm.y * M * M + Mathf.Pow(currentBodyAtm.y - 1, 2);
+                        d_ratio = 4 * currentBodyAtm.y * currentBodyAtm.y * Math.Pow(M, 4) - 4 * (currentBodyAtm.y - 1) * currentBodyAtm.y * M * M + Math.Pow(currentBodyAtm.y - 1, 2);
                         d_ratio = 1 / d_ratio;
                         d_ratio *= 4 * (currentBodyAtm.y * M * M - (currentBodyAtm.y - 1) / 2) * (currentBodyAtm.y - 1) * M - 8 * currentBodyAtm.y * M * (1 + (currentBodyAtm.y - 1) / 2 * M * M);
 
-                        machBehindShock.Add(Mathf.Sqrt(M), ratio);//, d_ratio, d_ratio);
+                        machBehindShock.Add((float)Math.Sqrt(M), (float)ratio);//, d_ratio, d_ratio);
                         if (M < 3)
-                            M += 0.1f;
+                            M += 0.1;
                         else if (M < 10)
-                            M += 0.5f;
+                            M += 0.5;
                         else if (M < 25)
                             M += 2;
                         else
@@ -328,9 +392,9 @@ namespace ferram4
                 {
                     MonoBehaviour.print("Stagnation Pressure Curve Initialized");
                     stagnationPressure = new FloatCurve();
-                    float ratio;
-                    float d_ratio;
-                    float M = 0;
+                    double ratio;
+                    double d_ratio;
+                    double M = 0;
                     //float gamma = 1.4f;
                     while (M < 250)  //calculates stagnation pressure
                     {
@@ -341,16 +405,16 @@ namespace ferram4
                         
                         d_ratio = ratio;
 
-                        ratio = Mathf.Pow(ratio, currentBodyAtm.y / (currentBodyAtm.y - 1));
+                        ratio = Math.Pow(ratio, currentBodyAtm.y / (currentBodyAtm.y - 1));
 
-                        d_ratio = Mathf.Pow(d_ratio, (currentBodyAtm.y / (currentBodyAtm.y - 1)) - 1);
+                        d_ratio = Math.Pow(d_ratio, (currentBodyAtm.y / (currentBodyAtm.y - 1)) - 1);
                         d_ratio *= M * currentBodyAtm.y;
 
-                        stagnationPressure.Add(M, ratio, d_ratio, d_ratio);
+                        stagnationPressure.Add((float)M, (float)ratio, (float)d_ratio, (float)d_ratio);
                         if (M < 3)
-                            M += 0.1f;
+                            M += 0.1;
                         else if (M < 10)
-                            M += 0.5f;
+                            M += 0.5;
                         else if (M < 25)
                             M += 2;
                         else
@@ -416,17 +480,17 @@ namespace ferram4
                 {
                     wingCamberFactor = new FloatCurve();
                     wingCamberFactor.Add(0, 0);
-                    for (float i = 0.1f; i <= 0.9f; i += 0.1f)
+                    for (double i = 0.1; i <= 0.9; i += 0.1)
                     {
-                        float tmp = i * 2;
+                        double tmp = i * 2;
                         tmp--;
-                        tmp = Mathf.Acos(tmp);
+                        tmp = Math.Acos(tmp);
 
-                        tmp = tmp - Mathf.Sin(tmp);
-                        tmp /= Mathf.PI;
+                        tmp = tmp - Math.Sin(tmp);
+                        tmp /= Math.PI;
                         tmp = 1 - tmp;
 
-                        wingCamberFactor.Add(i, tmp);
+                        wingCamberFactor.Add((float)i, (float)tmp);
                     }
                     wingCamberFactor.Add(1, 1);
                 }
@@ -441,15 +505,15 @@ namespace ferram4
                 if (wingCamberMoment == null)
                 {
                     wingCamberMoment = new FloatCurve();
-                    for (float i = 0f; i <= 1f; i += 0.1f)
+                    for (double i = 0; i <= 1; i += 0.1)
                     {
-                        float tmp = i * 2;
+                        double tmp = i * 2;
                         tmp--;
-                        tmp = Mathf.Acos(tmp);
+                        tmp = Math.Acos(tmp);
 
-                        tmp = (Mathf.Sin(2 * tmp) - 2 * Mathf.Sin(tmp)) / (8 * (Mathf.PI - tmp + Mathf.Sin(tmp)));
+                        tmp = (Math.Sin(2 * tmp) - 2 * Math.Sin(tmp)) / (8 * (Math.PI - tmp + Math.Sin(tmp)));
 
-                        wingCamberMoment.Add(i, tmp);
+                        wingCamberMoment.Add((float)i, (float)tmp);
                     }
                 }
                 return wingCamberMoment;
@@ -778,16 +842,18 @@ namespace ferram4
                     TempCurve3.Add(1, cdM);
 
 
-                    if (HighLogic.LoadedSceneIsFlight)
+                    if (HighLogic.LoadedSceneIsFlight && !FARAeroStress.PartIsGreeble(p, data.crossSectionalArea, data.finenessRatio, data.area))
                     {
                         FARPartStressTemplate template = FARAeroStress.DetermineStressTemplate(p);
 
                         YmaxForce = template.YmaxStress;    //in MPa
                         YmaxForce *= data.crossSectionalArea;
 
-                        XZmaxForce = 2 * Math.Sqrt(data.crossSectionalArea / Math.PI);
+                        /*XZmaxForce = 2 * Math.Sqrt(data.crossSectionalArea / Math.PI);
                         XZmaxForce = XZmaxForce * data.finenessRatio * XZmaxForce;
-                        XZmaxForce *= template.XZmaxStress;
+                        XZmaxForce *= template.XZmaxStress;*/
+
+                        XZmaxForce = template.XZmaxStress * data.area * 0.5;
 
                         Debug.Log("Template: " + template.name + " YmaxForce: " + YmaxForce + " XZmaxForce: " + XZmaxForce);
                     }
@@ -800,7 +866,6 @@ namespace ferram4
                 return;
             }
         }
-
 
         //Approximate drag of a tapering conic body
         public static double PressureDragDueToTaperingConic(double finenessRatio, double taperRatio, double crossSectionalArea, double surfaceArea)

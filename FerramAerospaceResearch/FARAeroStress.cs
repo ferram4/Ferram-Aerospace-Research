@@ -28,7 +28,11 @@ namespace ferram4
             parsedTemplate.name = "default";
             parsedTemplate.minNumResources = 0;
             parsedTemplate.resources = new List<string>();
+            parsedTemplate.excludeResources = new List<string>();
             parsedTemplate.rejectUnlistedResources = false;
+            parsedTemplate.crewed = false;
+            parsedTemplate.flowModeNeeded = false;
+            parsedTemplate.flowMode = ResourceFlowMode.NO_FLOW;
 
             if (template.HasValue("name"))
                 parsedTemplate.name = template.GetValue("name");
@@ -36,6 +40,8 @@ namespace ferram4
                 double.TryParse(template.GetValue("YmaxStress"), out parsedTemplate.YmaxStress);
             if (template.HasValue("XZmaxStress"))
                 double.TryParse(template.GetValue("XZmaxStress"), out parsedTemplate.XZmaxStress);
+            if (template.HasValue("requiresCrew"))
+                bool.TryParse(template.GetValue("requiresCrew"), out parsedTemplate.crewed);
 
             if (template.HasNode("Resources"))
             {
@@ -46,15 +52,31 @@ namespace ferram4
                 if (resources.HasValue("rejectUnlistedResources"))
                     bool.TryParse(resources.GetValue("rejectUnlistedResources"), out parsedTemplate.rejectUnlistedResources);
 
+                if (resources.HasValue("flowMode"))
+                {
+                    parsedTemplate.flowModeNeeded = true;
+                    string flowString = resources.GetValue("flowMode").ToLowerInvariant();
+
+                    if(flowString == "all_vessel")
+                        parsedTemplate.flowMode = ResourceFlowMode.ALL_VESSEL;
+                    else if (flowString == "stack_priority_search")
+                        parsedTemplate.flowMode = ResourceFlowMode.STACK_PRIORITY_SEARCH;
+                    else if (flowString == "stage_priority_flow")
+                        parsedTemplate.flowMode = ResourceFlowMode.STAGE_PRIORITY_FLOW;
+                }
+
                 PartResourceLibrary l = PartResourceLibrary.Instance;
                 foreach (string resString in resources.GetValues("res"))
                 {
                     if (l.resourceDefinitions.Contains(resString))
                         parsedTemplate.resources.Add(resString);
                 }
+                foreach (string resString in resources.GetValues("excludeRes"))
+                {
+                    if (l.resourceDefinitions.Contains(resString))
+                        parsedTemplate.excludeResources.Add(resString);
+                }
             }
-
-            Debug.Log("Created Template: " + parsedTemplate.name + "\n\rYmaxStress: " + parsedTemplate.YmaxStress + "\n\rXZmaxStress: " + parsedTemplate.XZmaxStress + "\n\rNumResReq: " + parsedTemplate.minNumResources + "\n\rRejectUnlistedRes: " + parsedTemplate.rejectUnlistedResources + "\n\rNumResources: " + parsedTemplate.resources.Count);
 
             return parsedTemplate;
         }
@@ -64,11 +86,14 @@ namespace ferram4
             FARPartStressTemplate template = StressTemplates[0];
 
             int resCount = p.Resources.Count;
+            bool crewed = p.CrewCapacity > 0;
 
             foreach (FARPartStressTemplate candidate in StressTemplates)
             {
-                //If it doesn't even contain enough resources, it'll never be this template
-                if (resCount <= candidate.minNumResources)
+                if (candidate.crewed != crewed)
+                    continue;
+
+                if (resCount < candidate.minNumResources)
                     continue;
 
                 if (candidate.rejectUnlistedResources)
@@ -76,6 +101,7 @@ namespace ferram4
                     bool cont = true;
                     int numRes = 0;
                     foreach (PartResource res in p.Resources.list)
+                    {
                         if (candidate.resources.Contains(res.info.name))
                         {
                             numRes++;
@@ -86,6 +112,7 @@ namespace ferram4
                             cont = true;
                             break;
                         }
+                    }
 
                     if (cont || numRes < candidate.minNumResources)
                         continue;
@@ -94,19 +121,50 @@ namespace ferram4
                 {
                     int numRes = 0;
                     foreach (PartResource res in p.Resources.list)
-                            numRes++;
+                        if (!candidate.excludeResources.Contains(res.info.name))
+                            if(!candidate.flowModeNeeded || res.info.resourceFlowMode == candidate.flowMode)
+                                numRes++;
+                    
 
                         
                     if (numRes < candidate.minNumResources)
                         continue;
                 }
 
-
                 template = candidate;
             }
 
 
             return template;
+        }
+
+        public static bool PartIsGreeble(Part p, double crossSectionalArea, double finenessRatio, double area)
+        {
+            bool isGreeble = false;
+
+            if (p.parent)
+            {
+                Part parent = p.parent;
+                if (parent.Modules.Contains("FARBasicDragModel"))
+                {
+                    FARBasicDragModel d = parent.GetComponent<FARBasicDragModel>();
+                    Vector3 parentVector = (p.transform.worldToLocalMatrix * parent.transform.localToWorldMatrix).MultiplyVector(d.localUpVector);
+
+                    double dotProd = Vector3.Dot(parentVector, Vector3.up);
+                    if (Math.Abs(dotProd) < 0.3)
+                        if (crossSectionalArea / d.S <= 0.1 && d.S > area * 0.2 * Math.Sqrt(1 - dotProd * dotProd))
+                            isGreeble = true;
+                }
+                else if (parent.Modules.Contains("FARWingAerodynamicModel"))
+                {
+                    FARWingAerodynamicModel w = parent.GetComponent<FARWingAerodynamicModel>();
+
+                    if (w.S * 0.5 > area)
+                        isGreeble = true;
+                }
+            }
+
+            return isGreeble;
         }
     }
 
@@ -116,7 +174,11 @@ namespace ferram4
         public double YmaxStress;
         public double XZmaxStress;
         public List<string> resources;
+        public List<string> excludeResources;
+        public ResourceFlowMode flowMode;
+        public bool flowModeNeeded;
         public int minNumResources;
         public bool rejectUnlistedResources;
+        public bool crewed;
     }
 }

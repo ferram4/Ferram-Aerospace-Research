@@ -189,10 +189,10 @@ namespace ferram4
         {
             config = KSP.IO.PluginConfiguration.CreateForType<FAREditorGUI>();
             config.load();
-            FARAeroUtil.areaFactor = Convert.ToSingle(config.GetValue("areaFactor", "1"));
-            FARAeroUtil.attachNodeRadiusFactor = Convert.ToSingle(config.GetValue("attachNodeDiameterFactor", "1.25")) * 0.5f;
-            FARAeroUtil.incompressibleRearAttachDrag = Convert.ToSingle(config.GetValue("incompressibleRearAttachDrag", "0.5"));
-            FARAeroUtil.sonicRearAdditionalAttachDrag = Convert.ToSingle(config.GetValue("sonicRearAdditionalAttachDrag", "0.5"));
+            FARAeroUtil.areaFactor = Convert.ToDouble(config.GetValue("areaFactor", "1"));
+            FARAeroUtil.attachNodeRadiusFactor = Convert.ToDouble(config.GetValue("attachNodeDiameterFactor", "1.25")) * 0.5f;
+            FARAeroUtil.incompressibleRearAttachDrag = Convert.ToDouble(config.GetValue("incompressibleRearAttachDrag", "0.5"));
+            FARAeroUtil.sonicRearAdditionalAttachDrag = Convert.ToDouble(config.GetValue("sonicRearAdditionalAttachDrag", "0.5"));
 
 
             FARControllableSurface.timeConstant = Convert.ToSingle(config.GetValue("ctrlSurfTimeConstant", "0.05"));
@@ -207,15 +207,15 @@ namespace ferram4
                 FAREditorGUI.windowPos.y = 75;
 
 
-            FARAeroUtil.bodyAtmosphereConfiguration = new Dictionary<int, Vector3>();
+            FARAeroUtil.bodyAtmosphereConfiguration = new Dictionary<int, Vector3d>();
             int i = 0;
             while (i < FlightGlobals.Bodies.Count)
             {
                 int index = FlightGlobals.Bodies[i].flightGlobalsIndex;
-                Vector3 Rgamma_and_gamma = new Vector3();
+                Vector3d Rgamma_and_gamma = new Vector3d();
 
-                Rgamma_and_gamma.y = Convert.ToSingle(config.GetValue("Body" + index + "SpecHeatRatio", "1.4"));
-                Rgamma_and_gamma.z = 8.3145f * 1000f / Convert.ToSingle(config.GetValue("Body" + index + "GasMolecularWeight", "28.96"));
+                Rgamma_and_gamma.y = Convert.ToDouble(config.GetValue("Body" + index + "SpecHeatRatio", "1.4"));
+                Rgamma_and_gamma.z = 8.3145 * 1000 / Convert.ToDouble(config.GetValue("Body" + index + "GasMolecularWeight", "28.96"));
                 Rgamma_and_gamma.x = Rgamma_and_gamma.y * Rgamma_and_gamma.z;
 
                 FARAeroUtil.bodyAtmosphereConfiguration.Add(index, Rgamma_and_gamma);
@@ -469,10 +469,10 @@ namespace ferram4
         {
             config = KSP.IO.PluginConfiguration.CreateForType<FAREditorGUI>();
             config.load();
-            FARAeroUtil.areaFactor = Convert.ToSingle(config.GetValue("areaFactor", "1"));
-            FARAeroUtil.attachNodeRadiusFactor = Convert.ToSingle(config.GetValue("attachNodeDiameterFactor", "1.25")) * 0.5f;
-            FARAeroUtil.incompressibleRearAttachDrag = Convert.ToSingle(config.GetValue("incompressibleRearAttachDrag", "0.5"));
-            FARAeroUtil.sonicRearAdditionalAttachDrag = Convert.ToSingle(config.GetValue("sonicRearAdditionalAttachDrag", "0.5"));
+            FARAeroUtil.areaFactor = Convert.ToDouble(config.GetValue("areaFactor", "1"));
+            FARAeroUtil.attachNodeRadiusFactor = Convert.ToDouble(config.GetValue("attachNodeDiameterFactor", "1.25")) * 0.5;
+            FARAeroUtil.incompressibleRearAttachDrag = Convert.ToDouble(config.GetValue("incompressibleRearAttachDrag", "0.5"));
+            FARAeroUtil.sonicRearAdditionalAttachDrag = Convert.ToDouble(config.GetValue("sonicRearAdditionalAttachDrag", "0.5"));
 
 
             FARControllableSurface.timeConstant = Convert.ToSingle(config.GetValue("ctrlSurfTimeConstant", "0.05"));
@@ -486,33 +486,37 @@ namespace ferram4
             FARControlSys.AirSpeedHelpPos = config.GetValue("AirSpeedHelpPos", new Rect());
             FARControlSys.minimize = config.GetValue<bool>("FlightGUIBool", false);
             FARControlSys.k_wingleveler_str = config.GetValue("k_wingleveler", "0.05");
-            FARControlSys.k_wingleveler = Convert.ToSingle(FARControlSys.k_wingleveler_str);
+            FARControlSys.k_wingleveler = Convert.ToDouble(FARControlSys.k_wingleveler_str);
             FARControlSys.kd_wingleveler_str = config.GetValue("kd_wingleveler", "0.002");
-            FARControlSys.kd_wingleveler = Convert.ToSingle(FARControlSys.kd_wingleveler_str);
+            FARControlSys.kd_wingleveler = Convert.ToDouble(FARControlSys.kd_wingleveler_str);
             FARControlSys.k_yawdamper_str = config.GetValue("k_yawdamper", "0.1");
-            FARControlSys.k_yawdamper = Convert.ToSingle(FARControlSys.k_yawdamper_str);
+            FARControlSys.k_yawdamper = Convert.ToDouble(FARControlSys.k_yawdamper_str);
             FARControlSys.k_pitchdamper_str = config.GetValue("k_pitchdamper", "0.25f");
-            FARControlSys.k_pitchdamper = Convert.ToSingle(FARControlSys.k_pitchdamper_str);
+            FARControlSys.k_pitchdamper = Convert.ToDouble(FARControlSys.k_pitchdamper_str);
             FARControlSys.scaleVelocity_str = config.GetValue("scaleVelocity", "150");
-            FARControlSys.scaleVelocity = Convert.ToSingle(FARControlSys.scaleVelocity_str);
+            FARControlSys.scaleVelocity = Convert.ToDouble(FARControlSys.scaleVelocity_str);
             FARControlSys.alt_str = config.GetValue("alt", "0");
-            FARControlSys.alt = Convert.ToSingle(FARControlSys.alt_str);
+            FARControlSys.alt = Convert.ToDouble(FARControlSys.alt_str);
             FARControlSys.upperLim_str = config.GetValue("upperLim", "25");
-            FARControlSys.upperLim = Convert.ToSingle(FARControlSys.upperLim_str);
+            FARControlSys.upperLim = Convert.ToDouble(FARControlSys.upperLim_str);
             FARControlSys.lowerLim_str = config.GetValue("lowerLim", "-25");
-            FARControlSys.lowerLim = Convert.ToSingle(FARControlSys.lowerLim_str);
+            FARControlSys.lowerLim = Convert.ToDouble(FARControlSys.lowerLim_str);
             FARControlSys.k_limiter_str = config.GetValue("k_limiter", "0.25f");
-            FARControlSys.k_limiter = Convert.ToSingle(FARControlSys.k_limiter_str);
+            FARControlSys.k_limiter = Convert.ToDouble(FARControlSys.k_limiter_str);
 
-            FARAeroUtil.bodyAtmosphereConfiguration = new Dictionary<int, Vector3>();
+            FARDebugValues.displayForces = Convert.ToBoolean(config.GetValue("displayForces", "false"));
+            FARDebugValues.displayCoefficients = Convert.ToBoolean(config.GetValue("displayCoefficients", "false"));
+            FARDebugValues.displayShielding = Convert.ToBoolean(config.GetValue("displayShielding", "false"));
+
+            FARAeroUtil.bodyAtmosphereConfiguration = new Dictionary<int, Vector3d>();
             int i = 0;
             while (i < FlightGlobals.Bodies.Count)
             {
                 int index = FlightGlobals.Bodies[i].flightGlobalsIndex;
-                Vector3 Rgamma_and_gamma = new Vector3();
+                Vector3d Rgamma_and_gamma = new Vector3d();
 
-                Rgamma_and_gamma.y = Convert.ToSingle(config.GetValue("Body" + index + "SpecHeatRatio", "1.4"));
-                Rgamma_and_gamma.z = 8.3145f * 1000f / Convert.ToSingle(config.GetValue("Body" + index + "GasMolecularWeight", "28.96"));
+                Rgamma_and_gamma.y = Convert.ToDouble(config.GetValue("Body" + index + "SpecHeatRatio", "1.4"));
+                Rgamma_and_gamma.z = 8.3145 * 1000 / Convert.ToDouble(config.GetValue("Body" + index + "GasMolecularWeight", "28.96"));
                 Rgamma_and_gamma.x = Rgamma_and_gamma.y * Rgamma_and_gamma.z;
 
                 FARAeroUtil.bodyAtmosphereConfiguration.Add(index, Rgamma_and_gamma);

@@ -63,7 +63,7 @@ namespace ferram4
         {
             GUI.skin = HighLogic.Skin;
             if (debugMenu)
-                debugWinPos = GUILayout.Window("FARDebug".GetHashCode(), debugWinPos, debugWindow, "FAR Debug Options, v0.13.2", GUILayout.MinWidth(250));
+                debugWinPos = GUILayout.Window("FARDebug".GetHashCode(), debugWinPos, debugWindow, "FAR Debug Options, v0.13.2", GUILayout.MinWidth(250), GUILayout.ExpandHeight(true));
         }
 
 
@@ -76,12 +76,16 @@ namespace ferram4
             thisStyle.padding = new RectOffset(4, 0, 0, 0);
             thisStyle.margin = new RectOffset(4, 0, 0, 0);
 
+            GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();
             GUILayout.Label("Part Right-Click Menu");
             FARDebugValues.displayForces = GUILayout.Toggle(FARDebugValues.displayForces, "Display Aero Forces", thisStyle);
             FARDebugValues.displayCoefficients = GUILayout.Toggle(FARDebugValues.displayCoefficients, "Display Coefficients", thisStyle);
             FARDebugValues.displayShielding = GUILayout.Toggle(FARDebugValues.displayShielding, "Display Shielding", thisStyle);
+            GUILayout.Label("Debug / Cheat Options");
+            FARDebugValues.useSplinesForSupersonicMath = GUILayout.Toggle(FARDebugValues.useSplinesForSupersonicMath, "Use Splines for Supersonic Math", thisStyle);
             GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
 
 
             //            SaveWindowPos.x = windowPos.x;
@@ -96,26 +100,27 @@ namespace ferram4
         {
             config = KSP.IO.PluginConfiguration.CreateForType<FARDebugOptions>();
             config.load();
-            FARAeroUtil.areaFactor = Convert.ToSingle(config.GetValue("areaFactor", "1"));
-            FARAeroUtil.attachNodeRadiusFactor = Convert.ToSingle(config.GetValue("attachNodeDiameterFactor", "1.25")) * 0.5f;
-            FARAeroUtil.incompressibleRearAttachDrag = Convert.ToSingle(config.GetValue("incompressibleRearAttachDrag", "0.5"));
-            FARAeroUtil.sonicRearAdditionalAttachDrag = Convert.ToSingle(config.GetValue("sonicRearAdditionalAttachDrag", "0.5"));
+            FARAeroUtil.areaFactor = Convert.ToDouble(config.GetValue("areaFactor", "1"));
+            FARAeroUtil.attachNodeRadiusFactor = Convert.ToDouble(config.GetValue("attachNodeDiameterFactor", "1.25")) * 0.5f;
+            FARAeroUtil.incompressibleRearAttachDrag = Convert.ToDouble(config.GetValue("incompressibleRearAttachDrag", "0.5"));
+            FARAeroUtil.sonicRearAdditionalAttachDrag = Convert.ToDouble(config.GetValue("sonicRearAdditionalAttachDrag", "0.5"));
 
             FARDebugValues.displayForces = Convert.ToBoolean(config.GetValue("displayForces", "false"));
             FARDebugValues.displayCoefficients = Convert.ToBoolean(config.GetValue("displayCoefficients", "false"));
             FARDebugValues.displayShielding = Convert.ToBoolean(config.GetValue("displayShielding", "false"));
+            FARDebugValues.useSplinesForSupersonicMath = Convert.ToBoolean(config.GetValue("useSplinesForSupersonicMath", "true"));
 
             FARControllableSurface.timeConstant = Convert.ToSingle(config.GetValue("ctrlSurfTimeConstant", "0.05"));
 
-            FARAeroUtil.bodyAtmosphereConfiguration = new Dictionary<int, Vector3>();
+            FARAeroUtil.bodyAtmosphereConfiguration = new Dictionary<int, Vector3d>();
             int i = 0;
             while (i < FlightGlobals.Bodies.Count)
             {
                 int index = FlightGlobals.Bodies[i].flightGlobalsIndex;
-                Vector3 Rgamma_and_gamma = new Vector3();
+                Vector3d Rgamma_and_gamma = new Vector3d();
 
-                Rgamma_and_gamma.y = Convert.ToSingle(config.GetValue("Body" + index + "SpecHeatRatio", "1.4"));
-                Rgamma_and_gamma.z = 8.3145f * 1000f / Convert.ToSingle(config.GetValue("Body" + index + "GasMolecularWeight", "28.96"));
+                Rgamma_and_gamma.y = Convert.ToDouble(config.GetValue("Body" + index + "SpecHeatRatio", "1.4"));
+                Rgamma_and_gamma.z = 8.3145 * 1000 / Convert.ToDouble(config.GetValue("Body" + index + "GasMolecularWeight", "28.96"));
                 Rgamma_and_gamma.x = Rgamma_and_gamma.y * Rgamma_and_gamma.z;
 
                 FARAeroUtil.bodyAtmosphereConfiguration.Add(index, Rgamma_and_gamma);
@@ -185,5 +190,7 @@ namespace ferram4
         public static bool displayForces = false;
         public static bool displayCoefficients = false;
         public static bool displayShielding = false;
+
+        public static bool useSplinesForSupersonicMath = true;
     }
 }
