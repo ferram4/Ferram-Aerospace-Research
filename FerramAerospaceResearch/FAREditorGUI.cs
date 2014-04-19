@@ -170,6 +170,11 @@ namespace ferram4
 
         double[] MOI_stabDerivs = new double[27];
 
+        public void OnDestroy()
+        {
+            EditorLogic.fetch.Unlock("FAREdLock");
+        }
+
         private void ControlSurfaceAttributionGUI()
         {
             if ((windowPos.x == 0) && (windowPos.y == 0))

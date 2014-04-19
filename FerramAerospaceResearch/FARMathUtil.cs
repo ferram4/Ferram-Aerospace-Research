@@ -106,5 +106,45 @@ namespace ferram4
                 return true;
             return false;
         }
+
+        public static bool Approximately(double p, double q, double error)
+        {
+            if (Math.Abs(p - q) < error)
+                return true;
+            return false;
+        }
+        
+        public static double ArithmeticGeometricMean(double a, double b, double error)
+        {
+            while (!Approximately(a, b, error))
+            {
+                double tmpA = 0.5 * (a + b);
+                b = Math.Sqrt(a * b);
+                a = tmpA;
+            }
+            return (a + b) * 0.5;
+        }
+
+        public static double ModifiedArithmeticGeometricMean(double a, double b, double error)
+        {
+            double c = 0;
+            while (!Approximately(a, b, error))
+            {
+                double tmpA = 0.5 * (a + b);
+                double tmpSqrt = Math.Sqrt((a - c) * (b - c));
+                b = c + tmpSqrt;
+                c = c - tmpSqrt; 
+                a = tmpA;
+            }
+            return (a + b) * 0.5;
+        }
+
+        public static double CompleteEllipticIntegralSecondKind(double k, double error)
+        {
+            double value = 2 * ArithmeticGeometricMean(1, k, error);
+            value = Math.PI * ModifiedArithmeticGeometricMean(1, k * k, error) / value;
+
+            return value;
+        }
     }
 }

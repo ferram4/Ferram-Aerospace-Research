@@ -287,6 +287,8 @@ namespace ferram4
             FARFlightButton.TexturePath = "FerramAerospaceResearch/Textures/icon_button";
             FARFlightButton.ToolTip = "FAR Flight Systems";
             FARFlightButton.OnClick += (e) => FARControlSys.minimize = !FARControlSys.minimize;
+
+            InputLockManager.RemoveControlLock("FAREdLock");
         }
 
         public void Start()

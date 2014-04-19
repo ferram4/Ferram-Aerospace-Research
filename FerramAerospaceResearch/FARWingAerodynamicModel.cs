@@ -86,6 +86,7 @@ namespace ferram4
         private double effective_MAC = 1f;
 
         protected double effective_AR = 4;
+        protected double transformed_AR = 4;
 
         [KSPField(isPersistant = false, guiActive = false, guiName = "Current lift", guiUnits = "kN", guiFormat = "F3")]
         protected float currentLift = 0.0f;
@@ -311,11 +312,11 @@ namespace ferram4
             if (part.srfAttachNode.originalOrientation.x < 0)
                 srfAttachNegative = -1;
 
-            effective_AR = 2 * b_2 / MAC;
+            transformed_AR = 2 * b_2 / MAC;
 
             MidChordSweepSideways = (1 - TaperRatio) / (1 + TaperRatio);
 
-            MidChordSweepSideways = (Math.PI * 0.5 - Math.Atan(Math.Tan(MidChordSweep * FARMathUtil.deg2rad) + MidChordSweepSideways * 2 / effective_AR)) * MidChordSweepSideways * 0.5;
+            MidChordSweepSideways = (Math.PI * 0.5 - Math.Atan(Math.Tan(MidChordSweep * FARMathUtil.deg2rad) + MidChordSweepSideways * 2 / transformed_AR)) * MidChordSweepSideways * 0.5;
 
             double sweepHalfChord = MidChordSweep * FARMathUtil.deg2rad;
 
@@ -676,6 +677,9 @@ namespace ferram4
             else if (MachNumber > 1.2)
             {
                 double axialForce = 0;
+
+                //DATCOMSupersonicLiftAndDrag(MachNumber, SweepAngle, sonicLe, AoA, out Cl, out Cd);
+
                 double coefMult = 1 / (1.4 * MachNumber * MachNumber);
 
                 double sonicLEFactor = 1;
@@ -720,6 +724,13 @@ namespace ferram4
 
 
                 double M = FARMathUtil.Clamp(MachNumber, 1.1, double.PositiveInfinity);
+
+                //double tmpCl, tmpCd;
+                //DATCOMSupersonicLiftAndDrag(M, SweepAngle, sonicLe, AoA, out tmpCl, out tmpCd);
+
+//                Cl += tmpCl * subScale;
+//                Cd += tmpCd * subScale;
+                
                 double axialForce = 0;
                 double coefMult = 1 / (1.4 * M * M);
                 double sonicLEFactor = 1;
@@ -766,22 +777,58 @@ namespace ferram4
         #region Supersonic Calculations
 
 
-        private void DATCOMSupersonicLiftAndDrag(double M, double cosSweep, double sonicLE, out double Cl, out double Cd)
+        private void DATCOMSupersonicLiftAndDrag(double M, double cosSweep, double sonicLE, double AoA, out double Cl, out double Cd)
         {
             double perpM = M * cosSweep;
-            bool attachedShock = false;
-            FARAeroUtil.MaxShockAngleCheck(perpM, FARAeroUtil.currentBodyAtm.y, out attachedShock);
-            if (attachedShock)
-            {
-            }
+            double B = Math.Sqrt(M * M - 1);
+            double tanSweep = Math.Sqrt(Math.Abs(1 - cosSweep * cosSweep)) / cosSweep;
+
+            bool subsonicLE = false;
+
+            double Cn = 0;
+
+            if ((object)PartInFrontOf == null)
+                Cn = FARAeroUtil.SupersonicWingCna(transformed_AR, tanSweep, B, TaperRatio, out subsonicLE);
+            else
+                Cn = FARAeroUtil.SupersonicWingCna(transformed_AR, tanSweep, B, WingInFrontOf.TaperRatio, out subsonicLE);
+
+            //And now for the nonlinear lift
+            /*double Cnaa = 0;
+            double slopeFactor = tanSweep * 0.52083333333333333333333333333333;
+
+            double E;
+            if (slopeFactor <= 1)
+                E = Cn;
             else
             {
-                double Cn;
-
-
+                E = Cn * (slopeFactor + 2.5 * (slopeFactor - 1));
             }
 
-            Cl = Cd = 0;
+            if (subsonicLE)
+            {
+                Cnaa = FARAeroUtil.SubsonicLECnaa(E, B, tanSweep, AoA);
+
+
+
+            }*/
+
+            Cl = Cn * Math.Sin(2 * AoA) * 0.5;
+
+            double slendernessParam = effective_b_2 * tanSweep + effective_MAC;
+            double p = S / (effective_b_2 * slendernessParam);
+            slendernessParam = effective_b_2 / slendernessParam;
+            slendernessParam *= B;
+
+            double dragParam;
+            if (slendernessParam <= 0.4)
+                dragParam = 0.55;
+            else
+                dragParam = (slendernessParam - 0.4) + 0.55;
+
+            Cd = dragParam * (1 + p) / p;
+            Cd /= Math.PI * transformed_AR;
+
+            Cd *= Cl * Cl;
         }
 
 
@@ -846,8 +893,9 @@ namespace ferram4
 
             pRatio = (p3 + p4) - (p1 + p2);
 
-            axialForce = (p1 + p3) - (p2 + p4);
-            axialForce *= 0.048;               //Thickness of the airfoil
+            //axialForce = (p1 + p3) - (p2 + p4);
+            //axialForce *= 0.048;               //Thickness of the airfoil
+            axialForce = 0;
 
             return pRatio;
         }
@@ -1076,7 +1124,7 @@ namespace ferram4
 
             effective_b_2 = Math.Max(b_2 * CosPartAngle, MAC * SinPartAngle2);
             effective_MAC = MAC * CosPartAngle + b_2 * SinPartAngle2;
-            effective_AR = 2 * effective_b_2 / effective_MAC;
+            transformed_AR = 2 * effective_b_2 / effective_MAC;
 
             SetSweepAngle(sweepHalfChord);
 
@@ -1116,7 +1164,7 @@ namespace ferram4
             SweepAngle = sweepHalfChord;
             SweepAngle = Math.Tan(SweepAngle);
             double tmp = (1 - TaperRatio) / (1 + TaperRatio);
-            tmp *= 2 / effective_AR;
+            tmp *= 2 / transformed_AR;
             SweepAngle += tmp;
             SweepAngle = Math.Cos(Math.Atan(SweepAngle));
         }
@@ -1419,9 +1467,9 @@ namespace ferram4
             double e_AR;
 
             if (effective_AR_modifier < 1)
-                e_AR = effective_AR * (effective_AR_modifier + 1);
+                e_AR = transformed_AR * (effective_AR_modifier + 1);
             else
-                e_AR = effective_AR * 2 * (2 - effective_AR_modifier) + 30 * (effective_AR_modifier - 1);
+                e_AR = transformed_AR * 2 * (2 - effective_AR_modifier) + 30 * (effective_AR_modifier - 1);
 
             //            print(forwardexposure + " " + backwardexposure + " " + outwardexposure + " " + inwardexposure + " " + e_AR);
 

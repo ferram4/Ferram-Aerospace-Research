@@ -1198,5 +1198,200 @@ namespace ferram4
 
             return tmp;
         }
+
+        public static double SupersonicWingCna(double AR, double tanSweep, double B, double taperRatio, out bool subsonicLE)
+        {
+            //double B = Math.Sqrt(M * M - 1);
+            double m = 1 / tanSweep;
+
+            double AR_ = AR * B;
+            double m_ = m * B;
+            double k = taperRatio + 1;
+            k = AR_ * k;
+            k = k / (k - 4 * m_ * (1 - taperRatio));
+
+            double machLineVal = 4 * m_ * taperRatio;
+            machLineVal /= (taperRatio + 1) * (1 - m_);
+
+            if (m_ >= 1)    //Supersonic leading edge
+            {
+                subsonicLE = false;
+                if (AR_ < machLineVal)      //Mach line intercepts tip chord
+                {
+                    double m_k = m_ * k;
+                    double fourm_k = 4 * m_k;
+                    double invkm_kplusone = (m_k + 1) * k;
+                    invkm_kplusone = 1 / invkm_kplusone;
+
+                    double line4 = fourm_k + AR_ * (3 * k + 1);
+                    line4 = (fourm_k * (AR_ - 1) + AR_ * (k - 1)) / line4;
+                    line4 = Math.Acos(line4);
+
+                    double tmp = (m_ - 1) * invkm_kplusone;
+                    tmp = Math.Sqrt(tmp);
+                    line4 *= tmp;
+
+                    tmp = fourm_k + AR_ * (1 + 3 * k);
+                    tmp *= tmp;
+                    tmp /= (4 * AR_ * (k + 1));
+                    line4 *= tmp;
+
+                    double line3 = fourm_k - AR_ * (k - 1);
+                    line3 = (fourm_k * (1 - AR_) + AR_ * (3 * k + 1)) / line4;
+                    line3 = Math.Acos(line3);
+
+                    tmp = (m_ + 1) * invkm_kplusone;
+                    tmp = Math.Sqrt(tmp);
+                    line3 *= tmp;
+
+                    tmp = fourm_k - AR_ * (k - 1);
+                    tmp *= tmp;
+                    tmp /= (4 * AR_ * (k - 1));
+                    line3 *= -tmp;
+
+
+                    double line2 = fourm_k + AR_ * (k - 1);
+                    line2 = (fourm_k * (AR_ - 1) - AR_ * (k + 3)) / line4;
+                    line2 = -Math.Acos(line2);
+
+                    line2 += Math.Acos(-1 / m_k);
+
+                    tmp = (m_k + 1) * (m_k - 1);
+                    tmp = Math.Sqrt(tmp);
+                    tmp = k * Math.Sqrt(m_ * m_ - 1) / tmp;
+                    line2 *= tmp;
+
+                    tmp = Math.Acos(1 / m_);
+                    tmp /= k;
+                    line2 += tmp;
+
+                    tmp = fourm_k + AR_ * (k - 1);
+                    tmp *= tmp;
+                    tmp /= (2 * AR_ * (k * k - 1));
+                    line2 *= tmp;
+
+                    double Cna = line2 + line3 + line4;
+                    Cna /= (Math.PI * B * Math.Sqrt(m_ * m_ - 1));
+                    return Cna;
+                }
+                else            //Mach line intercepts trailing edge
+                {
+                    double m_k = m_ * k;
+                    double fourm_k = 4 * m_k;
+                    double line2 = fourm_k - AR_ * (k - 1);
+                    line2 *= Math.PI * line2;
+                    line2 /= 4 * AR_ * (k - 1);
+
+                    double tmp = (m_k + 1) * k;
+                    tmp = m_ + 1 / tmp;
+                    tmp = Math.Sqrt(tmp);
+
+                    line2 *= -tmp;
+
+                    double line1 = (m_k - 1) * (m_k + 1);
+                    line1 = Math.Sqrt(line1);
+
+                    tmp = Math.Sqrt(m_ * m_ - 1) * k;
+                    line1 = tmp / line1;
+
+                    line1 *= Math.Acos(-1 / m_k);
+
+                    line1 += Math.Acos(1 / m_) / k;
+
+                    tmp = fourm_k + AR_ * (k - 1);
+                    tmp *= tmp;
+                    tmp /= (2 * AR_ * (k * k - 1));
+
+                    line1 *= tmp;
+
+                    double Cna = line1 + line2;
+                    Cna /= (Math.PI * B * Math.Sqrt(m_ * m_ - 1));
+                    return Cna;
+                }
+            }
+            else                       //Subsonic leading edge
+            {
+                subsonicLE = true;
+                double w = 4 * m_ / (AR_ * (1 + taperRatio));
+                double n = FARMathUtil.Clamp(1 - (1 - taperRatio) * w, 0, 1);
+
+                //Debug.Log("n " + n);
+
+                double longSqrtTerm = (1 + m_) * (n + 1) + w * (m_ - 1);
+                longSqrtTerm *= (w + n - 1);
+                longSqrtTerm = Math.Sqrt(longSqrtTerm);
+
+                double smallACosTerm = 1 + m_ * n + w * (m_ - 1);
+                smallACosTerm /= (m_ + n);
+                smallACosTerm = Math.Acos(smallACosTerm);
+
+                double invOneMinusMPow = Math.Pow(1 - m_, -1.5);
+
+                double line4 = 2 * (m_ + n) * (1 - m_) + (1 + n);
+                line4 = (1 + m_) * (1 + n) - w * (1 - m_) / line4;
+                line4 *= longSqrtTerm;
+
+                double line3 = (n + w) * (m_ - n) + 2 * (1 - w) + m_ + n;
+                line3 /= (1 + n + w) * (m_ + n);
+                line3 = Math.Acos(line3);
+
+                double tmp = 1 + n + w;
+                tmp *= tmp;
+                tmp *= 0.25 * Math.Pow(1 + n, -1.5);
+                line3 *= tmp;
+
+                line3 -= smallACosTerm * invOneMinusMPow;
+
+                double line34 = line3 + line4;
+
+                tmp = 4 * AR;
+                tmp /= (Math.PI * Math.Sqrt(1 + m_));
+                line34 *= tmp;
+
+                double line2 = w * n * (m_ - 1) + m_ * (n * n - 1) * Math.Sqrt(1 + m_);
+                line2 /= (m_ + n) * (n * n - 1) * (m_ - 1);
+                line2 *= longSqrtTerm;
+                
+                double line1 = (1 + m_) * (n * n - 1) + w * (1 + m_ * n);
+                line1 /= w * (m_ + n);
+                line1 = -Math.Asin(line1);
+                line1 += Math.Asin(n);
+
+                line1 *= w * w * Math.Pow(Math.Abs(1 - n * n), -1.5);
+
+                tmp = n * w * w / (1 - n * n);
+                line1 += tmp;
+
+                //Debug.Log("line1 " + line1);
+
+                tmp = Math.Sqrt(1 + m) * invOneMinusMPow * smallACosTerm;
+                line1 += tmp;
+
+                //Debug.Log("line1 " + line1);
+
+                double line12 = line1 + line2;
+                line12 *= AR;
+                line12 /= FARMathUtil.CompleteEllipticIntegralSecondKind(m_, 1e-6);
+
+
+                double Cna = line12 + line34;
+                //Debug.Log("Cna " + Cna);
+                return Cna;
+            }
+        }
+
+
+        public static double SubsonicLECnaa(double E, double B, double tanSweep, double AoA)
+        {
+            return 0;
+            double Eparam = E * B / tanSweep;
+            double AoAparam = Math.Tan(AoA) * B;
+            if (AoA > 1)
+                AoAparam = 1 / AoAparam;
+
+            double Cnaa = 0;
+
+            return Cnaa;
+        }
     }
 }

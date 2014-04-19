@@ -203,6 +203,7 @@ namespace ferram4
         private enum SurfaceVelMode
         {
             DEFAULT,
+            IAS,
             EAS,
             MACH
         }
@@ -210,11 +211,29 @@ namespace ferram4
         private static string[] surfModel_str = 
         {
             "Default",
+            "IAS",
             "EAS",
             "Mach"
         };
 
+        private enum SurfaceVelUnit
+        {
+            M_S,
+            KNOTS,
+            MPH,
+            KM_H,
+        }
+
+        private static string[] surfUnit_str = 
+        {
+            "m/s",
+            "knots",
+            "mph",
+            "km/h"
+        };
+
         private SurfaceVelMode Mode = SurfaceVelMode.DEFAULT;
+        private SurfaceVelUnit UnitMode = SurfaceVelUnit.M_S;
 
 /*        public void FlapChange()
         {
@@ -964,7 +983,10 @@ namespace ferram4
             GUILayout.Label("Select Surface Velocity Settings", TabLabelStyle);
             GUILayout.Space(10);
             GUILayout.EndVertical();
+            GUILayout.BeginHorizontal();
             Mode = (SurfaceVelMode)GUILayout.SelectionGrid((int)Mode, surfModel_str, 1, mytoggle);
+            UnitMode = (SurfaceVelUnit)GUILayout.SelectionGrid((int)UnitMode, surfUnit_str, 1, mytoggle);
+            GUILayout.EndHorizontal();
 
 
             AirSpeedHelp = GUILayout.Toggle(AirSpeedHelp, "Help", mytoggle, GUILayout.ExpandWidth(true));
@@ -1000,6 +1022,11 @@ namespace ferram4
             GUILayout.BeginHorizontal();
             GUILayout.Box("This setting causes the surface velocity indicator to display the true airspeed (TAS) of the vehicle, relative to the rotating body is on.", mySty);
             GUILayout.EndHorizontal();
+            GUILayout.Space(10);
+            GUILayout.Label("IAS", TabLabelStyle);
+            GUILayout.BeginHorizontal();
+            GUILayout.Box("This sets the surface velocity indicator to display indicated airspeed (IAS), which is the airspeed that would be measured by a standard pitot tube (device used for measuring airspeed) on this vehicle", mySty);
+            GUILayout.EndHorizontal();
             GUILayout.Space(10); 
             GUILayout.Label("EAS", TabLabelStyle);
             GUILayout.BeginHorizontal();
@@ -1027,11 +1054,41 @@ namespace ferram4
             if (FlightUIController.speedDisplayMode != FlightUIController.SpeedDisplayModes.Surface)
                 return;
             FlightUIController UI = FlightUIController.fetch;
-            if (velMode == SurfaceVelMode.EAS)
+
+            double unitConversion = 1;
+            string unitString = "m/s";
+            if (UnitMode == SurfaceVelUnit.KNOTS)
+            {
+                unitConversion = 1.943844492440604768413343347219;
+                unitString = "knots";
+            }
+            else if (UnitMode == SurfaceVelUnit.KM_H)
+            {
+                unitConversion = 3.6;
+                unitString = "km/h";
+            }
+            else if (UnitMode == SurfaceVelUnit.MPH)
+            {
+                unitConversion = 2.236936;
+                unitString = "mph";
+            }
+
+            if (velMode == SurfaceVelMode.DEFAULT)
+            {
+                UI.speed.text = (vessel.srf_velocity.magnitude * unitConversion).ToString("F1") + unitString;
+            }
+            else if (velMode == SurfaceVelMode.IAS)
+            {
+                UI.spdCaption.text = "IAS";
+                double densityRatio = (FARAeroUtil.GetCurrentDensity(vessel.mainBody, vessel.altitude) * invKerbinSLDensity);
+                double pressureRatio = FARAeroUtil.StagnationPressureCalc(MachNumber);
+                UI.speed.text = (vessel.srf_velocity.magnitude * Math.Sqrt(densityRatio) * pressureRatio * unitConversion).ToString("F1") + unitString;
+            }
+            else if (velMode == SurfaceVelMode.EAS)
             {
                 UI.spdCaption.text = "EAS";
                 double densityRatio = (FARAeroUtil.GetCurrentDensity(vessel.mainBody, vessel.altitude) * invKerbinSLDensity);
-                UI.speed.text = (vessel.srf_velocity.magnitude * Math.Sqrt(densityRatio)).ToString("F1") + "m/s";
+                UI.speed.text = (vessel.srf_velocity.magnitude * Math.Sqrt(densityRatio) * unitConversion).ToString("F1") + unitString;
             }
             else if (velMode == SurfaceVelMode.MACH)
             {
