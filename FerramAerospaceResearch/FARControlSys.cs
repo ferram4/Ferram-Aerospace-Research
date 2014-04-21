@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.1
+Ferram Aerospace Research v0.13.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -384,7 +384,7 @@ namespace ferram4
                             wingArea += w.S;
                             DragArea += w.S * w.GetCd();
                             LiftArea += w.S * w.Cl * Vector3.Dot(w.GetLiftDirection(), lift_axis);
-                            stallArea += w.S * w.GetStall();
+                            stallArea += w.S * w.GetDoubleStall();
                             break;
                         }
                         else if (m is FARBasicDragModel)
@@ -855,7 +855,7 @@ namespace ferram4
                 if (scaleVelocity < 0)
                 {
                     scaleVelocity = -scaleVelocity;
-                    scaleVelocity_str = scaleVelocity.ToString();
+                    scaleVelocity_str = scaleVelocity.ToString("N3");
                 }
 
                 GUIUtility.keyboardControl = 0;
@@ -1103,24 +1103,24 @@ namespace ferram4
             StartedGUI = true;
             if (!minimize)
             {
-                windowPos = GUILayout.Window(250, windowPos, WindowGUI, "FAR Flight Systems, v0.13.1", GUILayout.MinWidth(150));
+                windowPos = GUILayout.Window(250, windowPos, WindowGUI, "FAR Flight Systems, v0.13.2", GUILayout.MinWidth(150));
                 if (AutopilotWindow)
                 {
-                    AutoPilotWindowPos = GUILayout.Window(251, AutoPilotWindowPos, AutopilotWindowGUI, "FAR Flight Assistance System Options, v0.13.1", GUILayout.MinWidth(330));
+                    AutoPilotWindowPos = GUILayout.Window(251, AutoPilotWindowPos, AutopilotWindowGUI, "FAR Flight Assistance System Options, v0.13.2", GUILayout.MinWidth(330));
                     if (AutoPilotHelp)
-                        HelpWindowPos = GUILayout.Window(252, HelpWindowPos, HelpWindowGUI, "FAR FAS Help, v0.13.1", GUILayout.MinWidth(150));
+                        HelpWindowPos = GUILayout.Window(252, HelpWindowPos, HelpWindowGUI, "FAR FAS Help, v0.13.2", GUILayout.MinWidth(150));
                 }
                 if (FlightDataWindow)
                 {
-                    FlightDataPos = GUILayout.Window(253, FlightDataPos, FlightDataGUI, "FAR Flight Data, v0.13.1", GUILayout.MinWidth(250));
+                    FlightDataPos = GUILayout.Window(253, FlightDataPos, FlightDataGUI, "FAR Flight Data, v0.13.2", GUILayout.MinWidth(250));
                     if(FlightDataHelp)
-                        FlightDataHelpPos = GUILayout.Window(254, FlightDataHelpPos, FlightDataHelpGUI, "FAR Flight Data Help, v0.13.1", GUILayout.MinWidth(150));
+                        FlightDataHelpPos = GUILayout.Window(254, FlightDataHelpPos, FlightDataHelpGUI, "FAR Flight Data Help, v0.13.2", GUILayout.MinWidth(150));
                 }
                 if (AirSpeedWindow)
                 {
-                    AirSpeedPos = GUILayout.Window(255, AirSpeedPos, AirSpeedGUI, "FAR Airspeed Settings, v0.13.1", GUILayout.MinWidth(200));
+                    AirSpeedPos = GUILayout.Window(255, AirSpeedPos, AirSpeedGUI, "FAR Airspeed Settings, v0.13.2", GUILayout.MinWidth(200));
                     if (AirSpeedHelp)
-                        AirSpeedHelpPos = GUILayout.Window(256, AirSpeedHelpPos, AirSpeedHelpGUI, "FAR Airspeed Settings Help, v0.13.1", GUILayout.MinWidth(150));
+                        AirSpeedHelpPos = GUILayout.Window(256, AirSpeedHelpPos, AirSpeedHelpGUI, "FAR Airspeed Settings Help, v0.13.2", GUILayout.MinWidth(170));
                 }
 
             }

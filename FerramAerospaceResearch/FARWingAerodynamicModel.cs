@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.1
+Ferram Aerospace Research v0.13.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -130,9 +130,17 @@ namespace ferram4
 
         private double rho = 1;
 
+        public double YmaxForce = double.MaxValue;
+        public double XZmaxForce = double.MaxValue;
+
         #region GetFunctions
 
-        public double GetStall()
+        public float GetStall()
+        {
+            return (float)stall;
+        }
+
+        public double GetDoubleStall()
         {
             return stall;
         }
@@ -325,6 +333,20 @@ namespace ferram4
 
             PrecomputeCentroid();
             RunExposureAndGetControlSys();
+
+            FARPartStressTemplate template;
+            foreach (FARPartStressTemplate temp in FARAeroStress.StressTemplates)
+                if (temp.name == "wingStress")
+                {
+                    template = temp;
+
+                    YmaxForce = template.YmaxStress;    //in MPa
+                    YmaxForce *= S;
+
+                    XZmaxForce = template.XZmaxStress;
+                    XZmaxForce *= S;
+                    break;
+                }
         }
 
         private void RunExposureAndGetControlSys()
@@ -436,6 +458,13 @@ namespace ferram4
                 Debug.LogWarning("FAR Error: Aerodynamic force = " + force.magnitude + " AC Loc = " + AerodynamicCenter.magnitude + " AoA = " + AoA + "\n\rMAC = " + effective_MAC + " B_2 = " + effective_b_2 + " sweepAngle = " + SweepAngle + "\n\rMidChordSweep = " + MidChordSweep + " MidChordSweepSideways = " + MidChordSweepSideways + "\n\r at " + part.name);
                 force = AerodynamicCenter = Vector3d.zero;
             }
+
+            if (Math.Abs(Vector3d.Dot(force, forward)) > YmaxForce || Vector3d.Exclude(forward, force).magnitude > XZmaxForce)
+                if (part.parent)
+                {
+                    FlightLogger.eventLog.Add("[" + FARMathUtil.FormatTime(vessel.missionTime) + "] Joint between " + part.partInfo.title + " and " + part.parent.partInfo.title + " failed due to aerodynamic stresses.");
+                    part.decouple(25);
+                }
 
             return force;
 
@@ -777,7 +806,7 @@ namespace ferram4
         #region Supersonic Calculations
 
 
-        private void DATCOMSupersonicLiftAndDrag(double M, double cosSweep, double sonicLE, double AoA, out double Cl, out double Cd)
+        /*private void DATCOMSupersonicLiftAndDrag(double M, double cosSweep, double sonicLE, double AoA, out double Cl, out double Cd)
         {
             double perpM = M * cosSweep;
             double B = Math.Sqrt(M * M - 1);
@@ -793,7 +822,7 @@ namespace ferram4
                 Cn = FARAeroUtil.SupersonicWingCna(transformed_AR, tanSweep, B, WingInFrontOf.TaperRatio, out subsonicLE);
 
             //And now for the nonlinear lift
-            /*double Cnaa = 0;
+            double Cnaa = 0;
             double slopeFactor = tanSweep * 0.52083333333333333333333333333333;
 
             double E;
@@ -810,7 +839,7 @@ namespace ferram4
 
 
 
-            }*/
+            }
 
             Cl = Cn * Math.Sin(2 * AoA) * 0.5;
 
@@ -829,30 +858,6 @@ namespace ferram4
             Cd /= Math.PI * transformed_AR;
 
             Cd *= Cl * Cl;
-        }
-
-
-
-        /*       //approximations of oblique shock relation; I can't run an iterative search multiple times every physics update :P
-        //returns beta in degrees
-        private float GetBetaMax(float M)
-        {
-            float beta;
-            beta = 25 / M;
-            beta += 65;
-
-            return beta;
-        }
-
-        //returns theta in degrees
-        private float GetThetaMax(float M)
-        {
-            float theta;
-            theta = 45.5f;
-            theta -= 40f / M;
-            theta -= 5.5f / (M * M * M);
-
-            return theta;
         }*/
 
         //This models the wing using a symmetric diamond airfoil

@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.1
+Ferram Aerospace Research v0.13.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -61,6 +61,7 @@ namespace ferram4
             parsedTemplate.XZmaxStress = 500;
             parsedTemplate.YmaxStress = 500;
             parsedTemplate.name = "default";
+            parsedTemplate.isSpecialTemplate = false;
             parsedTemplate.minNumResources = 0;
             parsedTemplate.resources = new List<string>();
             parsedTemplate.excludeResources = new List<string>();
@@ -71,7 +72,9 @@ namespace ferram4
 
             if (template.HasValue("name"))
                 parsedTemplate.name = template.GetValue("name");
-            if(template.HasValue("YmaxStress"))
+            if (template.HasValue("isSpecialTemplate"))
+                bool.TryParse(template.GetValue("isSpecialTemplate"), out parsedTemplate.isSpecialTemplate);
+            if (template.HasValue("YmaxStress"))
                 double.TryParse(template.GetValue("YmaxStress"), out parsedTemplate.YmaxStress);
             if (template.HasValue("XZmaxStress"))
                 double.TryParse(template.GetValue("XZmaxStress"), out parsedTemplate.XZmaxStress);
@@ -125,6 +128,8 @@ namespace ferram4
 
             foreach (FARPartStressTemplate candidate in StressTemplates)
             {
+                if (candidate.isSpecialTemplate)
+                    continue;
                 if (candidate.crewed != crewed)
                     continue;
 
@@ -206,6 +211,7 @@ namespace ferram4
     public struct FARPartStressTemplate
     {
         public string name;
+        public bool isSpecialTemplate;
         public double YmaxStress;
         public double XZmaxStress;
         public List<string> resources;

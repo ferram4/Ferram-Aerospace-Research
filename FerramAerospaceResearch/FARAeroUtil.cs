@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.1
+Ferram Aerospace Research v0.13.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -1199,7 +1199,7 @@ namespace ferram4
             return tmp;
         }
 
-        public static double SupersonicWingCna(double AR, double tanSweep, double B, double taperRatio, out bool subsonicLE)
+        /*public static double SupersonicWingCna(double AR, double tanSweep, double B, double taperRatio, out bool subsonicLE)
         {
             //double B = Math.Sqrt(M * M - 1);
             double m = 1 / tanSweep;
@@ -1392,6 +1392,6 @@ namespace ferram4
             double Cnaa = 0;
 
             return Cnaa;
-        }
+        }*/
     }
 }

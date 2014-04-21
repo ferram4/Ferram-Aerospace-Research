@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.1
+Ferram Aerospace Research v0.13.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -93,6 +93,16 @@ namespace ferram4
 
         }
 
+        public static string FormatTime(double time)
+        {
+            int iTime = (int)time % 3600;
+            int seconds = iTime % 60;
+            int minutes = (iTime / 60) % 60;
+            int hours = (iTime / 3600);
+            return hours.ToString("D2")
+            + ":" + minutes.ToString("D2") + ":" + seconds.ToString("D2");
+        }
+        
         public static T Clamp<T>(this T val, T min, T max) where T : IComparable<T>
         {
             if (val.CompareTo(min) < 0) return min;

@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.1
+Ferram Aerospace Research v0.13.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -210,6 +210,25 @@ namespace ferram4
             OnVesselPartsChange += CalculateSurfaceFunctions;
             UpdateEvents();
             justStarted = true;
+
+            FARPartStressTemplate template;
+            foreach (FARPartStressTemplate temp in FARAeroStress.StressTemplates)
+                if (temp.name == "ctrlSurfStress")
+                {
+                    template = temp;
+
+                    YmaxForce *= 1 - ctrlSurfFrac;
+                    XZmaxForce *= 1 - ctrlSurfFrac;
+
+                    double tmp = template.YmaxStress;    //in MPa
+                    tmp *= S * ctrlSurfFrac;
+                    YmaxForce += tmp;
+
+                    tmp = template.XZmaxStress;    //in MPa
+                    tmp *= S * ctrlSurfFrac;
+                    XZmaxForce += tmp;
+                    break;
+                }
         }
 
         public override void FixedUpdate()

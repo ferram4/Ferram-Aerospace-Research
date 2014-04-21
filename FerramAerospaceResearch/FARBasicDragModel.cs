@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.1
+Ferram Aerospace Research v0.13.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -116,7 +116,6 @@ namespace ferram4
 
         public double YmaxForce = double.MaxValue;
         public double XZmaxForce = double.MaxValue;
-
 
         private void AnimationSetup()
         {
@@ -430,8 +429,11 @@ namespace ferram4
                 }
 
                 if (Math.Abs(Vector3d.Dot(force, upVector)) > YmaxForce || Vector3d.Exclude(upVector, force).magnitude > XZmaxForce)
-                    if(part.parent)
+                    if (part.parent)
+                    {
+                        FlightLogger.eventLog.Add("[" + FARMathUtil.FormatTime(vessel.missionTime) + "] Joint between " + part.partInfo.title + " and " + part.parent.partInfo.title + " failed due to aerodynamic stresses.");
                         part.decouple(25);
+                    }
 
                 //part.Rigidbody.AddTorque(moment);
                 return force;

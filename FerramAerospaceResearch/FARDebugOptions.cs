@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.1
+Ferram Aerospace Research v0.13.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -87,7 +87,6 @@ namespace ferram4
             FARDebugValues.allowStructuralFailures = GUILayout.Toggle(FARDebugValues.allowStructuralFailures, "Allow Aero-structural Failures", thisStyle);
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
-
 
             //            SaveWindowPos.x = windowPos.x;
             //            SaveWindowPos.y = windowPos.y;
