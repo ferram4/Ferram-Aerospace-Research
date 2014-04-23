@@ -506,6 +506,9 @@ namespace ferram4
             FARControlSys.k_limiter_str = config.GetValue("k_limiter", "0.25f");
             FARControlSys.k_limiter = Convert.ToDouble(FARControlSys.k_limiter_str);
 
+            FARControlSys.unitMode = (FARControlSys.SurfaceVelUnit)config.GetValue("unitMode", 0);
+            FARControlSys.velMode = (FARControlSys.SurfaceVelMode)config.GetValue("velMode", 0);
+
             FARDebugValues.displayForces = Convert.ToBoolean(config.GetValue("displayForces", "false"));
             FARDebugValues.displayCoefficients = Convert.ToBoolean(config.GetValue("displayCoefficients", "false"));
             FARDebugValues.displayShielding = Convert.ToBoolean(config.GetValue("displayShielding", "false"));
@@ -582,6 +585,9 @@ namespace ferram4
             config.SetValue("upperLim", (FARControlSys.upperLim).ToString());
             config.SetValue("lowerLim", (FARControlSys.lowerLim).ToString());
             config.SetValue("k_limiter", (FARControlSys.k_limiter).ToString());
+
+            config.SetValue("unitMode", (int)FARControlSys.unitMode);
+            config.SetValue("velMode", (int)FARControlSys.velMode);
 
             config.SetValue("ctrlSurfTimeConstant", FARControllableSurface.timeConstant.ToString());
 

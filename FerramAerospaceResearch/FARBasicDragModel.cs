@@ -157,8 +157,9 @@ namespace ferram4
                 }
                 else if (currentlyAnimating && !anim.isPlaying)
                 {
-                    currentlyAnimating = false;
+                    currentlyAnimating = false;                        
                     FARAeroUtil.SetBasicDragModuleProperties(this.part);      //By doing this, we update the properties of this object
+                    AttachNodeCdAdjust();                                     //In case the node properties somehow update with the node; also to deal with changes in part reference area
                 }
 //                bayProgress = bayAnim[bayAnimationName].normalizedTime;
 
@@ -419,6 +420,15 @@ namespace ferram4
 //                    CoDshift += CenterOfDrag;
                 }
 
+                //Must handle aero-structural failure before transforming CoD pos and adding pitching moment to forces or else parts with blunt body drag fall apart too easily
+                if (Math.Abs(Vector3d.Dot(force, upVector)) > YmaxForce || Vector3d.Exclude(upVector, force).magnitude > XZmaxForce)
+                    if (part.parent && !vessel.packed)
+                    {
+                        part.SendEvent("AerodynamicFailureStatus");
+                        FlightLogger.eventLog.Add("[" + FARMathUtil.FormatTime(vessel.missionTime) + "] Joint between " + part.partInfo.title + " and " + part.parent.partInfo.title + " failed due to aerodynamic stresses.");
+                        part.decouple(25);
+                    }
+
                 globalCoDShift = Vector3d.Cross(force, moment) / (force_scalar * force_scalar);
 
                 if (double.IsNaN(force_scalar) || double.IsNaN(moment.sqrMagnitude) || double.IsNaN(globalCoDShift.sqrMagnitude))
@@ -428,12 +438,6 @@ namespace ferram4
                     return force;
                 }
 
-                if (Math.Abs(Vector3d.Dot(force, upVector)) > YmaxForce || Vector3d.Exclude(upVector, force).magnitude > XZmaxForce)
-                    if (part.parent)
-                    {
-                        FlightLogger.eventLog.Add("[" + FARMathUtil.FormatTime(vessel.missionTime) + "] Joint between " + part.partInfo.title + " and " + part.parent.partInfo.title + " failed due to aerodynamic stresses.");
-                        part.decouple(25);
-                    }
 
                 //part.Rigidbody.AddTorque(moment);
                 return force;

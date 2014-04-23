@@ -199,8 +199,14 @@ namespace ferram4
         private static bool TSFCHelp = false;
         private static bool L_DTSFCHelp = false;
 
+        private static string statusString = "";
+        private static Color statusColor = Color.green;
+        private static double statusOverrideTimer = 0;
+        private static double statusBlinkerTimer = 0;
+        private static bool statusBlinker = false;
 
-        private enum SurfaceVelMode
+
+        public enum SurfaceVelMode
         {
             DEFAULT,
             IAS,
@@ -216,7 +222,7 @@ namespace ferram4
             "Mach"
         };
 
-        private enum SurfaceVelUnit
+        public enum SurfaceVelUnit
         {
             M_S,
             KNOTS,
@@ -232,8 +238,8 @@ namespace ferram4
             "km/h"
         };
 
-        private SurfaceVelMode Mode = SurfaceVelMode.DEFAULT;
-        private SurfaceVelUnit UnitMode = SurfaceVelUnit.M_S;
+        public static SurfaceVelMode velMode = SurfaceVelMode.DEFAULT;
+        public static SurfaceVelUnit unitMode = SurfaceVelUnit.M_S;
 
 /*        public void FlapChange()
         {
@@ -384,7 +390,7 @@ namespace ferram4
                             wingArea += w.S;
                             DragArea += w.S * w.GetCd();
                             LiftArea += w.S * w.Cl * Vector3.Dot(w.GetLiftDirection(), lift_axis);
-                            stallArea += w.S * w.GetDoubleStall();
+                            stallArea += w.S * w.GetStall();
                             break;
                         }
                         else if (m is FARBasicDragModel)
@@ -435,6 +441,62 @@ namespace ferram4
             termVel = 2 * ballisticCoeff * geeForce;
             termVel /= density;
             termVel = Math.Sqrt(termVel);
+
+            SetFlightStatusWindow();
+        }
+
+        [KSPEvent(name = "AerodynamicFailureStatus", active = true, guiActive = false, guiActiveUnfocused = false)]
+        public void AerodynamicFailureStatus()
+        {
+            statusString = "Aerodynamic Failure";
+            statusColor = Color.yellow;
+            statusOverrideTimer = 5;
+            statusBlinker = true;
+        }
+
+        private void SetFlightStatusWindow()
+        {
+            if (statusOverrideTimer > 0)
+            {
+                statusOverrideTimer -= TimeWarp.deltaTime;
+                return;
+            }
+            if(q < 10)
+            {
+                statusString = "Nominal";
+                statusColor = Color.green;
+                statusBlinker = false;
+            }
+            else if (stallPercentage > 0.5)
+            {
+                statusString = "Large-Scale Stall";
+                statusColor = Color.yellow;
+                statusBlinker = true;
+            }
+            else if (stallPercentage > 0.005)
+            {
+                statusString = "Minor Stalling";
+                statusColor = Color.yellow;
+                statusBlinker = false;
+            }
+            else if ((Math.Abs(AoA) > 20 && Math.Abs(AoA) < 160) || (Math.Abs(yaw) > 20 && Math.Abs(yaw) < 160))
+            {
+                statusString = "Large AoA / Sideslip";
+                statusColor = Color.yellow;
+                statusBlinker = false;
+            }
+            else if (q > 40000)
+            {
+                statusString = "High Dyn Pressure";
+                statusColor = Color.yellow;
+                statusBlinker = false;
+            }
+            else
+            {
+                statusString = "Nominal";
+                statusColor = Color.green;
+                statusBlinker = false;
+            }
         }
 
 
@@ -914,22 +976,29 @@ namespace ferram4
                     DensityRelative = !DensityRelative;
 
                 GUILayout.EndHorizontal();
+                GUIStyle minorTitle = new GUIStyle(GUI.skin.label);
+                minorTitle.alignment = TextAnchor.UpperCenter;
+                minorTitle.padding = new RectOffset(0, 0, 0, 0);
+                GUILayout.Label("Flight Status", minorTitle, GUILayout.ExpandWidth(true));
                 GUILayout.BeginHorizontal();
                 GUIStyle stallStyle = mySty;
-                if (stallPercentage <= 0.005)
+                if (statusBlinker)
                 {
-                    stallStyle.normal.textColor = stallStyle.focused.textColor = stallStyle.hover.textColor = stallStyle.active.textColor = stallStyle.onActive.textColor = stallStyle.onNormal.textColor = stallStyle.onFocused.textColor = stallStyle.onHover.textColor = stallStyle.onActive.textColor = Color.green;
-                    GUILayout.Box("Flight Normal: \n\rNo Stalling Detected", stallStyle, GUILayout.ExpandWidth(true));
-                }
-                else if (stallPercentage < 0.5)
-                {
-                    stallStyle.normal.textColor = stallStyle.focused.textColor = stallStyle.hover.textColor = stallStyle.active.textColor = stallStyle.onActive.textColor = stallStyle.onNormal.textColor = stallStyle.onFocused.textColor = stallStyle.onHover.textColor = stallStyle.onActive.textColor = Color.yellow;
-                    GUILayout.Box("Caution: \n\rMinor Stalling Detected", stallStyle, GUILayout.ExpandWidth(true));
+                    stallStyle.normal.textColor = stallStyle.focused.textColor = stallStyle.hover.textColor = stallStyle.active.textColor = stallStyle.onActive.textColor = stallStyle.onNormal.textColor = stallStyle.onFocused.textColor = stallStyle.onHover.textColor = stallStyle.onActive.textColor = statusColor;
+                    if(statusBlinkerTimer < 0.5)
+                        GUILayout.Box(statusString, stallStyle, GUILayout.ExpandWidth(true));
+                    else
+                        GUILayout.Box("", stallStyle, GUILayout.ExpandWidth(true));
+
+                    if (statusBlinkerTimer < 1)
+                        statusBlinkerTimer += TimeWarp.deltaTime;
+                    else
+                        statusBlinkerTimer = 0;
                 }
                 else
                 {
-                    stallStyle.normal.textColor = stallStyle.focused.textColor = stallStyle.hover.textColor = stallStyle.active.textColor = stallStyle.onActive.textColor = stallStyle.onNormal.textColor = stallStyle.onFocused.textColor = stallStyle.onHover.textColor = stallStyle.onActive.textColor = Color.red;
-                    GUILayout.Box("DANGER: \n\rLarge-Scale Stall Detected", stallStyle, GUILayout.ExpandWidth(true));
+                    stallStyle.normal.textColor = stallStyle.focused.textColor = stallStyle.hover.textColor = stallStyle.active.textColor = stallStyle.onActive.textColor = stallStyle.onNormal.textColor = stallStyle.onFocused.textColor = stallStyle.onHover.textColor = stallStyle.onActive.textColor = statusColor;
+                    GUILayout.Box(statusString, stallStyle, GUILayout.ExpandWidth(true));
                 }
                 GUILayout.EndHorizontal();
 
@@ -984,8 +1053,8 @@ namespace ferram4
             GUILayout.Space(10);
             GUILayout.EndVertical();
             GUILayout.BeginHorizontal();
-            Mode = (SurfaceVelMode)GUILayout.SelectionGrid((int)Mode, surfModel_str, 1, mytoggle);
-            UnitMode = (SurfaceVelUnit)GUILayout.SelectionGrid((int)UnitMode, surfUnit_str, 1, mytoggle);
+            velMode = (SurfaceVelMode)GUILayout.SelectionGrid((int)velMode, surfModel_str, 1, mytoggle);
+            unitMode = (SurfaceVelUnit)GUILayout.SelectionGrid((int)unitMode, surfUnit_str, 1, mytoggle);
             GUILayout.EndHorizontal();
 
 
@@ -1057,17 +1126,17 @@ namespace ferram4
 
             double unitConversion = 1;
             string unitString = "m/s";
-            if (UnitMode == SurfaceVelUnit.KNOTS)
+            if (unitMode == SurfaceVelUnit.KNOTS)
             {
                 unitConversion = 1.943844492440604768413343347219;
                 unitString = "knots";
             }
-            else if (UnitMode == SurfaceVelUnit.KM_H)
+            else if (unitMode == SurfaceVelUnit.KM_H)
             {
                 unitConversion = 3.6;
                 unitString = "km/h";
             }
-            else if (UnitMode == SurfaceVelUnit.MPH)
+            else if (unitMode == SurfaceVelUnit.MPH)
             {
                 unitConversion = 2.236936;
                 unitString = "mph";
@@ -1226,7 +1295,7 @@ namespace ferram4
         {
             if (StartedGUI && part)
             {
-                ChangeSurfVelocity(Mode);
+                ChangeSurfVelocity(velMode);
                 if (activeControlSys == this && TimeWarp.CurrentRate <= 4)
                     GetFlightCondition();
 //                if (start != StartState.Editor && startSequenceFinished && MachNumber > 0.5f && MachNumber < 1.5f)

@@ -135,12 +135,7 @@ namespace ferram4
 
         #region GetFunctions
 
-        public float GetStall()
-        {
-            return (float)stall;
-        }
-
-        public double GetDoubleStall()
+        public double GetStall()
         {
             return stall;
         }
@@ -460,8 +455,9 @@ namespace ferram4
             }
 
             if (Math.Abs(Vector3d.Dot(force, forward)) > YmaxForce || Vector3d.Exclude(forward, force).magnitude > XZmaxForce)
-                if (part.parent)
+                if (part.parent && !vessel.packed)
                 {
+                    part.SendEvent("AerodynamicFailureStatus");
                     FlightLogger.eventLog.Add("[" + FARMathUtil.FormatTime(vessel.missionTime) + "] Joint between " + part.partInfo.title + " and " + part.parent.partInfo.title + " failed due to aerodynamic stresses.");
                     part.decouple(25);
                 }
