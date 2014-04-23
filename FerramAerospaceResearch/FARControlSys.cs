@@ -1144,6 +1144,7 @@ namespace ferram4
 
             if (velMode == SurfaceVelMode.DEFAULT)
             {
+                UI.spdCaption.text = "Surface";
                 UI.speed.text = (vessel.srf_velocity.magnitude * unitConversion).ToString("F1") + unitString;
             }
             else if (velMode == SurfaceVelMode.IAS)
