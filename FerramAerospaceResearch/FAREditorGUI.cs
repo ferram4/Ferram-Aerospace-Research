@@ -175,7 +175,7 @@ namespace ferram4
             EditorLogic.fetch.Unlock("FAREdLock");
         }
 
-        private void ControlSurfaceAttributionGUI()
+        public void OnGUI()
         {
             if ((windowPos.x == 0) && (windowPos.y == 0))
             {
@@ -1874,7 +1874,7 @@ namespace ferram4
 
         private void ResetAll()
         {
-            RenderingManager.RemoveFromPostDrawQueue(0, new Callback(ControlSurfaceAttributionGUI));
+            RenderingManager.RemoveFromPostDrawQueue(0, new Callback(OnGUI));
             AllWings.Clear();
             AllControlSurfaces.Clear();
             RestartCtrlGUI();
@@ -1886,7 +1886,7 @@ namespace ferram4
             CurrentEditorFlapSetting = 0;
             CurrentEditorSpoilerSetting = false;
             windowPos = FARGUIUtils.ClampToScreen(windowPos);
-            RenderingManager.AddToPostDrawQueue(0, new Callback(ControlSurfaceAttributionGUI));
+            RenderingManager.AddToPostDrawQueue(0, new Callback(OnGUI));
         }
         #endregion
 

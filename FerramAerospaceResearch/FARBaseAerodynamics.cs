@@ -167,9 +167,7 @@ namespace ferram4
             Fields["isShielded"].guiActive = FARDebugValues.displayShielding;
             if (!(this is FARControlSys))
             {
-                Fields["Cl"].guiActive = FARDebugValues.displayCoefficients;
-                Fields["Cd"].guiActive = FARDebugValues.displayCoefficients;
-                Fields["Cm"].guiActive = FARDebugValues.displayCoefficients;
+                Fields["Cl"].guiActive = Fields["Cd"].guiActive = Fields["Cm"].guiActive = FARDebugValues.displayCoefficients;
             }
         }
 

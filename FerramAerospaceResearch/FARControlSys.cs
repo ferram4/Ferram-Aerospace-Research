@@ -37,6 +37,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -177,7 +178,6 @@ namespace ferram4
 
         private static double intakeDeficit = 0;
 
-        public static bool StartedGUI = false;
         private static FARControlSys activeControlSys;
 
         public static FARControlSys ActiveControlSys
@@ -187,8 +187,6 @@ namespace ferram4
                 return activeControlSys;
             }
         }
-
-        private bool startSequenceFinished = false;
 
         private static double timeSinceSave = 0;
 
@@ -1167,11 +1165,13 @@ namespace ferram4
             }
         }
 
-        private void drawGUI()
+        public void OnGUI()
         {
+            GameObject o = RenderingManager.fetch.uiElementsToDisable.FirstOrDefault();
+            if ((object)o == null || !o.activeSelf)
+                return;
             GUI.skin = HighLogic.Skin;
-            StartedGUI = true;
-            if (!minimize)
+            if (this == activeControlSys && !minimize)
             {
                 windowPos = GUILayout.Window(250, windowPos, WindowGUI, "FAR Flight Systems, v0.13.2", GUILayout.MinWidth(150));
                 if (AutopilotWindow)
@@ -1206,32 +1206,23 @@ namespace ferram4
             base.OnStart(start);
             Fields["isShielded"].guiActive = false;
 
-            print("GUI Started? " + StartedGUI);
-            if (start != StartState.Editor && !StartedGUI && vessel.isActiveVessel)
+            Fields["Cl"].guiActive = Fields["Cd"].guiActive = Fields["Cm"].guiActive = false;
+            if (HighLogic.LoadedSceneIsFlight && vessel.isActiveVessel)
             {
-                //LoadGUIParameters();
-
-                RenderingManager.AddToPostDrawQueue(0, new Callback(drawGUI));//start the GUI
-                this.part.OnJustAboutToBeDestroyed += OnDestroy;
-
                 activeControlSys = this;
-                StartedGUI = true;
+                statusOverrideTimer = 0;
                 vessel.OnFlyByWire += new FlightInputCallback(StabilityAugmentation);
-
             }
             OnVesselPartsChange += GetNavball;
-            startSequenceFinished = true;
             invKerbinSLDensity = 1 / FARAeroUtil.GetCurrentDensity(FlightGlobals.Bodies[1], 0);
         }
 
 
         public void OnDestroy()
         {
-            //SaveGUIParameters();
-            if (StartedGUI && start != StartState.Editor)
+            if (start != StartState.Editor)
             {
-                RenderingManager.RemoveFromPostDrawQueue(0, new Callback(drawGUI)); //close the GUI
-                StartedGUI = false;
+                activeControlSys = null;
                 if(vessel)
                     vessel.OnFlyByWire -= new FlightInputCallback(StabilityAugmentation);
             }
@@ -1239,20 +1230,16 @@ namespace ferram4
 
         public override void FixedUpdate()
         {
-            if (start != StartState.Editor && part && startSequenceFinished)
+            if (HighLogic.LoadedSceneIsFlight && part)
             {
                 if (vessel.isActiveVessel)
                 {
-                    if (!StartedGUI && activeControlSys == null)
+                    if ((object)activeControlSys == null)
                     {
-                        vessel.OnFlyByWire += new FlightInputCallback(StabilityAugmentation);
-
-                        RenderingManager.AddToPostDrawQueue(0, new Callback(drawGUI));//start the GUI
-                        this.part.OnJustAboutToBeDestroyed += OnDestroy;
-
                         activeControlSys = this;
-                        StartedGUI = true;
+                        statusOverrideTimer = 0;
                     }
+
                     if (activeControlSys == this)
                     {
                         if (vessel.staticPressure > 0)
@@ -1282,25 +1269,18 @@ namespace ferram4
 
                     }
                 }
-                else if (activeControlSys == this && StartedGUI)
-                {
-                    vessel.OnFlyByWire -= new FlightInputCallback(StabilityAugmentation);
-                    RenderingManager.RemoveFromPostDrawQueue(0, new Callback(drawGUI)); //close the GUI
+                else if (activeControlSys == this)
                     activeControlSys = null;
-                    StartedGUI = false;
-                }
             }
         }
 
         public override void LateUpdate()
         {
-            if (StartedGUI && part)
+            if (part)
             {
                 ChangeSurfVelocity(velMode);
                 if (activeControlSys == this && TimeWarp.CurrentRate <= 4)
                     GetFlightCondition();
-//                if (start != StartState.Editor && startSequenceFinished && MachNumber > 0.5f && MachNumber < 1.5f)
-//                    condEffectIntensity = CalculateCondensationIntensity();
             }
         }
 

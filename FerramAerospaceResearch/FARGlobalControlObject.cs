@@ -450,7 +450,7 @@ namespace ferram4
                     else if (vesselsWithFARModules.Contains(v))
                         vesselsWithFARModules.Remove(v);
                 }*/
-                FARFlightButton.Visible = FARControlSys.ActiveControlSys && (FARControlSys.ActiveControlSys.vessel == FlightGlobals.ActiveVessel) && FARControlSys.StartedGUI;
+                FARFlightButton.Visible = FARControlSys.ActiveControlSys && (FARControlSys.ActiveControlSys.vessel == FlightGlobals.ActiveVessel);
 
             }
 
