@@ -681,10 +681,8 @@ namespace ferram4
                 d.BuildNewDragModel(data.area * FARAeroUtil.areaFactor, TempCurve1, TempCurve2, TempCurve4, TempCurve3, data.originToCentroid, data.majorMinorAxisRatio, 0, data.taperCrossSectionArea, double.MaxValue, double.MaxValue);
                 return;
             } 
-            else if (p.Modules.Contains("ModuleRCS") || p.Modules.Contains("ModuleDeployableSolarPanel") || p.Modules.Contains("ModuleLandingGear") || title.Contains("heatshield") || (title.Contains("heat") && title.Contains("shield")) || title.Contains("ladder") || title.Contains("mobility") || title.Contains("railing"))
+            else if (IncludePartInGreeble(p, title))
             {
-                
-
                 FloatCurve TempCurve1 = new FloatCurve();
                 /*if (title.Contains("heatshield") || (title.Contains("heat") && title.Contains("shield")))
                     TempCurve1.Add(-1, 0.3f);
@@ -866,6 +864,12 @@ namespace ferram4
                 d.BuildNewDragModel(data.area * FARAeroUtil.areaFactor, TempCurve1, TempCurve2, TempCurve4, TempCurve3, data.originToCentroid, data.majorMinorAxisRatio, cosCutoffAngle, data.taperCrossSectionArea, YmaxForce, XZmaxForce);
                 return;
             }
+        }
+
+        //Currently hard-coded; will change to allow defining "greeble" modules and "greeble" strings
+        public static bool IncludePartInGreeble(Part p, string title)
+        {
+            return p.Modules.Contains("ModuleRCS") || p.Modules.Contains("ModuleDeployableSolarPanel") || p.Modules.Contains("ModuleLandingGear") || p.Modules.Contains("FSwheel") || title.Contains("heatshield") || (title.Contains("heat") && title.Contains("shield")) || title.Contains("ladder") || title.Contains("mobility") || title.Contains("railing");
         }
 
         //Approximate drag of a tapering conic body

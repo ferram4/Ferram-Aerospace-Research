@@ -122,17 +122,17 @@ namespace ferram4
         [KSPField(guiName = "Flap/Brake Max Deflection", isPersistant = true)]
         public float maxdeflectFlap = 15; 
         
-        protected float PitchLocation = 0;
-        protected float YawLocation = 0;
-        protected float RollLocation = 0;
+        protected double PitchLocation = 0;
+        protected double YawLocation = 0;
+        protected double RollLocation = 0;
         protected int flapLocation = 0;
 
-        private float AoAsign = 1;
-        private float AoAdesired = 0;
-        private float AoAfromflap = 0;
-        protected float AoAoffset = 0;
+        private double AoAsign = 1;
+        private double AoAdesired = 0;
+        private double AoAfromflap = 0;
+        protected double AoAoffset = 0;
 
-        private float lastAoAoffset = 0;
+        private double lastAoAoffset = 0;
         private Vector3 deflectedNormal = Vector3.forward;
 
         public static float timeConstant = 0.05f;
@@ -266,16 +266,16 @@ namespace ferram4
             if (isFlap == true)
             {
                 if (start != StartState.Editor)
-                    flapLocation = (int)Mathf.Sign(Vector3.Dot(vessel.ReferenceTransform.forward, part.transform.forward));      //figure out which way is up
+                    flapLocation = (int)Math.Sign(Vector3.Dot(vessel.ReferenceTransform.forward, part.transform.forward));      //figure out which way is up
                 else
-                    flapLocation = (int)Mathf.Sign(Vector3.Dot(EditorLogic.startPod.transform.forward, part.transform.forward));      //figure out which way is up
+                    flapLocation = (int)Math.Sign(Vector3.Dot(EditorLogic.startPod.transform.forward, part.transform.forward));      //figure out which way is up
             }
             else if (isSpoiler == true)
             {
                 if (start != StartState.Editor)
-                    flapLocation = -(int)Mathf.Sign(Vector3.Dot(vessel.ReferenceTransform.forward, part.transform.forward));      //figure out which way is up
+                    flapLocation = -(int)Math.Sign(Vector3.Dot(vessel.ReferenceTransform.forward, part.transform.forward));      //figure out which way is up
                 else
-                    flapLocation = -(int)Mathf.Sign(Vector3.Dot(EditorLogic.startPod.transform.forward, part.transform.forward));      //figure out which way is up
+                    flapLocation = -(int)Math.Sign(Vector3.Dot(EditorLogic.startPod.transform.forward, part.transform.forward));      //figure out which way is up
             }
 
             if(pitchaxis || yawaxis || rollaxis || start == StartState.Editor)
@@ -297,20 +297,20 @@ namespace ferram4
                 if (start == StartState.Editor)
                 {
                     Vector3 CoMoffset = (part.transform.position - CoM).normalized;
-                    PitchLocation = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.forward) * Mathf.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.up));
-                    YawLocation = -Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.right) * Mathf.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.up));
-                    RollLocation = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.forward) * Mathf.Sign(Vector3.Dot(CoMoffset, -EditorLogic.startPod.transform.right));
-                    roll2 = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.right) * Mathf.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.forward));
+                    PitchLocation = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.forward) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.up));
+                    YawLocation = -Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.right) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.up));
+                    RollLocation = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.forward) * Math.Sign(Vector3.Dot(CoMoffset, -EditorLogic.startPod.transform.right));
+                    roll2 = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.right) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.forward));
                 }
                 else
                 {
                     //Figures out where the ctrl surface is; this must be done after physics starts to get vessel COM
                     Vector3 CoMoffset = (part.transform.position - CoM).normalized;
-                    PitchLocation = Vector3.Dot(part.transform.forward, vessel.ReferenceTransform.forward) * Mathf.Sign(Vector3.Dot(CoMoffset, vessel.ReferenceTransform.up));
-                    YawLocation = -Vector3.Dot(part.transform.forward, vessel.ReferenceTransform.right) * Mathf.Sign(Vector3.Dot(CoMoffset, vessel.ReferenceTransform.up));
-                    RollLocation = Vector3.Dot(part.transform.forward, vessel.ReferenceTransform.forward) * Mathf.Sign(Vector3.Dot(CoMoffset, -vessel.ReferenceTransform.right));
-                    roll2 = Vector3.Dot(part.transform.forward, vessel.ReferenceTransform.right) * Mathf.Sign(Vector3.Dot(CoMoffset, vessel.ReferenceTransform.forward));
-                    AoAsign = Mathf.Sign(Vector3.Dot(part.transform.up, vessel.transform.up));
+                    PitchLocation = Vector3.Dot(part.transform.forward, vessel.ReferenceTransform.forward) * Math.Sign(Vector3.Dot(CoMoffset, vessel.ReferenceTransform.up));
+                    YawLocation = -Vector3.Dot(part.transform.forward, vessel.ReferenceTransform.right) * Math.Sign(Vector3.Dot(CoMoffset, vessel.ReferenceTransform.up));
+                    RollLocation = Vector3.Dot(part.transform.forward, vessel.ReferenceTransform.forward) * Math.Sign(Vector3.Dot(CoMoffset, -vessel.ReferenceTransform.right));
+                    roll2 = Vector3.Dot(part.transform.forward, vessel.ReferenceTransform.right) * Math.Sign(Vector3.Dot(CoMoffset, vessel.ReferenceTransform.forward));
+                    AoAsign = Math.Sign(Vector3.Dot(part.transform.up, vessel.transform.up));
                 }
                 //PitchLocation *= PitchLocation * Mathf.Sign(PitchLocation);
                 //YawLocation *= YawLocation * Mathf.Sign(YawLocation);
@@ -326,14 +326,14 @@ namespace ferram4
             else
                 AoAfromflap = 0;
 
-            AoAfromflap = Mathf.Clamp(AoAfromflap, -Mathf.Abs(maxdeflectFlap), Mathf.Abs(maxdeflectFlap));
+            AoAfromflap = FARMathUtil.Clamp(AoAfromflap, -Math.Abs(maxdeflectFlap), Math.Abs(maxdeflectFlap));
         }
 
         
         private void AoAOffsetFromFlapDeflection()
         {
-            AoAfromflap = maxdeflectFlap * flapLocation * flapDeflectionLevel * 0.33333333333f;
-            AoAfromflap = Mathf.Clamp(AoAfromflap, -Mathf.Abs(maxdeflectFlap), Mathf.Abs(maxdeflectFlap));
+            AoAfromflap = maxdeflectFlap * flapLocation * flapDeflectionLevel * 0.33333333333;
+            AoAfromflap = FARMathUtil.Clamp(AoAfromflap, -Math.Abs(maxdeflectFlap), Math.Abs(maxdeflectFlap));
         }
 
         private void AoAOffsetFromControl()
@@ -355,7 +355,7 @@ namespace ferram4
                 }
 
                 AoAdesired *= AoAsign * maxdeflect;
-                AoAdesired = Mathf.Clamp(AoAdesired, -Mathf.Abs(maxdeflect), Mathf.Abs(maxdeflect));
+                AoAdesired = FARMathUtil.Clamp(AoAdesired, -Math.Abs(maxdeflect), Math.Abs(maxdeflect));
                 AoAdesired += AoAfromflap;
             }
             ChangeDeflection(timeConstant);
@@ -380,17 +380,17 @@ namespace ferram4
             return Math.Asin(PerpVelocity);
         }
 
-        private void ChangeDeflection(float timeconstant)
+        private void ChangeDeflection(double timeconstant)
         {
             if (AoAoffset != AoAdesired)
             {
-                float error = AoAdesired - AoAoffset;
-                if (!justStarted && Mathf.Abs(error) >= 0.5f)
+                double error = AoAdesired - AoAoffset;
+                if (!justStarted && Math.Abs(error) >= 0.5)
                 {
-                    float recip_timeconstant = 1 / timeconstant;
-                    float tmp1 = error * recip_timeconstant;
+                    double recip_timeconstant = 1 / timeconstant;
+                    double tmp1 = error * recip_timeconstant;
                     //float tmp2 = (error + TimeWarp.deltaTime * tmp1) * recip_timeconstant;
-                    AoAoffset += Mathf.Clamp(TimeWarp.deltaTime * tmp1, -Mathf.Abs(0.6f * error), Mathf.Abs(0.6f * error));
+                    AoAoffset += FARMathUtil.Clamp((double)TimeWarp.deltaTime * tmp1, -Math.Abs(0.6 * error), Math.Abs(0.6 * error));
 
                 }
                 else
@@ -404,7 +404,7 @@ namespace ferram4
         protected void DeflectionAnimation()
         {
             // Don't recalculate on insignificant variations
-            if (Mathf.Abs(lastAoAoffset - AoAoffset) < 0.01f)
+            if (Math.Abs(lastAoAoffset - AoAoffset) < 0.01)
                 return;
 
             lastAoAoffset = AoAoffset;
@@ -418,9 +418,9 @@ namespace ferram4
             if (AoAoffset != 0)
             {
                 if(flipAxis)
-                    MovableSection.Rotate(controlSurfacePivot, AoAoffset);
+                    MovableSection.Rotate(controlSurfacePivot, (float)AoAoffset);
                 else
-                    MovableSection.Rotate(controlSurfacePivot, -AoAoffset);
+                    MovableSection.Rotate(controlSurfacePivot, (float)-AoAoffset);
             }
         }
 
@@ -445,17 +445,17 @@ namespace ferram4
                 {
                     AoAoffset += RollLocation * roll;
                 }
-                AoAoffset = Mathf.Clamp(AoAoffset, -1, 1) * maxdeflect;
+                AoAoffset = FARMathUtil.Clamp(AoAoffset, -1, 1) * maxdeflect;
 
                 if (isFlap == true)
                 {
                     int flapDeflectionLevel = flap;
-                    flapLocation = (int)Mathf.Sign(Vector3.Dot(EditorLogic.startPod.transform.forward, part.transform.forward));      //figure out which way is up
-                    AoAoffset += maxdeflectFlap * flapLocation * flapDeflectionLevel * 0.3333333333333f;
+                    flapLocation = (int)Math.Sign(Vector3.Dot(EditorLogic.startPod.transform.forward, part.transform.forward));      //figure out which way is up
+                    AoAoffset += maxdeflectFlap * flapLocation * flapDeflectionLevel * 0.3333333333333;
                 }
                 else if (isSpoiler == true)
                 {
-                    flapLocation = -(int)Mathf.Sign(Vector3.Dot(EditorLogic.startPod.transform.forward, part.transform.forward));      //figure out which way is up
+                    flapLocation = -(int)Math.Sign(Vector3.Dot(EditorLogic.startPod.transform.forward, part.transform.forward));      //figure out which way is up
                     AoAoffset += brake ? maxdeflectFlap * flapLocation : 0;
                 }
 
