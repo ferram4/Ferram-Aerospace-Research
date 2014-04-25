@@ -135,7 +135,7 @@ namespace ferram4
         private double lastAoAoffset = 0;
         private Vector3 deflectedNormal = Vector3.forward;
 
-        public static float timeConstant = 0.05f;
+        public static double timeConstant = 0.25;
         private bool brake = false;
         private bool justStarted = false;
 

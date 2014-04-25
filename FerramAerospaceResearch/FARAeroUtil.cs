@@ -63,6 +63,88 @@ namespace ferram4
         public static Vector3d currentBodyAtm = new Vector3d();
         public static double currentBodyTemp = 273.15;
 
+        public static void LoadAeroDataFromConfig()
+        {
+            foreach (ConfigNode node in GameDatabase.Instance.GetConfigNodes("FARAeroData"))
+            {
+                if (node == null)
+                    continue;
+
+                if(node.HasValue("areaFactor"))
+                    double.TryParse(node.GetValue("areaFactor"), out areaFactor);
+                if (node.HasValue("attachNodeDiameterFactor"))
+                {
+                    double.TryParse(node.GetValue("attachNodeDiameterFactor"), out attachNodeRadiusFactor);
+                    attachNodeRadiusFactor *= 0.5;
+                }
+                if (node.HasValue("incompressibleRearAttachDrag"))
+                    double.TryParse(node.GetValue("incompressibleRearAttachDrag"), out incompressibleRearAttachDrag);
+                if (node.HasValue("sonicRearAdditionalAttachDrag"))
+                    double.TryParse(node.GetValue("sonicRearAdditionalAttachDrag"), out sonicRearAdditionalAttachDrag);
+
+                if (node.HasValue("ctrlSurfTimeConstant"))
+                    double.TryParse(node.GetValue("ctrlSurfTimeConstant"), out FARControllableSurface.timeConstant);
+
+                FARAeroUtil.bodyAtmosphereConfiguration = new Dictionary<int, Vector3d>();
+                foreach (ConfigNode bodyProperties in node.GetNodes("BodyAtmosphericData"))
+                {
+                    if (bodyProperties == null || !bodyProperties.HasValue("index") || !bodyProperties.HasValue("specHeatRatio") || bodyProperties.HasValue("gasMolecularWeight"))
+                        continue;
+
+                    Vector3d Rgamma_and_gamma = new Vector3d();
+                    double tmp;
+                    double.TryParse(bodyProperties.GetValue("specHeightRatio"), out tmp);
+                    Rgamma_and_gamma.y = tmp;
+
+                    double.TryParse(bodyProperties.GetValue("gasMolecularWeight"), out tmp);
+
+                    Rgamma_and_gamma.z = 8.3145 * 1000 / tmp;
+                    Rgamma_and_gamma.x = Rgamma_and_gamma.y * Rgamma_and_gamma.z;
+
+                    int index;
+                    int.TryParse(bodyProperties.GetValue("index"), out index);
+
+                    FARAeroUtil.bodyAtmosphereConfiguration.Add(index, Rgamma_and_gamma);
+                }
+
+                //For any bodies that lack a configuration
+                foreach (CelestialBody body in FlightGlobals.Bodies)
+                {
+                    if (bodyAtmosphereConfiguration.ContainsKey(body.flightGlobalsIndex))
+                        continue;
+
+                    Vector3d Rgamma_and_gamma = new Vector3d();
+                    Rgamma_and_gamma.y = 1.4;
+                    Rgamma_and_gamma.z = 8.3145 * 1000 / 28.96;
+                    Rgamma_and_gamma.x = Rgamma_and_gamma.y * Rgamma_and_gamma.z;
+
+                    FARAeroUtil.bodyAtmosphereConfiguration.Add(body.flightGlobalsIndex, Rgamma_and_gamma);
+                }
+
+                FARMiscData.payloadFairingTitles = new List<string>();
+                FARMiscData.cargoBayTitles = new List<string>();
+
+                if (node.HasNode("PayloadFairing"))
+                {
+                    ConfigNode fairing = node.GetNode("PayloadFairing");
+
+                    foreach (string title in fairing.GetValues("title"))
+                    {
+                        FARMiscData.payloadFairingTitles.Add(title);
+                    }
+                }
+                if (node.HasNode("CargoBay"))
+                {
+                    ConfigNode fairing = node.GetNode("CargoBay");
+
+                    foreach (string title in fairing.GetValues("title"))
+                    {
+                        FARMiscData.cargoBayTitles.Add(title);
+                    }
+                }
+            }
+        }
+
         public static double MaxPressureCoefficientCalc(double M)
         {
             if (M <= 0)
