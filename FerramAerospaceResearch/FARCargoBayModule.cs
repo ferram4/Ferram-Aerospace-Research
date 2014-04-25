@@ -51,9 +51,9 @@ namespace ferram4
         private List<Part> FARShieldedParts = new List<Part>();
         
 
-        private Vector3 minBounds = new Vector3();
+        public Vector3 minBounds = new Vector3();
 
-        private Vector3 maxBounds = new Vector3();
+        public Vector3 maxBounds = new Vector3();
         private static StartState state;
 
         private bool bayOpen = true;
@@ -256,7 +256,7 @@ namespace ferram4
             bayOpen = false;
             UpdateShipPartsList();
 
-            float y_margin = Mathf.Max(0.12f, 0.03f * (maxBounds.y-minBounds.y));
+            double y_margin = Math.Max(0.12, 0.03 * (maxBounds.y-minBounds.y));
 
             foreach (Part p in VesselPartList)
             {

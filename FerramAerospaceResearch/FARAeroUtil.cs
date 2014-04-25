@@ -41,7 +41,7 @@ using UnityEngine;
 
 namespace ferram4
 {
-    static class FARAeroUtil
+    public static class FARAeroUtil
     {
         private static FloatCurve prandtlMeyerMach = null;
         private static FloatCurve prandtlMeyerAngle = null;

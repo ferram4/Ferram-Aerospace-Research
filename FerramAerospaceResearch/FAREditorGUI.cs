@@ -875,21 +875,21 @@ namespace ferram4
 
 
             GUILayout.BeginVertical(GUILayout.Width(160));
-            GUILayout.Label(new GUIContent("Ixx: " + MOI_stabDerivs[0] + " kg * m²", "Inertia about X-axis due to rotation about X-axis"));
-            GUILayout.Label(new GUIContent("Iyy: " + MOI_stabDerivs[1] + " kg * m²", "Inertia about Y-axis due to rotation about Y-axis"));
-            GUILayout.Label(new GUIContent("Izz: " + MOI_stabDerivs[2] + " kg * m²", "Inertia about Z-axis due to rotation about Z-axis"));
+            GUILayout.Label(new GUIContent("Ixx: " + MOI_stabDerivs[0].ToString("G6") + " kg * m²", "Inertia about X-axis due to rotation about X-axis"));
+            GUILayout.Label(new GUIContent("Iyy: " + MOI_stabDerivs[1].ToString("G6") + " kg * m²", "Inertia about Y-axis due to rotation about Y-axis"));
+            GUILayout.Label(new GUIContent("Izz: " + MOI_stabDerivs[2].ToString("G6") + " kg * m²", "Inertia about Z-axis due to rotation about Z-axis"));
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical(GUILayout.Width(160));
-            GUILayout.Label(new GUIContent("Ixy: " + MOI_stabDerivs[24] + " kg * m²", "Inertia about X-axis due to rotation about Y-axis; is equal to inertia about Y-axis due to rotation about X-axis"));
-            GUILayout.Label(new GUIContent("Iyz: " + MOI_stabDerivs[25] + " kg * m²", "Inertia about Y-axis due to rotation about Z-axis; is equal to inertia about Z-axis due to rotation about Y-axis"));
-            GUILayout.Label(new GUIContent("Ixz: " + MOI_stabDerivs[26] + " kg * m²", "Inertia about X-axis due to rotation about Z-axis; is equal to inertia about Z-axis due to rotation about X-axis"));
+            GUILayout.Label(new GUIContent("Ixy: " + MOI_stabDerivs[24].ToString("G6") + " kg * m²", "Inertia about X-axis due to rotation about Y-axis; is equal to inertia about Y-axis due to rotation about X-axis"));
+            GUILayout.Label(new GUIContent("Iyz: " + MOI_stabDerivs[25].ToString("G6") + " kg * m²", "Inertia about Y-axis due to rotation about Z-axis; is equal to inertia about Z-axis due to rotation about Y-axis"));
+            GUILayout.Label(new GUIContent("Ixz: " + MOI_stabDerivs[26].ToString("G6") + " kg * m²", "Inertia about X-axis due to rotation about Z-axis; is equal to inertia about Z-axis due to rotation about X-axis"));
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical(GUILayout.Width(140));
-            GUILayout.Label(new GUIContent("u0: " + u0 + " m/s", "Air speed based on this mach number and temperature."));
-            GUILayout.Label(new GUIContent("Cl: " + stable_Cl, "Required lift coefficient at this mass, speed and air density."));
-            GUILayout.Label(new GUIContent("AoA: " + stable_AoA_state + stable_AoA + " deg", "Angle of attack required to achieve the necessary lift force."));
+            GUILayout.Label(new GUIContent("u0: " + u0.ToString("G6") + " m/s", "Air speed based on this mach number and temperature."));
+            GUILayout.Label(new GUIContent("Cl: " + stable_Cl.ToString("G6"), "Required lift coefficient at this mass, speed and air density."));
+            GUILayout.Label(new GUIContent("AoA: " + stable_AoA_state + stable_AoA.ToString("G6") + " deg", "Angle of attack required to achieve the necessary lift force."));
             GUILayout.EndVertical();
 
             GUILayout.EndHorizontal();
@@ -1044,9 +1044,9 @@ namespace ferram4
             CoM /= mass;
             mass *= 1000;
 
-            this.b = b.ToString();
-            this.MAC = MAC.ToString();
-            this.surfArea = area.ToString();
+            this.b = b.ToString("G6");
+            this.MAC = MAC.ToString("G6");
+            this.surfArea = area.ToString("G6");
 
             MonoBehaviour.print("Mass: " + mass + "\n\rS: " + area + "\n\rMAC: " + MAC);
 

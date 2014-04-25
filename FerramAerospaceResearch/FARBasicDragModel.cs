@@ -881,10 +881,26 @@ namespace ferram4
 
                     Ray ray = new Ray();
 
+                    Vector3d relPos = Attach.position + Attach.offset;
 
-                    Vector3d origToNode = transform.localToWorldMatrix.MultiplyVector(Attach.position + Attach.offset);
+                    if(part.Modules.Contains("FARCargoBayModule"))
+                    {
+                        FARCargoBayModule bay = (FARCargoBayModule)part.Modules["FARCargoBayModule"];
+
+                        Vector3d maxBounds = bay.maxBounds;
+                        Vector3d minBounds = bay.minBounds;
+
+                        if (relPos.x < maxBounds.x && relPos.y < maxBounds.y && relPos.z < maxBounds.z && relPos.x > minBounds.x && relPos.y > minBounds.y && relPos.z > minBounds.z)
+                        {
+                            return;
+                        }
+                    }
+
+                    Vector3d origToNode = transform.localToWorldMatrix.MultiplyVector(relPos);
 
                     double mag = (origToNode).magnitude;
+
+
 
                     //print(part.partInfo.title + " Part Loc: " + part.transform.position + " Attach Loc: " + (origToNode + part.transform.position) + " Dist: " + mag);
 

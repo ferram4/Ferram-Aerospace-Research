@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.13.1
+Ferram Aerospace Research v0.13.2
 =========================
 
 Aerodynamics model for Kerbal Space Program
@@ -122,7 +122,7 @@ MODULE
 		key = 1 0  
 	}  
 	localUpVector = 0,1,0		//a unit vector defining "up" for this part; 0,1,0 is standard for most stock-compliant parts  
-	localForwardVector = 1,0,0	//a unti vector defining "forward" for this part; 1,0,0 is standard for msot stock-compliant parts  
+	localForwardVector = 1,0,0	//a unti vector defining "forward" for this part; 1,0,0 is standard for most stock-compliant parts  
 	majorMinorAxisRatio = 1		//the ratio of the part's "forward" length to its "side" length, used for drag and lift calculations  
 	taperCrossSectionAreaRatio = 0;	//the part's tapered area projected on a plane normal to the "up" vector, divided by surface area; used to handle changes in drag at hypersonic speeds  
 	CenterOfDrag = 0,0,0		//a vector defining the part's CoD  
@@ -135,11 +135,31 @@ For both of these, set MaxDrag and MinDrag to 0
 CHANGELOG
 =======================================================
 
+0.13.2v------------------------------------  
+Features:  
+Update to Module Manager 2.0.3
+Aerodynamically-induced structural failures will now be applied.  Beware of high dynamic pressure
+Updated flight status section of Flight GUI to be somewhat more useful and handle more situations
+Added IAS and velocity in knots, mph and km/h to the airspeed settings
+Reduced supersonic and transonic drag to somewhat more reasonable levels
+Increased floating point precision to double; also gets better performance
+
+Added debug menu in Space Center view, with the following options:
+	Option to switch between direct calculation of supersonic functions and using pre-computed splines to adjust performance on individual computers
+	Option to switch on / off various debug data about FAR drag model applied to particular parts
+	Option to disable aerodynamic failures
+
+BugFixes:
+Fixed Firespitter and B9 landing gear making excessive drag
+Fixed issue where some mod control surface parts would not display deflections unless the surfaces were moving
+
+
+
 0.13.1v------------------------------------  
 Features:  
 License change to GPL v3.  
 Moved source to Github.  All glory to the Octocat!  
-Tweak to control surface function to prevent weird roll coupling with yaw / pitch inputs for 3-way symmetry  
+Tweak to control surface function to prevent weird roll coupling with yaw / pitch inputs for 3-way symmetry
 
 BugFixes:  
 Fixed issue involving improperly defined engine fairings causing FAR to "crash" inside the game  
@@ -154,7 +174,7 @@ Greater limits on control surface deflections
 Animations will cause part aerodynamics to be recalculated  
 Implemented special asteroid-handling function  
 Official release of all v0.13x1 features  
-Updated to Toolbar v1.7.1  
+Updated to Toolbar v1.7.1
 
 
 0.13x1v------------------------------------  

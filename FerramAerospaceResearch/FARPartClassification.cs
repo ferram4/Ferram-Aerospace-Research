@@ -54,6 +54,8 @@ namespace ferram4
             greebleModules.Clear();
             foreach (ConfigNode node in GameDatabase.Instance.GetConfigNodes("FARPartClassification"))
             {
+                if (node == null)
+                    continue;
                 if (node.HasNode("GreebleTitle"))
                 {
                     ConfigNode titles = node.GetNode("GreebleTitle");
