@@ -72,6 +72,7 @@
     <Compile Include="FARGlobalControlObject.cs" />
     <Compile Include="FARGUIUtils.cs" />
     <Compile Include="FARMathUtil.cs" />
+    <Compile Include="FARPartClassification.cs" />
     <Compile Include="FARPartModule.cs" />
     <Compile Include="FARPayloadFairingModule.cs" />
     <Compile Include="FARRungeKutta.cs" />
