@@ -147,8 +147,8 @@ namespace ferram4
                     if (lastx >= 0)
                     {
                         int tmpThick = lineThickness - 1;
-                        int xstart = Mathf.Min(tmpx, lastx);
-                        int xend = Mathf.Max(tmpx, lastx);
+                        int xstart = Math.Min(tmpx, lastx);
+                        int xend = Math.Max(tmpx, lastx);
                         int ystart;
                         int yend;
 
@@ -170,8 +170,8 @@ namespace ferram4
                                 for (int j = -tmpThick; j <= tmpThick; j++)
                                 {
                                     int linear = (int)Math.Round(m * (i - xend) + yend);
-                                    if((i >= 0 && i <= lineDisplay.width) && (linear + j >= 0 && linear + j <= lineDisplay.height))
-                                        lineDisplay.SetPixel(i, linear + j, lineColor);
+                                    if((i >= 0 && i <= lineDisplay.width + 1) && (linear + j >= 0 && linear + j <= lineDisplay.height + 1))
+                                        lineDisplay.SetPixel(Mathf.Clamp(i, 0, lineDisplay.width), Mathf.Clamp(linear + j, 0, lineDisplay.height), lineColor);
                                 }
                         }
                         else
@@ -190,14 +190,14 @@ namespace ferram4
                                 xend = tmpx;
                             }
 
-                            m = ((double)xend - (double)xstart) / ((double)yend - (double)ystart);
+                            m = 1 / m;
 
                             for (int i = ystart; i < yend; i++)
                                 for (int j = -tmpThick; j <= tmpThick; j++)
                                 {
                                     int linear = (int)Math.Round(m * (i - yend) + xend);
-                                    if ((linear + j >= 0 && linear + j <= lineDisplay.width) && (i >= 0 && i <= lineDisplay.height))
-                                        lineDisplay.SetPixel(linear + j, i, lineColor);
+                                    if ((linear + j >= 0 && linear + j <= lineDisplay.width + 1) && (i >= 0 && i <= lineDisplay.height + 1))
+                                        lineDisplay.SetPixel(Mathf.Clamp(linear + j, 0, lineDisplay.height), Mathf.Clamp(i, 0, lineDisplay.width), lineColor);
                                 }
 
                         }
