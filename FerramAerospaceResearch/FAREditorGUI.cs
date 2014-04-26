@@ -1359,11 +1359,11 @@ namespace ferram4
             if (AoASweep)
             {
                 lowerBound_str = Regex.Replace(lowerBound_str, @"[^\d+-.]", "");
-                lowerBound = Convert.ToSingle(lowerBound_str);
+                lowerBound = Convert.ToDouble(lowerBound_str);
                 lowerBound = FARMathUtil.Clamp(lowerBound, -90, 90);
                 lowerBound_str = lowerBound.ToString();
                 upperBound_str = Regex.Replace(upperBound_str, @"[^\d+-.]", "");
-                upperBound = Convert.ToSingle(upperBound_str);
+                upperBound = Convert.ToDouble(upperBound_str);
                 upperBound = FARMathUtil.Clamp(upperBound, lowerBound, 90);
                 upperBound_str = upperBound.ToString();
                 numPoints_str = Regex.Replace(numPoints_str, @"[^\d+-.]", "");
@@ -1376,11 +1376,11 @@ namespace ferram4
             else if (MSweep)
             {
                 lowerBound_str = Regex.Replace(lowerBound_str, @"[^\d+-.]", "");
-                lowerBound = Convert.ToSingle(lowerBound_str);
+                lowerBound = Convert.ToDouble(lowerBound_str);
                 lowerBound = FARMathUtil.Clamp(lowerBound, 0, double.PositiveInfinity);
                 lowerBound_str = lowerBound.ToString();
                 upperBound_str = Regex.Replace(upperBound_str, @"[^\d+-.]", "");
-                upperBound = Convert.ToSingle(upperBound_str);
+                upperBound = Convert.ToDouble(upperBound_str);
                 upperBound = FARMathUtil.Clamp(upperBound, lowerBound, double.PositiveInfinity);
                 upperBound_str = upperBound.ToString();
                 numPoints_str = Regex.Replace(numPoints_str, @"[^\d+-.]", "");

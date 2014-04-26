@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<config>
+    <rect name="windowPos">
+        <xmin>410</xmin>
+        <xmax>1136</xmax>
+        <ymin>16</ymin>
+        <ymax>516</ymax>
+    </rect>
+    <bool name="EditorGUIBool">0</bool>
+    <rect name="FlightWindowPos">
+        <xmin>1086</xmin>
+        <xmax>1298</xmax>
+        <ymin>132</ymin>
+        <ymax>402</ymax>
+    </rect>
+    <rect name="AutopilotWinPos">
+        <xmin>0</xmin>
+        <xmax>0</xmax>
+        <ymin>0</ymin>
+        <ymax>0</ymax>
+    </rect>
+    <rect name="HelpWindowPos">
+        <xmin>0</xmin>
+        <xmax>0</xmax>
+        <ymin>0</ymin>
+        <ymax>0</ymax>
+    </rect>
+    <rect name="FlightDataPos">
+        <xmin>247</xmin>
+        <xmax>505</xmax>
+        <ymin>112</ymin>
+        <ymax>654</ymax>
+    </rect>
+    <rect name="FlightDataHelpPos">
+        <xmin>0</xmin>
+        <xmax>0</xmax>
+        <ymin>0</ymin>
+        <ymax>0</ymax>
+    </rect>
+    <rect name="AirSpeedPos">
+        <xmin>90</xmin>
+        <xmax>290</xmax>
+        <ymin>69</ymin>
+        <ymax>307</ymax>
+    </rect>
+    <rect name="AirSpeedHelpPos">
+        <xmin>399</xmin>
+        <xmax>913</xmax>
+        <ymin>53</ymin>
+        <ymax>531</ymax>
+    </rect>
+    <string name="k_wingleveler">0.1</string>
+    <string name="kd_wingleveler">0.002</string>
+    <string name="k_yawdamper">0.1</string>
+    <string name="k_pitchdamper">0.1</string>
+    <string name="scaleVelocity">100</string>
+    <string name="alt">0</string>
+    <string name="upperLim">25</string>
+    <string name="lowerLim">-25</string>
+    <string name="k_limiter">0.25</string>
+    <bool name="FlightGUIBool">0</bool>
+    <int name="SpacePortID">1113</int>
+    <string name="Name">Ferram Aerospace Research</string>
+    <string name="displayForces">True</string>
+    <string name="displayCoefficients">False</string>
+    <string name="displayShielding">False</string>
+    <string name="useSplinesForSupersonicMath">False</string>
+    <string name="allowStructuralFailures">True</string>
+    <int name="unitMode">0</int>
+    <int name="velMode">0</int>
+    <string name="areaFactor">1</string>
+    <string name="attachNodeDiameterFactor">1.25</string>
+    <string name="incompressibleRearAttachDrag">0.5</string>
+    <string name="sonicRearAdditionalAttachDrag">0.5</string>
+    <string name="ctrlSurfTimeConstant">0.0500000007450581</string>
+    <string name="Body0SpecHeatRatio">1.4</string>
+    <string name="Body0GasMolecularWeight">28.96</string>
+    <string name="Body1SpecHeatRatio">1.4</string>
+    <string name="Body1GasMolecularWeight">28.96</string>
+    <string name="Body2SpecHeatRatio">1.4</string>
+    <string name="Body2GasMolecularWeight">28.96</string>
+    <string name="Body3SpecHeatRatio">1.4</string>
+    <string name="Body3GasMolecularWeight">28.96</string>
+    <string name="Body4SpecHeatRatio">1.4</string>
+    <string name="Body4GasMolecularWeight">28.96</string>
+    <string name="Body5SpecHeatRatio">1.4</string>
+    <string name="Body5GasMolecularWeight">28.96</string>
+    <string name="Body6SpecHeatRatio">1.4</string>
+    <string name="Body6GasMolecularWeight">28.96</string>
+    <string name="Body7SpecHeatRatio">1.4</string>
+    <string name="Body7GasMolecularWeight">28.96</string>
+    <string name="Body8SpecHeatRatio">1.4</string>
+    <string name="Body8GasMolecularWeight">28.96</string>
+    <string name="Body9SpecHeatRatio">1.4</string>
+    <string name="Body9GasMolecularWeight">28.96</string>
+    <string name="Body10SpecHeatRatio">1.4</string>
+    <string name="Body10GasMolecularWeight">28.96</string>
+    <string name="Body11SpecHeatRatio">1.4</string>
+    <string name="Body11GasMolecularWeight">28.96</string>
+    <string name="Body12SpecHeatRatio">1.4</string>
+    <string name="Body12GasMolecularWeight">28.96</string>
+    <string name="Body13SpecHeatRatio">1.4</string>
+    <string name="Body13GasMolecularWeight">28.96</string>
+    <string name="Body14SpecHeatRatio">1.4</string>
+    <string name="Body14GasMolecularWeight">28.96</string>
+    <string name="Body15SpecHeatRatio">1.4</string>
+    <string name="Body15GasMolecularWeight">28.96</string>
+    <string name="Body16SpecHeatRatio">1.4</string>
+    <string name="Body16GasMolecularWeight">28.96</string>
+    <string name="cargoBayTitle0" />
+    <string name="payloadFairingTitle0" />
+    <string name="exemptAttachNodeString0" />
+</config>
