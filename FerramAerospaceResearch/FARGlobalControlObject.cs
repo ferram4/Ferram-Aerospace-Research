@@ -113,6 +113,9 @@ namespace ferram4
             bool returnValue = false;
             foreach (Part p in editorShip)
             {
+                if(p == null)
+                    continue;
+
                 if (p != null && FARAeroUtil.IsNonphysical(p) &&
                     p.physicalSignificance != Part.PhysicalSignificance.NONE)
                 {
@@ -120,47 +123,43 @@ namespace ferram4
                     p.physicalSignificance = Part.PhysicalSignificance.NONE;
                 }
 
-                if (p == null || p is StrutConnector || p is FuelLine || p is ControlSurface || p is Winglet || p.Modules.Contains("LaunchClamp") || p.Modules.Contains("FARBaseAerodynamics") || p.Modules.Contains("KerbalEVA") || p.Modules.Contains("ModuleControlSurface") || p.Modules.Contains("ModuleResourceIntake"))
+                string title = p.partInfo.title.ToLowerInvariant();
+
+                if (p is StrutConnector || p is FuelLine || p is ControlSurface || p is Winglet || FARPartClassification.ExemptPartFromGettingDragModel(p, title))
                     continue;
 
                 FARPartModule q = p.GetComponent<FARPartModule>();
                 if (q != null && !(q is FARControlSys))
                     continue;
 
-                string title = p.partInfo.title.ToLowerInvariant();
-
                 bool updatedModules = false;
 
-                foreach(string s in FARMiscData.cargoBayTitles)
-                    if (title.Contains(s))
+                if (FARPartClassification.PartIsCargoBay(p, title))
+                {
+                    if (!p.Modules.Contains("FARCargoBayModule"))
                     {
-                        if (!p.Modules.Contains("FARCargoBayModule"))
+                        p.AddModule("FARCargoBayModule");
+                        p.Modules["FARCargoBayModule"].OnStart(PartModule.StartState.Editor);
+                        FARAeroUtil.AddBasicDragModule(p);
+                        p.Modules["FARBasicDragModel"].OnStart(PartModule.StartState.Editor);
+                        updatedModules = true;
+                    }
+                }
+                if (!updatedModules)
+                {
+                    if (FARPartClassification.PartIsPayloadFairing(p, title))
+                    {
+                        if (!p.Modules.Contains("FARPayloadFairingModule"))
                         {
-                            p.AddModule("FARCargoBayModule");
-                            p.Modules["FARCargoBayModule"].OnStart(PartModule.StartState.Editor);
+                            p.AddModule("FARPayloadFairingModule");
+                            p.Modules["FARPayloadFairingModule"].OnStart(PartModule.StartState.Editor);
                             FARAeroUtil.AddBasicDragModule(p);
                             p.Modules["FARBasicDragModel"].OnStart(PartModule.StartState.Editor);
                             updatedModules = true;
                         }
-                        break;
                     }
-                if (!updatedModules)
-                {
-                    foreach (string s in FARMiscData.payloadFairingTitles)
-                        if (title.Contains(s))
-                        {
-                            if (!p.Modules.Contains("FARPayloadFairingModule"))
-                            {
-                                p.AddModule("FARPayloadFairingModule");
-                                p.Modules["FARPayloadFairingModule"].OnStart(PartModule.StartState.Editor);
-                                FARAeroUtil.AddBasicDragModule(p);
-                                p.Modules["FARBasicDragModel"].OnStart(PartModule.StartState.Editor);
-                                updatedModules = true;
-                            }
-                            break;
-                        }
 
-                    if (!updatedModules && !p.Modules.Contains("FARBasicDragModel") && !p.Modules.Contains("ModuleParachute"))
+                    if (!updatedModules && !p.Modules.Contains("FARBasicDragModel"))
                     {
                         FARAeroUtil.AddBasicDragModule(p);
                         p.Modules["FARBasicDragModel"].OnStart(PartModule.StartState.Editor);
@@ -271,7 +270,12 @@ namespace ferram4
             bool returnValue = false;
             foreach (Part p in v.Parts)
             {
-                if (p == null || p is StrutConnector || p is FuelLine || p is ControlSurface || p is Winglet || p.Modules.Contains("LaunchClamp") || p.Modules.Contains("KerbalEVA") || p.Modules.Contains("ModuleControlSurface") || p.Modules.Contains("ModuleResourceIntake"))
+                if (p == null)
+                    continue;
+
+                string title = p.partInfo.title.ToLowerInvariant();
+
+                if (p is StrutConnector || p is FuelLine || p is ControlSurface || p is Winglet || FARPartClassification.ExemptPartFromGettingDragModel(p, title))
                     continue;
 
                 if (p.Modules.Contains("FARPartModule"))
@@ -295,17 +299,33 @@ namespace ferram4
                 if (q != null && !(q is FARControlSys))
                     continue;
 
-                string title = p.partInfo.title.ToLowerInvariant();
-
                 bool updatedModules = false;
 
-                foreach (string s in FARMiscData.cargoBayTitles)
-                    if (title.Contains(s))
+                if (FARPartClassification.PartIsCargoBay(p, title))
+                {
+                    if (!p.Modules.Contains("FARCargoBayModule"))
                     {
-                        if (!p.Modules.Contains("FARCargoBayModule"))
+                        p.AddModule("FARCargoBayModule");
+                        PartModule m = p.Modules["FARCargoBayModule"];
+                        m.OnStart(PartModule.StartState.Flying);
+                        FARPartModules.Add(m as FARPartModule);
+
+                        FARAeroUtil.AddBasicDragModule(p);
+                        m = p.Modules["FARBasicDragModel"];
+                        m.OnStart(PartModule.StartState.Flying);
+                        FARPartModules.Add(m as FARPartModule);
+
+                        updatedModules = true;
+                    }
+                }
+                if (!updatedModules)
+                {
+                    if (FARPartClassification.PartIsPayloadFairing(p, title))
+                    {
+                        if (!p.Modules.Contains("FARPayloadFairingModule"))
                         {
-                            p.AddModule("FARCargoBayModule");
-                            PartModule m = p.Modules["FARCargoBayModule"];
+                            p.AddModule("FARPayloadFairingModule");
+                            PartModule m = p.Modules["FARPayloadFairingModule"];
                             m.OnStart(PartModule.StartState.Flying);
                             FARPartModules.Add(m as FARPartModule);
 
@@ -313,33 +333,11 @@ namespace ferram4
                             m = p.Modules["FARBasicDragModel"];
                             m.OnStart(PartModule.StartState.Flying);
                             FARPartModules.Add(m as FARPartModule);
-
                             updatedModules = true;
                         }
-                        break;
                     }
-                if (!updatedModules)
-                {
-                    foreach (string s in FARMiscData.payloadFairingTitles)
-                        if (title.Contains(s))
-                        {
-                            if (!p.Modules.Contains("FARPayloadFairingModule"))
-                            {
-                                p.AddModule("FARPayloadFairingModule");
-                                PartModule m = p.Modules["FARPayloadFairingModule"];
-                                m.OnStart(PartModule.StartState.Flying);
-                                FARPartModules.Add(m as FARPartModule);
 
-                                FARAeroUtil.AddBasicDragModule(p);
-                                m = p.Modules["FARBasicDragModel"];
-                                m.OnStart(PartModule.StartState.Flying);
-                                FARPartModules.Add(m as FARPartModule);
-                                updatedModules = true;
-                            }
-                            break;
-                        }
-
-                    if (!updatedModules && !p.Modules.Contains("FARBasicDragModel") && !p.Modules.Contains("ModuleParachute"))
+                    if (!updatedModules && !p.Modules.Contains("FARBasicDragModel"))
                     {
                         FARAeroUtil.AddBasicDragModule(p);
                         PartModule m = p.Modules["FARBasicDragModel"];
@@ -456,12 +454,5 @@ namespace ferram4
         {
             config.save();
         }
-    }
-
-    public static class FARMiscData
-    {
-        public static List<string> cargoBayTitles = new List<string>();
-        public static List<string> payloadFairingTitles = new List<string>();
-        public static List<string> exemptAttachNodes = new List<string>();
     }
 }

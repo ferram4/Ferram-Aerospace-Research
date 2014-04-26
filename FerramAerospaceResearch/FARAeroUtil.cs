@@ -120,28 +120,6 @@ namespace ferram4
 
                     FARAeroUtil.bodyAtmosphereConfiguration.Add(body.flightGlobalsIndex, Rgamma_and_gamma);
                 }
-
-                FARMiscData.payloadFairingTitles = new List<string>();
-                FARMiscData.cargoBayTitles = new List<string>();
-
-                if (node.HasNode("PayloadFairing"))
-                {
-                    ConfigNode fairing = node.GetNode("PayloadFairing");
-
-                    foreach (string title in fairing.GetValues("title"))
-                    {
-                        FARMiscData.payloadFairingTitles.Add(title);
-                    }
-                }
-                if (node.HasNode("CargoBay"))
-                {
-                    ConfigNode fairing = node.GetNode("CargoBay");
-
-                    foreach (string title in fairing.GetValues("title"))
-                    {
-                        FARMiscData.cargoBayTitles.Add(title);
-                    }
-                }
             }
         }
 

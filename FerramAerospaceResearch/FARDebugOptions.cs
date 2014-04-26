@@ -100,77 +100,15 @@ namespace ferram4
         {
             config = KSP.IO.PluginConfiguration.CreateForType<FARDebugOptions>();
             config.load();
-            FARAeroUtil.areaFactor = Convert.ToDouble(config.GetValue("areaFactor", "1"));
-            FARAeroUtil.attachNodeRadiusFactor = Convert.ToDouble(config.GetValue("attachNodeDiameterFactor", "1.25")) * 0.5f;
-            FARAeroUtil.incompressibleRearAttachDrag = Convert.ToDouble(config.GetValue("incompressibleRearAttachDrag", "0.5"));
-            FARAeroUtil.sonicRearAdditionalAttachDrag = Convert.ToDouble(config.GetValue("sonicRearAdditionalAttachDrag", "0.5"));
-
             FARDebugValues.displayForces = Convert.ToBoolean(config.GetValue("displayForces", "false"));
             FARDebugValues.displayCoefficients = Convert.ToBoolean(config.GetValue("displayCoefficients", "false"));
             FARDebugValues.displayShielding = Convert.ToBoolean(config.GetValue("displayShielding", "false"));
             FARDebugValues.useSplinesForSupersonicMath = Convert.ToBoolean(config.GetValue("useSplinesForSupersonicMath", "true"));
             FARDebugValues.allowStructuralFailures = Convert.ToBoolean(config.GetValue("allowStructuralFailures", "true"));
-
-            FARControllableSurface.timeConstant = Convert.ToSingle(config.GetValue("ctrlSurfTimeConstant", "0.05"));
-
-            FARAeroUtil.bodyAtmosphereConfiguration = new Dictionary<int, Vector3d>();
-            int i = 0;
-            while (i < FlightGlobals.Bodies.Count)
-            {
-                int index = FlightGlobals.Bodies[i].flightGlobalsIndex;
-                Vector3d Rgamma_and_gamma = new Vector3d();
-
-                Rgamma_and_gamma.y = Convert.ToDouble(config.GetValue("Body" + index + "SpecHeatRatio", "1.4"));
-                Rgamma_and_gamma.z = 8.3145 * 1000 / Convert.ToDouble(config.GetValue("Body" + index + "GasMolecularWeight", "28.96"));
-                Rgamma_and_gamma.x = Rgamma_and_gamma.y * Rgamma_and_gamma.z;
-
-                FARAeroUtil.bodyAtmosphereConfiguration.Add(index, Rgamma_and_gamma);
-                i++;
-            }
-
-            FARMiscData.cargoBayTitles = new List<string>();
-            FARMiscData.payloadFairingTitles = new List<string>();
-            FARMiscData.exemptAttachNodes = new List<string>();
-
-            i = 0;
-            do
-            {
-                string tmpCargoBayTitle, tmpPayloadFairingTitle, tmpAttach;
-                tmpCargoBayTitle = config.GetValue("cargoBayTitle" + i, "");
-                tmpPayloadFairingTitle = config.GetValue("payloadFairingTitle" + i, "");
-                tmpAttach = config.GetValue("exemptAttachNodeString" + i, "");
-
-
-                if (tmpCargoBayTitle != "")
-                    FARMiscData.cargoBayTitles.Add(tmpCargoBayTitle);
-                else
-                    config.SetValue("cargoBayTitle" + i, "");
-                if (tmpPayloadFairingTitle != "")
-                    FARMiscData.payloadFairingTitles.Add(tmpPayloadFairingTitle);
-                else
-                    config.SetValue("payloadFairingTitle" + i, "");
-
-                if (tmpAttach != "")
-                    FARMiscData.exemptAttachNodes.Add(tmpAttach);
-                else
-                    config.SetValue("exemptAttachNodeString" + i, "");
-
-                if (tmpCargoBayTitle == "" && tmpPayloadFairingTitle == "" && tmpAttach == "")
-                    break;
-
-                i++;
-            } while (true);
         }
 
         public static void SaveConfigs()
         {
-            config.SetValue("areaFactor", FARAeroUtil.areaFactor.ToString());
-            config.SetValue("attachNodeDiameterFactor", (FARAeroUtil.attachNodeRadiusFactor * 2).ToString());
-            config.SetValue("incompressibleRearAttachDrag", FARAeroUtil.incompressibleRearAttachDrag.ToString());
-            config.SetValue("sonicRearAdditionalAttachDrag", FARAeroUtil.sonicRearAdditionalAttachDrag.ToString());
-
-            config.SetValue("ctrlSurfTimeConstant", FARControllableSurface.timeConstant.ToString());
-
             config.SetValue("displayForces", FARDebugValues.displayForces.ToString());
             config.SetValue("displayCoefficients", FARDebugValues.displayCoefficients.ToString());
             config.SetValue("displayShielding", FARDebugValues.displayShielding.ToString());

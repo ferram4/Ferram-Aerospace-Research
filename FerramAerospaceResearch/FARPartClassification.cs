@@ -48,6 +48,12 @@ namespace ferram4
         public static List<string> greebleTitles = new List<string>();
         public static List<string> greebleModules = new List<string>();
 
+        public static List<string> exemptModules = new List<string>();
+
+        public static List<string> payloadFairingTitles = new List<string>();
+        public static List<string> cargoBayTitles = new List<string>();
+
+        
         public static void LoadClassificationTemplates()
         {
             greebleTitles.Clear();
@@ -72,6 +78,34 @@ namespace ferram4
                         greebleModules.Add(moduleString);
                     }
                 }
+                if(node.HasNode("ExemptModule"))
+                {
+                    ConfigNode modules = node.GetNode("ExemptModule");
+                    foreach (string moduleString in modules.GetValues("hasModule"))
+                    {
+                        exemptModules.Add(moduleString);
+                    }
+                }
+
+                if (node.HasNode("PayloadFairing"))
+                {
+                    ConfigNode fairing = node.GetNode("PayloadFairing");
+
+                    foreach (string title in fairing.GetValues("title"))
+                    {
+                        payloadFairingTitles.Add(title);
+                    }
+                }
+                if (node.HasNode("CargoBay"))
+                {
+                    ConfigNode fairing = node.GetNode("CargoBay");
+
+                    foreach (string title in fairing.GetValues("title"))
+                    {
+                        cargoBayTitles.Add(title);
+                    }
+                }
+
             }
         }
 
@@ -87,6 +121,34 @@ namespace ferram4
 
             return false;
             //return p.Modules.Contains("ModuleRCS") || p.Modules.Contains("ModuleDeployableSolarPanel") || p.Modules.Contains("ModuleLandingGear") || p.Modules.Contains("FSwheel") || title.Contains("heatshield") || (title.Contains("heat") && title.Contains("shield")) || title.Contains("ladder") || title.Contains("mobility") || title.Contains("railing");
+        }
+
+        public static bool ExemptPartFromGettingDragModel(Part p, string title)
+        {
+            foreach (string moduleString in exemptModules)
+                if (p.Modules.Contains(moduleString))
+                    return true;
+
+            //p.Modules.Contains("LaunchClamp") || p.Modules.Contains("FARBaseAerodynamics") || p.Modules.Contains("KerbalEVA") || p.Modules.Contains("ModuleControlSurface") || p.Modules.Contains("ModuleResourceIntake") || p.Modules.Contains("ModuleParachute")
+            return false;
+        }
+
+        public static bool PartIsPayloadFairing(Part p, string title)
+        {
+            foreach (string titleString in payloadFairingTitles)
+                if (title.Contains(titleString))
+                    return true;
+
+            return false;
+        }
+
+        public static bool PartIsCargoBay(Part p, string title)
+        {
+            foreach (string titleString in cargoBayTitles)
+                if (title.Contains(titleString))
+                    return true;
+
+            return false;
         }
     }
 }
