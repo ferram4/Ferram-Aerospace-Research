@@ -321,9 +321,11 @@ namespace ferram4
             {
                 if (p == null)
                     continue;
+
+                double rmass = 0;
                 if (p.Resources.Count > 0)
                 {
-                    double rmass = p.GetResourceMass();
+                    rmass = p.GetResourceMass();
                     fuelmass += rmass;
                     mass += rmass;
                 }
@@ -401,7 +403,7 @@ namespace ferram4
                         }
                     }
                 }
-                DragArea += p.mass * p.maximum_drag * drag_coeff;
+                DragArea += (p.mass + rmass) * p.maximum_drag * drag_coeff; //Resources matter here
             }
             intakeDeficit = airAvailable / airDemand;
 

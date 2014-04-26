@@ -1,5 +1,5 @@
 ﻿/* Name:    FerramGraph (Graph GUI Plugin)
- * Version: 1.2   (KSP 0.22+)
+ * Version: 1.3   (KSP 0.22+)
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of FerramGraph.
@@ -350,6 +350,17 @@ namespace ferram4
 
             pixelWidth = (int)Math.Round(((gridWidth * displayRect.width) / (bounds.y - bounds.x)));
             pixelHeight = (int)Math.Round(((gridHeight * displayRect.height) / (bounds.w - bounds.z)));
+
+            if (pixelWidth <= 1)
+            {
+                pixelWidth = 5;
+                Debug.Log("Warning! Grid width scale too fine for scaling; picking safe alternative");
+            }
+            if (pixelHeight <= 1)
+            {
+                pixelHeight = 5;
+                Debug.Log("Warning! Grid height scale too fine for scaling; picking safe alternative");
+            }
 
             SetGridScaleUsingPixels(pixelWidth, pixelHeight);
             

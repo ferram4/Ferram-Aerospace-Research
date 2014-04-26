@@ -1354,7 +1354,9 @@ namespace ferram4
             GUILayout.BeginHorizontal();
             GUILayout.Label("Mach / AoA: ", GUILayout.Width(80.0F), GUILayout.Height(25.0F));
             extra_str = GUILayout.TextField(extra_str, GUILayout.ExpandWidth(true));
-            if (GUILayout.Button("Sweep AoA", ButtonStyle, GUILayout.Width(100.0F), GUILayout.Height(25.0F)))
+            bool AoASweep = GUILayout.Button("Sweep AoA", ButtonStyle, GUILayout.Width(100.0F), GUILayout.Height(25.0F));
+            bool MSweep = GUILayout.Button("Sweep Mach", ButtonStyle, GUILayout.Width(100.0F), GUILayout.Height(25.0F));
+            if (AoASweep)
             {
                 lowerBound_str = Regex.Replace(lowerBound_str, @"[^\d+-.]", "");
                 lowerBound = Convert.ToSingle(lowerBound_str);
@@ -1371,8 +1373,7 @@ namespace ferram4
                 double M = Math.Abs(Convert.ToDouble(extra_str));
                 AngleOfAttackSweep(M, pitch);
             }
-
-            if (GUILayout.Button("Sweep Mach", ButtonStyle, GUILayout.Width(100.0F), GUILayout.Height(25.0F)))
+            else if (MSweep)
             {
                 lowerBound_str = Regex.Replace(lowerBound_str, @"[^\d+-.]", "");
                 lowerBound = Convert.ToSingle(lowerBound_str);
@@ -1784,7 +1785,6 @@ namespace ferram4
                 if (vehicleFueled && p.Resources.Count > 0)
                     partMass += p.GetResourceMass();
 
-                // All FAR forces are divided by 1000 before applying, so this needs to be multiplied
                 double stock_drag = partMass * p.maximum_drag * FlightGlobals.DragMultiplier * 1000;
                 Cd += stock_drag;
                 Cm += stock_drag * -Vector3d.Dot(part_pos, liftVector);
@@ -1812,7 +1812,7 @@ namespace ferram4
         private void InitGraph()
         {
             graph.SetBoundaries(0, 25, 0, 2);
-            graph.SetGridScaleUsingValues(5, 0.5f);
+            graph.SetGridScaleUsingValues(5, 0.5);
             graph.horizontalLabel = "Angle of Attack, degrees";
             graph.verticalLabel = "Cl\nCd\nCm\nL/D / 10";
             graph.Update();
@@ -1836,12 +1836,12 @@ namespace ferram4
 
             graph.Clear();
             graph.SetBoundaries(lowerBound, upperBound, realMin, realMax);
-            graph.SetGridScaleUsingValues(5, 0.5f);
+            graph.SetGridScaleUsingValues(5, 0.5);
             graph.AddLine("Cl", AlphaValues, ClValues, Color.cyan);
             graph.AddLine("Cd", AlphaValues, CdValues, Color.red);
             graph.AddLine("Cm", AlphaValues, CmValues, Color.yellow);
             graph.AddLine("L/D", AlphaValues, LDValues, Color.green);
-            graph.SetLineVerticalScaling("L/D", 0.1f);
+            graph.SetLineVerticalScaling("L/D", 0.1);
             graph.horizontalLabel = horizontalLabel;
             graph.verticalLabel = "Cl\nCd\nCm\nL/D / 10";
             AddZeroMarks("Cm", AlphaValues, CmValues, upperBound-lowerBound, realMax-realMin, Color.yellow);
