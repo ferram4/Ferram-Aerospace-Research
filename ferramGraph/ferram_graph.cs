@@ -109,10 +109,11 @@ namespace ferram4
 
                     tmpx -= bounds.x;
                     tmpx *= xScaling;
-                    tmpx = Math.Round(tmpx);
 
                     tmpy -= bounds.z;
                     tmpy *= yScaling;
+
+                    tmpx = Math.Round(tmpx);
                     tmpy = Math.Round(tmpy);
 
 //                    MonoBehaviour.print("x: " + tmpx.ToString() + " y: " + tmpy.ToString());

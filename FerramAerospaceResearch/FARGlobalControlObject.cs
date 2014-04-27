@@ -452,6 +452,27 @@ namespace ferram4
 
         public static void SaveConfigs()
         {
+            config.SetValue("FlightWindowPos", FARControlSys.windowPos);
+            config.SetValue("AutopilotWinPos", FARControlSys.AutopilotWinPos);
+            config.SetValue("HelpWindowPos", FARControlSys.HelpWindowPos);
+            config.SetValue("FlightDataPos", FARControlSys.FlightDataPos);
+            config.SetValue("FlightDataHelpPos", FARControlSys.FlightDataHelpPos);
+            config.SetValue("AirSpeedPos", FARControlSys.AirSpeedPos);
+            config.SetValue("AirSpeedHelpPos", FARControlSys.AirSpeedHelpPos);
+            config.SetValue("FlightGUIBool", FARControlSys.minimize);
+            config.SetValue("k_wingleveler", (FARControlSys.k_wingleveler).ToString());
+            config.SetValue("kd_wingleveler", (FARControlSys.kd_wingleveler).ToString());
+            config.SetValue("k_yawdamper", (FARControlSys.k_yawdamper).ToString());
+            config.SetValue("k_pitchdamper", (FARControlSys.k_pitchdamper).ToString());
+            config.SetValue("scaleVelocity", (FARControlSys.scaleVelocity).ToString());
+            config.SetValue("alt", (FARControlSys.alt).ToString());
+            config.SetValue("upperLim", (FARControlSys.upperLim).ToString());
+            config.SetValue("lowerLim", (FARControlSys.lowerLim).ToString());
+            config.SetValue("k_limiter", (FARControlSys.k_limiter).ToString());
+
+            config.SetValue("unitMode", (int)FARControlSys.unitMode);
+            config.SetValue("velMode", (int)FARControlSys.velMode); 
+            
             config.save();
         }
     }

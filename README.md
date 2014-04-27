@@ -149,6 +149,10 @@ Added debug menu in Space Center view, with the following options:
 	Option to switch on / off various debug data about FAR drag model applied to particular parts
 	Option to disable aerodynamic failures
 
+Switch to defining payload fairings and cargo bays using ConfigNodes
+Switch to defining aerodynamic properties using ConfigNodes
+Ability to define part modules that will exempt a part from getting FAR drag modules in a ConfigNode
+
 BugFixes:
 Fixed Firespitter and B9 landing gear making excessive drag
 Fixed issue where some mod control surface parts would not display deflections unless the surfaces were moving
