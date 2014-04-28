@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.13.2
+Ferram Aerospace Research v0.13.2.1
 =========================
 
 Aerodynamics model for Kerbal Space Program
@@ -134,6 +134,15 @@ For both of these, set MaxDrag and MinDrag to 0
 
 CHANGELOG
 =======================================================
+
+0.13.2.1v------------------------------------  
+Features:
+Update to Module Manager 2.0.5 to avoid an on-loading bug with that version of MM
+
+Bugfixes:
+Fixed wings and control surfaces not respecting turning aerodynamic failures off
+Fix to EAS, IAS, etc. displaying 0 as the speed
+
 
 0.13.2v------------------------------------  
 Features:  

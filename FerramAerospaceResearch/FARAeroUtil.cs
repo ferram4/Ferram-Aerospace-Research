@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.2
+Ferram Aerospace Research v0.13.2.1
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -1150,7 +1150,8 @@ namespace ferram4
             if ((object)body != null && body.flightGlobalsIndex != prevBody)
             {
                 UpdateCurrentActiveBody(body.flightGlobalsIndex);
-                if (body.name == "Jool" || body.name == "Sentar")
+//                if (body.name == "Jool" || body.name == "Sentar")
+                if(body.pqsController == null)
                     currentBodyTemp += FARAeroUtil.JoolTempOffset;
             }
         }

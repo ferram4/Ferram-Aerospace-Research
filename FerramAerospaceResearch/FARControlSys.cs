@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.2
+Ferram Aerospace Research v0.13.2.1
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -1123,7 +1123,7 @@ namespace ferram4
             if (FlightUIController.speedDisplayMode != FlightUIController.SpeedDisplayModes.Surface)
                 return;
             FlightUIController UI = FlightUIController.fetch;
-
+            Vessel activeVessel = FlightGlobals.ActiveVessel;
             double unitConversion = 1;
             string unitString = "m/s";
             if (unitMode == SurfaceVelUnit.KNOTS)
@@ -1145,22 +1145,22 @@ namespace ferram4
             if (velMode == SurfaceVelMode.DEFAULT)
             {
                 UI.spdCaption.text = "Surface";
-                UI.speed.text = (vessel.srf_velocity.magnitude * unitConversion).ToString("F1") + unitString;
+                UI.speed.text = (activeVessel.srf_velocity.magnitude * unitConversion).ToString("F1") + unitString;
             }
             else if (velMode == SurfaceVelMode.IAS)
             {
                 UI.spdCaption.text = "IAS";
-                double densityRatio = (FARAeroUtil.GetCurrentDensity(vessel.mainBody, vessel.altitude) * invKerbinSLDensity);
+                double densityRatio = (FARAeroUtil.GetCurrentDensity(activeVessel.mainBody, activeVessel.altitude) * invKerbinSLDensity);
                 double pressureRatio = FARAeroUtil.StagnationPressureCalc(MachNumber);
-                UI.speed.text = (vessel.srf_velocity.magnitude * Math.Sqrt(densityRatio) * pressureRatio * unitConversion).ToString("F1") + unitString;
+                UI.speed.text = (activeVessel.srf_velocity.magnitude * Math.Sqrt(densityRatio) * pressureRatio * unitConversion).ToString("F1") + unitString;
             }
             else if (velMode == SurfaceVelMode.EAS)
             {
                 UI.spdCaption.text = "EAS";
-                double densityRatio = (FARAeroUtil.GetCurrentDensity(vessel.mainBody, vessel.altitude) * invKerbinSLDensity);
-                UI.speed.text = (vessel.srf_velocity.magnitude * Math.Sqrt(densityRatio) * unitConversion).ToString("F1") + unitString;
+                double densityRatio = (FARAeroUtil.GetCurrentDensity(activeVessel.mainBody, activeVessel.altitude) * invKerbinSLDensity);
+                UI.speed.text = (activeVessel.srf_velocity.magnitude * Math.Sqrt(densityRatio) * unitConversion).ToString("F1") + unitString;
             }
-            else if (velMode == SurfaceVelMode.MACH)
+            else// if (velMode == SurfaceVelMode.MACH)
             {
                 UI.spdCaption.text = "Mach";
                 UI.speed.text = mach;
@@ -1175,24 +1175,24 @@ namespace ferram4
             GUI.skin = HighLogic.Skin;
             if (this == activeControlSys && !minimize)
             {
-                windowPos = GUILayout.Window(250, windowPos, WindowGUI, "FAR Flight Systems, v0.13.2", GUILayout.MinWidth(150));
+                windowPos = GUILayout.Window(250, windowPos, WindowGUI, "FAR Flight Systems, v0.13.2.1", GUILayout.MinWidth(150));
                 if (AutopilotWindow)
                 {
-                    AutoPilotWindowPos = GUILayout.Window(251, AutoPilotWindowPos, AutopilotWindowGUI, "FAR Flight Assistance System Options, v0.13.2", GUILayout.MinWidth(330));
+                    AutoPilotWindowPos = GUILayout.Window(251, AutoPilotWindowPos, AutopilotWindowGUI, "FAR Flight Assistance System Options", GUILayout.MinWidth(330));
                     if (AutoPilotHelp)
-                        HelpWindowPos = GUILayout.Window(252, HelpWindowPos, HelpWindowGUI, "FAR FAS Help, v0.13.2", GUILayout.MinWidth(150));
+                        HelpWindowPos = GUILayout.Window(252, HelpWindowPos, HelpWindowGUI, "FAR FAS Help", GUILayout.MinWidth(150));
                 }
                 if (FlightDataWindow)
                 {
-                    FlightDataPos = GUILayout.Window(253, FlightDataPos, FlightDataGUI, "FAR Flight Data, v0.13.2", GUILayout.MinWidth(250));
+                    FlightDataPos = GUILayout.Window(253, FlightDataPos, FlightDataGUI, "FAR Flight Data", GUILayout.MinWidth(250));
                     if(FlightDataHelp)
-                        FlightDataHelpPos = GUILayout.Window(254, FlightDataHelpPos, FlightDataHelpGUI, "FAR Flight Data Help, v0.13.2", GUILayout.MinWidth(150));
+                        FlightDataHelpPos = GUILayout.Window(254, FlightDataHelpPos, FlightDataHelpGUI, "FAR Flight Data Help", GUILayout.MinWidth(150));
                 }
                 if (AirSpeedWindow)
                 {
-                    AirSpeedPos = GUILayout.Window(255, AirSpeedPos, AirSpeedGUI, "FAR Airspeed Settings, v0.13.2", GUILayout.MinWidth(200));
+                    AirSpeedPos = GUILayout.Window(255, AirSpeedPos, AirSpeedGUI, "FAR Airspeed Settings", GUILayout.MinWidth(200));
                     if (AirSpeedHelp)
-                        AirSpeedHelpPos = GUILayout.Window(256, AirSpeedHelpPos, AirSpeedHelpGUI, "FAR Airspeed Settings Help, v0.13.2", GUILayout.MinWidth(170));
+                        AirSpeedHelpPos = GUILayout.Window(256, AirSpeedHelpPos, AirSpeedHelpGUI, "FAR Airspeed Settings Help", GUILayout.MinWidth(170));
                 }
 
             }

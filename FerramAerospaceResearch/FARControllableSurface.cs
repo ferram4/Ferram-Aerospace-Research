@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.2
+Ferram Aerospace Research v0.13.2.1
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -178,7 +178,6 @@ namespace ferram4
             SetDeflection(flapDeflectionLevel - 1);
             UpdateFlapDeflect();
         }
-
         private void UpdateFlapDeflect()
         {
             foreach (Part p in part.symmetryCounterparts)
@@ -211,24 +210,27 @@ namespace ferram4
             UpdateEvents();
             justStarted = true;
 
-            FARPartStressTemplate template;
-            foreach (FARPartStressTemplate temp in FARAeroStress.StressTemplates)
-                if (temp.name == "ctrlSurfStress")
-                {
-                    template = temp;
+            if (FARDebugValues.allowStructuralFailures)
+            {
+                FARPartStressTemplate template;
+                foreach (FARPartStressTemplate temp in FARAeroStress.StressTemplates)
+                    if (temp.name == "ctrlSurfStress")
+                    {
+                        template = temp;
 
-                    YmaxForce *= 1 - ctrlSurfFrac;
-                    XZmaxForce *= 1 - ctrlSurfFrac;
+                        YmaxForce *= 1 - ctrlSurfFrac;
+                        XZmaxForce *= 1 - ctrlSurfFrac;
 
-                    double tmp = template.YmaxStress;    //in MPa
-                    tmp *= S * ctrlSurfFrac;
-                    YmaxForce += tmp;
+                        double tmp = template.YmaxStress;    //in MPa
+                        tmp *= S * ctrlSurfFrac;
+                        YmaxForce += tmp;
 
-                    tmp = template.XZmaxStress;    //in MPa
-                    tmp *= S * ctrlSurfFrac;
-                    XZmaxForce += tmp;
-                    break;
-                }
+                        tmp = template.XZmaxStress;    //in MPa
+                        tmp *= S * ctrlSurfFrac;
+                        XZmaxForce += tmp;
+                        break;
+                    }
+            }
         }
 
         public override void FixedUpdate()

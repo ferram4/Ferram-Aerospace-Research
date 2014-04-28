@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.2
+Ferram Aerospace Research v0.13.2.1
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -329,19 +329,22 @@ namespace ferram4
             PrecomputeCentroid();
             RunExposureAndGetControlSys();
 
-            FARPartStressTemplate template;
-            foreach (FARPartStressTemplate temp in FARAeroStress.StressTemplates)
-                if (temp.name == "wingStress")
-                {
-                    template = temp;
+            if (FARDebugValues.allowStructuralFailures)
+            {
+                FARPartStressTemplate template;
+                foreach (FARPartStressTemplate temp in FARAeroStress.StressTemplates)
+                    if (temp.name == "wingStress")
+                    {
+                        template = temp;
 
-                    YmaxForce = template.YmaxStress;    //in MPa
-                    YmaxForce *= S;
+                        YmaxForce = template.YmaxStress;    //in MPa
+                        YmaxForce *= S;
 
-                    XZmaxForce = template.XZmaxStress;
-                    XZmaxForce *= S;
-                    break;
-                }
+                        XZmaxForce = template.XZmaxStress;
+                        XZmaxForce *= S;
+                        break;
+                    }
+            }
         }
 
         private void RunExposureAndGetControlSys()
