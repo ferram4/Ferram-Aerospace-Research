@@ -143,7 +143,7 @@ Control surfaces can handle more aerodynamic forces before failing
 
 Bugfixes:
 Fixed an issue where atmospheric composition was broken by new ConfigNode system
-
+Fix parts shielded property not being removed if part is removed from cargo bay
 
 0.13.2.1v------------------------------------  
 Features:

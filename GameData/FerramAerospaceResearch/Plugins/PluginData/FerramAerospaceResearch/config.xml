@@ -61,10 +61,10 @@
     <bool name="FlightGUIBool">0</bool>
     <int name="SpacePortID">1113</int>
     <string name="Name">Ferram Aerospace Research</string>
-    <string name="displayForces">True</string>
+    <string name="displayForces">False</string>
     <string name="displayCoefficients">False</string>
     <string name="displayShielding">False</string>
-    <string name="useSplinesForSupersonicMath">False</string>
+    <string name="useSplinesForSupersonicMath">True</string>
     <string name="allowStructuralFailures">True</string>
     <int name="unitMode">0</int>
     <int name="velMode">0</int>
