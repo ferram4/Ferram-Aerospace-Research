@@ -50,8 +50,11 @@ namespace ferram4
 
         public static void SaveCustomStressTemplates()
         {
-            ConfigNode node = new ConfigNode("%FARAeroStress[default]:FINAL");
+            ConfigNode node = new ConfigNode("@FARAeroStress[default]:FINAL");
             int i = 0;
+            for (i = 0; i < StressTemplates.Count; i++)
+                node.AddNode(new ConfigNode("!FARPartStressTemplate"));
+
             foreach (FARPartStressTemplate template in StressTemplates)
             {
                 node.AddNode(CreateAeroStressConfigNode(template, i));
@@ -65,35 +68,36 @@ namespace ferram4
 
         private static ConfigNode CreateAeroStressConfigNode(FARPartStressTemplate template, int index)
         {
-            ConfigNode node = new ConfigNode("%FARPartStressTemplate," + index);
-            node.AddValue("%name", template.name);
-            node.AddValue("%YmaxStress", template.YmaxStress);
-            node.AddValue("%XZmaxStress", template.XZmaxStress);
-            node.AddValue("%requiresCrew", template.crewed.ToString());
-            node.AddValue("%isSpecialTemplate", template.isSpecialTemplate.ToString());
+            ConfigNode node = new ConfigNode("FARPartStressTemplate");
+            node.AddValue("name", template.name);
+            node.AddValue("YmaxStress", template.YmaxStress);
+            node.AddValue("XZmaxStress", template.XZmaxStress);
+            node.AddValue("requiresCrew", template.crewed.ToString());
+            node.AddValue("isSpecialTemplate", template.isSpecialTemplate.ToString());
 
             ConfigNode res = new ConfigNode("%Resources");
 
-            res.AddValue("%numReq", template.minNumResources);
-            res.AddValue("%rejectUnlistedResources", template.rejectUnlistedResources);
+            res.AddValue("numReq", template.minNumResources);
+            res.AddValue("rejectUnlistedResources", template.rejectUnlistedResources);
 
-            int i = 0;
+            //Make sure to update this whenever MM fixes how it goes through nodes and values
+            int i = template.resources.Count - 1;
             foreach (string s in template.resources)
             {
-                res.AddValue("%res," + i, s);
-                i++;
+                res.AddValue("res", s);
+                i--;
             }
-            i = 0;
+            i = template.excludeResources.Count - 1;
             foreach (string s in template.excludeResources)
             {
-                res.AddValue("%excludeRes," + i, s);
+                res.AddValue("excludeRes", s);
                 i++;
             }
 
             if (template.flowModeNeeded)
-                res.AddValue("%flowMode", FARDebugOptions.FlowMode_str[(int)template.flowMode]);
+                res.AddValue("flowMode", FARDebugOptions.FlowMode_str[(int)template.flowMode]);
             else
-                res.AddValue("%flowMode", "unneeded");
+                res.AddValue("flowMode", "unneeded");
 
             node.AddNode(res);
 

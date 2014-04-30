@@ -839,10 +839,10 @@ namespace ferram4
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
             GUILayout.Label("k:", GUILayout.Width(30));
             k_wingleveler_str = GUILayout.TextField(k_wingleveler_str, GUILayout.ExpandWidth(true));
-            k_wingleveler_str = Regex.Replace(k_wingleveler_str, @"[^\d+-.]", "");
+            k_wingleveler_str = Regex.Replace(k_wingleveler_str, @"[^\d*\.?\d*]", "");
             GUILayout.Label("kd:", GUILayout.Width(30));
             kd_wingleveler_str = GUILayout.TextField(kd_wingleveler_str, GUILayout.ExpandWidth(true));
-            kd_wingleveler_str = Regex.Replace(kd_wingleveler_str, @"[^\d+-.]", "");
+            kd_wingleveler_str = Regex.Replace(kd_wingleveler_str, @"[^\d*\.?\d*]", "");
             GUILayout.EndHorizontal();
 
 
@@ -851,14 +851,14 @@ namespace ferram4
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
             GUILayout.Label("k:", GUILayout.Width(30));
             k_yawdamper_str = GUILayout.TextField(k_yawdamper_str, GUILayout.ExpandWidth(true));
-            k_yawdamper_str = Regex.Replace(k_yawdamper_str, @"[^\d+-.]", "");
+            k_yawdamper_str = Regex.Replace(k_yawdamper_str, @"[^\d*\.?\d*]", "");
             GUILayout.EndHorizontal();
 
             GUILayout.Box("Pitch Damper", mySty, GUILayout.ExpandWidth(true));
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
             GUILayout.Label("k:", GUILayout.Width(30));
             k_pitchdamper_str = GUILayout.TextField(k_pitchdamper_str, GUILayout.ExpandWidth(true));
-            k_pitchdamper_str = Regex.Replace(k_pitchdamper_str, @"[^\d+-.]", "");
+            k_pitchdamper_str = Regex.Replace(k_pitchdamper_str, @"[^\d*\.?\d*]", "");
 
             GUILayout.EndHorizontal();
 
@@ -867,16 +867,16 @@ namespace ferram4
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
             GUILayout.Label("Upper Lim:", GUILayout.Width(75));
             upperLim_str = GUILayout.TextField(upperLim_str, GUILayout.ExpandWidth(true));
-            upperLim_str = Regex.Replace(upperLim_str, @"[^\d+-.]", "");
+            upperLim_str = Regex.Replace(upperLim_str, @"[^\d*\.?\d*]", "");
             GUILayout.Label("Lower Lim:", GUILayout.Width(75));
             lowerLim_str = GUILayout.TextField(lowerLim_str, GUILayout.ExpandWidth(true));
-            lowerLim_str = Regex.Replace(lowerLim_str, @"[^\d+-.]", "");
+            lowerLim_str = Regex.Replace(lowerLim_str, @"[^\d*\.?\d*]", "");
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
             GUILayout.Label("k:", GUILayout.Width(30));
             k_limiter_str = GUILayout.TextField(k_limiter_str, GUILayout.ExpandWidth(true));
-            k_limiter_str = Regex.Replace(k_limiter_str, @"[^\d+-.]", "");
+            k_limiter_str = Regex.Replace(k_limiter_str, @"[^\d*\.?\d*]", "");
 
             GUILayout.EndHorizontal();
 
@@ -886,14 +886,14 @@ namespace ferram4
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
             GUILayout.Label("Scaling Velocity:", GUILayout.Width(100));
             scaleVelocity_str = GUILayout.TextField(scaleVelocity_str, GUILayout.ExpandWidth(true));
-            scaleVelocity_str = Regex.Replace(scaleVelocity_str, @"[^\d+-.]", "");
+            scaleVelocity_str = Regex.Replace(scaleVelocity_str, @"[^\d*\.?\d*]", "");
             GUILayout.Label("Ctrl Factor:", GUILayout.Width(80));
             GUILayout.Box(scalingfactor.ToString(), mySty, GUILayout.Width(90.0F), GUILayout.Height(30.0F));
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
             GUILayout.Label("Scaling Altitude:", GUILayout.Width(100));
             alt_str = GUILayout.TextField(alt_str, GUILayout.ExpandWidth(true));
-            alt_str = Regex.Replace(alt_str, @"[^\d+-.]", "");
+            alt_str = Regex.Replace(alt_str, @"[^\d*\.?\d*]", "");
 
             GUILayout.EndHorizontal(); 
             

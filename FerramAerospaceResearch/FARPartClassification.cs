@@ -55,14 +55,18 @@ namespace ferram4
         public static List<string> payloadFairingTitles = new List<string>();
         public static List<string> cargoBayTitles = new List<string>();
 
-
         public static void SaveCustomClassificationTemplates()
         {
-            ConfigNode node = new ConfigNode("%FARPartClassification[Default]:FINAL");
+            ConfigNode node = new ConfigNode("@FARPartClassification[Default]:FINAL");
+            node.AddNode(new ConfigNode("!GreebleTitle"));
             node.AddNode(StringOverrideNode(greebleTitles, "GreebleTitle", "titleContains"));
+            node.AddNode(new ConfigNode("!GreebleModule"));
             node.AddNode(StringOverrideNode(greebleModules, "GreebleModule", "hasModule"));
+            node.AddNode(new ConfigNode("!ExemptModule"));
             node.AddNode(StringOverrideNode(exemptModules, "ExemptModule", "hasModule"));
+            node.AddNode(new ConfigNode("!PayloadFairing"));
             node.AddNode(StringOverrideNode(payloadFairingTitles, "PayloadFairing", "title"));
+            node.AddNode(new ConfigNode("!CargoBay"));
             node.AddNode(StringOverrideNode(cargoBayTitles, "CargoBay", "title"));
 
             ConfigNode saveNode = new ConfigNode();
@@ -72,11 +76,12 @@ namespace ferram4
 
         private static ConfigNode StringOverrideNode(List<string> stringList, string nodeName, string fieldName)
         {
-            ConfigNode node = new ConfigNode("%" + nodeName);
+            ConfigNode node = new ConfigNode(nodeName);
             int i = 0;
+
             foreach (string s in stringList)
             {
-                string tmp = "%" + fieldName + "," + i;
+                string tmp = fieldName;
                 i++;
                 node.AddValue(tmp, s);
             }

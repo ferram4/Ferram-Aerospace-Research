@@ -63,8 +63,46 @@ namespace ferram4
         public static Vector3d currentBodyAtm = new Vector3d();
         public static double currentBodyTemp = 273.15;
 
+        public static bool loaded = false;
+
+        public static void SaveCustomAeroDataToConfig()
+        {
+            ConfigNode node = new ConfigNode("@FARAeroData[default]:FINAL");
+            node.AddValue("%areaFactor", areaFactor);
+            node.AddValue("%attachNodeDiameterFactor", attachNodeRadiusFactor * 2);
+            node.AddValue("%incompressibleRearAttachDrag", incompressibleRearAttachDrag);
+            node.AddValue("%sonicRearAdditionalAttachDrag", sonicRearAdditionalAttachDrag);
+
+            for(int i = 0; i < bodyAtmosphereConfiguration.Count; i++)
+                node.AddNode(new ConfigNode("!BodyAtmosphericData"));
+
+            foreach (KeyValuePair<int, Vector3d> pair in bodyAtmosphereConfiguration)
+            {
+                node.AddNode(CreateAtmConfigurationConfigNode(pair.Key, pair.Value));
+            }
+
+            ConfigNode saveNode = new ConfigNode();
+            saveNode.AddNode(node);
+            saveNode.Save(KSPUtil.ApplicationRootPath.Replace("\\", "/") + "GameData/FerramAerospaceResearch/CustomFARAeroData.cfg");
+        }
+
+        private static ConfigNode CreateAtmConfigurationConfigNode(int bodyIndex, Vector3d atmProperties)
+        {
+            ConfigNode node = new ConfigNode("BodyAtmosphericData");
+            node.AddValue("index", bodyIndex);
+
+            double gasMolecularWeight = 8314.5 / atmProperties.z;
+            node.AddValue("specHeatRatio", atmProperties.y);
+            node.AddValue("gasMolecularWeight", gasMolecularWeight);
+
+            return node;
+        }
+
         public static void LoadAeroDataFromConfig()
         {
+            if (loaded)
+                return;
+
             foreach (ConfigNode node in GameDatabase.Instance.GetConfigNodes("FARAeroData"))
             {
                 if (node == null)
@@ -88,12 +126,12 @@ namespace ferram4
                 FARAeroUtil.bodyAtmosphereConfiguration = new Dictionary<int, Vector3d>();
                 foreach (ConfigNode bodyProperties in node.GetNodes("BodyAtmosphericData"))
                 {
-                    if (bodyProperties == null || !bodyProperties.HasValue("index") || !bodyProperties.HasValue("specHeatRatio") || bodyProperties.HasValue("gasMolecularWeight"))
+                    if (bodyProperties == null || !bodyProperties.HasValue("index") || !bodyProperties.HasValue("specHeatRatio") || !bodyProperties.HasValue("gasMolecularWeight"))
                         continue;
 
                     Vector3d Rgamma_and_gamma = new Vector3d();
                     double tmp;
-                    double.TryParse(bodyProperties.GetValue("specHeightRatio"), out tmp);
+                    double.TryParse(bodyProperties.GetValue("specHeatRatio"), out tmp);
                     Rgamma_and_gamma.y = tmp;
 
                     double.TryParse(bodyProperties.GetValue("gasMolecularWeight"), out tmp);
@@ -107,20 +145,24 @@ namespace ferram4
                     FARAeroUtil.bodyAtmosphereConfiguration.Add(index, Rgamma_and_gamma);
                 }
 
-                //For any bodies that lack a configuration
-                foreach (CelestialBody body in FlightGlobals.Bodies)
-                {
-                    if (bodyAtmosphereConfiguration.ContainsKey(body.flightGlobalsIndex))
-                        continue;
 
-                    Vector3d Rgamma_and_gamma = new Vector3d();
-                    Rgamma_and_gamma.y = 1.4;
-                    Rgamma_and_gamma.z = 8.3145 * 1000 / 28.96;
-                    Rgamma_and_gamma.x = Rgamma_and_gamma.y * Rgamma_and_gamma.z;
-
-                    FARAeroUtil.bodyAtmosphereConfiguration.Add(body.flightGlobalsIndex, Rgamma_and_gamma);
-                }
             }
+
+            //For any bodies that lack a configuration
+            foreach (CelestialBody body in FlightGlobals.Bodies)
+            {
+                if (bodyAtmosphereConfiguration.ContainsKey(body.flightGlobalsIndex))
+                    continue;
+
+                Vector3d Rgamma_and_gamma = new Vector3d();
+                Rgamma_and_gamma.y = 1.4;
+                Rgamma_and_gamma.z = 8.3145 * 1000 / 28.96;
+                Rgamma_and_gamma.x = Rgamma_and_gamma.y * Rgamma_and_gamma.z;
+
+                FARAeroUtil.bodyAtmosphereConfiguration.Add(body.flightGlobalsIndex, Rgamma_and_gamma);
+            } 
+            
+            loaded = true;
         }
 
         public static double MaxPressureCoefficientCalc(double M)

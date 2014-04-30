@@ -78,6 +78,7 @@ namespace ferram4
         private MenuTab activeTab = MenuTab.DebugAndData;
 
         private int aeroStressIndex = 0;
+        private int atmBodyIndex = 0;
 
         public void Awake()
         {
@@ -125,6 +126,8 @@ namespace ferram4
                 PartClassificationTab(buttonStyle, boxStyle);
             else if (activeTab == MenuTab.AeroStress)
                 AeroStressTab(buttonStyle, boxStyle);
+            else
+                AeroDataTab(buttonStyle, boxStyle);
 
             //            SaveWindowPos.x = windowPos.x;
             //            SaveWindowPos.y = windowPos.y;
@@ -134,6 +137,81 @@ namespace ferram4
             debugWinPos = FARGUIUtils.ClampToScreen(debugWinPos);
         }
 
+        private void AeroDataTab(GUIStyle buttonStyle, GUIStyle boxStyle)
+        {
+            int i = 0;
+            GUILayout.BeginVertical(boxStyle);
+
+            string tmp;
+
+            tmp = FARAeroUtil.areaFactor.ToString();
+            TextEntryField("Area Factor:", 160, ref tmp);
+            tmp = Regex.Replace(tmp, @"[^\d*\.?\d*]", "");
+            FARAeroUtil.areaFactor = Convert.ToDouble(tmp);
+
+            tmp = (FARAeroUtil.attachNodeRadiusFactor * 2).ToString();
+            TextEntryField("Node Diameter Factor:", 160, ref tmp);
+            tmp = Regex.Replace(tmp, @"[^\d*\.?\d*]", "");
+            FARAeroUtil.attachNodeRadiusFactor = Convert.ToDouble(tmp) * 0.5;
+
+            tmp = FARAeroUtil.incompressibleRearAttachDrag.ToString();
+            TextEntryField("Rear Node Drag, Incomp:", 160, ref tmp);
+            tmp = Regex.Replace(tmp, @"[^\d*\.?\d*]", "");
+            FARAeroUtil.incompressibleRearAttachDrag = Convert.ToDouble(tmp);
+
+            tmp = FARAeroUtil.sonicRearAdditionalAttachDrag.ToString();
+            TextEntryField("Rear Node Drag, M = 1:", 160, ref tmp);
+            tmp = Regex.Replace(tmp, @"[^\d*\.?\d*]", "");
+            FARAeroUtil.sonicRearAdditionalAttachDrag = Convert.ToDouble(tmp);
+
+            GUILayout.Label("Celestial Body Atmosperic Properties");
+
+            GUILayout.EndVertical();
+            GUILayout.BeginHorizontal();
+            GUILayout.BeginVertical(boxStyle);
+
+            GUILayout.BeginHorizontal();
+            for (i = 0; i < FlightGlobals.Bodies.Count; i++)
+            {
+                bool active = GUILayout.Toggle(i == atmBodyIndex, FlightGlobals.Bodies[i].GetName(), buttonStyle, GUILayout.Width(150));
+                if (active)
+                    atmBodyIndex = i;
+                if ((i + 1) % 4 == 0)
+                {
+                    GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                }
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.EndVertical();
+            GUILayout.BeginVertical(boxStyle);
+
+            int flightGlobalsIndex = FlightGlobals.Bodies[atmBodyIndex].flightGlobalsIndex;
+
+            Vector3d atmProperties = FARAeroUtil.bodyAtmosphereConfiguration[flightGlobalsIndex];
+
+            tmp = atmProperties.y.ToString();
+            TextEntryField("Ratio of Specific Heats:", 80, ref tmp);
+            tmp = Regex.Replace(tmp, @"[^\d*\.?\d*]", "");
+            atmProperties.y = Convert.ToDouble(tmp);
+
+
+            double dTmp = 8314.5 / atmProperties.z;
+            tmp = dTmp.ToString();
+            TextEntryField("Gas Molecular Mass:", 80, ref tmp);
+            tmp = Regex.Replace(tmp, @"[^\d*\.?\d*]", "");
+            atmProperties.z = 8314.5 / Convert.ToDouble(tmp);
+
+            atmProperties.x = atmProperties.y * atmProperties.z;
+
+            FARAeroUtil.bodyAtmosphereConfiguration[flightGlobalsIndex] = atmProperties;
+
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+        }
+
+        
         private void AeroStressTab(GUIStyle buttonStyle, GUIStyle boxStyle)
         {
             int i = 0;
@@ -154,10 +232,28 @@ namespace ferram4
             if (removeIndex >= 0)
             {
                 FARAeroStress.StressTemplates.RemoveAt(removeIndex);
+                if (aeroStressIndex == removeIndex)
+                    aeroStressIndex--;
+
                 removeIndex = -1;
             }
             if (GUILayout.Button("+", buttonStyle, GUILayout.Width(30), GUILayout.Height(30)))
-                FARAeroStress.StressTemplates.Add(new FARPartStressTemplate());
+            {
+                FARPartStressTemplate newTemplate = new FARPartStressTemplate();
+                newTemplate.XZmaxStress = 500;
+                newTemplate.YmaxStress = 500;
+                newTemplate.name = "default";
+                newTemplate.isSpecialTemplate = false;
+                newTemplate.minNumResources = 0;
+                newTemplate.resources = new List<string>();
+                newTemplate.excludeResources = new List<string>();
+                newTemplate.rejectUnlistedResources = false;
+                newTemplate.crewed = false;
+                newTemplate.flowModeNeeded = false;
+                newTemplate.flowMode = ResourceFlowMode.NO_FLOW;
+
+                FARAeroStress.StressTemplates.Add(newTemplate);
+            }
 
             GUILayout.EndVertical();
             GUILayout.BeginVertical(boxStyle);
@@ -166,23 +262,23 @@ namespace ferram4
 
             string tmp;
 
-            TextEntryField("Name:", ref activeTemplate.name);
+            TextEntryField("Name:", 80, ref activeTemplate.name);
 
             tmp = activeTemplate.YmaxStress.ToString();
-            TextEntryField("Axial (Y-axis) Max Stress:", ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-.]", "");
+            TextEntryField("Axial (Y-axis) Max Stress:", 240, ref tmp);
+            tmp = Regex.Replace(tmp, @"[^\d*\.?\d*]", "");
             activeTemplate.YmaxStress = Convert.ToDouble(tmp);
 
             tmp = activeTemplate.XZmaxStress.ToString();
-            TextEntryField("Lateral (X,Z-axis) Max Stress:", ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-.]", "");
+            TextEntryField("Lateral (X,Z-axis) Max Stress:", 240, ref tmp);
+            tmp = Regex.Replace(tmp, @"[^\d*\.?\d*]", "");
             activeTemplate.XZmaxStress = Convert.ToDouble(tmp);
            
             activeTemplate.crewed = GUILayout.Toggle(activeTemplate.crewed, "Requires Crew Compartment");
 
             tmp = activeTemplate.minNumResources.ToString();
-            TextEntryField("Min Num Resources:", ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-.]", "");
+            TextEntryField("Min Num Resources:", 80, ref tmp);
+            tmp = Regex.Replace(tmp, @"[^\d*\.?\d*]", "");
             activeTemplate.minNumResources = Convert.ToInt32(tmp);
 
             GUILayout.Label("Req Resources:");
@@ -201,14 +297,17 @@ namespace ferram4
 
             activeTemplate.isSpecialTemplate = GUILayout.Toggle(activeTemplate.isSpecialTemplate, "Special Hardcoded Usage");
 
+            FARAeroStress.StressTemplates[aeroStressIndex] = activeTemplate;
+
+
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
         }
 
-        private void TextEntryField(string label, ref string inputOutput)
+        private void TextEntryField(string label, int labelWidth, ref string inputOutput)
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label(label);
+            GUILayout.Label(label, GUILayout.Width(labelWidth));
             inputOutput = GUILayout.TextField(inputOutput);
             GUILayout.EndHorizontal();
         }
@@ -318,6 +417,7 @@ namespace ferram4
             config.SetValue("useSplinesForSupersonicMath", FARDebugValues.useSplinesForSupersonicMath.ToString());
             config.SetValue("allowStructuralFailures", FARDebugValues.allowStructuralFailures.ToString());
 
+            FARAeroUtil.SaveCustomAeroDataToConfig();
             FARPartClassification.SaveCustomClassificationTemplates();
             FARAeroStress.SaveCustomStressTemplates();
             config.save();
