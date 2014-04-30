@@ -45,6 +45,8 @@ namespace ferram4
 {
     public static class FARPartClassification
     {
+        public static bool loaded = false;
+
         public static List<string> greebleTitles = new List<string>();
         public static List<string> greebleModules = new List<string>();
 
@@ -53,9 +55,39 @@ namespace ferram4
         public static List<string> payloadFairingTitles = new List<string>();
         public static List<string> cargoBayTitles = new List<string>();
 
-        
+
+        public static void SaveCustomClassificationTemplates()
+        {
+            ConfigNode node = new ConfigNode("%FARPartClassification[Default]:FINAL");
+            node.AddNode(StringOverrideNode(greebleTitles, "GreebleTitle", "titleContains"));
+            node.AddNode(StringOverrideNode(greebleModules, "GreebleModule", "hasModule"));
+            node.AddNode(StringOverrideNode(exemptModules, "ExemptModule", "hasModule"));
+            node.AddNode(StringOverrideNode(payloadFairingTitles, "PayloadFairing", "title"));
+            node.AddNode(StringOverrideNode(cargoBayTitles, "CargoBay", "title"));
+
+            ConfigNode saveNode = new ConfigNode();
+            saveNode.AddNode(node);
+            saveNode.Save(KSPUtil.ApplicationRootPath.Replace("\\", "/") + "GameData/FerramAerospaceResearch/CustomFARPartClassification.cfg");
+        }
+
+        private static ConfigNode StringOverrideNode(List<string> stringList, string nodeName, string fieldName)
+        {
+            ConfigNode node = new ConfigNode("%" + nodeName);
+            int i = 0;
+            foreach (string s in stringList)
+            {
+                string tmp = "%" + fieldName + "," + i;
+                i++;
+                node.AddValue(tmp, s);
+            }
+
+            return node;
+        }
+
         public static void LoadClassificationTemplates()
         {
+            if (loaded)
+                return;
             greebleTitles.Clear();
             greebleModules.Clear();
             foreach (ConfigNode node in GameDatabase.Instance.GetConfigNodes("FARPartClassification"))
@@ -107,6 +139,7 @@ namespace ferram4
                 }
 
             }
+            loaded = true;
         }
 
         public static bool IncludePartInGreeble(Part p, string title)
