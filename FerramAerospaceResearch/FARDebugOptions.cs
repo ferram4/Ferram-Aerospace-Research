@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.2.1
+Ferram Aerospace Research v0.13.3
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -78,7 +78,7 @@ namespace ferram4
         private MenuTab activeTab = MenuTab.DebugAndData;
 
         private int aeroStressIndex = 0;
-        private int atmBodyIndex = 0;
+        private int atmBodyIndex = 1;
 
         public void Awake()
         {
@@ -93,7 +93,7 @@ namespace ferram4
         {
             GUI.skin = HighLogic.Skin;
             if (debugMenu)
-                debugWinPos = GUILayout.Window("FARDebug".GetHashCode(), debugWinPos, debugWindow, "FAR Debug Options, v0.13.2.1", GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+                debugWinPos = GUILayout.Window("FARDebug".GetHashCode(), debugWinPos, debugWindow, "FAR Debug Options, v0.13.3", GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
         }
 
 
@@ -164,23 +164,37 @@ namespace ferram4
             tmp = Regex.Replace(tmp, @"[^\d*\.?\d*]", "");
             FARAeroUtil.sonicRearAdditionalAttachDrag = Convert.ToDouble(tmp);
 
-            GUILayout.Label("Celestial Body Atmosperic Properties");
+            tmp = FARControllableSurface.timeConstant.ToString();
+            TextEntryField("Ctrl Surf Time Constant:", 160, ref tmp);
+            tmp = Regex.Replace(tmp, @"[^\d*\.?\d*]", "");
+            FARControllableSurface.timeConstant = Convert.ToDouble(tmp);
 
             GUILayout.EndVertical();
+            GUILayout.BeginVertical();
+            GUILayout.Label("Celestial Body Atmosperic Properties");
+
             GUILayout.BeginHorizontal();
+            
             GUILayout.BeginVertical(boxStyle);
 
             GUILayout.BeginHorizontal();
+            int j = 0;
             for (i = 0; i < FlightGlobals.Bodies.Count; i++)
             {
-                bool active = GUILayout.Toggle(i == atmBodyIndex, FlightGlobals.Bodies[i].GetName(), buttonStyle, GUILayout.Width(150));
+                CelestialBody body = FlightGlobals.Bodies[i];
+
+                if (!body.atmosphere)
+                    continue;
+
+                bool active = GUILayout.Toggle(i == atmBodyIndex, body.GetName(), buttonStyle, GUILayout.Width(150), GUILayout.Height(40));
                 if (active)
                     atmBodyIndex = i;
-                if ((i + 1) % 4 == 0)
+                if ((j + 1) % 4 == 0)
                 {
                     GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
                 }
+                j++;
             }
             GUILayout.EndHorizontal();
 
@@ -209,6 +223,7 @@ namespace ferram4
 
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
         }
 
         

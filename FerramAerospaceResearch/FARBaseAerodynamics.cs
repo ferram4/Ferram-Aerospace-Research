@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.2.1
+Ferram Aerospace Research v0.13.3
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -165,13 +165,16 @@ namespace ferram4
             start = state;
             base.OnStart(state);
             Fields["isShielded"].guiActive = FARDebugValues.displayShielding;
+
+            part.OnEditorDetach += ClearShielding;
+
             if (!(this is FARControlSys))
             {
                 Fields["Cl"].guiActive = Fields["Cd"].guiActive = Fields["Cm"].guiActive = FARDebugValues.displayCoefficients;
             }
         }
 
-        private void ClearShielding()
+        public void ClearShielding()
         {
             isShielded = false;
         }

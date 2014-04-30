@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.2.1
+Ferram Aerospace Research v0.13.3
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -72,9 +72,9 @@ namespace ferram4
             node.AddValue("%attachNodeDiameterFactor", attachNodeRadiusFactor * 2);
             node.AddValue("%incompressibleRearAttachDrag", incompressibleRearAttachDrag);
             node.AddValue("%sonicRearAdditionalAttachDrag", sonicRearAdditionalAttachDrag);
+            node.AddValue("%ctrlSurfTimeConstant", FARControllableSurface.timeConstant);
 
-            for(int i = 0; i < bodyAtmosphereConfiguration.Count; i++)
-                node.AddNode(new ConfigNode("!BodyAtmosphericData"));
+            node.AddNode(new ConfigNode("!BodyAtmosphericData,*"));
 
             foreach (KeyValuePair<int, Vector3d> pair in bodyAtmosphereConfiguration)
             {

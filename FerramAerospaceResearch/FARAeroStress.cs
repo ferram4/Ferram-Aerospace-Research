@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.2.1
+Ferram Aerospace Research v0.13.3
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -52,8 +52,7 @@ namespace ferram4
         {
             ConfigNode node = new ConfigNode("@FARAeroStress[default]:FINAL");
             int i = 0;
-            for (i = 0; i < StressTemplates.Count; i++)
-                node.AddNode(new ConfigNode("!FARPartStressTemplate"));
+            node.AddNode(new ConfigNode("!FARPartStressTemplate,*"));
 
             foreach (FARPartStressTemplate template in StressTemplates)
             {
@@ -75,7 +74,7 @@ namespace ferram4
             node.AddValue("requiresCrew", template.crewed.ToString());
             node.AddValue("isSpecialTemplate", template.isSpecialTemplate.ToString());
 
-            ConfigNode res = new ConfigNode("%Resources");
+            ConfigNode res = new ConfigNode("Resources");
 
             res.AddValue("numReq", template.minNumResources);
             res.AddValue("rejectUnlistedResources", template.rejectUnlistedResources);
