@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.13.2.1
+Ferram Aerospace Research v0.13.3
 =========================
 
 Aerodynamics model for Kerbal Space Program
@@ -135,6 +135,15 @@ For both of these, set MaxDrag and MinDrag to 0
 
 CHANGELOG
 =======================================================
+
+0.13.3v------------------------------------  
+Features:
+Ability to change all settings and templates through the debug menu in the space center
+Control surfaces can handle more aerodynamic forces before failing
+
+Bugfixes:
+Fixed an issue where atmospheric composition was broken by new ConfigNode system
+
 
 0.13.2.1v------------------------------------  
 Features:
