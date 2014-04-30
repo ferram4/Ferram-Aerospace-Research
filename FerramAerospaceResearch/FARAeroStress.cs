@@ -45,14 +45,73 @@ namespace ferram4
     public static class FARAeroStress
     {
         public static List<FARPartStressTemplate> StressTemplates = new List<FARPartStressTemplate>();
+        public static bool loaded = false;
+
+
+        public static void SaveCustomStressTemplates()
+        {
+            ConfigNode node = new ConfigNode("%FARAeroStress[default]:FINAL");
+            int i = 0;
+            foreach (FARPartStressTemplate template in StressTemplates)
+            {
+                node.AddNode(CreateAeroStressConfigNode(template, i));
+                i++;
+            }
+
+            ConfigNode saveNode = new ConfigNode();
+            saveNode.AddNode(node);
+            saveNode.Save(KSPUtil.ApplicationRootPath.Replace("\\", "/") + "GameData/FerramAerospaceResearch/CustomFARAeroStress.cfg");
+        }
+
+        private static ConfigNode CreateAeroStressConfigNode(FARPartStressTemplate template, int index)
+        {
+            ConfigNode node = new ConfigNode("%FARPartStressTemplate," + index);
+            node.AddValue("%name", template.name);
+            node.AddValue("%YmaxStress", template.YmaxStress);
+            node.AddValue("%XZmaxStress", template.XZmaxStress);
+            node.AddValue("%requiresCrew", template.crewed.ToString());
+            node.AddValue("%isSpecialTemplate", template.isSpecialTemplate.ToString());
+
+            ConfigNode res = new ConfigNode("%Resources");
+
+            res.AddValue("%numReq", template.minNumResources);
+            res.AddValue("%rejectUnlistedResources", template.rejectUnlistedResources);
+
+            int i = 0;
+            foreach (string s in template.resources)
+            {
+                res.AddValue("%res," + i, s);
+                i++;
+            }
+            i = 0;
+            foreach (string s in template.excludeResources)
+            {
+                res.AddValue("%excludeRes," + i, s);
+                i++;
+            }
+
+            if (template.flowModeNeeded)
+                res.AddValue("%flowMode", FARDebugOptions.FlowMode_str[(int)template.flowMode]);
+            else
+                res.AddValue("%flowMode", "unneeded");
+
+            node.AddNode(res);
+
+            return node;
+        }
+
 
         public static void LoadStressTemplates()
         {
+            if (loaded)
+                return;
             StressTemplates.Clear();
             foreach (ConfigNode node in GameDatabase.Instance.GetConfigNodes("FARAeroStress"))
                 if((object)node != null)
                     foreach(ConfigNode template in node.GetNodes("FARPartStressTemplate"))
                         StressTemplates.Add(CreateFARPartStressTemplate(template));
+
+            loaded = true;
         }
 
         private static FARPartStressTemplate CreateFARPartStressTemplate(ConfigNode template)
@@ -95,12 +154,16 @@ namespace ferram4
                     parsedTemplate.flowModeNeeded = true;
                     string flowString = resources.GetValue("flowMode").ToLowerInvariant();
 
-                    if(flowString == "all_vessel")
+                    if (flowString == "all_vessel")
                         parsedTemplate.flowMode = ResourceFlowMode.ALL_VESSEL;
                     else if (flowString == "stack_priority_search")
                         parsedTemplate.flowMode = ResourceFlowMode.STACK_PRIORITY_SEARCH;
                     else if (flowString == "stage_priority_flow")
                         parsedTemplate.flowMode = ResourceFlowMode.STAGE_PRIORITY_FLOW;
+                    else if (flowString == "no_flow")
+                        parsedTemplate.flowMode = ResourceFlowMode.NO_FLOW;
+                    else
+                        parsedTemplate.flowModeNeeded = false;
                 }
 
                 PartResourceLibrary l = PartResourceLibrary.Instance;

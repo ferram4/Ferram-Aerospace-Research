@@ -35,6 +35,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
 
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using KSP;
 using Toolbar;
@@ -58,7 +59,7 @@ namespace ferram4
             AtmComposition
         }
 
-        private string[] MenuTab_str = new string[]
+        private static string[] MenuTab_str = new string[]
         {
             "Debug Options",
             "Part Classification",
@@ -66,7 +67,17 @@ namespace ferram4
             "Atm Composition",
         };
 
+        public static string[] FlowMode_str = new string[]
+        {
+            "NO_FLOW",
+            "ALL_VESSEL",
+            "STAGE_PRIORITY_FLOW",
+            "STACK_PRIORITY_SEARCH",
+        };
+       
         private MenuTab activeTab = MenuTab.DebugAndData;
+
+        private int aeroStressIndex = 0;
 
         public void Awake()
         {
@@ -91,20 +102,20 @@ namespace ferram4
             GUIStyle thisStyle = new GUIStyle(GUI.skin.toggle);
             thisStyle.stretchHeight = true;
             thisStyle.stretchWidth = true;
-            thisStyle.padding = new RectOffset(4, 0, 0, 0);
-            thisStyle.margin = new RectOffset(4, 0, 0, 0);
+            thisStyle.padding = new RectOffset(4, 4, 4, 4);
+            thisStyle.margin = new RectOffset(4, 4, 4, 4);
 
             GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
             buttonStyle.stretchHeight = true;
             buttonStyle.stretchWidth = true;
-            buttonStyle.padding = new RectOffset(4, 0, 0, 0);
-            buttonStyle.margin = new RectOffset(4, 0, 0, 0);
+            buttonStyle.padding = new RectOffset(4, 4, 4, 4);
+            buttonStyle.margin = new RectOffset(4, 4, 4, 4);
 
             GUIStyle boxStyle = new GUIStyle(GUI.skin.box);
             boxStyle.stretchHeight = true;
             boxStyle.stretchWidth = true;
-            boxStyle.padding = new RectOffset(4, 0, 0, 0);
-            boxStyle.margin = new RectOffset(4, 0, 0, 0);
+            boxStyle.padding = new RectOffset(4, 4, 4, 4);
+            boxStyle.margin = new RectOffset(4, 4, 4, 4);
 
             activeTab = (MenuTab)GUILayout.SelectionGrid((int)activeTab, MenuTab_str, 4);
 
@@ -112,6 +123,8 @@ namespace ferram4
                 DebugAndDataTab(thisStyle);
             else if (activeTab == MenuTab.PartClassification)
                 PartClassificationTab(buttonStyle, boxStyle);
+            else if (activeTab == MenuTab.AeroStress)
+                AeroStressTab(buttonStyle, boxStyle);
 
             //            SaveWindowPos.x = windowPos.x;
             //            SaveWindowPos.y = windowPos.y;
@@ -121,6 +134,85 @@ namespace ferram4
             debugWinPos = FARGUIUtils.ClampToScreen(debugWinPos);
         }
 
+        private void AeroStressTab(GUIStyle buttonStyle, GUIStyle boxStyle)
+        {
+            int i = 0;
+            int removeIndex = -1;
+            GUILayout.BeginHorizontal();
+            GUILayout.BeginVertical(boxStyle);
+
+            for (i = 0; i < FARAeroStress.StressTemplates.Count; i++)
+            {
+                GUILayout.BeginHorizontal();
+                bool active = GUILayout.Toggle(i == aeroStressIndex, FARAeroStress.StressTemplates[i].name, buttonStyle, GUILayout.Width(150));
+                if (GUILayout.Button("-", buttonStyle, GUILayout.Width(30), GUILayout.Height(30)))
+                    removeIndex = i;
+                GUILayout.EndHorizontal();
+                if (active)
+                    aeroStressIndex = i;
+            }
+            if (removeIndex >= 0)
+            {
+                FARAeroStress.StressTemplates.RemoveAt(removeIndex);
+                removeIndex = -1;
+            }
+            if (GUILayout.Button("+", buttonStyle, GUILayout.Width(30), GUILayout.Height(30)))
+                FARAeroStress.StressTemplates.Add(new FARPartStressTemplate());
+
+            GUILayout.EndVertical();
+            GUILayout.BeginVertical(boxStyle);
+
+            FARPartStressTemplate activeTemplate = FARAeroStress.StressTemplates[aeroStressIndex];
+
+            string tmp;
+
+            TextEntryField("Name:", ref activeTemplate.name);
+
+            tmp = activeTemplate.YmaxStress.ToString();
+            TextEntryField("Axial (Y-axis) Max Stress:", ref tmp);
+            tmp = Regex.Replace(tmp, @"[^\d+-.]", "");
+            activeTemplate.YmaxStress = Convert.ToDouble(tmp);
+
+            tmp = activeTemplate.XZmaxStress.ToString();
+            TextEntryField("Lateral (X,Z-axis) Max Stress:", ref tmp);
+            tmp = Regex.Replace(tmp, @"[^\d+-.]", "");
+            activeTemplate.XZmaxStress = Convert.ToDouble(tmp);
+           
+            activeTemplate.crewed = GUILayout.Toggle(activeTemplate.crewed, "Requires Crew Compartment");
+
+            tmp = activeTemplate.minNumResources.ToString();
+            TextEntryField("Min Num Resources:", ref tmp);
+            tmp = Regex.Replace(tmp, @"[^\d+-.]", "");
+            activeTemplate.minNumResources = Convert.ToInt32(tmp);
+
+            GUILayout.Label("Req Resources:");
+            StringListUpdateGUI(activeTemplate.resources, buttonStyle, boxStyle);
+
+            GUILayout.Label("Exclude Resources:");
+            StringListUpdateGUI(activeTemplate.excludeResources, buttonStyle, boxStyle);
+
+            activeTemplate.rejectUnlistedResources = GUILayout.Toggle(activeTemplate.rejectUnlistedResources, "Reject Unlisted Res");
+
+            activeTemplate.flowModeNeeded = GUILayout.Toggle(activeTemplate.flowModeNeeded, "Requires Specific Flow Mode");
+            if (activeTemplate.flowModeNeeded)
+            {
+                activeTemplate.flowMode = (ResourceFlowMode)GUILayout.SelectionGrid((int)activeTemplate.flowMode, FlowMode_str, 1);
+            }
+
+            activeTemplate.isSpecialTemplate = GUILayout.Toggle(activeTemplate.isSpecialTemplate, "Special Hardcoded Usage");
+
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+        }
+
+        private void TextEntryField(string label, ref string inputOutput)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(label);
+            inputOutput = GUILayout.TextField(inputOutput);
+            GUILayout.EndHorizontal();
+        }
+            
         private void PartClassificationTab(GUIStyle buttonStyle, GUIStyle boxStyle)
         {
             GUILayout.BeginHorizontal();
@@ -227,6 +319,7 @@ namespace ferram4
             config.SetValue("allowStructuralFailures", FARDebugValues.allowStructuralFailures.ToString());
 
             FARPartClassification.SaveCustomClassificationTemplates();
+            FARAeroStress.SaveCustomStressTemplates();
             config.save();
         }
         void OnDestroy()
