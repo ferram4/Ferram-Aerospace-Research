@@ -62,6 +62,7 @@ namespace ferram4
         public static int prevBody = -1;
         public static Vector3d currentBodyAtm = new Vector3d();
         public static double currentBodyTemp = 273.15;
+        public static double currentBodyAtmPressureOffset = 0;
 
         public static bool loaded = false;
 
@@ -144,7 +145,6 @@ namespace ferram4
 
                     FARAeroUtil.bodyAtmosphereConfiguration.Add(index, Rgamma_and_gamma);
                 }
-
 
             }
 
@@ -1147,7 +1147,7 @@ namespace ferram4
 
             double temp = Math.Max(0.1, currentBodyTemp + FlightGlobals.getExternalTemperature(worldLocation));
 
-            double pressure = FlightGlobals.getStaticPressure(worldLocation, body) * 101300;     //Need to convert atm to Pa
+            double pressure = (FlightGlobals.getStaticPressure(worldLocation, body) - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
 
             return pressure / (temp * currentBodyAtm.z);
         }
@@ -1161,7 +1161,7 @@ namespace ferram4
 
             double temp = Math.Max(0.1, currentBodyTemp + FlightGlobals.getExternalTemperature((float)altitude, body));
 
-            double pressure = FlightGlobals.getStaticPressure(altitude, body) * 101300;     //Need to convert atm to Pa
+            double pressure = (FlightGlobals.getStaticPressure(altitude, body) - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
 
             return pressure / (temp * currentBodyAtm.z);
         }
@@ -1180,7 +1180,7 @@ namespace ferram4
             UpdateCurrentActiveBody(body);
 
             double temp = Math.Max(0.1, currentBodyTemp + FlightGlobals.getExternalTemperature((float)altitude, body));
-            double pressure = (float)vessel.staticPressure * 101300f;     //Need to convert atm to Pa
+            double pressure = (vessel.staticPressure - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
 
             soundspeed = Math.Sqrt(temp * currentBodyAtm.x); // * 401.8f;              //Calculation for speed of sound in ideal gas using air constants of gamma = 1.4 and R = 287 kJ/kg*K
 
@@ -1191,20 +1191,27 @@ namespace ferram4
         {
             if ((object)body != null && body.flightGlobalsIndex != prevBody)
             {
-                UpdateCurrentActiveBody(body.flightGlobalsIndex);
+                UpdateCurrentActiveBody(body.flightGlobalsIndex, body);
 //                if (body.name == "Jool" || body.name == "Sentar")
                 if(body.pqsController == null)
                     currentBodyTemp += FARAeroUtil.JoolTempOffset;
             }
         }
 
-        public static void UpdateCurrentActiveBody(int index)
+        public static void UpdateCurrentActiveBody(int index, CelestialBody body)
         {
             if (index != prevBody)
             {
                 prevBody = index;
                 currentBodyAtm = bodyAtmosphereConfiguration[prevBody];
                 currentBodyTemp = 273.15f;
+                if(body.useLegacyAtmosphere)
+                {
+                    currentBodyAtmPressureOffset = body.atmosphereMultiplier * 1e-6;
+                }
+                else
+                    currentBodyAtmPressureOffset = 0;
+
                 prandtlMeyerMach = null;
                 prandtlMeyerAngle = null;
                 pressureBehindShock = null;

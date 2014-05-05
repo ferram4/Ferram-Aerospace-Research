@@ -48,6 +48,6 @@ C:\Users\ferram4\Ferram-Aerospace-Research\FerramAerospaceResearch\bin\Release\M
 C:\Users\ferram4\Ferram-Aerospace-Research\FerramAerospaceResearch\bin\Release\Assembly-CSharp-firstpass.dll
 C:\Users\ferram4\Ferram-Aerospace-Research\FerramAerospaceResearch\bin\Release\TDx.TDxInput.dll
 C:\Users\ferram4\Ferram-Aerospace-Research\FerramAerospaceResearch\bin\Release\ferramGraph.pdb
-C:\Users\ferram4\Ferram-Aerospace-Research\FerramAerospaceResearch\obj\Release\ResolveAssemblyReference.cache
 C:\Users\ferram4\Ferram-Aerospace-Research\FerramAerospaceResearch\obj\Release\FerramAerospaceResearch.dll
 C:\Users\ferram4\Ferram-Aerospace-Research\FerramAerospaceResearch\obj\Release\FerramAerospaceResearch.pdb
+C:\Users\ferram4\Ferram-Aerospace-Research\FerramAerospaceResearch\obj\Release\FerramAerospaceResearch.csprojResolveAssemblyReference.cache

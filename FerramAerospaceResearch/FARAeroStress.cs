@@ -48,6 +48,7 @@ namespace ferram4
         public static bool loaded = false;
 
 
+
         public static void SaveCustomStressTemplates()
         {
             ConfigNode node = new ConfigNode("@FARAeroStress[default]:FINAL");

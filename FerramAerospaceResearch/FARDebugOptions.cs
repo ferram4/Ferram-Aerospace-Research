@@ -146,27 +146,27 @@ namespace ferram4
 
             tmp = FARAeroUtil.areaFactor.ToString();
             TextEntryField("Area Factor:", 160, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d*\.?\d*]", "");
+            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
             FARAeroUtil.areaFactor = Convert.ToDouble(tmp);
 
             tmp = (FARAeroUtil.attachNodeRadiusFactor * 2).ToString();
             TextEntryField("Node Diameter Factor:", 160, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d*\.?\d*]", "");
+            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
             FARAeroUtil.attachNodeRadiusFactor = Convert.ToDouble(tmp) * 0.5;
 
             tmp = FARAeroUtil.incompressibleRearAttachDrag.ToString();
             TextEntryField("Rear Node Drag, Incomp:", 160, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d*\.?\d*]", "");
+            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
             FARAeroUtil.incompressibleRearAttachDrag = Convert.ToDouble(tmp);
 
             tmp = FARAeroUtil.sonicRearAdditionalAttachDrag.ToString();
             TextEntryField("Rear Node Drag, M = 1:", 160, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d*\.?\d*]", "");
+            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
             FARAeroUtil.sonicRearAdditionalAttachDrag = Convert.ToDouble(tmp);
 
             tmp = FARControllableSurface.timeConstant.ToString();
             TextEntryField("Ctrl Surf Time Constant:", 160, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d*\.?\d*]", "");
+            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
             FARControllableSurface.timeConstant = Convert.ToDouble(tmp);
 
             GUILayout.EndVertical();
@@ -207,14 +207,14 @@ namespace ferram4
 
             tmp = atmProperties.y.ToString();
             TextEntryField("Ratio of Specific Heats:", 80, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d*\.?\d*]", "");
+            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
             atmProperties.y = Convert.ToDouble(tmp);
 
 
             double dTmp = 8314.5 / atmProperties.z;
             tmp = dTmp.ToString();
             TextEntryField("Gas Molecular Mass:", 80, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d*\.?\d*]", "");
+            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
             atmProperties.z = 8314.5 / Convert.ToDouble(tmp);
 
             atmProperties.x = atmProperties.y * atmProperties.z;
@@ -281,19 +281,19 @@ namespace ferram4
 
             tmp = activeTemplate.YmaxStress.ToString();
             TextEntryField("Axial (Y-axis) Max Stress:", 240, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d*\.?\d*]", "");
+            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
             activeTemplate.YmaxStress = Convert.ToDouble(tmp);
 
             tmp = activeTemplate.XZmaxStress.ToString();
             TextEntryField("Lateral (X,Z-axis) Max Stress:", 240, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d*\.?\d*]", "");
+            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
             activeTemplate.XZmaxStress = Convert.ToDouble(tmp);
            
             activeTemplate.crewed = GUILayout.Toggle(activeTemplate.crewed, "Requires Crew Compartment");
 
             tmp = activeTemplate.minNumResources.ToString();
             TextEntryField("Min Num Resources:", 80, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d*\.?\d*]", "");
+            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
             activeTemplate.minNumResources = Convert.ToInt32(tmp);
 
             GUILayout.Label("Req Resources:");
