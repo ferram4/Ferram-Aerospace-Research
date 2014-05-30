@@ -279,7 +279,7 @@ namespace ferram4
                 if (w)
                 {
                     b = w as FARBaseAerodynamics;
-                    relPos += w.AerodynamicCenter;
+                    relPos += w.WingCentroid();
                 }
                 else
                 {
