@@ -82,8 +82,8 @@ namespace ferram4
 
         public override void FixedUpdate()
         {
-            if (start == StartState.Editor)
-                return;
+//            if (start == StartState.Editor)
+//                return;
 
             if (minBounds.Count == 0)
             {
@@ -103,6 +103,8 @@ namespace ferram4
         {
             minBounds.Clear();
             maxBounds.Clear();
+            var d = part.GetComponent<FARBasicDragModel>();
+            if (d != null) d.UpdatePropertiesWithShapeChange();
         }
 
 
@@ -218,7 +220,7 @@ namespace ferram4
                 if (w)
                 {
                     b = w as FARBaseAerodynamics;
-                    relPos += w.AerodynamicCenter;
+                    relPos += w.WingCentroid();
                 }
                 else
                 {

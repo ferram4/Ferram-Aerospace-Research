@@ -147,6 +147,12 @@ namespace ferram4
             }
         }
 
+        public void UpdatePropertiesWithShapeChange()
+        {
+            FARAeroUtil.SetBasicDragModuleProperties(this.part);      //By doing this, we update the properties of this object
+            AttachNodeCdAdjust();                                     //In case the node properties somehow update with the node; also to deal with changes in part reference area
+        }
+
         private void UpdatePropertiesWithAnimation()
         {
             if (anim)
@@ -157,9 +163,8 @@ namespace ferram4
                 }
                 else if (currentlyAnimating && !anim.isPlaying)
                 {
-                    currentlyAnimating = false;                        
-                    FARAeroUtil.SetBasicDragModuleProperties(this.part);      //By doing this, we update the properties of this object
-                    AttachNodeCdAdjust();                                     //In case the node properties somehow update with the node; also to deal with changes in part reference area
+                    currentlyAnimating = false;
+                    UpdatePropertiesWithShapeChange();
                 }
 //                bayProgress = bayAnim[bayAnimationName].normalizedTime;
 
