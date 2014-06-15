@@ -107,6 +107,8 @@ namespace ferram4
 
         protected double zeroLiftCdIncrement = 0;
 
+        protected double criticalCl = 1.6;
+
 
         public Vector3d AerodynamicCenter = Vector3.zero;
         private Vector3d CurWingCentroid = Vector3.zero;
@@ -571,12 +573,13 @@ namespace ferram4
             {
                 var w = WingInFrontOf;
 
+                double angle = Vector3.Dot(w.liftDirection, this.liftDirection);        //This deals with the effect of a part being attached at a strange angle and reducing the effect, so that a vertical stabilizer placed on a wing doesn't affect the lift of the wing
+                
                 double flapRatio = FARMathUtil.Clamp(this.effective_MAC / (this.effective_MAC + w.effective_MAC), 0, 1);
                 float flt_flapRatio = (float)flapRatio;
                 double flapFactor = FARAeroUtil.WingCamberFactor.Evaluate(flt_flapRatio);        //Flap Effectiveness Factor
                 double dCm_dCl = FARAeroUtil.WingCamberMoment.Evaluate(flt_flapRatio);           //Change in moment due to change in lift from flap
 
-                double angle = Vector3.Dot(w.liftDirection, this.liftDirection);        //This deals with the effect of a part being attached at a strange angle and reducing the effect, so that a vertical stabilizer placed on a wing doesn't affect the lift of the wing
                 double liftDirVal = angle;
                 double wAoA = w.CalculateAoA(w.GetVelocity()) * Math.Sign(liftDirVal);
                 angle = (AoA - wAoA) * Math.Abs(angle);                //First, make sure that the AoA are wrt the same direction; then account for any strange angling of the part that shouldn't be there
@@ -783,18 +786,25 @@ namespace ferram4
                 Cd += CdCompressibilityZeroLiftIncrement(MachNumber, SweepAngle);
             }
 
+            //AC shift due to flaps
             Vector3d ACShiftVec;
             if (!double.IsNaN(ACshift))
                 ACShiftVec = ACshift * ParallelInPlane;
             else
                 ACShiftVec = Vector3d.zero;
-            AerodynamicCenter = AerodynamicCenter + ACShiftVec;
 
+            //Stalling effects
             stall = FARMathUtil.Clamp(stall, minStall, 1);
 
+            //AC shift due to stall
+            if (stall > 0)
+                ACShiftVec -= 0.75 / criticalCl * MAC * Math.Abs(Cl) * stall * ParallelInPlane;
 
             Cl -= Cl * stall * 0.769;
-            Cd += Cd * stall * 0.4;
+            Cd += Cd * stall * 3;
+
+
+            AerodynamicCenter = AerodynamicCenter + ACShiftVec;
 
             Cl *= ClCdInterference;
 
@@ -1099,7 +1109,7 @@ namespace ferram4
             else
                 StallAngle = Mathf.PI / 3;*/
 
-            StallAngle = 1.6 / liftslope;          //Simpler version of above commented out section; just limit the lift coefficient to ~1.6
+            StallAngle = criticalCl / liftslope;          //Simpler version of above commented out section; just limit the lift coefficient to ~1.6
 
             return StallAngle;
 
