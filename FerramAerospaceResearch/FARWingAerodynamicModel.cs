@@ -187,7 +187,7 @@ namespace ferram4
             localWingCentroid = WC;
         }
 
-        private Vector3 WingCentroid()
+        public Vector3 WingCentroid()
         {
             return part_transform.TransformPoint(localWingCentroid);
         }
