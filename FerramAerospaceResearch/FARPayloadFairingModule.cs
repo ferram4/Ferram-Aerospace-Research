@@ -80,7 +80,7 @@ namespace ferram4
             maxBounds.Clear();
         }
 
-        public override void FixedUpdate()
+        public void FixedUpdate()
         {
 //            if (start == StartState.Editor)
 //                return;

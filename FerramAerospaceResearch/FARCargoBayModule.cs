@@ -169,10 +169,8 @@ namespace ferram4
             return true;
         }
 
-        public override void FixedUpdate()
+        public void FixedUpdate()
         {
-
-            base.FixedUpdate();
 
             UpdateShieldedParts();
             

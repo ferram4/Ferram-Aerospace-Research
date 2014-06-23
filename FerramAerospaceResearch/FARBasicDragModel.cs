@@ -276,7 +276,7 @@ namespace ferram4
         }
 
 
-        public override void FixedUpdate()
+        public void FixedUpdate()
         {
             currentDrag = 0;
 

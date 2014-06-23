@@ -66,30 +66,7 @@ namespace ferram4
                 part.OnEditorDetach += OnEditorAttach;
                 part.OnEditorDestroy += OnEditorAttach;
             }
-        }
-
-        public virtual void FixedUpdate()
-        {
-        }
-
-        public virtual void LateUpdate()
-        {
-            // In-editor updates are done centralized from the control object
-            /*if (start != StartState.Editor && part)
-            {
-                int count = vessel ? vessel.parts.Count : 1;
-
-                if (VesselPartList == null || VesselPartListCount != count)
-                {
-
-
-                    //lastVesselParts = VesselPartList.Count;
-                    if (OnVesselPartsChange != null)
-                        OnVesselPartsChange();
-
-                }
-            }*/
-        }
+        }        
 
         public virtual void OnEditorAttach()
         {

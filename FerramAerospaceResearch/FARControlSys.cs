@@ -1209,12 +1209,6 @@ namespace ferram4
             Fields["isShielded"].guiActive = false;
 
             Fields["Cl"].guiActive = Fields["Cd"].guiActive = Fields["Cm"].guiActive = false;
-            if (HighLogic.LoadedSceneIsFlight && vessel.isActiveVessel)
-            {
-                activeControlSys = this;
-                statusOverrideTimer = 0;
-                vessel.OnFlyByWire += new FlightInputCallback(StabilityAugmentation);
-            }
             OnVesselPartsChange += GetNavball;
             invKerbinSLDensity = 1 / FARAeroUtil.GetCurrentDensity(FlightGlobals.Bodies[1], 0);
         }
@@ -1225,12 +1219,25 @@ namespace ferram4
             if (start != StartState.Editor)
             {
                 activeControlSys = null;
-                if(vessel)
+                if(vessel.isActiveVessel)
                     vessel.OnFlyByWire -= new FlightInputCallback(StabilityAugmentation);
             }
         }
 
-        public override void FixedUpdate()
+        public static void StabilityAugmentationUpdate(Vessel v)
+        {
+            Debug.Log(FlightGlobals.ActiveVessel.vesselName);
+            Debug.Log(v.vesselName);
+
+            FlightGlobals.ActiveVessel.OnFlyByWire -= new FlightInputCallback(StabilityAugmentation);
+
+            activeControlSys = v.GetComponent<FARControlSys>();
+            statusOverrideTimer = 0;
+            v.OnFlyByWire += new FlightInputCallback(StabilityAugmentation);
+        }
+
+
+        public void FixedUpdate()
         {
             if (HighLogic.LoadedSceneIsFlight && part)
             {
@@ -1276,7 +1283,7 @@ namespace ferram4
             }
         }
 
-        public override void LateUpdate()
+        public void LateUpdate()
         {
             if (part)
             {
@@ -1286,7 +1293,7 @@ namespace ferram4
             }
         }
 
-        public void StabilityAugmentation(FlightCtrlState state)
+        public static void StabilityAugmentation(FlightCtrlState state)
         {
 
             double tmp = 0;
@@ -1362,18 +1369,18 @@ namespace ferram4
             }
             if (ControlReducer)
             {
-                double std_q = FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(alt, vessel.mainBody)) * scaleVelocity * scaleVelocity * 0.5;
+                double std_q = FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(alt, activeControlSys.vessel.mainBody)) * scaleVelocity * scaleVelocity * 0.5;
 
-                if (q < std_q)
+                if (activeControlSys.q < std_q)
                 {
-                    scalingfactor = 1;
+                    activeControlSys.scalingfactor = 1;
                     return;
                 }
-                scalingfactor = std_q / q;
+                activeControlSys.scalingfactor = std_q / activeControlSys.q;
 
-                state.pitch = state.pitchTrim + (state.pitch - state.pitchTrim) * (float)scalingfactor;
-                state.yaw = state.yawTrim + (state.yaw - state.yawTrim) * (float)scalingfactor;
-                state.roll = state.rollTrim + (state.roll - state.rollTrim) * (float)scalingfactor;
+                state.pitch = state.pitchTrim + (state.pitch - state.pitchTrim) * (float)activeControlSys.scalingfactor;
+                state.yaw = state.yawTrim + (state.yaw - state.yawTrim) * (float)activeControlSys.scalingfactor;
+                state.roll = state.rollTrim + (state.roll - state.rollTrim) * (float)activeControlSys.scalingfactor;
             }
             lastDt = dt;
         }

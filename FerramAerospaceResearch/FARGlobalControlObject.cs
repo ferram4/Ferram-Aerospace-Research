@@ -218,6 +218,7 @@ namespace ferram4
         private IButton FARFlightButton;
         //private Dictionary<Vessel, List<FARPartModule>> vesselFARPartModules = new Dictionary<Vessel, List<FARPartModule>>();
         static PluginConfiguration config;
+        private Vessel lastActiveVessel = null;
 
         public void Awake()
         {
@@ -243,24 +244,6 @@ namespace ferram4
                 foreach (PartModule m in p.Modules)
                     if (m is FARPartModule)
                         (m as FARPartModule).ForceOnVesselPartsChange();
-/*            List<FARPartModule> FARPartModules;
-            if (vesselFARPartModules.TryGetValue(v, out FARPartModules))
-            {
-                foreach (FARPartModule m in FARPartModules)
-                {
-                    m.ForceOnVesselPartsChange();
-                }
-                vesselFARPartModules.Remove(v);
-
-                FARPartModules = new List<FARPartModule>();
-                foreach (Part p in v.Parts)
-                {
-                    foreach (PartModule m in p.Modules)
-                        if (m is FARPartModule)
-                            FARPartModules.Add(m as FARPartModule);
-                }
-                vesselFARPartModules.Add(v, FARPartModules);
-            }*/
         }
 
         private void FindPartsWithoutFARModel(Vessel v)
@@ -354,16 +337,6 @@ namespace ferram4
                 if (b != null)
                     b.VesselPartList = v.Parts;             //This prevents every single part in the ship running this due to VesselPartsList not being initialized
             }
-
-            /*if (vesselFARPartModules.ContainsKey(v))
-            {
-                List<FARPartModule> Modules = vesselFARPartModules[v];
-                FARPartModules = FARPartModules.Union(Modules).ToList();
-                vesselFARPartModules[v] = FARPartModules;
-            }
-            else
-                vesselFARPartModules.Add(v, FARPartModules);*/
-            //return returnValue;
         }
 
 
@@ -372,28 +345,14 @@ namespace ferram4
 
             if (FlightGlobals.ready)
             {
-/*                if (vesselsWithFARModules == null)
-                    vesselsWithFARModules = new List<Vessel>();
-
-                foreach (Vessel v in FlightGlobals.Vessels)
-                {
-                    if (v.loaded)
-                    {
-                        if (!vesselsWithFARModules.Contains(v))
-                        {
-                            vesselsWithFARModules.Add(v);
-                            FindPartsWithoutFARModel(v);
-                        }
-                    }
-                    else if (vesselsWithFARModules.Contains(v))
-                        vesselsWithFARModules.Remove(v);
-                }*/
                 FARFlightButton.Visible = FARControlSys.ActiveControlSys && (FARControlSys.ActiveControlSys.vessel == FlightGlobals.ActiveVessel);
-
             }
 
-            //            else
-            //                vesselsWithFARModules = null;
+            if (lastActiveVessel != FlightGlobals.ActiveVessel)
+            {
+                lastActiveVessel = FlightGlobals.ActiveVessel;
+                FARControlSys.StabilityAugmentationUpdate(FlightGlobals.ActiveVessel);
+            }
         }
 
         void OnDestroy()

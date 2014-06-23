@@ -1205,7 +1205,7 @@ namespace ferram4
                 prevBody = index;
                 currentBodyAtm = bodyAtmosphereConfiguration[prevBody];
                 currentBodyTemp = 273.15f;
-                if(body.useLegacyAtmosphere)
+                if(body.useLegacyAtmosphere && body.atmosphere)
                 {
                     currentBodyAtmPressureOffset = body.atmosphereMultiplier * 1e-6;
                 }

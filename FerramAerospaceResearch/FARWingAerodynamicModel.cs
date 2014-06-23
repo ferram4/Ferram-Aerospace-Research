@@ -356,7 +356,7 @@ namespace ferram4
             WingExposureFunction();
         }
 
-        public override void FixedUpdate()
+        public virtual void FixedUpdate()
         {
             currentLift = currentDrag = 0;
 
