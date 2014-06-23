@@ -189,7 +189,7 @@ namespace ferram4
 
         public Vector3 WingCentroid()
         {
-            return part_transform.TransformPoint(localWingCentroid);
+            return part_transform.TransformDirection(localWingCentroid) + part.transform.position;
         }
 
         public override Vector3d GetVelocity()
@@ -425,8 +425,8 @@ namespace ferram4
             }
 
             double v_scalar = velocity.magnitude;
-            if (v_scalar <= 0.1)
-                return Vector3d.zero;
+            //if (v_scalar <= 0.1)
+            //    return Vector3d.zero;
 
             Vector3 forward = part_transform.forward;
             Vector3d velocity_normalized = velocity / v_scalar;

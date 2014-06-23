@@ -1147,7 +1147,9 @@ namespace ferram4
 
             double temp = Math.Max(0.1, currentBodyTemp + FlightGlobals.getExternalTemperature(worldLocation));
 
-            double pressure = (FlightGlobals.getStaticPressure(worldLocation, body) - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
+            double pressure = FlightGlobals.getStaticPressure(worldLocation, body);
+            if (pressure > 0)
+                pressure = (pressure - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
 
             return pressure / (temp * currentBodyAtm.z);
         }
@@ -1161,7 +1163,9 @@ namespace ferram4
 
             double temp = Math.Max(0.1, currentBodyTemp + FlightGlobals.getExternalTemperature((float)altitude, body));
 
-            double pressure = (FlightGlobals.getStaticPressure(altitude, body) - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
+            double pressure = FlightGlobals.getStaticPressure(altitude, body);
+            if (pressure > 0)
+                pressure = (pressure - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
 
             return pressure / (temp * currentBodyAtm.z);
         }
@@ -1180,7 +1184,10 @@ namespace ferram4
             UpdateCurrentActiveBody(body);
 
             double temp = Math.Max(0.1, currentBodyTemp + FlightGlobals.getExternalTemperature((float)altitude, body));
-            double pressure = (vessel.staticPressure - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
+
+            double pressure = 0;
+            if (vessel.staticPressure > 0)
+                pressure = (vessel.staticPressure - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
 
             soundspeed = Math.Sqrt(temp * currentBodyAtm.x); // * 401.8f;              //Calculation for speed of sound in ideal gas using air constants of gamma = 1.4 and R = 287 kJ/kg*K
 

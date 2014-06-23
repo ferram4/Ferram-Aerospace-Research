@@ -1123,7 +1123,7 @@ namespace ferram4
             if (FlightUIController.speedDisplayMode != FlightUIController.SpeedDisplayModes.Surface)
                 return;
             FlightUIController UI = FlightUIController.fetch;
-            Vessel activeVessel = FlightGlobals.ActiveVessel;
+            Vessel activeVessel = vessel;
             double unitConversion = 1;
             string unitString = "m/s";
             if (unitMode == SurfaceVelUnit.KNOTS)

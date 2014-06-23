@@ -225,7 +225,7 @@ namespace ferram4
                 else
                 {
                     b = d as FARBaseAerodynamics;
-                    relPos += p.transform.TransformPoint(d.CenterOfDrag);       //No attach node shifting with this
+                    relPos += p.transform.TransformDirection(d.CenterOfDrag);       //No attach node shifting with this
                 }
 
 
