@@ -238,7 +238,7 @@ namespace ferram4
             if (justStarted)
                 CalculateSurfaceFunctions();
 
-            if (start != StartState.Editor && (object)part != null && (object)vessel != null)
+            if (HighLogic.LoadedSceneIsFlight && (object)part != null && (object)vessel != null)
             {
                 bool process = part.isControllable || (justStarted && isFlap);
 
@@ -262,25 +262,25 @@ namespace ferram4
 
         public void CalculateSurfaceFunctions()
         {
-            if (start != StartState.Editor && (object)vessel == null)
+            if (HighLogic.LoadedSceneIsEditor && ((object)vessel == null || (object)part.transform == null))
                 return;
 
             if (isFlap == true)
             {
-                if (start != StartState.Editor)
+                if (HighLogic.LoadedSceneIsFlight)
                     flapLocation = (int)Math.Sign(Vector3.Dot(vessel.ReferenceTransform.forward, part.transform.forward));      //figure out which way is up
                 else
                     flapLocation = (int)Math.Sign(Vector3.Dot(EditorLogic.startPod.transform.forward, part.transform.forward));      //figure out which way is up
             }
             else if (isSpoiler == true)
             {
-                if (start != StartState.Editor)
+                if (HighLogic.LoadedSceneIsFlight)
                     flapLocation = -(int)Math.Sign(Vector3.Dot(vessel.ReferenceTransform.forward, part.transform.forward));      //figure out which way is up
                 else
                     flapLocation = -(int)Math.Sign(Vector3.Dot(EditorLogic.startPod.transform.forward, part.transform.forward));      //figure out which way is up
             }
 
-            if(pitchaxis || yawaxis || rollaxis || start == StartState.Editor)
+            if (pitchaxis || yawaxis || rollaxis || HighLogic.LoadedSceneIsEditor)
             {
                 Vector3 CoM = Vector3.zero;
                 float mass = 0;
@@ -292,17 +292,18 @@ namespace ferram4
 
                 CoM /= mass;
 
-                if (start == StartState.Editor && (isFlap || isSpoiler))
+                if (HighLogic.LoadedSceneIsEditor && (isFlap || isSpoiler))
                     SetControlStateEditor(CoM, 0, 0, 0, FAREditorGUI.CurrentEditorFlapSetting, FAREditorGUI.CurrentEditorSpoilerSetting);
 
                 float roll2 = 0;
-                if (start == StartState.Editor)
+                if (HighLogic.LoadedSceneIsEditor)
                 {
                     Vector3 CoMoffset = (part.transform.position - CoM).normalized;
                     PitchLocation = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.forward) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.up));
                     YawLocation = -Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.right) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.up));
                     RollLocation = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.forward) * Math.Sign(Vector3.Dot(CoMoffset, -EditorLogic.startPod.transform.right));
                     roll2 = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.right) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.forward));
+                    AoAsign = Math.Sign(Vector3.Dot(part.transform.up, vessel.transform.up));
                 }
                 else
                 {
@@ -428,7 +429,7 @@ namespace ferram4
 
         public void SetControlStateEditor(Vector3 CoM, float pitch, float yaw, float roll, int flap, bool brake)
         {
-            if (start == StartState.Editor)
+            if (HighLogic.LoadedSceneIsEditor)
             {
                 Vector3 CoMoffset = (part.transform.position - CoM).normalized;
                 PitchLocation = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.forward) * Mathf.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.up));

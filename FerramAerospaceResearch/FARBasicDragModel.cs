@@ -251,7 +251,7 @@ namespace ferram4
         public double GetCl()
         {
             Vector3d backward;
-            if (start == StartState.Editor)
+            if (HighLogic.LoadedSceneIsEditor)
                 backward = -EditorLogic.startPod.transform.forward;
             else
                 backward = -vessel.transform.forward;
@@ -282,7 +282,7 @@ namespace ferram4
 
             // With unity objects, "foo" or "foo != null" calls a method to check if
             // it's destroyed. (object)foo != null just checks if it is actually null.
-            if (start != StartState.Editor && (object)part != null)
+            if (HighLogic.LoadedSceneIsFlight && (object)part != null)
             {
                 if (animatingPart)
                     UpdatePropertiesWithAnimation();
@@ -404,7 +404,7 @@ namespace ferram4
 
                 Rigidbody rb = part.Rigidbody;
 
-                if (start != StartState.Editor && rb)
+                if (HighLogic.LoadedSceneIsFlight && rb)
                 {
                     if (rb.angularVelocity.sqrMagnitude != 0)
                     {

@@ -162,7 +162,6 @@ namespace ferram4
 
         public override void OnStart(PartModule.StartState state)
         {
-            start = state;
             base.OnStart(state);
             Fields["isShielded"].guiActive = FARDebugValues.displayShielding;
 
@@ -181,7 +180,7 @@ namespace ferram4
 
         public virtual Vector3d GetVelocity()
         {
-            if (start != StartState.Editor)
+            if (HighLogic.LoadedSceneIsFlight)
                 return part.Rigidbody.velocity + Krakensbane.GetFrameVelocityV3f();
             else
                 return velocityEditor;
@@ -190,7 +189,7 @@ namespace ferram4
         public Vector3d GetVelocity(Vector3 refPoint)
         {
             Vector3d velocity = Vector3.zero;
-            if (start != StartState.Editor)
+            if (HighLogic.LoadedSceneIsFlight)
             {
                 if (part.Rigidbody)
                     velocity += part.Rigidbody.GetPointVelocity(refPoint);
@@ -204,7 +203,7 @@ namespace ferram4
 
         public double GetMachNumber(CelestialBody body, double altitude, Vector3d velocity)
         {
-            if (start != StartState.Editor)
+            if (HighLogic.LoadedSceneIsFlight)
             {
 
                 if (FARControl != null)

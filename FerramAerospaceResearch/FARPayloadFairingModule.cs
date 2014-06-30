@@ -187,7 +187,7 @@ namespace ferram4
 
         private void FindShieldedParts()
         {
-            if (start == StartState.Editor && FARAeroUtil.EditorAboutToAttach(false) &&
+            if (HighLogic.LoadedSceneIsEditor && FARAeroUtil.EditorAboutToAttach(false) &&
                 !FARAeroUtil.CurEditorParts.Contains(part))
                 return;
 

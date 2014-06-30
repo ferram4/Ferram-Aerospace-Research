@@ -1315,6 +1315,16 @@ namespace ferram4
             return tmp;
         }
 
+        //Calculates Oswald's Efficiency e using Sheval's Method
+        public static double CalculateOswaldsEfficiency(double AR, double CosSweepAngle, double Cd0)
+        {
+            double e = 1 - 0.02 * Math.Pow(AR, 0.7) * Math.Pow(Math.Acos(CosSweepAngle), 2.2);
+            double tmp = AR * Cd0 * Mathf.PI + 1;
+            e /= tmp;
+
+            return e;
+        }
+
         /*public static double SupersonicWingCna(double AR, double tanSweep, double B, double taperRatio, out bool subsonicLE)
         {
             //double B = Math.Sqrt(M * M - 1);

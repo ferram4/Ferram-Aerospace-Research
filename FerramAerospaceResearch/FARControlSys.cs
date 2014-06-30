@@ -1169,9 +1169,6 @@ namespace ferram4
 
         public void OnGUI()
         {
-            GameObject o = RenderingManager.fetch.uiElementsToDisable.FirstOrDefault();
-            if ((object)o == null || !o.activeSelf)
-                return;
             GUI.skin = HighLogic.Skin;
             if (this == activeControlSys && !minimize)
             {
@@ -1216,7 +1213,7 @@ namespace ferram4
 
         public void OnDestroy()
         {
-            if (start != StartState.Editor)
+            if (HighLogic.LoadedSceneIsFlight)
             {
                 activeControlSys = null;
                 if(vessel.isActiveVessel)
@@ -1224,16 +1221,19 @@ namespace ferram4
             }
         }
 
-        public static void StabilityAugmentationUpdate(Vessel v)
+        public static void StabilityAugmentationUpdate(Vessel vesselToChangeTo, Vessel vesselToChangeFrom)
         {
-            Debug.Log(FlightGlobals.ActiveVessel.vesselName);
-            Debug.Log(v.vesselName);
+            if ((object)vesselToChangeFrom != null)
+            {
+                RenderingManager.RemoveFromPostDrawQueue(0, new Callback(activeControlSys.OnGUI));
+                FlightGlobals.ActiveVessel.OnFlyByWire -= new FlightInputCallback(StabilityAugmentation);
+            }
+            activeControlSys = vesselToChangeTo.GetComponent<FARControlSys>();
+            RenderingManager.AddToPostDrawQueue(0, new Callback(activeControlSys.OnGUI));
 
-            FlightGlobals.ActiveVessel.OnFlyByWire -= new FlightInputCallback(StabilityAugmentation);
 
-            activeControlSys = v.GetComponent<FARControlSys>();
             statusOverrideTimer = 0;
-            v.OnFlyByWire += new FlightInputCallback(StabilityAugmentation);
+            vesselToChangeTo.OnFlyByWire += new FlightInputCallback(StabilityAugmentation);
         }
 
 

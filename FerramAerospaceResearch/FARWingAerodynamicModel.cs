@@ -146,7 +146,7 @@ namespace ferram4
         {
 
             double ClUpwards = 1;
-            if (start != StartState.Editor)
+            if (HighLogic.LoadedSceneIsFlight)
                 ClUpwards = Vector3.Dot(liftDirection, -vessel.transform.forward);
             ClUpwards *= Cl;
 
@@ -194,7 +194,7 @@ namespace ferram4
 
         public override Vector3d GetVelocity()
         {
-            if (start != StartState.Editor)
+            if (HighLogic.LoadedSceneIsFlight)
                 return part.Rigidbody.GetPointVelocity(WingCentroid()) + Krakensbane.GetFrameVelocityV3f();
             else
                 return velocityEditor;
@@ -362,7 +362,7 @@ namespace ferram4
 
             // With unity objects, "foo" or "foo != null" calls a method to check if
             // it's destroyed. (object)foo != null just checks if it is actually null.
-            if (start != StartState.Editor && !isShielded && (object)part != null)
+            if (HighLogic.LoadedSceneIsFlight && !isShielded && (object)part != null)
             {
                 Rigidbody rb = part.Rigidbody;
                 Vessel vessel = part.vessel;
@@ -481,7 +481,7 @@ namespace ferram4
 
         private void FindWingInFrontOf()
         {
-            if (start != StartState.Editor)
+            if (HighLogic.LoadedSceneIsFlight)
             {
                 // Don't repeat traces until count expires or > 5 degree angle change
                 if (LastInFrontRaycastCount-- > 0 &&
@@ -501,7 +501,7 @@ namespace ferram4
                 // Special case for control surfaces attached to a wing:
                 // If the ray direction is within 60 degrees of up, just use parent.
                 if (nonSideAttach > 0 && ParallelInPlaneLocal.y > 0.5 &&
-                    (part.parent || start == StartState.Editor && part.potentialParent))
+                    (part.parent || HighLogic.LoadedSceneIsEditor && part.potentialParent))
                 {
                     Part parent = part.parent ?? part.potentialParent;
                     FARWingAerodynamicModel w = parent.GetComponent<FARWingAerodynamicModel>();
@@ -530,12 +530,12 @@ namespace ferram4
 
                 if (hit.distance != 0)
                 {
-                    if (hit.collider.attachedRigidbody || start == StartState.Editor)
+                    if (hit.collider.attachedRigidbody || HighLogic.LoadedSceneIsEditor)
                     {
                         Part p = null;
                         if (hit.collider.attachedRigidbody)
                             p = hit.collider.attachedRigidbody.GetComponent<Part>();
-                        if (p == null && start == StartState.Editor)
+                        if (p == null && HighLogic.LoadedSceneIsEditor)
                             foreach (Part q in VesselPartList)
                                 if (q.collider == hit.collider)
                                 {
@@ -544,7 +544,7 @@ namespace ferram4
                                 }
                         if (p != null && p != this.part)
                         {
-                            if (start != StartState.Editor && p.vessel != vessel)
+                            if (HighLogic.LoadedSceneIsFlight && p.vessel != vessel)
                                 return;
 
                             FARWingAerodynamicModel w = p.GetComponent<FARWingAerodynamicModel>();
@@ -647,7 +647,7 @@ namespace ferram4
                 stall = lastStall;
             }
 
-            if (start != StartState.Editor)
+            if (HighLogic.LoadedSceneIsFlight)
                 stall = FARMathUtil.Clamp(stall, lastStall - 2 * TimeWarp.fixedDeltaTime, lastStall + 2 * TimeWarp.fixedDeltaTime);     //Limits stall to increasing at a rate of 2/s
 
             stall = FARMathUtil.Clamp(stall, 0, 1);
@@ -660,15 +660,11 @@ namespace ferram4
         private void CalculateCoefficients(double MachNumber, double AoA)
         {
 
-            minStall = 0;// ShockStall(MachNumber);
+            minStall = 0;
 
             liftslope = GetLiftSlope(MachNumber);// / AoA;     //Prandtl lifting Line
 
-            //float SweepOrMiddle = Mathf.Abs(SweepAngle);
             double sonicLe = 0;
-
-            //if (PartInFrontOf)
-            //    SweepOrMiddle = 0;
 
             double ACshift = 0, ACweight = 0;
             DetermineStall(MachNumber, AoA, out ACshift, out ACweight);
@@ -682,14 +678,10 @@ namespace ferram4
                 //print(sonicLe);
             }
 
-            //float CdMultiplier = CdCompressibilityMultiplier(MachNumber, SweepOrMiddle, sonicLe);
+            double Cd0 = CdCompressibilityZeroLiftIncrement(MachNumber, SweepAngle);
+            e = FARAeroUtil.CalculateOswaldsEfficiency(effective_AR, SweepAngle, Cd0);
+            piARe = effective_AR * e * Mathf.PI;
 
-            //downWash = CalculateDownwash();
-            //AoA -= downWash;
-            /*
-             * Subsonic nonlinear lift / drag code
-             * 
-             */
             if (MachNumber <= 0.8)
             {
                 double Cn = liftslope;
@@ -700,6 +692,7 @@ namespace ferram4
                     ACshift *= FARMathUtil.Clamp(Math.Abs(ACweight / Cl), 0, 1);
                 //Cl += UnsteadyAerodynamicsCl();
                 Cd = (0.006 + Cl * Cl / piARe);     //Drag due to 3D effects on wing and base constant
+                Cd += Cd0;
             }
             /*
              * Supersonic nonlinear lift / drag code
@@ -731,7 +724,7 @@ namespace ferram4
                 Cl = coefMult * (normalForce * CosAoA * Math.Sign(AoA) * sonicLEFactor - axialForce * SinAoA);
                 Cd = coefMult * (Math.Abs(normalForce * SinAoA) * sonicLEFactor + axialForce * CosAoA);
                 Cd += 0.006;
-                Cd += CdCompressibilityZeroLiftIncrement(MachNumber, SweepAngle);
+                Cd += Cd0;
             }
             /*
              * Transonic nonlinear lift / drag code
@@ -783,7 +776,7 @@ namespace ferram4
                 Cl += coefMult * (normalForce * CosAoA * Math.Sign(AoA) * sonicLEFactor - axialForce * SinAoA) * (subScale);
                 Cd += coefMult * (Math.Abs(normalForce * SinAoA) * sonicLEFactor + axialForce * CosAoA) * (subScale);
                 Cd += 0.006;
-                Cd += CdCompressibilityZeroLiftIncrement(MachNumber, SweepAngle);
+                Cd += Cd0;
             }
 
             //AC shift due to flaps
@@ -1143,8 +1136,6 @@ namespace ferram4
             SetSweepAngle(sweepHalfChord);
 
             effective_AR = EffectOfExposure();
-
-            piARe = Mathf.PI * effective_AR * e;
 
             /*if (MachNumber < 1)
                 tmp = Mathf.Clamp(MachNumber, 0, 0.9f);

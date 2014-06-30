@@ -45,7 +45,6 @@ namespace ferram4
         protected Callback OnVesselPartsChange;
         public List<Part> VesselPartList = null;
         int VesselPartListCount = 0;
-        protected static StartState start;
 
         public void ForceOnVesselPartsChange()
         {
@@ -56,11 +55,10 @@ namespace ferram4
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
-            start = state;
             OnVesselPartsChange = UpdateShipPartsList;
             UpdateShipPartsList();
 
-            if (start == StartState.Editor)
+            if (HighLogic.LoadedSceneIsEditor)
             {
                 part.OnEditorAttach += OnEditorAttach;
                 part.OnEditorDetach += OnEditorAttach;
@@ -83,7 +81,7 @@ namespace ferram4
         public List<Part> GetShipPartList()
         {
             List<Part> list = null;
-            if (start == StartState.Editor)
+            if (HighLogic.LoadedSceneIsEditor)
                 list = FARAeroUtil.AllEditorParts;
             else if (vessel)
                 list = vessel.Parts;

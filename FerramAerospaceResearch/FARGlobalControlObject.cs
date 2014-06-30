@@ -346,12 +346,12 @@ namespace ferram4
             if (FlightGlobals.ready)
             {
                 FARFlightButton.Visible = FARControlSys.ActiveControlSys && (FARControlSys.ActiveControlSys.vessel == FlightGlobals.ActiveVessel);
-            }
 
-            if (lastActiveVessel != FlightGlobals.ActiveVessel)
-            {
-                lastActiveVessel = FlightGlobals.ActiveVessel;
-                FARControlSys.StabilityAugmentationUpdate(FlightGlobals.ActiveVessel);
+                if (lastActiveVessel != FlightGlobals.ActiveVessel)
+                {
+                    FARControlSys.StabilityAugmentationUpdate(FlightGlobals.ActiveVessel, lastActiveVessel);
+                    lastActiveVessel = FlightGlobals.ActiveVessel;
+                }
             }
         }
 

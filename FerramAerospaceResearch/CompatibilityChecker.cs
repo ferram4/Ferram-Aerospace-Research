@@ -66,7 +66,8 @@ namespace ferram4
             //
 
             bool compatible = false;
-            if (Versioning.version_minor == 23 && Versioning.Revision == 5)
+            if ((Versioning.version_minor == 24 && Versioning.Revision == 0)
+                || (Versioning.version_minor == 23 && Versioning.Revision == 5))
                 compatible = true;
 
             return compatible;

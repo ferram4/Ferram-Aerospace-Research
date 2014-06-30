@@ -77,6 +77,7 @@
     <Compile Include="FARPayloadFairingModule.cs" />
     <Compile Include="FARRungeKutta.cs" />
     <Compile Include="FARWingAerodynamicModel.cs" />
+    <Compile Include="InstallChecker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

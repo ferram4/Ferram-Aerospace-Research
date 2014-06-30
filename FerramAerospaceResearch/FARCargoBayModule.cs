@@ -75,11 +75,11 @@ namespace ferram4
         [KSPEvent]
         private void UpdateCargoParts()
         {
-            if (start == StartState.Editor && FARAeroUtil.EditorAboutToAttach(false) &&
+            if (HighLogic.LoadedSceneIsEditor && FARAeroUtil.EditorAboutToAttach(false) &&
                 !FARAeroUtil.CurEditorParts.Contains(part))
                 return;
 
-            if (bayAnim == null || !bayOpen || start == StartState.Editor)
+            if (bayAnim == null || !bayOpen || HighLogic.LoadedSceneIsEditor)
                 FindShieldedParts();
         }
 
@@ -187,7 +187,7 @@ namespace ferram4
 
         private void UpdateShieldedParts()
         {
-            if (start == StartState.Editor)
+            if (HighLogic.LoadedSceneIsEditor)
                 return;
 
             if (bayAnim)
@@ -328,7 +328,7 @@ namespace ferram4
                     }
                 }
             }
-            if(start != StartState.Editor)
+            if (HighLogic.LoadedSceneIsEditor)
                 foreach (Vessel v in FlightGlobals.Vessels)
                 {
                     if (v == this.vessel)
