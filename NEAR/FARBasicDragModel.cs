@@ -635,7 +635,7 @@ namespace NEAR
             
             Cl += newtonianLift;
 
-//            Debug.Log("Cd = " + Cd + " Cl = " + Cl + " Cm = " + Cm + "\nPot Lift = " + potentialLift + " Visc Lift = " + viscousLift + " Newt Lift = " + newtonianLift + "\nCdAdd = " + CdAdd + " sepFlowCd = " + sepFlowCd + " maxPressureCoeff = " + maxPressureCoeff + "\ntaperCrossSectionAreaRatio = " + taperCrossSectionAreaRatio + " crossflowParameter = " + crossflowParameter);
+            //Debug.Log("Cd = " + Cd + " Cl = " + Cl + " Cm = " + Cm + "\nPot Lift = " + potentialLift + " Visc Lift = " + viscousLift + " Newt Lift = " + newtonianLift + "\nCdAdd = " + CdAdd + " sepFlowCd = " + sepFlowCd + " maxPressureCoeff = " + maxPressureCoeff + "\ntaperCrossSectionAreaRatio = " + taperCrossSectionAreaRatio + " crossflowParameter = " + crossflowParameter);
         }
 
         private double SeparatedFlowDrag()

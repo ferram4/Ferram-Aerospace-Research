@@ -48,6 +48,10 @@ namespace NEAR
 
         static PluginConfiguration config;
 
+        public void Awake()
+        {
+            LoadConfigs();
+        }
 
         public void LateUpdate()
         {
@@ -157,9 +161,6 @@ namespace NEAR
 
         public static void LoadConfigs()
         {
-            config = KSP.IO.PluginConfiguration.CreateForType<FARGlobalControlEditorObject>();
-            config.load();
-
             FARPartClassification.LoadClassificationTemplates();
             FARAeroUtil.LoadAeroDataFromConfig();
         }
@@ -171,7 +172,11 @@ namespace NEAR
         //private List<Vessel> vesselsWithFARModules = null;
         //private Dictionary<Vessel, List<FARPartModule>> vesselFARPartModules = new Dictionary<Vessel, List<FARPartModule>>();
         static PluginConfiguration config;
-        private Vessel lastActiveVessel = null;
+
+        public void Awake()
+        {
+            LoadConfigs();
+        }
 
         public void Start()
         {
@@ -209,15 +214,6 @@ namespace NEAR
                         if (m is FARPartModule)
                             FARPartModules.Add(m as FARPartModule);
                     continue;
-                }
-
-                if (p.Modules.Contains("ModuleCommand") && !p.Modules.Contains("FARControlSys"))
-                {
-                    p.AddModule("FARControlSys");
-                    PartModule m = p.Modules["FARControlSys"];
-                    m.OnStart(PartModule.StartState.Flying);
-
-                    FARPartModules.Add(m as FARPartModule);
                 }
 
                 FARPartModule q = p.GetComponent<FARPartModule>();
@@ -292,9 +288,6 @@ namespace NEAR
 
         public static void LoadConfigs()
         {
-            config = KSP.IO.PluginConfiguration.CreateForType<FARGlobalControlFlightObject>();
-            config.load();
-
             FARPartClassification.LoadClassificationTemplates();
             FARAeroUtil.LoadAeroDataFromConfig();
         }

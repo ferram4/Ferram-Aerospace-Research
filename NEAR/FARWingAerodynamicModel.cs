@@ -78,12 +78,6 @@ namespace NEAR
 
         private double liftslope = 0;
         protected double ClCdInterference = 1;
-
-        private double forwardexposure;
-        private double backwardexposure;
-        private double outwardexposure;
-        private double inwardexposure;
-
         protected double WingtipExposure = 0;
         protected double WingrootExposure = 0;
 
@@ -100,22 +94,15 @@ namespace NEAR
 
         // in local coordinates
         private Vector3d localWingCentroid = Vector3.zero;
-        private Vector3d sweepPerpLocal, sweepPerp2Local;
         private Vector3d ParallelInPlaneLocal = Vector3.zero;
 
         private Int16 srfAttachNegative = 1;
 
         private Vector3d LastInFrontRaycast = Vector3.zero;
-        private int LastInFrontRaycastCount = 0;
-        private Part PartInFrontOf = null;
-        private FARWingAerodynamicModel WingInFrontOf = null;
 
         protected double ClIncrementFromRear = 0f;
 
         private double rho = 1;
-
-        public double YmaxForce = double.MaxValue;
-        public double XZmaxForce = double.MaxValue;
 
         #region GetFunctions
 

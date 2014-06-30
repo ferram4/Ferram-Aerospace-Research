@@ -60,7 +60,7 @@ namespace NEAR
                     double.TryParse(node.GetValue("attachNodeDiameterFactor"), out attachNodeRadiusFactor);
                     attachNodeRadiusFactor *= 0.5;
                 }
-                if (node.HasValue("incompressibleRearAttachDrag"))
+                if (node.HasValue("rearNodeDragFactor"))
                     double.TryParse(node.GetValue("rearNodeDragFactor"), out rearNodeDragFactor);
 
                 if (node.HasValue("ctrlSurfTimeConstant"))
