@@ -264,7 +264,7 @@ namespace ferram4
                 FARBaseAerodynamics b = null;
                 FARBasicDragModel d = null;
                 FARWingAerodynamicModel w = null;
-                Vector3 relPos = -this.part.transform.position;
+                Vector3 relPos = -part.transform.position;
                 w = p.GetComponent<FARWingAerodynamicModel>();
                 if ((object)w == null)
                 {
@@ -282,7 +282,7 @@ namespace ferram4
                 else
                 {
                     b = d as FARBaseAerodynamics;
-                    relPos += p.transform.TransformPoint(d.CenterOfDrag);       //No attach node shifting with this
+                    relPos += p.transform.TransformDirection(d.CenterOfDrag) + p.transform.position;       //No attach node shifting with this
                 }
 
                 relPos = this.part.transform.worldToLocalMatrix.MultiplyVector(relPos);
