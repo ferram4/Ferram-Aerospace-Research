@@ -219,7 +219,7 @@ namespace NEAR
                 else
                 {
                     b = d as FARBaseAerodynamics;
-                    relPos += p.transform.TransformDirection(d.CenterOfDrag);       //No attach node shifting with this
+                    relPos += p.transform.TransformDirection(d.CenterOfDrag) + p.transform.position;       //No attach node shifting with this
                 }
 
 
