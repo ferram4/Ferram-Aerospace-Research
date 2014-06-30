@@ -1,10 +1,10 @@
 ﻿/*
-Ferram Aerospace Research v0.13.3
+NEAR: Easymode Aerodynamics Replacement v1.0
 Copyright 2014, Michael Ferrara, aka Ferram4
 
-    This file is part of Ferram Aerospace Research.
+    This file is part of NEAR: Easymode Aerodynamics Replacement.
 
-    Ferram Aerospace Research is free software: you can redistribute it and/or modify
+    NEAR: Easymode Aerodynamics Replacement is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
@@ -15,30 +15,24 @@ Copyright 2014, Michael Ferrara, aka Ferram4
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Ferram Aerospace Research.  If not, see <http://www.gnu.org/licenses/>.
+    along with NEAR: Easymode Aerodynamics Replacement.  If not, see <http://www.gnu.org/licenses/>.
 
     Serious thanks:		a.g., for tons of bugfixes and code-refactorings
             			Taverius, for correcting a ton of incorrect values
             			sarbian, for refactoring code for working with MechJeb, and the Module Manager 1.5 updates
             			ialdabaoth (who is awesome), who originally created Module Manager
             			Duxwing, for copy editing the readme
- * 
- * Kerbal Engineer Redux created by Cybutek, Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
- *      Referenced for starting point for fixing the "editor click-through-GUI" bug
  *
  * Part.cfg changes powered by sarbian & ialdabaoth's ModuleManager plugin; used with permission
  *	http://forum.kerbalspaceprogram.com/threads/55219
  *
- * Toolbar integration powered by blizzy78's Toolbar plugin; used with permission
- *	http://forum.kerbalspaceprogram.com/threads/60863
  */
-
 
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace ferram4
+namespace NEAR
 {
     // An accumulator class for summarizing a set of forces acting on the body
     public class FARCenterQuery
@@ -135,7 +129,6 @@ namespace ferram4
         public double Cm;
 
         
-        protected FARControlSys FARControl;
         //protected float MachNumber = 0;
         protected Vector3d velocityEditor = Vector3.zero;
 
@@ -163,14 +156,8 @@ namespace ferram4
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
-            Fields["isShielded"].guiActive = FARDebugValues.displayShielding;
 
             part.OnEditorDetach += ClearShielding;
-
-            if (!(this is FARControlSys))
-            {
-                Fields["Cl"].guiActive = Fields["Cd"].guiActive = Fields["Cm"].guiActive = FARDebugValues.displayCoefficients;
-            }
         }
 
         public void ClearShielding()
@@ -201,29 +188,13 @@ namespace ferram4
                 return velocityEditor;
         }
 
-        public double GetMachNumber(CelestialBody body, double altitude, Vector3d velocity)
-        {
-            if (HighLogic.LoadedSceneIsFlight)
-            {
-
-                if (FARControl != null)
-                    return FARControl.MachNumber;
-                else
-                    return FARAeroUtil.GetMachNumber(body, altitude, velocity);
-            }
-            else
-            {
-                print("GetMachNumber called in editor");
-                return 0;
-            }
-        }
 
         protected virtual void ResetCenterOfLift()
         {
             // Clear state when preparing CoL computation
         }
 
-        protected virtual Vector3d PrecomputeCenterOfLift(Vector3d velocity, double MachNumber, FARCenterQuery center)
+        protected virtual Vector3d PrecomputeCenterOfLift(Vector3d velocity, FARCenterQuery center)
         {
             return Vector3d.zero;
         }
@@ -275,9 +246,9 @@ namespace ferram4
 
             // run computations twice to let things like flap interactions settle
             foreach (var ba in parts)
-                ba.PrecomputeCenterOfLift(vel, 0, dummy);
+                ba.PrecomputeCenterOfLift(vel, dummy);
             foreach (var ba in parts)
-                ba.CoLForce = ba.PrecomputeCenterOfLift(vel, 0, lift);
+                ba.CoLForce = ba.PrecomputeCenterOfLift(vel, lift);
 
             // flip sign of data in the accumulator to indirectly subtract passes
             lift.force = -lift.force;
@@ -292,9 +263,9 @@ namespace ferram4
             }
 
             foreach (var ba in parts)
-                ba.PrecomputeCenterOfLift(vel, 0, dummy);
+                ba.PrecomputeCenterOfLift(vel, dummy);
             foreach (var ba in parts)
-                ba.CoLForce -= ba.PrecomputeCenterOfLift(vel, 0, lift);
+                ba.CoLForce -= ba.PrecomputeCenterOfLift(vel, lift);
 
             // Choose the center location
             GlobalCoL = lift.GetMinTorquePos();

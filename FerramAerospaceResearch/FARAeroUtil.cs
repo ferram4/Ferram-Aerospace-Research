@@ -1,10 +1,10 @@
 ﻿/*
-Ferram Aerospace Research v0.13.3
+NEAR: Easymode Aerodynamics Replacement v1.0
 Copyright 2014, Michael Ferrara, aka Ferram4
 
-    This file is part of Ferram Aerospace Research.
+    This file is part of NEAR: Easymode Aerodynamics Replacement.
 
-    Ferram Aerospace Research is free software: you can redistribute it and/or modify
+    NEAR: Easymode Aerodynamics Replacement is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
@@ -15,96 +15,40 @@ Copyright 2014, Michael Ferrara, aka Ferram4
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Ferram Aerospace Research.  If not, see <http://www.gnu.org/licenses/>.
+    along with NEAR: Easymode Aerodynamics Replacement.  If not, see <http://www.gnu.org/licenses/>.
 
     Serious thanks:		a.g., for tons of bugfixes and code-refactorings
             			Taverius, for correcting a ton of incorrect values
             			sarbian, for refactoring code for working with MechJeb, and the Module Manager 1.5 updates
             			ialdabaoth (who is awesome), who originally created Module Manager
             			Duxwing, for copy editing the readme
- * 
- * Kerbal Engineer Redux created by Cybutek, Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
- *      Referenced for starting point for fixing the "editor click-through-GUI" bug
  *
  * Part.cfg changes powered by sarbian & ialdabaoth's ModuleManager plugin; used with permission
  *	http://forum.kerbalspaceprogram.com/threads/55219
  *
- * Toolbar integration powered by blizzy78's Toolbar plugin; used with permission
- *	http://forum.kerbalspaceprogram.com/threads/60863
  */
-
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace ferram4
+namespace NEAR
 {
     public static class FARAeroUtil
     {
-        private static FloatCurve prandtlMeyerMach = null;
-        private static FloatCurve prandtlMeyerAngle = null;
-        public static double maxPrandtlMeyerTurnAngle = 0;
-        private static FloatCurve pressureBehindShock = null;
-        private static FloatCurve machBehindShock = null;
-        private static FloatCurve stagnationPressure = null;
-//        private static FloatCurve criticalMachNumber = null;
-        //private static FloatCurve liftslope = null;
-        private static FloatCurve maxPressureCoefficient = null;
-
         public static double areaFactor;
         public static double attachNodeRadiusFactor;
-        public static double incompressibleRearAttachDrag;
-        public static double sonicRearAdditionalAttachDrag;
-
-        public static Dictionary<int, Vector3d> bodyAtmosphereConfiguration = null;
-        public static int prevBody = -1;
-        public static Vector3d currentBodyAtm = new Vector3d();
-        public static double currentBodyTemp = 273.15;
-        public static double currentBodyAtmPressureOffset = 0;
+        public static double rearNodeDragFactor;
 
         public static bool loaded = false;
-
-        public static void SaveCustomAeroDataToConfig()
-        {
-            ConfigNode node = new ConfigNode("@FARAeroData[default]:FINAL");
-            node.AddValue("%areaFactor", areaFactor);
-            node.AddValue("%attachNodeDiameterFactor", attachNodeRadiusFactor * 2);
-            node.AddValue("%incompressibleRearAttachDrag", incompressibleRearAttachDrag);
-            node.AddValue("%sonicRearAdditionalAttachDrag", sonicRearAdditionalAttachDrag);
-            node.AddValue("%ctrlSurfTimeConstant", FARControllableSurface.timeConstant);
-
-            node.AddNode(new ConfigNode("!BodyAtmosphericData,*"));
-
-            foreach (KeyValuePair<int, Vector3d> pair in bodyAtmosphereConfiguration)
-            {
-                node.AddNode(CreateAtmConfigurationConfigNode(pair.Key, pair.Value));
-            }
-
-            ConfigNode saveNode = new ConfigNode();
-            saveNode.AddNode(node);
-            saveNode.Save(KSPUtil.ApplicationRootPath.Replace("\\", "/") + "GameData/FerramAerospaceResearch/CustomFARAeroData.cfg");
-        }
-
-        private static ConfigNode CreateAtmConfigurationConfigNode(int bodyIndex, Vector3d atmProperties)
-        {
-            ConfigNode node = new ConfigNode("BodyAtmosphericData");
-            node.AddValue("index", bodyIndex);
-
-            double gasMolecularWeight = 8314.5 / atmProperties.z;
-            node.AddValue("specHeatRatio", atmProperties.y);
-            node.AddValue("gasMolecularWeight", gasMolecularWeight);
-
-            return node;
-        }
 
         public static void LoadAeroDataFromConfig()
         {
             if (loaded)
                 return;
 
-            foreach (ConfigNode node in GameDatabase.Instance.GetConfigNodes("FARAeroData"))
+            foreach (ConfigNode node in GameDatabase.Instance.GetConfigNodes("NEARAeroData"))
             {
                 if (node == null)
                     continue;
@@ -117,511 +61,14 @@ namespace ferram4
                     attachNodeRadiusFactor *= 0.5;
                 }
                 if (node.HasValue("incompressibleRearAttachDrag"))
-                    double.TryParse(node.GetValue("incompressibleRearAttachDrag"), out incompressibleRearAttachDrag);
-                if (node.HasValue("sonicRearAdditionalAttachDrag"))
-                    double.TryParse(node.GetValue("sonicRearAdditionalAttachDrag"), out sonicRearAdditionalAttachDrag);
+                    double.TryParse(node.GetValue("rearNodeDragFactor"), out rearNodeDragFactor);
 
                 if (node.HasValue("ctrlSurfTimeConstant"))
                     double.TryParse(node.GetValue("ctrlSurfTimeConstant"), out FARControllableSurface.timeConstant);
-
-                FARAeroUtil.bodyAtmosphereConfiguration = new Dictionary<int, Vector3d>();
-                foreach (ConfigNode bodyProperties in node.GetNodes("BodyAtmosphericData"))
-                {
-                    if (bodyProperties == null || !bodyProperties.HasValue("index") || !bodyProperties.HasValue("specHeatRatio") || !bodyProperties.HasValue("gasMolecularWeight"))
-                        continue;
-
-                    Vector3d Rgamma_and_gamma = new Vector3d();
-                    double tmp;
-                    double.TryParse(bodyProperties.GetValue("specHeatRatio"), out tmp);
-                    Rgamma_and_gamma.y = tmp;
-
-                    double.TryParse(bodyProperties.GetValue("gasMolecularWeight"), out tmp);
-
-                    Rgamma_and_gamma.z = 8.3145 * 1000 / tmp;
-                    Rgamma_and_gamma.x = Rgamma_and_gamma.y * Rgamma_and_gamma.z;
-
-                    int index;
-                    int.TryParse(bodyProperties.GetValue("index"), out index);
-
-                    FARAeroUtil.bodyAtmosphereConfiguration.Add(index, Rgamma_and_gamma);
-                }
-
-            }
-
-            //For any bodies that lack a configuration
-            foreach (CelestialBody body in FlightGlobals.Bodies)
-            {
-                if (bodyAtmosphereConfiguration.ContainsKey(body.flightGlobalsIndex))
-                    continue;
-
-                Vector3d Rgamma_and_gamma = new Vector3d();
-                Rgamma_and_gamma.y = 1.4;
-                Rgamma_and_gamma.z = 8.3145 * 1000 / 28.96;
-                Rgamma_and_gamma.x = Rgamma_and_gamma.y * Rgamma_and_gamma.z;
-
-                FARAeroUtil.bodyAtmosphereConfiguration.Add(body.flightGlobalsIndex, Rgamma_and_gamma);
-            } 
-            
+            }            
             loaded = true;
         }
 
-        public static double MaxPressureCoefficientCalc(double M)
-        {
-            if (M <= 0)
-                return 0;
-            double value;
-            double gamma = currentBodyAtm.y;
-            if (M <= 1)
-                value = StagnationPressureCalc(M);
-            else
-            {
-
-                value = (gamma + 1) * (gamma + 1);                  //Rayleigh Pitot Tube Formula; gives max stagnation pressure behind shock
-                value *= M * M;
-                value /= (4 * gamma * M * M - 2 * (gamma - 1));
-                value = Math.Pow(value, 3.5);
-
-                value *= (1 - gamma + 2 * gamma * M * M);
-                value /= (gamma + 1);
-            }
-            value--;                                //and now to conver to pressure coefficient
-            value *= 2 / (gamma * M * M);
-
-            return value;
-        }
-
-        public static double StagnationPressureCalc(double M)
-        {
-
-            double ratio;
-            double gamma = currentBodyAtm.y;
-            ratio = M * M;
-            ratio *= (gamma - 1);
-            ratio *= 0.5;
-            ratio++;
-
-            ratio = Math.Pow(ratio, gamma / (gamma - 1));
-            return ratio;
-        }
-
-        public static double PressureBehindShockCalc(double M)
-        {
-            double ratio;
-            double gamma = currentBodyAtm.y;
-            ratio = M * M;
-            ratio--;
-            ratio *= 2 * gamma;
-            ratio /= (gamma + 1);
-            ratio++;
-
-            return ratio;
-
-        }
-
-        public static double MachBehindShockCalc(double M)
-        {
-            double ratio;
-            double gamma = currentBodyAtm.y;
-            ratio = (gamma - 1) * 0.5;
-            ratio *= M * M;
-            ratio++;
-            ratio /= (gamma * M * M - (gamma - 1) * 0.5);
-            ratio = Math.Sqrt(ratio);
-
-            return ratio;
-        }
-
-        public static FloatCurve MaxPressureCoefficient
-        {
-            get
-            {
-                if (maxPressureCoefficient == null)
-                {
-                    MonoBehaviour.print("Stagnation Pressure Coefficient Curve Initialized");
-                    maxPressureCoefficient = new FloatCurve();
-
-                    double M = 0.05;
-                    //float gamma = 1.4f;
-
-                    maxPressureCoefficient.Add(0, 1);
-
-                    if (currentBodyAtm == new Vector3d())
-                    {
-                        currentBodyAtm.y = 1.4;
-                        currentBodyAtm.z = 8.3145 * 1000 / 28.96;
-                        currentBodyAtm.x = currentBodyAtm.y * currentBodyAtm.z;
-                    }
-
-                    while (M < 50)
-                    {
-                        double value = 0;
-                        if (M <= 1)
-                        {
-                            value = StagnationPressure.Evaluate((float)M);
-                        }
-                        else
-                        {
-                            value = (currentBodyAtm.y + 1) * (currentBodyAtm.y + 1);                  //Rayleigh Pitot Tube Formula; gives max stagnation pressure behind shock
-                            value *= M * M;
-                            value /= (4 * currentBodyAtm.y * M * M - 2 * (currentBodyAtm.y - 1));
-                            value = Math.Pow(value, 3.5);
-
-                            value *= (1 - currentBodyAtm.y + 2 * currentBodyAtm.y * M * M);
-                            value /= (currentBodyAtm.y + 1);
-                        }
-                        value--;                                //and now to conver to pressure coefficient
-                        value *= 2 / (currentBodyAtm.y * M * M);
-
-
-                        maxPressureCoefficient.Add((float)M, (float)value);
-
-
-                        if (M < 2)
-                            M += 0.1;
-                        else if (M < 5)
-                            M += 0.5;
-                        else
-                            M += 2.5;
-                    }
-
-
-
-                }
-
-
-                return maxPressureCoefficient;
-            }
-        }
-
-        public static double LiftSlope(double input)
-        {
-            double tmp = input * input + 4;
-            tmp = Math.Sqrt(tmp);
-            tmp += 2;
-            tmp = 1 / tmp;
-            tmp *= 2 * Math.PI;
-
-            return tmp;
-
-        }
-
-        public static FloatCurve PrandtlMeyerMach
-        {
-            get{
-                if (prandtlMeyerMach == null)
-                {
-                    MonoBehaviour.print("Prandlt-Meyer Expansion Curves Initialized");
-                    prandtlMeyerMach = new FloatCurve();
-                    prandtlMeyerAngle = new FloatCurve();
-                    double M = 1;
-                    //float gamma = 1.4f;
-
-                    double gamma_ = Math.Sqrt((currentBodyAtm.y + 1) / (currentBodyAtm.y - 1));
-
-                    while (M < 250)
-                    {
-                        double mach = Math.Sqrt(M * M - 1);
-
-                        double nu = Math.Atan(mach / gamma_);
-                        nu *= gamma_;
-                        nu -= Math.Atan(mach);
-                        nu *= FARMathUtil.rad2deg;
-
-                        double nu_mach = (currentBodyAtm.y - 1) / 2;
-                        nu_mach *= M * M;
-                        nu_mach++;
-                        nu_mach *= M;
-                        nu_mach = mach / nu_mach;
-                        nu_mach *= FARMathUtil.rad2deg;
-
-                        prandtlMeyerMach.Add((float)M, (float)nu, (float)nu_mach, (float)nu_mach);
-
-                        nu_mach = 1 / nu_mach;
-
-                        prandtlMeyerAngle.Add((float)nu, (float)M, (float)nu_mach, (float)nu_mach);
-
-                        if (M < 3)
-                            M += 0.1f;
-                        else if (M < 10)
-                            M += 0.5f;
-                        else if (M < 25)
-                            M += 2;
-                        else
-                            M += 25;
-                    }
-
-                    maxPrandtlMeyerTurnAngle = gamma_ - 1;
-                    maxPrandtlMeyerTurnAngle *= 90;
-                }
-                return prandtlMeyerMach;
-            }
-        }
-
-        public static FloatCurve PrandtlMeyerAngle
-        {
-            get
-            {
-                if (prandtlMeyerAngle == null)
-                {
-                    MonoBehaviour.print("Prandlt-Meyer Expansion Curves Initialized");
-                    prandtlMeyerMach = new FloatCurve();
-                    prandtlMeyerAngle = new FloatCurve();
-                    double M = 1;
-                    //float gamma = 1.4f;
-
-                    double gamma_ = Math.Sqrt((currentBodyAtm.y + 1) / (currentBodyAtm.y - 1));
-
-                    while (M < 250)
-                    {
-                        double mach = Math.Sqrt(M * M - 1);
-
-                        double nu = Math.Atan(mach / gamma_);
-                        nu *= gamma_;
-                        nu -= Math.Atan(mach);
-                        nu *= FARMathUtil.rad2deg;
-
-                        double nu_mach = (currentBodyAtm.y - 1) / 2;
-                        nu_mach *= M * M;
-                        nu_mach++;
-                        nu_mach *= M;
-                        nu_mach = mach / nu_mach;
-                        nu_mach *= FARMathUtil.rad2deg;
-
-                        prandtlMeyerMach.Add((float)M, (float)nu, (float)nu_mach, (float)nu_mach);
-
-                        nu_mach = 1 / nu_mach;
-
-                        prandtlMeyerAngle.Add((float)nu, (float)M, (float)nu_mach, (float)nu_mach);
-
-                        if (M < 3)
-                            M += 0.1;
-                        else if (M < 10)
-                            M += 0.5;
-                        else if (M < 25)
-                            M += 2;
-                        else
-                            M += 25;
-                    }
-
-                    maxPrandtlMeyerTurnAngle = gamma_ - 1;
-                    maxPrandtlMeyerTurnAngle *= 90;
-                }
-                return prandtlMeyerAngle;
-            }
-        }
-
-
-        public static FloatCurve PressureBehindShock
-        {
-            get
-            {
-                if (pressureBehindShock == null)
-                {
-                    MonoBehaviour.print("Normal Shock Pressure Curve Initialized");
-                    pressureBehindShock = new FloatCurve();
-                    double ratio;
-                    double d_ratio;
-                    double M = 1;
-                    //float gamma = 1.4f;
-                    while (M < 250)  //Calculates the pressure behind a normal shock
-                    {
-                        ratio = M * M;
-                        ratio--;
-                        ratio *= 2 * currentBodyAtm.y;
-                        ratio /= (currentBodyAtm.y + 1);
-                        ratio++;
-
-                        d_ratio = M * 4 * currentBodyAtm.y;
-                        d_ratio /= (currentBodyAtm.y + 1);
-
-                        pressureBehindShock.Add((float)M, (float)ratio, (float)d_ratio, (float)d_ratio);
-                        if (M < 3)
-                            M += 0.1;
-                        else if (M < 10)
-                            M += 0.5;
-                        else if (M < 25)
-                            M += 2;
-                        else
-                            M += 25;
-                    }
-                }
-                return pressureBehindShock;
-            }
-        }
-
-        public static FloatCurve MachBehindShock
-        {
-            get
-            {
-                if (machBehindShock == null)
-                {
-                    MonoBehaviour.print("Normal Shock Mach Number Curve Initialized");
-                    machBehindShock = new FloatCurve();
-                    double ratio;
-                    double d_ratio;
-                    double M = 1;
-                    //float gamma = 1.4f;
-                    while (M < 250)  //Calculates the pressure behind a normal shock
-                    {
-                        ratio = (currentBodyAtm.y - 1) / 2;
-                        ratio *= M * M;
-                        ratio++;
-                        ratio /= (currentBodyAtm.y * M * M - (currentBodyAtm.y - 1) / 2);
-
-                        d_ratio = 4 * currentBodyAtm.y * currentBodyAtm.y * Math.Pow(M, 4) - 4 * (currentBodyAtm.y - 1) * currentBodyAtm.y * M * M + Math.Pow(currentBodyAtm.y - 1, 2);
-                        d_ratio = 1 / d_ratio;
-                        d_ratio *= 4 * (currentBodyAtm.y * M * M - (currentBodyAtm.y - 1) / 2) * (currentBodyAtm.y - 1) * M - 8 * currentBodyAtm.y * M * (1 + (currentBodyAtm.y - 1) / 2 * M * M);
-
-                        machBehindShock.Add((float)Math.Sqrt(M), (float)ratio);//, d_ratio, d_ratio);
-                        if (M < 3)
-                            M += 0.1;
-                        else if (M < 10)
-                            M += 0.5;
-                        else if (M < 25)
-                            M += 2;
-                        else
-                            M += 25;
-                    }
-                }
-                return machBehindShock;
-            }
-        }
-
-        public static FloatCurve StagnationPressure
-        {
-            get
-            {
-                if (stagnationPressure == null)
-                {
-                    MonoBehaviour.print("Stagnation Pressure Curve Initialized");
-                    stagnationPressure = new FloatCurve();
-                    double ratio;
-                    double d_ratio;
-                    double M = 0;
-                    //float gamma = 1.4f;
-                    while (M < 250)  //calculates stagnation pressure
-                    {
-                        ratio = M * M;
-                        ratio *= (currentBodyAtm.y - 1);
-                        ratio /= 2;
-                        ratio++;
-                        
-                        d_ratio = ratio;
-
-                        ratio = Math.Pow(ratio, currentBodyAtm.y / (currentBodyAtm.y - 1));
-
-                        d_ratio = Math.Pow(d_ratio, (currentBodyAtm.y / (currentBodyAtm.y - 1)) - 1);
-                        d_ratio *= M * currentBodyAtm.y;
-
-                        stagnationPressure.Add((float)M, (float)ratio, (float)d_ratio, (float)d_ratio);
-                        if (M < 3)
-                            M += 0.1;
-                        else if (M < 10)
-                            M += 0.5;
-                        else if (M < 25)
-                            M += 2;
-                        else
-                            M += 25;
-                    }
-                }
-                return stagnationPressure;
-            }
-        }
-
-
-/*        public static FloatCurve CriticalMachNumber
-        {
-            get
-            {
-                if (criticalMachNumber == null)
-                {
-                    MonoBehaviour.print("Critical Mach Curve Initialized");
-                    criticalMachNumber = new FloatCurve();
-                    criticalMachNumber.Add(0, 0.98f);
-                    criticalMachNumber.Add(Mathf.PI / 36, 0.86f);
-                    criticalMachNumber.Add(Mathf.PI / 18, 0.65f);
-                    criticalMachNumber.Add(Mathf.PI / 9, 0.35f);
-                    criticalMachNumber.Add(Mathf.PI / 2, 0.3f);
-                }
-                return criticalMachNumber;
-            }
-        }*/
-
-        private static float joolTempOffset = 0;
-
-        public static float JoolTempOffset      //This is another kluge hotfix for the "Jool's atmosphere is below 0 Kelvin bug"
-        {                                         //Essentially it just shifts its outer atmosphere temperature up to 4 Kelvin
-            get{
-                if(joolTempOffset == 0)
-                {
-                    CelestialBody Jool = null;
-                    foreach (CelestialBody body in  FlightGlobals.Bodies)
-                        if (body.GetName() == "Jool")
-                        {
-                            Jool = body;
-                            break;
-                        }
-                    Jool.atmoshpereTemperatureMultiplier *= 0.5f;
-                    float outerAtmTemp = FlightGlobals.getExternalTemperature(138000f, Jool) + 273.15f;
-                    joolTempOffset = 25f - outerAtmTemp;
-                    joolTempOffset = Mathf.Clamp(joolTempOffset, 0.1f, Mathf.Infinity);
-                }
-                
-
-            return joolTempOffset;
-            }
-        }
-
-        private static FloatCurve wingCamberFactor = null;
-        private static FloatCurve wingCamberMoment = null;
-
-        public static FloatCurve WingCamberFactor
-        {
-            get
-            {
-                if (wingCamberFactor == null)
-                {
-                    wingCamberFactor = new FloatCurve();
-                    wingCamberFactor.Add(0, 0);
-                    for (double i = 0.1; i <= 0.9; i += 0.1)
-                    {
-                        double tmp = i * 2;
-                        tmp--;
-                        tmp = Math.Acos(tmp);
-
-                        tmp = tmp - Math.Sin(tmp);
-                        tmp /= Math.PI;
-                        tmp = 1 - tmp;
-
-                        wingCamberFactor.Add((float)i, (float)tmp);
-                    }
-                    wingCamberFactor.Add(1, 1);
-                }
-                return wingCamberFactor;
-            }
-        }
-
-        public static FloatCurve WingCamberMoment
-        {
-            get
-            {
-                if (wingCamberMoment == null)
-                {
-                    wingCamberMoment = new FloatCurve();
-                    for (double i = 0; i <= 1; i += 0.1)
-                    {
-                        double tmp = i * 2;
-                        tmp--;
-                        tmp = Math.Acos(tmp);
-
-                        tmp = (Math.Sin(2 * tmp) - 2 * Math.Sin(tmp)) / (8 * (Math.PI - tmp + Math.Sin(tmp)));
-
-                        wingCamberMoment.Add((float)i, (float)tmp);
-                    }
-                }
-                return wingCamberMoment;
-            }
-        }
 
         public static bool IsNonphysical(Part p)
         {
@@ -942,23 +389,6 @@ namespace ferram4
                     TempCurve3.Add(0.5f, cdM * 2);
                     TempCurve3.Add(1, cdM);
 
-
-                    if (HighLogic.LoadedSceneIsFlight && !FARAeroStress.PartIsGreeble(p, data.crossSectionalArea, data.finenessRatio, data.area) && FARDebugValues.allowStructuralFailures)
-                    {
-                        FARPartStressTemplate template = FARAeroStress.DetermineStressTemplate(p);
-
-                        YmaxForce = template.YmaxStress;    //in MPa
-                        YmaxForce *= data.crossSectionalArea;
-
-                        /*XZmaxForce = 2 * Math.Sqrt(data.crossSectionalArea / Math.PI);
-                        XZmaxForce = XZmaxForce * data.finenessRatio * XZmaxForce;
-                        XZmaxForce *= template.XZmaxStress;*/
-
-                        XZmaxForce = template.XZmaxStress * data.area * 0.5;
-
-                        Debug.Log("Template: " + template.name + " YmaxForce: " + YmaxForce + " XZmaxForce: " + XZmaxForce);
-                    }
-
                 }
 //                if (p.Modules.Contains("FARPayloadFairingModule"))
 //                    data.area /= p.symmetryCounterparts.Count + 1;
@@ -1025,7 +455,7 @@ namespace ferram4
 
             taperCrossSectionArea = Math.Abs(taperCrossSectionArea - crossSectionalArea);      //This is the cross-sectional area of the tapered section
 
-            double maxcdA = taperCrossSectionArea * (incompressibleRearAttachDrag + sonicRearAdditionalAttachDrag);
+            double maxcdA = taperCrossSectionArea * (rearNodeDragFactor);
             maxcdA /= surfaceArea;      //This is the maximum drag that this part can create
 
             cdA = FARMathUtil.Clamp(cdA, 0, maxcdA);      //make sure that stupid amounts of drag don't exist
@@ -1119,113 +549,6 @@ namespace ferram4
             exp *= exp;
 
             return exp;
-        }
-
-
-        public static double GetMachNumber(CelestialBody body, double altitude, Vector3 velocity)
-        {
-            double MachNumber = 0;
-            if (HighLogic.LoadedSceneIsFlight)
-            {
-                //continue updating Mach Number for debris
-                UpdateCurrentActiveBody(body);
-                double temp = Math.Max(0.1, currentBodyTemp + FlightGlobals.getExternalTemperature((float)altitude, body));
-                double Soundspeed = Math.Sqrt(temp * currentBodyAtm.x);// * 401.8f;              //Calculation for speed of sound in ideal gas using air constants of gamma = 1.4 and R = 287 kJ/kg*K
-
-                MachNumber = velocity.magnitude / Soundspeed;
-
-                if (MachNumber < 0)
-                    MachNumber = 0;
-
-            }
-            return MachNumber;
-        }
-
-        public static double GetCurrentDensity(CelestialBody body, Vector3 worldLocation)
-        {
-            UpdateCurrentActiveBody(body);
-
-            double temp = Math.Max(0.1, currentBodyTemp + FlightGlobals.getExternalTemperature(worldLocation));
-
-            double pressure = FlightGlobals.getStaticPressure(worldLocation, body);
-            if (pressure > 0)
-                pressure = (pressure - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
-
-            return pressure / (temp * currentBodyAtm.z);
-        }
-
-        public static double GetCurrentDensity(CelestialBody body, double altitude)
-        {
-            UpdateCurrentActiveBody(body);
-
-            if (altitude > body.maxAtmosphereAltitude)
-                return 0;
-
-            double temp = Math.Max(0.1, currentBodyTemp + FlightGlobals.getExternalTemperature((float)altitude, body));
-
-            double pressure = FlightGlobals.getStaticPressure(altitude, body);
-            if (pressure > 0)
-                pressure = (pressure - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
-
-            return pressure / (temp * currentBodyAtm.z);
-        }
-
-        // Vessel has altitude and cached pressure, and both density and sound speed need temperature
-        public static double GetCurrentDensity(Vessel vessel, out double soundspeed)
-        {
-            double altitude = vessel.altitude;
-            CelestialBody body = vessel.mainBody;
-
-            soundspeed = 1e+6f;
-
-            if ((object)body == null || altitude > body.maxAtmosphereAltitude)
-                return 0;
-
-            UpdateCurrentActiveBody(body);
-
-            double temp = Math.Max(0.1, currentBodyTemp + FlightGlobals.getExternalTemperature((float)altitude, body));
-
-            double pressure = 0;
-            if (vessel.staticPressure > 0)
-                pressure = (vessel.staticPressure - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
-
-            soundspeed = Math.Sqrt(temp * currentBodyAtm.x); // * 401.8f;              //Calculation for speed of sound in ideal gas using air constants of gamma = 1.4 and R = 287 kJ/kg*K
-
-            return pressure / (temp * currentBodyAtm.z);
-        }
-
-        public static void UpdateCurrentActiveBody(CelestialBody body)
-        {
-            if ((object)body != null && body.flightGlobalsIndex != prevBody)
-            {
-                UpdateCurrentActiveBody(body.flightGlobalsIndex, body);
-//                if (body.name == "Jool" || body.name == "Sentar")
-                if(body.pqsController == null)
-                    currentBodyTemp += FARAeroUtil.JoolTempOffset;
-            }
-        }
-
-        public static void UpdateCurrentActiveBody(int index, CelestialBody body)
-        {
-            if (index != prevBody)
-            {
-                prevBody = index;
-                currentBodyAtm = bodyAtmosphereConfiguration[prevBody];
-                currentBodyTemp = 273.15f;
-                if(body.useLegacyAtmosphere && body.atmosphere)
-                {
-                    currentBodyAtmPressureOffset = body.atmosphereMultiplier * 1e-6;
-                }
-                else
-                    currentBodyAtmPressureOffset = 0;
-
-                prandtlMeyerMach = null;
-                prandtlMeyerAngle = null;
-                pressureBehindShock = null;
-                machBehindShock = null;
-                stagnationPressure = null;
-                maxPressureCoefficient = null;
-            }
         }
         
         //Based on NASA Contractor Report 187173, Exact and Approximate Oblique Shock Equations for Real-Time Applications

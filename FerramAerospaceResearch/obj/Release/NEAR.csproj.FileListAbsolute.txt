@@ -1,0 +1,10 @@
+C:\Users\ferram4\NEAR\FerramAerospaceResearch\obj\Release\NEAR.csprojResolveAssemblyReference.cache
+C:\Users\ferram4\NEAR\FerramAerospaceResearch\obj\Release\FerramAerospaceResearch.dll
+C:\Users\ferram4\NEAR\FerramAerospaceResearch\obj\Release\FerramAerospaceResearch.pdb
+C:\Users\ferram4\NEAR\FerramAerospaceResearch\bin\Release\FerramAerospaceResearch.dll
+C:\Users\ferram4\NEAR\FerramAerospaceResearch\bin\Release\FerramAerospaceResearch.pdb
+C:\Users\ferram4\NEAR\FerramAerospaceResearch\bin\Release\Toolbar.dll
+C:\Users\ferram4\NEAR\FerramAerospaceResearch\bin\Release\Mono.Cecil.dll
+C:\Users\ferram4\NEAR\FerramAerospaceResearch\bin\Release\Assembly-CSharp-firstpass.dll
+C:\Users\ferram4\NEAR\FerramAerospaceResearch\bin\Release\TDx.TDxInput.dll
+C:\Users\ferram4\NEAR\FerramAerospaceResearch\bin\Release\ferramGraph.pdb
