@@ -1,5 +1,5 @@
-/FerramAerospaceResearch/bin/Debug/*
-/FerramAerospaceResearch/bin/Release/Assembly-CSharp.dll
-/FerramAerospaceResearch/bin/Release/Assembly-CSharp-firstpass.dll
-/FerramAerospaceResearch/bin/Release/UnityEngine.dll
-/FerramAerospaceResearch/obj/Debug/*
+/NEAR/bin/Debug/*
+/NEAR/bin/Release/Assembly-CSharp.dll
+/NEAR/bin/Release/Assembly-CSharp-firstpass.dll
+/NEAR/bin/Release/UnityEngine.dll
+/NEAR/obj/Debug/*

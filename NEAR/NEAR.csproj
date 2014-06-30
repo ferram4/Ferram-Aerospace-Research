@@ -8,8 +8,8 @@
     <ProjectGuid>{0CE2D15F-3EC2-4DC0-B35F-D9F7B18169BE}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>FerramAerospaceResearch</RootNamespace>
-    <AssemblyName>FerramAerospaceResearch</AssemblyName>
+    <RootNamespace>NEAR</RootNamespace>
+    <AssemblyName>NEAR</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
