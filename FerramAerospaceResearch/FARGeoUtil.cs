@@ -715,7 +715,7 @@ namespace ferram4
             //This is the cross-sectional area of the tapered section
 
 
-            Debug.Log(p.partInfo.title + ": Geometry model created; Size: " + size + ", LD " + lowerDiameters + ", UD " + upperDiameters + "\n\rSurface area: " + partGeometry.area + "\n\rFineness Ratio: " + partGeometry.finenessRatio + "\n\rTaperRatio: " + partGeometry.taperRatio + "\n\rCross Sectional Area: " + partGeometry.crossSectionalArea + "\n\rCross Sectional Tapered Area: " + partGeometry.taperCrossSectionArea + "\n\rMajor-minor axis ratio: " + partGeometry.majorMinorAxisRatio + "\n\rCentroid: " + partGeometry.originToCentroid);
+            //Debug.Log(p.partInfo.title + ": Geometry model created; Size: " + size + ", LD " + lowerDiameters + ", UD " + upperDiameters + "\n\rSurface area: " + partGeometry.area + "\n\rFineness Ratio: " + partGeometry.finenessRatio + "\n\rTaperRatio: " + partGeometry.taperRatio + "\n\rCross Sectional Area: " + partGeometry.crossSectionalArea + "\n\rCross Sectional Tapered Area: " + partGeometry.taperCrossSectionArea + "\n\rMajor-minor axis ratio: " + partGeometry.majorMinorAxisRatio + "\n\rCentroid: " + partGeometry.originToCentroid);
             return partGeometry;
         }
 
