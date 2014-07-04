@@ -150,6 +150,13 @@ namespace ferram4
         [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
         public bool isShielded = false;
 
+        [KSPEvent(name = "ToggleShielding", guiActive = false, guiActiveEditor = false)]
+        public void ToggleShielding()
+        {
+            isShielded = !isShielded;
+        }
+        
+
         public static bool GlobalCoLReady = false;
         private static Vector3d GlobalCoL;
         private Vector3 CoLForce;
@@ -158,14 +165,17 @@ namespace ferram4
         {
             base.OnAwake();
             part_transform = part.partTransform;
+
         }
 
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
             Fields["isShielded"].guiActive = FARDebugValues.displayShielding;
+            Events["ToggleShielding"].guiActive = FARDebugValues.manualOverrideShielding;
 
-            part.OnEditorDetach += ClearShielding;
+            if (!FARDebugValues.manualOverrideShielding)
+                part.OnEditorDetach += ClearShielding;
 
             if (!(this is FARControlSys))
             {

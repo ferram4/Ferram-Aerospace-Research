@@ -85,7 +85,7 @@ namespace ferram4
 //            if (start == StartState.Editor)
 //                return;
 
-            if (minBounds.Count == 0)
+            if (!FARDebugValues.manualOverrideShielding && minBounds.Count == 0)
             {
                 CalculateFairingBounds();
                 FindShieldedParts();

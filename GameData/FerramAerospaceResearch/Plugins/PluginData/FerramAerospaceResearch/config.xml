@@ -66,6 +66,7 @@
     <string name="displayShielding">False</string>
     <string name="useSplinesForSupersonicMath">True</string>
     <string name="allowStructuralFailures">True</string>
+    <string name="manualOverrideShielding">False</string>
     <int name="unitMode">0</int>
     <int name="velMode">0</int>
 </config>

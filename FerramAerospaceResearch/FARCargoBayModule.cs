@@ -189,26 +189,28 @@ namespace ferram4
         {
             if (HighLogic.LoadedSceneIsEditor)
                 return;
-
-            if (bayAnim)
+            if (!FARDebugValues.manualOverrideShielding)
             {
-                if (bayAnim.isPlaying && !bayAnimating)
+                if (bayAnim)
                 {
-                    ClearShieldedParts();
-                    bayAnimating = true;
-                }
-                else if (bayAnimating && !bayAnim.isPlaying)
-                {
-                    bayAnimating = false;
+                    if (bayAnim.isPlaying && !bayAnimating)
+                    {
+                        ClearShieldedParts();
+                        bayAnimating = true;
+                    }
+                    else if (bayAnimating && !bayAnim.isPlaying)
+                    {
+                        bayAnimating = false;
 
-                    if (bayOpen && CheckBayClosed())
-                        FindShieldedParts();
-                }
-//                bayProgress = bayAnim[bayAnimationName].normalizedTime;
+                        if (bayOpen && CheckBayClosed())
+                            FindShieldedParts();
+                    }
+                    //                bayProgress = bayAnim[bayAnimationName].normalizedTime;
 
+                }
+                else if (BayController == null)
+                    BayController = this;
             }
-            else if (BayController == null)
-                BayController = this;
 
         }
 

@@ -404,6 +404,7 @@ namespace ferram4
             GUILayout.Label("Debug / Cheat Options");
             FARDebugValues.useSplinesForSupersonicMath = GUILayout.Toggle(FARDebugValues.useSplinesForSupersonicMath, "Use Splines for Supersonic Math", thisStyle);
             FARDebugValues.allowStructuralFailures = GUILayout.Toggle(FARDebugValues.allowStructuralFailures, "Allow Aero-structural Failures", thisStyle);
+            FARDebugValues.manualOverrideShielding = GUILayout.Toggle(FARDebugValues.manualOverrideShielding, "Manual Override for Part Shielding", thisStyle);
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
         }
@@ -417,6 +418,7 @@ namespace ferram4
             FARDebugValues.displayShielding = Convert.ToBoolean(config.GetValue("displayShielding", "false"));
             FARDebugValues.useSplinesForSupersonicMath = Convert.ToBoolean(config.GetValue("useSplinesForSupersonicMath", "true"));
             FARDebugValues.allowStructuralFailures = Convert.ToBoolean(config.GetValue("allowStructuralFailures", "true"));
+            FARDebugValues.manualOverrideShielding = Convert.ToBoolean(config.GetValue("manualOverrideShielding", "false"));
 
             FARAeroStress.LoadStressTemplates();
             FARPartClassification.LoadClassificationTemplates();
@@ -431,6 +433,7 @@ namespace ferram4
 
             config.SetValue("useSplinesForSupersonicMath", FARDebugValues.useSplinesForSupersonicMath.ToString());
             config.SetValue("allowStructuralFailures", FARDebugValues.allowStructuralFailures.ToString());
+            config.SetValue("manualOverrideShielding", FARDebugValues.manualOverrideShielding.ToString());
 
             FARAeroUtil.SaveCustomAeroDataToConfig();
             FARPartClassification.SaveCustomClassificationTemplates();
@@ -454,5 +457,6 @@ namespace ferram4
 
         public static bool useSplinesForSupersonicMath = true;
         public static bool allowStructuralFailures = true;
+        public static bool manualOverrideShielding = false;
     }
 }

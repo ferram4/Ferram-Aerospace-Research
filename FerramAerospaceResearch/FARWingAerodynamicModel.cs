@@ -69,7 +69,7 @@ namespace ferram4
 
         private double minStall = 0;
 
-        private const double twopi = Mathf.PI * 2;   //lift slope
+        private const double twopi = Math.PI * 2;   //lift slope
         private double piARe = 1;    //induced drag factor
 
         [KSPField(isPersistant = false)]
@@ -82,8 +82,8 @@ namespace ferram4
 
         private double SweepAngle = 0;
 
-        private double effective_b_2 = 1f;
-        private double effective_MAC = 1f;
+        private double effective_b_2 = 1;
+        private double effective_MAC = 1;
 
         protected double effective_AR = 4;
         protected double transformed_AR = 4;
@@ -209,10 +209,10 @@ namespace ferram4
                 tmp *= tmp;
                 if (MachNumber < 0.85)
                     AC_offset = effective_MAC * 0.25 * ParallelInPlane;
-                else if (MachNumber > 1.2)
+                else if (MachNumber > 1.4)
                     AC_offset = effective_MAC * 0.10 * ParallelInPlane;
                 else if (MachNumber > 1)
-                    AC_offset = effective_MAC * (-0.75 * MachNumber + 1) * ParallelInPlane;
+                    AC_offset = effective_MAC * (-0.375 * MachNumber + 0.625) * ParallelInPlane;
                     //This is for the transonic instability, which is lessened for highly swept wings
                 else
                 {
@@ -220,15 +220,12 @@ namespace ferram4
                     if (MachNumber < 0.9)
                         AC_offset = effective_MAC * ((MachNumber - 0.85) * 2 * sweepFactor + 0.25) * ParallelInPlane;
                     else
-                        AC_offset = effective_MAC * ((1 - MachNumber) * sweepFactor + 0.25)* ParallelInPlane;
+                        AC_offset = effective_MAC * ((1 - MachNumber) * sweepFactor + 0.25) * ParallelInPlane;
                 }
 
                 AC_offset *= tmp;
 
             }
-            //if (stall > 0.5)
-            //    AC_offset -= (stall - 0.5f) * effective_MAC * 2f * velocity.normalized;
-
 
             WC += AC_offset;
 
@@ -573,7 +570,7 @@ namespace ferram4
 
             FindWingInFrontOf();
 
-            if (WingInFrontOf != null)
+            if ((object)WingInFrontOf != null)
             {
                 var w = WingInFrontOf;
 
@@ -607,6 +604,7 @@ namespace ferram4
 
                 liftslope = w.liftslope;
                 SweepAngle = w.SweepAngle;
+                
 
                 wStall = w.stall * Math.Abs(liftDirVal);
                 if (Math.Abs(liftDirVal) > 0.5)
@@ -620,7 +618,6 @@ namespace ferram4
             else
                 AoAmax = GetAoAmax();
         }
-
 
         #endregion
 
@@ -668,25 +665,30 @@ namespace ferram4
 
             liftslope = GetLiftSlope(MachNumber);// / AoA;     //Prandtl lifting Line
 
-            double sonicLe = 0;
 
             double ACshift = 0, ACweight = 0;
             DetermineStall(MachNumber, AoA, out ACshift, out ACweight);
 
+            double Cd0 = CdCompressibilityZeroLiftIncrement(MachNumber, SweepAngle) + 0.006;
+            e = FARAeroUtil.CalculateOswaldsEfficiency(effective_AR, SweepAngle, Cd0);
+            piARe = effective_AR * e * Math.PI;
+
+            double beta = 1;
+            double TanSweep = 0;
+            double beta_TanSweep = 0;
+
             if (MachNumber > 1)
             {
-                sonicLe = Math.Sqrt(MachNumber * MachNumber - 1);
-                sonicLe /= Math.Tan(FARMathUtil.Clamp(Math.Abs(Math.Acos(SweepAngle) - Math.PI * 0.5), -1.57, 1.57));
-                if (double.IsNaN(sonicLe))
-                    sonicLe = 0;
-                //print(sonicLe);
+                beta = Math.Sqrt(MachNumber * MachNumber - 1);
+                TanSweep = Math.Tan(FARMathUtil.Clamp(Math.Acos(SweepAngle), 0, Math.PI * 0.5));
+                beta_TanSweep = beta / TanSweep;
+                if (double.IsNaN(beta_TanSweep))
+                    beta_TanSweep = 0;
             }
 
-            double Cd0 = CdCompressibilityZeroLiftIncrement(MachNumber, SweepAngle);
-            e = FARAeroUtil.CalculateOswaldsEfficiency(effective_AR, SweepAngle, Cd0);
-            piARe = effective_AR * e * Mathf.PI;
 
-            if (MachNumber <= 0.8)
+
+            if (MachNumber <= 0.6)
             {
                 double Cn = liftslope;
                 Cl = Cn * Math.Sin(2 * AoA) * 0.5;
@@ -694,29 +696,30 @@ namespace ferram4
                 Cl += ClIncrementFromRear;
                 if (Math.Abs(Cl) > Math.Abs(ACweight))
                     ACshift *= FARMathUtil.Clamp(Math.Abs(ACweight / Cl), 0, 1);
-                //Cl += UnsteadyAerodynamicsCl();
-                Cd = (0.006 + Cl * Cl / piARe);     //Drag due to 3D effects on wing and base constant
+                Cd = (Cl * Cl / piARe);     //Drag due to 3D effects on wing and base constant
                 Cd += Cd0;
             }
             /*
              * Supersonic nonlinear lift / drag code
              * 
              */
-            else if (MachNumber > 1.2)
+            else if (MachNumber > 1.4)
             {
                 double axialForce = 0;
 
                 //DATCOMSupersonicLiftAndDrag(MachNumber, SweepAngle, sonicLe, AoA, out Cl, out Cd);
 
-                double coefMult = 1 / (1.4 * MachNumber * MachNumber);
+                double coefMult = 1 / (FARAeroUtil.currentBodyAtm.y * MachNumber * MachNumber);
 
-                double sonicLEFactor = 1;
+                /*double sonicLEFactor = 1;
 
                 //This handles the effect of wings that have their leading edges inside their own Mach cone / ones outside their own Mach cone
                 if (sonicLe < 1)
                     sonicLEFactor = liftslope * (FARMathUtil.Clamp(1 - sonicLe, 0, 1) + 1) * 0.125;
                 else
-                    sonicLEFactor = (1 - 0.125 * liftslope) * FARMathUtil.Clamp(1 - 1 / sonicLe, 0, 1) + 0.125 * liftslope;
+                    sonicLEFactor = (1 - 0.125 * liftslope) * FARMathUtil.Clamp(1 - 1 / sonicLe, 0, 1) + 0.125 * liftslope;*/
+
+                double supersonicLENormalForceFactor = CalculateSupersonicLEFactor(beta, TanSweep, beta_TanSweep);
 
                 double normalForce;
                 if (FARDebugValues.useSplinesForSupersonicMath)
@@ -725,9 +728,12 @@ namespace ferram4
                     normalForce = GetSupersonicPressureDifferenceNoSpline(MachNumber, AoA, out axialForce);
                 double CosAoA = Math.Cos(AoA);
                 double SinAoA = Math.Sin(AoA);
-                Cl = coefMult * (normalForce * CosAoA * Math.Sign(AoA) * sonicLEFactor - axialForce * SinAoA);
-                Cd = coefMult * (Math.Abs(normalForce * SinAoA) * sonicLEFactor + axialForce * CosAoA);
-                Cd += 0.006;
+                //Cl = coefMult * (normalForce * CosAoA * Math.Sign(AoA) * sonicLEFactor - axialForce * SinAoA);
+                //Cd = coefMult * (Math.Abs(normalForce * SinAoA) * sonicLEFactor + axialForce * CosAoA);
+
+                Cl = coefMult * normalForce * CosAoA * Math.Sign(AoA) * supersonicLENormalForceFactor;
+                Cd = beta * Cl * Cl / piARe;
+
                 Cd += Cd0;
             }
             /*
@@ -736,7 +742,7 @@ namespace ferram4
              */
             else
             {
-                double subScale = 3f - 2.5f * MachNumber;            //This determines the weight of subsonic flow; supersonic uses 1-this
+                double subScale = 1.75 - 1.25 * MachNumber;            //This determines the weight of subsonic flow; supersonic uses 1-this
                 double Cn = liftslope;
                 Cl = Cn * Math.Sin(2 * AoA) * 0.5;
                 if (MachNumber < 1)
@@ -745,9 +751,9 @@ namespace ferram4
                     if (Math.Abs(Cl) > Math.Abs(ACweight))
                         ACshift *= FARMathUtil.Clamp(Math.Abs(ACweight / Cl), 0, 1);
                 }
-                Cd = Cl * Cl / piARe;     //Drag due to 3D effects on wing and base constant
+                //Cd = Cl * Cl / piARe;     //Drag due to 3D effects on wing and base constant
                 Cl *= subScale;
-                Cd *= subScale;
+                //Cd *= subScale;
 
 
 
@@ -760,14 +766,12 @@ namespace ferram4
 //                Cd += tmpCd * subScale;
                 
                 double axialForce = 0;
-                double coefMult = 1 / (1.4 * M * M);
-                double sonicLEFactor = 1;
+                double coefMult = 1 / (FARAeroUtil.currentBodyAtm.y * M * M);
 
-                //This handles the effect of wings that have their leading edges inside their own Mach cone / ones outside their own Mach cone
-                if (sonicLe < 1)
-                    sonicLEFactor = liftslope * (FARMathUtil.Clamp(1 - sonicLe, 0, 1) + 1) * 0.125;
-                else
-                    sonicLEFactor = (1 - 0.125 * liftslope) * FARMathUtil.Clamp(1 - 1 / sonicLe, 0, 1) + 0.125 * liftslope;
+                double supersonicLENormalForceFactor = 1;
+
+                if (MachNumber > 1)
+                    supersonicLENormalForceFactor = CalculateSupersonicLEFactor(beta, TanSweep, beta_TanSweep);
 
                 subScale = 1 - subScale; //Adjust for supersonic code
                 double normalForce;
@@ -776,10 +780,12 @@ namespace ferram4
                 else
                     normalForce = GetSupersonicPressureDifferenceNoSpline(M, AoA, out axialForce);
                 double CosAoA = Math.Cos(AoA);
-                double SinAoA = Math.Sin(AoA);
-                Cl += coefMult * (normalForce * CosAoA * Math.Sign(AoA) * sonicLEFactor - axialForce * SinAoA) * (subScale);
-                Cd += coefMult * (Math.Abs(normalForce * SinAoA) * sonicLEFactor + axialForce * CosAoA) * (subScale);
-                Cd += 0.006;
+                //double SinAoA = Math.Sin(AoA);
+                //Cl += coefMult * (normalForce * CosAoA * Math.Sign(AoA) * sonicLEFactor - axialForce * SinAoA) * (subScale);
+                //Cd += coefMult * (Math.Abs(normalForce * SinAoA) * sonicLEFactor + axialForce * CosAoA) * (subScale);
+                Cl += coefMult * normalForce * CosAoA * Math.Sign(AoA) * supersonicLENormalForceFactor * subScale;
+                Cd = Cl * Cl / piARe;
+
                 Cd += Cd0;
             }
 
@@ -811,6 +817,40 @@ namespace ferram4
 
         #region Supersonic Calculations
 
+
+        private double CalculateSupersonicLEFactor(double beta, double TanSweep, double beta_TanSweep)
+        {
+            double SupersonicLEFactor = 1;
+            double ARTanSweep = effective_AR * TanSweep;
+
+            if (beta_TanSweep < 1)   //"subsonic" leading edge, scales with Tan Sweep
+            {
+                if (beta_TanSweep < 0.5)
+                {
+                    SupersonicLEFactor = 1.57 * effective_AR;
+                    SupersonicLEFactor /= ARTanSweep + 0.5;
+                }
+                else
+                {
+                    SupersonicLEFactor = (1.57 - 0.28 * (beta_TanSweep - 0.5)) * effective_AR;
+                    SupersonicLEFactor /= ARTanSweep + 0.5 - (beta_TanSweep - 0.5) * 0.25;
+                }
+                //SupersonicLEFactor /= TanSweep;
+            }
+            else //"supersonic" leading edge, scales with beta
+            {
+                beta_TanSweep = 1 / beta_TanSweep;
+
+                SupersonicLEFactor = 1.43 * ARTanSweep;
+                SupersonicLEFactor /= ARTanSweep + 0.375;
+                SupersonicLEFactor--;
+                SupersonicLEFactor *= beta_TanSweep;
+                SupersonicLEFactor++;
+                SupersonicLEFactor /= beta;
+            }
+
+            return SupersonicLEFactor;
+        }
 
         /*private void DATCOMSupersonicLiftAndDrag(double M, double cosSweep, double sonicLE, double AoA, out double Cl, out double Cd)
         {
@@ -1012,8 +1052,9 @@ namespace ferram4
 
             pRatio = (p3 + p4) - (p1 + p2);
 
-            axialForce = (p1 + p3) - (p2 + p4);
-            axialForce *= 0.048;               //Thickness of the airfoil
+            //axialForce = (p1 + p3) - (p2 + p4);
+            //axialForce *= 0.048;               //Thickness of the airfoil
+            axialForce = 0;
 
             return pRatio;
         }
@@ -1104,7 +1145,7 @@ namespace ferram4
                 StallAngle = Mathf.Clamp(StallAngle, 15, 45) * FARMathUtil.deg2rad;
             }
             else
-                StallAngle = Mathf.PI / 3;*/
+                StallAngle = Math.PI / 3;*/
 
             StallAngle = criticalCl / liftslope;          //Simpler version of above commented out section; just limit the lift coefficient to ~1.6
 
@@ -1188,7 +1229,7 @@ namespace ferram4
         /*        private float ShockStall(float M)
                 {
                     float flowSep = 0;
-                    if (Mathf.Abs(AoA) < Mathf.PI / 36)
+                    if (Mathf.Abs(AoA) < Math.PI / 36)
                         return 0;
                     float CritMach = FARAeroUtil.CriticalMachNumber.Evaluate(Mathf.Abs(AoA));
                     if(M > CritMach)
