@@ -205,21 +205,25 @@ namespace ferram4
             Vector3d AC_offset = Vector3d.zero;
             if (nonSideAttach <= 0)
             {
+                double tmp = Math.Cos(AoA);
+                tmp *= tmp;
                 if (MachNumber < 0.85)
                     AC_offset = effective_MAC * 0.25 * ParallelInPlane;
-                else if (MachNumber > 1)
+                else if (MachNumber > 1.2)
                     AC_offset = effective_MAC * 0.10 * ParallelInPlane;
+                else if (MachNumber > 1)
+                    AC_offset = effective_MAC * (-0.75 * MachNumber + 1) * ParallelInPlane;
+                    //This is for the transonic instability, which is lessened for highly swept wings
                 else
                 {
-                    if (MachNumber < 0.95)
-                        AC_offset = effective_MAC * (0.5 * MachNumber - 0.175) * ParallelInPlane;
+                    double sweepFactor = SweepAngle * SweepAngle * tmp;
+                    if (MachNumber < 0.9)
+                        AC_offset = effective_MAC * ((MachNumber - 0.85) * 2 * sweepFactor + 0.25) * ParallelInPlane;
                     else
-                        AC_offset = effective_MAC * (-4 * MachNumber + 4.1) * ParallelInPlane;
+                        AC_offset = effective_MAC * ((1 - MachNumber) * sweepFactor + 0.25)* ParallelInPlane;
                 }
 
-                double tmp = Math.Cos(AoA);
-
-                AC_offset *= tmp * tmp;
+                AC_offset *= tmp;
 
             }
             //if (stall > 0.5)

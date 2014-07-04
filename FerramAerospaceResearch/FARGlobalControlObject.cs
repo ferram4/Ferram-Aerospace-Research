@@ -38,6 +38,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using KSP.IO;
 using Toolbar;
@@ -219,6 +220,9 @@ namespace ferram4
         //private Dictionary<Vessel, List<FARPartModule>> vesselFARPartModules = new Dictionary<Vessel, List<FARPartModule>>();
         static PluginConfiguration config;
         private Vessel lastActiveVessel = null;
+        //private AerodynamicsFX afx;
+        //private Rect windowPos = new Rect();
+        //private AeroFXState cond;
 
         public void Awake()
         {
@@ -229,6 +233,8 @@ namespace ferram4
             FARFlightButton.OnClick += (e) => FARControlSys.minimize = !FARControlSys.minimize;
 
             InputLockManager.RemoveControlLock("FAREdLock");
+
+            //afx = (AerodynamicsFX)GameObject.Find("FXLogic").GetComponent<AerodynamicsFX>();
         }
 
         public void Start()
@@ -245,6 +251,56 @@ namespace ferram4
                     if (m is FARPartModule)
                         (m as FARPartModule).ForceOnVesselPartsChange();
         }
+
+        /*private void OnGUI()
+        {
+            windowPos = GUILayout.Window(6521, windowPos, ChangeFXWindow, "", GUILayout.MinWidth(150));
+        }
+
+        private void ChangeFXWindow(int windowID)
+        {
+            cond = afx.Condensation;
+            GUILayout.Label("Edge Fade");
+            cond.edgeFade.min = TextEntryForFloat("min", cond.edgeFade.min);
+            cond.edgeFade.max = TextEntryForFloat("max", cond.edgeFade.max);
+            GUILayout.Label("Falloff 1");
+            cond.falloff1.min = TextEntryForFloat("min", cond.falloff1.min);
+            cond.falloff1.max = TextEntryForFloat("max", cond.falloff1.max);
+            GUILayout.Label("Falloff 2");
+            cond.falloff2.min = TextEntryForFloat("min", cond.falloff2.min);
+            cond.falloff2.max = TextEntryForFloat("max", cond.falloff2.max);
+            GUILayout.Label("Falloff 3");
+            cond.falloff3.min = TextEntryForFloat("min", cond.falloff3.min);
+            cond.falloff3.max = TextEntryForFloat("max", cond.falloff3.max);
+            GUILayout.Label("Intensity");
+            cond.intensity.min = TextEntryForFloat("min", cond.intensity.min);
+            cond.intensity.max = TextEntryForFloat("max", cond.intensity.max);
+            GUILayout.Label("Length");
+            cond.length.min = TextEntryForFloat("min", cond.length.min);
+            cond.length.max = TextEntryForFloat("max", cond.length.max);
+            GUILayout.Label("Light Power");
+            cond.lightPower.min = TextEntryForFloat("min", cond.lightPower.min);
+            cond.lightPower.max = TextEntryForFloat("max", cond.lightPower.max);
+            GUILayout.Label("Wobble");
+            cond.wobble.min = TextEntryForFloat("min", cond.wobble.min);
+            cond.wobble.max = TextEntryForFloat("max", cond.wobble.max);
+
+            afx.Condensation = cond;
+            GUI.DragWindow();
+        }
+
+        private float TextEntryForFloat(string label, float val)
+        {
+            string val_str = val.ToString();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(label);
+            val_str = GUILayout.TextField(val_str);
+            GUILayout.EndHorizontal();
+            val_str = Regex.Replace(val_str, @"[^-?\d*\.?\d*]", "");
+            val = Convert.ToSingle(val_str);
+
+            return val;
+        }*/
 
         private void FindPartsWithoutFARModel(Vessel v)
         {
