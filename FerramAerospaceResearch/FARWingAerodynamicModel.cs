@@ -211,7 +211,7 @@ namespace ferram4
                     AC_offset = effective_MAC * 0.25 * ParallelInPlane;
                 else if (MachNumber > 1.4)
                     AC_offset = effective_MAC * 0.10 * ParallelInPlane;
-                else if (MachNumber > 1)
+                else if (MachNumber >= 1)
                     AC_offset = effective_MAC * (-0.375 * MachNumber + 0.625) * ParallelInPlane;
                     //This is for the transonic instability, which is lessened for highly swept wings
                 else
@@ -593,7 +593,8 @@ namespace ferram4
                 double ClIncrement = flapFactor * w.liftslope * Math.Sin(2 * angle) * 0.5;   //Lift created by the flap interaction
                 ClIncrement *= (this.S * FlapFraction + w.S * WingFraction) / this.S;                   //Increase the Cl so that even though we're working with the flap's area, it accounts for the added lift across the entire object
 
-                double MachCoeff = Math.Sqrt(FARMathUtil.Clamp(1 - MachNumber * MachNumber, 0, 1));
+                double MachCoeff = FARMathUtil.Clamp(1 - MachNumber * MachNumber, 0, 1);
+
                 ACweight = ClIncrement * MachCoeff; // Total flap Cl for the purpose of applying ACshift, including the bit subtracted below
 
                 ClIncrement -= FlapFraction * w.liftslope * Math.Sin(2 * angle) * 0.5;        //Removing additional angle so that lift of the flap is calculated as lift at wing angle + lift due to flap interaction rather than being greater
@@ -677,16 +678,6 @@ namespace ferram4
             double TanSweep = 0;
             double beta_TanSweep = 0;
 
-            if (MachNumber > 1)
-            {
-                beta = Math.Sqrt(MachNumber * MachNumber - 1);
-                TanSweep = Math.Tan(FARMathUtil.Clamp(Math.Acos(SweepAngle), 0, Math.PI * 0.5));
-                beta_TanSweep = beta / TanSweep;
-                if (double.IsNaN(beta_TanSweep))
-                    beta_TanSweep = 0;
-            }
-
-
 
             if (MachNumber <= 0.6)
             {
@@ -719,6 +710,13 @@ namespace ferram4
                 else
                     sonicLEFactor = (1 - 0.125 * liftslope) * FARMathUtil.Clamp(1 - 1 / sonicLe, 0, 1) + 0.125 * liftslope;*/
 
+                beta = Math.Sqrt(MachNumber * MachNumber - 1);
+                TanSweep = Math.Tan(FARMathUtil.Clamp(Math.Acos(SweepAngle), 0, Math.PI * 0.5));
+                beta_TanSweep = beta / TanSweep;
+                if (double.IsNaN(beta_TanSweep))
+                    beta_TanSweep = 0;
+
+
                 double supersonicLENormalForceFactor = CalculateSupersonicLEFactor(beta, TanSweep, beta_TanSweep);
 
                 double normalForce;
@@ -745,19 +743,24 @@ namespace ferram4
                 double subScale = 1.75 - 1.25 * MachNumber;            //This determines the weight of subsonic flow; supersonic uses 1-this
                 double Cn = liftslope;
                 Cl = Cn * Math.Sin(2 * AoA) * 0.5;
-                if (MachNumber < 1)
-                {
-                    Cl += ClIncrementFromRear;
-                    if (Math.Abs(Cl) > Math.Abs(ACweight))
-                        ACshift *= FARMathUtil.Clamp(Math.Abs(ACweight / Cl), 0, 1);
-                }
+
+                Cl += ClIncrementFromRear;
+                if (Math.Abs(Cl) > Math.Abs(ACweight))
+                    ACshift *= FARMathUtil.Clamp(Math.Abs(ACweight / Cl), 0, 1);
+                
                 //Cd = Cl * Cl / piARe;     //Drag due to 3D effects on wing and base constant
                 Cl *= subScale;
                 //Cd *= subScale;
 
 
 
-                double M = FARMathUtil.Clamp(MachNumber, 1.1, double.PositiveInfinity);
+                double M = FARMathUtil.Clamp(MachNumber, 1.2, double.PositiveInfinity);
+
+                beta = Math.Sqrt(M * M - 1);
+                TanSweep = Math.Tan(FARMathUtil.Clamp(Math.Acos(SweepAngle), 0, Math.PI * 0.5));
+                beta_TanSweep = beta / TanSweep;
+                if (double.IsNaN(beta_TanSweep))
+                    beta_TanSweep = 0;
 
                 //double tmpCl, tmpCd;
                 //DATCOMSupersonicLiftAndDrag(M, SweepAngle, sonicLe, AoA, out tmpCl, out tmpCd);
@@ -768,10 +771,7 @@ namespace ferram4
                 double axialForce = 0;
                 double coefMult = 1 / (FARAeroUtil.currentBodyAtm.y * M * M);
 
-                double supersonicLENormalForceFactor = 1;
-
-                if (MachNumber > 1)
-                    supersonicLENormalForceFactor = CalculateSupersonicLEFactor(beta, TanSweep, beta_TanSweep);
+                double supersonicLENormalForceFactor = CalculateSupersonicLEFactor(beta, TanSweep, beta_TanSweep);
 
                 subScale = 1 - subScale; //Adjust for supersonic code
                 double normalForce;
@@ -791,7 +791,7 @@ namespace ferram4
 
             //AC shift due to flaps
             Vector3d ACShiftVec;
-            if (!double.IsNaN(ACshift))
+            if (!double.IsNaN(ACshift) && MachNumber <= 1.4)
                 ACShiftVec = ACshift * ParallelInPlane;
             else
                 ACShiftVec = Vector3d.zero;
@@ -835,7 +835,7 @@ namespace ferram4
                     SupersonicLEFactor = (1.57 - 0.28 * (beta_TanSweep - 0.5)) * effective_AR;
                     SupersonicLEFactor /= ARTanSweep + 0.5 - (beta_TanSweep - 0.5) * 0.25;
                 }
-                //SupersonicLEFactor /= TanSweep;
+                SupersonicLEFactor *= beta;
             }
             else //"supersonic" leading edge, scales with beta
             {
@@ -846,7 +846,6 @@ namespace ferram4
                 SupersonicLEFactor--;
                 SupersonicLEFactor *= beta_TanSweep;
                 SupersonicLEFactor++;
-                SupersonicLEFactor /= beta;
             }
 
             return SupersonicLEFactor;
@@ -1187,10 +1186,10 @@ namespace ferram4
             else
                 tmp = 1 / Mathf.Clamp(MachNumber, 1.09f, Mathf.Infinity);*/
 
-            if (MachNumber < 1)
+            if (MachNumber < 0.9)
                 tmp = 1 - MachNumber * MachNumber;
             else
-                tmp = MachNumber * MachNumber - 1;
+                tmp = 0.09;
 
             double sweepTmp = Math.Tan(SweepAngle);
             sweepTmp *= sweepTmp;
