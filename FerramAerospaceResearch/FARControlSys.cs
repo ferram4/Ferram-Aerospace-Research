@@ -899,16 +899,16 @@ namespace ferram4
             
             if (GUILayout.Button("Update Gains, Limits and Values", mytoggle, GUILayout.ExpandWidth(true), GUILayout.Height(30.0F)))
             {
-                k_wingleveler = Convert.ToSingle(k_wingleveler_str);
-                kd_wingleveler = Convert.ToSingle(kd_wingleveler_str);
-                k_yawdamper = Convert.ToSingle(k_yawdamper_str);
-                k_pitchdamper = Convert.ToSingle(k_pitchdamper_str);
-                upperLim = Convert.ToSingle(upperLim_str);
-                lowerLim = Convert.ToSingle(lowerLim_str);
-                k_limiter = Convert.ToSingle(k_limiter_str);
+                k_wingleveler = Convert.ToDouble(k_wingleveler_str);
+                kd_wingleveler = Convert.ToDouble(kd_wingleveler_str);
+                k_yawdamper = Convert.ToDouble(k_yawdamper_str);
+                k_pitchdamper = Convert.ToDouble(k_pitchdamper_str);
+                upperLim = Convert.ToDouble(upperLim_str);
+                lowerLim = Convert.ToDouble(lowerLim_str);
+                k_limiter = Convert.ToDouble(k_limiter_str);
 
-                alt = Convert.ToSingle(alt_str);
-                scaleVelocity = Convert.ToSingle(scaleVelocity_str);
+                alt = Convert.ToDouble(alt_str);
+                scaleVelocity = Convert.ToDouble(scaleVelocity_str);
                 if (alt < 0)
                 {
                     alt = 0;

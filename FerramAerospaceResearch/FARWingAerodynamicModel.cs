@@ -744,9 +744,12 @@ namespace ferram4
                 double Cn = liftslope;
                 Cl = Cn * Math.Sin(2 * AoA) * 0.5;
 
-                Cl += ClIncrementFromRear;
-                if (Math.Abs(Cl) > Math.Abs(ACweight))
-                    ACshift *= FARMathUtil.Clamp(Math.Abs(ACweight / Cl), 0, 1);
+                if (MachNumber < 1)
+                {
+                    Cl += ClIncrementFromRear;
+                    if (Math.Abs(Cl) > Math.Abs(ACweight))
+                        ACshift *= FARMathUtil.Clamp(Math.Abs(ACweight / Cl), 0, 1);
+                }
                 
                 //Cd = Cl * Cl / piARe;     //Drag due to 3D effects on wing and base constant
                 Cl *= subScale;
@@ -791,7 +794,7 @@ namespace ferram4
 
             //AC shift due to flaps
             Vector3d ACShiftVec;
-            if (!double.IsNaN(ACshift) && MachNumber <= 1.4)
+            if (!double.IsNaN(ACshift) && MachNumber <= 1)
                 ACShiftVec = ACshift * ParallelInPlane;
             else
                 ACShiftVec = Vector3d.zero;
@@ -1247,7 +1250,7 @@ namespace ferram4
         private double CdCompressibilityZeroLiftIncrement(double M, double SweepAngle)
         {
 
-            if (PartInFrontOf != null)
+            if ((object)WingInFrontOf != null)
             {
                 zeroLiftCdIncrement = WingInFrontOf.zeroLiftCdIncrement;
                 return zeroLiftCdIncrement;
@@ -1255,19 +1258,37 @@ namespace ferram4
 
             double tmp = 1 / Math.Sqrt(SweepAngle);
 
-            double dd_MachNumber = 0.85 * tmp;               //Find Drag Divergence Mach Number
+            double dd_MachNumber = 0.8 * tmp;               //Find Drag Divergence Mach Number
 
-            if (M < dd_MachNumber)                                               //If below this number, 
+            if (M < dd_MachNumber)      //If below this number, 
+            {
+                zeroLiftCdIncrement = 0;
                 return 0;
+            }
 
             double peak_MachNumber = 1.1 * tmp;
 
-            double peak_Increment = 0.025 * Math.Pow(SweepAngle, 2.5);
+            double peak_Increment = 0.025 * FARMathUtil.PowApprox(SweepAngle, 2.5);
 
             if (M > peak_MachNumber)
+            {
+                zeroLiftCdIncrement = peak_Increment;
                 return peak_Increment;
+            }
 
-            double CdIncrement = (M - dd_MachNumber) / (peak_MachNumber - dd_MachNumber) * peak_Increment;
+            //double CdIncrement = (M - dd_MachNumber) / (peak_MachNumber - dd_MachNumber) * peak_Increment;
+
+            tmp = dd_MachNumber - peak_MachNumber;
+            tmp = tmp * tmp * tmp;
+            tmp = 1 / tmp;
+
+            double CdIncrement = 2 * M;
+            CdIncrement -= 3 * (dd_MachNumber + peak_MachNumber);
+            CdIncrement *= M;
+            CdIncrement += 6 * dd_MachNumber * peak_MachNumber;
+            CdIncrement *= M;
+            CdIncrement += dd_MachNumber * dd_MachNumber * (dd_MachNumber - 3 * peak_MachNumber);
+            CdIncrement *= tmp;
 
             zeroLiftCdIncrement = CdIncrement;
 
