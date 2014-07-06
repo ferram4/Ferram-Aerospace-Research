@@ -1289,6 +1289,7 @@ namespace ferram4
             CdIncrement *= M;
             CdIncrement += dd_MachNumber * dd_MachNumber * (dd_MachNumber - 3 * peak_MachNumber);
             CdIncrement *= tmp;
+            CdIncrement *= peak_Increment;
 
             zeroLiftCdIncrement = CdIncrement;
 
