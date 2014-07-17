@@ -1,10 +1,10 @@
 ﻿/*
-NEAR: Easymode Aerodynamics Replacement v1.0
+Neophyte's Elementary Aerodynamics Replacement v1.0
 Copyright 2014, Michael Ferrara, aka Ferram4
 
-    This file is part of NEAR: Easymode Aerodynamics Replacement.
+    This file is part of Neophyte's Elementary Aerodynamics Replacement.
 
-    NEAR: Easymode Aerodynamics Replacement is free software: you can redistribute it and/or modify
+    Neophyte's Elementary Aerodynamics Replacement is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
@@ -15,7 +15,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with NEAR: Easymode Aerodynamics Replacement.  If not, see <http://www.gnu.org/licenses/>.
+    along with Neophyte's Elementary Aerodynamics Replacement.  If not, see <http://www.gnu.org/licenses/>.
 
     Serious thanks:		a.g., for tons of bugfixes and code-refactorings
             			Taverius, for correcting a ton of incorrect values

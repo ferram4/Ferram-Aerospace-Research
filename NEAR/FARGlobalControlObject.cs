@@ -1,10 +1,10 @@
 ﻿/*
-NEAR: Easymode Aerodynamics Replacement v1.0
+Neophyte's Elementary Aerodynamics Replacement v1.0
 Copyright 2014, Michael Ferrara, aka Ferram4
 
-    This file is part of NEAR: Easymode Aerodynamics Replacement.
+    This file is part of Neophyte's Elementary Aerodynamics Replacement.
 
-    NEAR: Easymode Aerodynamics Replacement is free software: you can redistribute it and/or modify
+    Neophyte's Elementary Aerodynamics Replacement is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
@@ -15,7 +15,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with NEAR: Easymode Aerodynamics Replacement.  If not, see <http://www.gnu.org/licenses/>.
+    along with Neophyte's Elementary Aerodynamics Replacement.  If not, see <http://www.gnu.org/licenses/>.
 
     Serious thanks:		a.g., for tons of bugfixes and code-refactorings
             			Taverius, for correcting a ton of incorrect values
@@ -34,7 +34,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using KSP.IO;
-using Toolbar;
 
 namespace NEAR
 {
@@ -45,8 +44,6 @@ namespace NEAR
         private int part_count = -1;
 
         public static bool EditorPartsChanged = false;
-
-        static PluginConfiguration config;
 
         public void Awake()
         {
@@ -180,6 +177,7 @@ namespace NEAR
 
         public void Start()
         {
+            GameEvents.onVesselLoaded.Add(FindPartsWithoutFARModel);
             GameEvents.onVesselGoOffRails.Add(FindPartsWithoutFARModel);
             GameEvents.onVesselWasModified.Add(UpdateFARPartModules);
             GameEvents.onVesselCreate.Add(UpdateFARPartModules);
@@ -195,9 +193,6 @@ namespace NEAR
 
         private void FindPartsWithoutFARModel(Vessel v)
         {
-            List<FARPartModule> FARPartModules = new List<FARPartModule>();
-
-            bool returnValue = false;
             foreach (Part p in v.Parts)
             {
                 if (p == null)
@@ -208,13 +203,20 @@ namespace NEAR
                 if (p is StrutConnector || p is FuelLine || p is ControlSurface || p is Winglet || FARPartClassification.ExemptPartFromGettingDragModel(p, title))
                     continue;
 
-                if (p.Modules.Contains("FARPartModule"))
+                if (p.Modules.Contains("FARBasicDragModel"))
                 {
-                    foreach (PartModule m in p.Modules)
-                        if (m is FARPartModule)
-                            FARPartModules.Add(m as FARPartModule);
-                    continue;
+                    FARBasicDragModel d = p.Modules["FARBasicDragModel"] as FARBasicDragModel;
+                    if (d.CdCurve == null || d.ClPotentialCurve == null || d.ClViscousCurve == null || d.CmCurve == null)
+                    {
+                        p.RemoveModule(d);
+                        Debug.Log("Removing Incomplete NEAR Drag Module");
+                    }
                 }
+                if (p.Modules.Contains("FARPayloadFairingModule"))
+                    p.RemoveModule(p.Modules["FARPayloadFairingModule"]);
+                if (p.Modules.Contains("FARCargoBayModule"))
+                    p.RemoveModule(p.Modules["FARCargoBayModule"]);
+
 
                 FARPartModule q = p.GetComponent<FARPartModule>();
                 if (q != null)
@@ -229,12 +231,10 @@ namespace NEAR
                         p.AddModule("FARCargoBayModule");
                         PartModule m = p.Modules["FARCargoBayModule"];
                         m.OnStart(PartModule.StartState.Flying);
-                        FARPartModules.Add(m as FARPartModule);
 
                         FARAeroUtil.AddBasicDragModule(p);
                         m = p.Modules["FARBasicDragModel"];
                         m.OnStart(PartModule.StartState.Flying);
-                        FARPartModules.Add(m as FARPartModule);
 
                         updatedModules = true;
                     }
@@ -248,12 +248,10 @@ namespace NEAR
                             p.AddModule("FARPayloadFairingModule");
                             PartModule m = p.Modules["FARPayloadFairingModule"];
                             m.OnStart(PartModule.StartState.Flying);
-                            FARPartModules.Add(m as FARPartModule);
 
                             FARAeroUtil.AddBasicDragModule(p);
                             m = p.Modules["FARBasicDragModel"];
                             m.OnStart(PartModule.StartState.Flying);
-                            FARPartModules.Add(m as FARPartModule);
                             updatedModules = true;
                         }
                     }
@@ -263,24 +261,26 @@ namespace NEAR
                         FARAeroUtil.AddBasicDragModule(p);
                         PartModule m = p.Modules["FARBasicDragModel"];
                         m.OnStart(PartModule.StartState.Flying);
-                        FARPartModules.Add(m as FARPartModule);
 
                         updatedModules = true;
                     }
                 }
 
-                returnValue |= updatedModules;
+                //returnValue |= updatedModules;
 
                 FARPartModule b = p.GetComponent<FARPartModule>();
                 if (b != null)
-                    b.VesselPartList = v.Parts;             //This prevents every single part in the ship running this due to VesselPartsList not being initialized
+                    b.VesselPartList = p.vessel.Parts;             //This prevents every single part in the ship running this due to VesselPartsList not being initialized
             }
+
         }
+
 
 
 
         void OnDestroy()
         {
+            GameEvents.onVesselLoaded.Remove(FindPartsWithoutFARModel);
             GameEvents.onVesselGoOffRails.Remove(FindPartsWithoutFARModel);
             GameEvents.onVesselWasModified.Remove(UpdateFARPartModules);
             GameEvents.onVesselCreate.Remove(UpdateFARPartModules);

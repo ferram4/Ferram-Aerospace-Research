@@ -43,7 +43,7 @@ namespace NEAR
      * http://forum.kerbalspaceprogram.com/threads/65395-Voluntarily-Locking-Plugins-to-a-Particular-KSP-Version
      */
 
-    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
+    [KSPAddon(KSPAddon.Startup.Instantly, true)]
     internal class CompatibilityChecker : MonoBehaviour
     {
         public static bool IsCompatible()
@@ -64,13 +64,24 @@ namespace NEAR
             // Even if you don't lock down functionality, you should return true if your users 
             // can expect a future update to be available.
             //
+            return Versioning.version_major == 0 && Versioning.version_minor == 24 && Versioning.Revision == 0;
 
-            bool compatible = false;
-            if ((Versioning.version_minor == 24 && Versioning.Revision == 0)
-                || (Versioning.version_minor == 23 && Versioning.Revision == 5))
-                compatible = true;
+            /*-----------------------------------------------*\
+            | IMPLEMENTERS SHOULD NOT EDIT BEYOND THIS POINT! |
+            \*-----------------------------------------------*/
+        }
 
-            return compatible;
+        public static bool IsUnityCompatible()
+        {
+            /*-----------------------------------------------*\
+            |    BEGIN IMPLEMENTATION-SPECIFIC EDITS HERE.    |
+            \*-----------------------------------------------*/
+
+            // TODO: Implement your own Unity compatibility check.
+            //
+            bool compat = Application.unityVersion == "4.3.3f1";               //Mac / Linux  
+            compat |= Application.unityVersion == "4.5.2f1";                   //Windows
+            return compat;
 
             /*-----------------------------------------------*\
             | IMPLEMENTERS SHOULD NOT EDIT BEYOND THIS POINT! |
@@ -78,7 +89,7 @@ namespace NEAR
         }
 
         // Version of the compatibility checker itself.
-        private static int _version = 2;
+        private static int _version = 3;
 
         public void Start()
         {
@@ -122,12 +133,51 @@ namespace NEAR
                 .Select(m => m.DeclaringType.Assembly.GetName().Name)
                 .ToArray();
 
+            // A mod is incompatible with Unity if its compatibility checker has an IsUnityCompatible method which returns false.
+            String[] incompatibleUnity =
+                fields
+                .Select(f => f.DeclaringType.GetMethod("IsUnityCompatible", Type.EmptyTypes))
+                .Where(m => m != null)  // Mods without IsUnityCompatible() are assumed to be compatible.
+                .Where(m => m.IsStatic)
+                .Where(m => m.ReturnType == typeof(bool))
+                .Where(m =>
+                {
+                    try
+                    {
+                        return !(bool)m.Invoke(null, new object[0]);
+                    }
+                    catch (Exception e)
+                    {
+                        // If a mod throws an exception from IsUnityCompatible, it's not compatible.
+                        Debug.LogWarning(String.Format("[CompatibilityChecker] Exception while invoking IsUnityCompatible() from '{0}':\n\n{1}", m.DeclaringType.Assembly.GetName().Name, e));
+                        return true;
+                    }
+                })
+                .Select(m => m.DeclaringType.Assembly.GetName().Name)
+                .ToArray();
+
             Array.Sort(incompatible);
+            Array.Sort(incompatibleUnity);
+
+            String message = "Some installed mods may be incompatible with this version of Kerbal Space Program. Features may be broken or disabled. Please check for updates to the listed mods.";
 
             if (incompatible.Length > 0)
             {
                 Debug.LogWarning("[CompatibilityChecker] Incompatible mods detected: " + String.Join(", ", incompatible));
-                PopupDialog.SpawnPopupDialog("Incompatible Mods Detected", "Some installed mods are incompatible with this version of Kerbal Space Program. Some features may be broken or disabled. Please check for updates to the following mods:\n\n" + String.Join("\n", incompatible), "OK", false, HighLogic.Skin);
+                message += String.Format("\n\nThese mods are incompatible with KSP {0}.{1}.{2}:\n\n", Versioning.version_major, Versioning.version_minor, Versioning.Revision);
+                message += String.Join("\n", incompatible);
+            }
+
+            if (incompatibleUnity.Length > 0)
+            {
+                Debug.LogWarning("[CompatibilityChecker] Incompatible mods (Unity) detected: " + String.Join(", ", incompatibleUnity));
+                message += String.Format("\n\nThese mods are incompatible with Unity {0}:\n\n", Application.unityVersion);
+                message += String.Join("\n", incompatibleUnity);
+            }
+
+            if ((incompatible.Length > 0) || (incompatibleUnity.Length > 0))
+            {
+                PopupDialog.SpawnPopupDialog("Incompatible Mods Detected", message, "OK", true, HighLogic.Skin);
             }
         }
 

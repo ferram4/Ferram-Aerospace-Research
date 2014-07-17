@@ -1,10 +1,10 @@
 ﻿/*
-NEAR: Easymode Aerodynamics Replacement v1.0
+Neophyte's Elementary Aerodynamics Replacement v1.0
 Copyright 2014, Michael Ferrara, aka Ferram4
 
-    This file is part of NEAR: Easymode Aerodynamics Replacement.
+    This file is part of Neophyte's Elementary Aerodynamics Replacement.
 
-    NEAR: Easymode Aerodynamics Replacement is free software: you can redistribute it and/or modify
+    Neophyte's Elementary Aerodynamics Replacement is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
@@ -15,7 +15,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with NEAR: Easymode Aerodynamics Replacement.  If not, see <http://www.gnu.org/licenses/>.
+    along with Neophyte's Elementary Aerodynamics Replacement.  If not, see <http://www.gnu.org/licenses/>.
 
     Serious thanks:		a.g., for tons of bugfixes and code-refactorings
             			Taverius, for correcting a ton of incorrect values
@@ -27,6 +27,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
  *	http://forum.kerbalspaceprogram.com/threads/55219
  *
  */
+
 
 
 using System;
@@ -394,6 +395,15 @@ namespace NEAR
         {
             List<Transform> returnList = new List<Transform>();
 
+            //Very hacky, but is necessary for root parts with broken transforms
+            if (p.partTransform == null)
+            {
+                bool root = p == p.vessel.rootPart;
+                Debug.Log("This one is busted: " + p.partInfo.title + " root? " + root);
+                if (root)
+                    p.partTransform = p.vessel.vesselTransform;
+            } 
+            
             Transform[] propellersToIgnore = IgnoreModelTransformArray(p);
 
             returnList.AddRange(p.FindModelComponents<Transform>());
@@ -709,7 +719,7 @@ namespace NEAR
             //This is the cross-sectional area of the tapered section
 
 
-            Debug.Log(p.partInfo.title + ": Geometry model created; Size: " + size + ", LD " + lowerDiameters + ", UD " + upperDiameters + "\n\rSurface area: " + partGeometry.area + "\n\rFineness Ratio: " + partGeometry.finenessRatio + "\n\rTaperRatio: " + partGeometry.taperRatio + "\n\rCross Sectional Area: " + partGeometry.crossSectionalArea + "\n\rCross Sectional Tapered Area: " + partGeometry.taperCrossSectionArea + "\n\rMajor-minor axis ratio: " + partGeometry.majorMinorAxisRatio + "\n\rCentroid: " + partGeometry.originToCentroid);
+            //Debug.Log(p.partInfo.title + ": Geometry model created; Size: " + size + ", LD " + lowerDiameters + ", UD " + upperDiameters + "\n\rSurface area: " + partGeometry.area + "\n\rFineness Ratio: " + partGeometry.finenessRatio + "\n\rTaperRatio: " + partGeometry.taperRatio + "\n\rCross Sectional Area: " + partGeometry.crossSectionalArea + "\n\rCross Sectional Tapered Area: " + partGeometry.taperCrossSectionArea + "\n\rMajor-minor axis ratio: " + partGeometry.majorMinorAxisRatio + "\n\rCentroid: " + partGeometry.originToCentroid);
             return partGeometry;
         }
 

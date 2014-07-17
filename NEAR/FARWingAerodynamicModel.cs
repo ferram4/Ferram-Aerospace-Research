@@ -1,10 +1,10 @@
 ﻿/*
-NEAR: Easymode Aerodynamics Replacement v1.0
+Neophyte's Elementary Aerodynamics Replacement v1.0
 Copyright 2014, Michael Ferrara, aka Ferram4
 
-    This file is part of NEAR: Easymode Aerodynamics Replacement.
+    This file is part of Neophyte's Elementary Aerodynamics Replacement.
 
-    NEAR: Easymode Aerodynamics Replacement is free software: you can redistribute it and/or modify
+    Neophyte's Elementary Aerodynamics Replacement is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
@@ -15,7 +15,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with NEAR: Easymode Aerodynamics Replacement.  If not, see <http://www.gnu.org/licenses/>.
+    along with Neophyte's Elementary Aerodynamics Replacement.  If not, see <http://www.gnu.org/licenses/>.
 
     Serious thanks:		a.g., for tons of bugfixes and code-refactorings
             			Taverius, for correcting a ton of incorrect values
@@ -55,7 +55,7 @@ namespace NEAR
         [KSPField(isPersistant = false)]
         public double TaperRatio;
 
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Stalled %", guiFormat = "F2")]
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Stalled %", guiFormat = "N2")]
         protected double stall = 0;
 
         private double minStall = 0;
@@ -373,6 +373,8 @@ namespace NEAR
             double tmp = 0;
             stall = 0;
 
+            AoAmax = GetAoAmax();
+
             double absAoA = Math.Abs(AoA);
 
             if (absAoA > AoAmax)
@@ -403,11 +405,11 @@ namespace NEAR
 
             minStall = 0;
 
-            liftslope = 6; //Just slightly below the ideal 2pi, but much simpler to 
+            liftslope = 4; //Quite a bit below ideal 2pi, but better for flying around like mad
 
             DetermineStall(AoA);
 
-            piARe = 5 * Mathf.PI;   //Uses induced drag of a AR 5 wing with an elliptical distribution
+            piARe = 4 * Mathf.PI;   //Uses induced drag of a AR 4 wing with an elliptical distribution
 
             double Cn = liftslope;
             Cl = Cn * Math.Sin(2 * AoA) * 0.5;
