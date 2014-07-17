@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.3
+Ferram Aerospace Research v0.14
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -41,7 +41,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using KSP.IO;
-using Toolbar;
+//using Toolbar;
 
 namespace ferram4
 {
@@ -51,7 +51,9 @@ namespace ferram4
         private int count = 0;
         private FAREditorGUI editorGUI = null;
         private int part_count = -1;
-        private IButton FAREditorButton;
+        private IButton FAREditorButtonBlizzy;
+        private ApplicationLauncherButton FAREditorButtonStock;
+
 
         public static bool EditorPartsChanged = false;
 
@@ -60,12 +62,59 @@ namespace ferram4
         public void Awake()
         {
             LoadConfigs();
-            FAREditorButton = ToolbarManager.Instance.add("ferram4", "FAREditorButton");
-            FAREditorButton.TexturePath = "FerramAerospaceResearch/Textures/icon_button";
-            FAREditorButton.ToolTip = "FAR Editor Analysis";
-            FAREditorButton.OnClick += (e) => FAREditorGUI.minimize = !FAREditorGUI.minimize;
+            if (FARDebugValues.useBlizzyToolbar)
+            {
+                FAREditorButtonBlizzy = ToolbarManager.Instance.add("ferram4", "FAREditorButton");
+                FAREditorButtonBlizzy.TexturePath = "FerramAerospaceResearch/Textures/icon_button";
+                FAREditorButtonBlizzy.ToolTip = "FAR Editor Analysis";
+                FAREditorButtonBlizzy.OnClick += (e) => FAREditorGUI.minimize = !FAREditorGUI.minimize;
+            }
+            else
+                GameEvents.onGUIApplicationLauncherReady.Add(OnGUIAppLauncherReady);
         }
 
+        void OnGUIAppLauncherReady()
+        {
+            if (ApplicationLauncher.Ready)
+            {
+                if (EditorLogic.fetch.editorType == EditorLogic.EditorMode.VAB)
+                {
+                    FAREditorButtonStock = ApplicationLauncher.Instance.AddModApplication(
+                        onAppLaunchToggleOn,
+                        onAppLaunchToggleOff,
+                        DummyVoid,
+                        DummyVoid,
+                        DummyVoid,
+                        DummyVoid,
+                        ApplicationLauncher.AppScenes.VAB,
+                        (Texture)GameDatabase.Instance.GetTexture("FerramAerospaceResearch/Textures/icon_button_stock", false));
+                }
+                else
+                {
+                    FAREditorButtonStock = ApplicationLauncher.Instance.AddModApplication(
+                        onAppLaunchToggleOn,
+                        onAppLaunchToggleOff,
+                        DummyVoid,
+                        DummyVoid,
+                        DummyVoid,
+                        DummyVoid,
+                        ApplicationLauncher.AppScenes.SPH,
+                        (Texture)GameDatabase.Instance.GetTexture("FerramAerospaceResearch/Textures/icon_button_stock", false));
+                }
+            }
+        }
+
+        void onAppLaunchToggleOn()
+        {
+            FAREditorGUI.minimize = false;
+        }
+
+        void onAppLaunchToggleOff()
+        {
+            FAREditorGUI.minimize = true;
+        }
+
+        void DummyVoid() { }
 
         public void LateUpdate()
         {
@@ -129,6 +178,20 @@ namespace ferram4
                 if (p is StrutConnector || p is FuelLine || p is ControlSurface || p is Winglet || FARPartClassification.ExemptPartFromGettingDragModel(p, title))
                     continue;
 
+                if (p.Modules.Contains("FARBasicDragModel"))
+                {
+                    FARBasicDragModel d = p.Modules["FARBasicDragModel"] as FARBasicDragModel;
+                    if (d.CdCurve == null || d.ClPotentialCurve == null || d.ClViscousCurve == null || d.CmCurve == null)
+                    {
+                        p.RemoveModule(d);
+                        Debug.Log("Removing Incomplete FAR Drag Module");
+                    }
+                }
+                if (p.Modules.Contains("FARPayloadFairingModule"))
+                    p.RemoveModule(p.Modules["FARPayloadFairingModule"]);
+                if (p.Modules.Contains("FARCargoBayModule"))
+                    p.RemoveModule(p.Modules["FARCargoBayModule"]);
+
                 FARPartModule q = p.GetComponent<FARPartModule>();
                 if (q != null && !(q is FARControlSys))
                     continue;
@@ -182,7 +245,11 @@ namespace ferram4
         void OnDestroy()
         {
             SaveConfigs();
-            FAREditorButton.Destroy();
+            GameEvents.onGUIApplicationLauncherReady.Remove(OnGUIAppLauncherReady);
+            if (FAREditorButtonStock != null)
+                ApplicationLauncher.Instance.RemoveModApplication(FAREditorButtonStock);
+            if(FAREditorButtonBlizzy != null)
+                FAREditorButtonBlizzy.Destroy();
         }
 
         public static void LoadConfigs()
@@ -194,7 +261,7 @@ namespace ferram4
             FARDebugValues.displayShielding = Convert.ToBoolean(config.GetValue("displayShielding", "false"));
 
             FAREditorGUI.windowPos = config.GetValue("windowPos", new Rect());
-            FAREditorGUI.minimize = config.GetValue("EditorGUIBool", true);
+            //FAREditorGUI.minimize = config.GetValue("EditorGUIBool", true);
             if (FAREditorGUI.windowPos.y < 75)
                 FAREditorGUI.windowPos.y = 75;
 
@@ -206,7 +273,7 @@ namespace ferram4
         public static void SaveConfigs()
         {
             config.SetValue("windowPos", FAREditorGUI.windowPos);
-            config.SetValue("EditorGUIBool", FAREditorGUI.minimize);
+            //config.SetValue("EditorGUIBool", FAREditorGUI.minimize);
             //print(FARAeroUtil.areaFactor + " " + FARAeroUtil.attachNodeRadiusFactor * 2 + " " + FARAeroUtil.incompressibleRearAttachDrag + " " + FARAeroUtil.sonicRearAdditionalAttachDrag);
             config.save();
         }
@@ -215,30 +282,60 @@ namespace ferram4
     [KSPAddon(KSPAddon.Startup.Flight, false)]
     public class FARGlobalControlFlightObject : UnityEngine.MonoBehaviour
     {
-        //private List<Vessel> vesselsWithFARModules = null;
-        private IButton FARFlightButton;
+        private IButton FARFlightButtonBlizzy = null;
+        private ApplicationLauncherButton FARFlightButtonStock;
         //private Dictionary<Vessel, List<FARPartModule>> vesselFARPartModules = new Dictionary<Vessel, List<FARPartModule>>();
         static PluginConfiguration config;
         private Vessel lastActiveVessel = null;
-        //private AerodynamicsFX afx;
-        //private Rect windowPos = new Rect();
-        //private AeroFXState cond;
 
         public void Awake()
         {
             LoadConfigs();
-            FARFlightButton = ToolbarManager.Instance.add("ferram4", "FAREditorButton");
-            FARFlightButton.TexturePath = "FerramAerospaceResearch/Textures/icon_button";
-            FARFlightButton.ToolTip = "FAR Flight Systems";
-            FARFlightButton.OnClick += (e) => FARControlSys.minimize = !FARControlSys.minimize;
+            if (FARDebugValues.useBlizzyToolbar)
+            {
+                FARFlightButtonBlizzy = ToolbarManager.Instance.add("ferram4", "FAREditorButton");
+                FARFlightButtonBlizzy.TexturePath = "FerramAerospaceResearch/Textures/icon_button_blizzy";
+                FARFlightButtonBlizzy.ToolTip = "FAR Flight Systems";
+                FARFlightButtonBlizzy.OnClick += (e) => FARControlSys.minimize = !FARControlSys.minimize;
+            }
+            else
+                GameEvents.onGUIApplicationLauncherReady.Add(OnGUIAppLauncherReady);
 
             InputLockManager.RemoveControlLock("FAREdLock");
 
-            //afx = (AerodynamicsFX)GameObject.Find("FXLogic").GetComponent<AerodynamicsFX>();
         }
+
+        void OnGUIAppLauncherReady()
+        {
+            if (ApplicationLauncher.Ready)
+            {
+                FARFlightButtonStock = ApplicationLauncher.Instance.AddModApplication(
+                    onAppLaunchToggleOn,
+                    onAppLaunchToggleOff,
+                    DummyVoid,
+                    DummyVoid,
+                    DummyVoid,
+                    DummyVoid,
+                    ApplicationLauncher.AppScenes.FLIGHT,
+                    (Texture)GameDatabase.Instance.GetTexture("FerramAerospaceResearch/Textures/icon_button_stock", false));
+            }
+        }
+
+        void onAppLaunchToggleOn()
+        {
+            FARControlSys.minimize = false;
+        }
+
+        void onAppLaunchToggleOff()
+        {
+            FARControlSys.minimize = true;
+        }
+
+        void DummyVoid() { }
 
         public void Start()
         {
+            GameEvents.onVesselLoaded.Add(FindPartsWithoutFARModel);
             GameEvents.onVesselGoOffRails.Add(FindPartsWithoutFARModel);
             GameEvents.onVesselWasModified.Add(UpdateFARPartModules);
             GameEvents.onVesselCreate.Add(UpdateFARPartModules);
@@ -252,61 +349,8 @@ namespace ferram4
                         (m as FARPartModule).ForceOnVesselPartsChange();
         }
 
-        /*private void OnGUI()
-        {
-            windowPos = GUILayout.Window(6521, windowPos, ChangeFXWindow, "", GUILayout.MinWidth(150));
-        }
-
-        private void ChangeFXWindow(int windowID)
-        {
-            cond = afx.Condensation;
-            GUILayout.Label("Edge Fade");
-            cond.edgeFade.min = TextEntryForFloat("min", cond.edgeFade.min);
-            cond.edgeFade.max = TextEntryForFloat("max", cond.edgeFade.max);
-            GUILayout.Label("Falloff 1");
-            cond.falloff1.min = TextEntryForFloat("min", cond.falloff1.min);
-            cond.falloff1.max = TextEntryForFloat("max", cond.falloff1.max);
-            GUILayout.Label("Falloff 2");
-            cond.falloff2.min = TextEntryForFloat("min", cond.falloff2.min);
-            cond.falloff2.max = TextEntryForFloat("max", cond.falloff2.max);
-            GUILayout.Label("Falloff 3");
-            cond.falloff3.min = TextEntryForFloat("min", cond.falloff3.min);
-            cond.falloff3.max = TextEntryForFloat("max", cond.falloff3.max);
-            GUILayout.Label("Intensity");
-            cond.intensity.min = TextEntryForFloat("min", cond.intensity.min);
-            cond.intensity.max = TextEntryForFloat("max", cond.intensity.max);
-            GUILayout.Label("Length");
-            cond.length.min = TextEntryForFloat("min", cond.length.min);
-            cond.length.max = TextEntryForFloat("max", cond.length.max);
-            GUILayout.Label("Light Power");
-            cond.lightPower.min = TextEntryForFloat("min", cond.lightPower.min);
-            cond.lightPower.max = TextEntryForFloat("max", cond.lightPower.max);
-            GUILayout.Label("Wobble");
-            cond.wobble.min = TextEntryForFloat("min", cond.wobble.min);
-            cond.wobble.max = TextEntryForFloat("max", cond.wobble.max);
-
-            afx.Condensation = cond;
-            GUI.DragWindow();
-        }
-
-        private float TextEntryForFloat(string label, float val)
-        {
-            string val_str = val.ToString();
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(label);
-            val_str = GUILayout.TextField(val_str);
-            GUILayout.EndHorizontal();
-            val_str = Regex.Replace(val_str, @"[^-?\d*\.?\d*]", "");
-            val = Convert.ToSingle(val_str);
-
-            return val;
-        }*/
-
         private void FindPartsWithoutFARModel(Vessel v)
         {
-            List<FARPartModule> FARPartModules = new List<FARPartModule>();
-
-            bool returnValue = false;
             foreach (Part p in v.Parts)
             {
                 if (p == null)
@@ -317,13 +361,20 @@ namespace ferram4
                 if (p is StrutConnector || p is FuelLine || p is ControlSurface || p is Winglet || FARPartClassification.ExemptPartFromGettingDragModel(p, title))
                     continue;
 
-                if (p.Modules.Contains("FARPartModule"))
+                if (p.Modules.Contains("FARBasicDragModel"))
                 {
-                    foreach (PartModule m in p.Modules)
-                        if (m is FARPartModule)
-                            FARPartModules.Add(m as FARPartModule);
-                    continue;
+                    FARBasicDragModel d = p.Modules["FARBasicDragModel"] as FARBasicDragModel;
+                    if (d.CdCurve == null || d.ClPotentialCurve == null || d.ClViscousCurve == null || d.CmCurve == null)
+                    {
+                        p.RemoveModule(d);
+                        Debug.Log("Removing Incomplete FAR Drag Module");
+                    }
                 }
+                if (p.Modules.Contains("FARPayloadFairingModule"))
+                    p.RemoveModule(p.Modules["FARPayloadFairingModule"]);
+                if (p.Modules.Contains("FARCargoBayModule"))
+                    p.RemoveModule(p.Modules["FARCargoBayModule"]);
+
 
                 if (p.Modules.Contains("ModuleCommand") && !p.Modules.Contains("FARControlSys"))
                 {
@@ -331,7 +382,6 @@ namespace ferram4
                     PartModule m = p.Modules["FARControlSys"];
                     m.OnStart(PartModule.StartState.Flying);
 
-                    FARPartModules.Add(m as FARPartModule);
                 }
 
                 FARPartModule q = p.GetComponent<FARPartModule>();
@@ -347,12 +397,10 @@ namespace ferram4
                         p.AddModule("FARCargoBayModule");
                         PartModule m = p.Modules["FARCargoBayModule"];
                         m.OnStart(PartModule.StartState.Flying);
-                        FARPartModules.Add(m as FARPartModule);
 
                         FARAeroUtil.AddBasicDragModule(p);
                         m = p.Modules["FARBasicDragModel"];
                         m.OnStart(PartModule.StartState.Flying);
-                        FARPartModules.Add(m as FARPartModule);
 
                         updatedModules = true;
                     }
@@ -366,12 +414,10 @@ namespace ferram4
                             p.AddModule("FARPayloadFairingModule");
                             PartModule m = p.Modules["FARPayloadFairingModule"];
                             m.OnStart(PartModule.StartState.Flying);
-                            FARPartModules.Add(m as FARPartModule);
 
                             FARAeroUtil.AddBasicDragModule(p);
                             m = p.Modules["FARBasicDragModel"];
                             m.OnStart(PartModule.StartState.Flying);
-                            FARPartModules.Add(m as FARPartModule);
                             updatedModules = true;
                         }
                     }
@@ -381,32 +427,31 @@ namespace ferram4
                         FARAeroUtil.AddBasicDragModule(p);
                         PartModule m = p.Modules["FARBasicDragModel"];
                         m.OnStart(PartModule.StartState.Flying);
-                        FARPartModules.Add(m as FARPartModule);
 
                         updatedModules = true;
                     }
                 }
 
-                returnValue |= updatedModules;
+                //returnValue |= updatedModules;
 
                 FARPartModule b = p.GetComponent<FARPartModule>();
                 if (b != null)
-                    b.VesselPartList = v.Parts;             //This prevents every single part in the ship running this due to VesselPartsList not being initialized
+                    b.VesselPartList = p.vessel.Parts;             //This prevents every single part in the ship running this due to VesselPartsList not being initialized
             }
-        }
 
+        }
 
         public void LateUpdate()
         {
 
             if (FlightGlobals.ready)
             {
-                FARFlightButton.Visible = FARControlSys.ActiveControlSys && (FARControlSys.ActiveControlSys.vessel == FlightGlobals.ActiveVessel);
+                //FARFlightButton = FARControlSys.ActiveControlSys && (FARControlSys.ActiveControlSys.vessel == FlightGlobals.ActiveVessel);
 
-                if (lastActiveVessel != FlightGlobals.ActiveVessel)
+                if ((object)lastActiveVessel == null || lastActiveVessel != FlightGlobals.ActiveVessel)
                 {
-                    FARControlSys.StabilityAugmentationUpdate(FlightGlobals.ActiveVessel, lastActiveVessel);
-                    lastActiveVessel = FlightGlobals.ActiveVessel;
+                    if(FARControlSys.StabilityAugmentationUpdate(FlightGlobals.ActiveVessel, lastActiveVessel))
+                        lastActiveVessel = FlightGlobals.ActiveVessel;
                 }
             }
         }
@@ -414,7 +459,16 @@ namespace ferram4
         void OnDestroy()
         {
             SaveConfigs();
-            FARFlightButton.Destroy();
+
+            GameEvents.onGUIApplicationLauncherReady.Remove(OnGUIAppLauncherReady);
+            if (FARFlightButtonStock != null)
+                ApplicationLauncher.Instance.RemoveModApplication(FARFlightButtonStock);
+
+            if (FARFlightButtonBlizzy != null)
+                FARFlightButtonBlizzy.Destroy();
+
+            //GameEvents.onVesselLoaded.Remove(FindPartsWithoutFARModel);
+            GameEvents.onVesselLoaded.Remove(FindPartsWithoutFARModel);
             GameEvents.onVesselGoOffRails.Remove(FindPartsWithoutFARModel);
             GameEvents.onVesselWasModified.Remove(UpdateFARPartModules);
             GameEvents.onVesselCreate.Remove(UpdateFARPartModules);
@@ -431,7 +485,7 @@ namespace ferram4
             FARControlSys.FlightDataHelpPos = config.GetValue("FlightDataHelpPos", new Rect());
             FARControlSys.AirSpeedPos = config.GetValue("AirSpeedPos", new Rect());
             FARControlSys.AirSpeedHelpPos = config.GetValue("AirSpeedHelpPos", new Rect());
-            FARControlSys.minimize = config.GetValue<bool>("FlightGUIBool", false);
+            //FARControlSys.minimize = config.GetValue<bool>("FlightGUIBool", false);
             FARControlSys.k_wingleveler_str = config.GetValue("k_wingleveler", "0.05");
             FARControlSys.k_wingleveler = Convert.ToDouble(FARControlSys.k_wingleveler_str);
             FARControlSys.kd_wingleveler_str = config.GetValue("kd_wingleveler", "0.002");
@@ -474,7 +528,7 @@ namespace ferram4
             config.SetValue("FlightDataHelpPos", FARControlSys.FlightDataHelpPos);
             config.SetValue("AirSpeedPos", FARControlSys.AirSpeedPos);
             config.SetValue("AirSpeedHelpPos", FARControlSys.AirSpeedHelpPos);
-            config.SetValue("FlightGUIBool", FARControlSys.minimize);
+            //config.SetValue("FlightGUIBool", FARControlSys.minimize);
             config.SetValue("k_wingleveler", (FARControlSys.k_wingleveler).ToString());
             config.SetValue("kd_wingleveler", (FARControlSys.kd_wingleveler).ToString());
             config.SetValue("k_yawdamper", (FARControlSys.k_yawdamper).ToString());

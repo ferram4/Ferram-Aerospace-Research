@@ -3,12 +3,12 @@
   "URL": "https://raw.githubusercontent.com/ferram4/Ferram-Aerospace-Research/master/GameData/FerramAerospaceResearch/FAR.version",
   "VERSION": {
     "MAJOR": 0,
-    "MINOR": 13,
-    "PATCH": 3
+    "MINOR": 14,
+    "PATCH": 0
   },
   "KSP_VERSION": {
     "MAJOR": 0,
-    "MINOR": 23,
-    "PATCH": 5
+    "MINOR": 24,
+    "PATCH": 0
   }
 }

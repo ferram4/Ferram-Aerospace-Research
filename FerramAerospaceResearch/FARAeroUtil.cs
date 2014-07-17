@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.3
+Ferram Aerospace Research v0.14
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -57,6 +57,7 @@ namespace ferram4
         public static double attachNodeRadiusFactor;
         public static double incompressibleRearAttachDrag;
         public static double sonicRearAdditionalAttachDrag;
+        public static bool AJELoaded;
 
         public static Dictionary<int, Vector3d> bodyAtmosphereConfiguration = null;
         public static int prevBody = -1;
@@ -160,7 +161,17 @@ namespace ferram4
                 Rgamma_and_gamma.x = Rgamma_and_gamma.y * Rgamma_and_gamma.z;
 
                 FARAeroUtil.bodyAtmosphereConfiguration.Add(body.flightGlobalsIndex, Rgamma_and_gamma);
-            } 
+            }
+
+            foreach (AssemblyLoader.LoadedAssembly assembly in AssemblyLoader.loadedAssemblies)
+            {
+                if (assembly.assembly.GetName().Name == "AJE")
+                {
+                    AJELoaded = true;
+                    return;
+                }
+            }
+
             
             loaded = true;
         }
@@ -734,15 +745,15 @@ namespace ferram4
             if (p.Modules.Contains("KerbalEVA"))
                 return;
 
+            p.minimum_drag = 0;
+            p.maximum_drag = 0;
+            p.dragModelType = "override";
             p.angularDrag = 0;
-            if (!p.Modules.Contains("ModuleResourceIntake"))
-            {
-                p.minimum_drag = 0;
-                p.maximum_drag = 0;
-                p.dragModelType = "override";
-            }
-            else
-                return;
+
+            if (p.Modules.Contains("ModuleResourceIntake"))
+                if (AJELoaded)
+                    return;
+
 
             p.AddModule("FARBasicDragModel");
 
@@ -771,8 +782,8 @@ namespace ferram4
                 TempCurve2.Add(1, 0);
 
                 FloatCurve TempCurve4 = new FloatCurve();
-                TempCurve2.Add(-1, 0);
-                TempCurve2.Add(1, 0);
+                TempCurve4.Add(-1, 0);
+                TempCurve4.Add(1, 0);
 
                 FloatCurve TempCurve3 = new FloatCurve();
                 TempCurve3.Add(-1, 0);
@@ -798,8 +809,8 @@ namespace ferram4
                 TempCurve2.Add(1, 0);
 
                 FloatCurve TempCurve4 = new FloatCurve();
-                TempCurve2.Add(-1, 0);
-                TempCurve2.Add(1, 0);
+                TempCurve4.Add(-1, 0);
+                TempCurve4.Add(1, 0);
 
                 FloatCurve TempCurve3 = new FloatCurve();
                 TempCurve3.Add(-1, 0);
@@ -864,19 +875,19 @@ namespace ferram4
                             TempCurve2.Add((float)cosCutoffAngle, 0, (float)Cn1, 0);
                         else
                             TempCurve2.Add(-0.9f, 0, (float)Cn1, 0);
-                        TempCurve2.Add(-0.8660f, (float)(Math.Cos((Math.PI * 0.5 - Math.Acos(0.8660f)) * 0.5) * Math.Sin(2 * (Math.PI * 0.5 - Math.Acos(0.8660f))) * Cn1), 0, 0);
+                        TempCurve2.Add(-0.8660f, (float)(Math.Cos((Math.PI * 0.5 - Math.Acos(0.8660)) * 0.5) * Math.Sin(2 * (Math.PI * 0.5 - Math.Acos(0.8660))) * Cn1), 0, 0);
                         TempCurve2.Add(0, 0);
-                        TempCurve2.Add(0.8660f, (float)(Math.Cos((Math.PI * 0.5 - Math.Acos(0.8660f)) * 0.5) * Math.Sin(2 * (Math.PI * 0.5 - Math.Acos(0.8660f))) * Cn1), 0, 0);
+                        TempCurve2.Add(0.8660f, (float)(Math.Cos((Math.PI * 0.5 - Math.Acos(0.8660)) * 0.5) * Math.Sin(2 * (Math.PI * 0.5 - Math.Acos(0.8660))) * Cn1), 0, 0);
                         TempCurve2.Add(1, 0, (float)Cn1, (float)Cn1);
 
                         TempCurve4.Add(-1, 0, 0, 0);
-                        TempCurve4.Add(-0.95f, (float)(Math.Pow(Math.Sin(Math.Acos(0.95f)), 2) * Cn2 * -0.95f));
-                        TempCurve4.Add(-0.8660f, (float)(Math.Pow(Math.Sin(Math.Acos(0.8660f)), 2) * Cn2 * -0.8660f));
-                        TempCurve4.Add(-0.5f, (float)(Math.Pow(Math.Sin(Math.Acos(0.5f)), 2) * Cn2 * -0.5f));
+                        TempCurve4.Add(-0.95f, (float)(Math.Pow(Math.Sin(Math.Acos(0.95)), 2) * Cn2 * -0.95));
+                        TempCurve4.Add(-0.8660f, (float)(Math.Pow(Math.Sin(Math.Acos(0.8660)), 2) * Cn2 * -0.8660));
+                        TempCurve4.Add(-0.5f, (float)(Math.Pow(Math.Sin(Math.Acos(0.5f)), 2) * Cn2 * -0.5));
                         TempCurve4.Add(0, 0);
-                        TempCurve4.Add(0.5f, (float)(Math.Pow(Math.Sin(Math.Acos(0.5f)), 2) * Cn2 * 0.5f));
-                        TempCurve4.Add(0.8660f, (float)(Math.Pow(Math.Sin(Math.Acos(0.8660f)), 2) * Cn2 * 0.8660f));
-                        TempCurve4.Add(0.95f, (float)(Math.Pow(Math.Sin(Math.Acos(0.95f)), 2) * Cn2 * 0.95f));
+                        TempCurve4.Add(0.5f, (float)(Math.Pow(Math.Sin(Math.Acos(0.5)), 2) * Cn2 * 0.5));
+                        TempCurve4.Add(0.8660f, (float)(Math.Pow(Math.Sin(Math.Acos(0.8660)), 2) * Cn2 * 0.8660));
+                        TempCurve4.Add(0.95f, (float)(Math.Pow(Math.Sin(Math.Acos(0.95)), 2) * Cn2 * 0.95));
                         TempCurve4.Add(1, 0, 0, 0);
                     }
                     else
@@ -1315,7 +1326,7 @@ namespace ferram4
             return tmp;
         }
 
-        //Calculates Oswald's Efficiency e using Sheval's Method
+        //Calculates Oswald's Efficiency e using Shevell's Method
         public static double CalculateOswaldsEfficiency(double AR, double CosSweepAngle, double Cd0)
         {
             double e = 1 - 0.02 * FARMathUtil.PowApprox(AR, 0.7) * FARMathUtil.PowApprox(Math.Acos(CosSweepAngle), 2.2);

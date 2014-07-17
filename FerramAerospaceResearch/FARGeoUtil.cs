@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.3
+Ferram Aerospace Research v0.14
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -400,6 +400,15 @@ namespace ferram4
         {
             List<Transform> returnList = new List<Transform>();
 
+            //Very hacky, but is necessary for root parts with broken transforms
+            if (p.partTransform == null)
+            {
+                bool root = p == p.vessel.rootPart;
+                Debug.Log("This one is busted: " + p.partInfo.title + " root? " + root);
+                if (root)
+                    p.partTransform = p.vessel.vesselTransform;
+            } 
+            
             Transform[] propellersToIgnore = IgnoreModelTransformArray(p);
 
             returnList.AddRange(p.FindModelComponents<Transform>());

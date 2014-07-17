@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.3
+Ferram Aerospace Research v0.14
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -147,7 +147,7 @@ namespace ferram4
         private static bool AoAHlp = false;
 
 
-        public static bool minimize = false;
+        public static bool minimize = true;
 
 
 /*        private static Vector3 SaveWindowPos = new Vector3();
@@ -206,7 +206,7 @@ namespace ferram4
 
         public enum SurfaceVelMode
         {
-            DEFAULT,
+            TAS,
             IAS,
             EAS,
             MACH
@@ -214,7 +214,7 @@ namespace ferram4
 
         private static string[] surfModel_str = 
         {
-            "Default",
+            "TAS",
             "IAS",
             "EAS",
             "Mach"
@@ -236,7 +236,7 @@ namespace ferram4
             "km/h"
         };
 
-        public static SurfaceVelMode velMode = SurfaceVelMode.DEFAULT;
+        public static SurfaceVelMode velMode = SurfaceVelMode.TAS;
         public static SurfaceVelUnit unitMode = SurfaceVelUnit.M_S;
 
 /*        public void FlapChange()
@@ -888,7 +888,7 @@ namespace ferram4
             scaleVelocity_str = GUILayout.TextField(scaleVelocity_str, GUILayout.ExpandWidth(true));
             scaleVelocity_str = Regex.Replace(scaleVelocity_str, @"[^-?\d*\.?\d*]", "");
             GUILayout.Label("Ctrl Factor:", GUILayout.Width(80));
-            GUILayout.Box(scalingfactor.ToString(), mySty, GUILayout.Width(90.0F), GUILayout.Height(30.0F));
+            GUILayout.Box(scalingfactor.ToString("N4"), mySty, GUILayout.Width(90.0F), GUILayout.Height(30.0F));
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
             GUILayout.Label("Scaling Altitude:", GUILayout.Width(100));
@@ -1087,14 +1087,14 @@ namespace ferram4
             TabLabelStyle.alignment = TextAnchor.UpperCenter;
 
             GUILayout.BeginVertical(GUILayout.Height(200), GUILayout.Width(500), GUILayout.ExpandHeight(true));
-            GUILayout.Label("Default", TabLabelStyle);
+            GUILayout.Label("TAS", TabLabelStyle);
             GUILayout.BeginHorizontal();
-            GUILayout.Box("This setting causes the surface velocity indicator to display the true airspeed (TAS) of the vehicle, relative to the rotating body is on.", mySty);
+            GUILayout.Box("This is the default setting, and displays the true airspeed (TAS) of the vehicle relative to the rotating body is on.", mySty);
             GUILayout.EndHorizontal();
             GUILayout.Space(10);
             GUILayout.Label("IAS", TabLabelStyle);
             GUILayout.BeginHorizontal();
-            GUILayout.Box("This sets the surface velocity indicator to display indicated airspeed (IAS), which is the airspeed that would be measured by a standard pitot tube (device used for measuring airspeed) on this vehicle", mySty);
+            GUILayout.Box("This sets the surface velocity indicator to display indicated airspeed (IAS), which is the airspeed that would be measured by a standard pitot tube (device used for measuring airspeed using changes in air pressure) on this vehicle", mySty);
             GUILayout.EndHorizontal();
             GUILayout.Space(10); 
             GUILayout.Label("EAS", TabLabelStyle);
@@ -1122,8 +1122,14 @@ namespace ferram4
         {
             if (FlightUIController.speedDisplayMode != FlightUIController.SpeedDisplayModes.Surface)
                 return;
+
             FlightUIController UI = FlightUIController.fetch;
+
+            if ((object)activeControlSys == null)
+                return;
+
             Vessel activeVessel = activeControlSys.vessel;
+
             double unitConversion = 1;
             string unitString = "m/s";
             if (unitMode == SurfaceVelUnit.KNOTS)
@@ -1141,10 +1147,9 @@ namespace ferram4
                 unitConversion = 2.236936;
                 unitString = "mph";
             }
-
-            if (velMode == SurfaceVelMode.DEFAULT)
+            if (velMode == SurfaceVelMode.TAS)
             {
-                UI.spdCaption.text = "Surface";
+                UI.spdCaption.text = "TAS";
                 UI.speed.text = (activeVessel.srf_velocity.magnitude * unitConversion).ToString("F1") + unitString;
             }
             else if (velMode == SurfaceVelMode.IAS)
@@ -1172,7 +1177,7 @@ namespace ferram4
             GUI.skin = HighLogic.Skin;
             if (this == activeControlSys && !minimize)
             {
-                windowPos = GUILayout.Window(250, windowPos, WindowGUI, "FAR Flight Systems, v0.13.3", GUILayout.MinWidth(150));
+                windowPos = GUILayout.Window(250, windowPos, WindowGUI, "FAR Flight Systems, v0.14", GUILayout.MinWidth(150));
                 if (AutopilotWindow)
                 {
                     AutoPilotWindowPos = GUILayout.Window(251, AutoPilotWindowPos, AutopilotWindowGUI, "FAR Flight Assistance System Options", GUILayout.MinWidth(330));
@@ -1221,19 +1226,23 @@ namespace ferram4
             }
         }
 
-        public static void StabilityAugmentationUpdate(Vessel vesselToChangeTo, Vessel vesselToChangeFrom)
+        public static bool StabilityAugmentationUpdate(Vessel vesselToChangeTo, Vessel vesselToChangeFrom)
         {
-            if ((object)vesselToChangeFrom != null)
+            if ((object)vesselToChangeFrom != null && (object)activeControlSys != null)
             {
-                RenderingManager.RemoveFromPostDrawQueue(0, new Callback(activeControlSys.OnGUI));
+                RenderingManager.RemoveFromPreDrawQueue(0, new Callback(activeControlSys.OnGUI));
                 FlightGlobals.ActiveVessel.OnFlyByWire -= new FlightInputCallback(StabilityAugmentation);
             }
             activeControlSys = vesselToChangeTo.GetComponent<FARControlSys>();
-            RenderingManager.AddToPostDrawQueue(0, new Callback(activeControlSys.OnGUI));
+            if ((object)activeControlSys == null)
+                return false;
+            RenderingManager.AddToPreDrawQueue(0, new Callback(activeControlSys.OnGUI));
 
 
             statusOverrideTimer = 0;
             vesselToChangeTo.OnFlyByWire += new FlightInputCallback(StabilityAugmentation);
+
+            return true;
         }
 
 

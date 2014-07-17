@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.3
+Ferram Aerospace Research v0.14
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -58,7 +58,7 @@ namespace ferram4
         protected static bool stabDerivHelp = false;
         public static List<FARWingAerodynamicModel> AllControlSurfaces = new List<FARWingAerodynamicModel>();
         public static List<FARWingAerodynamicModel> AllWings = new List<FARWingAerodynamicModel>();
-        public static bool minimize = false;
+        public static bool minimize = true;
 
         private static double lastMinBounds = 0;
         private static double lastMaxBounds = 0;
@@ -200,7 +200,7 @@ namespace ferram4
 
             if (!minimize)
             {
-                windowPos = GUILayout.Window(256, windowPos, ActualGUI, "FAR Control & Analysis Systems, v0.13.3");
+                windowPos = GUILayout.Window(256, windowPos, ActualGUI, "FAR Control & Analysis Systems, v0.14");
                 if (AnalysisHelp)
                 {
                     analysisHelpPos = GUILayout.Window(258, analysisHelpPos, AnalysisHelpGUI, "FAR Analysis Systems Help", GUILayout.Width(400), GUILayout.Height(Screen.height / 3));

@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.3
+Ferram Aerospace Research v0.14
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -166,6 +166,9 @@ namespace ferram4
             base.OnAwake();
             part_transform = part.partTransform;
 
+            //Terrible, hacky fix for part.partTransform going bad
+            if (part.partTransform == null && part == part.vessel.rootPart)
+                part_transform = vessel.vesselTransform;
         }
 
         public override void OnStart(PartModule.StartState state)

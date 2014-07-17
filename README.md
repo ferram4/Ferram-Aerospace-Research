@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.13.3
+Ferram Aerospace Research v0.14
 =========================
 
 Aerodynamics model for Kerbal Space Program
@@ -81,7 +81,7 @@ MODULE
 	name = FARControllableSurface / FARWingAerodynamicModel  
 	b_2 = 0.5				//distance from wing root to tip; semi-span  
 	MAC = 0.5				//Mean Aerodynamic Chord  
-	e = 0.9					//Oswald's Efficiency, 0-1, increases drag from lift  
+	e = 0.9					//Oswald's Efficiency, 0-1, increases drag from lift  	//DEPRECATED
 	nonSideAttach = 0			//0 for canard-like / normal wing pieces, 1 for ctrlsurfaces attached to the back of other wing parts  
 	TaperRatio = 0.7			//Ratio of tip chord to root chord generally < 1, must be > 0  
 	MidChordSweep = 25			//Sweep angle in degrees; measured down the center of the span / midchord position  
@@ -135,6 +135,20 @@ For both of these, set MaxDrag and MinDrag to 0
 
 CHANGELOG
 =======================================================
+
+0.14v------------------------------------
+Features:
+Updated to KSP 0.24!  WILL NOT BE COMPATIBLE WITH KSP 0.23.5
+Integration with Blizzy's toolbar is now optional; can switch between toolbar and new stock AppLauncher
+Updated modeling of transonic and supersonic wing drag; greater benefits from sweep and low AR wings
+Dynamic calculation of Oswald's Efficiency for wings; e value specified in configs is deprecated
+Update to Module Manager 2.1.5
+
+Bugfixes:
+Fixed some wings not being shielded by fairings / cargo bays
+Fixed control systems refusing to function as a result of docking
+Fixed an issue with wing aerodynamic center being placed wrong at supersonic speeds
+
 
 0.13.3v------------------------------------  
 Features:

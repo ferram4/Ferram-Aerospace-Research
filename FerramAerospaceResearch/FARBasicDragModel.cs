@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.3
+Ferram Aerospace Research v0.14
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -323,7 +323,6 @@ namespace ferram4
                 RunDragCalculation(velocityEditor, MachNumber, 1);
 
             return Cd * S;
-
         }
 
         public double GetLiftEditor()
@@ -404,7 +403,7 @@ namespace ferram4
 
                 Rigidbody rb = part.Rigidbody;
 
-                if (HighLogic.LoadedSceneIsFlight && rb)
+                if (HighLogic.LoadedSceneIsFlight && (object)rb != null)
                 {
                     if (rb.angularVelocity.sqrMagnitude != 0)
                     {
@@ -847,7 +846,6 @@ namespace ferram4
             {
                 return;
             }
-
             if(VesselPartList == null)
                 UpdateShipPartsList();
 
@@ -870,19 +868,7 @@ namespace ferram4
                         continue;
                     }
                     if (Attach.id.ToLowerInvariant() == "strut")
-                        continue;
-
-/*                    string attachId = Attach.id.ToLowerInvariant();
-                    bool leaveAttachLoop = false;
-                    foreach (string s in FARMiscData.exemptAttachNodes)
-                        if (attachId.Contains(s))
-                        {
-                            leaveAttachLoop = true;
-                            break;
-                        }
-                    if (leaveAttachLoop)
-                        continue;*/
-                        
+                        continue;                        
 
                     Ray ray = new Ray();
 
@@ -935,7 +921,6 @@ namespace ferram4
                         
                     if (!gotIt)
                     {
-//                            float exposedAttachArea = (Mathf.PI * Mathf.Pow(attachSize * FARAeroUtil.attachNodeRadiusFactor, 2) / Mathf.Clamp(S, 0.01f, Mathf.Infinity));
                         double exposedAttachArea = attachSize * FARAeroUtil.attachNodeRadiusFactor;
                         exposedAttachArea *= exposedAttachArea;
                         exposedAttachArea *= Math.PI * FARAeroUtil.areaFactor;
@@ -948,7 +933,6 @@ namespace ferram4
                         else
                             newAttachNodeData.pitchesAwayFromUpVec = false;
 
-
                         if (attachNodeDragDict.ContainsKey(transform.worldToLocalMatrix.MultiplyVector(origToNode)))
                         {
                             attachNodeData tmp = attachNodeDragDict[transform.worldToLocalMatrix.MultiplyVector(origToNode)];
@@ -960,9 +944,6 @@ namespace ferram4
                     }
                 }
             }
-//            }
-
-            //print(part.partInfo.title + " Num unused Attach Nodes: " + attachNodeDragDict.Count);
         }
         /// <summary>
         /// These are just a few different attempts to figure drag for various blunt bodies
@@ -983,6 +964,7 @@ namespace ferram4
             double M_2 = M * M;
             double M_2_recip = 1 / M_2;
             double maxPressureCoeff;
+            
             if(FARDebugValues.useSplinesForSupersonicMath)
                 maxPressureCoeff = FARAeroUtil.MaxPressureCoefficient.Evaluate((float)M);
             else
@@ -1003,9 +985,13 @@ namespace ferram4
             {
                 crossflowParameter *= 50 * OneMinusAxial_2;
             }
-
+            
             Cd += CdCurve.Evaluate(AxialProportion_flt);
+
+
+
             viscousLift = ClViscousCurve.Evaluate(AxialProportion_flt);
+
             double axialDirectionFactor = cosAngleCutoff * AxialProportion;
 
             if (axialDirectionFactor > 0)
@@ -1025,8 +1011,9 @@ namespace ferram4
             {
                 potentialLift = ClPotentialCurve.Evaluate(AxialProportion_flt);
             }
-            Cm = CmCurve.Evaluate(AxialProportion_flt) * 0.1;
 
+
+            Cm = CmCurve.Evaluate(AxialProportion_flt) * 0.1;
 
             CoDshift = CenterOfDrag;
 
@@ -1089,6 +1076,7 @@ namespace ferram4
                 newtonianLift += Cltmp;
             }
 
+
             viscousLift *= MachMultiplier;
             Cd += CdAdd;
             Cl = viscousLift + potentialLift;
@@ -1123,9 +1111,6 @@ namespace ferram4
             else
                 multiplier = 0.15 / M + 1.25;             //Cd drops after Mach 1
 
-
-            //            if (DragEnumType == DragModelType.NOSECONE)
-            //                multiplier *= 0.25f * S;
 
             return multiplier;
         }

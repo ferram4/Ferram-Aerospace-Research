@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.3
+Ferram Aerospace Research v0.14
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -38,7 +38,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using KSP;
-using Toolbar;
+//using Toolbar;
 
 namespace ferram4
 {
@@ -47,7 +47,8 @@ namespace ferram4
     {
 
         public static KSP.IO.PluginConfiguration config;
-        private IButton FARDebugButton;
+        private IButton FARDebugButtonBlizzy = null;
+        private ApplicationLauncherButton FARDebugButtonStock = null;
         private bool debugMenu = false;
         private Rect debugWinPos = new Rect(50, 50, 700, 250);
 
@@ -83,17 +84,52 @@ namespace ferram4
         public void Awake()
         {
             LoadConfigs();
-            FARDebugButton = ToolbarManager.Instance.add("ferram4", "FARDebugButton");
-            FARDebugButton.TexturePath = "FerramAerospaceResearch/Textures/icon_button";
-            FARDebugButton.ToolTip = "FAR Debug Options";
-            FARDebugButton.OnClick += (e) => debugMenu = !debugMenu;
+            if (FARDebugValues.useBlizzyToolbar)
+            {
+                FARDebugButtonBlizzy = ToolbarManager.Instance.add("ferram4", "FARDebugButtonBlizzy");
+                FARDebugButtonBlizzy.TexturePath = "FerramAerospaceResearch/Textures/icon_button_blizzy";
+                FARDebugButtonBlizzy.ToolTip = "FAR Debug Options";
+                FARDebugButtonBlizzy.OnClick += (e) => debugMenu = !debugMenu;
+            }
+            else
+                GameEvents.onGUIApplicationLauncherReady.Add(OnGUIAppLauncherReady);
         }
+
+        void OnGUIAppLauncherReady()
+        {
+            if (ApplicationLauncher.Ready)
+            {
+                    FARDebugButtonStock = ApplicationLauncher.Instance.AddModApplication(
+                        onAppLaunchToggleOn,
+                        onAppLaunchToggleOff,
+                        DummyVoid,
+                        DummyVoid,
+                        DummyVoid,
+                        DummyVoid,
+                        ApplicationLauncher.AppScenes.SPACECENTER,
+                        (Texture)GameDatabase.Instance.GetTexture("FerramAerospaceResearch/Textures/icon_button_stock", false));
+                
+            }
+        }
+
+        void onAppLaunchToggleOn()
+        {
+            debugMenu = true;
+        }
+
+        void onAppLaunchToggleOff()
+        {
+            debugMenu = false;
+        }
+
+        void DummyVoid() { }
+
 
         public void OnGUI()
         {
             GUI.skin = HighLogic.Skin;
             if (debugMenu)
-                debugWinPos = GUILayout.Window("FARDebug".GetHashCode(), debugWinPos, debugWindow, "FAR Debug Options, v0.13.3", GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+                debugWinPos = GUILayout.Window("FARDebug".GetHashCode(), debugWinPos, debugWindow, "FAR Debug Options, v0.14", GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
         }
 
 
@@ -407,6 +443,33 @@ namespace ferram4
             FARDebugValues.manualOverrideShielding = GUILayout.Toggle(FARDebugValues.manualOverrideShielding, "Manual Override for Part Shielding", thisStyle);
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
+            if (ToolbarManager.ToolbarAvailable)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Other Options");
+                FARDebugValues.useBlizzyToolbar = GUILayout.Toggle(FARDebugValues.useBlizzyToolbar, "Use Blizzy78 Toolbar instead of Stock AppManager", thisStyle);
+                bool tmp = FARDebugValues.useBlizzyToolbar;
+
+                if (tmp != FARDebugValues.useBlizzyToolbar)
+                {
+                    if (FARDebugButtonStock != null)
+                        ApplicationLauncher.Instance.RemoveModApplication(FARDebugButtonStock);
+
+                    if (FARDebugButtonBlizzy != null)
+                        FARDebugButtonBlizzy.Destroy();
+
+                    if (FARDebugValues.useBlizzyToolbar)
+                    {
+                        FARDebugButtonBlizzy = ToolbarManager.Instance.add("ferram4", "FARDebugButtonBlizzy");
+                        FARDebugButtonBlizzy.TexturePath = "FerramAerospaceResearch/Textures/icon_button_blizzy";
+                        FARDebugButtonBlizzy.ToolTip = "FAR Debug Options";
+                        FARDebugButtonBlizzy.OnClick += (e) => debugMenu = !debugMenu;
+                    }
+                    else
+                        GameEvents.onGUIApplicationLauncherReady.Add(OnGUIAppLauncherReady);
+                }
+                GUILayout.EndHorizontal();
+            }
         }
 
         public static void LoadConfigs()
@@ -419,6 +482,8 @@ namespace ferram4
             FARDebugValues.useSplinesForSupersonicMath = Convert.ToBoolean(config.GetValue("useSplinesForSupersonicMath", "true"));
             FARDebugValues.allowStructuralFailures = Convert.ToBoolean(config.GetValue("allowStructuralFailures", "true"));
             FARDebugValues.manualOverrideShielding = Convert.ToBoolean(config.GetValue("manualOverrideShielding", "false"));
+
+            FARDebugValues.useBlizzyToolbar = Convert.ToBoolean(config.GetValue("useBlizzyToolbar", "false"));
 
             FARAeroStress.LoadStressTemplates();
             FARPartClassification.LoadClassificationTemplates();
@@ -435,6 +500,10 @@ namespace ferram4
             config.SetValue("allowStructuralFailures", FARDebugValues.allowStructuralFailures.ToString());
             config.SetValue("manualOverrideShielding", FARDebugValues.manualOverrideShielding.ToString());
 
+            config.SetValue("useBlizzyToolbar", FARDebugValues.useBlizzyToolbar.ToString());
+
+            FARDebugValues.useBlizzyToolbar &= ToolbarManager.ToolbarAvailable;
+
             FARAeroUtil.SaveCustomAeroDataToConfig();
             FARPartClassification.SaveCustomClassificationTemplates();
             FARAeroStress.SaveCustomStressTemplates();
@@ -443,7 +512,12 @@ namespace ferram4
         void OnDestroy()
         {
             SaveConfigs();
-            FARDebugButton.Destroy();
+            GameEvents.onGUIApplicationLauncherReady.Remove(OnGUIAppLauncherReady);
+            if (FARDebugButtonStock != null)
+                ApplicationLauncher.Instance.RemoveModApplication(FARDebugButtonStock);
+
+            if (FARDebugButtonBlizzy != null)
+                FARDebugButtonBlizzy.Destroy();
         }
 
     }
@@ -458,5 +532,7 @@ namespace ferram4
         public static bool useSplinesForSupersonicMath = true;
         public static bool allowStructuralFailures = true;
         public static bool manualOverrideShielding = false;
+
+        public static bool useBlizzyToolbar = false;
     }
 }

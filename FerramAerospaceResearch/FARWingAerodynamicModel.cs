@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.13.3
+Ferram Aerospace Research v0.14
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -278,7 +278,7 @@ namespace ferram4
         {
             base.OnStart(state);
 
-            OnVesselPartsChange += RunExposureAndGetControlSys;
+            OnVesselPartsChange += RunExposure;
 
             if (part is ControlSurface)
             {
@@ -330,7 +330,7 @@ namespace ferram4
             sweepPerp2Local = Vector3d.up * Math.Sin(MidChordSweepSideways) - Vector3d.right * Math.Cos(MidChordSweepSideways) * srfAttachNegative; //Vector perpendicular to midChord line2
 
             PrecomputeCentroid();
-            RunExposureAndGetControlSys();
+            RunExposure();
 
             if (FARDebugValues.allowStructuralFailures)
             {
@@ -350,7 +350,7 @@ namespace ferram4
             }
         }
 
-        private void RunExposureAndGetControlSys()
+        private void RunExposure()
         {
             LastInFrontRaycastCount = 0;
 
@@ -670,13 +670,16 @@ namespace ferram4
             double ACshift = 0, ACweight = 0;
             DetermineStall(MachNumber, AoA, out ACshift, out ACweight);
 
-            double Cd0 = CdCompressibilityZeroLiftIncrement(MachNumber, SweepAngle) + 0.006;
+            double beta = Math.Sqrt(MachNumber * MachNumber - 1);
+            double TanSweep = Math.Tan(FARMathUtil.Clamp(Math.Acos(SweepAngle), 0, Math.PI * 0.5));
+            double beta_TanSweep = beta / TanSweep;
+
+            if (double.IsNaN(beta_TanSweep))
+                beta_TanSweep = 0;
+
+            double Cd0 = CdCompressibilityZeroLiftIncrement(MachNumber, SweepAngle, TanSweep, beta_TanSweep, beta) + 0.006;
             e = FARAeroUtil.CalculateOswaldsEfficiency(effective_AR, SweepAngle, Cd0);
             piARe = effective_AR * e * Math.PI;
-
-            double beta = 1;
-            double TanSweep = 0;
-            double beta_TanSweep = 0;
 
 
             if (MachNumber <= 0.6)
@@ -710,13 +713,6 @@ namespace ferram4
                 else
                     sonicLEFactor = (1 - 0.125 * liftslope) * FARMathUtil.Clamp(1 - 1 / sonicLe, 0, 1) + 0.125 * liftslope;*/
 
-                beta = Math.Sqrt(MachNumber * MachNumber - 1);
-                TanSweep = Math.Tan(FARMathUtil.Clamp(Math.Acos(SweepAngle), 0, Math.PI * 0.5));
-                beta_TanSweep = beta / TanSweep;
-                if (double.IsNaN(beta_TanSweep))
-                    beta_TanSweep = 0;
-
-
                 double supersonicLENormalForceFactor = CalculateSupersonicLEFactor(beta, TanSweep, beta_TanSweep);
 
                 double normalForce;
@@ -744,7 +740,7 @@ namespace ferram4
                 double Cn = liftslope;
                 Cl = Cn * Math.Sin(2 * AoA) * 0.5;
 
-                if (MachNumber < 1)
+                if (MachNumber <= 1)
                 {
                     Cl += ClIncrementFromRear;
                     if (Math.Abs(Cl) > Math.Abs(ACweight))
@@ -759,7 +755,9 @@ namespace ferram4
 
                 double M = FARMathUtil.Clamp(MachNumber, 1.2, double.PositiveInfinity);
 
-                beta = Math.Sqrt(M * M - 1);
+                if (double.IsNaN(beta) || beta < 0.66332495807107996982298654733414)
+                    beta = 0.66332495807107996982298654733414;
+
                 TanSweep = Math.Tan(FARMathUtil.Clamp(Math.Acos(SweepAngle), 0, Math.PI * 0.5));
                 beta_TanSweep = beta / TanSweep;
                 if (double.IsNaN(beta_TanSweep))
@@ -1224,30 +1222,10 @@ namespace ferram4
 
         #region Compressibility
 
-
-        /// <summary>
-        /// This models stall due to shockwaves appearing on the wings during transonic flight
-        /// </summary>
-        /*        private float ShockStall(float M)
-                {
-                    float flowSep = 0;
-                    if (Mathf.Abs(AoA) < Math.PI / 36)
-                        return 0;
-                    float CritMach = FARAeroUtil.CriticalMachNumber.Evaluate(Mathf.Abs(AoA));
-                    if(M > CritMach)
-                    {
-                        flowSep = Mathf.Min((M - CritMach) * 0.5f, (1.1f - M) * 0.5f);
-                        flowSep = Mathf.Clamp01(flowSep);
-                    }
-                    return flowSep;
-                }*/
-
-
-
         /// <summary>
         /// This modifies the Cd to account for compressibility effects
         /// </summary>
-        private double CdCompressibilityZeroLiftIncrement(double M, double SweepAngle)
+        private double CdCompressibilityZeroLiftIncrement(double M, double SweepAngle, double TanSweep, double beta_TanSweep, double beta)
         {
 
             if ((object)WingInFrontOf != null)
@@ -1256,6 +1234,24 @@ namespace ferram4
                 return zeroLiftCdIncrement;
             }
 
+            //Based on the method of DATCOM Section 4.1.5.1-C
+            if(M > 1.4)
+            {
+                //Subsonic leading edge
+                if(beta_TanSweep < 1)
+                {                           //This constant is due to airfoil shape and thickness
+                    zeroLiftCdIncrement = 0.009216 / TanSweep;
+                }
+                //Supersonic leading edge
+                else
+                {
+                    zeroLiftCdIncrement = 0.009216 / beta;
+                }
+                return zeroLiftCdIncrement;
+            }
+
+
+            //Based on the method of DATCOM Section 4.1.5.1-B
             double tmp = 1 / Math.Sqrt(SweepAngle);
 
             double dd_MachNumber = 0.8 * tmp;               //Find Drag Divergence Mach Number
@@ -1273,55 +1269,46 @@ namespace ferram4
             if (M > peak_MachNumber)
             {
                 zeroLiftCdIncrement = peak_Increment;
-                return peak_Increment;
-            }
-
-            //double CdIncrement = (M - dd_MachNumber) / (peak_MachNumber - dd_MachNumber) * peak_Increment;
-
-            tmp = dd_MachNumber - peak_MachNumber;
-            tmp = tmp * tmp * tmp;
-            tmp = 1 / tmp;
-
-            double CdIncrement = 2 * M;
-            CdIncrement -= 3 * (dd_MachNumber + peak_MachNumber);
-            CdIncrement *= M;
-            CdIncrement += 6 * dd_MachNumber * peak_MachNumber;
-            CdIncrement *= M;
-            CdIncrement += dd_MachNumber * dd_MachNumber * (dd_MachNumber - 3 * peak_MachNumber);
-            CdIncrement *= tmp;
-            CdIncrement *= peak_Increment;
-
-            zeroLiftCdIncrement = CdIncrement;
-
-            return CdIncrement;
-        }
-
-        /*private float CdCompressibilityMultiplier(float M, float SweepOrMiddle, float sonicLE)
-        {
-            float CdMultiplier;
-
-            float severityFactor = 1 - SweepOrMiddle;
-            severityFactor *= severityFactor;
-
-            float ExpSlope = 1.1f - severityFactor;                    //These make drag worse for unswept wings; add 1 to this to get multiplier at Mach 1
-            float MinfAsym = 1.35f - severityFactor * 0.35f;
-            float contfactor = (1 + ExpSlope - MinfAsym);                  //make continuous
-            if (M <= 1)
-            {
-                CdMultiplier = 1f + ExpSlope * FARAeroUtil.ExponentialApproximation(10 * M - 10f);            //Exponentially increases, mostly from 0.8 to 1;  Models Drag divergence due to locally supersonic flow around object at flight Mach Numbers < 1
             }
             else
             {
-                CdMultiplier = contfactor / M + MinfAsym;             //Cd drops after Mach 1 for wings
+                tmp = dd_MachNumber - peak_MachNumber;
+                tmp = tmp * tmp * tmp;
+                tmp = 1 / tmp;
 
-//                if (sonicLE > 1)
-//                {
-//                    CdMultiplier *= 5 * (5 * sonicLE / (sonicLE + 5) + sonicLE) + 1;
-//                }
+                double CdIncrement = 2 * M;
+                CdIncrement -= 3 * (dd_MachNumber + peak_MachNumber);
+                CdIncrement *= M;
+                CdIncrement += 6 * dd_MachNumber * peak_MachNumber;
+                CdIncrement *= M;
+                CdIncrement += dd_MachNumber * dd_MachNumber * (dd_MachNumber - 3 * peak_MachNumber);
+                CdIncrement *= tmp;
+                CdIncrement *= peak_Increment;
+
+                zeroLiftCdIncrement = CdIncrement;
             }
-            
-            return CdMultiplier;
-        }*/
+           
+            double scalingMachNumber = Math.Min(peak_MachNumber, 1.2);
+
+            if (M < scalingMachNumber)
+                return zeroLiftCdIncrement;
+
+            double scale = (M - 1.4) / (scalingMachNumber - 1.4);
+            zeroLiftCdIncrement *= scale;
+            scale = 1 - scale;
+
+            //Subsonic leading edge
+            if (beta_TanSweep < 1)
+            {                           //This constant is due to airfoil shape and thickness
+                zeroLiftCdIncrement += 0.009216 / TanSweep * scale;
+            }
+            //Supersonic leading edge
+            else
+            {
+                zeroLiftCdIncrement += 0.009216 / beta * scale;
+            }
+            return zeroLiftCdIncrement;
+        }
         #endregion
 
         #region Exposure / Whole is greater than sum of parts
