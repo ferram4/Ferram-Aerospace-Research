@@ -1,0 +1,14 @@
+{
+  "NAME": "Neophyte's Elementary Aerodynamics Replacement",
+  "URL": "https://github.com/ferram4/Ferram-Aerospace-Research/tree/NEAR/GameData/NEAR/NEAR.version",
+  "VERSION": {
+    "MAJOR": 1,
+    "MINOR": 0,
+    "PATCH": 0
+  },
+  "KSP_VERSION": {
+    "MAJOR": 0,
+    "MINOR": 24,
+    "PATCH": 0
+  }
+}
