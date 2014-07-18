@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.14
+Ferram Aerospace Research v0.14.0.1
 =========================
 
 Aerodynamics model for Kerbal Space Program
@@ -135,6 +135,12 @@ For both of these, set MaxDrag and MinDrag to 0
 
 CHANGELOG
 =======================================================
+
+0.14.0.1v------------------------------------
+Bugfixes:
+Included JsonFx.dll, which is required by ModStats
+Relabeled ModStatistics.dll to allow simple overwriting for ModStats updates
+
 
 0.14v------------------------------------
 Features:

@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14
+Ferram Aerospace Research v0.14.0.1
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -9,7 +9,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Kerbal Joint Reinforcement is distributed in the hope that it will be useful,
+    Ferram Aerospace Research is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
@@ -129,7 +129,7 @@ namespace ferram4
         {
             GUI.skin = HighLogic.Skin;
             if (debugMenu)
-                debugWinPos = GUILayout.Window("FARDebug".GetHashCode(), debugWinPos, debugWindow, "FAR Debug Options, v0.14", GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+                debugWinPos = GUILayout.Window("FARDebug".GetHashCode(), debugWinPos, debugWindow, "FAR Debug Options, v0.14.0.1", GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
         }
 
 
