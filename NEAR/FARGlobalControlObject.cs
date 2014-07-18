@@ -1,5 +1,5 @@
 ﻿/*
-Neophyte's Elementary Aerodynamics Replacement v1.0.1
+Neophyte's Elementary Aerodynamics Replacement v1.0.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Neophyte's Elementary Aerodynamics Replacement.
@@ -103,6 +103,20 @@ namespace NEAR
 
                 string title = p.partInfo.title.ToLowerInvariant();
 
+                if (p.Modules.Contains("FARBasicDragModel"))
+                {
+                    FARBasicDragModel d = p.Modules["FARBasicDragModel"] as FARBasicDragModel;
+                    if (d.CdCurve == null || d.ClPotentialCurve == null || d.ClViscousCurve == null || d.CmCurve == null)
+                    {
+                        p.RemoveModule(d);
+                        Debug.Log("Removing Incomplete NEAR Drag Module");
+                    }
+                }
+                if (p.Modules.Contains("FARPayloadFairingModule"))
+                    p.RemoveModule(p.Modules["FARPayloadFairingModule"]);
+                if (p.Modules.Contains("FARCargoBayModule"))
+                    p.RemoveModule(p.Modules["FARCargoBayModule"]); 
+                
                 if (p is StrutConnector || p is FuelLine || p is ControlSurface || p is Winglet || FARPartClassification.ExemptPartFromGettingDragModel(p, title))
                     continue;
 
@@ -200,8 +214,6 @@ namespace NEAR
 
                 string title = p.partInfo.title.ToLowerInvariant();
 
-                if (p is StrutConnector || p is FuelLine || p is ControlSurface || p is Winglet || FARPartClassification.ExemptPartFromGettingDragModel(p, title))
-                    continue;
 
                 if (p.Modules.Contains("FARBasicDragModel"))
                 {
@@ -217,6 +229,8 @@ namespace NEAR
                 if (p.Modules.Contains("FARCargoBayModule"))
                     p.RemoveModule(p.Modules["FARCargoBayModule"]);
 
+                if (p is StrutConnector || p is FuelLine || p is ControlSurface || p is Winglet || FARPartClassification.ExemptPartFromGettingDragModel(p, title))
+                    continue;
 
                 FARPartModule q = p.GetComponent<FARPartModule>();
                 if (q != null)
