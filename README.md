@@ -1,4 +1,4 @@
-Neophyte's Elementary Aerodynamics Replacement v1.0
+Neophyte's Elementary Aerodynamics Replacement v1.0.1
 =========================
 
 Simpler aerodynamics model for Kerbal Space Program, based on a stripped-down version of Ferram Aerospace Research
@@ -134,6 +134,10 @@ For both of these, set MaxDrag and MinDrag to 0
 
 CHANGELOG
 =======================================================
+v1.0.1------------------------------------  
+Bugfixes:
+Included JsonFx.dll, which is required by ModStats
+Relabeled ModStatistics.dll to allow simple overwriting for ModStats updates
 
 v1.0------------------------------------  
 Features:
