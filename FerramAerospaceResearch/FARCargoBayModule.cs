@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.0.1
+Ferram Aerospace Research v0.14.0.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -189,28 +189,26 @@ namespace ferram4
         {
             if (HighLogic.LoadedSceneIsEditor)
                 return;
-            if (!FARDebugValues.manualOverrideShielding)
+            if (bayAnim)
             {
-                if (bayAnim)
+                if (bayAnim.isPlaying && !bayAnimating)
                 {
-                    if (bayAnim.isPlaying && !bayAnimating)
-                    {
-                        ClearShieldedParts();
-                        bayAnimating = true;
-                    }
-                    else if (bayAnimating && !bayAnim.isPlaying)
-                    {
-                        bayAnimating = false;
-
-                        if (bayOpen && CheckBayClosed())
-                            FindShieldedParts();
-                    }
-                    //                bayProgress = bayAnim[bayAnimationName].normalizedTime;
-
+                    ClearShieldedParts();
+                    bayAnimating = true;
                 }
-                else if (BayController == null)
-                    BayController = this;
+                else if (bayAnimating && !bayAnim.isPlaying)
+                {
+                    bayAnimating = false;
+
+                    if (bayOpen && CheckBayClosed())
+                        FindShieldedParts();
+                }
+                //                bayProgress = bayAnim[bayAnimationName].normalizedTime;
+
             }
+            else if (BayController == null)
+                BayController = this;
+
 
         }
 
@@ -284,7 +282,7 @@ namespace ferram4
                 else
                 {
                     b = d as FARBaseAerodynamics;
-                    relPos += p.transform.TransformDirection(d.CenterOfDrag) + p.transform.position;       //No attach node shifting with this
+                    relPos += p.partTransform.TransformDirection(d.CenterOfDrag) + p.partTransform.position;       //No attach node shifting with this
                 }
 
                 relPos = this.part.transform.worldToLocalMatrix.MultiplyVector(relPos);
@@ -378,6 +376,12 @@ namespace ferram4
             FARShieldedParts.Clear();
             bayOpen = true;
             partsShielded = 0;
+        }
+
+        //Blank save node ensures that nothing for this partmodule is saved
+        public override void OnSave(ConfigNode node)
+        {
+            //base.OnSave(node);
         }
     }
 }

@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.14.0.1
+Ferram Aerospace Research v0.14.0.2
 =========================
 
 Aerodynamics model for Kerbal Space Program
@@ -135,6 +135,14 @@ For both of these, set MaxDrag and MinDrag to 0
 
 CHANGELOG
 =======================================================
+
+0.14.0.2v------------------------------------
+Bugfixes:
+Fix an issue with the FAR Flight GUI not appearing properly
+Fixed a part shielding in editor issue
+Fixed more nullref exceptions during craft file loading
+Actually included JsonFx.dll, which is required by ModStats
+
 
 0.14.0.1v------------------------------------
 Bugfixes:

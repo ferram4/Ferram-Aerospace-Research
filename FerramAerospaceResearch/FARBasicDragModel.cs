@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.0.1
+Ferram Aerospace Research v0.14.0.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -1126,6 +1126,12 @@ namespace ferram4
             INDEPENDENT_NODE,
             VERTICAL_NODES,
             PARALLEL_NODES
+        }
+
+        //Blank save node ensures that nothing for this partmodule is saved
+        public override void OnSave(ConfigNode node)
+        {
+            //base.OnSave(node);
         }
     }
 }

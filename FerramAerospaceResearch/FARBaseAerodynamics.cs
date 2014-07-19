@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.0.1
+Ferram Aerospace Research v0.14.0.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -150,11 +150,6 @@ namespace ferram4
         [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
         public bool isShielded = false;
 
-        [KSPEvent(name = "ToggleShielding", guiActive = false, guiActiveEditor = false)]
-        public void ToggleShielding()
-        {
-            isShielded = !isShielded;
-        }
         
 
         public static bool GlobalCoLReady = false;
@@ -175,10 +170,8 @@ namespace ferram4
         {
             base.OnStart(state);
             Fields["isShielded"].guiActive = FARDebugValues.displayShielding;
-            Events["ToggleShielding"].guiActive = FARDebugValues.manualOverrideShielding;
 
-            if (!FARDebugValues.manualOverrideShielding)
-                part.OnEditorDetach += ClearShielding;
+            part.OnEditorDetach += ClearShielding;
 
             if (!(this is FARControlSys))
             {

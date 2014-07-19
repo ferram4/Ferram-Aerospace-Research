@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.0.1
+Ferram Aerospace Research v0.14.0.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -249,15 +249,34 @@ namespace ferram4
         {
             bool isGreeble = false;
 
-            if (p.parent)
+            if (p.parent && p.parent.Modules != null)
             {
                 Part parent = p.parent;
                 if (parent.Modules.Contains("FARBasicDragModel"))
                 {
-                    FARBasicDragModel d = parent.GetComponent<FARBasicDragModel>();
-                    Vector3 parentVector = (p.transform.worldToLocalMatrix * parent.transform.localToWorldMatrix).MultiplyVector(d.localUpVector);
+                    FARBasicDragModel d = null;
+                    foreach (PartModule m in parent.Modules)
+                        if (m is FARBasicDragModel)
+                        {
+                            d = m as FARBasicDragModel;
+                            return false;
+                        }
 
-                    double dotProd = Vector3.Dot(parentVector, Vector3.up);
+                    Transform selfTransform = p.partTransform;
+                    if ((object)selfTransform == null)
+                    {
+                        selfTransform = p.vessel.vesselTransform;
+                    }
+
+                    Transform parentTransform = p.parent.partTransform;
+                    if ((object)parentTransform == null)
+                    {
+                        parentTransform = p.vessel.vesselTransform;
+                    }
+
+                    Vector3d parentVector = (selfTransform.worldToLocalMatrix * parentTransform.localToWorldMatrix).MultiplyVector(d.localUpVector);
+
+                    double dotProd = Vector3d.Dot(parentVector, Vector3d.up);
                     if (Math.Abs(dotProd) < 0.3)
                         if (crossSectionalArea / d.S <= 0.1 && d.S > area * 0.2 * Math.Sqrt(1 - dotProd * dotProd))
                             isGreeble = true;

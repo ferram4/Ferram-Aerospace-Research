@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.0.1
+Ferram Aerospace Research v0.14.0.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -50,18 +50,20 @@ namespace ferram4
     {
         private int count = 0;
         private FAREditorGUI editorGUI = null;
-        private int part_count = -1;
+        private int part_count_all = -1;
+        private int part_count_ship = -1;
         private IButton FAREditorButtonBlizzy;
         private ApplicationLauncherButton FAREditorButtonStock;
 
 
-        public static bool EditorPartsChanged = false;
+        public static bool EditorPartsChanged = true;
 
         static PluginConfiguration config;
 
         public void Awake()
         {
             LoadConfigs();
+
             if (FARDebugValues.useBlizzyToolbar)
             {
                 FAREditorButtonBlizzy = ToolbarManager.Instance.add("ferram4", "FAREditorButton");
@@ -133,7 +135,6 @@ namespace ferram4
                 {
                     var editorShip = FARAeroUtil.AllEditorParts;
 
-                    FindPartsWithoutFARModel(editorShip);
 
                     if (FARAeroUtil.EditorAboutToAttach() && count++ >= 10)
                     {
@@ -141,22 +142,26 @@ namespace ferram4
                         count = 0;
                     }
 
-                    if (part_count != editorShip.Count || EditorPartsChanged)
+                    if (part_count_all != editorShip.Count || part_count_ship != EditorLogic.SortedShipList.Count || EditorPartsChanged)
                     {
+                        FindPartsWithoutFARModel(editorShip);
+                        foreach (Part p in editorShip)
+                            foreach (PartModule m in p.Modules)
+                                if (m is FARBaseAerodynamics)
+                                    (m as FARBaseAerodynamics).ClearShielding();
+
                         foreach (Part p in editorShip)
                             foreach (PartModule m in p.Modules)
                                 if (m is FARPartModule)
                                     (m as FARPartModule).ForceOnVesselPartsChange();
 
-                        part_count = editorShip.Count;
+                        part_count_all = editorShip.Count;
+                        part_count_ship = EditorLogic.SortedShipList.Count;
                         EditorPartsChanged = false;
                     }
                 }
-
             }
-
         }
-
 
         private bool FindPartsWithoutFARModel(List<Part> editorShip)
         {
@@ -175,22 +180,39 @@ namespace ferram4
 
                 string title = p.partInfo.title.ToLowerInvariant();
 
-                if (p is StrutConnector || p is FuelLine || p is ControlSurface || p is Winglet || FARPartClassification.ExemptPartFromGettingDragModel(p, title))
-                    continue;
-
                 if (p.Modules.Contains("FARBasicDragModel"))
                 {
-                    FARBasicDragModel d = p.Modules["FARBasicDragModel"] as FARBasicDragModel;
-                    if (d.CdCurve == null || d.ClPotentialCurve == null || d.ClViscousCurve == null || d.CmCurve == null)
+                    List<PartModule> modulesToRemove = new List<PartModule>();
+                    foreach (PartModule m in p.Modules)
                     {
-                        p.RemoveModule(d);
-                        Debug.Log("Removing Incomplete FAR Drag Module");
+                        if (!(m is FARBasicDragModel))
+                            continue;
+                        FARBasicDragModel d = m as FARBasicDragModel;
+                        if (d.CdCurve == null || d.ClPotentialCurve == null || d.ClViscousCurve == null || d.CmCurve == null)
+                        {
+                            modulesToRemove.Add(m);
+                        }
+                    }
+                    if (modulesToRemove.Count > 0)
+                    {
+                        foreach (PartModule m in modulesToRemove)
+                        {
+                            p.RemoveModule(m);
+                            Debug.Log("Removing Incomplete FAR Drag Module");
+                        }
+                        if (p.Modules.Contains("FARPayloadFairingModule"))
+                            p.RemoveModule(p.Modules["FARPayloadFairingModule"]);
+                        if (p.Modules.Contains("FARCargoBayModule"))
+                            p.RemoveModule(p.Modules["FARCargoBayModule"]);
+                        if (p.Modules.Contains("FARControlSys"))
+                            p.RemoveModule(p.Modules["FARControlSys"]);
                     }
                 }
-                if (p.Modules.Contains("FARPayloadFairingModule"))
-                    p.RemoveModule(p.Modules["FARPayloadFairingModule"]);
-                if (p.Modules.Contains("FARCargoBayModule"))
-                    p.RemoveModule(p.Modules["FARCargoBayModule"]);
+
+
+
+                if (p is StrutConnector || p is FuelLine || p is ControlSurface || p is Winglet || FARPartClassification.ExemptPartFromGettingDragModel(p, title))
+                    continue;
 
                 FARPartModule q = p.GetComponent<FARPartModule>();
                 if (q != null && !(q is FARControlSys))
@@ -358,15 +380,22 @@ namespace ferram4
 
                 string title = p.partInfo.title.ToLowerInvariant();
 
-                if (p is StrutConnector || p is FuelLine || p is ControlSurface || p is Winglet || FARPartClassification.ExemptPartFromGettingDragModel(p, title))
-                    continue;
-
                 if (p.Modules.Contains("FARBasicDragModel"))
                 {
-                    FARBasicDragModel d = p.Modules["FARBasicDragModel"] as FARBasicDragModel;
-                    if (d.CdCurve == null || d.ClPotentialCurve == null || d.ClViscousCurve == null || d.CmCurve == null)
+                    List<PartModule> modulesToRemove = new List<PartModule>();
+                    foreach (PartModule m in p.Modules)
                     {
-                        p.RemoveModule(d);
+                        if (!(m is FARBasicDragModel))
+                            continue;
+                        FARBasicDragModel d = m as FARBasicDragModel;
+                        if (d.S == 0 || d.CdCurve == null || d.ClPotentialCurve == null || d.ClViscousCurve == null || d.CmCurve == null)
+                        {
+                            modulesToRemove.Add(m);
+                        }
+                    }
+                    foreach (PartModule m in modulesToRemove)
+                    {
+                        p.RemoveModule(m);
                         Debug.Log("Removing Incomplete FAR Drag Module");
                     }
                 }
@@ -374,14 +403,19 @@ namespace ferram4
                     p.RemoveModule(p.Modules["FARPayloadFairingModule"]);
                 if (p.Modules.Contains("FARCargoBayModule"))
                     p.RemoveModule(p.Modules["FARCargoBayModule"]);
+                if (p.Modules.Contains("FARControlSys"))
+                    p.RemoveModule(p.Modules["FARControlSys"]);
 
+
+                if (p is StrutConnector || p is FuelLine || p is ControlSurface || p is Winglet || FARPartClassification.ExemptPartFromGettingDragModel(p, title))
+                    continue;
 
                 if (p.Modules.Contains("ModuleCommand") && !p.Modules.Contains("FARControlSys"))
                 {
                     p.AddModule("FARControlSys");
                     PartModule m = p.Modules["FARControlSys"];
                     m.OnStart(PartModule.StartState.Flying);
-
+                    //Debug.Log("Added FARControlSys to " + p.partInfo.title);
                 }
 
                 FARPartModule q = p.GetComponent<FARPartModule>();
@@ -438,7 +472,6 @@ namespace ferram4
                 if (b != null)
                     b.VesselPartList = p.vessel.Parts;             //This prevents every single part in the ship running this due to VesselPartsList not being initialized
             }
-
         }
 
         public void LateUpdate()
@@ -450,7 +483,7 @@ namespace ferram4
 
                 if ((object)lastActiveVessel == null || lastActiveVessel != FlightGlobals.ActiveVessel)
                 {
-                    if(FARControlSys.StabilityAugmentationUpdate(FlightGlobals.ActiveVessel, lastActiveVessel))
+                    if(FARControlSys.SetActiveControlSysAndStabilitySystem(FlightGlobals.ActiveVessel, lastActiveVessel))
                         lastActiveVessel = FlightGlobals.ActiveVessel;
                 }
             }
@@ -458,7 +491,8 @@ namespace ferram4
 
         void OnDestroy()
         {
-            SaveConfigs();
+            if(config != null)
+                SaveConfigs();
 
             GameEvents.onGUIApplicationLauncherReady.Remove(OnGUIAppLauncherReady);
             if (FARFlightButtonStock != null)

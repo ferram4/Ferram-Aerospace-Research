@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.0.1
+Ferram Aerospace Research v0.14.0.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -214,7 +214,7 @@ namespace ferram4
 
         private static string[] surfModel_str = 
         {
-            "TAS",
+            "Surface",
             "IAS",
             "EAS",
             "Mach"
@@ -258,7 +258,8 @@ namespace ferram4
 
         private void GetNavball()
         {
-            ball = FlightUIController.fetch.GetComponentInChildren<NavBall>();
+            if(HighLogic.LoadedSceneIsFlight)
+                ball = FlightUIController.fetch.GetComponentInChildren<NavBall>();
         }
 
         private void GetFlightCondition()
@@ -1087,7 +1088,7 @@ namespace ferram4
             TabLabelStyle.alignment = TextAnchor.UpperCenter;
 
             GUILayout.BeginVertical(GUILayout.Height(200), GUILayout.Width(500), GUILayout.ExpandHeight(true));
-            GUILayout.Label("TAS", TabLabelStyle);
+            GUILayout.Label("Surface", TabLabelStyle);
             GUILayout.BeginHorizontal();
             GUILayout.Box("This is the default setting, and displays the true airspeed (TAS) of the vehicle relative to the rotating body is on.", mySty);
             GUILayout.EndHorizontal();
@@ -1149,7 +1150,7 @@ namespace ferram4
             }
             if (velMode == SurfaceVelMode.TAS)
             {
-                UI.spdCaption.text = "TAS";
+                UI.spdCaption.text = "Surface";
                 UI.speed.text = (activeVessel.srf_velocity.magnitude * unitConversion).ToString("F1") + unitString;
             }
             else if (velMode == SurfaceVelMode.IAS)
@@ -1177,7 +1178,7 @@ namespace ferram4
             GUI.skin = HighLogic.Skin;
             if (this == activeControlSys && !minimize)
             {
-                windowPos = GUILayout.Window(250, windowPos, WindowGUI, "FAR Flight Systems, v0.14.0.1", GUILayout.MinWidth(150));
+                windowPos = GUILayout.Window(250, windowPos, WindowGUI, "FAR Flight Systems, v0.14.0.2", GUILayout.MinWidth(150));
                 if (AutopilotWindow)
                 {
                     AutoPilotWindowPos = GUILayout.Window(251, AutoPilotWindowPos, AutopilotWindowGUI, "FAR Flight Assistance System Options", GUILayout.MinWidth(330));
@@ -1226,16 +1227,23 @@ namespace ferram4
             }
         }
 
-        public static bool StabilityAugmentationUpdate(Vessel vesselToChangeTo, Vessel vesselToChangeFrom)
+        public static bool SetActiveControlSysAndStabilitySystem(Vessel vesselToChangeTo, Vessel vesselToChangeFrom)
         {
             if ((object)vesselToChangeFrom != null && (object)activeControlSys != null)
             {
                 RenderingManager.RemoveFromPreDrawQueue(0, new Callback(activeControlSys.OnGUI));
-                FlightGlobals.ActiveVessel.OnFlyByWire -= new FlightInputCallback(StabilityAugmentation);
+                vesselToChangeFrom.OnFlyByWire -= new FlightInputCallback(StabilityAugmentation);
             }
-            activeControlSys = vesselToChangeTo.GetComponent<FARControlSys>();
+            foreach (Part p in vesselToChangeTo.Parts)
+                if (p.Modules.Contains("FARControlSys"))
+                {
+                    activeControlSys = p.Modules["FARControlSys"] as FARControlSys;
+                    break;
+                }
             if ((object)activeControlSys == null)
+            {
                 return false;
+            }
             RenderingManager.AddToPreDrawQueue(0, new Callback(activeControlSys.OnGUI));
 
 
@@ -1422,6 +1430,12 @@ namespace ferram4
             AirSpeedHelpPos = config.GetValue("AirSpeedHelpPos", new Rect());
             minimize = config.GetValue<bool>("FlightGUIBool", false);
         }*/
+
+        //Blank save node ensures that nothing for this partmodule is saved
+        public override void OnSave(ConfigNode node)
+        {
+            //base.OnSave(node);
+        }
     }
 
 }

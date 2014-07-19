@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.0.1
+Ferram Aerospace Research v0.14.0.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -129,7 +129,7 @@ namespace ferram4
         {
             GUI.skin = HighLogic.Skin;
             if (debugMenu)
-                debugWinPos = GUILayout.Window("FARDebug".GetHashCode(), debugWinPos, debugWindow, "FAR Debug Options, v0.14.0.1", GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+                debugWinPos = GUILayout.Window("FARDebug".GetHashCode(), debugWinPos, debugWindow, "FAR Debug Options, v0.14.0.2", GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
         }
 
 
@@ -440,7 +440,6 @@ namespace ferram4
             GUILayout.Label("Debug / Cheat Options");
             FARDebugValues.useSplinesForSupersonicMath = GUILayout.Toggle(FARDebugValues.useSplinesForSupersonicMath, "Use Splines for Supersonic Math", thisStyle);
             FARDebugValues.allowStructuralFailures = GUILayout.Toggle(FARDebugValues.allowStructuralFailures, "Allow Aero-structural Failures", thisStyle);
-            FARDebugValues.manualOverrideShielding = GUILayout.Toggle(FARDebugValues.manualOverrideShielding, "Manual Override for Part Shielding", thisStyle);
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
             if (ToolbarManager.ToolbarAvailable)
@@ -481,7 +480,6 @@ namespace ferram4
             FARDebugValues.displayShielding = Convert.ToBoolean(config.GetValue("displayShielding", "false"));
             FARDebugValues.useSplinesForSupersonicMath = Convert.ToBoolean(config.GetValue("useSplinesForSupersonicMath", "true"));
             FARDebugValues.allowStructuralFailures = Convert.ToBoolean(config.GetValue("allowStructuralFailures", "true"));
-            FARDebugValues.manualOverrideShielding = Convert.ToBoolean(config.GetValue("manualOverrideShielding", "false"));
 
             FARDebugValues.useBlizzyToolbar = Convert.ToBoolean(config.GetValue("useBlizzyToolbar", "false"));
 
@@ -498,7 +496,6 @@ namespace ferram4
 
             config.SetValue("useSplinesForSupersonicMath", FARDebugValues.useSplinesForSupersonicMath.ToString());
             config.SetValue("allowStructuralFailures", FARDebugValues.allowStructuralFailures.ToString());
-            config.SetValue("manualOverrideShielding", FARDebugValues.manualOverrideShielding.ToString());
 
             config.SetValue("useBlizzyToolbar", FARDebugValues.useBlizzyToolbar.ToString());
 
@@ -531,7 +528,6 @@ namespace ferram4
 
         public static bool useSplinesForSupersonicMath = true;
         public static bool allowStructuralFailures = true;
-        public static bool manualOverrideShielding = false;
 
         public static bool useBlizzyToolbar = false;
     }

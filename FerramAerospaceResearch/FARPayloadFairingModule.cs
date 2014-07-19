@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.0.1
+Ferram Aerospace Research v0.14.0.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -69,31 +69,29 @@ namespace ferram4
             base.OnStart(start);
             OnVesselPartsChange += FindShieldedParts;
             Fields["partsShielded"].guiActive = FARDebugValues.displayShielding;
+            FindShieldedParts();
         }
 
         public override void OnEditorAttach()
         {
             base.OnEditorAttach();
 
-            ClearShieldedParts();
             minBounds.Clear();
             maxBounds.Clear();
+            FindShieldedParts();
         }
 
         public void FixedUpdate()
         {
-//            if (start == StartState.Editor)
-//                return;
+            //            if (start == StartState.Editor)
+            //                return;
 
-            if (!FARDebugValues.manualOverrideShielding && minBounds.Count == 0)
-            {
-                CalculateFairingBounds();
-                FindShieldedParts();
-            }
-            
-//            line.SetPosition(0, minBounds + part.transform.position);
-//            line.SetPosition(1, maxBounds + part.transform.position);
-            
+            //CalculateFairingBounds();
+            //FindShieldedParts();
+
+            //            line.SetPosition(0, minBounds + part.transform.position);
+            //            line.SetPosition(1, maxBounds + part.transform.position);
+
         }
 
 
@@ -187,10 +185,9 @@ namespace ferram4
 
         private void FindShieldedParts()
         {
-            if (HighLogic.LoadedSceneIsEditor && FARAeroUtil.EditorAboutToAttach(false) &&
+            /*if (HighLogic.LoadedSceneIsEditor/* && FARAeroUtil.EditorAboutToAttach(false) &&
                 !FARAeroUtil.CurEditorParts.Contains(part))
-                return;
-
+                return;*/
             if (minBounds.Count == 0)
             {
                 CalculateFairingBounds();
@@ -225,7 +222,7 @@ namespace ferram4
                 else
                 {
                     b = d as FARBaseAerodynamics;
-                    relPos += p.transform.TransformDirection(d.CenterOfDrag) + p.transform.position;       //No attach node shifting with this
+                    relPos += p.partTransform.TransformDirection(d.CenterOfDrag) + p.partTransform.position;       //No attach node shifting with this
                 }
 
 
@@ -260,6 +257,12 @@ namespace ferram4
                 }
             }
             partsShielded = FARShieldedParts.Count;
+        }
+
+        //Blank save node ensures that nothing for this partmodule is saved
+        public override void OnSave(ConfigNode node)
+        {
+            //base.OnSave(node);
         }
     }
 }                                               
