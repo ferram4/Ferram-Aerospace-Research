@@ -1,5 +1,5 @@
 ﻿/*
-Neophyte's Elementary Aerodynamics Replacement v1.0.2
+Neophyte's Elementary Aerodynamics Replacement v1.0.3
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Neophyte's Elementary Aerodynamics Replacement.
@@ -63,15 +63,16 @@ namespace NEAR
             state = start;
             base.OnStart(start);
             OnVesselPartsChange += FindShieldedParts;
+            FindShieldedParts();
         }
 
         public override void OnEditorAttach()
         {
             base.OnEditorAttach();
 
-            ClearShieldedParts();
             minBounds.Clear();
             maxBounds.Clear();
+            FindShieldedParts();
         }
 
         public void FixedUpdate()
@@ -79,11 +80,11 @@ namespace NEAR
 //            if (start == StartState.Editor)
 //                return;
 
-            if (minBounds.Count == 0)
+            /*if (minBounds.Count == 0)
             {
                 CalculateFairingBounds();
                 FindShieldedParts();
-            }
+            }*/
             
 //            line.SetPosition(0, minBounds + part.transform.position);
 //            line.SetPosition(1, maxBounds + part.transform.position);
@@ -181,9 +182,9 @@ namespace NEAR
 
         private void FindShieldedParts()
         {
-            if (HighLogic.LoadedSceneIsEditor && FARAeroUtil.EditorAboutToAttach(false) &&
+            /*if (HighLogic.LoadedSceneIsEditor && FARAeroUtil.EditorAboutToAttach(false) &&
                 !FARAeroUtil.CurEditorParts.Contains(part))
-                return;
+                return;*/
 
             if (minBounds.Count == 0)
             {
@@ -219,7 +220,7 @@ namespace NEAR
                 else
                 {
                     b = d as FARBaseAerodynamics;
-                    relPos += p.transform.TransformDirection(d.CenterOfDrag) + p.transform.position;       //No attach node shifting with this
+                    relPos += p.partTransform.TransformDirection(d.CenterOfDrag) + p.partTransform.position;       //No attach node shifting with this
                 }
 
 

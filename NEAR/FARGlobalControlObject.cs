@@ -1,5 +1,5 @@
 ﻿/*
-Neophyte's Elementary Aerodynamics Replacement v1.0.2
+Neophyte's Elementary Aerodynamics Replacement v1.0.3
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Neophyte's Elementary Aerodynamics Replacement.
@@ -41,7 +41,8 @@ namespace NEAR
     public class FARGlobalControlEditorObject : UnityEngine.MonoBehaviour
     {
         private int count = 0;
-        private int part_count = -1;
+        private int part_count_all = -1;
+        private int part_count_ship = -1;
 
         public static bool EditorPartsChanged = false;
 
@@ -61,7 +62,6 @@ namespace NEAR
                 {
                     var editorShip = FARAeroUtil.AllEditorParts;
 
-                    FindPartsWithoutFARModel(editorShip);
 
                     if (FARAeroUtil.EditorAboutToAttach() && count++ >= 10)
                     {
@@ -69,14 +69,21 @@ namespace NEAR
                         count = 0;
                     }
 
-                    if (part_count != editorShip.Count || EditorPartsChanged)
+                    if (part_count_all != editorShip.Count || part_count_ship != EditorLogic.SortedShipList.Count || EditorPartsChanged)
                     {
+                        FindPartsWithoutFARModel(editorShip);
+                        foreach (Part p in editorShip)
+                            foreach (PartModule m in p.Modules)
+                                if (m is FARBaseAerodynamics)
+                                    (m as FARBaseAerodynamics).ClearShielding();
+
                         foreach (Part p in editorShip)
                             foreach (PartModule m in p.Modules)
                                 if (m is FARPartModule)
                                     (m as FARPartModule).ForceOnVesselPartsChange();
 
-                        part_count = editorShip.Count;
+                        part_count_all = editorShip.Count;
+                        part_count_ship = EditorLogic.SortedShipList.Count;
                         EditorPartsChanged = false;
                     }
                 }
@@ -105,20 +112,39 @@ namespace NEAR
 
                 if (p.Modules.Contains("FARBasicDragModel"))
                 {
-                    FARBasicDragModel d = p.Modules["FARBasicDragModel"] as FARBasicDragModel;
-                    if (d.CdCurve == null || d.ClPotentialCurve == null || d.ClViscousCurve == null || d.CmCurve == null)
+                    List<PartModule> modulesToRemove = new List<PartModule>();
+                    foreach (PartModule m in p.Modules)
                     {
-                        p.RemoveModule(d);
-                        Debug.Log("Removing Incomplete NEAR Drag Module");
+                        if (!(m is FARBasicDragModel))
+                            continue;
+                        FARBasicDragModel d = m as FARBasicDragModel;
+                        if (d.CdCurve == null || d.ClPotentialCurve == null || d.ClViscousCurve == null || d.CmCurve == null)
+                        {
+                            modulesToRemove.Add(m);
+                        }
+                    }
+                    if (modulesToRemove.Count > 0)
+                    {
+                        foreach (PartModule m in modulesToRemove)
+                        {
+                            p.RemoveModule(m);
+                            Debug.Log("Removing Incomplete NEAR Drag Module");
+                        }
+                        if (p.Modules.Contains("FARPayloadFairingModule"))
+                            p.RemoveModule(p.Modules["FARPayloadFairingModule"]);
+                        if (p.Modules.Contains("FARCargoBayModule"))
+                            p.RemoveModule(p.Modules["FARCargoBayModule"]);
+                        if (p.Modules.Contains("FARControlSys"))
+                            p.RemoveModule(p.Modules["FARControlSys"]);
                     }
                 }
-                if (p.Modules.Contains("FARPayloadFairingModule"))
-                    p.RemoveModule(p.Modules["FARPayloadFairingModule"]);
-                if (p.Modules.Contains("FARCargoBayModule"))
-                    p.RemoveModule(p.Modules["FARCargoBayModule"]); 
-                
+
+
+
                 if (p is StrutConnector || p is FuelLine || p is ControlSurface || p is Winglet || FARPartClassification.ExemptPartFromGettingDragModel(p, title))
                     continue;
+
+
 
                 FARPartModule q = p.GetComponent<FARPartModule>();
                 if (q != null)

@@ -1,4 +1,4 @@
-Neophyte's Elementary Aerodynamics Replacement v1.0.2
+Neophyte's Elementary Aerodynamics Replacement v1.0.3
 =========================
 
 Simpler aerodynamics model for Kerbal Space Program, based on a stripped-down version of Ferram Aerospace Research
@@ -134,6 +134,12 @@ For both of these, set MaxDrag and MinDrag to 0
 
 CHANGELOG
 =======================================================
+
+v1.0.3------------------------------------  
+Bugfixes:
+Fixed a part shielding in editor issue
+Fixed more nullref exceptions during craft file loading
+
 v1.0.2------------------------------------  
 Bugfixes:
 Fixed an issue where NullReferenceExceptions would be spammed in the editor

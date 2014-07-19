@@ -1,5 +1,5 @@
 ﻿/*
-Neophyte's Elementary Aerodynamics Replacement v1.0.2
+Neophyte's Elementary Aerodynamics Replacement v1.0.3
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Neophyte's Elementary Aerodynamics Replacement.
@@ -276,7 +276,7 @@ namespace NEAR
                 else
                 {
                     b = d as FARBaseAerodynamics;
-                    relPos += p.transform.TransformDirection(d.CenterOfDrag) + p.transform.position;       //No attach node shifting with this
+                    relPos += p.partTransform.TransformDirection(d.CenterOfDrag) + p.partTransform.position;       //No attach node shifting with this
                 }
 
                 relPos = this.part.transform.worldToLocalMatrix.MultiplyVector(relPos);

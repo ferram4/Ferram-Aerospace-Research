@@ -1,5 +1,5 @@
 ﻿/*
-Neophyte's Elementary Aerodynamics Replacement v1.0.2
+Neophyte's Elementary Aerodynamics Replacement v1.0.3
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Neophyte's Elementary Aerodynamics Replacement.
@@ -316,7 +316,6 @@ namespace NEAR
                 RunDragCalculation(velocityEditor, 1);
 
             return Cd * S;
-
         }
 
         public Vector3d RunDragCalculation(Vector3d velocity, double rho)
