@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.0.2
+Ferram Aerospace Research v0.14.1
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -129,7 +129,7 @@ namespace ferram4
         {
             GUI.skin = HighLogic.Skin;
             if (debugMenu)
-                debugWinPos = GUILayout.Window("FARDebug".GetHashCode(), debugWinPos, debugWindow, "FAR Debug Options, v0.14.0.2", GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+                debugWinPos = GUILayout.Window("FARDebug".GetHashCode(), debugWinPos, debugWindow, "FAR Debug Options, v0.14.1", GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
         }
 
 

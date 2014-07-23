@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.0.2
+Ferram Aerospace Research v0.14.1
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -144,7 +144,7 @@ namespace ferram4
         protected static Ray ray;
         protected static RaycastHit hit;
 
-        [KSPField(isPersistant = false)]
+        //[KSPField(isPersistant = false, guiActive = true)]
         public double S;
 
         [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
@@ -161,6 +161,7 @@ namespace ferram4
             base.OnAwake();
             part_transform = part.partTransform;
 
+            //refArea = S;
             //Terrible, hacky fix for part.partTransform going bad
             if (part.partTransform == null && part == part.vessel.rootPart)
                 part_transform = vessel.vesselTransform;
@@ -317,6 +318,13 @@ namespace ferram4
             CoLMarker.pos = GlobalCoL;
             CoLMarker.dir = CoLForce.normalized;
             CoLMarker.lift = CoLForce.magnitude * 50f;
+        }
+
+        public override void OnLoad(ConfigNode node)
+        {
+            base.OnLoad(node);
+            if (node.HasValue("S"))
+                double.TryParse(node.GetValue("S"), out S);
         }
     }
 }

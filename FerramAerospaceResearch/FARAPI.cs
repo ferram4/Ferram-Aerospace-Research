@@ -33,22 +33,60 @@ Copyright 2014, Michael Ferrara, aka Ferram4
  *	http://forum.kerbalspaceprogram.com/threads/60863
  */
 
-
-
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using UnityEngine;
+using KSP;
 
 namespace ferram4
 {
-    static class FARGUIUtils
+    //Can be used to access the 
+    public static class FARAPI
     {
-        public static Rect ClampToScreen(Rect window)
+        public static bool ActiveControlSysIsOnVessel(Vessel v)
         {
-            window.x = Mathf.Clamp(window.x, -window.width + 20, Screen.width - 20);
-            window.y = Mathf.Clamp(window.y, -window.height + 20, Screen.height - 20);
+            if (FARControlSys.ActiveControlSys != null)
+                return FARControlSys.ActiveControlSys.vessel == v;
 
-            return window;
+            return false;
+        }
+        public static double ActiveControlSys_Q()
+        {
+            if (FARControlSys.ActiveControlSys != null)
+                return FARControlSys.ActiveControlSys.q;
+            return 0;
+        }
+        public static double ActiveControlSys_Cl()
+        {
+            if (FARControlSys.ActiveControlSys != null)
+                return FARControlSys.ActiveControlSys.Cl;
+            return 0;
+        }
+        public static double ActiveControlSys_Cd()
+        {
+            if (FARControlSys.ActiveControlSys != null)
+                return FARControlSys.ActiveControlSys.Cd;
+            return 0;
+        }
+        public static double ActiveControlSys_Cm()
+        {
+            if (FARControlSys.ActiveControlSys != null)
+                return FARControlSys.ActiveControlSys.Cm;
+            return 0;
+        }
+        public static double ActiveControlSys_RefArea()
+        {
+            if (FARControlSys.ActiveControlSys != null)
+                return FARControlSys.ActiveControlSys.S;
+            return 0;
+        }
+        public static double ActiveControlSys_MachNumber()
+        {
+            if (FARControlSys.ActiveControlSys != null)
+                return FARControlSys.ActiveControlSys.MachNumber;
+            return 0;
         }
     }
 }

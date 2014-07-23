@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.0.2
+Ferram Aerospace Research v0.14.1
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -724,7 +724,7 @@ namespace ferram4
             //This is the cross-sectional area of the tapered section
 
 
-            //Debug.Log(p.partInfo.title + ": Geometry model created; Size: " + size + ", LD " + lowerDiameters + ", UD " + upperDiameters + "\n\rSurface area: " + partGeometry.area + "\n\rFineness Ratio: " + partGeometry.finenessRatio + "\n\rTaperRatio: " + partGeometry.taperRatio + "\n\rCross Sectional Area: " + partGeometry.crossSectionalArea + "\n\rCross Sectional Tapered Area: " + partGeometry.taperCrossSectionArea + "\n\rMajor-minor axis ratio: " + partGeometry.majorMinorAxisRatio + "\n\rCentroid: " + partGeometry.originToCentroid);
+            Debug.Log(p.partInfo.title + ": Geometry model created; Size: " + size + ", LD " + lowerDiameters + ", UD " + upperDiameters + "\n\rSurface area: " + partGeometry.area + "\n\rFineness Ratio: " + partGeometry.finenessRatio + "\n\rTaperRatio: " + partGeometry.taperRatio + "\n\rCross Sectional Area: " + partGeometry.crossSectionalArea + "\n\rCross Sectional Tapered Area: " + partGeometry.taperCrossSectionArea + "\n\rMajor-minor axis ratio: " + partGeometry.majorMinorAxisRatio + "\n\rCentroid: " + partGeometry.originToCentroid);
             return partGeometry;
         }
 

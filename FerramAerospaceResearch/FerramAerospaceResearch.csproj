@@ -61,6 +61,7 @@
     <Compile Include="CompatibilityChecker.cs" />
     <Compile Include="FARAeroStress.cs" />
     <Compile Include="FARAeroUtil.cs" />
+    <Compile Include="FARAPI.cs" />
     <Compile Include="FARBaseAerodynamics.cs" />
     <Compile Include="FARBasicDragModel.cs" />
     <Compile Include="FARCargoBayModule.cs" />

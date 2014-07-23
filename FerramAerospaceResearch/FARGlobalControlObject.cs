@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.0.2
+Ferram Aerospace Research v0.14.1
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -388,24 +388,26 @@ namespace ferram4
                         if (!(m is FARBasicDragModel))
                             continue;
                         FARBasicDragModel d = m as FARBasicDragModel;
-                        if (d.S == 0 || d.CdCurve == null || d.ClPotentialCurve == null || d.ClViscousCurve == null || d.CmCurve == null)
+                        if (d.CdCurve == null || d.ClPotentialCurve == null || d.ClViscousCurve == null || d.CmCurve == null)
                         {
                             modulesToRemove.Add(m);
                         }
                     }
-                    foreach (PartModule m in modulesToRemove)
+                    if (modulesToRemove.Count > 0)
                     {
-                        p.RemoveModule(m);
-                        Debug.Log("Removing Incomplete FAR Drag Module");
+                        foreach (PartModule m in modulesToRemove)
+                        {
+                            p.RemoveModule(m);
+                            Debug.Log("Removing Incomplete FAR Drag Module");
+                        }
+                        if (p.Modules.Contains("FARPayloadFairingModule"))
+                            p.RemoveModule(p.Modules["FARPayloadFairingModule"]);
+                        if (p.Modules.Contains("FARCargoBayModule"))
+                            p.RemoveModule(p.Modules["FARCargoBayModule"]);
+                        if (p.Modules.Contains("FARControlSys"))
+                            p.RemoveModule(p.Modules["FARControlSys"]);
                     }
                 }
-                if (p.Modules.Contains("FARPayloadFairingModule"))
-                    p.RemoveModule(p.Modules["FARPayloadFairingModule"]);
-                if (p.Modules.Contains("FARCargoBayModule"))
-                    p.RemoveModule(p.Modules["FARCargoBayModule"]);
-                if (p.Modules.Contains("FARControlSys"))
-                    p.RemoveModule(p.Modules["FARControlSys"]);
-
 
                 if (p is StrutConnector || p is FuelLine || p is ControlSurface || p is Winglet || FARPartClassification.ExemptPartFromGettingDragModel(p, title))
                     continue;
