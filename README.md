@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.14.0.2
+Ferram Aerospace Research v0.14.1
 =========================
 
 Aerodynamics model for Kerbal Space Program
@@ -135,6 +135,14 @@ For both of these, set MaxDrag and MinDrag to 0
 
 CHANGELOG
 =======================================================
+
+0.14.1v------------------------------------
+Features:
+Added new FARAPI class for other plugins to interface with FAR data; more stuff will be added as requested
+
+Bugfixes:
+Fixed issue with payload fairing and cargo bay modules not being added to vehicles in flight
+Fixed issue with pre-defined FAR modules having a reference area of 0
 
 0.14.0.2v------------------------------------
 Bugfixes:
