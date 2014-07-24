@@ -140,6 +140,10 @@ CHANGELOG
 Features:
 Added new FARAPI class for other plugins to interface with FAR data; more stuff will be added as requested
 
+Tweaks:
+Reduced thrust of turbojet and RAPIER to be more appropriate for FAR
+Added tweaks to reduce thrust of all airbreathing engines
+
 Bugfixes:
 Fixed issue with payload fairing and cargo bay modules not being added to vehicles in flight
 Fixed issue with pre-defined FAR modules having a reference area of 0

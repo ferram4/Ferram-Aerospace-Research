@@ -52,40 +52,52 @@ namespace ferram4
 
             return false;
         }
-        public static double ActiveControlSys_Q()
+        public static double GetActiveControlSys_Q()
         {
             if (FARControlSys.ActiveControlSys != null)
                 return FARControlSys.ActiveControlSys.q;
             return 0;
         }
-        public static double ActiveControlSys_Cl()
+        public static double GetActiveControlSys_Cl()
         {
             if (FARControlSys.ActiveControlSys != null)
                 return FARControlSys.ActiveControlSys.Cl;
             return 0;
         }
-        public static double ActiveControlSys_Cd()
+        public static double GetActiveControlSys_Cd()
         {
             if (FARControlSys.ActiveControlSys != null)
                 return FARControlSys.ActiveControlSys.Cd;
             return 0;
         }
-        public static double ActiveControlSys_Cm()
+        public static double GetActiveControlSys_Cm()
         {
             if (FARControlSys.ActiveControlSys != null)
                 return FARControlSys.ActiveControlSys.Cm;
             return 0;
         }
-        public static double ActiveControlSys_RefArea()
+        public static double GetActiveControlSys_RefArea()
         {
             if (FARControlSys.ActiveControlSys != null)
                 return FARControlSys.ActiveControlSys.S;
             return 0;
         }
-        public static double ActiveControlSys_MachNumber()
+        public static double GetActiveControlSys_MachNumber()
         {
             if (FARControlSys.ActiveControlSys != null)
                 return FARControlSys.ActiveControlSys.MachNumber;
+            return 0;
+        }
+        public static double GetActiveControlSys_TermVel()
+        {
+            if (FARControlSys.ActiveControlSys != null)
+                return FARControlSys.termVel;
+            return 0;
+        }
+        public static double GetActiveControlSys_BallisticCoeff()
+        {
+            if (FARControlSys.ActiveControlSys != null)
+                return FARControlSys.ballisticCoeff;
             return 0;
         }
     }
