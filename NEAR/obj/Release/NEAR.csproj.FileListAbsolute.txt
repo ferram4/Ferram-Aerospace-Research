@@ -5,3 +5,4 @@ C:\Users\ferram4\NEAR\NEAR\bin\Release\TDx.TDxInput.dll
 C:\Users\ferram4\NEAR\NEAR\obj\Release\NEAR.csprojResolveAssemblyReference.cache
 C:\Users\ferram4\NEAR\NEAR\obj\Release\NEAR.dll
 C:\Users\ferram4\NEAR\NEAR\obj\Release\NEAR.pdb
+C:\Users\ferram4\NEAR\NEAR\bin\Release\Assembly-CSharp-firstpass.dll

@@ -1,5 +1,5 @@
 ﻿/*
-Neophyte's Elementary Aerodynamics Replacement v1.0.3
+Neophyte's Elementary Aerodynamics Replacement v1.1
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Neophyte's Elementary Aerodynamics Replacement.
@@ -282,6 +282,13 @@ namespace NEAR
             CoLMarker.pos = GlobalCoL;
             CoLMarker.dir = CoLForce.normalized;
             CoLMarker.lift = CoLForce.magnitude * 50f;
+        }
+
+        public override void OnLoad(ConfigNode node)
+        {
+            base.OnLoad(node);
+            if (node.HasValue("S"))
+                double.TryParse(node.GetValue("S"), out S);
         }
     }
 }

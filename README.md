@@ -1,4 +1,4 @@
-Neophyte's Elementary Aerodynamics Replacement v1.0.3
+Neophyte's Elementary Aerodynamics Replacement v1.1
 =========================
 
 Simpler aerodynamics model for Kerbal Space Program, based on a stripped-down version of Ferram Aerospace Research
@@ -134,6 +134,15 @@ For both of these, set MaxDrag and MinDrag to 0
 
 CHANGELOG
 =======================================================
+
+1.1v------------------------------------
+Tweaks:
+Reduced thrust of turbojet and RAPIER to be more appropriate for NEAR
+Added tweaks to reduce thrust of all airbreathing engines
+
+Bugfixes:
+Fixed issue with payload fairing and cargo bay modules not being added to vehicles in flight
+Fixed issue with pre-defined NEAR modules having a reference area of 0
 
 v1.0.3------------------------------------  
 Bugfixes:
