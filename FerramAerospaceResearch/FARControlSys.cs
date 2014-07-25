@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.1
+Ferram Aerospace Research v0.14.1.1
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -1178,7 +1178,7 @@ namespace ferram4
             GUI.skin = HighLogic.Skin;
             if (this == activeControlSys && !minimize)
             {
-                windowPos = GUILayout.Window(250, windowPos, WindowGUI, "FAR Flight Systems, v0.14.1", GUILayout.MinWidth(150));
+                windowPos = GUILayout.Window(250, windowPos, WindowGUI, "FAR Flight Systems, v0.14.1.1", GUILayout.MinWidth(150));
                 if (AutopilotWindow)
                 {
                     AutoPilotWindowPos = GUILayout.Window(251, AutoPilotWindowPos, AutopilotWindowGUI, "FAR Flight Assistance System Options", GUILayout.MinWidth(330));
@@ -1221,9 +1221,12 @@ namespace ferram4
         {
             if (HighLogic.LoadedSceneIsFlight)
             {
-                activeControlSys = null;
-                if(vessel.isActiveVessel)
+                if (activeControlSys == this)
+                {
+                    RenderingManager.RemoveFromPreDrawQueue(0, new Callback(activeControlSys.OnGUI));
                     vessel.OnFlyByWire -= new FlightInputCallback(StabilityAugmentation);
+                }
+                activeControlSys = null;
             }
         }
 
@@ -1234,6 +1237,7 @@ namespace ferram4
                 RenderingManager.RemoveFromPreDrawQueue(0, new Callback(activeControlSys.OnGUI));
                 vesselToChangeFrom.OnFlyByWire -= new FlightInputCallback(StabilityAugmentation);
             }
+
             foreach (Part p in vesselToChangeTo.Parts)
                 if (p.Modules.Contains("FARControlSys"))
                 {

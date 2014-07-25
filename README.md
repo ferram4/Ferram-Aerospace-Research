@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.14.1
+Ferram Aerospace Research v0.14.1.1
 =========================
 
 Aerodynamics model for Kerbal Space Program
@@ -135,6 +135,16 @@ For both of these, set MaxDrag and MinDrag to 0
 
 CHANGELOG
 =======================================================
+
+0.14.1.1v------------------------------------
+Features:
+Ensured 0.24.2 compatibility
+
+Tweaks:
+Un-nerfed air-breathers in overall thrust and thrust curves
+
+Bugfixes:
+Fixed some issues where FARControlSys GUIs could be wonky
 
 0.14.1v------------------------------------
 Features:
