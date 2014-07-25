@@ -1,4 +1,4 @@
-Neophyte's Elementary Aerodynamics Replacement v1.1
+Neophyte's Elementary Aerodynamics Replacement v1.1.1
 =========================
 
 Simpler aerodynamics model for Kerbal Space Program, based on a stripped-down version of Ferram Aerospace Research
@@ -134,6 +134,11 @@ For both of these, set MaxDrag and MinDrag to 0
 
 CHANGELOG
 =======================================================
+
+1.1.1v------------------------------------
+Tweaks:
+Un-nerfed airbreather thrust slightly, also changed velocity curves to be better
+
 
 1.1v------------------------------------
 Tweaks:
