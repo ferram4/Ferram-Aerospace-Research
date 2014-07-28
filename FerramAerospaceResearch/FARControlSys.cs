@@ -167,14 +167,14 @@ namespace ferram4
         private static double fuelmass;
         public static double termVel;
         public static double ballisticCoeff;
-        private static double TSFC;
+        public static double TSFC;
         private static double L_W;
 
-        private static double AoA;
+        public static double AoA;
         private static double pitch;
         private static double roll;
         private static double heading;
-        private static double yaw;
+        public static double yaw;
 
         private static double intakeDeficit = 0;
 
@@ -1214,27 +1214,23 @@ namespace ferram4
             Fields["Cl"].guiActive = Fields["Cd"].guiActive = Fields["Cm"].guiActive = false;
             OnVesselPartsChange += GetNavball;
             invKerbinSLDensity = 1 / FARAeroUtil.GetCurrentDensity(FlightGlobals.Bodies[1], 0);
+            this.enabled = true;
         }
 
 
         public void OnDestroy()
         {
-            if (HighLogic.LoadedSceneIsFlight)
+            if (activeControlSys == this)
             {
-                if (activeControlSys == this)
-                {
-                    RenderingManager.RemoveFromPreDrawQueue(0, new Callback(activeControlSys.OnGUI));
-                    vessel.OnFlyByWire -= new FlightInputCallback(StabilityAugmentation);
-                }
-                activeControlSys = null;
+                vessel.OnFlyByWire -= new FlightInputCallback(StabilityAugmentation);
             }
+            activeControlSys = null;
         }
 
         public static bool SetActiveControlSysAndStabilitySystem(Vessel vesselToChangeTo, Vessel vesselToChangeFrom)
         {
             if ((object)vesselToChangeFrom != null && (object)activeControlSys != null)
             {
-                RenderingManager.RemoveFromPreDrawQueue(0, new Callback(activeControlSys.OnGUI));
                 vesselToChangeFrom.OnFlyByWire -= new FlightInputCallback(StabilityAugmentation);
             }
 
@@ -1248,9 +1244,6 @@ namespace ferram4
             {
                 return false;
             }
-            RenderingManager.AddToPreDrawQueue(0, new Callback(activeControlSys.OnGUI));
-
-
             statusOverrideTimer = 0;
             vesselToChangeTo.OnFlyByWire += new FlightInputCallback(StabilityAugmentation);
 

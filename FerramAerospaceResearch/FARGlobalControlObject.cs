@@ -361,6 +361,7 @@ namespace ferram4
             GameEvents.onVesselGoOffRails.Add(FindPartsWithoutFARModel);
             GameEvents.onVesselWasModified.Add(UpdateFARPartModules);
             GameEvents.onVesselCreate.Add(UpdateFARPartModules);
+            GameEvents.onVesselChange.Add(ChangeControlSys);
         }
 
         private void UpdateFARPartModules(Vessel v)
@@ -476,7 +477,13 @@ namespace ferram4
             }
         }
 
-        public void LateUpdate()
+        private void ChangeControlSys(Vessel v)
+        {
+            if (FARControlSys.SetActiveControlSysAndStabilitySystem(v, lastActiveVessel))
+                lastActiveVessel = v;
+        }
+
+        /*public void LateUpdate()
         {
 
             if (FlightGlobals.ready)
@@ -489,7 +496,7 @@ namespace ferram4
                         lastActiveVessel = FlightGlobals.ActiveVessel;
                 }
             }
-        }
+        }*/
 
         void OnDestroy()
         {
@@ -508,6 +515,7 @@ namespace ferram4
             GameEvents.onVesselGoOffRails.Remove(FindPartsWithoutFARModel);
             GameEvents.onVesselWasModified.Remove(UpdateFARPartModules);
             GameEvents.onVesselCreate.Remove(UpdateFARPartModules);
+            GameEvents.onVesselChange.Remove(ChangeControlSys);
         }
 
         public static void LoadConfigs()

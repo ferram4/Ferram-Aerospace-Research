@@ -52,6 +52,7 @@ namespace ferram4
 
             return false;
         }
+
         public static double GetActiveControlSys_Q()
         {
             if (FARControlSys.ActiveControlSys != null)
@@ -98,6 +99,26 @@ namespace ferram4
         {
             if (FARControlSys.ActiveControlSys != null)
                 return FARControlSys.ballisticCoeff;
+            return 0;
+        }
+
+        public static double GetActiveControlSys_AoA()
+        {
+            if (FARControlSys.ActiveControlSys != null)
+                return FARControlSys.AoA;
+            return 0;
+        }
+        public static double GetActiveControlSys_Sideslip()
+        {
+            if (FARControlSys.ActiveControlSys != null)
+                return FARControlSys.yaw;
+            return 0;
+        }
+
+        public static double GetActiveControlSys_TSFC()
+        {
+            if (FARControlSys.ActiveControlSys != null)
+                return FARControlSys.TSFC;
             return 0;
         }
     }
