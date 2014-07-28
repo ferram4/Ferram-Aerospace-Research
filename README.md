@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.14.1.1
+Ferram Aerospace Research v0.14.1.2
 =========================
 
 Aerodynamics model for Kerbal Space Program
@@ -135,6 +135,13 @@ For both of these, set MaxDrag and MinDrag to 0
 
 CHANGELOG
 =======================================================
+
+0.14.1.1v------------------------------------
+Features:
+More Get functions for the FARAPI
+
+Bugfixes:
+Fixed some vessel-switching FAR GUI issues
 
 0.14.1.1v------------------------------------
 Features:
