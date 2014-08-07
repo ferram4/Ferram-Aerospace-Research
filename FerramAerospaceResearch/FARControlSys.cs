@@ -9,7 +9,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Kerbal Joint Reinforcement is distributed in the hope that it will be useful,
+    Ferram Aerospace Research is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
@@ -148,6 +148,7 @@ namespace ferram4
 
 
         public static bool minimize = true;
+        public static bool hide = false;
 
 
 /*        private static Vector3 SaveWindowPos = new Vector3();
@@ -1176,7 +1177,7 @@ namespace ferram4
         public void OnGUI()
         {
             GUI.skin = HighLogic.Skin;
-            if (this == activeControlSys && !minimize)
+            if (this == activeControlSys && !minimize && !hide)
             {
                 windowPos = GUILayout.Window(250, windowPos, WindowGUI, "FAR Flight Systems, v0.14.1.2", GUILayout.MinWidth(150));
                 if (AutopilotWindow)

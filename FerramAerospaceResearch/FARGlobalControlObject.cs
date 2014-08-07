@@ -9,7 +9,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Kerbal Joint Reinforcement is distributed in the hope that it will be useful,
+    Ferram Aerospace Research is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
@@ -73,6 +73,9 @@ namespace ferram4
             }
             else
                 GameEvents.onGUIApplicationLauncherReady.Add(OnGUIAppLauncherReady);
+
+            GameEvents.onShowUI.Add(ShowUI);
+            GameEvents.onHideUI.Add(HideUI);
         }
 
         void OnGUIAppLauncherReady()
@@ -117,6 +120,16 @@ namespace ferram4
         }
 
         void DummyVoid() { }
+
+        private void HideUI()
+        {
+            FAREditorGUI.hide = true;
+        }
+
+        private void ShowUI()
+        {
+            FAREditorGUI.hide = false;
+        }
 
         public void LateUpdate()
         {
@@ -268,6 +281,9 @@ namespace ferram4
         {
             SaveConfigs();
             GameEvents.onGUIApplicationLauncherReady.Remove(OnGUIAppLauncherReady);
+            GameEvents.onShowUI.Remove(ShowUI);
+            GameEvents.onHideUI.Remove(HideUI); 
+            
             if (FAREditorButtonStock != null)
                 ApplicationLauncher.Instance.RemoveModApplication(FAREditorButtonStock);
             if(FAREditorButtonBlizzy != null)
@@ -324,7 +340,6 @@ namespace ferram4
                 GameEvents.onGUIApplicationLauncherReady.Add(OnGUIAppLauncherReady);
 
             InputLockManager.RemoveControlLock("FAREdLock");
-
         }
 
         void OnGUIAppLauncherReady()
@@ -362,8 +377,20 @@ namespace ferram4
             GameEvents.onVesselWasModified.Add(UpdateFARPartModules);
             GameEvents.onVesselCreate.Add(UpdateFARPartModules);
             GameEvents.onVesselChange.Add(ChangeControlSys);
+            GameEvents.onShowUI.Add(ShowUI);
+            GameEvents.onHideUI.Add(HideUI);
         }
 
+        private void HideUI()
+        {
+            FARControlSys.hide = true;
+        }
+
+        private void ShowUI()
+        {
+            FARControlSys.hide = false;
+        }
+        
         private void UpdateFARPartModules(Vessel v)
         {
             foreach (Part p in v.Parts)
@@ -475,6 +502,7 @@ namespace ferram4
                 if (b != null)
                     b.VesselPartList = p.vessel.Parts;             //This prevents every single part in the ship running this due to VesselPartsList not being initialized
             }
+            UpdateFARPartModules(v);
         }
 
         private void ChangeControlSys(Vessel v)
@@ -516,6 +544,8 @@ namespace ferram4
             GameEvents.onVesselWasModified.Remove(UpdateFARPartModules);
             GameEvents.onVesselCreate.Remove(UpdateFARPartModules);
             GameEvents.onVesselChange.Remove(ChangeControlSys);
+            GameEvents.onShowUI.Remove(ShowUI);
+            GameEvents.onHideUI.Remove(HideUI);
         }
 
         public static void LoadConfigs()

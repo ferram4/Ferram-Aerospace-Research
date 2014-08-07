@@ -9,7 +9,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Kerbal Joint Reinforcement is distributed in the hope that it will be useful,
+    Ferram Aerospace Research is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
@@ -45,7 +45,7 @@ namespace ferram4
 {
     public class FAREditorGUI
     {
-
+        
         public static Rect windowPos;
         protected static Rect helpPos;
         protected static Rect analysisHelpPos;
@@ -58,7 +58,9 @@ namespace ferram4
         protected static bool stabDerivHelp = false;
         public static List<FARWingAerodynamicModel> AllControlSurfaces = new List<FARWingAerodynamicModel>();
         public static List<FARWingAerodynamicModel> AllWings = new List<FARWingAerodynamicModel>();
+
         public static bool minimize = true;
+        public static bool hide = false;
 
         private static double lastMinBounds = 0;
         private static double lastMaxBounds = 0;
@@ -198,7 +200,7 @@ namespace ferram4
 
             bool cursorInGUI = false;
 
-            if (!minimize)
+            if (!minimize && !hide)
             {
                 windowPos = GUILayout.Window(256, windowPos, ActualGUI, "FAR Control & Analysis Systems, v0.14.1.2");
                 if (AnalysisHelp)
@@ -1575,6 +1577,9 @@ namespace ferram4
 
                 double M = i / (double)numPoints * (upperBound - lowerBound) + lowerBound;
 
+                if (M == 0)
+                    M = 0.001;
+
                 double cy, cn, cr;
 
                 GetClCdCmSteady(CoM, AoA, 0, 0, 0, 0, 0, M, pitch, out Cl, out Cd, out Cm, out cy, out cn, out cr, true, i == 0);
@@ -1593,6 +1598,9 @@ namespace ferram4
 
         private void AngleOfAttackSweep(double M, double pitch)
         {
+            if (M == 0)
+                M = 0.001;
+
             FARAeroUtil.UpdateCurrentActiveBody(index, FlightGlobals.Bodies[1]);
 
             double Cl = 0;
@@ -1601,7 +1609,7 @@ namespace ferram4
             double mass = 0;
             Vector3d CoM = Vector3.zero;
 
-
+            
             foreach (Part p in FARAeroUtil.CurEditorParts)
             {
                 if (FARAeroUtil.IsNonphysical(p))

@@ -9,7 +9,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Kerbal Joint Reinforcement is distributed in the hope that it will be useful,
+    Ferram Aerospace Research is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
@@ -108,8 +108,8 @@ namespace ferram4
 
         private Quaternion to_model_rotation = Quaternion.identity;
 
-        public Transform[] PartModelTransforms = null;
-        public Transform[] VesselModelTransforms = null;
+        //public Transform[] PartModelTransforms = null;
+        //public Transform[] VesselModelTransforms = null;
 
         [KSPField(isPersistant = false, guiActive = false, guiName = "Current drag", guiUnits = "kN", guiFormat = "F3")]
         protected float currentDrag = 0.0f;
@@ -200,7 +200,7 @@ namespace ferram4
             OnVesselPartsChange += AttachNodeCdAdjust;
 
             UpdateUpVector(false);
-            PartModelTransforms = FARGeoUtil.PartModelTransformArray(part);
+            //PartModelTransforms = FARGeoUtil.PartModelTransformArray(part);
             AttachNodeCdAdjust();
             AnimationSetup();
             Fields["currentDrag"].guiActive = FARDebugValues.displayForces;
@@ -450,7 +450,7 @@ namespace ferram4
                 return Vector3d.zero;
         }
 
-
+        /*
         private Dictionary<string, List<AttachNode>> GetAttachNodeGroups()
         {
             Dictionary<string, List<AttachNode>> attachNodeGroups = new Dictionary<string, List<AttachNode>>();
@@ -835,7 +835,7 @@ namespace ferram4
             }
 
         }
-
+        */
 
         private void AttachNodeCdAdjust()
         {
@@ -855,6 +855,14 @@ namespace ferram4
             attachNodeDragDict.Clear();
 
             Transform transform = part.partTransform;
+
+            if (transform == null)
+                transform = part.transform;
+            if(transform == null)
+            {
+                Debug.LogError("Part " + part.partInfo.title + " has null transform; drag interactions cannot be applied.");
+                return;
+            }
 
             Vector3d partUpVector = transform.TransformDirection(localUpVector);
 
