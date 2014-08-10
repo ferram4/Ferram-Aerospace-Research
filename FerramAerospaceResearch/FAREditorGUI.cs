@@ -1593,7 +1593,7 @@ namespace ferram4
                 LDValues[i] = Cl / Cd;
             }
             string horizontalLabel = "Mach Number";
-            UpdateGraph(AlphaValues, ClValues, CdValues, CmValues, LDValues, horizontalLabel);
+            UpdateGraph(AlphaValues, ClValues, CdValues, CmValues, LDValues, null, null, null, null, horizontalLabel);
         }
 
         private void AngleOfAttackSweep(double M, double pitch)
@@ -1623,11 +1623,15 @@ namespace ferram4
             }
             CoM /= mass;
 
-            double[] ClValues = new double[2 * (int)numPoints];
-            double[] CdValues = new double[2 * (int)numPoints];
-            double[] CmValues = new double[2 * (int)numPoints];
-            double[] LDValues = new double[2 * (int)numPoints];
-            double[] AlphaValues = new double[2 * (int)numPoints];
+            double[] ClValues = new double[(int)numPoints];
+            double[] CdValues = new double[(int)numPoints];
+            double[] CmValues = new double[(int)numPoints];
+            double[] LDValues = new double[(int)numPoints];
+            double[] AlphaValues = new double[(int)numPoints];
+            double[] ClValues2 = new double[(int)numPoints];
+            double[] CdValues2 = new double[(int)numPoints];
+            double[] CmValues2 = new double[(int)numPoints];
+            double[] LDValues2 = new double[(int)numPoints];
 
             for (int i = 0; i < 2 * numPoints; i++)
             {
@@ -1643,14 +1647,27 @@ namespace ferram4
                 
 
 //                MonoBehaviour.print("Cl: " + Cl + " Cd: " + Cd);
-                AlphaValues[i] = angle;
-                ClValues[i] = Cl;
-                CdValues[i] = Cd;
-                CmValues[i] = Cm;
-                LDValues[i] = Cl / Cd;
+                if (i < numPoints)
+                {
+                    AlphaValues[i] = angle;
+                    ClValues[i] = Cl;
+                    CdValues[i] = Cd;
+                    CmValues[i] = Cm;
+                    LDValues[i] = Cl / Cd;
+                }
+                else
+                {
+                    ClValues2[numPoints*2 - 1 - i] = Cl;
+                    CdValues2[numPoints*2 - 1 - i] = Cd;
+                    CmValues2[numPoints*2 - 1 - i] = Cm;
+                    LDValues2[numPoints*2 - 1 - i] = Cl / Cd;                    
+                }
             }
             string horizontalLabel = "Angle of Attack, degrees";
-            UpdateGraph(AlphaValues, ClValues, CdValues, CmValues, LDValues, horizontalLabel);
+            UpdateGraph(AlphaValues, 
+                        ClValues, CdValues, CmValues, LDValues,
+                        ClValues2, CdValues2, CmValues2, LDValues2, 
+                        horizontalLabel);
         }
 
         private void GetClCdCmSteady(Vector3d CoM, double alpha, double beta, double phi, double alphaDot, double betaDot, double phiDot, double M, double pitch, out double Cl, out double Cd, out double Cm, out double Cy, out double Cn, out double C_roll, bool clear, bool reset_stall = false)
@@ -1828,7 +1845,7 @@ namespace ferram4
 
         }
 
-        private void UpdateGraph(double[] AlphaValues, double[] ClValues, double[] CdValues, double[] CmValues, double[] LDValues, string horizontalLabel)
+        private void UpdateGraph(double[] AlphaValues, double[] ClValues, double[] CdValues, double[] CmValues, double[] LDValues, double[] ClValues2, double[] CdValues2, double[] CmValues2, double[] LDValues2, string horizontalLabel)
         {
             // To allow switching between two graph setups to observe differences,
             // use both the current and the previous shown graph to estimate scale
@@ -1842,13 +1859,27 @@ namespace ferram4
             double realMin = Math.Min(Math.Floor(minBounds), -0.25);
             double realMax = Math.Max(Math.Ceiling(maxBounds), 0.25);
 
+            Color darkCyan = new Color(0f, 0.5f, 0.5f);
+            Color darkRed  = new Color(0.5f, 0f, 0f);
+            Color darkYellow = new Color(0.5f, 0.5f, 0f);
+            Color darkGreen = new Color(0f, 0.5f, 0f);
+
             graph.Clear();
             graph.SetBoundaries(lowerBound, upperBound, realMin, realMax);
             graph.SetGridScaleUsingValues(5, 0.5);
+            if (ClValues2 != null && CdValues2 != null && CmValues2 != null && LDValues2 != null)
+            {
+                graph.AddLine("Cl2", AlphaValues, ClValues2, darkCyan, 1, false);
+                graph.AddLine("Cd2", AlphaValues, CdValues2, darkRed, 1, false);
+                graph.AddLine("L/D2", AlphaValues, LDValues2, darkGreen, 1, false);
+                graph.AddLine("Cm2", AlphaValues, CmValues2, darkYellow, 1, false);
+                graph.SetLineVerticalScaling("L/D2", 0.1);
+                AddZeroMarks("Cm2", AlphaValues, CmValues2, upperBound - lowerBound, realMax - realMin, darkYellow);
+            }
             graph.AddLine("Cl", AlphaValues, ClValues, Color.cyan);
             graph.AddLine("Cd", AlphaValues, CdValues, Color.red);
-            graph.AddLine("Cm", AlphaValues, CmValues, Color.yellow);
             graph.AddLine("L/D", AlphaValues, LDValues, Color.green);
+            graph.AddLine("Cm", AlphaValues, CmValues, Color.yellow);
             graph.SetLineVerticalScaling("L/D", 0.1);
             graph.horizontalLabel = horizontalLabel;
             graph.verticalLabel = "Cl\nCd\nCm\nL/D / 10";
