@@ -248,12 +248,16 @@ namespace ferram4
         {
             GUIStyle BackgroundStyle = new GUIStyle(GUI.skin.box);
             BackgroundStyle.richText = true;
-            BackgroundStyle.fontStyle = FontStyle.Normal;
-            BackgroundStyle.alignment = TextAnchor.UpperLeft;
             BackgroundStyle.hover = BackgroundStyle.active = BackgroundStyle.normal;
+            BackgroundStyle.padding = new RectOffset(2, 2, 2, 2);
+
             GUILayout.BeginVertical();
 
-            GUILayout.Box("The analysis window is designed to help you determine the performance of your airplane before you attempt to fly it by calculating various aerodynamic parameters.\n\r\n\r<b>Analyzer modes:</b>\n\rSweep AoA (Angle of attack)\n\rSweep Mach\n\r\n\r<b>Sweep AoA:</b> Vary AoA of plane at a constant Mach number.  Set angles using lower and upper bounds and choose enough points for accuracy.  Analyzer will produce two curves; one with increasing AoA, one with decreasing to display effects of stall. The sweep from high to low AoA is displayed in darker tones. \n\r\n\r<b>Sweep Mach:</b> Vary Mach number at a constant AoA.  Will only sweep from lower Mach Number to upper.  Will not accept negative Mach Numbers.\n\r\n\r<b>Parameters Drawn:</b> Cl, Cd, Cm, L/D\n\r\n\r<b>Cl:</b> Lift coefficient; describes the lift of the plane after removing effects of air density and velocity.  Will increase with AoA until stall, where it will drop greatly.  AoA must be lowered greatly before stall ends.\n\r\n\r<b>Cd:</b> Drag coefficient; like the above, but for drag.  Notice the large increase following stall.\n\r\n\r<b>Cm:</b> Pitching moment coefficient; Angular force (think torque) applied to the plane when effects of air density and velocity are removed; must decrease with angle of attack for the plane to be stable.\n\r\n\r<b>L/D:</b> Lift over drag; measure of how efficiently the plane flies.", BackgroundStyle);
+            GUILayout.Box("The analysis window is designed to help you determine the performance of your airplane before you attempt to fly it by calculating various aerodynamic parameters.", BackgroundStyle);
+            
+            GUILayout.BeginVertical(BackgroundStyle);
+            GUILayout.Label("<b>Analyzer modes:</b>\n\rSweep AoA (Angle of attack)\n\rSweep Mach\n\r\n\r<b>Sweep AoA:</b> Vary AoA of plane at a constant Mach number.  Set angles using lower and upper bounds and choose enough points for accuracy.  Analyzer will produce two curves; one with increasing AoA, one with decreasing to display effects of stall. The sweep from high to low AoA is displayed in darker tones. \n\r\n\r<b>Sweep Mach:</b> Vary Mach number at a constant AoA.  Will only sweep from lower Mach Number to upper.  Will not accept negative Mach Numbers.\n\r\n\r<b>Parameters Drawn:</b> Cl, Cd, Cm, L/D\n\r\n\r<b>Cl:</b> Lift coefficient; describes the lift of the plane after removing effects of air density and velocity.  Will increase with AoA until stall, where it will drop greatly.  AoA must be lowered greatly before stall ends.\n\r\n\r<b>Cd:</b> Drag coefficient; like the above, but for drag.  Notice the large increase following stall.\n\r\n\r<b>Cm:</b> Pitching moment coefficient; Angular force (think torque) applied to the plane when effects of air density and velocity are removed; must decrease with angle of attack for the plane to be stable.\n\r\n\r<b>L/D:</b> Lift over drag; measure of how efficiently the plane flies.");
+            GUILayout.EndVertical();
 
             GUILayout.EndVertical();
 
@@ -1866,27 +1870,37 @@ namespace ferram4
             Color darkRed  = new Color(0.5f, 0f, 0f);
             Color darkYellow = new Color(0.5f, 0.5f, 0f);
             Color darkGreen = new Color(0f, 0.5f, 0f);
-
+            bool hasHighToLowAoA = ClValues2 != null && CdValues2 != null && CmValues2 != null && LDValues2 != null;
             graph.Clear();
             graph.SetBoundaries(lowerBound, upperBound, realMin, realMax);
             graph.SetGridScaleUsingValues(5, 0.5);
-            if (ClValues2 != null && CdValues2 != null && CmValues2 != null && LDValues2 != null)
-            {
-                graph.AddLine("Cl2", AlphaValues, ClValues2, darkCyan, 1, false);
+
+            if (hasHighToLowAoA)
                 graph.AddLine("Cd2", AlphaValues, CdValues2, darkRed, 1, false);
+            graph.AddLine("Cd", AlphaValues, CdValues, Color.red);
+            
+            if (hasHighToLowAoA) 
+                graph.AddLine("Cl2", AlphaValues, ClValues2, darkCyan, 1, false);
+            graph.AddLine("Cl", AlphaValues, ClValues, Color.cyan);
+
+            if (hasHighToLowAoA) 
                 graph.AddLine("L/D2", AlphaValues, LDValues2, darkGreen, 1, false);
+            graph.AddLine("L/D", AlphaValues, LDValues, Color.green);
+
+            if (hasHighToLowAoA) 
                 graph.AddLine("Cm2", AlphaValues, CmValues2, darkYellow, 1, false);
+            graph.AddLine("Cm", AlphaValues, CmValues, Color.yellow);
+
+            if (hasHighToLowAoA) 
+            {
                 graph.SetLineVerticalScaling("L/D2", 0.1);
                 AddZeroMarks("Cm2", AlphaValues, CmValues2, upperBound - lowerBound, realMax - realMin, darkYellow);
             }
-            graph.AddLine("Cl", AlphaValues, ClValues, Color.cyan);
-            graph.AddLine("Cd", AlphaValues, CdValues, Color.red);
-            graph.AddLine("L/D", AlphaValues, LDValues, Color.green);
-            graph.AddLine("Cm", AlphaValues, CmValues, Color.yellow);
             graph.SetLineVerticalScaling("L/D", 0.1);
+            AddZeroMarks("Cm", AlphaValues, CmValues, upperBound - lowerBound, realMax - realMin, Color.yellow);
+
             graph.horizontalLabel = horizontalLabel;
             graph.verticalLabel = "Cl\nCd\nCm\nL/D / 10";
-            AddZeroMarks("Cm", AlphaValues, CmValues, upperBound-lowerBound, realMax-realMin, Color.yellow);
             graph.Update();
 
         }
