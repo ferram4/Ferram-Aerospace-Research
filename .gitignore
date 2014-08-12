@@ -1,11 +1,11 @@
 /FerramAerospaceResearch/bin/Debug/*
-/FerramAerospaceResearch/bin/Release/Assembly-CSharp.dll
-/FerramAerospaceResearch/bin/Release/Assembly-CSharp-firstpass.dll
-/FerramAerospaceResearch/bin/Release/UnityEngine.dll
+/FerramAerospaceResearch/bin/Release/*
 /FerramAerospaceResearch/obj/Debug/*
+/FerramAerospaceResearch/obj/Release/*
 
 /ferramGraph/bin/Debug/*
-/ferramGraph/bin/Release/Assembly-CSharp.dll
-/ferramGraph/bin/Release/Assembly-CSharp-firstpass.dll
-/ferramGraph/bin/Release/UnityEngine.dll
+/ferramGraph/bin/Release/*
 /ferramGraph/obj/Debug/*
+/ferramGraph/obj/Release/*
+
+/GameData/FerramAerospaceResearch/Custom*.cfg

@@ -247,10 +247,17 @@ namespace ferram4
         private void AnalysisHelpGUI(int windowID)
         {
             GUIStyle BackgroundStyle = new GUIStyle(GUI.skin.box);
+            BackgroundStyle.richText = true;
             BackgroundStyle.hover = BackgroundStyle.active = BackgroundStyle.normal;
+            BackgroundStyle.padding = new RectOffset(2, 2, 2, 2);
+
             GUILayout.BeginVertical();
 
-            GUILayout.Box("The analysis window is designed to help you determine the performance of your airplane before you attempt to fly it by calculating various aerodynamic parameters.\n\r\n\rAnalyzer modes:\n\rSweep AoA\n\rSweep Mach\n\r\n\rSweep AoA: Vary angle of attack of plane at a constant Mach number.  Set angles using lower and upper bounds and choose enough points for accuracy.  Analyzer will produce two curves; one with increasing angle of attack, one with decreasing to display effects of stall.\n\r\n\rSweep Mach: Vary Mach number at a constant angle of attack.  Will only sweep from lower Mach Number to upper.  Will not accept negative Mach Numbers.\n\r\n\rParameters Drawn: Cl, Cd, Cm, L/D\n\r\n\rCl: Lift coefficient; describes the lift of the plane after removing effects of air density and velocity.  Will increase with angle of attack until stall, where it will drop greatly.  Angle of attack must be lowered greatly before stall ends.\n\r\n\rCd: Drag coefficient; like the above, but for drag.  Notice the large increase following stall.\n\r\n\rCm: Pitching moment coefficient; Angular force (think torque) applied to the plane when effects of air density and velocity are removed; must decrease with angle of attack for the plane to be stable.\n\r\n\rL/D: Lift over drag; measure of how efficiently the plane flies.", BackgroundStyle);
+            GUILayout.Box("The analysis window is designed to help you determine the performance of your airplane before you attempt to fly it by calculating various aerodynamic parameters.", BackgroundStyle);
+            
+            GUILayout.BeginVertical(BackgroundStyle);
+            GUILayout.Label("<b>Analyzer modes:</b>\n\rSweep AoA (Angle of attack)\n\rSweep Mach\n\r\n\r<b>Sweep AoA:</b> Vary AoA of plane at a constant Mach number.  Set angles using lower and upper bounds and choose enough points for accuracy.  Analyzer will produce two curves; one with increasing AoA, one with decreasing to display effects of stall. The sweep from high to low AoA is displayed in darker tones. \n\r\n\r<b>Sweep Mach:</b> Vary Mach number at a constant AoA.  Will only sweep from lower Mach Number to upper.  Will not accept negative Mach Numbers.\n\r\n\r<b>Parameters Drawn:</b> Cl, Cd, Cm, L/D\n\r\n\r<b>Cl:</b> Lift coefficient; describes the lift of the plane after removing effects of air density and velocity.  Will increase with AoA until stall, where it will drop greatly.  AoA must be lowered greatly before stall ends.\n\r\n\r<b>Cd:</b> Drag coefficient; like the above, but for drag.  Notice the large increase following stall.\n\r\n\r<b>Cm:</b> Pitching moment coefficient; Angular force (think torque) applied to the plane when effects of air density and velocity are removed; must decrease with angle of attack for the plane to be stable.\n\r\n\r<b>L/D:</b> Lift over drag; measure of how efficiently the plane flies.");
+            GUILayout.EndVertical();
 
             GUILayout.EndVertical();
 
@@ -1593,7 +1600,7 @@ namespace ferram4
                 LDValues[i] = Cl / Cd;
             }
             string horizontalLabel = "Mach Number";
-            UpdateGraph(AlphaValues, ClValues, CdValues, CmValues, LDValues, horizontalLabel);
+            UpdateGraph(AlphaValues, ClValues, CdValues, CmValues, LDValues, null, null, null, null, horizontalLabel);
         }
 
         private void AngleOfAttackSweep(double M, double pitch)
@@ -1623,11 +1630,15 @@ namespace ferram4
             }
             CoM /= mass;
 
-            double[] ClValues = new double[2 * (int)numPoints];
-            double[] CdValues = new double[2 * (int)numPoints];
-            double[] CmValues = new double[2 * (int)numPoints];
-            double[] LDValues = new double[2 * (int)numPoints];
-            double[] AlphaValues = new double[2 * (int)numPoints];
+            double[] ClValues = new double[(int)numPoints];
+            double[] CdValues = new double[(int)numPoints];
+            double[] CmValues = new double[(int)numPoints];
+            double[] LDValues = new double[(int)numPoints];
+            double[] AlphaValues = new double[(int)numPoints];
+            double[] ClValues2 = new double[(int)numPoints];
+            double[] CdValues2 = new double[(int)numPoints];
+            double[] CmValues2 = new double[(int)numPoints];
+            double[] LDValues2 = new double[(int)numPoints];
 
             for (int i = 0; i < 2 * numPoints; i++)
             {
@@ -1643,14 +1654,27 @@ namespace ferram4
                 
 
 //                MonoBehaviour.print("Cl: " + Cl + " Cd: " + Cd);
-                AlphaValues[i] = angle;
-                ClValues[i] = Cl;
-                CdValues[i] = Cd;
-                CmValues[i] = Cm;
-                LDValues[i] = Cl / Cd;
+                if (i < numPoints)
+                {
+                    AlphaValues[i] = angle;
+                    ClValues[i] = Cl;
+                    CdValues[i] = Cd;
+                    CmValues[i] = Cm;
+                    LDValues[i] = Cl / Cd;
+                }
+                else
+                {
+                    ClValues2[numPoints*2 - 1 - i] = Cl;
+                    CdValues2[numPoints*2 - 1 - i] = Cd;
+                    CmValues2[numPoints*2 - 1 - i] = Cm;
+                    LDValues2[numPoints*2 - 1 - i] = Cl / Cd;                    
+                }
             }
             string horizontalLabel = "Angle of Attack, degrees";
-            UpdateGraph(AlphaValues, ClValues, CdValues, CmValues, LDValues, horizontalLabel);
+            UpdateGraph(AlphaValues, 
+                        ClValues, CdValues, CmValues, LDValues,
+                        ClValues2, CdValues2, CmValues2, LDValues2, 
+                        horizontalLabel);
         }
 
         private void GetClCdCmSteady(Vector3d CoM, double alpha, double beta, double phi, double alphaDot, double betaDot, double phiDot, double M, double pitch, out double Cl, out double Cd, out double Cm, out double Cy, out double Cn, out double C_roll, bool clear, bool reset_stall = false)
@@ -1828,7 +1852,7 @@ namespace ferram4
 
         }
 
-        private void UpdateGraph(double[] AlphaValues, double[] ClValues, double[] CdValues, double[] CmValues, double[] LDValues, string horizontalLabel)
+        private void UpdateGraph(double[] AlphaValues, double[] ClValues, double[] CdValues, double[] CmValues, double[] LDValues, double[] ClValues2, double[] CdValues2, double[] CmValues2, double[] LDValues2, string horizontalLabel)
         {
             // To allow switching between two graph setups to observe differences,
             // use both the current and the previous shown graph to estimate scale
@@ -1842,17 +1866,41 @@ namespace ferram4
             double realMin = Math.Min(Math.Floor(minBounds), -0.25);
             double realMax = Math.Max(Math.Ceiling(maxBounds), 0.25);
 
+            Color darkCyan = new Color(0f, 0.5f, 0.5f);
+            Color darkRed  = new Color(0.5f, 0f, 0f);
+            Color darkYellow = new Color(0.5f, 0.5f, 0f);
+            Color darkGreen = new Color(0f, 0.5f, 0f);
+            bool hasHighToLowAoA = ClValues2 != null && CdValues2 != null && CmValues2 != null && LDValues2 != null;
             graph.Clear();
             graph.SetBoundaries(lowerBound, upperBound, realMin, realMax);
             graph.SetGridScaleUsingValues(5, 0.5);
-            graph.AddLine("Cl", AlphaValues, ClValues, Color.cyan);
+
+            if (hasHighToLowAoA)
+                graph.AddLine("Cd2", AlphaValues, CdValues2, darkRed, 1, false);
             graph.AddLine("Cd", AlphaValues, CdValues, Color.red);
-            graph.AddLine("Cm", AlphaValues, CmValues, Color.yellow);
+            
+            if (hasHighToLowAoA) 
+                graph.AddLine("Cl2", AlphaValues, ClValues2, darkCyan, 1, false);
+            graph.AddLine("Cl", AlphaValues, ClValues, Color.cyan);
+
+            if (hasHighToLowAoA) 
+                graph.AddLine("L/D2", AlphaValues, LDValues2, darkGreen, 1, false);
             graph.AddLine("L/D", AlphaValues, LDValues, Color.green);
+
+            if (hasHighToLowAoA) 
+                graph.AddLine("Cm2", AlphaValues, CmValues2, darkYellow, 1, false);
+            graph.AddLine("Cm", AlphaValues, CmValues, Color.yellow);
+
+            if (hasHighToLowAoA) 
+            {
+                graph.SetLineVerticalScaling("L/D2", 0.1);
+                AddZeroMarks("Cm2", AlphaValues, CmValues2, upperBound - lowerBound, realMax - realMin, darkYellow);
+            }
             graph.SetLineVerticalScaling("L/D", 0.1);
+            AddZeroMarks("Cm", AlphaValues, CmValues, upperBound - lowerBound, realMax - realMin, Color.yellow);
+
             graph.horizontalLabel = horizontalLabel;
             graph.verticalLabel = "Cl\nCd\nCm\nL/D / 10";
-            AddZeroMarks("Cm", AlphaValues, CmValues, upperBound-lowerBound, realMax-realMin, Color.yellow);
             graph.Update();
 
         }
