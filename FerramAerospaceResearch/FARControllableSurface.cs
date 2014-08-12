@@ -248,7 +248,6 @@ namespace ferram4
                         AoAOffsetFromFlapDeflection();
                     else if (isSpoiler == true)
                         AoAOffsetFromSpoilerDeflection();
-                    
                     AoAOffsetFromControl();
 
                 }

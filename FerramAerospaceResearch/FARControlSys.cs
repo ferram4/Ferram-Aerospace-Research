@@ -65,7 +65,8 @@ namespace ferram4
             }
         }
 
-        private static string AirDensity;
+        private static string airDensity_str;
+        public static double airDensity;
         private static bool DensityRelative = true;
         private static string DensityRelative_str = "REL";
         private static double invKerbinSLDensity = 0;
@@ -966,12 +967,12 @@ namespace ferram4
                 GUILayout.BeginHorizontal();
                 if (DensityRelative)
                 {
-                    GUILayout.Box("Frac SL Density: " + AirDensity, mySty, GUILayout.ExpandWidth(true));
+                    GUILayout.Box("Frac SL Density: " + airDensity_str, mySty, GUILayout.ExpandWidth(true));
                     DensityRelative_str = "ABS";
                 }
                 else
                 {
-                    GUILayout.Box("ATM Density: " + AirDensity, mySty, GUILayout.ExpandWidth(true));
+                    GUILayout.Box("ATM Density: " + airDensity_str, mySty, GUILayout.ExpandWidth(true));
                     DensityRelative_str = "REL";
                 }
                 if (GUILayout.Button(DensityRelative_str, mytoggle, GUILayout.Width(30.0F), GUILayout.Height(30.0F)))
@@ -1258,27 +1259,21 @@ namespace ferram4
             {
                 if (vessel.isActiveVessel)
                 {
-                    if ((object)activeControlSys == null)
-                    {
-                        activeControlSys = this;
-                        statusOverrideTimer = 0;
-                    }
-
                     if (activeControlSys == this)
                     {
                         if (vessel.staticPressure > 0)
                         {
                             double soundspeed;
-                            double density = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
+                            airDensity = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
                             MachNumber = this.vessel.srf_velocity.magnitude / soundspeed;
 
                             if (DensityRelative)
-                                AirDensity = (density * invKerbinSLDensity).ToString("F3");
+                                airDensity_str = (airDensity * invKerbinSLDensity).ToString("F3");
                             else
-                                AirDensity = (density).ToString("F3");
+                                airDensity_str = (airDensity).ToString("F3");
 
 
-                            q = density * vessel.srf_velocity.sqrMagnitude * 0.5;
+                            q = airDensity * vessel.srf_velocity.sqrMagnitude * 0.5;
 
                             mach = MachNumber.ToString("F3");
                         }
@@ -1286,7 +1281,7 @@ namespace ferram4
                         {
                             q = 0;
                             mach = "0.000";
-                            AirDensity = "0.000";
+                            airDensity_str = "0.000";
                         }
 
                         timeSinceSave++;

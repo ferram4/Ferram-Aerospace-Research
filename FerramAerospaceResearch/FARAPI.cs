@@ -53,6 +53,12 @@ namespace ferram4
             return false;
         }
 
+        public static double GetActiveControlSys_AirDensity()
+        {
+            if (FARControlSys.ActiveControlSys != null)
+                return FARControlSys.airDensity;
+            return 0;
+        }
         public static double GetActiveControlSys_Q()
         {
             if (FARControlSys.ActiveControlSys != null)

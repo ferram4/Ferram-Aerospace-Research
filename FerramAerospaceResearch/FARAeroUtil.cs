@@ -925,26 +925,6 @@ namespace ferram4
                         TempCurve4.Add(1, 0, 0, 0);
                     }
 
-
-                    /*                    TempCurve2.Add(-1, 0);
-                                        TempCurve2.Add(-0.866f, -0.138f);
-                                        TempCurve2.Add(-0.5f, -0.239f, 0, 0);
-                                        TempCurve2.Add(0, 0);
-                                        TempCurve2.Add(0.5f, 0.239f, 0, 0);
-                                        TempCurve2.Add(0.866f, 0.138f);
-                                        TempCurve2.Add(1, 0);*/
-
-                    /*                    if (p.partInfo.title.ToLowerInvariant().Contains("nose"))
-                                        {
-                                            TempCurve3.Add(-1, -0.1f, 0, 0);
-                                            TempCurve3.Add(-0.5f, -0.1f, 0, 0);
-                                            TempCurve3.Add(0, -0.1f, 0, 0);
-                                            TempCurve3.Add(0.8660f, 0f, 0, 0);
-                                            TempCurve3.Add(1, 0.1f, 0, 0);
-                                        }
-                                        else
-                                        {*/
-
                     float cdM = (float)MomentDueToTapering(data.finenessRatio, data.taperRatio, data.crossSectionalArea, data.area);
 
                     TempCurve3.Add(-1, cdM);
@@ -971,8 +951,6 @@ namespace ferram4
                     }
 
                 }
-//                if (p.Modules.Contains("FARPayloadFairingModule"))
-//                    data.area /= p.symmetryCounterparts.Count + 1;
 
                 d.BuildNewDragModel(data.area * FARAeroUtil.areaFactor, TempCurve1, TempCurve2, TempCurve4, TempCurve3, data.originToCentroid, data.majorMinorAxisRatio, cosCutoffAngle, data.taperCrossSectionArea, YmaxForce, XZmaxForce);
                 return;
