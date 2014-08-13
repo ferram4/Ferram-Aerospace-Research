@@ -139,6 +139,8 @@ namespace ferram4
         private bool brake = false;
         private bool justStarted = false;
 
+        private Transform lastReferenceTransform = null;
+
 
         [KSPAction("Activate Spoiler", actionGroup = KSPActionGroup.Brakes)]
         public void ActivateSpoiler(KSPActionParam param)
@@ -255,6 +257,12 @@ namespace ferram4
 
             base.FixedUpdate();
             justStarted = false;
+
+            if(vessel && vessel.ReferenceTransform != lastReferenceTransform)
+            {
+                justStarted = false;
+                lastReferenceTransform = vessel.ReferenceTransform;
+            }
         }
 
         #region Deflection
@@ -370,7 +378,7 @@ namespace ferram4
             // Use the vector computed by DeflectionAnimation
             Vector3d perp = part_transform.TransformDirection(deflectedNormal);
             double PerpVelocity = Vector3d.Dot(perp, velocity.normalized);
-            return Math.Asin(PerpVelocity);
+            return Math.Asin(FARMathUtil.Clamp(PerpVelocity, -1, 1));
         }
 
         // Had to add this one since the parent class don't use AoAoffset and adding it would break GetWingInFrontOf
