@@ -114,6 +114,8 @@ namespace ferram4
         [KSPField(isPersistant = false, guiActive = false, guiName = "Current drag", guiUnits = "kN", guiFormat = "F3")]
         protected float currentDrag = 0.0f;
 
+        public double SPlusAttachArea = 0;
+
         public double YmaxForce = double.MaxValue;
         public double XZmaxForce = double.MaxValue;
 
@@ -182,6 +184,7 @@ namespace ferram4
             majorMinorAxisRatio = newMajorMinorAxisRatio;
             cosAngleCutoff = newCosCutoffAngle;
             taperCrossSectionAreaRatio = newTaperCrossSectionArea / S;
+            SPlusAttachArea = S;
 
             YmaxForce = newYmaxForce;
             XZmaxForce = newXZmaxForce;
@@ -864,6 +867,8 @@ namespace ferram4
                 return;
             }
 
+            SPlusAttachArea = S;
+
             Vector3d partUpVector = transform.TransformDirection(localUpVector);
 
             //print("Updating drag for " + part.partInfo.title);
@@ -932,6 +937,9 @@ namespace ferram4
                         double exposedAttachArea = attachSize * FARAeroUtil.attachNodeRadiusFactor;
                         exposedAttachArea *= exposedAttachArea;
                         exposedAttachArea *= Math.PI * FARAeroUtil.areaFactor;
+
+                        SPlusAttachArea += exposedAttachArea;
+
                         exposedAttachArea /= FARMathUtil.Clamp(S, 0.01, double.PositiveInfinity);
 
                         attachNodeData newAttachNodeData = new attachNodeData();

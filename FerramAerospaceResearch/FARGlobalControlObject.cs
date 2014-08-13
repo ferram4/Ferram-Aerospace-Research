@@ -511,7 +511,7 @@ namespace ferram4
                 lastActiveVessel = v;
         }
 
-        /*public void LateUpdate()
+        public void LateUpdate()
         {
 
             if (FlightGlobals.ready)
@@ -524,7 +524,7 @@ namespace ferram4
                         lastActiveVessel = FlightGlobals.ActiveVessel;
                 }
             }
-        }*/
+        }
 
         void OnDestroy()
         {
