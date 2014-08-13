@@ -50,6 +50,8 @@ namespace ferram4
         protected static Rect helpPos;
         protected static Rect analysisHelpPos;
         protected static Rect stabDerivHelpPos;
+        protected static GUIStyle BackgroundStyle;
+        protected static GUIStyle ButtonStyle;
 
         private static Vector3 mousePos = Vector3.zero;
 
@@ -193,6 +195,21 @@ namespace ferram4
             //if (GUI.Button(switchButton, "FAR CAS"))
             //    minimize = !minimize;
 
+            if (BackgroundStyle == null || ButtonStyle == null)
+            {
+                // DM: initialize styles on first use
+                BackgroundStyle = new GUIStyle(GUI.skin.box);
+                BackgroundStyle.richText = true;
+                BackgroundStyle.hover = BackgroundStyle.active = BackgroundStyle.normal;
+                BackgroundStyle.padding = new RectOffset(2, 2, 2, 2);
+
+                ButtonStyle = new GUIStyle(GUI.skin.button);
+                ButtonStyle.normal.textColor = ButtonStyle.focused.textColor = Color.white;
+                ButtonStyle.hover.textColor = ButtonStyle.active.textColor = Color.yellow;
+                ButtonStyle.onNormal.textColor = ButtonStyle.onFocused.textColor = ButtonStyle.onHover.textColor = ButtonStyle.onActive.textColor = Color.green;
+                ButtonStyle.padding = new RectOffset(4, 4, 4, 4);
+            }
+
             mousePos = Input.mousePosition;         //Mouse location; based on Kerbal Engineer Redux code
             mousePos.y = Screen.height - mousePos.y;
 
@@ -246,11 +263,6 @@ namespace ferram4
 
         private void AnalysisHelpGUI(int windowID)
         {
-            GUIStyle BackgroundStyle = new GUIStyle(GUI.skin.box);
-            BackgroundStyle.richText = true;
-            BackgroundStyle.hover = BackgroundStyle.active = BackgroundStyle.normal;
-            BackgroundStyle.padding = new RectOffset(2, 2, 2, 2);
-
             GUILayout.BeginVertical();
 
             GUILayout.Box("The analysis window is designed to help you determine the performance of your airplane before you attempt to fly it by calculating various aerodynamic parameters.", BackgroundStyle);
@@ -266,18 +278,7 @@ namespace ferram4
 
         private void StabDerivHelpGUI(int windowID)
         {
-            GUIStyle BackgroundStyle = new GUIStyle(GUI.skin.box);
-            BackgroundStyle.hover = BackgroundStyle.active = BackgroundStyle.normal;
-
-            GUIStyle ButtonStyle = new GUIStyle(GUI.skin.button);
-            ButtonStyle.normal.textColor = ButtonStyle.focused.textColor = Color.white;
-            ButtonStyle.hover.textColor = ButtonStyle.active.textColor = Color.yellow;
-            ButtonStyle.onNormal.textColor = ButtonStyle.onFocused.textColor = ButtonStyle.onHover.textColor = ButtonStyle.onActive.textColor = Color.green;
-            ButtonStyle.padding = new RectOffset(4, 4, 4, 4);
-
-
             GUILayout.Box("The data and stability derivative GUI is designed to help you analyze the dynamic properties of your aircraft at a glance.  The simulation GUI is designed to display the dynamic motion of the vehicle as predicted from the stability derivatives.", BackgroundStyle);
-
             
             analysisHelpTab = (AnalysisHelpTab)GUILayout.SelectionGrid((int)analysisHelpTab, AnalysisHelpTab_str, 3, ButtonStyle);
             GUILayout.BeginVertical(BackgroundStyle);
@@ -285,59 +286,60 @@ namespace ferram4
 
             if (analysisHelpTab == AnalysisHelpTab.AIRCRAFT_PROPERTIES)
             {
-                GUILayout.Label("Surface Area, Scaled Chord and Scaled Span");
-                GUILayout.Space(5);
+                GUILayout.Label("<b>Surface Area, Scaled Chord and Scaled Span</b>");
+                //GUILayout.Space(5);
                 GUILayout.Label("These are used in scaling the aerodynamic properties of the aircraft; larger wing surface areas increase lift, larger scaled chords increase pitching moments and larger scaled spans increase lateral forces and moments.");
-                GUILayout.Space(10);
+                //GUILayout.Space(10);
 
-                GUILayout.Label("Moments of Inertia");
-                GUILayout.Space(5);
+                GUILayout.Label("<b>Moments of Inertia</b>");
+                //GUILayout.Space(5);
                 GUILayout.Label("These describe the vehicle's resistance to rotation about a given axis caused by its mass distribution about that axis.  Larger Ixx increases rolling inertia, larger Iyy increases pitching inertia and larger Izz increases yawing inertia.");
-                GUILayout.Space(10);
+                //GUILayout.Space(10);
 
-                GUILayout.Label("Products of Inertia");
-                GUILayout.Space(5);
+                GUILayout.Label("<b>Products of Inertia</b>");
+                //GUILayout.Space(5);
                 GUILayout.Label("These describe the vehicle's resistance to rotation about a given axis caused by its mass distribution about a different axis; it is caused by a vehicle's assymmetry.  For a standard airplane, Ixy and Iyz should be near 0, or the stability analysis will be invalid.");
             }
             if (analysisHelpTab == AnalysisHelpTab.LONGITUDINAL)
             {
-                GUILayout.Label("Basics");
+                GUILayout.Label("<b>Basics</b>");
                 GUILayout.Space(5);
                 GUILayout.Label("Longitudinal motion refers to the interaction between the motion and forces acting in the forwards / backwards and downwards / upwards directions (relative to the vehicle) and pitching rates and moments; this is the motion is primarily due to keeping the aircraft moving and aloft.  It consists of two overlapping responses: the short-period response and the phugoid (long-period) response.");
                 GUILayout.Space(10);
-                GUILayout.Label("Short-Period Motion");
+                GUILayout.Label("<b>Short-Period Motion</b>");
                 GUILayout.Space(5);
                 GUILayout.Label("The short-period response is essentially the aircraft pitching up and down without any significant change in forward velocity; It is so named because it consists of relatively rapid oscillations (high frequency = short period) and it typically damps out within a few oscillations, though with some designs the oscillations will damp out within a single period.  This motion generally becomes less stable as flight velocity increases.");
                 GUILayout.Space(10);
-                GUILayout.Label("Phugoid Motion");
+                GUILayout.Label("<b>Phugoid Motion</b>");
                 GUILayout.Space(5);
                 GUILayout.Label("The phugoid motion consists of an exchange between altitude (displayed as pitch angle θ) and forward velocity; it is named after a a mis-translation of the phrase \"to fly\".  The lower the lift-to-drag ratio (L/D) of the aircraft, the more damped (and thus, stable) this mode becomes.  Therefore, it typically becomes more stable with increasing velocity.");
                 GUILayout.Space(10);
-                GUILayout.Label("Stability Derivatives");
+                GUILayout.Label("<b>Stability Derivatives</b>");
                 GUILayout.Space(5);
-                GUILayout.Label("These describe the changes in forces / moments with respect to (wrt) changes in some value.  Legend:\n\r\n\rX_: forward forces; positive forwards\n\rZ_: vertical forces; positive downwards\n\rM_: pitching moment; positive upwards\n\r\n\r[]u: wrt changes in forward velocity\n\r[]w: wrt changes in downward velocity\n\r[]q: wrt changes in pitch-rate\n\r[]δe: wrt changes in pitch-control");
+                GUILayout.Label("These describe the changes in forces / moments with respect to (wrt) changes in some value.\n\r\n\r<b>Legend:</b>\n\rX_: forward forces; positive forwards\n\rZ_: vertical forces; positive downwards\n\rM_: pitching moment; positive upwards\n\r\n\r[]u: wrt changes in forward velocity\n\r[]w: wrt changes in downward velocity\n\r[]q: wrt changes in pitch-rate\n\r[]δe: wrt changes in pitch-control");
             }
             if (analysisHelpTab == AnalysisHelpTab.LATERAL)
             {
-                GUILayout.Label("Basics");
+                GUILayout.Label("<b>Basics</b>");
                 GUILayout.Space(5);
                 GUILayout.Label("Lateral motion refers to the interaction between the rates and moments in rolling and yawing and the motion and forces in the sideways direction; this motion is primarily due to keeping the aircraft facing in a given direction.  It consists of three different motions: the roll subsidence response, the spiral response, and the dutch roll response.");
                 GUILayout.Space(10);
-                GUILayout.Label("Roll Subsidence Motion");
+                GUILayout.Label("<b>Roll Subsidence Motion</b>");
                 GUILayout.Space(5);
                 GUILayout.Label("This is a simple damped, non-oscillating motion due to the roll rate.  If the vehicle is rolling, the roll rate will drop to zero.  This motion also controls the upper limit on rolling rate.");
                 GUILayout.Space(10);
-                GUILayout.Label("Spiral Motion");
+                GUILayout.Label("<b>Spiral Motion</b>");
                 GUILayout.Space(5);
                 GUILayout.Label("The spiral motion is either a slight convergent or slightly divergent non-oscillating motion caused by an interaction between the vehicle's yaw and roll stability that, when unstable, often causes the plane to fly in an ever-tightening spiral with an increase in sideslip angle and roll angle until the plane crashes; note that this is not a spin, which requires unequal stalling on the wings.  This motion is usually subconsciously corrected by pilots before it becomes noticable in good visibilty conditions.  Any attempt to increase the stability of the spiral motion will inevitably decrease the stability of the dutch roll motion (see below).");
                 GUILayout.Space(10);
-                GUILayout.Label("Dutch Roll Motion");
+                GUILayout.Label("<b>Dutch Roll Motion</b>");
                 GUILayout.Space(5);
                 GUILayout.Label("The dutch roll motion consists of an exchange between sideslip angle and roll angle that is best described by the plane \"wagging\" in flight; it is named after a motion that appears in ice skating.  While this motion is normally stable, it is often very lightly damped, which can make flight difficult.  It generally becomes less stable as velocity increases and attempts to make the dutch roll motion damp faster will inevitably cause lowered stability in the spiral motion (see above).");
+                
                 GUILayout.Space(10);
-                GUILayout.Label("Stability Derivatives");
+                GUILayout.Label("<b>Stability Derivatives</b>");
                 GUILayout.Space(5);
-                GUILayout.Label("These describe the changes in forces / moments with respect to (wrt) changes in some value.  Legend:\n\r\n\rY_: sideways forces; positive right\n\rN_: yawing moment; positive right\n\rL_: rolling moment; positive right\n\r\n\r[]β: wrt changes in sideslip angle\n\r[]p: wrt changes in roll-rate\n\r[]r: wrt changes in yaw-rate");
+                GUILayout.Label("These describe the changes in forces / moments with respect to (wrt) changes in some value.\n\r\n\r<b>Legend:</b>\n\rY_: sideways forces; positive right\n\rN_: yawing moment; positive right\n\rL_: rolling moment; positive right\n\r\n\r[]ß: wrt changes in sideslip angle\n\r[]p: wrt changes in roll-rate\n\r[]r: wrt changes in yaw-rate");
             }
 
 
@@ -349,16 +351,6 @@ namespace ferram4
 
         private void ActualGUI(int windowID)
         {
-            GUIStyle ButtonStyle = new GUIStyle(GUI.skin.button);
-            ButtonStyle.normal.textColor = ButtonStyle.focused.textColor = Color.white;
-            ButtonStyle.hover.textColor = ButtonStyle.active.textColor = Color.yellow;
-            ButtonStyle.onNormal.textColor = ButtonStyle.onFocused.textColor = ButtonStyle.onHover.textColor = ButtonStyle.onActive.textColor = Color.green;
-            ButtonStyle.padding = new RectOffset(4, 4, 4, 4);
-
-            GUIStyle BackgroundStyle = new GUIStyle(GUI.skin.box);
-            BackgroundStyle.hover = BackgroundStyle.active = BackgroundStyle.normal;
-
-
             GUIStyle TabLabelStyle = new GUIStyle(GUI.skin.label);
             TabLabelStyle.fontStyle = FontStyle.Bold;
             TabLabelStyle.alignment = TextAnchor.UpperCenter;
@@ -391,17 +383,6 @@ namespace ferram4
 
         private void SimulationGUI(bool tmp)
         {
-            GUIStyle ButtonStyle = new GUIStyle(GUI.skin.button);
-            ButtonStyle.normal.textColor = ButtonStyle.focused.textColor = Color.white;
-            ButtonStyle.hover.textColor = ButtonStyle.active.textColor = Color.yellow;
-            ButtonStyle.onNormal.textColor = ButtonStyle.onFocused.textColor = ButtonStyle.onHover.textColor = ButtonStyle.onActive.textColor = Color.green;
-            ButtonStyle.padding = new RectOffset(4, 4, 4, 4);
-
-            GUIStyle BackgroundStyle = new GUIStyle(GUI.skin.box);
-            BackgroundStyle.hover = BackgroundStyle.active = BackgroundStyle.normal;
-
-
-
             GUIStyle TabLabelStyle = new GUIStyle(GUI.skin.label);
             TabLabelStyle.fontStyle = FontStyle.Bold;
             TabLabelStyle.alignment = TextAnchor.UpperCenter;
