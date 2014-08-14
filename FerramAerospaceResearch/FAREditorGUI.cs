@@ -21,6 +21,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
             			Taverius, for correcting a ton of incorrect values
             			sarbian, for refactoring code for working with MechJeb, and the Module Manager 1.5 updates
             			ialdabaoth (who is awesome), who originally created Module Manager
+                        Regex, for adding RPM support
             			Duxwing, for copy editing the readme
  * 
  * Kerbal Engineer Redux created by Cybutek, Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License

@@ -7,6 +7,7 @@ Aerodynamics model for Kerbal Space Program
             			Taverius, for correcting a ton of incorrect values  
             			sarbian, for refactoring code for working with MechJeb, and the Module Manager 1.5 updates  
             			ialdabaoth (who is awesome), who originally created Module Manager  
+                        	Regex, for adding RPM support
             			Duxwing, for copy editing the readme  
    
    CompatibilityChecker by Majiir, BSD 2-clause http://opensource.org/licenses/BSD-2-Clause
