@@ -76,6 +76,7 @@
     <Compile Include="FARPartClassification.cs" />
     <Compile Include="FARPartModule.cs" />
     <Compile Include="FARPayloadFairingModule.cs" />
+    <Compile Include="FARPM.cs" />
     <Compile Include="FARRungeKutta.cs" />
     <Compile Include="FARWingAerodynamicModel.cs" />
     <Compile Include="InstallChecker.cs" />
