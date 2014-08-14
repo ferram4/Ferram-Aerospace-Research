@@ -212,6 +212,7 @@ namespace ferram4
             OnVesselPartsChange += CalculateSurfaceFunctions;
             UpdateEvents();
             justStarted = true;
+            lastReferenceTransform = vessel.ReferenceTransform;
 
             if (FARDebugValues.allowStructuralFailures)
             {
@@ -261,7 +262,7 @@ namespace ferram4
 
             if(vessel && vessel.ReferenceTransform != lastReferenceTransform)
             {
-                justStarted = false;
+                justStarted = true;
                 lastReferenceTransform = vessel.ReferenceTransform;
             }
         }
@@ -311,7 +312,7 @@ namespace ferram4
                     YawLocation = -Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.right) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.up));
                     RollLocation = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.forward) * Math.Sign(Vector3.Dot(CoMoffset, -EditorLogic.startPod.transform.right));
                     roll2 = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.right) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.forward));
-                    AoAsign = Math.Sign(Vector3.Dot(part.transform.up, vessel.transform.up));
+                    AoAsign = Math.Sign(Vector3.Dot(part.transform.up, EditorLogic.startPod.transform.up));
                 }
                 else
                 {
@@ -321,7 +322,7 @@ namespace ferram4
                     YawLocation = -Vector3.Dot(part.transform.forward, vessel.ReferenceTransform.right) * Math.Sign(Vector3.Dot(CoMoffset, vessel.ReferenceTransform.up));
                     RollLocation = Vector3.Dot(part.transform.forward, vessel.ReferenceTransform.forward) * Math.Sign(Vector3.Dot(CoMoffset, -vessel.ReferenceTransform.right));
                     roll2 = Vector3.Dot(part.transform.forward, vessel.ReferenceTransform.right) * Math.Sign(Vector3.Dot(CoMoffset, vessel.ReferenceTransform.forward));
-                    AoAsign = Math.Sign(Vector3.Dot(part.transform.up, vessel.transform.up));
+                    AoAsign = Math.Sign(Vector3.Dot(part.transform.up, vessel.ReferenceTransform.up));
                 }
                 //PitchLocation *= PitchLocation * Mathf.Sign(PitchLocation);
                 //YawLocation *= YawLocation * Mathf.Sign(YawLocation);
