@@ -1050,15 +1050,15 @@ namespace ferram4
                     dotProd *= dotProd;
                     tmp = sepFlowCd;
 
-//                    Cltmp = tmp * (dotProd - 1);
-//                    Cltmp *= pair.Value;
+                    //                    Cltmp = tmp * (dotProd - 1);
+                    //                    Cltmp *= pair.Value;
 
                     tmp *= pair.Value.areaValue * dotProd;
 
 
-//                    Vector3 CoDshiftOffset = -Vector3.Exclude(pair.Key, part.transform.worldToLocalMatrix.MultiplyVector(velocity.normalized)).normalized;
-//                    CoDshiftOffset *= Mathf.Sqrt(Mathf.Clamp01(1 - dotProd));
-//                    CoDshiftOffset *= Mathf.Sqrt(1.5f * pair.Value);
+                    //                    Vector3 CoDshiftOffset = -Vector3.Exclude(pair.Key, part.transform.worldToLocalMatrix.MultiplyVector(velocity.normalized)).normalized;
+                    //                    CoDshiftOffset *= Mathf.Sqrt(Mathf.Clamp01(1 - dotProd));
+                    //                    CoDshiftOffset *= Mathf.Sqrt(1.5f * pair.Value);
 
                     CoDshift += pair.Key * (tmp / (tmp + Cd));
                 }
@@ -1081,7 +1081,7 @@ namespace ferram4
                     double tmpCdCl = tmp + Math.Abs(Cltmp);
 
                     CoDshift += pair.Key * ((tmpCdCl) / (tmpCdCl + Cd)) + CoDshiftOffset;
-                    if(pair.Value.pitchesAwayFromUpVec)
+                    if (pair.Value.pitchesAwayFromUpVec)
                         Cm -= 0.25 * radius * pair.Value.areaValue / S * Math.Abs(liftProd);
                     else
                         Cm += 0.25 * radius * pair.Value.areaValue / S * Math.Abs(liftProd);
@@ -1143,6 +1143,21 @@ namespace ferram4
             INDEPENDENT_NODE,
             VERTICAL_NODES,
             PARALLEL_NODES
+        }
+        public override void OnLoad(ConfigNode node)
+        {
+            base.OnLoad(node);
+            if(node.HasNode("ClCurve"))
+            {
+                ClPotentialCurve.Load(node.GetNode("ClCurve"));
+                ClViscousCurve = new FloatCurve();
+                ClViscousCurve.Add(-1, 0);
+                ClViscousCurve.Add(1, 0);
+            }
+            if (node.HasValue("majorMinorAxisRatio"))
+                double.TryParse(node.GetValue("majorMinorAxisRatio"), out majorMinorAxisRatio);
+            if (node.HasValue("taperCrossSectionAreaRatio"))
+                double.TryParse(node.GetValue("taperCrossSectionAreaRatio"), out taperCrossSectionAreaRatio);
         }
 
         //Blank save node ensures that nothing for this partmodule is saved

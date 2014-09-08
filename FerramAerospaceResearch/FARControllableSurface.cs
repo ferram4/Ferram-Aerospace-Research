@@ -134,7 +134,7 @@ namespace ferram4
         protected double AoAoffset = 0;
 
         private double lastAoAoffset = 0;
-        private Vector3 deflectedNormal = Vector3.forward;
+        private Vector3d deflectedNormal = Vector3d.forward;
 
         public static double timeConstant = 0.25;
         private bool brake = false;
@@ -146,12 +146,7 @@ namespace ferram4
         [KSPAction("Activate Spoiler", actionGroup = KSPActionGroup.Brakes)]
         public void ActivateSpoiler(KSPActionParam param)
         {
-            OnSpoilerActivate();
-        }
-
-        private void OnSpoilerActivate()
-        {
-            brake = !brake;
+            brake = !(param.type > 0);
         }
 
         [KSPAction("Increase Flap Deflection")]
@@ -183,10 +178,16 @@ namespace ferram4
         }
         private void UpdateFlapDeflect()
         {
-            foreach (Part p in part.symmetryCounterparts)
-                foreach (PartModule m in p.Modules)
+            for (int i = 0; i < part.symmetryCounterparts.Count; i++)
+            {
+                Part p = part.symmetryCounterparts[i];
+                for (int j = 0; j < p.Modules.Count; j++)
+                {
+                    PartModule m = p.Modules[j];
                     if (m is FARControllableSurface)
                         (m as FARControllableSurface).SetDeflection(this.flapDeflectionLevel);
+                }
+            }
         }
 
         private void SetDeflection(int newstate)
@@ -212,7 +213,8 @@ namespace ferram4
             OnVesselPartsChange += CalculateSurfaceFunctions;
             UpdateEvents();
             justStarted = true;
-            lastReferenceTransform = vessel.ReferenceTransform;
+            if(vessel)
+                lastReferenceTransform = vessel.ReferenceTransform;
 
             if (FARDebugValues.allowStructuralFailures)
             {
@@ -293,12 +295,14 @@ namespace ferram4
             {
                 Vector3 CoM = Vector3.zero;
                 float mass = 0;
-                foreach (Part p in VesselPartList)
+                for (int i = 0; i < VesselPartList.Count; i++)
                 {
+                    Part p = VesselPartList[i];
+
                     CoM += p.transform.position * p.mass;
                     mass += p.mass;
-                }
 
+                }
                 CoM /= mass;
 
                 if (HighLogic.LoadedSceneIsEditor && (isFlap || isSpoiler))
@@ -423,7 +427,8 @@ namespace ferram4
 
             // Compute a vector for CalculateAoA
             double radAoAoffset = AoAoffset * FARMathUtil.deg2rad * ctrlSurfFrac;
-            deflectedNormal = new Vector3d(0, Math.Sin(radAoAoffset), Math.Cos(radAoAoffset));
+            deflectedNormal.y = Math.Sin(radAoAoffset);
+            deflectedNormal.z = Math.Cos(radAoAoffset);
 
             // Visually animate the surface
             MovableSection.localRotation = MovableOrig;

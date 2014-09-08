@@ -180,7 +180,7 @@ namespace ferram4
             Vector3d WC = Vector3d.zero;
             if (nonSideAttach <= 0)
             {
-                WC = -b_2 * 0.5 * (Vector3d.right * srfAttachNegative + Vector3d.up * Math.Tan(MidChordSweep * FARMathUtil.deg2rad));
+                WC = -b_2 / 3 * (1 + TaperRatio * 2) / (1 + TaperRatio) * (Vector3d.right * srfAttachNegative + Vector3d.up * Math.Tan(MidChordSweep * FARMathUtil.deg2rad));
             }
             else
                 WC = (-MAC * 0.7) * Vector3d.up;
@@ -521,15 +521,23 @@ namespace ferram4
                 float distance = Mathf.Max((float)(3 * effective_MAC), 0.1f);
                 RaycastHit[] hits = Physics.RaycastAll(CurWingCentroid, ParallelInPlane, distance, FARAeroUtil.RaycastMask);
 
-                foreach (RaycastHit h in hits)
-                    if (h.collider == part.collider || h.rigidbody == part.rigidbody)
+                for (int i = 0; i < hits.Length; i++)
+                {
+                    RaycastHit h = hits[i];
+                    if (h.rigidbody == part.rigidbody)
                         continue;
+
+                    Collider[] colliders = part.GetComponents<Collider>();
+                    for (int j = 0; j < colliders.Length; j++)
+                        if (h.collider == colliders[j])
+                            continue;
+                        
                     else if (h.distance < distance)
                     {
                         distance = h.distance;
                         hit = h;
                     }
-
+                }
                 if (hit.distance != 0)
                 {
                     if (hit.collider.attachedRigidbody || HighLogic.LoadedSceneIsEditor)
@@ -538,12 +546,23 @@ namespace ferram4
                         if (hit.collider.attachedRigidbody)
                             p = hit.collider.attachedRigidbody.GetComponent<Part>();
                         if (p == null && HighLogic.LoadedSceneIsEditor)
-                            foreach (Part q in VesselPartList)
-                                if (q.collider == hit.collider)
-                                {
-                                    p = q;
+                            for (int i = 0; i < VesselPartList.Count; i++)
+                            {
+                                Part q = VesselPartList[i];
+                                bool breakBool = false;
+
+                                Collider[] colliders = q.GetComponents<Collider>();
+                                for (int j = 0; j < colliders.Length; j++)
+                                    if (hit.collider == colliders[j])
+                                    {
+                                        p = q;
+                                        breakBool = true;
+                                        break;
+                                    }
+
+                                if (breakBool)
                                     break;
-                                }
+                            }
                         if (p != null && p != this.part)
                         {
                             if (HighLogic.LoadedSceneIsFlight && p.vessel != vessel)
@@ -682,6 +701,7 @@ namespace ferram4
             e = FARAeroUtil.CalculateOswaldsEfficiency(effective_AR, SweepAngle, Cd0);
             piARe = effective_AR * e * Math.PI;
 
+//            Debug.Log("Part: " + part.partInfo.title + " AoA: " + AoA);
 
             if (MachNumber <= 0.6)
             {
@@ -1159,15 +1179,15 @@ namespace ferram4
         {
             double sweepHalfChord = MidChordSweep * FARMathUtil.deg2rad;
 
-            double CosPartAngle = Mathf.Clamp(Vector3.Dot(sweepPerpLocal, ParallelInPlaneLocal), -1, 1);
-            double tmp = Mathf.Clamp(Vector3.Dot(sweepPerp2Local, ParallelInPlaneLocal), -1, 1);
+            double CosPartAngle = FARMathUtil.Clamp(Vector3.Dot(sweepPerpLocal, ParallelInPlaneLocal), -1, 1);
+            double tmp = FARMathUtil.Clamp(Vector3.Dot(sweepPerp2Local, ParallelInPlaneLocal), -1, 1);
 
             if (Math.Abs(CosPartAngle) > Math.Abs(tmp))                //Based on perp vector find which line is the right one
                 sweepHalfChord = Math.Acos(CosPartAngle);
             else
                 sweepHalfChord = Math.Acos(tmp);
 
-            if (sweepHalfChord > Math.PI * 0.5f)
+            if (sweepHalfChord > Math.PI * 0.5)
                 sweepHalfChord -= Math.PI;
 
             CosPartAngle = FARMathUtil.Clamp(ParallelInPlaneLocal.y, -1, 1);
@@ -1193,13 +1213,18 @@ namespace ferram4
             else
                 tmp = 0.09;
 
-            double sweepTmp = Math.Tan(SweepAngle);
+            double sweepTmp = Math.Tan(sweepHalfChord);
             sweepTmp *= sweepTmp;
 
             tmp += sweepTmp;
-            tmp = Math.Sqrt(tmp) * effective_AR;
+            tmp = tmp * effective_AR * effective_AR;
+            tmp += 4;
+            tmp = Math.Sqrt(tmp);
+            tmp += 2;
+            tmp = 1 / tmp;
+            tmp *= 2 * Math.PI;
 
-            double liftslope = FARAeroUtil.LiftSlope(tmp) * effective_AR;
+            double liftslope = tmp * effective_AR;
 
             /*float liftslope = Mathf.Pow(effective_AR / FARAeroUtil.FastCos(sweepHalfChord), 2) + 4 - Mathf.Pow(effective_AR * tmp, 2);
             liftslope = 2 + Mathf.Sqrt(Mathf.Clamp(liftslope, 0, Mathf.Infinity));
@@ -1354,27 +1379,36 @@ namespace ferram4
 
             ray.origin = WingCentroid();
 
+            bool gotSomething = false;
+
             hit.distance = 0;
             RaycastHit[] hits = Physics.RaycastAll(ray.origin, ray.direction, dist, FARAeroUtil.RaycastMask);
-            foreach (RaycastHit h in hits)
+            for (int i = 0; i < hits.Length; i++)
             {
+                RaycastHit h = hits[i];
                 if (h.collider != null)
                 {
-                    foreach (Part p in PartList)
+                    for (int j = 0; j < PartList.Count; j++)
                     {
+                        Part p = PartList[j];
+                        Collider[] colliders = p.GetComponents<Collider>();
                         if (p.Modules.Contains("FARWingAerodynamicModel"))
                         {
-                            if (h.collider == p.collider && p != part)
-                            {
-                                if (h.distance > 0)
+                            for (int k = 0; k < colliders.Length; k++)
+                                if (h.collider == colliders[k] && p != part)
                                 {
-                                    double tmp = h.distance / dist;
-                                    tmp = FARMathUtil.Clamp(tmp, 0, 1);
-                                    interferencevalue = Math.Min(tmp, interferencevalue);
+                                    if (h.distance > 0)
+                                    {
+                                        double tmp = h.distance / dist;
+                                        tmp = FARMathUtil.Clamp(tmp, 0, 1);
+                                        interferencevalue = Math.Min(tmp, interferencevalue);
+                                        gotSomething = true;
+                                    }
+                                    break;
                                 }
-                                break;
-                            }
                         }
+                        if (gotSomething)
+                            break;
                     }
                 }
             }
@@ -1405,21 +1439,27 @@ namespace ferram4
                     hit.distance = 0;
                     RaycastHit[] hits = Physics.RaycastAll(ray.origin, ray.direction, dist, FARAeroUtil.RaycastMask);
                     bool gotSomething = false;
-                    foreach (RaycastHit h in hits)
+                    for (int j = 0; j < hits.Length; j++)
                     {
+                        RaycastHit h = hits[j];
                         if (h.collider != null)
                         {
-                            foreach (Part p in PartList)
+                            for (int k = 0; k < PartList.Count; k++)
                             {
-                                if (h.collider == p.collider && p != part)
-                                {
-                                    if (h.distance > 0)
+                                Part p = PartList[k];
+                                Collider[] colliders = p.GetComponents<Collider>();
+                                for (int l = 0; l < colliders.Length; l++)
+                                    if (h.collider == colliders[l] && p != part)
                                     {
-                                        exposure -= 0.2;
-                                        gotSomething = true;
+                                        if (h.distance > 0)
+                                        {
+                                            exposure -= 0.2;
+                                            gotSomething = true;
+                                        }
+                                        break;
                                     }
+                                if (gotSomething)
                                     break;
-                                }
                             }
                         }
                         if (gotSomething)
@@ -1428,7 +1468,6 @@ namespace ferram4
                 }
             else
             {
-
                 ray.origin = part.transform.position - (float)(MAC * 0.7) * part.transform.up.normalized;
 
 
@@ -1438,21 +1477,27 @@ namespace ferram4
                 hit.distance = 0;
                 RaycastHit[] hits = Physics.RaycastAll(ray.origin, ray.direction, dist, FARAeroUtil.RaycastMask);
                 bool gotSomething = false;
-                foreach (RaycastHit h in hits)
+                for (int i = 0; i < hits.Length; i++)
                 {
+                    RaycastHit h = hits[i];
                     if (h.collider != null)
                     {
-                        foreach (Part p in PartList)
+                        for (int j = 0; j < PartList.Count; j++)
                         {
-                            if (h.collider == p.collider && p != part)
-                            {
-                                if (h.distance > 0)
+                            Part p = PartList[j];
+                            Collider[] colliders = p.GetComponents<Collider>();
+                            for (int k = 0; k < colliders.Length; k++)
+                                if (h.collider == colliders[k] && p != part)
                                 {
-                                    exposure -= 1;
-                                    gotSomething = true;
+                                    if (h.distance > 0)
+                                    {
+                                        exposure -= 1;
+                                        gotSomething = true;
+                                    }
+                                    break;
                                 }
+                            if (gotSomething)
                                 break;
-                            }
                         }
                     }
                     if (gotSomething)

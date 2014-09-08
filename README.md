@@ -27,7 +27,7 @@ Source available at: https://github.com/ferram4/Ferram-Aerospace-Research
 Install by merging the GameData folder in the zip with the GameData folder in your KSP install
 Multiple copies of ModuleManager will cause issues; make sure you are using MM 2.0.5 or higher
 
-ModuleManager and 000_Toolbar are REQUIRED for FAR to work properly.  Failing to copy these over will result in strange errors.
+ModuleManager is REQUIRED for FAR to work properly.  Failing to copy this over will result in strange errors.
 
 ----------------------------------------------------------
 ---------------- LEARNING TO FLY WITH FAR ----------------

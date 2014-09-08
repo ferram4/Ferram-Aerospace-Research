@@ -41,6 +41,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Linq;
 using UnityEngine;
+//using ferramGraph;
 
 namespace ferram4
 {
@@ -146,7 +147,7 @@ namespace ferram4
 
         string atm_temp_str = "20";
         string rho_str = "1.225";
-        string Mach_str = "0.2";
+        string Mach_str = "0.35";
         string alpha_str = "0.1";
         string beta_str = "0";
         string phi_str = "0";
@@ -358,7 +359,7 @@ namespace ferram4
             if (!minimize)
             {
                 bool tmp = false;
-                GUILayout.BeginHorizontal();
+                //GUILayout.BeginHorizontal();
 
                 FAREditorMode lastMode = Mode;
 
@@ -367,7 +368,7 @@ namespace ferram4
                 if (lastMode != Mode)
                     tmp = true;
 
-                GUILayout.EndHorizontal();
+                //GUILayout.EndHorizontal();
                 if (Mode == FAREditorMode.STATIC)
                     GraphGUI(tmp);
                 else if (Mode == FAREditorMode.STABILITY)
@@ -521,6 +522,7 @@ namespace ferram4
                 GUILayout.EndHorizontal();
             }
             graph.Display(BackgroundStyle, 0, 0);
+            //graph.Display(GUILayout.Width(540), GUILayout.Height(300));
 
             DrawTooltip();
         }
@@ -563,9 +565,9 @@ namespace ferram4
             Derivs[22] = Lr + Derivs[26] / Derivs[0] * Nr;
             Derivs[23] = Nr + Derivs[26] / Derivs[2] * Lr;
 
-
-            foreach (double f in Derivs)
+            for (int k = 0; k < Derivs.Length; k++)
             {
+                double f = Derivs[k];
                 if (num < 15)
                 {
                     num++;              //Avoid Ix, Iy, Iz and long derivs
@@ -675,8 +677,9 @@ namespace ferram4
             int i = 0;
             int j = 0;
             int num = 0;
-            foreach (double f in MOI_stabDerivs)
+            for (int k = 0; k < MOI_stabDerivs.Length; k++)
             {
+                double f = MOI_stabDerivs[k];
                 if (num < 3 || num >= 15)
                 {
                     num++;              //Avoid Ix, Iy, Iz
@@ -900,7 +903,7 @@ namespace ferram4
             StabilityLabel("Zw: ", MOI_stabDerivs[3], " s⁻¹", "Change in Z-direction acceleration with respect to Z-direction velocity; should be negative", 160, -1);
             StabilityLabel("Zu: ", MOI_stabDerivs[6], " s⁻¹", "Change in Z-direction acceleration with respect to X-direction velocity; should be negative", 160, -1);
             StabilityLabel("Zq: ", MOI_stabDerivs[9], " m/s", "Change in Z-direction acceleration with respect to pitch-up rate; sign unimportant", 160, 0);
-            StabilityLabel("Zδe: ", MOI_stabDerivs[12], " m/s²", "Change in Z-direction acceleration with respect to pitch control input; should be negative", 160, -1);
+            StabilityLabel("Zδe: ", MOI_stabDerivs[12], " m/s²", "Change in Z-direction acceleration with respect to pitch control input; should be negative", 160, 0);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             StabilityLabel("Xw: ", MOI_stabDerivs[4], " s⁻¹", "Change in X-direction acceleration with respect to Z-direction velocity; should be positive", 160, 1);
@@ -1007,8 +1010,10 @@ namespace ferram4
 
             GetClCdCmSteady(Vector3d.zero, alpha, beta, phi, 0, 0, 0, M, 0, out nomCl, out nomCd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true);
 
-            foreach (Part p in FARAeroUtil.CurEditorParts)
+            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
             {
+                Part p = FARAeroUtil.CurEditorParts[i];
+
                 if (FARAeroUtil.IsNonphysical(p))
                     continue;
                 double partMass = p.mass;
@@ -1041,9 +1046,11 @@ namespace ferram4
 
             MonoBehaviour.print("Mass: " + mass + "\n\rS: " + area + "\n\rMAC: " + MAC);
 
-            foreach (Part p in FARAeroUtil.CurEditorParts)
+            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
             {
-                if (FARAeroUtil.IsNonphysical(p))
+                Part p = FARAeroUtil.CurEditorParts[i];
+
+                if (p == null || FARAeroUtil.IsNonphysical(p))
                     continue;
                 //This section handles the parallel axis theorem
                 Vector3 relPos = p.transform.TransformPoint(p.CoMOffset) - CoM;
@@ -1068,13 +1075,13 @@ namespace ferram4
                 Ixz += -x * z * partMass;
 
                 //And this handles the part's own moment of inertia
-                Vector3 principalInertia = p.rigidbody.inertiaTensor;
-                Quaternion prncInertRot = p.rigidbody.inertiaTensorRotation;
+                Vector3 principalInertia = p.Rigidbody.inertiaTensor;
+                Quaternion prncInertRot = p.Rigidbody.inertiaTensorRotation;
 
                 //The rows of the direction cosine matrix for a quaternion
                 Vector3 Row1 = new Vector3(prncInertRot.x * prncInertRot.x - prncInertRot.y * prncInertRot.y - prncInertRot.z * prncInertRot.z + prncInertRot.w * prncInertRot.w,
-                    2*(prncInertRot.x * prncInertRot.y + prncInertRot.z * prncInertRot.w),
-                    2*(prncInertRot.x * prncInertRot.z - prncInertRot.y * prncInertRot.w));
+                    2 * (prncInertRot.x * prncInertRot.y + prncInertRot.z * prncInertRot.w),
+                    2 * (prncInertRot.x * prncInertRot.z - prncInertRot.y * prncInertRot.w));
 
                 Vector3 Row2 = new Vector3(2 * (prncInertRot.x * prncInertRot.y - prncInertRot.z * prncInertRot.w),
                     -prncInertRot.x * prncInertRot.x + prncInertRot.y * prncInertRot.y - prncInertRot.z * prncInertRot.z + prncInertRot.w * prncInertRot.w,
@@ -1084,7 +1091,7 @@ namespace ferram4
                     2 * (prncInertRot.y * prncInertRot.z - prncInertRot.x * prncInertRot.w),
                     -prncInertRot.x * prncInertRot.x - prncInertRot.y * prncInertRot.y + prncInertRot.z * prncInertRot.z + prncInertRot.w * prncInertRot.w);
 
-                
+
                 //And converting the principal moments of inertia into the coordinate system used by the system
                 Ix += principalInertia.x * Row1.x * Row1.x + principalInertia.y * Row1.y * Row1.y + principalInertia.z * Row1.z * Row1.z;
                 Iy += principalInertia.x * Row2.x * Row2.x + principalInertia.y * Row2.y * Row2.y + principalInertia.z * Row2.z * Row2.z;
@@ -1093,15 +1100,6 @@ namespace ferram4
                 Ixy += principalInertia.x * Row1.x * Row2.x + principalInertia.y * Row1.y * Row2.y + principalInertia.z * Row1.z * Row2.z;
                 Ixz += principalInertia.x * Row1.x * Row3.x + principalInertia.y * Row1.y * Row3.y + principalInertia.z * Row1.z * Row3.z;
                 Iyz += principalInertia.x * Row2.x * Row3.x + principalInertia.y * Row2.y * Row3.y + principalInertia.z * Row2.z * Row3.z;
-
-                /*//And converting the principal moments of inertia into the coordinate system used by the system; transposed from original matrix code
-                Ix += principalInertia.x * Row1.x * Row1.x + principalInertia.y * Row2.x * Row2.x + principalInertia.z * Row3.x * Row3.x;
-                Iy += principalInertia.x * Row1.y * Row1.y + principalInertia.y * Row2.y * Row2.y + principalInertia.z * Row3.y * Row3.y;
-                Iz += principalInertia.x * Row1.z * Row1.z + principalInertia.y * Row2.z * Row2.z + principalInertia.z * Row3.z * Row3.z;
-
-                Ixy += principalInertia.x * Row1.x * Row2.x + principalInertia.y * Row1.x * Row3.x + principalInertia.z * Row2.x * Row3.x;
-                Ixz += principalInertia.x * Row1.y * Row2.y + principalInertia.y * Row1.y * Row3.y + principalInertia.z * Row2.y * Row3.y;
-                Iyz += principalInertia.x * Row1.z * Row2.z + principalInertia.y * Row1.z * Row3.z + principalInertia.z * Row2.z * Row3.z;*/
             }
             Ix *= 1000;
             Iy *= 1000;
@@ -1283,7 +1281,7 @@ namespace ferram4
                 windowPos.width = 650;
             }
 
-            GUILayout.BeginVertical();
+            //GUILayout.BeginVertical();
             GUILayout.BeginHorizontal();
             GUILayout.Label("Steady-State Aerodynamic Analysis", TabLabelStyle);
             GUILayout.Space(20F);
@@ -1295,11 +1293,11 @@ namespace ferram4
             GUILayout.Space(20F);
             AnalysisHelp = GUILayout.Toggle(AnalysisHelp, "?", ButtonStyle);
             GUILayout.EndHorizontal();
-            GUILayout.EndVertical();
+            //GUILayout.EndVertical();
 
-//            EditorVertScroll = GUILayout.BeginScrollView(EditorVertScroll, false, false, GUILayout.MaxHeight(Screen.height / 2));
             GUILayout.BeginHorizontal();
-            GUILayout.BeginVertical(GUILayout.Width(520));
+
+            GUILayout.BeginVertical(GUILayout.Width(540));
             graph.Display(BackgroundStyle, 0, 0);
             GUILayout.EndVertical();
 
@@ -1313,27 +1311,10 @@ namespace ferram4
             vehicleFueled = GUILayout.Toggle(vehicleFueled, vehicleFueled ? "Full" : "Empty");
             GUILayout.Label("Spoilers:");
             spoilersDeployed = GUILayout.Toggle(spoilersDeployed, spoilersDeployed ? "Deployed" : "Retracted");
-/*            GUILayout.Label("Visualization");
-            showDrag = GUILayout.Toggle(showDrag, "Drag");
-            showLift = GUILayout.Toggle(showLift, "Lift");
-            AerodynamicTinting(showLift, showDrag);*/
-            
-//            GUILayout.Label("Pitch Setting:");
-//            pitch_str = GUILayout.TextField(pitch_str, GUILayout.ExpandWidth(true));
-//            pitch_str = Regex.Replace(pitch_str, @"[^-?\d*\.?\d*]", "");
-            
             GUILayout.EndVertical();
-/*            GUILayout.BeginVertical();
-            TintForDrag = GUILayout.Toggle(TintForDrag, "Tint for\n\rLocal Cd", ButtonStyle, GUILayout.Height(20), GUILayout.Width(75));
-            GUILayout.EndVertical();
-            GUILayout.BeginVertical();
-            TintForLift = GUILayout.Toggle(TintForLift, "Tint for\n\rLocal Cl", ButtonStyle, GUILayout.Height(20), GUILayout.Width(75));
-            GUILayout.EndVertical();*/
+
             GUILayout.EndHorizontal();
 
-            //            GUILayout.BeginArea(new Rect(75, bottom + 25, 400, 400));
-            GUILayout.BeginHorizontal();
-            GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             GUILayout.Label("Lower: ", GUILayout.Width(50.0F), GUILayout.Height(25.0F));
             lowerBound_str = GUILayout.TextField(lowerBound_str, GUILayout.ExpandWidth(true));
@@ -1342,6 +1323,7 @@ namespace ferram4
             GUILayout.Label("Num Pts: ", GUILayout.Width(70.0F), GUILayout.Height(25.0F));
             numPoints_str = GUILayout.TextField(numPoints_str, GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
+
             GUILayout.BeginHorizontal();
             GUILayout.Label("Mach / AoA: ", GUILayout.Width(80.0F), GUILayout.Height(25.0F));
             extra_str = GUILayout.TextField(extra_str, GUILayout.ExpandWidth(true));
@@ -1381,6 +1363,8 @@ namespace ferram4
                 double AoA = Math.Abs(Convert.ToDouble(extra_str));
                 MachNumberSweep(AoA, pitch);
             }
+            //if (GUILayout.Button("Dump Graph Data", ButtonStyle, GUILayout.Width(100.0F), GUILayout.Height(25.0F)))
+            //    graph.DumpDataToCSV("FAR_" + EditorLogic.fetch.shipNameField.Text + "_Data.csv");
             GUILayout.EndHorizontal();
         }
 
@@ -1541,8 +1525,10 @@ namespace ferram4
             double mass = 0;
             Vector3d CoM = Vector3d.zero;
 
-            foreach (Part p in FARAeroUtil.CurEditorParts)
+            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
             {
+                Part p = FARAeroUtil.CurEditorParts[i];
+
                 if (FARAeroUtil.IsNonphysical(p))
                     continue;
 
@@ -1598,9 +1584,11 @@ namespace ferram4
             double mass = 0;
             Vector3d CoM = Vector3.zero;
 
-            
-            foreach (Part p in FARAeroUtil.CurEditorParts)
+
+            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
             {
+                Part p = FARAeroUtil.CurEditorParts[i];
+
                 if (FARAeroUtil.IsNonphysical(p))
                     continue;
 
@@ -1628,7 +1616,7 @@ namespace ferram4
                 if(i < numPoints)
                     angle = i / (double)numPoints * (upperBound - lowerBound) + lowerBound;
                 else
-                    angle = (i - (double)numPoints) / (double)numPoints * (lowerBound - upperBound) + upperBound;
+                    angle = (i - (double)numPoints + 1) / (double)numPoints * (lowerBound - upperBound) + upperBound;
 
                 double cy, cn, cr;
 
@@ -1696,37 +1684,51 @@ namespace ferram4
 
             Vector3d sideways = Vector3.Cross(velocity, liftVector);
 
-            foreach (Part p in FARAeroUtil.CurEditorParts)
+
+
+
+            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
             {
-                foreach (PartModule m in p.Modules)
+                Part p = FARAeroUtil.CurEditorParts[i];
+                for (int k = 0; k < p.Modules.Count; k++)
                 {
+                    PartModule m = p.Modules[k];
                     if (m is FARPartModule)
                     {
                         (m as FARPartModule).ForceOnVesselPartsChange();
                     }
                 }
             }
-            foreach (Part p in FARAeroUtil.CurEditorParts)
+            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
             {
+                Part p = FARAeroUtil.CurEditorParts[i]; 
+                
                 if (FARAeroUtil.IsNonphysical(p))
                     continue;
-                foreach (PartModule m in p.Modules)
+                for (int k = 0; k < p.Modules.Count; k++)
+                {
+                    PartModule m = p.Modules[k];
                     if (m is FARWingAerodynamicModel)
                     {
                         FARWingAerodynamicModel w = m as FARWingAerodynamicModel;
-                        if(clear)
+                        if (clear)
                             w.EditorClClear(reset_stall);
                         if (w is FARControllableSurface)
                             (w as FARControllableSurface).SetControlStateEditor(CoM, (float)pitch, 0, 0, flap_setting, spoilersDeployed);
                     }
+                }
             }
             for (int j = 0; j < 3; j++)
             {
-                foreach (Part p in FARAeroUtil.CurEditorParts)
+                for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
                 {
+                    Part p = FARAeroUtil.CurEditorParts[i]; 
+                    
                     if (FARAeroUtil.IsNonphysical(p))
                         continue;
-                    foreach (PartModule m in p.Modules)
+                    for (int k = 0; k < p.Modules.Count; k++)
+                    {
+                        PartModule m = p.Modules[k];
                         if (m is FARWingAerodynamicModel)
                         {
                             Vector3 relPos = p.transform.position - CoM;
@@ -1736,14 +1738,17 @@ namespace ferram4
                             FARWingAerodynamicModel w = m as FARWingAerodynamicModel;
                             w.ComputeClCdEditor(vel, M);
                         }
+                    }
                 }
             }
-            foreach (Part p in FARAeroUtil.CurEditorParts)
+            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
             {
+                Part p = FARAeroUtil.CurEditorParts[i]; 
                 if (FARAeroUtil.IsNonphysical(p))
                     continue;
-                foreach (PartModule m in p.Modules)
+                for (int k = 0; k < p.Modules.Count; k++)
                 {
+                    PartModule m = p.Modules[k];
                     if (m is FARWingAerodynamicModel)
                     {
                        
@@ -1937,12 +1942,16 @@ namespace ferram4
 
             List<FARWingAerodynamicModel> nullWings = new List<FARWingAerodynamicModel>();
 
-            foreach (FARWingAerodynamicModel w in AllWings)
+            for (int i = 0; i < AllWings.Count; i++)
+            {
+                FARWingAerodynamicModel w = AllWings[i];
                 if (w.part == null || (w.part.parent == null && w.part != EditorLogic.startPod))
                     nullWings.Add(w);
+            }
 
-            foreach (FARWingAerodynamicModel w in nullWings)
+            for (int i = 0; i < nullWings.Count; i++)
             {
+                FARWingAerodynamicModel w = nullWings[i];
                 if (AllWings.Contains(w))
                     AllWings.Remove(w);
                 if(AllControlSurfaces.Contains(w))
@@ -1951,8 +1960,9 @@ namespace ferram4
 
             if (EditorLogic.startPod)
             {
-                foreach (Part p in FARAeroUtil.CurEditorParts)
+                for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
                 {
+                    Part p = FARAeroUtil.CurEditorParts[i];
                     FARWingAerodynamicModel w = p.GetComponent<FARWingAerodynamicModel>();
                     if(w != null && !AllWings.Contains(w))
                     {

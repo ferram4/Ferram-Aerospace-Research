@@ -305,18 +305,6 @@ namespace ferram4
             }
         }
 
-        public static double LiftSlope(double input)
-        {
-            double tmp = input * input + 4;
-            tmp = Math.Sqrt(tmp);
-            tmp += 2;
-            tmp = 1 / tmp;
-            tmp *= 2 * Math.PI;
-
-            return tmp;
-
-        }
-
         public static FloatCurve PrandtlMeyerMach
         {
             get{
@@ -694,8 +682,11 @@ namespace ferram4
             {
                 RecursePartList(list, EditorLogic.SelectedPart);
 
-                foreach (Part sym in EditorLogic.SelectedPart.symmetryCounterparts)
+                for (int i = 0; i < EditorLogic.SelectedPart.symmetryCounterparts.Count; i++)
+                {
+                    Part sym = EditorLogic.SelectedPart.symmetryCounterparts[i];
                     RecursePartList(list, sym);
+                }
             }
 
             return list;
@@ -704,8 +695,11 @@ namespace ferram4
         private static void RecursePartList(List<Part> list, Part part)
         {
             list.Add(part);
-            foreach (Part p in part.children)
+            for (int i = 0; i < part.children.Count; i++)
+            {
+                Part p = part.children[i];
                 RecursePartList(list, p);
+            }
         }
 
         private static int RaycastMaskVal = 0, RaycastMaskEdit;

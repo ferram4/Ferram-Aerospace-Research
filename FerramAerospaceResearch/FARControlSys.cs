@@ -321,8 +321,11 @@ namespace ferram4
             Vector3 lift_axis = -vessel.transform.forward;
 
             //stuff that needs to iterate through all the vessel's parts
-            foreach (Part p in vessel.parts)
+            int iCount = vessel.parts.Count;
+            for (int i = 0; i < iCount; i++)
             {
+                Part p = vessel.parts[i];
+
                 if (p == null)
                     continue;
 
@@ -335,55 +338,26 @@ namespace ferram4
                 }
                 mass += p.mass;
 
-                foreach (PartModule m in p.Modules)
+                int jCount = p.Modules.Count;
+                for (int j = 0; j < jCount; j++)
                 {
+                    PartModule m = p.Modules[j];
                     if (m is ModuleEngines)
                     {
                         ModuleEngines e = m as ModuleEngines;
-                        if (e.EngineIgnited && !e.engineShutdown)
-                        {
-                            totalthrust += e.finalThrust;
-                            foreach (Propellant v in e.propellants)
-                            {
-                                string propName = v.name;
-                                PartResourceDefinition r = l.resourceDefinitions[propName];
-                                if (propName == "IntakeAir")
-                                {
-                                    airDemand += v.currentRequirement;
-                                    continue;
-                                }
-                                fuelconsumption += r.density * v.currentRequirement / fixedDeltaTime;
-
-                            }
-                        }
+                        FuelConsumptionFromEngineModule(e, ref totalthrust, ref fuelconsumption, ref airDemand, fixedDeltaTime, l);
                     }
                     else if (m is ModuleEnginesFX)
                     {
                         ModuleEnginesFX e = m as ModuleEnginesFX;
-                        if (e.EngineIgnited && !e.engineShutdown)
-                        {
-                            totalthrust += e.finalThrust;
-                            foreach (Propellant v in e.propellants)
-                            {
-                                string propName = v.name;
-                                PartResourceDefinition r = l.resourceDefinitions[propName];
-                                if (propName == "IntakeAir")
-                                {
-                                    airDemand += v.currentRequirement;
-                                    continue;
-                                }
-                                fuelconsumption += r.density * v.currentRequirement / fixedDeltaTime;
-
-                            }
-                        }
+                        FuelConsumptionFromEngineModule(e, ref totalthrust, ref fuelconsumption, ref airDemand, fixedDeltaTime, l);
                     }
                     else if (m is ModuleResourceIntake)
                     {
-                        ModuleResourceIntake i = m as ModuleResourceIntake;
-                        if (i.intakeEnabled)
+                        ModuleResourceIntake intake = m as ModuleResourceIntake;
+                        if (intake.intakeEnabled)
                         {
-                            //PartResourceDefinition r = l.resourceDefinitions[i.resourceName];
-                            airAvailable += i.airFlow * fixedDeltaTime;// *r.density / i.unitScalar;
+                            airAvailable += intake.airFlow * fixedDeltaTime;
                         }
                     }
                     if (!zero_q)
@@ -448,6 +422,50 @@ namespace ferram4
 
             SetFlightStatusWindow();
         }
+
+        #region FlightData Calc Functions
+        private void FuelConsumptionFromEngineModule(ModuleEngines e, ref double totalThrust, ref double fuelConsumption, ref double airDemand, double fixedDeltaTime, PartResourceLibrary l)
+        {
+            if (e.EngineIgnited && !e.engineShutdown)
+            {
+                totalThrust += e.finalThrust;
+                for (int i = 0; i < e.propellants.Count; i++)
+                {
+                    Propellant v = e.propellants[i];
+                    string propName = v.name;
+                    PartResourceDefinition r = l.resourceDefinitions[propName];
+                    if (propName == "IntakeAir")
+                    {
+                        airDemand += v.currentRequirement;
+                        continue;
+                    }
+                    fuelConsumption += r.density * v.currentRequirement / fixedDeltaTime;
+
+                }
+            }
+        }
+
+        private void FuelConsumptionFromEngineModule(ModuleEnginesFX e, ref double totalThrust, ref double fuelConsumption, ref double airDemand, double fixedDeltaTime, PartResourceLibrary l)
+        {
+            if (e.EngineIgnited && !e.engineShutdown)
+            {
+                totalThrust += e.finalThrust;
+                for (int i = 0; i < e.propellants.Count; i++)
+                {
+                    Propellant v = e.propellants[i];
+                    string propName = v.name;
+                    PartResourceDefinition r = l.resourceDefinitions[propName];
+                    if (propName == "IntakeAir")
+                    {
+                        airDemand += v.currentRequirement;
+                        continue;
+                    }
+                    fuelConsumption += r.density * v.currentRequirement / fixedDeltaTime;
+
+                }
+            }
+        }
+        #endregion
 
         [KSPEvent(name = "AerodynamicFailureStatus", active = true, guiActive = false, guiActiveUnfocused = false)]
         public void AerodynamicFailureStatus()
@@ -524,7 +542,7 @@ namespace ferram4
 
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();
-            GUILayout.Box("Pitch Angle: \n\rHeading: \n\rRoll Angle: \n\r\n\rAngle of Attack: \n\rSideslip Angle: \n\r\n\rQ: \n\r\n\rCl: \n\rCd: \n\rReference Area: \n\rL/W: \n\r\n\rL/D: \n\rV*L/D: \n\r\n\rFuel Fraction: \n\rTSFC: \n\rAir Req Met: \n\r\n\rL/D / TSFC: \n\rV*L/D / TSFC:  \n\r\n\rTerminal V: \n\rBC:", leftBox, GUILayout.Width(120));
+            GUILayout.Box("Pitch Angle: \n\rHeading: \n\rRoll Angle: \n\r\n\rAngle of Attack: \n\rSideslip Angle: \n\r\n\rQ: \n\r\n\rCl: \n\rCd: \n\rReference Area: \n\rL/W: \n\r\n\rL/D: \n\rV*L/D: \n\r\n\rFuel Fraction: \n\rTSFC: \n\rAir Req Met: \n\r\n\rL/D / TSFC: \n\rV*L/D / TSFC: \n\rEst. Endurance: \n\rEst. Range: \n\r\n\rTerminal V: \n\rBC:", leftBox, GUILayout.Width(120));
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical();
@@ -535,8 +553,13 @@ namespace ferram4
             if (TSFC != 0)
             {
                 L_D_TSFC = L_D / TSFC;
-                VL_D_TSFC = VL_D / TSFC * 0.001;
+                VL_D_TSFC = VL_D / TSFC * 3600;
             }
+
+            double range = mass / (mass - fuelmass);
+            range = Math.Log(range);
+            double endurance = L_D_TSFC * range;
+            range *= VL_D_TSFC;
 
             StringBuilder readoutString = new StringBuilder();
             readoutString.AppendLine(pitch.ToString("N1") + "°");
@@ -562,6 +585,8 @@ namespace ferram4
             readoutString.AppendLine();
             readoutString.AppendLine(L_D_TSFC.ToString("N2") + " hr");
             readoutString.AppendLine(VL_D_TSFC.ToString("N2") + " km");
+            readoutString.AppendLine(endurance.ToString("N2") + " hr");
+            readoutString.AppendLine(range.ToString("N2") + " km");
             readoutString.AppendLine();
             readoutString.AppendLine(termVel.ToString("N0") + " m/s");
             readoutString.Append(ballisticCoeff.ToString("N1") + " kg/m²");
@@ -1237,12 +1262,15 @@ namespace ferram4
                 vesselToChangeFrom.OnFlyByWire -= new FlightInputCallback(StabilityAugmentation);
             }
 
-            foreach (Part p in vesselToChangeTo.Parts)
+            for (int i = 0; i < vesselToChangeTo.Parts.Count; i++)
+            {
+                Part p = vesselToChangeTo.Parts[i];
                 if (p.Modules.Contains("FARControlSys"))
                 {
                     activeControlSys = p.Modules["FARControlSys"] as FARControlSys;
                     break;
                 }
+            }
             if ((object)activeControlSys == null)
             {
                 return false;

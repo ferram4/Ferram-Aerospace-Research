@@ -42,9 +42,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>bin\Release\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
-    <Reference Include="ferramGraph, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\ferramGraph\obj\Release\ferramGraph.dll</HintPath>
+    <Reference Include="ferramGraph">
+      <HintPath>..\ferramGraph\bin\Release\ferramGraph.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

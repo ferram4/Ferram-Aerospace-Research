@@ -68,7 +68,7 @@ namespace ferram4
             if (FARDebugValues.useBlizzyToolbar)
             {
                 FAREditorButtonBlizzy = ToolbarManager.Instance.add("ferram4", "FAREditorButton");
-                FAREditorButtonBlizzy.TexturePath = "FerramAerospaceResearch/Textures/icon_button";
+                FAREditorButtonBlizzy.TexturePath = "FerramAerospaceResearch/Textures/icon_button_blizzy";
                 FAREditorButtonBlizzy.ToolTip = "FAR Editor Analysis";
                 FAREditorButtonBlizzy.OnClick += (e) => FAREditorGUI.minimize = !FAREditorGUI.minimize;
             }
@@ -159,16 +159,27 @@ namespace ferram4
                     if (part_count_all != editorShip.Count || part_count_ship != EditorLogic.SortedShipList.Count || EditorPartsChanged)
                     {
                         FindPartsWithoutFARModel(editorShip);
-                        foreach (Part p in editorShip)
-                            foreach (PartModule m in p.Modules)
+                        for (int i = 0; i < editorShip.Count; i++)
+                        {
+                            Part p = editorShip[i];
+                            for (int j = 0; j < p.Modules.Count; j++)
+                            {
+                                PartModule m = p.Modules[j];
                                 if (m is FARBaseAerodynamics)
                                     (m as FARBaseAerodynamics).ClearShielding();
+                            }
+                        }
 
-                        foreach (Part p in editorShip)
-                            foreach (PartModule m in p.Modules)
+                        for (int i = 0; i < editorShip.Count; i++)
+                        {
+                            Part p = editorShip[i];
+                            for (int j = 0; j < p.Modules.Count; j++)
+                            {
+                                PartModule m = p.Modules[j];
                                 if (m is FARPartModule)
                                     (m as FARPartModule).ForceOnVesselPartsChange();
-
+                            }
+                        }
                         part_count_all = editorShip.Count;
                         part_count_ship = EditorLogic.SortedShipList.Count;
                         EditorPartsChanged = false;
@@ -180,8 +191,11 @@ namespace ferram4
         private bool FindPartsWithoutFARModel(List<Part> editorShip)
         {
             bool returnValue = false;
-            foreach (Part p in editorShip)
+
+            for (int i = 0; i < editorShip.Count; i++)
             {
+                Part p = editorShip[i];
+
                 if(p == null)
                     continue;
 
@@ -197,8 +211,9 @@ namespace ferram4
                 if (p.Modules.Contains("FARBasicDragModel"))
                 {
                     List<PartModule> modulesToRemove = new List<PartModule>();
-                    foreach (PartModule m in p.Modules)
+                    for (int j = 0; j < p.Modules.Count; j++)
                     {
+                        PartModule m = p.Modules[j];
                         if (!(m is FARBasicDragModel))
                             continue;
                         FARBasicDragModel d = m as FARBasicDragModel;
@@ -206,11 +221,14 @@ namespace ferram4
                         {
                             modulesToRemove.Add(m);
                         }
+
                     }
                     if (modulesToRemove.Count > 0)
                     {
-                        foreach (PartModule m in modulesToRemove)
+                        for (int j = 0; j < modulesToRemove.Count; j++)
                         {
+                            PartModule m = modulesToRemove[j];
+
                             p.RemoveModule(m);
                             Debug.Log("Removing Incomplete FAR Drag Module");
                         }
@@ -394,16 +412,23 @@ namespace ferram4
         
         private void UpdateFARPartModules(Vessel v)
         {
-            foreach (Part p in v.Parts)
-                foreach (PartModule m in p.Modules)
+            for (int i = 0; i < v.Parts.Count; i++)
+            {
+                Part p = v.Parts[i];
+                for (int j = 0; j < p.Modules.Count; j++)
+                {
+                    PartModule m = p.Modules[j];
                     if (m is FARPartModule)
                         (m as FARPartModule).ForceOnVesselPartsChange();
+                }
+            }
         }
 
         private void FindPartsWithoutFARModel(Vessel v)
         {
-            foreach (Part p in v.Parts)
+            for (int i = 0; i < v.Parts.Count; i++)
             {
+                Part p = v.Parts[i];
                 if (p == null)
                     continue;
 
@@ -412,8 +437,9 @@ namespace ferram4
                 if (p.Modules.Contains("FARBasicDragModel"))
                 {
                     List<PartModule> modulesToRemove = new List<PartModule>();
-                    foreach (PartModule m in p.Modules)
+                    for (int j = 0; j < p.Modules.Count; j++)
                     {
+                        PartModule m = p.Modules[j];
                         if (!(m is FARBasicDragModel))
                             continue;
                         FARBasicDragModel d = m as FARBasicDragModel;
@@ -424,8 +450,9 @@ namespace ferram4
                     }
                     if (modulesToRemove.Count > 0)
                     {
-                        foreach (PartModule m in modulesToRemove)
+                        for (int j = 0; j < modulesToRemove.Count; j++)
                         {
+                            PartModule m = modulesToRemove[j];
                             p.RemoveModule(m);
                             Debug.Log("Removing Incomplete FAR Drag Module");
                         }

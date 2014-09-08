@@ -82,21 +82,6 @@ namespace ferram4
             FindShieldedParts();
         }
 
-        public void FixedUpdate()
-        {
-            //            if (start == StartState.Editor)
-            //                return;
-
-            //CalculateFairingBounds();
-            //FindShieldedParts();
-
-            //            line.SetPosition(0, minBounds + part.transform.position);
-            //            line.SetPosition(1, maxBounds + part.transform.position);
-
-        }
-
-
-
         [KSPEvent(name = "FairingShapeChanged", active = true, guiActive = false, guiActiveUnfocused = false)]
         public void FairingShapeChanged()
         {
@@ -112,21 +97,24 @@ namespace ferram4
         {
             Vector3 minBoundVec, maxBoundVec;
             minBoundVec = maxBoundVec = Vector3.zero;
-            foreach (Transform t in p.FindModelComponents<Transform>())
+            Transform[] transformList = part.FindModelComponents<Transform>();
+            for (int i = 0; i < transformList.Length; i++)
             {
+                Transform t = transformList[i];
+
                 MeshFilter mf = t.GetComponent<MeshFilter>();
-                if (mf == null)
+                if ((object)mf == null)
                     continue;
                 Mesh m = mf.mesh;
 
-                if (m == null)
+                if ((object)m == null)
                     continue;
 
                 var matrix = part.transform.worldToLocalMatrix * t.localToWorldMatrix;
 
-                foreach (Vector3 vertex in m.vertices)
+                for (int j = 0; j < m.vertices.Length; j++)
                 {
-                    Vector3 v = matrix.MultiplyPoint3x4(vertex);
+                    Vector3 v = matrix.MultiplyPoint3x4(m.vertices[j]);
 
                     maxBoundVec.x = Mathf.Max(maxBoundVec.x, v.x);
                     minBoundVec.x = Mathf.Min(minBoundVec.x, v.x);
@@ -149,12 +137,14 @@ namespace ferram4
         {
             if (part.parent != null)
             {
-                foreach (Part p in part.symmetryCounterparts)
+                for (int i = 0; i < part.symmetryCounterparts.Count; i++)
+                {
+                    Part p = part.symmetryCounterparts[i];
                     if (p.GetComponent<FARPayloadFairingModule>() != null)
                     {
                         CalculatePartBounds(p);
                     }
-
+                }
                 CalculatePartBounds(part);
             }
             else
@@ -168,8 +158,10 @@ namespace ferram4
 
         private void ClearShieldedParts()
         {
-            foreach (Part p in FARShieldedParts)
+            for (int i = 0; i < FARShieldedParts.Count; i++)
             {
+                Part p = FARShieldedParts[i];
+
                 if (p == null || p.Modules == null)
                     continue;
                 FARBaseAerodynamics b = null;
@@ -197,11 +189,13 @@ namespace ferram4
             ClearShieldedParts();
             UpdateShipPartsList();
 
-            foreach (Part p in VesselPartList)
+            for (int i = 0; i < VesselPartList.Count; i++)
             {
+                Part p = VesselPartList[i];
+
                 if (FARShieldedParts.Contains(p) || p == null || p == part || part.symmetryCounterparts.Contains(p))
                     continue;
-                
+
                 FARBaseAerodynamics b = null;
                 FARBasicDragModel d = null;
                 FARWingAerodynamicModel w = null;
@@ -228,11 +222,11 @@ namespace ferram4
 
 
                 relPos = this.part.transform.worldToLocalMatrix.MultiplyVector(relPos);
-                for (int i = 0; i < minBounds.Count; i++)
+                for (int j = 0; j < minBounds.Count; j++)
                 {
                     Vector3 minBoundVec, maxBoundVec;
-                    minBoundVec = minBounds[i];
-                    maxBoundVec = maxBounds[i];
+                    minBoundVec = minBounds[j];
+                    maxBoundVec = maxBounds[j];
                     if (relPos.x < maxBoundVec.x && relPos.y < maxBoundVec.y && relPos.z < maxBoundVec.z && relPos.x > minBoundVec.x && relPos.y > minBoundVec.y && relPos.z > minBoundVec.z)
                     {
                         FARShieldedParts.Add(p);
@@ -241,8 +235,10 @@ namespace ferram4
                             b.isShielded = true;
                             //print("Shielded: " + p.partInfo.title);
                         }
-                        foreach (Part q in p.symmetryCounterparts)
+                        for (int k = 0; k < p.symmetryCounterparts.Count; k++)
                         {
+                            Part q = p.symmetryCounterparts[k];
+
                             if (q == null)
                                 continue;
                             FARShieldedParts.Add(q);
