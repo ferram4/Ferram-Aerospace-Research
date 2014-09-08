@@ -1149,6 +1149,7 @@ namespace ferram4
             base.OnLoad(node);
             if(node.HasNode("ClCurve"))
             {
+                ClPotentialCurve = new FloatCurve();
                 ClPotentialCurve.Load(node.GetNode("ClCurve"));
                 ClViscousCurve = new FloatCurve();
                 ClViscousCurve.Add(-1, 0);
