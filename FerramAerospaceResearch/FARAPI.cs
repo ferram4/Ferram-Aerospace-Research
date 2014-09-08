@@ -128,5 +128,13 @@ namespace ferram4
                 return FARControlSys.TSFC;
             return 0;
         }
+
+        public static double GetActiveControlSys_StallFrac()
+        {
+            if (FARControlSys.ActiveControlSys != null)
+                return FARControlSys.stallPercentage;
+            return 0;
+
+        }
     }
 }

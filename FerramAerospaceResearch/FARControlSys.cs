@@ -165,7 +165,7 @@ namespace ferram4
 
         //private float Cl;
         //private float Cd;
-        private static double stallPercentage;
+        public static double stallPercentage;
         private static double mass;
         private static double fuelmass;
         public static double termVel;

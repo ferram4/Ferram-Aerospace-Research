@@ -105,22 +105,22 @@ namespace ferram4
         public bool rollaxis = true;
 
         [UI_Toggle(enabledText = "True", scene = UI_Scene.Editor, disabledText = "False")]
-        [KSPField(guiName = "Use as flap", isPersistant = true, guiActiveEditor = true, guiActive = false)]
+        [KSPField(guiName = "Flap", isPersistant = true, guiActiveEditor = true, guiActive = false)]
         public bool isFlap;
 
         [UI_Toggle(enabledText = "True", scene = UI_Scene.Editor, disabledText = "False")]
-        [KSPField(guiName = "Use as spoiler", isPersistant = true, guiActiveEditor = true, guiActive = false)]
+        [KSPField(guiName = "Spoiler", isPersistant = true, guiActiveEditor = true, guiActive = false)]
         public bool isSpoiler;
 
-        [KSPField(isPersistant = true, guiName = "Flap deflection")]
+        [KSPField(isPersistant = true, guiName = "Flap setting")]
         public int flapDeflectionLevel = 2;
 
         [UI_FloatRange(maxValue = 30, minValue = -15, scene = UI_Scene.Editor, stepIncrement = 0.5f)]
-        [KSPField(guiName = "Control Max Deflection", isPersistant = true)]
+        [KSPField(guiName = "Ctrl Max Dflct", isPersistant = true)]
         public float maxdeflect = 15;
 
         [UI_FloatRange(maxValue = 85, minValue = -30, scene = UI_Scene.Editor, stepIncrement = 0.5f)]
-        [KSPField(guiName = "Flap/Brake Max Deflection", isPersistant = true)]
+        [KSPField(guiName = "Flp/splr Max Dflct", isPersistant = true)]
         public float maxdeflectFlap = 15; 
         
         protected double PitchLocation = 0;
