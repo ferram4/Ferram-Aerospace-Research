@@ -99,6 +99,7 @@ namespace ferram4
 
         public Vector3d CoDshift = Vector3d.zero;
         public Vector3d globalCoDShift = Vector3d.zero;
+
         public double cosAngleCutoff = 0;
 
         //private float M = 0;
@@ -1159,6 +1160,8 @@ namespace ferram4
                 double.TryParse(node.GetValue("majorMinorAxisRatio"), out majorMinorAxisRatio);
             if (node.HasValue("taperCrossSectionAreaRatio"))
                 double.TryParse(node.GetValue("taperCrossSectionAreaRatio"), out taperCrossSectionAreaRatio);
+            if (node.HasValue("cosAngleCutoff"))
+                double.TryParse(node.GetValue("cosAngleCutoff"), out cosAngleCutoff);
         }
 
         //Blank save node ensures that nothing for this partmodule is saved

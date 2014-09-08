@@ -527,7 +527,16 @@ namespace ferram4
                     if (h.rigidbody == part.rigidbody)
                         continue;
 
-                    Collider[] colliders = part.GetComponents<Collider>();
+                    Collider[] colliders;
+                    try
+                    {
+                        colliders = part.GetComponents<Collider>();
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogException(e);
+                        colliders = new Collider[1] { part.collider };
+                    }
                     for (int j = 0; j < colliders.Length; j++)
                         if (h.collider == colliders[j])
                             continue;
@@ -551,7 +560,16 @@ namespace ferram4
                                 Part q = VesselPartList[i];
                                 bool breakBool = false;
 
-                                Collider[] colliders = q.GetComponents<Collider>();
+                                Collider[] colliders;
+                                try
+                                {
+                                    colliders = q.GetComponents<Collider>();
+                                }
+                                catch (Exception e)
+                                {
+                                    Debug.LogException(e);
+                                    colliders = new Collider[1] { q.collider };
+                                }
                                 for (int j = 0; j < colliders.Length; j++)
                                     if (hit.collider == colliders[j])
                                     {
@@ -1391,7 +1409,16 @@ namespace ferram4
                     for (int j = 0; j < PartList.Count; j++)
                     {
                         Part p = PartList[j];
-                        Collider[] colliders = p.GetComponents<Collider>();
+                        Collider[] colliders;
+                        try
+                        {
+                            colliders = p.GetComponents<Collider>();
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.LogException(e);
+                            colliders = new Collider[1] { p.collider };
+                        }
                         if (p.Modules.Contains("FARWingAerodynamicModel"))
                         {
                             for (int k = 0; k < colliders.Length; k++)
@@ -1447,7 +1474,16 @@ namespace ferram4
                             for (int k = 0; k < PartList.Count; k++)
                             {
                                 Part p = PartList[k];
-                                Collider[] colliders = p.GetComponents<Collider>();
+                                Collider[] colliders;
+                                try
+                                {
+                                    colliders = p.GetComponents<Collider>();
+                                }
+                                catch (Exception e)
+                                {
+                                    Debug.LogException(e);
+                                    colliders = new Collider[1] { p.collider };
+                                }
                                 for (int l = 0; l < colliders.Length; l++)
                                     if (h.collider == colliders[l] && p != part)
                                     {
@@ -1485,7 +1521,16 @@ namespace ferram4
                         for (int j = 0; j < PartList.Count; j++)
                         {
                             Part p = PartList[j];
-                            Collider[] colliders = p.GetComponents<Collider>();
+                            Collider[] colliders;
+                            try
+                            {
+                                colliders = p.GetComponents<Collider>();
+                            }
+                            catch (Exception e)
+                            {
+                                Debug.LogException(e);
+                                colliders = new Collider[1] { p.collider };
+                            }
                             for (int k = 0; k < colliders.Length; k++)
                                 if (h.collider == colliders[k] && p != part)
                                 {
