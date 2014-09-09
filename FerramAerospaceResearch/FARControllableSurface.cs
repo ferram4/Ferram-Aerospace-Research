@@ -34,9 +34,6 @@ Copyright 2014, Michael Ferrara, aka Ferram4
  *	http://forum.kerbalspaceprogram.com/threads/60863
  */
 
-
-
-
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -129,14 +126,17 @@ namespace ferram4
         protected int flapLocation = 0;
 
         private double AoAsign = 1;
-        private double AoAdesired = 0;
-        private double AoAfromflap = 0;
-        protected double AoAoffset = 0;
+        private double AoAdesiredControl = 0; //DaMichel: treat desired AoA's from flap and stick inputs separately for different animation rates
+        private double AoAdesiredFlap = 0;
+        private double AoAcurrentControl = 0; // current deflection due to control inputs
+        private double AoAcurrentFlap = 0; // current deflection due to flap/spoiler deployment
+        private double AoAoffset = 0; // total current deflection
 
         private double lastAoAoffset = 0;
         private Vector3d deflectedNormal = Vector3d.forward;
 
         public static double timeConstant = 0.25;
+        public static double timeConstantFlap = 0.2;
         private bool brake = false;
         private bool justStarted = false;
 
@@ -250,12 +250,15 @@ namespace ferram4
 
                 if (process && (object)MovableSection != null && part.Rigidbody)
                 {
+                    // Set member vars for desired AoA
                     if (isFlap == true)
                         AoAOffsetFromFlapDeflection();
                     else if (isSpoiler == true)
                         AoAOffsetFromSpoilerDeflection();
-                    AoAOffsetFromControl();
-
+                    AoAOffsetFromControl(); 
+                    //DaMichel: put deflection change here so that AoAOffsetFromControlInput does only the thing which the name suggests
+                    ChangeDeflection();
+                    DeflectionAnimation();
                 }
             }
 
@@ -333,50 +336,51 @@ namespace ferram4
                 //RollLocation = RollLocation * RollLocation * Mathf.Sign(RollLocation) + roll2 * roll2 * Mathf.Sign(roll2);
                 RollLocation += roll2;
             }
+            //DaMichel: this is important to force a reset of the flap/spoiler model orientation to the desired value.
+            // What apparently happens on loading a new flight scene is that first the model (obj_ctrlSrf) 
+            // orientation is set correctly by DeflectionAnimation(). But then the orientations is mysteriously 
+            // zeroed-out. And this definitely doesn't happen in this module. However OnVesselPartsChange
+            // subscribers are called afterwards, so we have a chance to fix the broken orientation state.
+            lastAoAoffset = double.MaxValue;
         }
 
         private void AoAOffsetFromSpoilerDeflection()
         {
             if (brake)
-                AoAfromflap = maxdeflectFlap * flapLocation;
+                AoAdesiredFlap = maxdeflectFlap * flapLocation;
             else
-                AoAfromflap = 0;
-
-            AoAfromflap = FARMathUtil.Clamp(AoAfromflap, -Math.Abs(maxdeflectFlap), Math.Abs(maxdeflectFlap));
+                AoAdesiredFlap = 0;
+            AoAdesiredFlap = FARMathUtil.Clamp(AoAdesiredFlap, -Math.Abs(maxdeflectFlap), Math.Abs(maxdeflectFlap));
         }
 
         
         private void AoAOffsetFromFlapDeflection()
         {
-            AoAfromflap = maxdeflectFlap * flapLocation * flapDeflectionLevel * 0.33333333333;
-            AoAfromflap = FARMathUtil.Clamp(AoAfromflap, -Math.Abs(maxdeflectFlap), Math.Abs(maxdeflectFlap));
+            AoAdesiredFlap = maxdeflectFlap * flapLocation * flapDeflectionLevel * 0.33333333333;
+            AoAdesiredFlap = FARMathUtil.Clamp(AoAdesiredFlap, -Math.Abs(maxdeflectFlap), Math.Abs(maxdeflectFlap));
         }
 
         private void AoAOffsetFromControl()
         {
-            AoAdesired = 0;
+            AoAdesiredControl = 0;
             if ((object)vessel != null && vessel.staticPressure > 0)
             {
                 if (pitchaxis)
                 {
-                    AoAdesired += PitchLocation * vessel.ctrlState.pitch;
+                    AoAdesiredControl += PitchLocation * vessel.ctrlState.pitch;
                 }
                 if (yawaxis)
                 {
-                    AoAdesired += YawLocation * vessel.ctrlState.yaw;
+                    AoAdesiredControl += YawLocation * vessel.ctrlState.yaw;
                 }
                 if (rollaxis)
                 {
-                    AoAdesired += RollLocation * vessel.ctrlState.roll;
+                    AoAdesiredControl += RollLocation * vessel.ctrlState.roll;
                 }
 
-                AoAdesired *= AoAsign * maxdeflect;
-                AoAdesired = FARMathUtil.Clamp(AoAdesired, -Math.Abs(maxdeflect), Math.Abs(maxdeflect));
-                AoAdesired += AoAfromflap;
+                AoAdesiredControl *= AoAsign * maxdeflect;
+                AoAdesiredControl = FARMathUtil.Clamp(AoAdesiredControl, -Math.Abs(maxdeflect), Math.Abs(maxdeflect));
             }
-            ChangeDeflection(timeConstant);
-
-            DeflectionAnimation();
         }
 
         protected override double CalculateAoA(Vector3d velocity)
@@ -396,22 +400,44 @@ namespace ferram4
             return Math.Asin(PerpVelocity);
         }
 
-        private void ChangeDeflection(double timeconstant)
+        //DaMichel: Factored the time evolution for deflection AoA into this function. This one results into an exponential asympotic
+        //"decay" towards the desired value. Good for stick inputs, i suppose, and the original method.
+        private static double BlendDeflectionExp(double current, double desired, double timeConstant, bool forceSetToDesired)
         {
-            if (AoAoffset != AoAdesired)
+            double error = desired - current;
+            if (!forceSetToDesired && Math.Abs(error) >= 0.1)  // DaMichel: i changed the threshold since i noticed a "bump" at max deflection
             {
-                double error = AoAdesired - AoAoffset;
-                if (!justStarted && Math.Abs(error) >= 0.5)
-                {
-                    double recip_timeconstant = 1 / timeconstant;
-                    double tmp1 = error * recip_timeconstant;
-                    //float tmp2 = (error + TimeWarp.deltaTime * tmp1) * recip_timeconstant;
-                    AoAoffset += FARMathUtil.Clamp((double)TimeWarp.deltaTime * tmp1, -Math.Abs(0.6 * error), Math.Abs(0.6 * error));
-
-                }
-                else
-                    AoAoffset = AoAdesired;
+                double recip_timeconstant = 1 / timeConstant;
+                double tmp1 = error * recip_timeconstant;
+                current += FARMathUtil.Clamp((double)TimeWarp.deltaTime * tmp1, -Math.Abs(0.6 * error), Math.Abs(0.6 * error));
             }
+            else
+                current = desired;
+            return current;
+        }
+
+        //DaMichel: Similarly, this is used for constant rate movment towards the desired value. I presume it is more realistic for 
+        //for slow moving flaps and spoilers. It looks better anyways.
+        private static double BlendDeflectionLinear(double current, double desired, double timeConstant, bool forceSetToDesired)
+        {
+            double error = desired - current;
+            if (!forceSetToDesired && Math.Abs(error) >= 0.1)
+            {
+                double recip_timeconstant = 1 / timeConstant;
+                double tmp1 = Math.Sign(error) * recip_timeconstant;
+                current += FARMathUtil.Clamp((double)TimeWarp.deltaTime * tmp1, -Math.Abs(0.6 * error), Math.Abs(0.6 * error));
+            }
+            else
+                current = desired;
+            return current;
+        }
+
+        // Determines current deflection contributions from stick and flap/spoiler settings and update current total deflection (AoAoffset).
+        private void ChangeDeflection()
+        {
+            if (AoAcurrentControl != AoAdesiredControl) AoAcurrentControl = BlendDeflectionExp(AoAcurrentControl, AoAdesiredControl, timeConstant, justStarted);
+            if (AoAcurrentFlap  != AoAdesiredFlap) AoAcurrentFlap = BlendDeflectionLinear(AoAcurrentFlap, AoAdesiredFlap, timeConstantFlap, justStarted);
+            AoAoffset = AoAcurrentFlap + AoAcurrentControl;
         }
 
         /// <summary>
@@ -449,36 +475,36 @@ namespace ferram4
                 PitchLocation = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.forward) * Mathf.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.up));
                 YawLocation = -Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.right) * Mathf.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.up));
                 RollLocation = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.forward) * Mathf.Sign(Vector3.Dot(CoMoffset, -EditorLogic.startPod.transform.right));
-                AoAoffset = 0;
+                AoAcurrentControl = 0;
                 if (pitchaxis == true)
                 {
-                    AoAoffset += PitchLocation * pitch;
+                    AoAcurrentControl += PitchLocation * pitch;
                 }
                 if (yawaxis == true)
                 {
-                    AoAoffset += YawLocation * yaw;
+                    AoAcurrentControl += YawLocation * yaw;
                 }
                 if (rollaxis == true)
                 {
-                    AoAoffset += RollLocation * roll;
+                    AoAcurrentControl += RollLocation * roll;
                 }
-                AoAoffset = FARMathUtil.Clamp(AoAoffset, -1, 1) * maxdeflect;
-
+                AoAcurrentControl = AoAdesiredControl = FARMathUtil.Clamp(AoAcurrentControl, -1, 1) * maxdeflect;
+                AoAcurrentFlap = 0;
                 if (isFlap == true)
                 {
                     int flapDeflectionLevel = flap;
                     flapLocation = (int)Math.Sign(Vector3.Dot(EditorLogic.startPod.transform.forward, part.transform.forward));      //figure out which way is up
-                    AoAoffset += maxdeflectFlap * flapLocation * flapDeflectionLevel * 0.3333333333333;
+                    AoAcurrentFlap += maxdeflectFlap * flapLocation * flapDeflectionLevel * 0.3333333333333;
                 }
                 else if (isSpoiler == true)
                 {
                     flapLocation = -(int)Math.Sign(Vector3.Dot(EditorLogic.startPod.transform.forward, part.transform.forward));      //figure out which way is up
-                    AoAoffset += brake ? maxdeflectFlap * flapLocation : 0;
+                    AoAcurrentFlap += brake ? maxdeflectFlap * flapLocation : 0;
                 }
-
+                AoAdesiredFlap = AoAcurrentFlap;
+                AoAoffset = AoAdesiredFlap + AoAdesiredControl;
                 DeflectionAnimation();
             }
-
         }
         #endregion
     }

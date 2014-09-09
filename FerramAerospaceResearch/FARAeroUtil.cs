@@ -76,6 +76,7 @@ namespace ferram4
             node.AddValue("%incompressibleRearAttachDrag", incompressibleRearAttachDrag);
             node.AddValue("%sonicRearAdditionalAttachDrag", sonicRearAdditionalAttachDrag);
             node.AddValue("%ctrlSurfTimeConstant", FARControllableSurface.timeConstant);
+            node.AddValue("%ctrlSurfTimeConstantFlap", FARControllableSurface.timeConstantFlap);
 
             node.AddNode(new ConfigNode("!BodyAtmosphericData,*"));
 
@@ -125,6 +126,9 @@ namespace ferram4
 
                 if (node.HasValue("ctrlSurfTimeConstant"))
                     double.TryParse(node.GetValue("ctrlSurfTimeConstant"), out FARControllableSurface.timeConstant);
+
+                if (node.HasValue("ctrlSurfTimeConstantFlap"))
+                    double.TryParse(node.GetValue("ctrlSurfTimeConstantFlap"), out FARControllableSurface.timeConstantFlap);
 
                 FARAeroUtil.bodyAtmosphereConfiguration = new Dictionary<int, Vector3d>();
                 foreach (ConfigNode bodyProperties in node.GetNodes("BodyAtmosphericData"))
