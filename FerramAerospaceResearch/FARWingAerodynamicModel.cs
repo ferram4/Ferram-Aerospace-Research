@@ -111,11 +111,14 @@ namespace ferram4
         protected double criticalCl = 1.6;
 
 
-        public Vector3d AerodynamicCenter = Vector3.zero;
-        private Vector3d CurWingCentroid = Vector3.zero;
-        private Vector3d ParallelInPlane = Vector3.zero;
-        private Vector3d perp = Vector3.zero;
-        private Vector3d liftDirection = Vector3.zero;
+        public Vector3d AerodynamicCenter = Vector3d.zero;
+        private Vector3d CurWingCentroid = Vector3d.zero;
+        private Vector3d ParallelInPlane = Vector3d.zero;
+        private Vector3d perp = Vector3d.zero;
+        private Vector3d liftDirection = Vector3d.zero;
+
+        [KSPField(isPersistant = false)]
+        private Vector3d rootMidChordOffsetFromOrig = Vector3d.zero;
 
         // in local coordinates
         private Vector3d localWingCentroid = Vector3.zero;
@@ -177,7 +180,7 @@ namespace ferram4
 
         private void PrecomputeCentroid()
         {
-            Vector3d WC = Vector3d.zero;
+            Vector3d WC = rootMidChordOffsetFromOrig;
             if (nonSideAttach <= 0)
             {
                 WC = -b_2 / 3 * (1 + TaperRatio * 2) / (1 + TaperRatio) * (Vector3d.right * srfAttachNegative + Vector3d.up * Math.Tan(MidChordSweep * FARMathUtil.deg2rad));
