@@ -445,8 +445,8 @@ namespace ferram4
             GUILayout.EndHorizontal();
             if (ToolbarManager.ToolbarAvailable)
             {
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("Other Options");
+                GUILayout.Label("Other Options"); // DaMichel: put it above the toolbar toggle
+                GUILayout.BeginVertical();
                 FARDebugValues.useBlizzyToolbar = GUILayout.Toggle(FARDebugValues.useBlizzyToolbar, "Use Blizzy78 Toolbar instead of Stock AppManager", thisStyle);
                 bool tmp = FARDebugValues.useBlizzyToolbar;
 
@@ -468,7 +468,8 @@ namespace ferram4
                     else
                         GameEvents.onGUIApplicationLauncherReady.Add(OnGUIAppLauncherReady);
                 }
-                GUILayout.EndHorizontal();
+                FARActionGroupConfiguration.DrawGUI();
+                GUILayout.EndVertical();
             }
         }
 
@@ -487,6 +488,7 @@ namespace ferram4
             FARAeroStress.LoadStressTemplates();
             FARPartClassification.LoadClassificationTemplates();
             FARAeroUtil.LoadAeroDataFromConfig();
+            FARActionGroupConfiguration.LoadConfiguration();
         }
 
         public static void SaveConfigs()
@@ -505,6 +507,7 @@ namespace ferram4
             FARAeroUtil.SaveCustomAeroDataToConfig();
             FARPartClassification.SaveCustomClassificationTemplates();
             FARAeroStress.SaveCustomStressTemplates();
+            FARActionGroupConfiguration.SaveConfigruration();
             config.save();
         }
         void OnDestroy()
