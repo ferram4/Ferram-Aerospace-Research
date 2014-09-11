@@ -534,7 +534,8 @@ namespace ferram4
                     }
                     catch (Exception e)
                     {
-                        Debug.LogException(e);
+                        //Fail silently because it's the only way to avoid issues with pWings
+                        //Debug.LogException(e);
                         colliders = new Collider[1] { part.collider };
                     }
                     for (int j = 0; j < colliders.Length; j++)
@@ -567,7 +568,8 @@ namespace ferram4
                                 }
                                 catch (Exception e)
                                 {
-                                    Debug.LogException(e);
+                                    //Fail silently because it's the only way to avoid issues with pWings
+                                    //Debug.LogException(e);
                                     colliders = new Collider[1] { q.collider };
                                 }
                                 for (int j = 0; j < colliders.Length; j++)
@@ -1416,7 +1418,8 @@ namespace ferram4
                         }
                         catch (Exception e)
                         {
-                            Debug.LogException(e);
+                            //Fail silently because it's the only way to avoid issues with pWings
+                            //Debug.LogException(e);
                             colliders = new Collider[1] { p.collider };
                         }
                         if (p.Modules.Contains("FARWingAerodynamicModel"))
@@ -1481,7 +1484,8 @@ namespace ferram4
                                 }
                                 catch (Exception e)
                                 {
-                                    Debug.LogException(e);
+                                    //Fail silently because it's the only way to avoid issues with pWings
+                                    //Debug.LogException(e);
                                     colliders = new Collider[1] { p.collider };
                                 }
                                 for (int l = 0; l < colliders.Length; l++)
@@ -1528,7 +1532,8 @@ namespace ferram4
                             }
                             catch (Exception e)
                             {
-                                Debug.LogException(e);
+                                //Fail silently because it's the only way to avoid issues with pWings
+                                //Debug.LogException(e);
                                 colliders = new Collider[1] { p.collider };
                             }
                             for (int k = 0; k < colliders.Length; k++)
