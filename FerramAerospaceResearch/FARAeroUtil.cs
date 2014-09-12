@@ -866,10 +866,7 @@ namespace ferram4
                         TempCurve1.Add(1, (float)axialPressureDrag);
 
 
-                        if (cutoffAngle > 30)
-                            TempCurve2.Add((float)cosCutoffAngle, 0, (float)Cn1, 0);
-                        else
-                            TempCurve2.Add(-0.9f, 0, (float)Cn1, 0);
+                        TempCurve2.Add((float)cosCutoffAngle, 0, (float)Cn1, 0);
                         TempCurve2.Add(-0.8660f, (float)(Math.Cos((Math.PI * 0.5 - Math.Acos(0.8660)) * 0.5) * Math.Sin(2 * (Math.PI * 0.5 - Math.Acos(0.8660))) * Cn1), 0, 0);
                         TempCurve2.Add(0, 0);
                         TempCurve2.Add(0.8660f, (float)(Math.Cos((Math.PI * 0.5 - Math.Acos(0.8660)) * 0.5) * Math.Sin(2 * (Math.PI * 0.5 - Math.Acos(0.8660))) * Cn1), 0, 0);
@@ -904,10 +901,7 @@ namespace ferram4
                         TempCurve2.Add(-0.8660f, (float)((-Math.Cos((Math.PI *0.5 - Math.Acos(0.8660)) *0.5) * Math.Sin(2 * (Math.PI *0.5 - Math.Acos(0.8660))) * Cn1)), 0, 0);
                         TempCurve2.Add(0, 0);
                         TempCurve2.Add(0.8660f, (float)((-Math.Cos((Math.PI *0.5 - Math.Acos(0.8660)) *0.5) * Math.Sin(2 * (Math.PI *0.5 - Math.Acos(0.8660))) * Cn1)), 0, 0);
-                        if (cutoffAngle > 30)
-                            TempCurve2.Add((float)cosCutoffAngle, 0, (float)-Cn1, 0);
-                        else
-                            TempCurve2.Add(0.9f, 0, (float)-Cn1, 0);
+                        TempCurve2.Add((float)cosCutoffAngle, 0, (float)-Cn1, 0);
 
                         TempCurve4.Add(-1, 0, 0, 0);
                         TempCurve4.Add(-0.95f, (float)(Math.Pow(Math.Sin(Math.Acos(0.95)), 2) * Cn2 * -0.95));

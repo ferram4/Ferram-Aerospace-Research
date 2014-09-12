@@ -97,10 +97,12 @@ namespace ferram4
         [KSPField(isPersistant = false)]
         public Vector3d CenterOfDrag = Vector3d.zero;
 
+        public bool ignoreAnim = false;
+
         public Vector3d CoDshift = Vector3d.zero;
         public Vector3d globalCoDShift = Vector3d.zero;
 
-        public double sinAngleCutoff = 0;
+        public double cosAngleCutoff = 0;
 
         //private float M = 0;
 
@@ -123,6 +125,9 @@ namespace ferram4
 
         private void AnimationSetup()
         {
+            if (ignoreAnim)
+                return;
+
             foreach (PartModule m in part.Modules)
             {
                 FieldInfo field = m.GetType().GetField("animationName");
@@ -147,7 +152,6 @@ namespace ferram4
                         break;
                     }
                 }
-                
             }
         }
 
@@ -184,7 +188,7 @@ namespace ferram4
             CmCurve = newCm;
             CenterOfDrag = newCoD;
             majorMinorAxisRatio = newMajorMinorAxisRatio;
-            sinAngleCutoff = newCosCutoffAngle;
+            cosAngleCutoff = newCosCutoffAngle;
             taperCrossSectionAreaRatio = newTaperCrossSectionArea / S;
             SPlusAttachArea = S;
 
@@ -1010,7 +1014,7 @@ namespace ferram4
 
             viscousLift = ClViscousCurve.Evaluate(AxialProportion_flt);
 
-            double axialDirectionFactor = sinAngleCutoff * AxialProportion;
+            double axialDirectionFactor = cosAngleCutoff * AxialProportion;
 
             if (axialDirectionFactor > 0)
             {
@@ -1161,7 +1165,9 @@ namespace ferram4
             if (node.HasValue("taperCrossSectionAreaRatio"))
                 double.TryParse(node.GetValue("taperCrossSectionAreaRatio"), out taperCrossSectionAreaRatio);
             if (node.HasValue("cosAngleCutoff"))
-                double.TryParse(node.GetValue("cosAngleCutoff"), out sinAngleCutoff);
+                double.TryParse(node.GetValue("cosAngleCutoff"), out cosAngleCutoff);
+            if (node.HasValue("ignoreAnim"))
+                bool.TryParse(node.GetValue("ignoreAnim"), out ignoreAnim);
         }
 
         //Blank save node ensures that nothing for this partmodule is saved

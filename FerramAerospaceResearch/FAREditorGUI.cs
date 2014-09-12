@@ -119,14 +119,16 @@ namespace ferram4
         {
             STATIC,
             STABILITY,
-            SIMULATION
+            SIMULATION,
+            DEBUG
         }
 
         private static string[] FAReditorMode_str = 
         {
             "Static",
             "Data + Stability Derivatives",
-            "Simulation"
+            "Simulation",
+            "Debug FAR Modules"
         };
 
         private SimMode simMode= 0;
@@ -373,8 +375,10 @@ namespace ferram4
                     GraphGUI(tmp);
                 else if (Mode == FAREditorMode.STABILITY)
                     StabilityDerivativeGUI(tmp);
-                else
+                else if (Mode == FAREditorMode.SIMULATION)
                     SimulationGUI(tmp);
+                else
+                    DebugGUI(tmp);
 
             }
 
@@ -382,6 +386,114 @@ namespace ferram4
 
         }
 
+        private void DebugGUI(bool tmp)
+        {
+            GUIStyle TabLabelStyle = new GUIStyle(GUI.skin.label);
+            TabLabelStyle.fontStyle = FontStyle.Bold;
+            TabLabelStyle.alignment = TextAnchor.UpperCenter;
+
+            if (tmp)
+            {
+                windowPos.height = 600;
+                windowPos.width = 650;
+            }
+            List<Part> selectedParts = EditorActionGroups.Instance.GetSelectedParts();
+            if (EditorLogic.fetch.editorScreen == EditorLogic.EditorScreen.Actions && selectedParts.Count > 0)
+            {
+                Part p = selectedParts[0];  //Selected parts should only ever be symmetry counterparts
+                PartModule m = null;
+                m = p.Modules["FARBasicDragModel"];
+                if (m == null)
+                {
+                    m = p.Modules["FARWingAerodynamicModel"];
+                    DisplayFARModuleProperties((FARWingAerodynamicModel)m);
+                }
+                else
+                    DisplayFARModuleProperties((FARBasicDragModel)m);
+            }
+            else
+                GUILayout.Label("Switch to Action Groups Menu and select a part to display FAR Module Properties");
+        }
+
+        private void DisplayFARModuleProperties(FARWingAerodynamicModel w)
+        {
+            GUIStyle boxStyle = new GUIStyle(GUI.skin.box);
+            boxStyle.alignment = TextAnchor.MiddleLeft;
+
+            GUILayout.Label(w.part.partInfo.title + "\n\rFARWingAerodynamicModel Data");
+            GUILayout.Box("Area (S): " + w.S +
+                "\n\rSemispan (b_2): " + w.b_2 + 
+                "\n\rMeanAeroChord (MAC): " + w.MAC + 
+                "\n\rTaperRatio: " + w.TaperRatio + 
+                "\n\rMidChordSweep: " + w.MidChordSweep, boxStyle);
+        }
+
+        private void DisplayFARModuleProperties(FARBasicDragModel d)
+        {
+            GUIStyle boxStyle = new GUIStyle(GUI.skin.box);
+            boxStyle.alignment = TextAnchor.MiddleLeft;
+
+            GUILayout.Label(d.part.partInfo.title + "\n\rFARBasicDragModel Data");
+            string s = "Area (S): " + d.S +
+                "\n\rcosAngleCutoff: " + d.cosAngleCutoff +
+                "\n\rtaperCrossSectionAreaRatio: " + d.taperCrossSectionAreaRatio +
+                "\n\rmajorMinorAxisRatio" + d.majorMinorAxisRatio;
+            s += "\n\r\n\rCdCurve\n\r" + FloatCurveToString(d.CdCurve);
+            s += "\n\rClPotentialCurve\n\r" + FloatCurveToString(d.ClPotentialCurve);
+            GUILayout.BeginHorizontal();
+            GUILayout.Box(s, boxStyle);
+            s = "ClViscousCurve\n\r" + FloatCurveToString(d.ClViscousCurve);
+            s += "\n\rCmCurve\n\r" + FloatCurveToString(d.CmCurve);
+            GUILayout.Box(s, boxStyle);
+            GUILayout.EndHorizontal();
+
+            if (GUILayout.Button("Create DragModel Config"))
+                CreateDragModelConfig(d);
+        }
+
+        private void CreateDragModelConfig(FARBasicDragModel d)
+        {
+            ConfigNode node = new ConfigNode("MODULE");
+            node.AddValue("name", "FARBasicDragModel");
+            node.AddValue("S", d.S);
+            node.AddValue("cosAngleCutoff", d.cosAngleCutoff);
+            node.AddValue("majorMinorAxisRatio", d.majorMinorAxisRatio);
+            node.AddValue("taperCrossSectionAreaRatio", d.taperCrossSectionAreaRatio);
+            node.AddValue("ignoreAnim", d.ignoreAnim);
+
+            ConfigNode newNode = new ConfigNode("CdCurve");
+            d.CdCurve.Save(newNode);
+            node.AddNode(newNode);
+
+            newNode = new ConfigNode("ClPotentialCurve");
+            d.ClPotentialCurve.Save(newNode);
+            node.AddNode(newNode);
+
+            newNode = new ConfigNode("ClViscousCurve");
+            d.ClViscousCurve.Save(newNode);
+            node.AddNode(newNode);
+
+            newNode = new ConfigNode("CmCurve");
+            d.CmCurve.Save(newNode);
+            node.AddNode(newNode);
+
+            ConfigNode saveNode = new ConfigNode();
+            saveNode.AddNode(node);
+            string savePath = KSPUtil.ApplicationRootPath.Replace("\\", "/") + "GameData/FerramAerospaceResearch/Part" + d.part.partInfo.title + ".cfg";
+            saveNode.Save(savePath);
+            PopupDialog.SpawnPopupDialog("Config Saved", "FARBasicDragModel data saved to:\n\r" + savePath, "OK", true, HighLogic.Skin);
+        }
+
+        private string FloatCurveToString(FloatCurve curve)
+        {
+            string s = "";
+            ConfigNode n = new ConfigNode();
+            curve.Save(n);
+            for (int i = 0; i < n.values.Count; i++)
+                s += n.values[i].name + " " + n.values[i].value + "\n\r";
+
+            return s;
+        }
 
         private void SimulationGUI(bool tmp)
         {
