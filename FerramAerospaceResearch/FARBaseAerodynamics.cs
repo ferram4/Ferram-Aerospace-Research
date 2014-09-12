@@ -168,9 +168,10 @@ namespace ferram4
                 part_transform = vessel.vesselTransform;
         }
 
-        public override void OnStart(PartModule.StartState state)
+        public override void Start()
         {
-            base.OnStart(state);
+            base.Start();
+
             Fields["isShielded"].guiActive = FARDebugValues.displayShielding;
 
             part.OnEditorDetach += ClearShielding;

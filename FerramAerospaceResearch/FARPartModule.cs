@@ -53,9 +53,8 @@ namespace ferram4
                 OnVesselPartsChange();
         }
 
-        public override void OnStart(PartModule.StartState state)
+        public virtual void Start()
         {
-            base.OnStart(state);
             OnVesselPartsChange = UpdateShipPartsList;
             UpdateShipPartsList();
 

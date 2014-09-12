@@ -202,9 +202,9 @@ namespace ferram4
             Events["DeflectMore"].active = isFlap && flapDeflectionLevel < 3;
             Events["DeflectLess"].active = isFlap && flapDeflectionLevel > 0;
         }
-        public override void OnStart(StartState state)
+        public override void Start()
         {
-            base.OnStart(state);
+            base.Start();
             if (part.Modules.Contains("ModuleControlSurface"))
             {
                 part.RemoveModule(part.Modules["ModuleControlSurface"]);

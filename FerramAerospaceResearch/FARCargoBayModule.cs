@@ -84,10 +84,9 @@ namespace ferram4
                 FindShieldedParts();
         }
 
-        public override void OnStart(StartState start)
+        public override void Start()
         {
-            state = start;
-            base.OnStart(start);
+            base.Start();
             BayAnimationSetup();
             OnVesselPartsChange += UpdateCargoParts;
         }

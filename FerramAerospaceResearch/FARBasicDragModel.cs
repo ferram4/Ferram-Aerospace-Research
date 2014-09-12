@@ -199,9 +199,9 @@ namespace ferram4
         }
 
 
-        public override void OnStart(StartState state)
+        public override void Start()
         {
-            base.OnStart(state);
+            base.Start();
             
 
             //gear = part.GetComponent<ModuleLandingGear>();

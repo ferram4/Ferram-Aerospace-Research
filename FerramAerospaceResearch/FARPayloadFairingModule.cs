@@ -59,15 +59,13 @@ namespace ferram4
         //private Vector3 minBounds = new Vector3();
 
         //private Vector3 maxBounds = new Vector3();
-        private static StartState state;
 
 //        private LineRenderer line = null;
 
 
-        public override void OnStart(StartState start)
+        public override void Start()
         {
-            state = start;
-            base.OnStart(start);
+            base.Start();
             OnVesselPartsChange += FindShieldedParts;
             Fields["partsShielded"].guiActive = FARDebugValues.displayShielding;
             FindShieldedParts();

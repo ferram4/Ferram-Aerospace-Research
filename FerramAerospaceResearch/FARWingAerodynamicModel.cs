@@ -59,7 +59,7 @@ namespace ferram4
         public double e;
 
         [KSPField(isPersistant = false)]
-        public double nonSideAttach;           //This is for ailerons and the small ctrl surf
+        public int nonSideAttach;           //This is for ailerons and the small ctrl surf
 
 
         [KSPField(isPersistant = false)]
@@ -118,7 +118,7 @@ namespace ferram4
         private Vector3d liftDirection = Vector3d.zero;
 
         [KSPField(isPersistant = false)]
-        private Vector3d rootMidChordOffsetFromOrig = Vector3d.zero;
+        public Vector3 rootMidChordOffsetFromOrig;
 
         // in local coordinates
         private Vector3d localWingCentroid = Vector3.zero;
@@ -181,12 +181,14 @@ namespace ferram4
         private void PrecomputeCentroid()
         {
             Vector3d WC = rootMidChordOffsetFromOrig;
+            Debug.Log(WC);
             if (nonSideAttach <= 0)
             {
                 WC += -b_2 / 3 * (1 + TaperRatio * 2) / (1 + TaperRatio) * (Vector3d.right * srfAttachNegative + Vector3d.up * Math.Tan(MidChordSweep * FARMathUtil.deg2rad));
             }
             else
                 WC += (-MAC * 0.7) * Vector3d.up;
+            Debug.Log(WC);
 
             localWingCentroid = WC;
         }
@@ -278,9 +280,9 @@ namespace ferram4
 
         #endregion
 
-        public override void OnStart(StartState state)
+        public override void Start()
         {
-            base.OnStart(state);
+            base.Start();
 
             OnVesselPartsChange += RunExposure;
 
@@ -1660,9 +1662,28 @@ namespace ferram4
             if (node.HasValue("TaperRatio"))
                 double.TryParse(node.GetValue("TaperRatio"), out TaperRatio);
             if (node.HasValue("nonSideAttach"))
-                double.TryParse(node.GetValue("nonSideAttach"), out nonSideAttach);
+                int.TryParse(node.GetValue("nonSideAttach"), out nonSideAttach);
             if (node.HasValue("MidChordSweep"))
                 double.TryParse(node.GetValue("MidChordSweep"), out MidChordSweep);
+            /*if (node.HasValue("rootMidChordOffsetFromOrig"))
+            {
+                string s = node.GetValue("rootMidChordOffsetFromOrig");
+                string[] strs = s.Split(new char[] { ' ', ',' });
+                int j = 0;
+                rootMidChordOffsetFromOrig = new Vector3d();
+                for (int i = 0; i < strs.Length; i++)
+                {
+                    double tmp;
+                    if (double.TryParse(strs[i], out tmp))
+                    {
+                        rootMidChordOffsetFromOrig[j] = tmp;
+                        j++;
+                        if (j > 2)
+                            break;
+                    }
+                }
+            }*/
+
         }
     }
 
