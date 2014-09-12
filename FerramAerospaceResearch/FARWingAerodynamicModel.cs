@@ -183,10 +183,10 @@ namespace ferram4
             Vector3d WC = rootMidChordOffsetFromOrig;
             if (nonSideAttach <= 0)
             {
-                WC = -b_2 / 3 * (1 + TaperRatio * 2) / (1 + TaperRatio) * (Vector3d.right * srfAttachNegative + Vector3d.up * Math.Tan(MidChordSweep * FARMathUtil.deg2rad));
+                WC += -b_2 / 3 * (1 + TaperRatio * 2) / (1 + TaperRatio) * (Vector3d.right * srfAttachNegative + Vector3d.up * Math.Tan(MidChordSweep * FARMathUtil.deg2rad));
             }
             else
-                WC = (-MAC * 0.7) * Vector3d.up;
+                WC += (-MAC * 0.7) * Vector3d.up;
 
             localWingCentroid = WC;
         }
