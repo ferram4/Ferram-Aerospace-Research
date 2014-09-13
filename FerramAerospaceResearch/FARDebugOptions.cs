@@ -206,6 +206,11 @@ namespace ferram4
             tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
             FARControllableSurface.timeConstant = Convert.ToDouble(tmp);
 
+            tmp = FARControllableSurface.timeConstantFlap.ToString();
+            TextEntryField("Flap/Spoiler Time Constant:", 160, ref tmp);
+            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
+            FARControllableSurface.timeConstantFlap = Convert.ToDouble(tmp);
+
             GUILayout.EndVertical();
             GUILayout.BeginVertical();
             GUILayout.Label("Celestial Body Atmosperic Properties");
