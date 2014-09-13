@@ -137,9 +137,12 @@ For both of these, set MaxDrag and MinDrag to 0
 CHANGELOG
 =======================================================
 
-0.14.1.1v------------------------------------
+0.14.1.2v------------------------------------
 Features:
 More Get functions for the FARAPI
+Add some RPM integration
+Estimated range and endurance readouts in the Flight Data UI
+See and dump FAR module data in the VAB / SPH using the Editor GUI
 
 Bugfixes:
 Fixed some vessel-switching FAR GUI issues

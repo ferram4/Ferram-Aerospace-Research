@@ -136,5 +136,12 @@ namespace ferram4
             return 0;
 
         }
+
+        public static string GetActiveControlSys_StatusMessage()
+        {
+            if (FARControlSys.ActiveControlSys != null)
+                return FARControlSys.statusString;
+            return "Status Unavailable";
+        }
     }
 }

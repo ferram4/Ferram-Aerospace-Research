@@ -55,7 +55,6 @@ namespace ferram4
         public Vector3 minBounds = new Vector3();
 
         public Vector3 maxBounds = new Vector3();
-        private static StartState state;
 
         private bool bayOpen = true;
 

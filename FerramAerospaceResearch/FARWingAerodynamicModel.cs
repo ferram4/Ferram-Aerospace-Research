@@ -1657,8 +1657,6 @@ namespace ferram4
                 double.TryParse(node.GetValue("b_2"), out b_2);
             if (node.HasValue("MAC"))
                 double.TryParse(node.GetValue("MAC"), out MAC);
-            if (node.HasValue("e"))
-                double.TryParse(node.GetValue("e"), out e);
             if (node.HasValue("TaperRatio"))
                 double.TryParse(node.GetValue("TaperRatio"), out TaperRatio);
             if (node.HasValue("nonSideAttach"))

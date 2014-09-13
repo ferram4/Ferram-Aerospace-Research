@@ -200,7 +200,7 @@ namespace ferram4
         private static bool TSFCHelp = false;
         private static bool L_DTSFCHelp = false;
 
-        private static string statusString = "";
+        public static string statusString = "";
         private static Color statusColor = Color.green;
         private static double statusOverrideTimer = 0;
         private static double statusBlinkerTimer = 0;

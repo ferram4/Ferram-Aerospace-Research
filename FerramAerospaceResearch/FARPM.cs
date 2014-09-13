@@ -69,7 +69,11 @@ namespace ferram4 {
 					return FARAPI.GetActiveControlSys_Sideslip();
 				case "FARPM_THRUST_SPECIFIC_FUEL_CONSUMPTION":
 					return FARAPI.GetActiveControlSys_TSFC();
-			}
+                case "FARPM_STALL_FRACTION":
+                    return FARAPI.GetActiveControlSys_StallFrac();
+                case "FARPM_STATUS_MESSAGE":
+                    return FARAPI.GetActiveControlSys_StatusMessage();
+            }
 			return null;
 		}
 	}
