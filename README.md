@@ -82,7 +82,6 @@ MODULE
 	name = FARControllableSurface / FARWingAerodynamicModel  
 	b_2 = 0.5				//distance from wing root to tip; semi-span  
 	MAC = 0.5				//Mean Aerodynamic Chord  
-	e = 0.9					//Oswald's Efficiency, 0-1, increases drag from lift  	//DEPRECATED
 	nonSideAttach = 0			//0 for canard-like / normal wing pieces, 1 for ctrlsurfaces attached to the back of other wing parts  
 	TaperRatio = 0.7			//Ratio of tip chord to root chord generally < 1, must be > 0  
 	MidChordSweep = 25			//Sweep angle in degrees; measured down the center of the span / midchord position  
@@ -107,12 +106,20 @@ MODULE
 		key = 0 0.3		//sideways  
 		key = 1.0 0		//forwards  
 	}  
-	ClCurve  
+	ClPotentialCurve  
 	{  
-		key = -1 0		//Lift coefficient  
+		key = -1 0		//Lift coefficient, decreases with Mach number  
 		key = -0.5 -0.03  
 		key = 0 0  
 		key = 0.5 0.03  
+		key = 1 0  
+	}  
+	ClViscuousCurve  
+	{  
+		key = -1 0		//Lift coefficient, remains nearly constant with Mach number  
+		key = -0.5 -0.2  
+		key = 0 0  
+		key = 0.5 0.2  
 		key = 1 0  
 	}  
 	CmCurve				//Moment coefficient  
@@ -126,6 +133,7 @@ MODULE
 	localUpVector = 0,1,0		//a unit vector defining "up" for this part; 0,1,0 is standard for most stock-compliant parts  
 	localForwardVector = 1,0,0	//a unti vector defining "forward" for this part; 1,0,0 is standard for most stock-compliant parts  
 	majorMinorAxisRatio = 1		//the ratio of the part's "forward" length to its "side" length, used for drag and lift calculations  
+	cosCutoffAngle = 0		//cosine of the angle used to determine which side of the part is tapering for hypersonic drag calculations.  Use sign to specify which side  
 	taperCrossSectionAreaRatio = 0;	//the part's tapered area projected on a plane normal to the "up" vector, divided by surface area; used to handle changes in drag at hypersonic speeds  
 	CenterOfDrag = 0,0,0		//a vector defining the part's CoD  
 }  
@@ -139,13 +147,17 @@ CHANGELOG
 
 0.14.1.2v------------------------------------
 Features:
-More Get functions for the FARAPI
-Add some RPM integration
-Estimated range and endurance readouts in the Flight Data UI
-See and dump FAR module data in the VAB / SPH using the Editor GUI
+More Get functions for the FARAPI  
+Add some RPM integration  
+Estimated range and endurance readouts in the Flight Data UI  
+See and dump FAR module data in the VAB / SPH using the Editor GUI  
+Contributed by Da Michel:  
+	Implement deflection speeds for flaps / spoilers  
+	Allow preferred default action groups for spoilers / flaps  
 
 Bugfixes:
-Fixed some vessel-switching FAR GUI issues
+Fixed some vessel-switching FAR GUI issues  
+Fixed control surface reversal on undocking or backwards root part selection  
 
 0.14.1.1v------------------------------------
 Features:

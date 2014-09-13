@@ -542,7 +542,7 @@ namespace ferram4
 
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();
-            GUILayout.Box("Pitch Angle: \n\rHeading: \n\rRoll Angle: \n\r\n\rAngle of Attack: \n\rSideslip Angle: \n\r\n\rQ: \n\r\n\rCl: \n\rCd: \n\rReference Area: \n\rL/W: \n\r\n\rL/D: \n\rV*L/D: \n\r\n\rFuel Fraction: \n\rTSFC: \n\rAir Req Met: \n\r\n\rL/D / TSFC: \n\rV*L/D / TSFC: \n\rEst. Endurance: \n\rEst. Range: \n\r\n\rTerminal V: \n\rBC:", leftBox, GUILayout.Width(120));
+            GUILayout.Box("Pitch Angle: \n\rHeading: \n\rRoll Angle: \n\r\n\rAngle of Attack: \n\rSideslip Angle: \n\r\n\rQ: \n\r\n\rCl: \n\rCd: \n\rReference Area: \n\rL/W: \n\r\n\rL/D: \n\rV*L/D: \n\r\n\rFuel Fraction: \n\rTSFC: \n\rAir Req Met: \n\r\n\rEst. Endurance: \n\rEst. Range: \n\r\n\rTerminal V: \n\rBC:", leftBox, GUILayout.Width(120));
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical();
@@ -583,8 +583,6 @@ namespace ferram4
             readoutString.AppendLine(TSFC.ToString("N3") + " hr⁻¹");
             readoutString.AppendLine(intakeDeficit.ToString("P1"));
             readoutString.AppendLine();
-            readoutString.AppendLine(L_D_TSFC.ToString("N2") + " hr");
-            readoutString.AppendLine(VL_D_TSFC.ToString("N2") + " km");
             readoutString.AppendLine(endurance.ToString("N2") + " hr");
             readoutString.AppendLine(range.ToString("N2") + " km");
             readoutString.AppendLine();
@@ -694,15 +692,15 @@ namespace ferram4
             GUILayout.Box("Percentage of jet engine air requirements met by current active intakes; > 100% indicates normal operation, while < 100% will result in flameouts.", mySty);
             GUILayout.EndHorizontal();
 
-            GUILayout.Label("L/D / TSFC and V*L/D / TSFC", TabLabelStyle);
+            GUILayout.Label("Est. Endurance / Range", TabLabelStyle);
             GUILayout.BeginHorizontal();
-            GUILayout.Box("These are a combination of the above efficiencies.", mySty);
+            GUILayout.Box("Endurance and range estimates made under common assumptions.", mySty);
             tmp = L_DTSFCHelp;
             L_DTSFCHelp = GUILayout.Toggle(L_DTSFCHelp, "More", mytoggle, GUILayout.Width(60.0F), GUILayout.Height(30.0F));
             if (L_DTSFCHelp)
             {
                 GUILayout.EndHorizontal();
-                GUILayout.Box("By combining the aerodynamic efficiency measurements and the thrust efficiency measurements, we can come up with a measure of the relative efficiency of an airplane in flight with regard to either time in the air or distance travelled.", mySty);
+                GUILayout.Box("Assuming that the plane is in steady flight (no acceleration in any direction) and that the curvature of the planet is negligible, endurance and range can be easily calculated.  These numbers will likely underestimate true range / endurance due to the effects of planetary curvature.", mySty);
                 GUILayout.BeginHorizontal();
             }
             else if (tmp)
