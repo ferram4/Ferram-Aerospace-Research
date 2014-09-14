@@ -1083,9 +1083,9 @@ namespace ferram4
                     Vector3 CoDshiftOffset = Vector3.Exclude(pair.Key, local_velocity).normalized;
                     CoDshiftOffset *= (float)(Math.Abs(liftProd) * radius);
 
-                    double tmpCdCl = tmp + Math.Abs(Cltmp);
+                    double tmpCdCl = Math.Sqrt(tmp * tmp + Cltmp * Cltmp);
 
-                    CoDshift += pair.Key * ((tmpCdCl) / (tmpCdCl + Cd)) + CoDshiftOffset;
+                    CoDshift += pair.Key * (tmpCdCl / (tmpCdCl + Math.Sqrt(Cd * Cd + Cl * Cl))) + CoDshiftOffset;
                     if (pair.Value.pitchesAwayFromUpVec)
                         Cm -= 0.25 * radius * pair.Value.areaValue / S * Math.Abs(liftProd);
                     else
