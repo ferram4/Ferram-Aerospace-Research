@@ -546,7 +546,7 @@ namespace ferram4
             {
                 //FARFlightButton = FARControlSys.ActiveControlSys && (FARControlSys.ActiveControlSys.vessel == FlightGlobals.ActiveVessel);
 
-                if ((object)lastActiveVessel == null || lastActiveVessel != FlightGlobals.ActiveVessel)
+                if (FARControlSys.ActiveControlSys == null)
                 {
                     if(FARControlSys.SetActiveControlSysAndStabilitySystem(FlightGlobals.ActiveVessel, lastActiveVessel))
                         lastActiveVessel = FlightGlobals.ActiveVessel;

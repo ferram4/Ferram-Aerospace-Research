@@ -559,7 +559,7 @@ namespace ferram4
             double range = mass / (mass - fuelmass);
             range = Math.Log(range);
             double endurance = L_D_TSFC * range;
-            range *= VL_D_TSFC;
+            range *= VL_D_TSFC * 0.001;
 
             StringBuilder readoutString = new StringBuilder();
             readoutString.AppendLine(pitch.ToString("N1") + "°");
@@ -1232,9 +1232,9 @@ namespace ferram4
 
 
         
-        public override void OnStart(StartState start)
+        public override void Start()
         {
-            base.OnStart(start);
+            minimize = true;
             Fields["isShielded"].guiActive = false;
 
             Fields["Cl"].guiActive = Fields["Cd"].guiActive = Fields["Cm"].guiActive = false;
