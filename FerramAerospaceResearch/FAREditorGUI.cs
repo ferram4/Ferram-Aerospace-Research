@@ -168,6 +168,7 @@ namespace ferram4
         string MAC = "0";
         string b = "0";
         double stable_Cl = 0;
+        double stable_Cd = 0;
         double stable_AoA = 0;
         string stable_AoA_state = "";
 
@@ -994,7 +995,10 @@ namespace ferram4
 
             GUILayout.BeginVertical(GUILayout.Width(140));
             GUILayout.Label(new GUIContent("u0: " + u0.ToString("G6") + " m/s", "Air speed based on this mach number and temperature."));
-            GUILayout.Label(new GUIContent("Cl: " + stable_Cl.ToString("G6"), "Required lift coefficient at this mass, speed and air density."));
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(new GUIContent("Cl: " + stable_Cl.ToString("G3"), "Required lift coefficient at this mass, speed and air density."));
+            GUILayout.Label(new GUIContent("Cd: " + stable_Cd.ToString("G3"), "Resulting drag coefficient at this mass, speed and air density."));
+            GUILayout.EndHorizontal();
             GUILayout.Label(new GUIContent("AoA: " + stable_AoA_state + stable_AoA.ToString("G6") + " deg", "Angle of attack required to achieve the necessary lift force."));
             GUILayout.EndVertical();
 
@@ -1255,12 +1259,13 @@ namespace ferram4
             GetClCdCmSteady(CoM, alpha + 0.1, beta, phi, 0, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true, true);
 
             stable_Cl = neededCl;
+            stable_Cd = nomCd;
             stable_AoA = alpha;
             stable_AoA_state = "";
             if (Math.Abs((nomCl - neededCl) / neededCl) > 0.1)
                 stable_AoA_state = ((nomCl > neededCl) ? "<" : ">");
 
-            MonoBehaviour.print("Cl needed: " + neededCl + ", AoA: " + alpha + ", Cl: " + nomCl);
+            Debug.Log("Cl needed: " + neededCl + ", AoA: " + alpha + ", Cl: " + nomCl + ", Cd: " + stable_Cd);
 
             pertCl = (pertCl - nomCl) / 0.1 * FARMathUtil.rad2deg;                   //vert vel derivs
             pertCd = (pertCd - nomCd) / 0.1 * FARMathUtil.rad2deg;
