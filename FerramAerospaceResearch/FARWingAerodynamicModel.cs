@@ -535,7 +535,7 @@ namespace ferram4
                     Collider[] colliders;
                     try
                     {
-                        colliders = part.GetComponents<Collider>();
+                        colliders = part.GetComponentsInChildren<Collider>();
                     }
                     catch (Exception e)
                     {
@@ -569,7 +569,7 @@ namespace ferram4
                                 Collider[] colliders;
                                 try
                                 {
-                                    colliders = q.GetComponents<Collider>();
+                                    colliders = q.GetComponentsInChildren<Collider>();
                                 }
                                 catch (Exception e)
                                 {
@@ -1419,7 +1419,7 @@ namespace ferram4
                         Collider[] colliders;
                         try
                         {
-                            colliders = p.GetComponents<Collider>();
+                            colliders = p.GetComponentsInChildren<Collider>();
                         }
                         catch (Exception e)
                         {
@@ -1485,7 +1485,7 @@ namespace ferram4
                                 Collider[] colliders;
                                 try
                                 {
-                                    colliders = p.GetComponents<Collider>();
+                                    colliders = p.GetComponentsInChildren<Collider>();
                                 }
                                 catch (Exception e)
                                 {
@@ -1533,7 +1533,7 @@ namespace ferram4
                             Collider[] colliders;
                             try
                             {
-                                colliders = p.GetComponents<Collider>();
+                                colliders = p.GetComponentsInChildren<Collider>();
                             }
                             catch (Exception e)
                             {
