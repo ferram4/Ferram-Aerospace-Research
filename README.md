@@ -8,6 +8,7 @@ Aerodynamics model for Kerbal Space Program
             			sarbian, for refactoring code for working with MechJeb, and the Module Manager 1.5 updates  
             			ialdabaoth (who is awesome), who originally created Module Manager  
                         	Regex, for adding RPM support  
+				DaMichel, for some ferramGraph updates and some control surface-related features
             			Duxwing, for copy editing the readme  
    
    CompatibilityChecker by Majiir, BSD 2-clause http://opensource.org/licenses/BSD-2-Clause
@@ -148,12 +149,15 @@ CHANGELOG
 0.14.1.2v------------------------------------
 Features:
 More Get functions for the FARAPI  
-Add some RPM integration  
 Estimated range and endurance readouts in the Flight Data UI  
 See and dump FAR module data in the VAB / SPH using the Editor GUI  
+Some runtime optimizations  
 Contributed by Da Michel:  
-	Implement deflection speeds for flaps / spoilers  
+	Implement separate deflection speeds for flaps / spoilers  
 	Allow preferred default action groups for spoilers / flaps  
+Contributed by regex:  
+	Add some RPM integration  
+
 
 Bugfixes:
 Fixed some vessel-switching FAR GUI issues  

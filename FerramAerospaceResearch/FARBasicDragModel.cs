@@ -92,7 +92,7 @@ namespace ferram4
         private Vector3d perp = Vector3.zero;
         private Vector3d liftDir = Vector3.zero;
         //private ModuleLandingGear gear = null;
-        private Dictionary<Vector3d, attachNodeData> attachNodeDragDict = new Dictionary<Vector3d, attachNodeData>();
+        private List<attachNodeData> attachNodeDragList = new List<attachNodeData>();
 
         [KSPField(isPersistant = false)]
         public Vector3d CenterOfDrag = Vector3d.zero;
@@ -858,10 +858,10 @@ namespace ferram4
             if(VesselPartList == null)
                 UpdateShipPartsList();
 
-            if (attachNodeDragDict == null)
-                attachNodeDragDict = new Dictionary<Vector3d, attachNodeData>();
+            if (attachNodeDragList == null)
+                attachNodeDragList = new List<attachNodeData>();
 
-            attachNodeDragDict.Clear();
+            attachNodeDragList.Clear();
 
             Transform transform = part.partTransform;
 
@@ -955,14 +955,9 @@ namespace ferram4
                         else
                             newAttachNodeData.pitchesAwayFromUpVec = false;
 
-                        if (attachNodeDragDict.ContainsKey(transform.worldToLocalMatrix.MultiplyVector(origToNode)))
-                        {
-                            attachNodeData tmp = attachNodeDragDict[transform.worldToLocalMatrix.MultiplyVector(origToNode)];
-                            tmp.areaValue += newAttachNodeData.areaValue;
-                            attachNodeDragDict[transform.worldToLocalMatrix.MultiplyVector(origToNode)] = tmp;
-                        }
-                        else
-                            attachNodeDragDict.Add(part.transform.worldToLocalMatrix.MultiplyVector(origToNode), newAttachNodeData);
+                        newAttachNodeData.location = transform.worldToLocalMatrix.MultiplyVector(origToNode);
+
+                        attachNodeDragList.Add(newAttachNodeData);
                     }
                 }
             }
@@ -1045,9 +1040,11 @@ namespace ferram4
 
             Cd *= MachMultiplier;
 
-            foreach (KeyValuePair<Vector3d, attachNodeData> pair in attachNodeDragDict)
+            for (int i = 0; i < attachNodeDragList.Count; i++)
             {
-                double dotProd = Vector3d.Dot(pair.Key.normalized, local_velocity);
+                attachNodeData node = attachNodeDragList[i];
+
+                double dotProd = Vector3d.Dot(node.location.normalized, local_velocity);
                 double tmp = 0;
                 double Cltmp = 0;
                 if (dotProd < 0)
@@ -1058,45 +1055,43 @@ namespace ferram4
                     //                    Cltmp = tmp * (dotProd - 1);
                     //                    Cltmp *= pair.Value;
 
-                    tmp *= pair.Value.areaValue * dotProd;
+                    tmp *= node.areaValue * dotProd;
 
 
                     //                    Vector3 CoDshiftOffset = -Vector3.Exclude(pair.Key, part.transform.worldToLocalMatrix.MultiplyVector(velocity.normalized)).normalized;
                     //                    CoDshiftOffset *= Mathf.Sqrt(Mathf.Clamp01(1 - dotProd));
                     //                    CoDshiftOffset *= Mathf.Sqrt(1.5f * pair.Value);
 
-                    CoDshift += pair.Key * (tmp / (tmp + Cd));
+                    CoDshift += node.location * (tmp / (tmp + Cd));
                 }
                 else
                 {
-                    Vector3d worldPairVec = part_transform.TransformDirection(pair.Key.normalized);
+                    Vector3d worldPairVec = part_transform.TransformDirection(node.location.normalized);
                     double dotProd_2 = dotProd * dotProd;
                     double liftProd = Vector3d.Dot(worldPairVec, liftDir);
 
                     tmp = maxPressureCoeff * dotProd_2 * dotProd;
-                    tmp *= pair.Value.areaValue;
+                    tmp *= node.areaValue;
 
                     Cltmp = maxPressureCoeff * dotProd_2 * liftProd;
-                    Cltmp *= -pair.Value.areaValue;
+                    Cltmp *= -node.areaValue;
 
-                    double radius = Math.Sqrt(pair.Value.areaValue / Math.PI);
-                    Vector3 CoDshiftOffset = Vector3.Exclude(pair.Key, local_velocity).normalized;
+                    double radius = Math.Sqrt(node.areaValue / Math.PI);
+                    Vector3 CoDshiftOffset = Vector3.Exclude(node.location, local_velocity).normalized;
                     CoDshiftOffset *= (float)(Math.Abs(liftProd) * radius * 0.4);
 
                     double Cmtmp;
-                    if (pair.Value.pitchesAwayFromUpVec)
-                        Cmtmp = -0.25 * radius * pair.Value.areaValue / S * Math.Abs(liftProd);
+                    if (node.pitchesAwayFromUpVec)
+                        Cmtmp = -0.25 * radius * node.areaValue / S * Math.Abs(liftProd);
                     else
-                        Cmtmp = 0.25 * radius * pair.Value.areaValue / S * Math.Abs(liftProd);
+                        Cmtmp = 0.25 * radius * node.areaValue / S * Math.Abs(liftProd);
 
                     double tmpCdCl = Math.Sqrt(tmp * tmp + Cltmp * Cltmp);
 
-                    CoDshift += pair.Key * (tmpCdCl / (tmpCdCl + Math.Sqrt(Cd * Cd + Cl * Cl))) + CoDshiftOffset;
-                    if (Math.Abs(Cltmp) > 0)
-                        CoDshift += local_velocity.normalized * Cmtmp / Math.Abs(Cltmp);
+                    CoDshift += node.location * (tmpCdCl / (tmpCdCl + Math.Sqrt(Cd * Cd + Cl * Cl))) + CoDshiftOffset;
+
+                    Cm += Cmtmp;
                 }
-
-
 
                 CdAdd += tmp;
                 newtonianLift += Cltmp;
@@ -1145,6 +1140,7 @@ namespace ferram4
         {
             public double areaValue;
             public bool pitchesAwayFromUpVec;
+            public Vector3d location;
         }
 
         public enum AttachGroupType
