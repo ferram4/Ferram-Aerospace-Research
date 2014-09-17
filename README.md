@@ -161,7 +161,8 @@ Contributed by regex:
 
 Bugfixes:
 Fixed some vessel-switching FAR GUI issues  
-Fixed control surface reversal on undocking or backwards root part selection  
+Fixed control surface reversal on undocking or backwards root part selection
+Fixed some issues involving CoL position with wings when dealing with parts that have multiple colliders  
 
 0.14.1.1v------------------------------------
 Features:
