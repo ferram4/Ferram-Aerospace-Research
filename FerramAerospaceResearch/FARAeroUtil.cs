@@ -179,12 +179,15 @@ namespace ferram4
 
             
             loaded = true;
+
+            //Get Kerbin
+            currentBodyAtm = bodyAtmosphereConfiguration[1];
         }
 
         public static double MaxPressureCoefficientCalc(double M)
         {
             if (M <= 0)
-                return 0;
+                return 1;
             double value;
             double gamma = currentBodyAtm.y;
             if (M <= 1)
@@ -195,7 +198,7 @@ namespace ferram4
                 value = (gamma + 1) * (gamma + 1);                  //Rayleigh Pitot Tube Formula; gives max stagnation pressure behind shock
                 value *= M * M;
                 value /= (4 * gamma * M * M - 2 * (gamma - 1));
-                value = Math.Pow(value, 3.5);
+                value = Math.Pow(value, gamma / (gamma - 1));
 
                 value *= (1 - gamma + 2 * gamma * M * M);
                 value /= (gamma + 1);
@@ -267,29 +270,51 @@ namespace ferram4
                         currentBodyAtm.z = 8.3145 * 1000 / 28.96;
                         currentBodyAtm.x = currentBodyAtm.y * currentBodyAtm.z;
                     }
+                    double gamma = currentBodyAtm.y;
 
                     while (M < 50)
                     {
                         double value = 0;
+                        double d_value = 0;
                         if (M <= 1)
                         {
-                            value = StagnationPressure.Evaluate((float)M);
+                            value = StagnationPressureCalc(M);
+
+                            d_value = M * M * (gamma - 1) * 0.5;
+                            d_value++;
+                            d_value = Math.Pow(d_value, 1 / (gamma - 1));
+                            d_value *= gamma * M * M;
+
+                            d_value -= 2 * value;
+                            d_value += 2;
+                            d_value *= 2;
+                            d_value /= (gamma * M * M * M);
                         }
                         else
                         {
-                            value = (currentBodyAtm.y + 1) * (currentBodyAtm.y + 1);                  //Rayleigh Pitot Tube Formula; gives max stagnation pressure behind shock
+                            value = (gamma + 1) * (gamma + 1);                  //Rayleigh Pitot Tube Formula; gives max stagnation pressure behind shock
                             value *= M * M;
-                            value /= (4 * currentBodyAtm.y * M * M - 2 * (currentBodyAtm.y - 1));
-                            value = Math.Pow(value, 3.5);
 
-                            value *= (1 - currentBodyAtm.y + 2 * currentBodyAtm.y * M * M);
-                            value /= (currentBodyAtm.y + 1);
+                            d_value = value;
+
+                            value /= (4 * gamma * M * M - 2 * (gamma - 1));
+                            value = Math.Pow(value, gamma / (gamma - 1));
+
+                            value *= (1 - gamma + 2 * gamma * M * M);
+                            value /= (gamma + 1);
+
+                            d_value /= (4 * M * M - 2) * gamma + 2;
+                            d_value = Math.Pow(d_value, gamma / (gamma - 1));
+                            d_value = gamma + 1 - d_value;
+                            d_value *= 4;
+                            d_value /= M * M * M * gamma * (gamma + 1);
+
                         }
                         value--;                                //and now to conver to pressure coefficient
-                        value *= 2 / (currentBodyAtm.y * M * M);
+                        value *= 2 / (gamma * M * M);
 
 
-                        maxPressureCoefficient.Add((float)M, (float)value);
+                        maxPressureCoefficient.Add((float)M, (float)value, (float)d_value, (float)d_value);
 
 
                         if (M < 2)
@@ -476,7 +501,7 @@ namespace ferram4
                         d_ratio = 1 / d_ratio;
                         d_ratio *= 4 * (currentBodyAtm.y * M * M - (currentBodyAtm.y - 1) / 2) * (currentBodyAtm.y - 1) * M - 8 * currentBodyAtm.y * M * (1 + (currentBodyAtm.y - 1) / 2 * M * M);
 
-                        machBehindShock.Add((float)Math.Sqrt(M), (float)ratio);//, d_ratio, d_ratio);
+                        machBehindShock.Add((float)Math.Sqrt(M), (float)ratio, (float)d_ratio, (float)d_ratio);
                         if (M < 3)
                             M += 0.1;
                         else if (M < 10)
