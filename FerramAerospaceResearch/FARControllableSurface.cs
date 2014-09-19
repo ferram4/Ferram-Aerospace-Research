@@ -170,7 +170,7 @@ namespace ferram4
             {
                 if (movableSection == null)
                 {
-                    movableSection = part.FindModelTransform("obj_ctrlSrf");     //And the transform
+                    movableSection = part.FindModelTransform(transformName);     //And the transform
                     if (!MovableOrigReady)
                     {
                         // In parts copied by symmetry, these fields should already be set,
@@ -195,6 +195,9 @@ namespace ferram4
 
         [KSPField(isPersistant = false)]
         public float ctrlSurfFrac = 1;
+
+        [KSPField(isPersistant = false)]
+        public string transformName = "obj_ctrlSrf";
 
         // These TWO fields MUST be set up so that they are copied by Object.Instantiate.
         // Otherwise detaching and re-attaching wings with deflected flaps etc breaks until save/load.
