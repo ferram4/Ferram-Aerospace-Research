@@ -41,7 +41,7 @@ using UnityEngine;
 
 namespace ferram4
 {
-    // An accumulator class for summarizing a set of forces acting on the body
+    // An accumulator class for summarizing a set of forces acting on the body and calculating the AerodynamicCenter
     public class FARCenterQuery
     {
         // Total force.
@@ -53,6 +53,52 @@ namespace ferram4
         // single center location on the line of physically equivalent ones.
         public Vector3d pos = Vector3d.zero;
         public double amount = 0.0;
+
+        /*//Component of ac position created by part location
+        public Vector3d acPartPosComponent = Vector3d.zero;
+
+        //Component of ac position due to interactions with location of AC on other axes
+        public Vector3d acAxisInteractComponent = Vector3d.zero;
+
+        public void AddAerodynamicForcesAndMoments(Vector3d force, Vector3d moment, Vector3d pos)
+        {
+            double tmp;
+
+            tmp = force.x / force.y;
+            acPartPosComponent.x = tmp * pos.y - moment.z + pos.x;
+            acAxisInteractComponent.x = moment.z - tmp;
+
+            tmp = force.y / force.z;
+            acPartPosComponent.y = tmp * pos.z - moment.x + pos.y;
+            acAxisInteractComponent.y = moment.x - tmp;
+
+            tmp = force.z / force.x;
+            acPartPosComponent.z = tmp * pos.x - moment.y + pos.z;
+            acAxisInteractComponent.z = moment.y - tmp;
+        }
+
+        public Vector3d GetACPosition()
+        {
+            double denominator = 1 - acAxisInteractComponent.x * acAxisInteractComponent.y * acAxisInteractComponent.z;
+
+            Vector3d acPos = Vector3d.zero;
+
+            acPos.x = acPartPosComponent.x
+                + acPartPosComponent.y * acAxisInteractComponent.x
+                + acPartPosComponent.z * acAxisInteractComponent.x * acAxisInteractComponent.y;
+
+            acPos.y = acPartPosComponent.y
+                + acPartPosComponent.z * acAxisInteractComponent.y
+                + acPartPosComponent.x * acAxisInteractComponent.y * acAxisInteractComponent.z;
+
+            acPos.z = acPartPosComponent.z
+                + acPartPosComponent.x * acAxisInteractComponent.z
+                + acPartPosComponent.y * acAxisInteractComponent.z * acAxisInteractComponent.x;
+
+            acPos /= denominator;
+
+            return acPos;
+        }*/
 
         // Record a force applied at a point
         public void AddForce(Vector3d npos, Vector3d nforce)
@@ -181,6 +227,28 @@ namespace ferram4
                 Fields["Cl"].guiActive = Fields["Cd"].guiActive = Fields["Cm"].guiActive = FARDebugValues.displayCoefficients;
             }
         }
+
+        /*public void LateUpdate()
+        {
+            float satCl = 0, satCd = 0;
+
+            bool active = FARControlSys.tintForCl || FARControlSys.tintForCd;
+
+            if (FARControlSys.tintForCl)
+                satCl = (float)FARMathUtil.Clamp(Math.Abs(Cl / FARControlSys.fullySaturatedCl), 0, 1);
+            if (FARControlSys.tintForCd)
+                satCd = (float)FARMathUtil.Clamp(Math.Abs(Cd / FARControlSys.fullySaturatedCd), 0, 1);
+
+            Color tintColor = new Color(satCd, 0, satCl);
+
+            if (active)
+                part.SetHighlightType(Part.HighlightType.AlwaysOn);
+            else
+                part.SetHighlightType(Part.HighlightType.Disabled);
+
+            part.SetHighlightColor(tintColor);
+            part.SetHighlight(active);
+        }*/
 
         public void ClearShielding()
         {

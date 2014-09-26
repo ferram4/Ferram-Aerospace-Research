@@ -587,6 +587,7 @@ namespace ferram4
             FARControlSys.FlightDataHelpPos = config.GetValue("FlightDataHelpPos", new Rect());
             FARControlSys.AirSpeedPos = config.GetValue("AirSpeedPos", new Rect());
             FARControlSys.AirSpeedHelpPos = config.GetValue("AirSpeedHelpPos", new Rect());
+            FARControlSys.AeroForceTintingPos = config.GetValue("AeroForceTintingPos", new Rect());
             //FARControlSys.minimize = config.GetValue<bool>("FlightGUIBool", false);
             FARControlSys.k_wingleveler_str = config.GetValue("k_wingleveler", "0.05");
             FARControlSys.k_wingleveler = Convert.ToDouble(FARControlSys.k_wingleveler_str);
@@ -630,6 +631,7 @@ namespace ferram4
             config.SetValue("FlightDataHelpPos", FARControlSys.FlightDataHelpPos);
             config.SetValue("AirSpeedPos", FARControlSys.AirSpeedPos);
             config.SetValue("AirSpeedHelpPos", FARControlSys.AirSpeedHelpPos);
+            config.SetValue("AeroForceTintingPos", FARControlSys.AeroForceTintingPos);
             //config.SetValue("FlightGUIBool", FARControlSys.minimize);
             config.SetValue("k_wingleveler", (FARControlSys.k_wingleveler).ToString());
             config.SetValue("kd_wingleveler", (FARControlSys.kd_wingleveler).ToString());

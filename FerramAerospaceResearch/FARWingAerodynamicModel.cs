@@ -110,6 +110,8 @@ namespace ferram4
 
         protected double criticalCl = 1.6;
 
+        private double refAreaChildren = 0;
+
 
         public Vector3d AerodynamicCenter = Vector3d.zero;
         private Vector3d CurWingCentroid = Vector3d.zero;
@@ -131,6 +133,9 @@ namespace ferram4
         private int LastInFrontRaycastCount = 0;
         private Part PartInFrontOf = null;
         private FARWingAerodynamicModel WingInFrontOf = null;
+
+        private FARWingAerodynamicModel parentWing = null;
+        private bool updateMassNextFrame = false;
 
         protected double ClIncrementFromRear = 0f;
 
@@ -162,41 +167,12 @@ namespace ferram4
             return Cd;
         }
 
-        public void EditorClClear(bool reset_stall)
-        {
-            Cl = 0;
-            Cd = 0;
-            if (reset_stall)
-                stall = 0;
-            //            LastAoA = AoA;
-            //            LastAoADot = AoADot;
-            //downWash = 0;
-        }
 
         public Vector3d GetAerodynamicCenter()
         {
             return AerodynamicCenter;
         }
 
-        private void PrecomputeCentroid()
-        {
-            Vector3d WC = rootMidChordOffsetFromOrig;
-            Debug.Log(WC);
-            if (nonSideAttach <= 0)
-            {
-                WC += -b_2 / 3 * (1 + TaperRatio * 2) / (1 + TaperRatio) * (Vector3d.right * srfAttachNegative + Vector3d.up * Math.Tan(MidChordSweep * FARMathUtil.deg2rad));
-            }
-            else
-                WC += (-MAC * 0.7) * Vector3d.up;
-            Debug.Log(WC);
-
-            localWingCentroid = WC;
-        }
-
-        public Vector3 WingCentroid()
-        {
-            return part_transform.TransformDirection(localWingCentroid) + part.transform.position;
-        }
 
         public override Vector3d GetVelocity()
         {
@@ -204,38 +180,6 @@ namespace ferram4
                 return part.Rigidbody.GetPointVelocity(WingCentroid()) + Krakensbane.GetFrameVelocityV3f();
             else
                 return velocityEditor;
-        }
-
-        private Vector3d CalculateAerodynamicCenter(double MachNumber, double AoA, Vector3d WC)
-        {
-            Vector3d AC_offset = Vector3d.zero;
-            if (nonSideAttach <= 0)
-            {
-                double tmp = Math.Cos(AoA);
-                tmp *= tmp;
-                if (MachNumber < 0.85)
-                    AC_offset = effective_MAC * 0.25 * ParallelInPlane;
-                else if (MachNumber > 1.4)
-                    AC_offset = effective_MAC * 0.10 * ParallelInPlane;
-                else if (MachNumber >= 1)
-                    AC_offset = effective_MAC * (-0.375 * MachNumber + 0.625) * ParallelInPlane;
-                    //This is for the transonic instability, which is lessened for highly swept wings
-                else
-                {
-                    double sweepFactor = SweepAngle * SweepAngle * tmp;
-                    if (MachNumber < 0.9)
-                        AC_offset = effective_MAC * ((MachNumber - 0.85) * 2 * sweepFactor + 0.25) * ParallelInPlane;
-                    else
-                        AC_offset = effective_MAC * ((1 - MachNumber) * sweepFactor + 0.25) * ParallelInPlane;
-                }
-
-                AC_offset *= tmp;
-
-            }
-
-            WC += AC_offset;
-
-            return WC;      //WC updated to AC
         }
 
         public double GetMAC()
@@ -247,6 +191,16 @@ namespace ferram4
             return effective_b_2;
         }
 
+        public Vector3d GetLiftDirection()
+        {
+            return liftDirection;
+        }
+
+
+        #endregion
+
+        #region Editor Functions
+
         public void ComputeClCdEditor(Vector3d velocityVector, double M)
         {
             velocityEditor = velocityVector;
@@ -255,11 +209,6 @@ namespace ferram4
 
             double AoA = CalculateAoA(velocityVector);
             CalculateForces(velocityVector, M, AoA);
-        }
-
-        public Vector3d GetLiftDirection()
-        {
-            return liftDirection;
         }
 
         protected override void ResetCenterOfLift()
@@ -278,13 +227,87 @@ namespace ferram4
             return force;
         }
 
+        public void EditorClClear(bool reset_stall)
+        {
+            Cl = 0;
+            Cd = 0;
+            if (reset_stall)
+                stall = 0;
+            //            LastAoA = AoA;
+            //            LastAoADot = AoADot;
+            //downWash = 0;
+        }
+
         #endregion
+
+        #region Wing Centroid and Aerodynamic Center
+
+        private void PrecomputeCentroid()
+        {
+            Vector3d WC = rootMidChordOffsetFromOrig;
+            if (nonSideAttach <= 0)
+            {
+                WC += -b_2 / 3 * (1 + TaperRatio * 2) / (1 + TaperRatio) * (Vector3d.right * srfAttachNegative + Vector3d.up * Math.Tan(MidChordSweep * FARMathUtil.deg2rad));
+            }
+            else
+                WC += (-MAC * 0.7) * Vector3d.up;
+
+            localWingCentroid = WC;
+        }
+
+        public Vector3 WingCentroid()
+        {
+            return part_transform.TransformDirection(localWingCentroid) + part.transform.position;
+        }
+
+        private Vector3d CalculateAerodynamicCenter(double MachNumber, double AoA, Vector3d WC)
+        {
+            Vector3d AC_offset = Vector3d.zero;
+            if (nonSideAttach <= 0)
+            {
+                double tmp = Math.Cos(AoA);
+                tmp *= tmp;
+                if (MachNumber < 0.85)
+                    AC_offset = effective_MAC * 0.25 * ParallelInPlane;
+                else if (MachNumber > 1.4)
+                    AC_offset = effective_MAC * 0.10 * ParallelInPlane;
+                else if (MachNumber >= 1)
+                    AC_offset = effective_MAC * (-0.375 * MachNumber + 0.625) * ParallelInPlane;
+                //This is for the transonic instability, which is lessened for highly swept wings
+                else
+                {
+                    double sweepFactor = SweepAngle * SweepAngle * tmp;
+                    if (MachNumber < 0.9)
+                        AC_offset = effective_MAC * ((MachNumber - 0.85) * 2 * sweepFactor + 0.25) * ParallelInPlane;
+                    else
+                        AC_offset = effective_MAC * ((1 - MachNumber) * sweepFactor + 0.25) * ParallelInPlane;
+                }
+
+                AC_offset *= tmp;
+
+            }
+
+            WC += AC_offset;
+
+            return WC;      //WC updated to AC
+        }
+
+        #endregion
+
+        #region Initialization
 
         public override void Start()
         {
             base.Start();
 
             OnVesselPartsChange += RunExposure;
+
+            if(HighLogic.LoadedSceneIsEditor)
+            {
+                part.OnEditorAttach += OnWingAttach;
+                part.OnEditorDetach += OnWingDetach;
+            }
+
 
             if (part is ControlSurface)
             {
@@ -310,6 +333,8 @@ namespace ferram4
             MathAndFunctionInitialization();
             Fields["currentLift"].guiActive = FARDebugValues.displayForces;
             Fields["currentDrag"].guiActive = FARDebugValues.displayForces;
+
+            OnWingAttach();
         }
 
         public void MathAndFunctionInitialization()
@@ -363,6 +388,10 @@ namespace ferram4
             WingExposureFunction();
         }
 
+#endregion
+
+        #region Physics Frame
+
         public virtual void FixedUpdate()
         {
             currentLift = currentDrag = 0;
@@ -394,12 +423,6 @@ namespace ferram4
                         double AoA = CalculateAoA(velocity);
                         Vector3d force = DoCalculateForces(velocity, MachNumber, AoA);
 
-                        /*                        if ((object)part.parent != null)
-                                                {
-                                                    set_vel = true;
-                                                    rb.maxAngularVelocity = ((object)WingInFrontOf != null ? 700 : 400);
-                                                }*/
-
                         rb.AddForceAtPosition(force, AerodynamicCenter);            //and apply force
                     }
                     else
@@ -408,8 +431,6 @@ namespace ferram4
                 else
                     stall = 0;
 
-                //if (!set_vel)
-                //    rb.maxAngularVelocity = 7;
             }
         }
 
@@ -466,7 +487,12 @@ namespace ferram4
                 force = AerodynamicCenter = Vector3d.zero;
             }
 
-            if (Math.Abs(Vector3d.Dot(force, forward)) > YmaxForce || Vector3d.Exclude(forward, force).magnitude > XZmaxForce)
+            Vector3d scaledForce = force;
+            //This accounts for the effect of flap effects only being handled by the rearward surface
+            if ((object)WingInFrontOf != null)
+                scaledForce *= S / (S + WingInFrontOf.S);
+
+            if (Math.Abs(Vector3d.Dot(scaledForce, forward)) > YmaxForce || Vector3d.Exclude(forward, scaledForce).magnitude > XZmaxForce)
                 if (part.parent && !vessel.packed)
                 {
                     part.SendEvent("AerodynamicFailureStatus");
@@ -477,6 +503,66 @@ namespace ferram4
             return force;
 
         }
+
+        #endregion
+
+        #region Wing Mass For Structure
+
+        private void Update()
+        {
+            if(updateMassNextFrame)
+            {
+                GetRefAreaChildren();
+                UpdateMassToAccountForArea();
+                updateMassNextFrame = false;
+            }
+        }
+
+        private void OnWingAttach()
+        {
+            if(part.parent)
+                parentWing = part.parent.GetComponent<FARWingAerodynamicModel>();
+
+            GetRefAreaChildren();
+
+            UpdateMassToAccountForArea();
+        }
+
+        private void OnWingDetach()
+        {
+            if ((object)parentWing != null)
+                parentWing.updateMassNextFrame = true;
+        }
+
+        private void UpdateMassToAccountForArea()
+        {
+            float supportedArea = (float)(refAreaChildren + S);
+            part.mass = supportedArea * (float)FARAeroUtil.massPerWingAreaSupported;
+
+            Debug.Log("Wing: " + part.partInfo.title + " mass set to: " + part.mass + " with a supported area of: " + supportedArea);
+        }
+
+        private void GetRefAreaChildren()
+        {
+            refAreaChildren = 0;
+
+            for(int i = 0; i < part.children.Count; i++)
+            {
+                Part p = part.children[i];
+                FARWingAerodynamicModel childWing = p.GetComponent<FARWingAerodynamicModel>();
+                if ((object)childWing == null)
+                    continue;
+
+                refAreaChildren += childWing.refAreaChildren + childWing.S;
+            }
+
+            if ((object)parentWing != null)
+            {
+                parentWing.GetRefAreaChildren();
+            }
+        }
+
+        #endregion
 
         protected virtual double CalculateAoA(Vector3d velocity)
         {
@@ -524,7 +610,7 @@ namespace ferram4
 
                 RaycastHit hit = new RaycastHit();
                 float distance = Mathf.Max((float)(3 * effective_MAC), 0.1f);
-                RaycastHit[] hits = Physics.RaycastAll(CurWingCentroid, ParallelInPlane, distance, FARAeroUtil.RaycastMask);
+                RaycastHit[] hits = Physics.SphereCastAll(new Ray(CurWingCentroid, ParallelInPlane), Mathf.Min((float)MAC * 0.1f, distance * 0.05f), distance, FARAeroUtil.RaycastMask);
 
                 for (int i = 0; i < hits.Length; i++)
                 {
@@ -1416,6 +1502,10 @@ namespace ferram4
                     for (int j = 0; j < PartList.Count; j++)
                     {
                         Part p = PartList[j];
+
+                        if (p == part)
+                            continue;
+
                         Collider[] colliders;
                         try
                         {
@@ -1430,7 +1520,7 @@ namespace ferram4
                         if (p.Modules.Contains("FARWingAerodynamicModel"))
                         {
                             for (int k = 0; k < colliders.Length; k++)
-                                if (h.collider == colliders[k] && p != part)
+                                if (h.collider == colliders[k])
                                 {
                                     if (h.distance > 0)
                                     {
@@ -1452,6 +1542,8 @@ namespace ferram4
 
         private double ExposureDirection(Ray ray, RaycastHit hit, List<Part> PartList, float dist, bool span)
         {
+            Vector3 pos = part.transform.position + part_transform.TransformDirection(rootMidChordOffsetFromOrig);
+
             double exposure = 1;
             if (nonSideAttach == 0)
                 for (int i = 0; i < 5; i++)
@@ -1459,11 +1551,11 @@ namespace ferram4
                     //Vector3 centroid = WingCentroid();
                     if (span)
                     {
-                        ray.origin = part.transform.position - (float)(b_2 * (i * 0.2 + 0.1)) * part.transform.right.normalized * srfAttachNegative;
+                        ray.origin = pos - (float)(b_2 * (i * 0.2 + 0.1)) * part.transform.right.normalized * srfAttachNegative;
                     }
                     else
                     {
-                        ray.origin = part.transform.position + (float)(MAC * i * 0.25 - (MAC * 0.5)) * part.transform.up.normalized * 0.8f;
+                        ray.origin = pos + (float)(MAC * i * 0.25 - (MAC * 0.5)) * part.transform.up.normalized * 0.8f;
                         //                        ray.origin = part.transform.position + (MAC * i / 4 - (MAC / 2)) * part.transform.up.normalized * 0.8f;
                         ray.origin -= (float)(b_2 * 0.5) * part.transform.right.normalized * srfAttachNegative;
                     }
@@ -1482,6 +1574,9 @@ namespace ferram4
                             for (int k = 0; k < PartList.Count; k++)
                             {
                                 Part p = PartList[k];
+                                if (p == part)
+                                    continue;
+
                                 Collider[] colliders;
                                 try
                                 {
@@ -1494,7 +1589,7 @@ namespace ferram4
                                     colliders = new Collider[1] { p.collider };
                                 }
                                 for (int l = 0; l < colliders.Length; l++)
-                                    if (h.collider == colliders[l] && p != part)
+                                    if (h.collider == colliders[l])
                                     {
                                         if (h.distance > 0)
                                         {
@@ -1513,7 +1608,7 @@ namespace ferram4
                 }
             else
             {
-                ray.origin = part.transform.position - (float)(MAC * 0.7) * part.transform.up.normalized;
+                ray.origin = pos - (float)(MAC * 0.7) * part.transform.up.normalized;
 
 
                 if (dist <= 0)
@@ -1530,6 +1625,10 @@ namespace ferram4
                         for (int j = 0; j < PartList.Count; j++)
                         {
                             Part p = PartList[j];
+
+                            if (p == part)
+                                continue;
+
                             Collider[] colliders;
                             try
                             {
@@ -1542,7 +1641,7 @@ namespace ferram4
                                 colliders = new Collider[1] { p.collider };
                             }
                             for (int k = 0; k < colliders.Length; k++)
-                                if (h.collider == colliders[k] && p != part)
+                                if (h.collider == colliders[k])
                                 {
                                     if (h.distance > 0)
                                     {

@@ -58,6 +58,7 @@ namespace ferram4
         public static double attachNodeRadiusFactor;
         public static double incompressibleRearAttachDrag;
         public static double sonicRearAdditionalAttachDrag;
+        public static double massPerWingAreaSupported;
         public static bool AJELoaded;
 
         public static Dictionary<int, Vector3d> bodyAtmosphereConfiguration = null;
@@ -75,6 +76,7 @@ namespace ferram4
             node.AddValue("%attachNodeDiameterFactor", attachNodeRadiusFactor * 2);
             node.AddValue("%incompressibleRearAttachDrag", incompressibleRearAttachDrag);
             node.AddValue("%sonicRearAdditionalAttachDrag", sonicRearAdditionalAttachDrag);
+            node.AddValue("%massPerWingAreaSupported", massPerWingAreaSupported);
             node.AddValue("%ctrlSurfTimeConstant", FARControllableSurface.timeConstant);
             node.AddValue("%ctrlSurfTimeConstantFlap", FARControllableSurface.timeConstantFlap);
 
@@ -123,6 +125,9 @@ namespace ferram4
                     double.TryParse(node.GetValue("incompressibleRearAttachDrag"), out incompressibleRearAttachDrag);
                 if (node.HasValue("sonicRearAdditionalAttachDrag"))
                     double.TryParse(node.GetValue("sonicRearAdditionalAttachDrag"), out sonicRearAdditionalAttachDrag);
+
+                if (node.HasValue("massPerWingAreaSupported"))
+                    double.TryParse(node.GetValue("massPerWingAreaSupported"), out massPerWingAreaSupported);
 
                 if (node.HasValue("ctrlSurfTimeConstant"))
                     double.TryParse(node.GetValue("ctrlSurfTimeConstant"), out FARControllableSurface.timeConstant);

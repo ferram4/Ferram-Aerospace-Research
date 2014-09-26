@@ -51,5 +51,13 @@ namespace ferram4
 
             return window;
         }
+
+        public static void TextEntryField(string label, int labelWidth, ref string inputOutput)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(label, GUILayout.Width(labelWidth));
+            inputOutput = GUILayout.TextField(inputOutput);
+            GUILayout.EndHorizontal();
+        }
     }
 }

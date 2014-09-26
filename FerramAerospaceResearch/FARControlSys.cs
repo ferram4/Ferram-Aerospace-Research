@@ -141,6 +141,10 @@ namespace ferram4
         private static bool AirSpeedHelp = false;
 
         public static Rect AirSpeedHelpPos; 
+
+        internal static bool AeroForceTintingWindow = false;
+
+        public static Rect AeroForceTintingPos;
         
         private static bool WgLvHlp = false;
         private static bool YwDpHlp = false;
@@ -148,6 +152,10 @@ namespace ferram4
         private static bool DynCtrlHlp = false;
         private static bool AoAHlp = false;
 
+        internal static bool tintForCl = false;
+        internal static bool tintForCd = false;
+        internal static double fullySaturatedCl = 2;
+        internal static double fullySaturatedCd = 2;
 
         public static bool minimize = true;
         public static bool hide = false;
@@ -1031,7 +1039,8 @@ namespace ferram4
 
                 GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
                 AirSpeedWindow = GUILayout.Toggle(AirSpeedWindow, "Airspd Settings", mytoggle, GUILayout.ExpandWidth(true));
-                FlightDataWindow = GUILayout.Toggle(FlightDataWindow, "Flight Data", mytoggle, GUILayout.ExpandWidth(true));
+                FlightDataWindow = GUILayout.Toggle(FlightDataWindow, "Flt Data", mytoggle, GUILayout.ExpandWidth(true));
+                //AeroForceTintingWindow = GUILayout.Toggle(AeroForceTintingWindow, "Aero Viz", mytoggle, GUILayout.ExpandWidth(true));
                 GUILayout.EndHorizontal();
                 GUILayout.Label("Flight Assistance Toggles:");
 
@@ -1143,6 +1152,43 @@ namespace ferram4
             AirSpeedHelpPos = FARGUIUtils.ClampToScreen(AirSpeedHelpPos);
         }
 
+        private void AeroForceTintingGUI(int windowID)
+        {
+
+            GUIStyle mySty = new GUIStyle(GUI.skin.box);
+            mySty.normal.textColor = mySty.focused.textColor = Color.white;
+            mySty.hover.textColor = mySty.active.textColor = Color.yellow;
+            mySty.onNormal.textColor = mySty.onFocused.textColor = mySty.onHover.textColor = mySty.onActive.textColor = Color.green;
+            mySty.padding = new RectOffset(4, 4, 4, 4);
+
+            GUIStyle mytoggle = new GUIStyle(GUI.skin.button);
+            mytoggle.normal.textColor = mytoggle.focused.textColor = Color.white;
+            mytoggle.hover.textColor = mytoggle.active.textColor = mytoggle.onActive.textColor = Color.yellow;
+            mytoggle.onNormal.textColor = mytoggle.onFocused.textColor = mytoggle.onHover.textColor = Color.green;
+            mytoggle.padding = new RectOffset(4, 4, 4, 4);
+
+            GUIStyle TabLabelStyle = new GUIStyle(GUI.skin.label);
+            TabLabelStyle.fontStyle = FontStyle.Bold;
+            TabLabelStyle.alignment = TextAnchor.UpperCenter;
+
+            tintForCl = GUILayout.Toggle(tintForCl, "Tint Cl");
+            tintForCd = GUILayout.Toggle(tintForCd, "Tint Cd");
+
+            string tmp = fullySaturatedCl.ToString();
+            FARGUIUtils.TextEntryField("Cl For Full Tint:", 80, ref tmp);
+            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
+            fullySaturatedCl = double.Parse(tmp);
+
+            tmp = fullySaturatedCd.ToString();
+            FARGUIUtils.TextEntryField("Cd For Full Tint:", 80, ref tmp);
+            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
+            fullySaturatedCd = double.Parse(tmp);
+
+            GUI.DragWindow();
+
+            AeroForceTintingPos = FARGUIUtils.ClampToScreen(AeroForceTintingPos);
+        }
+
         #endregion
 
         private void ChangeSurfVelocity(SurfaceVelMode velMode)
@@ -1222,6 +1268,10 @@ namespace ferram4
                     AirSpeedPos = GUILayout.Window(255, AirSpeedPos, AirSpeedGUI, "FAR Airspeed Settings", GUILayout.MinWidth(200));
                     if (AirSpeedHelp)
                         AirSpeedHelpPos = GUILayout.Window(256, AirSpeedHelpPos, AirSpeedHelpGUI, "FAR Airspeed Settings Help", GUILayout.MinWidth(170));
+                }
+                if(AeroForceTintingWindow)
+                {
+                    AeroForceTintingPos = GUILayout.Window(257, AeroForceTintingPos, AeroForceTintingGUI, "FAR Aero Force Visualization", GUILayout.MinWidth(200));
                 }
 
             }
