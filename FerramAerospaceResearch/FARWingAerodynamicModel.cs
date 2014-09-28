@@ -610,9 +610,9 @@ namespace ferram4
                 RaycastHit hit = new RaycastHit();
                 float distance = Mathf.Max((float)(3 * effective_MAC), 0.1f);
                 Ray tmpRay = new Ray((Vector3)CurWingCentroid, (Vector3)ParallelInPlane);
-                float sphereRad = Mathf.Min((float)MAC * 0.1f, distance * 0.05f);
+                float sphereRad = Mathf.Min((float)effective_MAC * 0.1f, distance * 0.05f);
 
-                RaycastHit[] hits = Physics.RaycastAll(tmpRay, distance, FARAeroUtil.RaycastMask);
+                RaycastHit[] hits = Physics.SphereCastAll(tmpRay, sphereRad, distance, FARAeroUtil.RaycastMask);
 
                 for (int i = 0; i < hits.Length; i++)
                 {
@@ -774,9 +774,9 @@ namespace ferram4
                 stall += tmp;
                 stall = Math.Max(stall, lastStall);
             }
-            else if (absAoA < AoAmax * 0.75)
+            else if (absAoA < AoAmax * 0.8)
             {
-                stall = 1 - FARMathUtil.Clamp((AoAmax * 0.75 - absAoA) * 10, 0, 1);
+                stall = 1 - FARMathUtil.Clamp((AoAmax * 0.8 - absAoA) * 20, 0, 1);
                 stall += tmp;
                 stall = Math.Min(stall, lastStall);
             }

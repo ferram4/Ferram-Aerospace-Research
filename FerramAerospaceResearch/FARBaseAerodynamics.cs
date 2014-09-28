@@ -232,27 +232,30 @@ namespace ferram4
 
         public virtual void LateUpdate()
         {
-            float satCl = 0, satCd = 0;
-
-            bool active = FARControlSys.tintForCl || FARControlSys.tintForCd;
-
-            if (FARControlSys.tintForCl)
-                satCl = (float)FARMathUtil.Clamp(Math.Abs(Cl / FARControlSys.fullySaturatedCl), 0, 1);
-            if (FARControlSys.tintForCd)
-                satCd = (float)FARMathUtil.Clamp(Math.Abs(Cd / FARControlSys.fullySaturatedCd), 0, 1);
-
-            Color tintColor = new Color(satCd, 0.5f * (satCl + satCd), satCl);
-
-            if (active)
-                part.SetHighlightType(Part.HighlightType.AlwaysOn);
-            else
+            if (HighLogic.LoadedSceneIsFlight)
             {
-                tintColor = FARGUIUtils.defaultHighlightColor;
-                part.SetHighlightType(Part.HighlightType.OnMouseOver);
-            }
+                float satCl = 0, satCd = 0;
 
-            part.SetHighlightColor(tintColor);
-            //part.SetHighlight(true);
+                bool active = FARControlSys.tintForCl || FARControlSys.tintForCd;
+
+                if (FARControlSys.tintForCl)
+                    satCl = (float)FARMathUtil.Clamp(Math.Abs(Cl / FARControlSys.fullySaturatedCl), 0, 1);
+                if (FARControlSys.tintForCd)
+                    satCd = (float)FARMathUtil.Clamp(Math.Abs(Cd / FARControlSys.fullySaturatedCd), 0, 1);
+
+                Color tintColor = new Color(satCd, 0.5f * (satCl + satCd), satCl);
+
+                if (active)
+                    part.SetHighlightType(Part.HighlightType.AlwaysOn);
+                else
+                {
+                    tintColor = FARGUIUtils.defaultHighlightColor;
+                    part.SetHighlightType(Part.HighlightType.OnMouseOver);
+                }
+
+                part.SetHighlightColor(tintColor);
+                part.SetHighlight(true);
+            }
         }
 
         public void ClearShielding()
