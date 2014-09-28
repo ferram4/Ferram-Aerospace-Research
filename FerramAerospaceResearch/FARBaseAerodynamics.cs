@@ -252,7 +252,7 @@ namespace ferram4
             }
 
             part.SetHighlightColor(tintColor);
-            part.SetHighlight(active);
+            //part.SetHighlight(true);
         }
 
         public void ClearShielding()

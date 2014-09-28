@@ -611,7 +611,8 @@ namespace ferram4
                 float distance = Mathf.Max((float)(3 * effective_MAC), 0.1f);
                 Ray tmpRay = new Ray((Vector3)CurWingCentroid, (Vector3)ParallelInPlane);
                 float sphereRad = Mathf.Min((float)MAC * 0.1f, distance * 0.05f);
-                RaycastHit[] hits = Physics.SphereCastAll(tmpRay, sphereRad, distance, FARAeroUtil.RaycastMask);
+
+                RaycastHit[] hits = Physics.RaycastAll(tmpRay, distance, FARAeroUtil.RaycastMask);
 
                 for (int i = 0; i < hits.Length; i++)
                 {
