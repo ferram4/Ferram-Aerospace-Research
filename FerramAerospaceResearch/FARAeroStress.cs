@@ -286,8 +286,11 @@ namespace ferram4
                 {
                     FARWingAerodynamicModel w = parent.GetComponent<FARWingAerodynamicModel>();
 
-                    if (w.b_2 * w.MAC * 0.5 > area)
+                    double comparisonArea = w.b_2 * w.MAC * 0.5;
+                    if (comparisonArea > area)
                         isGreeble = true;
+
+                    Debug.Log(p.partInfo.title + " is greeble on wing? " + isGreeble + "\n\rPart area: " + area + " wing area comparison: " + comparisonArea);
                 }
             }
 
