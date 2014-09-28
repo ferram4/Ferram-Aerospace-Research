@@ -228,7 +228,7 @@ namespace ferram4
             }
         }
 
-        /*public void LateUpdate()
+        public virtual void LateUpdate()
         {
             float satCl = 0, satCd = 0;
 
@@ -239,7 +239,7 @@ namespace ferram4
             if (FARControlSys.tintForCd)
                 satCd = (float)FARMathUtil.Clamp(Math.Abs(Cd / FARControlSys.fullySaturatedCd), 0, 1);
 
-            Color tintColor = new Color(satCd, 0, satCl);
+            Color tintColor = new Color(satCd, 0.5f * (satCl + satCd), satCl);
 
             if (active)
                 part.SetHighlightType(Part.HighlightType.AlwaysOn);
@@ -248,7 +248,7 @@ namespace ferram4
 
             part.SetHighlightColor(tintColor);
             part.SetHighlight(active);
-        }*/
+        }
 
         public void ClearShielding()
         {

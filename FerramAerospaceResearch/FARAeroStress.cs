@@ -286,7 +286,7 @@ namespace ferram4
                 {
                     FARWingAerodynamicModel w = parent.GetComponent<FARWingAerodynamicModel>();
 
-                    if (w.S * 0.5 > area)
+                    if (w.b_2 * w.MAC * 0.5 > area)
                         isGreeble = true;
                 }
             }

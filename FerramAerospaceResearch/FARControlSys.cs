@@ -1040,7 +1040,7 @@ namespace ferram4
                 GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
                 AirSpeedWindow = GUILayout.Toggle(AirSpeedWindow, "Airspd Settings", mytoggle, GUILayout.ExpandWidth(true));
                 FlightDataWindow = GUILayout.Toggle(FlightDataWindow, "Flt Data", mytoggle, GUILayout.ExpandWidth(true));
-                //AeroForceTintingWindow = GUILayout.Toggle(AeroForceTintingWindow, "Aero Viz", mytoggle, GUILayout.ExpandWidth(true));
+                AeroForceTintingWindow = GUILayout.Toggle(AeroForceTintingWindow, "Aero Viz", mytoggle, GUILayout.ExpandWidth(true));
                 GUILayout.EndHorizontal();
                 GUILayout.Label("Flight Assistance Toggles:");
 
@@ -1370,7 +1370,7 @@ namespace ferram4
             }
         }
 
-        public void LateUpdate()
+        public override void LateUpdate()
         {
             if (part)
             {
