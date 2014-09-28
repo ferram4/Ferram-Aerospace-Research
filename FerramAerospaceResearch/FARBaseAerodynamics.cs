@@ -246,15 +246,17 @@ namespace ferram4
                 Color tintColor = new Color(satCd, 0.5f * (satCl + satCd), satCl);
 
                 if (active)
-                    part.SetHighlightType(Part.HighlightType.AlwaysOn);
-                else
                 {
-                    tintColor = FARGUIUtils.defaultHighlightColor;
-                    part.SetHighlightType(Part.HighlightType.OnMouseOver);
+                    part.SetHighlightType(Part.HighlightType.AlwaysOn);
+                    part.SetHighlightColor(tintColor);
+                    part.SetHighlight(true);
                 }
-
-                part.SetHighlightColor(tintColor);
-                part.SetHighlight(true);
+                else if (part.highlightType != Part.HighlightType.OnMouseOver)
+                {
+                    part.SetHighlightType(Part.HighlightType.OnMouseOver);
+                    part.SetHighlightColor(FARGUIUtils.defaultHighlightColor);
+                    part.SetHighlight(false);
+                }
             }
         }
 
