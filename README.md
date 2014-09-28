@@ -78,6 +78,7 @@ Sample Part.cfg:
 
 For wings
 -----------------------------------
+```
 MODULE  
 {  
 	name = FARControllableSurface / FARWingAerodynamicModel  
@@ -89,7 +90,8 @@ MODULE
 	maxdeflect = 15				//Default maximum deflection value; only used by FARControlableSurface  
 	controlSurfacePivot = 1, 0, 0;		//Local vector that obj_ctrlSrf pivots about; defaults to 1, 0, 0 (right)  
 	ctrlSurfFrac = 0.2			//Value from 0-1, percentage of the part that is a flap; only used by FARControlableSurface  
-}  
+}
+```
 
 For control surfaces, use above but replace FARWingAerodynamicModel with FARControllableSurface and add maxdeflect value
 
@@ -97,6 +99,7 @@ Set all the other winglet/control surface values to zero
 
 Other Drag (not normally needed; only for very strange objects)
 ---------------------------
+```
 MODULE  
 {  
 	name = FARBasicDragModel  
@@ -138,6 +141,7 @@ MODULE
 	taperCrossSectionAreaRatio = 0;	//the part's tapered area projected on a plane normal to the "up" vector, divided by surface area; used to handle changes in drag at hypersonic speeds  
 	CenterOfDrag = 0,0,0		//a vector defining the part's CoD  
 }  
+```
 
 For both of these, set MaxDrag and MinDrag to 0
 
