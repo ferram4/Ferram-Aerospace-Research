@@ -159,49 +159,4 @@ namespace ferram4
             return next;
         }
     }
-
-    class FARMatrix
-    {
-        private double[,] matrix;
-        public int m;
-        public int n;
-        
-        public FARMatrix(int m, int n)
-        {
-            matrix = new double[m,n];
-            this.m = m;
-            this.n = n;
-        }
-
-        public double Value(int i, int j)
-        {
-            return matrix[i, j];
-        }
-
-
-        public void Add(double Element, int i, int j)
-        {
-            matrix[i,j] = Element;
-        }
-
-        public void PrintToConsole()
-        {
-            StringBuilder MatrixDump = new StringBuilder();
-            for (int j = 0; j < n; j++)
-            {
-                MatrixDump.Append("[");
-                for (int i = 0; i < m; i++)
-                {
-                    MatrixDump.Append(matrix[i, j]);
-                    if (i < m - 1)
-                        MatrixDump.Append(",");
-                    else
-                        MatrixDump.Append("]\n\r");
-                }
-            }
-            MonoBehaviour.print(MatrixDump.ToString());
-
-
-        }
-    }
 }

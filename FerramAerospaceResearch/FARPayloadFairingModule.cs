@@ -56,13 +56,6 @@ namespace ferram4
         private List<Vector3> minBounds = new List<Vector3>();
         private List<Vector3> maxBounds = new List<Vector3>();
 
-        //private Vector3 minBounds = new Vector3();
-
-        //private Vector3 maxBounds = new Vector3();
-
-//        private LineRenderer line = null;
-
-
         public override void Start()
         {
             base.Start();
@@ -147,11 +140,6 @@ namespace ferram4
             }
             else
                 CalculatePartBounds(part);
-
-            //minBounds.x *= 1.05f;
-            //maxBounds.x *= 1.05f;
-            //minBounds.z *= 1.05f;
-            //maxBounds.z *= 1.05f;
         }
 
         private void ClearShieldedParts()

@@ -58,20 +58,24 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CompatibilityChecker.cs" />
+    <Compile Include="FARAction.cs" />
     <Compile Include="FARAeroStress.cs" />
     <Compile Include="FARAeroUtil.cs" />
     <Compile Include="FARAPI.cs" />
     <Compile Include="FARBaseAerodynamics.cs" />
     <Compile Include="FARBasicDragModel.cs" />
     <Compile Include="FARCargoBayModule.cs" />
+    <Compile Include="FARCenterQuery.cs" />
     <Compile Include="FARControllableSurface.cs" />
     <Compile Include="FARDebugOptions.cs" />
     <Compile Include="FAREditorGUI.cs" />
     <Compile Include="FARControlSys.cs" />
     <Compile Include="FARGeoUtil.cs" />
-    <Compile Include="FARGlobalControlObject.cs" />
+    <Compile Include="FARGlobalControFlightObject.cs" />
+    <Compile Include="FARGlobalControlEditorObject.cs" />
     <Compile Include="FARGUIUtils.cs" />
     <Compile Include="FARMathUtil.cs" />
+    <Compile Include="FARMatrix.cs" />
     <Compile Include="FARPartClassification.cs" />
     <Compile Include="FARPartModule.cs" />
     <Compile Include="FARPayloadFairingModule.cs" />

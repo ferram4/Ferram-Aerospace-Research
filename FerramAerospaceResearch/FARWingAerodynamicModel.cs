@@ -153,7 +153,7 @@ namespace ferram4
 
         public double GetCl()
         {
-
+        
             double ClUpwards = 1;
             if (HighLogic.LoadedSceneIsFlight)
                 ClUpwards = Vector3.Dot(liftDirection, -vessel.transform.forward);
@@ -167,19 +167,9 @@ namespace ferram4
             return Cd;
         }
 
-
         public Vector3d GetAerodynamicCenter()
         {
             return AerodynamicCenter;
-        }
-
-
-        public override Vector3d GetVelocity()
-        {
-            if (HighLogic.LoadedSceneIsFlight)
-                return part.Rigidbody.GetPointVelocity(WingCentroid()) + Krakensbane.GetFrameVelocityV3f();
-            else
-                return velocityEditor;
         }
 
         public double GetMAC()
@@ -836,27 +826,15 @@ namespace ferram4
              */
             else if (MachNumber > 1.4)
             {
-                double axialForce = 0;
-
-                //DATCOMSupersonicLiftAndDrag(MachNumber, SweepAngle, sonicLe, AoA, out Cl, out Cd);
-
                 double coefMult = 1 / (FARAeroUtil.currentBodyAtm.y * MachNumber * MachNumber);
-
-                /*double sonicLEFactor = 1;
-
-                //This handles the effect of wings that have their leading edges inside their own Mach cone / ones outside their own Mach cone
-                if (sonicLe < 1)
-                    sonicLEFactor = liftslope * (FARMathUtil.Clamp(1 - sonicLe, 0, 1) + 1) * 0.125;
-                else
-                    sonicLEFactor = (1 - 0.125 * liftslope) * FARMathUtil.Clamp(1 - 1 / sonicLe, 0, 1) + 0.125 * liftslope;*/
 
                 double supersonicLENormalForceFactor = CalculateSupersonicLEFactor(beta, TanSweep, beta_TanSweep);
 
                 double normalForce;
                 if (FARDebugValues.useSplinesForSupersonicMath)
-                    normalForce = GetSupersonicPressureDifference(MachNumber, AoA, out axialForce);
+                    normalForce = GetSupersonicPressureDifference(MachNumber, AoA);
                 else
-                    normalForce = GetSupersonicPressureDifferenceNoSpline(MachNumber, AoA, out axialForce);
+                    normalForce = GetSupersonicPressureDifferenceNoSpline(MachNumber, AoA);
                 double CosAoA = Math.Cos(AoA);
                 double SinAoA = Math.Sin(AoA);
                 //Cl = coefMult * (normalForce * CosAoA * Math.Sign(AoA) * sonicLEFactor - axialForce * SinAoA);
@@ -884,11 +862,7 @@ namespace ferram4
                         ACshift *= FARMathUtil.Clamp(Math.Abs(ACweight / Cl), 0, 1);
                 }
                 
-                //Cd = Cl * Cl / piARe;     //Drag due to 3D effects on wing and base constant
                 Cl *= subScale;
-                //Cd *= subScale;
-
-
 
                 double M = FARMathUtil.Clamp(MachNumber, 1.2, double.PositiveInfinity);
 
@@ -899,14 +873,7 @@ namespace ferram4
                 beta_TanSweep = beta / TanSweep;
                 if (double.IsNaN(beta_TanSweep))
                     beta_TanSweep = 0;
-
-                //double tmpCl, tmpCd;
-                //DATCOMSupersonicLiftAndDrag(M, SweepAngle, sonicLe, AoA, out tmpCl, out tmpCd);
-
-//                Cl += tmpCl * subScale;
-//                Cd += tmpCd * subScale;
                 
-                double axialForce = 0;
                 double coefMult = 1 / (FARAeroUtil.currentBodyAtm.y * M * M);
 
                 double supersonicLENormalForceFactor = CalculateSupersonicLEFactor(beta, TanSweep, beta_TanSweep);
@@ -914,13 +881,11 @@ namespace ferram4
                 subScale = 1 - subScale; //Adjust for supersonic code
                 double normalForce;
                 if (FARDebugValues.useSplinesForSupersonicMath)
-                    normalForce = GetSupersonicPressureDifference(M, AoA, out axialForce);
+                    normalForce = GetSupersonicPressureDifference(M, AoA);
                 else
-                    normalForce = GetSupersonicPressureDifferenceNoSpline(M, AoA, out axialForce);
+                    normalForce = GetSupersonicPressureDifferenceNoSpline(M, AoA);
                 double CosAoA = Math.Cos(AoA);
-                //double SinAoA = Math.Sin(AoA);
-                //Cl += coefMult * (normalForce * CosAoA * Math.Sign(AoA) * sonicLEFactor - axialForce * SinAoA) * (subScale);
-                //Cd += coefMult * (Math.Abs(normalForce * SinAoA) * sonicLEFactor + axialForce * CosAoA) * (subScale);
+
                 Cl += coefMult * normalForce * CosAoA * Math.Sign(AoA) * supersonicLENormalForceFactor * subScale;
                 Cd = Cl * Cl / piARe;
 
@@ -989,63 +954,9 @@ namespace ferram4
             return SupersonicLEFactor;
         }
 
-        /*private void DATCOMSupersonicLiftAndDrag(double M, double cosSweep, double sonicLE, double AoA, out double Cl, out double Cd)
-        {
-            double perpM = M * cosSweep;
-            double B = Math.Sqrt(M * M - 1);
-            double tanSweep = Math.Sqrt(Math.Abs(1 - cosSweep * cosSweep)) / cosSweep;
-
-            bool subsonicLE = false;
-
-            double Cn = 0;
-
-            if ((object)PartInFrontOf == null)
-                Cn = FARAeroUtil.SupersonicWingCna(transformed_AR, tanSweep, B, TaperRatio, out subsonicLE);
-            else
-                Cn = FARAeroUtil.SupersonicWingCna(transformed_AR, tanSweep, B, WingInFrontOf.TaperRatio, out subsonicLE);
-
-            //And now for the nonlinear lift
-            double Cnaa = 0;
-            double slopeFactor = tanSweep * 0.52083333333333333333333333333333;
-
-            double E;
-            if (slopeFactor <= 1)
-                E = Cn;
-            else
-            {
-                E = Cn * (slopeFactor + 2.5 * (slopeFactor - 1));
-            }
-
-            if (subsonicLE)
-            {
-                Cnaa = FARAeroUtil.SubsonicLECnaa(E, B, tanSweep, AoA);
-
-
-
-            }
-
-            Cl = Cn * Math.Sin(2 * AoA) * 0.5;
-
-            double slendernessParam = effective_b_2 * tanSweep + effective_MAC;
-            double p = S / (effective_b_2 * slendernessParam);
-            slendernessParam = effective_b_2 / slendernessParam;
-            slendernessParam *= B;
-
-            double dragParam;
-            if (slendernessParam <= 0.4)
-                dragParam = 0.55;
-            else
-                dragParam = (slendernessParam - 0.4) + 0.55;
-
-            Cd = dragParam * (1 + p) / p;
-            Cd /= Math.PI * transformed_AR;
-
-            Cd *= Cl * Cl;
-        }*/
-
         //This models the wing using a symmetric diamond airfoil
 
-        private double GetSupersonicPressureDifferenceNoSpline(double M, double AoA, out double axialForce)
+        private double GetSupersonicPressureDifferenceNoSpline(double M, double AoA)
         {
             double pRatio;
 
@@ -1076,14 +987,8 @@ namespace ferram4
             //Region 4 is the lower surface behind the max thickness
             double p4 = PMExpansionCalculationNoSpline(2 * halfAngle, M3, maxSinBeta, minSinBeta) * p3;
 
-            //float cosHalfAngle = Mathf.Cos(halfAngle);
-            //float sinHalfAngle = halfAngle;
 
             pRatio = (p3 + p4) - (p1 + p2);
-
-            //axialForce = (p1 + p3) - (p2 + p4);
-            //axialForce *= 0.048;               //Thickness of the airfoil
-            axialForce = 0;
 
             return pRatio;
         }
@@ -1153,13 +1058,12 @@ namespace ferram4
         }
 
         
-        private double GetSupersonicPressureDifference(double M, double AoA, out double axialForce)
+        private double GetSupersonicPressureDifference(double M, double AoA)
         {
             double pRatio;
 
             double maxSinBeta = FARAeroUtil.CalculateSinMaxShockAngle(M, FARAeroUtil.currentBodyAtm.y);//GetBetaMax(M) * FARMathUtil.deg2rad;
             double minSinBeta = 1 / M;
-
 
             double halfAngle = 0.05;            //Corresponds to ~2.8 degrees or approximately what you would get from a ~4.8% thick diamond airfoil
 
@@ -1184,14 +1088,7 @@ namespace ferram4
             //Region 4 is the lower surface behind the max thickness
             double p4 = PMExpansionCalculation(2 * halfAngle, M3, maxSinBeta, minSinBeta) * p3;
 
-            //float cosHalfAngle = Mathf.Cos(halfAngle);
-            //float sinHalfAngle = halfAngle;
-
             pRatio = (p3 + p4) - (p1 + p2);
-
-            //axialForce = (p1 + p3) - (p2 + p4);
-            //axialForce *= 0.048;               //Thickness of the airfoil
-            axialForce = 0;
 
             return pRatio;
         }
@@ -1228,8 +1125,6 @@ namespace ferram4
             double nu2 = nu1 + theta;
             if (nu2 >= FARAeroUtil.maxPrandtlMeyerTurnAngle)
             {
-                //minStall += (nu2 - FARAeroUtil.maxPrandtlMeyerTurnAngle) * 0.066666667f;
-                //minStall = Mathf.Clamp01(minStall);
                 nu2 = FARAeroUtil.maxPrandtlMeyerTurnAngle;
             }
             outM = FARAeroUtil.PrandtlMeyerAngle.Evaluate((float)nu2);
@@ -1248,8 +1143,6 @@ namespace ferram4
             double nu2 = nu1 + theta;
             if (nu2 >= FARAeroUtil.maxPrandtlMeyerTurnAngle)
             {
-                //minStall += (nu2 - FARAeroUtil.maxPrandtlMeyerTurnAngle) * 0.066666667f;
-                //minStall = Mathf.Clamp01(minStall);
                 nu2 = FARAeroUtil.maxPrandtlMeyerTurnAngle;
             }
             float outM = FARAeroUtil.PrandtlMeyerAngle.Evaluate((float)nu2);
@@ -1264,32 +1157,12 @@ namespace ferram4
 
         protected double GetAoAmax()
         {
-
-
             double StallAngle;
-            /*
-            if (MachNumber < 1.1)
-            {
-                float tmp = 2 / effective_AR;
-                StallAngle = 16 * (Mathf.Sqrt(1 + Mathf.Pow(tmp, 2)) + 2 / (tmp));
-
-                if (Mathf.Abs(SweepAngle) >= 0.4)
-                    StallAngle *= 1 / Mathf.Abs(SweepAngle);
-                else
-                    StallAngle *= 2.5f;
-
-
-                StallAngle = Mathf.Clamp(StallAngle, 15, 45) * FARMathUtil.deg2rad;
-            }
-            else
-                StallAngle = Math.PI / 3;*/
-
-            StallAngle = criticalCl / liftslope;          //Simpler version of above commented out section; just limit the lift coefficient to ~1.6
+            StallAngle = criticalCl / liftslope;
 
             return StallAngle;
 
         }
-
 
         private double GetLiftSlope(double MachNumber)
         {

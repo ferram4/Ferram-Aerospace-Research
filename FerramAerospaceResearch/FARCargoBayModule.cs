@@ -58,19 +58,14 @@ namespace ferram4
 
         private bool bayOpen = true;
 
-        //private PartModule BayAnim = null;
         private static int frameCounterCargo = 0;
         private static FARCargoBayModule BayController;
 
         private Animation bayAnim = null;
         private string bayAnimationName;
 
-//        [KSPField(guiActive = true, isPersistant = false)]
-//        private float bayProgress = 0;
-
         private bool bayAnimating = true;
 
-//        private LineRenderer line = null;
 
         [KSPEvent]
         private void UpdateCargoParts()
@@ -113,7 +108,6 @@ namespace ferram4
                         break;
                 }
             }
-            //bayProgress = bayAnim[bayAnimationName].normalizedTime;
         }
 
 
@@ -203,7 +197,6 @@ namespace ferram4
                     if (bayOpen && CheckBayClosed())
                         FindShieldedParts();
                 }
-                //                bayProgress = bayAnim[bayAnimationName].normalizedTime;
 
             }
             else if (BayController == null)
@@ -300,19 +293,7 @@ namespace ferram4
                             p.parent == this.part && p.attachMode == AttachModes.STACK)
                             continue;
                     }
-/*                    if (w)
-                    {
-                        if (w.nonSideAttach <= 0)
-                        {
-                            relPos = p.transform.position - this.part.transform.position;
-                            relPos -= p.transform.right * Mathf.Sign(p.srfAttachNode.originalOrientation.x) * w.b_2;
 
-                            relPos = this.part.transform.worldToLocalMatrix.MultiplyVector(relPos);
-
-                            if (!(relPos.x < maxBounds.x && relPos.y < maxBounds.y && relPos.z < maxBounds.z && relPos.x > minBounds.x && relPos.y > minBounds.y && relPos.z > minBounds.z))
-                                continue;
-                        }
-                    }*/
                     FARShieldedParts.Add(p);
                     if (b)
                     {
@@ -361,7 +342,6 @@ namespace ferram4
         //Blank save node ensures that nothing for this partmodule is saved
         public override void OnSave(ConfigNode node)
         {
-            //base.OnSave(node);
         }
     }
 }

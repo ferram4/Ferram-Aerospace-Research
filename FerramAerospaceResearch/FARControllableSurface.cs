@@ -36,132 +36,13 @@ Copyright 2014, Michael Ferrara, aka Ferram4
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using UnityEngine;
 using KSP;
 
 namespace ferram4
 {
-    //Added by DaMichel: 
-    public class FARAction : KSPAction
-    {
-        // Is constructed each time a part module instance is created.
-        // The current AG seems to be stored elsewhere so base.actionGroup
-        // is only used for the initial assignment.
-        public FARAction(string guiName, int actionIdentifier) : base(guiName)
-        {
-            base.actionGroup = FARActionGroupConfiguration.map(actionIdentifier);
-        }
-    };
-
-
-
-    public class FARActionGroupConfiguration
-    {
-        public const int ID_SPOILER = 0;
-        public const int ID_INCREASE_FLAP_DEFLECTION = 1;
-        public const int ID_DECREASE_FLAP_DEFLECTION = 2;
-        public const int ACTION_COUNT = 3;
-        // private lookup tables
-        static KSPActionGroup[] id2actionGroup = { KSPActionGroup.Brakes, KSPActionGroup.None, KSPActionGroup.None };
-        // keys in the configuration file
-        static string[] configKeys = {  "actionGroupSpoiler",
-                                        "actionGroupIncreaseFlapDeflection",
-                                        "actionGroupDecreaseFlapDeflection" };
-        // for the gui
-        static string[] guiLabels = { "Spoilers",
-                                      "Increase Flap Deflection",
-                                      "Decrease Flap Deflection" };
-        static string[] currentGuiStrings = { id2actionGroup[0].ToString(), 
-                                              id2actionGroup[1].ToString(),
-                                              id2actionGroup[2].ToString() };
-
-        public static KSPActionGroup map(int id) 
-        {
-            return id2actionGroup[id];
-        }
-
-        public static void LoadConfiguration()
-        {
-            // straight forward, reading the (action name, action group) tuples
-            KSP.IO.PluginConfiguration config = FARDebugOptions.config;
-            for (int i=0; i<ACTION_COUNT; ++i)
-            {
-                try 
-                {
-                    id2actionGroup[i] = (KSPActionGroup)Enum.Parse(typeof(KSPActionGroup), config.GetValue(configKeys[i], id2actionGroup[i].ToString()));;
-                    currentGuiStrings[i] = id2actionGroup[i].ToString(); // don't forget to initialize the gui
-                    Debug.Log(String.Format("FAR: loaded AG {0} as {1}", configKeys[i], id2actionGroup[i]));
-                }
-                catch (Exception e)
-                {
-                    Debug.LogWarning("FAR: error reading config key '"+configKeys[i]+"' with value '" + config.GetValue(configKeys[i], "n/a") + "' gave " + e.ToString());
-                }
-            }
-        }
-
-        public static void SaveConfigruration()
-        {
-            KSP.IO.PluginConfiguration config = FARDebugOptions.config;
-            for (int i=0; i<ACTION_COUNT; ++i)
-            {
-                Debug.Log(String.Format("FAR: save AG {0} as {1}", configKeys[i], id2actionGroup[i]));
-                config.SetValue(configKeys[i], id2actionGroup[i].ToString());
-            }
-        }
-
-        public static void DrawGUI()
-        {
-            GUIStyle label = new GUIStyle(GUI.skin.label);
-            label.normal.textColor = GUI.skin.toggle.normal.textColor;
-            GUILayout.Label("Default Action Group Assignments");
-            GUILayout.BeginHorizontal(); // left column: label, right column: text field
-            GUILayout.BeginVertical();
-            for (int i=0; i<FARActionGroupConfiguration.ACTION_COUNT; ++i)
-            {
-                GUILayout.Label(FARActionGroupConfiguration.guiLabels[i], label);
-            }
-            GUILayout.EndVertical();
-            GUILayout.BeginVertical();
-            for (int i=0; i<FARActionGroupConfiguration.ACTION_COUNT; ++i)
-            {
-                GUILayout.BeginHorizontal();
-                currentGuiStrings[i] = GUILayout.TextField(currentGuiStrings[i], GUILayout.Width(150));
-                bool ok = false;
-                try 
-                {
-                    id2actionGroup[i] = (KSPActionGroup)Enum.Parse(typeof(KSPActionGroup), currentGuiStrings[i]);
-                    ok = true;
-                    //Debug.Log(String.Format("FAR: set AG {0} to {1}", guiLabels[i], id2actionGroup[i]));
-                }
-                catch (Exception e)
-                {
-                }
-                GUILayout.Label(ok ? " Ok" : " Invalid", GUILayout.Width(50));
-                GUILayout.EndHorizontal();
-            }
-            GUILayout.EndVertical();
-            GUILayout.EndHorizontal(); // end of columns
-            GUILayout.BeginHorizontal(); // list admissible entries for ease of use. Unity has no comboboxes, so this has to do for now ...
-            GUILayout.Label("Admissible Entries ", label);
-            string[] names = Enum.GetNames(typeof(KSPActionGroup));
-            var sb = new System.Text.StringBuilder(256);
-            for (int i=0; i<names.Length; ++i)
-            {
-                sb.Append(names[i]);
-                if (i < names.Length-1) sb.Append(',');
-            }
-            GUILayout.Label(sb.ToString());
-            GUILayout.EndHorizontal();
-        }
-    }
-
-
-
     public class FARControllableSurface : FARWingAerodynamicModel
-    {
-        
-        
+    {        
         protected Transform movableSection = null;
 
         protected Transform MovableSection
