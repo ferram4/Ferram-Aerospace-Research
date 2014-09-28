@@ -307,6 +307,7 @@ namespace ferram4
                 part.OnEditorAttach += OnWingAttach;
                 part.OnEditorDetach += OnWingDetach;
             }
+            MathAndFunctionInitialization();
 
 
             if (part is ControlSurface)
@@ -329,8 +330,6 @@ namespace ferram4
                 w.maximum_drag = 0;
                 w.minimum_drag = 0;
             }
-
-            MathAndFunctionInitialization();
             Fields["currentLift"].guiActive = FARDebugValues.displayForces;
             Fields["currentDrag"].guiActive = FARDebugValues.displayForces;
 
@@ -610,7 +609,9 @@ namespace ferram4
 
                 RaycastHit hit = new RaycastHit();
                 float distance = Mathf.Max((float)(3 * effective_MAC), 0.1f);
-                RaycastHit[] hits = Physics.SphereCastAll(new Ray(CurWingCentroid, ParallelInPlane), Mathf.Min((float)MAC * 0.1f, distance * 0.05f), distance, FARAeroUtil.RaycastMask);
+                Ray tmpRay = new Ray((Vector3)CurWingCentroid, (Vector3)ParallelInPlane);
+                float sphereRad = Mathf.Min((float)MAC * 0.1f, distance * 0.05f);
+                RaycastHit[] hits = Physics.SphereCastAll(tmpRay, sphereRad, distance, FARAeroUtil.RaycastMask);
 
                 for (int i = 0; i < hits.Length; i++)
                 {
@@ -644,9 +645,11 @@ namespace ferram4
                     if (hit.collider.attachedRigidbody || HighLogic.LoadedSceneIsEditor)
                     {
                         Part p = null;
+
                         if (hit.collider.attachedRigidbody)
                             p = hit.collider.attachedRigidbody.GetComponent<Part>();
-                        if (p == null && HighLogic.LoadedSceneIsEditor)
+
+                        if ((object)p == null && HighLogic.LoadedSceneIsEditor)
                             for (int i = 0; i < VesselPartList.Count; i++)
                             {
                                 Part q = VesselPartList[i];
@@ -674,6 +677,7 @@ namespace ferram4
                                 if (breakBool)
                                     break;
                             }
+
                         if (p != null && p != this.part)
                         {
                             if (HighLogic.LoadedSceneIsFlight && p.vessel != vessel)
@@ -703,7 +707,7 @@ namespace ferram4
 
             if ((object)WingInFrontOf != null)
             {
-                var w = WingInFrontOf;
+                FARWingAerodynamicModel w = WingInFrontOf;
 
                 double angle = Vector3.Dot(w.liftDirection, this.liftDirection);        //This deals with the effect of a part being attached at a strange angle and reducing the effect, so that a vertical stabilizer placed on a wing doesn't affect the lift of the wing
                 

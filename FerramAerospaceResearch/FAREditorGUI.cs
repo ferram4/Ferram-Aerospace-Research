@@ -402,15 +402,15 @@ namespace ferram4
             if (EditorLogic.fetch.editorScreen == EditorLogic.EditorScreen.Actions && selectedParts.Count > 0)
             {
                 Part p = selectedParts[0];  //Selected parts should only ever be symmetry counterparts
-                PartModule m = null;
-                m = p.Modules["FARBasicDragModel"];
-                if (m == null)
-                {
-                    m = p.Modules["FARWingAerodynamicModel"];
-                    DisplayFARModuleProperties((FARWingAerodynamicModel)m);
-                }
+                FARBasicDragModel d = null;
+                d = p.GetComponent<FARBasicDragModel>();
+                if ((object)d != null)
+                    DisplayFARModuleProperties(d);
                 else
-                    DisplayFARModuleProperties((FARBasicDragModel)m);
+                {
+                    FARWingAerodynamicModel w = p.GetComponent<FARWingAerodynamicModel>();
+                    DisplayFARModuleProperties(w);
+                }
             }
             else
                 GUILayout.Label("Switch to Action Groups Menu and select a part to display FAR Module Properties");

@@ -226,6 +226,8 @@ namespace ferram4
             {
                 Fields["Cl"].guiActive = Fields["Cd"].guiActive = Fields["Cm"].guiActive = FARDebugValues.displayCoefficients;
             }
+
+            FARGUIUtils.defaultHighlightColor = part.highlightColor;
         }
 
         public virtual void LateUpdate()
@@ -244,7 +246,10 @@ namespace ferram4
             if (active)
                 part.SetHighlightType(Part.HighlightType.AlwaysOn);
             else
-                part.SetHighlightType(Part.HighlightType.Disabled);
+            {
+                tintColor = FARGUIUtils.defaultHighlightColor;
+                part.SetHighlightType(Part.HighlightType.OnMouseOver);
+            }
 
             part.SetHighlightColor(tintColor);
             part.SetHighlight(active);
