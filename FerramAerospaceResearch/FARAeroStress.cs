@@ -282,7 +282,7 @@ namespace ferram4
                         if (crossSectionalArea / d.S <= 0.1 && d.S > area * 0.2 * Math.Sqrt(1 - dotProd * dotProd))
                             isGreeble = true;
                 }
-                else if (parent.Modules.Contains("FARWingAerodynamicModel"))
+                else if (parent.Modules.Contains("FARWingAerodynamicModel") || parent.Modules.Contains("FARControllableSurface"))
                 {
                     FARWingAerodynamicModel w = parent.GetComponent<FARWingAerodynamicModel>();
 
