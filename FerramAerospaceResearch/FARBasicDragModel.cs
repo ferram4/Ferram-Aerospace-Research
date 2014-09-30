@@ -107,7 +107,7 @@ namespace ferram4
         //private float M = 0;
 
         private bool animatingPart = false;
-        private bool currentlyAnimating = true;
+        private bool currentlyAnimating = false;
         private Animation anim = null;
 
         private Quaternion to_model_rotation = Quaternion.identity;
@@ -779,6 +779,27 @@ namespace ferram4
                 double.TryParse(node.GetValue("cosAngleCutoff"), out cosAngleCutoff);
             if (node.HasValue("ignoreAnim"))
                 bool.TryParse(node.GetValue("ignoreAnim"), out ignoreAnim);
+
+            if(node.HasNode("CdCurve"))
+            {
+                CdCurve = new FloatCurve();
+                CdCurve.Load(node.GetNode("CdCurve"));
+            }
+            if (node.HasNode("ClPotentialCurve"))
+            {
+                ClPotentialCurve = new FloatCurve();
+                ClPotentialCurve.Load(node.GetNode("ClPotentialCurve"));
+            }
+            if (node.HasNode("ClViscousCurve"))
+            {
+                ClViscousCurve = new FloatCurve();
+                ClViscousCurve.Load(node.GetNode("ClViscousCurve"));
+            }
+            if (node.HasNode("CmCurve"))
+            {
+                CmCurve = new FloatCurve();
+                CmCurve.Load(node.GetNode("CmCurve"));
+            }
         }
 
         //Blank save node ensures that nothing for this partmodule is saved

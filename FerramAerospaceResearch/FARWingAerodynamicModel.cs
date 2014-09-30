@@ -81,7 +81,7 @@ namespace ferram4
         public double MidChordSweep;
         private double MidChordSweepSideways = 0;
 
-        private double SweepAngle = 0;
+        private double cosSweepAngle = 0;
 
         private double effective_b_2 = 1;
         private double effective_MAC = 1;
@@ -266,7 +266,7 @@ namespace ferram4
                 //This is for the transonic instability, which is lessened for highly swept wings
                 else
                 {
-                    double sweepFactor = SweepAngle * SweepAngle * tmp;
+                    double sweepFactor = cosSweepAngle * cosSweepAngle * tmp;
                     if (MachNumber < 0.9)
                         AC_offset = effective_MAC * ((MachNumber - 0.85) * 2 * sweepFactor + 0.25) * ParallelInPlane;
                     else
@@ -472,7 +472,7 @@ namespace ferram4
             Vector3d force = (L + D) * 0.001;
             if (double.IsNaN(force.sqrMagnitude) || double.IsNaN(AerodynamicCenter.sqrMagnitude))// || float.IsNaN(moment.magnitude))
             {
-                Debug.LogWarning("FAR Error: Aerodynamic force = " + force.magnitude + " AC Loc = " + AerodynamicCenter.magnitude + " AoA = " + AoA + "\n\rMAC = " + effective_MAC + " B_2 = " + effective_b_2 + " sweepAngle = " + SweepAngle + "\n\rMidChordSweep = " + MidChordSweep + " MidChordSweepSideways = " + MidChordSweepSideways + "\n\r at " + part.name);
+                Debug.LogWarning("FAR Error: Aerodynamic force = " + force.magnitude + " AC Loc = " + AerodynamicCenter.magnitude + " AoA = " + AoA + "\n\rMAC = " + effective_MAC + " B_2 = " + effective_b_2 + " sweepAngle = " + cosSweepAngle + "\n\rMidChordSweep = " + MidChordSweep + " MidChordSweepSideways = " + MidChordSweepSideways + "\n\r at " + part.name);
                 force = AerodynamicCenter = Vector3d.zero;
             }
 
@@ -561,6 +561,7 @@ namespace ferram4
 
         #region Interactive Effects
 
+        //Uses raycasting to find a wing part in front of this part
         private void FindWingInFrontOf()
         {
             if (HighLogic.LoadedSceneIsFlight)
@@ -688,7 +689,8 @@ namespace ferram4
             }
         }
 
-        private void GetWingInFrontOf(double MachNumber, double AoA, out double ACshift, out double ACweight, out double wStall)
+        //Calculates camber and flap effects due to wing interactions
+        private void CalculateWingCamberInteractions(double MachNumber, double AoA, out double ACshift, out double ACweight, out double wStall)
         {
             ACshift = 0;
             ACweight = 0;
@@ -730,31 +732,32 @@ namespace ferram4
                 this.ClIncrementFromRear = ClIncrement * MachCoeff;
 
                 liftslope = w.liftslope;
-                SweepAngle = w.SweepAngle;
+                cosSweepAngle = w.cosSweepAngle;
                 
 
                 wStall = w.stall * Math.Abs(liftDirVal);
                 if (Math.Abs(liftDirVal) > 0.5)
                 {
-                    this.AoAmax = (w.AoAmax + GetAoAmax()) * 0.5;
+                    this.AoAmax = (w.AoAmax + CalculateAoAmax()) * 0.5;
                     this.AoAmax += (AoA - wAoA) * Math.Sign(AoA); //  less efficient than before since we calculate AoA again
                 }
                 else
-                    AoAmax = GetAoAmax();
+                    AoAmax = CalculateAoAmax();
             }
             else
-                AoAmax = GetAoAmax();
+                AoAmax = CalculateAoAmax();
         }
 
         #endregion
 
+        //Calculates current stall fraction based on previous stall fraction and current data.
         private void DetermineStall(double MachNumber, double AoA, out double ACshift, out double ACweight)
         {
             double lastStall = stall;
             double tmp = 0;
             stall = 0;
 
-            GetWingInFrontOf(MachNumber, AoA, out ACshift, out ACweight, out tmp);
+            CalculateWingCamberInteractions(MachNumber, AoA, out ACshift, out ACweight, out tmp);
 
             double absAoA = Math.Abs(AoA);
 
@@ -790,21 +793,21 @@ namespace ferram4
 
             minStall = 0;
 
-            liftslope = GetLiftSlope(MachNumber);// / AoA;     //Prandtl lifting Line
+            liftslope = CalculateSubsonicLiftSlope(MachNumber);// / AoA;     //Prandtl lifting Line
 
 
             double ACshift = 0, ACweight = 0;
             DetermineStall(MachNumber, AoA, out ACshift, out ACweight);
 
             double beta = Math.Sqrt(MachNumber * MachNumber - 1);
-            double TanSweep = Math.Tan(FARMathUtil.Clamp(Math.Acos(SweepAngle), 0, Math.PI * 0.5));
+            double TanSweep = Math.Tan(FARMathUtil.Clamp(Math.Acos(cosSweepAngle), 0, Math.PI * 0.5));
             double beta_TanSweep = beta / TanSweep;
 
             if (double.IsNaN(beta_TanSweep))
                 beta_TanSweep = 0;
 
-            double Cd0 = CdCompressibilityZeroLiftIncrement(MachNumber, SweepAngle, TanSweep, beta_TanSweep, beta) + 0.006;
-            e = FARAeroUtil.CalculateOswaldsEfficiency(effective_AR, SweepAngle, Cd0);
+            double Cd0 = CdCompressibilityZeroLiftIncrement(MachNumber, cosSweepAngle, TanSweep, beta_TanSweep, beta) + 0.006;
+            e = FARAeroUtil.CalculateOswaldsEfficiency(effective_AR, cosSweepAngle, Cd0);
             piARe = effective_AR * e * Math.PI;
 
 //            Debug.Log("Part: " + part.partInfo.title + " AoA: " + AoA);
@@ -869,7 +872,7 @@ namespace ferram4
                 if (double.IsNaN(beta) || beta < 0.66332495807107996982298654733414)
                     beta = 0.66332495807107996982298654733414;
 
-                TanSweep = Math.Tan(FARMathUtil.Clamp(Math.Acos(SweepAngle), 0, Math.PI * 0.5));
+                TanSweep = Math.Tan(FARMathUtil.Clamp(Math.Acos(cosSweepAngle), 0, Math.PI * 0.5));
                 beta_TanSweep = beta / TanSweep;
                 if (double.IsNaN(beta_TanSweep))
                     beta_TanSweep = 0;
@@ -920,7 +923,7 @@ namespace ferram4
 
         #region Supersonic Calculations
 
-
+        //Calculates effect of the Mach cone being in front of, along, or behind the leading edge of the wing
         private double CalculateSupersonicLEFactor(double beta, double TanSweep, double beta_TanSweep)
         {
             double SupersonicLEFactor = 1;
@@ -993,7 +996,7 @@ namespace ferram4
             return pRatio;
         }
 
-
+        //Calculates pressure ratio of turning a supersonic flow through a particular angle using a shockwave
         private double ShockWaveCalculationNoSpline(double angle, double inM, out double outM, double maxSinBeta, double minSinBeta)
         {
             //float sinBeta = (maxBeta - minBeta) * angle / maxTheta + minBeta;
@@ -1017,6 +1020,7 @@ namespace ferram4
             return pRatio;
         }
 
+        //Calculates pressure ratio due to turning a supersonic flow through a Prandtl-Meyer Expansion
         private double PMExpansionCalculationNoSpline(double angle, double inM, out double outM, double maxBeta, double minBeta)
         {
             inM = FARMathUtil.Clamp(inM, 1, double.PositiveInfinity);
@@ -1037,6 +1041,7 @@ namespace ferram4
             return ratio;
         }
 
+        //Calculates pressure ratio due to turning a supersonic flow through a Prandtl-Meyer Expansion
         private double PMExpansionCalculationNoSpline(double angle, double inM, double maxBeta, double minBeta)
         {
             inM = FARMathUtil.Clamp(inM, 1, double.PositiveInfinity);
@@ -1094,6 +1099,7 @@ namespace ferram4
         }
 
 
+        //Calculates pressure ratio of turning a supersonic flow through a particular angle using a shockwave
         private double ShockWaveCalculation(double angle, double inM, out double outM, double maxSinBeta, double minSinBeta)
         {
             //float sinBeta = (maxBeta - minBeta) * angle / maxTheta + minBeta;
@@ -1117,6 +1123,7 @@ namespace ferram4
             return pRatio;
         }
 
+        //Calculates pressure ratio due to turning a supersonic flow through a Prandtl-Meyer Expansion
         private double PMExpansionCalculation(double angle, double inM, out double outM, double maxBeta, double minBeta)
         {
             inM = FARMathUtil.Clamp(inM, 1, double.PositiveInfinity);
@@ -1135,6 +1142,7 @@ namespace ferram4
             return ratio;
         }
 
+        //Calculates pressure ratio due to turning a supersonic flow through a Prandtl-Meyer Expansion
         private double PMExpansionCalculation(double angle, double inM, double maxBeta, double minBeta)
         {
             inM = FARMathUtil.Clamp(inM, 1, double.PositiveInfinity);
@@ -1155,7 +1163,8 @@ namespace ferram4
 
         #endregion
 
-        protected double GetAoAmax()
+        //Short calculation for peak AoA for stalling
+        protected double CalculateAoAmax()
         {
             double StallAngle;
             StallAngle = criticalCl / liftslope;
@@ -1164,7 +1173,8 @@ namespace ferram4
 
         }
 
-        private double GetLiftSlope(double MachNumber)
+        //Calculates subsonic liftslope
+        private double CalculateSubsonicLiftSlope(double MachNumber)
         {
             double sweepHalfChord = MidChordSweep * FARMathUtil.deg2rad;
 
@@ -1223,22 +1233,22 @@ namespace ferram4
 
         }
 
-
+        //Transforms sweep of the midchord to cosine(sweep of the leading edge)
         private void SetSweepAngle(double sweepHalfChord)
         {
-            SweepAngle = sweepHalfChord;
-            SweepAngle = Math.Tan(SweepAngle);
+            cosSweepAngle = sweepHalfChord;
+            cosSweepAngle = Math.Tan(cosSweepAngle);
             double tmp = (1 - TaperRatio) / (1 + TaperRatio);
             tmp *= 2 / transformed_AR;
-            SweepAngle += tmp;
-            SweepAngle = Math.Cos(Math.Atan(SweepAngle));
+            cosSweepAngle += tmp;
+            cosSweepAngle = Math.Cos(Math.Atan(cosSweepAngle));
         }
 
 
         #region Compressibility
 
         /// <summary>
-        /// This modifies the Cd to account for compressibility effects
+        /// This modifies the Cd to account for compressibility effects due to increasing Mach number
         /// </summary>
         private double CdCompressibilityZeroLiftIncrement(double M, double SweepAngle, double TanSweep, double beta_TanSweep, double beta)
         {

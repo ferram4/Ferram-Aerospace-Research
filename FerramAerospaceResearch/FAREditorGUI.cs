@@ -409,7 +409,8 @@ namespace ferram4
                 else
                 {
                     FARWingAerodynamicModel w = p.GetComponent<FARWingAerodynamicModel>();
-                    DisplayFARModuleProperties(w);
+                    if((object)w != null)
+                        DisplayFARModuleProperties(w);
                 }
             }
             else
