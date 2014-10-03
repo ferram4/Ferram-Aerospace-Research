@@ -17,7 +17,7 @@ namespace ferram4
         /// A WindFunction takes the current celestial body and a position (should be the position of the part)
         /// and returns the wind as a Vector3 (unit is m/s)
         /// </summary>
-        public delegate Vector3 WindFunction(CelestialBody body, Vector3 position);
+        public delegate Vector3 WindFunction(CelestialBody body, Part part, Vector3 position);
 
 
         /// <summary>
@@ -31,11 +31,11 @@ namespace ferram4
         /// If any exception occurs, it is suppressed and Vector3.zero is returned.
         /// This function will never throw, (although it will spam the log).
         /// </summary>
-        public static Vector3 GetWind(CelestialBody body, Vector3 position)
+        public static Vector3 GetWind(CelestialBody body, Part part, Vector3 position)
         {
             try
             {
-                return func(body, position);
+                return func(body, part, position);
             }
             catch (Exception e)
             {
@@ -64,7 +64,7 @@ namespace ferram4
         }
 
 
-        public static Vector3 ZeroWind(CelestialBody body, Vector3 position)
+        public static Vector3 ZeroWind(CelestialBody body, Part part, Vector3 position)
         {
             return Vector3.zero;
         }        
