@@ -34,91 +34,6 @@ using UnityEngine;
 
 namespace NEAR
 {
-    // An accumulator class for summarizing a set of forces acting on the body
-    public class FARCenterQuery
-    {
-        // Total force.
-        public Vector3d force = Vector3d.zero;
-        // Torque needed to compensate if force were applied at origin.
-        public Vector3d torque = Vector3d.zero;
-
-        // Weighted average of force positions used as aid in choosing the
-        // single center location on the line of physically equivalent ones.
-        public Vector3d pos = Vector3d.zero;
-        public double amount = 0.0;
-
-        // Record a force applied at a point
-        public void AddForce(Vector3d npos, Vector3d nforce)
-        {
-            double size = nforce.magnitude;
-            force += nforce;
-            torque += Vector3d.Cross(npos, nforce);
-            pos += npos*size;
-            amount += size;
-        }
-
-        // Record an abstracted torque; point of application does not matter.
-        public void AddTorque(Vector3d ntorque)
-        {
-            torque += ntorque;
-        }
-
-        // Merge two force sets
-        public void AddAll(FARCenterQuery q2) {
-            force += q2.force;
-            torque += q2.torque;
-            pos += q2.pos;
-            amount += q2.amount;
-        }
-
-        // Returns a center of weight-like average of force positions.
-        // Unless all forces are strictly parallel it doesn't mean much.
-        public Vector3d GetPos()
-        {
-            return amount > 0 ? pos / amount : Vector3d.zero;
-        }
-
-        public void SetPos(Vector3d npos)
-        {
-            pos = npos;
-            amount = 1;
-        }
-
-        // Compensating torque at different origin.
-        public Vector3d TorqueAt(Vector3d origin)
-        {
-            return torque - Vector3d.Cross(origin, force);
-        }
-
-        // Returns a point that requires minimal residual torque
-        // (or even 0 if possible) and is closest to origin.
-        // Any remaining torque is always parallel to force.
-        public Vector3d GetMinTorquePos(Vector3d origin)
-        {
-            double fmag = force.sqrMagnitude;
-            if (fmag <= 0) return origin;
-
-            return origin + Vector3d.Cross(force, TorqueAt(origin)) / fmag;
-        }
-
-        public Vector3d GetMinTorquePos()
-        {
-            return GetMinTorquePos(GetPos());
-        }
-
-        // The physics engine limits torque that can be applied to a single
-        // object. This tries to replicate it based on results of experiments.
-        // In practice this is probably not necessary for FAR, but since this
-        // knowledge has been obtained, might as well turn it into code.
-        public static float TorqueClipFactor(Vector3 torque, Rigidbody body)
-        {
-            Vector3 tq = Quaternion.Inverse(body.rotation * body.inertiaTensorRotation) * torque;
-            Vector3 tensor = body.inertiaTensor;
-            float acceleration = new Vector3(tq.x/tensor.x, tq.y/tensor.y, tq.z/tensor.z).magnitude;
-            return Mathf.Max(1.0f, acceleration * Time.fixedDeltaTime / body.maxAngularVelocity);
-        }
-    }
-
     public abstract class FARBaseAerodynamics : FARPartModule
     {
         [KSPField(isPersistant = false, guiActive = false)]
@@ -128,7 +43,6 @@ namespace NEAR
         [KSPField(isPersistant = false, guiActive = false)]
         public double Cm;
 
-        
         //protected float MachNumber = 0;
         protected Vector3d velocityEditor = Vector3.zero;
 
@@ -137,11 +51,13 @@ namespace NEAR
         protected static Ray ray;
         protected static RaycastHit hit;
 
-        [KSPField(isPersistant = false)]
+        //[KSPField(isPersistant = false, guiActive = true)]
         public double S;
 
         [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
         public bool isShielded = false;
+
+        
 
         public static bool GlobalCoLReady = false;
         private static Vector3d GlobalCoL;
@@ -151,11 +67,16 @@ namespace NEAR
         {
             base.OnAwake();
             part_transform = part.partTransform;
+
+            //refArea = S;
+            //Terrible, hacky fix for part.partTransform going bad
+            if (part.partTransform == null && part == part.vessel.rootPart)
+                part_transform = vessel.vesselTransform;
         }
 
-        public override void OnStart(PartModule.StartState state)
+        public override void Start()
         {
-            base.OnStart(state);
+            base.Start();
 
             part.OnEditorDetach += ClearShielding;
         }
@@ -187,7 +108,6 @@ namespace NEAR
             else
                 return velocityEditor;
         }
-
 
         protected virtual void ResetCenterOfLift()
         {

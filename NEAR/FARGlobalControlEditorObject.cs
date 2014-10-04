@@ -28,10 +28,10 @@ Copyright 2014, Michael Ferrara, aka Ferram4
  *
  */
 
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using KSP.IO;
 
@@ -44,7 +44,8 @@ namespace NEAR
         private int part_count_all = -1;
         private int part_count_ship = -1;
 
-        public static bool EditorPartsChanged = false;
+
+        public static bool EditorPartsChanged = true;
 
         public void Awake()
         {
@@ -72,33 +73,44 @@ namespace NEAR
                     if (part_count_all != editorShip.Count || part_count_ship != EditorLogic.SortedShipList.Count || EditorPartsChanged)
                     {
                         FindPartsWithoutFARModel(editorShip);
-                        foreach (Part p in editorShip)
-                            foreach (PartModule m in p.Modules)
+                        for (int i = 0; i < editorShip.Count; i++)
+                        {
+                            Part p = editorShip[i];
+                            for (int j = 0; j < p.Modules.Count; j++)
+                            {
+                                PartModule m = p.Modules[j];
                                 if (m is FARBaseAerodynamics)
                                     (m as FARBaseAerodynamics).ClearShielding();
+                            }
+                        }
 
-                        foreach (Part p in editorShip)
-                            foreach (PartModule m in p.Modules)
+                        for (int i = 0; i < editorShip.Count; i++)
+                        {
+                            Part p = editorShip[i];
+                            for (int j = 0; j < p.Modules.Count; j++)
+                            {
+                                PartModule m = p.Modules[j];
                                 if (m is FARPartModule)
                                     (m as FARPartModule).ForceOnVesselPartsChange();
-
+                            }
+                        }
                         part_count_all = editorShip.Count;
                         part_count_ship = EditorLogic.SortedShipList.Count;
                         EditorPartsChanged = false;
                     }
                 }
-
             }
-
         }
-
 
         private bool FindPartsWithoutFARModel(List<Part> editorShip)
         {
             bool returnValue = false;
-            foreach (Part p in editorShip)
+
+            for (int i = 0; i < editorShip.Count; i++)
             {
-                if(p == null)
+                Part p = editorShip[i];
+
+                if (p == null)
                     continue;
 
                 if (p != null && FARAeroUtil.IsNonphysical(p) &&
@@ -113,8 +125,9 @@ namespace NEAR
                 if (p.Modules.Contains("FARBasicDragModel"))
                 {
                     List<PartModule> modulesToRemove = new List<PartModule>();
-                    foreach (PartModule m in p.Modules)
+                    for (int j = 0; j < p.Modules.Count; j++)
                     {
+                        PartModule m = p.Modules[j];
                         if (!(m is FARBasicDragModel))
                             continue;
                         FARBasicDragModel d = m as FARBasicDragModel;
@@ -122,13 +135,16 @@ namespace NEAR
                         {
                             modulesToRemove.Add(m);
                         }
+
                     }
                     if (modulesToRemove.Count > 0)
                     {
-                        foreach (PartModule m in modulesToRemove)
+                        for (int j = 0; j < modulesToRemove.Count; j++)
                         {
+                            PartModule m = modulesToRemove[j];
+
                             p.RemoveModule(m);
-                            Debug.Log("Removing Incomplete NEAR Drag Module");
+                            Debug.Log("Removing Incomplete FAR Drag Module");
                         }
                         if (p.Modules.Contains("FARPayloadFairingModule"))
                             p.RemoveModule(p.Modules["FARPayloadFairingModule"]);
@@ -143,8 +159,6 @@ namespace NEAR
 
                 if (p is StrutConnector || p is FuelLine || p is ControlSurface || p is Winglet || FARPartClassification.ExemptPartFromGettingDragModel(p, title))
                     continue;
-
-
 
                 FARPartModule q = p.GetComponent<FARPartModule>();
                 if (q != null)
@@ -191,7 +205,7 @@ namespace NEAR
                 if (b != null)
                     b.VesselPartList = editorShip;             //This prevents every single part in the ship running this due to VesselPartsList not being initialized
 
-               
+
             }
             return returnValue;
         }
@@ -203,148 +217,4 @@ namespace NEAR
         }
     }
 
-    [KSPAddon(KSPAddon.Startup.Flight, false)]
-    public class FARGlobalControlFlightObject : UnityEngine.MonoBehaviour
-    {
-        //private List<Vessel> vesselsWithFARModules = null;
-        //private Dictionary<Vessel, List<FARPartModule>> vesselFARPartModules = new Dictionary<Vessel, List<FARPartModule>>();
-        static PluginConfiguration config;
-
-        public void Awake()
-        {
-            LoadConfigs();
-        }
-
-        public void Start()
-        {
-            GameEvents.onVesselLoaded.Add(FindPartsWithoutFARModel);
-            GameEvents.onVesselGoOffRails.Add(FindPartsWithoutFARModel);
-            GameEvents.onVesselWasModified.Add(UpdateFARPartModules);
-            GameEvents.onVesselCreate.Add(UpdateFARPartModules);
-        }
-
-        private void UpdateFARPartModules(Vessel v)
-        {
-            foreach (Part p in v.Parts)
-                foreach (PartModule m in p.Modules)
-                    if (m is FARPartModule)
-                        (m as FARPartModule).ForceOnVesselPartsChange();
-        }
-
-        private void FindPartsWithoutFARModel(Vessel v)
-        {
-            foreach (Part p in v.Parts)
-            {
-                if (p == null)
-                    continue;
-
-                string title = p.partInfo.title.ToLowerInvariant();
-
-
-                if (p.Modules.Contains("FARBasicDragModel"))
-                {
-                    List<PartModule> modulesToRemove = new List<PartModule>();
-                    foreach (PartModule m in p.Modules)
-                    {
-                        if (!(m is FARBasicDragModel))
-                            continue;
-                        FARBasicDragModel d = m as FARBasicDragModel;
-                        if (d.CdCurve == null || d.ClPotentialCurve == null || d.ClViscousCurve == null || d.CmCurve == null)
-                        {
-                            modulesToRemove.Add(m);
-                        }
-                    }
-                    if (modulesToRemove.Count > 0)
-                    {
-                        foreach (PartModule m in modulesToRemove)
-                        {
-                            p.RemoveModule(m);
-                            Debug.Log("Removing Incomplete NEAR Drag Module");
-                        }
-                        if (p.Modules.Contains("FARPayloadFairingModule"))
-                            p.RemoveModule(p.Modules["FARPayloadFairingModule"]);
-                        if (p.Modules.Contains("FARCargoBayModule"))
-                            p.RemoveModule(p.Modules["FARCargoBayModule"]);
-                        if (p.Modules.Contains("FARControlSys"))
-                            p.RemoveModule(p.Modules["FARControlSys"]);
-                    }
-                }
-
-                if (p is StrutConnector || p is FuelLine || p is ControlSurface || p is Winglet || FARPartClassification.ExemptPartFromGettingDragModel(p, title))
-                    continue;
-
-                FARPartModule q = p.GetComponent<FARPartModule>();
-                if (q != null)
-                    continue;
-
-                bool updatedModules = false;
-
-                if (FARPartClassification.PartIsCargoBay(p, title))
-                {
-                    if (!p.Modules.Contains("FARCargoBayModule"))
-                    {
-                        p.AddModule("FARCargoBayModule");
-                        PartModule m = p.Modules["FARCargoBayModule"];
-                        m.OnStart(PartModule.StartState.Flying);
-
-                        FARAeroUtil.AddBasicDragModule(p);
-                        m = p.Modules["FARBasicDragModel"];
-                        m.OnStart(PartModule.StartState.Flying);
-
-                        updatedModules = true;
-                    }
-                }
-                if (!updatedModules)
-                {
-                    if (FARPartClassification.PartIsPayloadFairing(p, title))
-                    {
-                        if (!p.Modules.Contains("FARPayloadFairingModule"))
-                        {
-                            p.AddModule("FARPayloadFairingModule");
-                            PartModule m = p.Modules["FARPayloadFairingModule"];
-                            m.OnStart(PartModule.StartState.Flying);
-
-                            FARAeroUtil.AddBasicDragModule(p);
-                            m = p.Modules["FARBasicDragModel"];
-                            m.OnStart(PartModule.StartState.Flying);
-                            updatedModules = true;
-                        }
-                    }
-
-                    if (!updatedModules && !p.Modules.Contains("FARBasicDragModel"))
-                    {
-                        FARAeroUtil.AddBasicDragModule(p);
-                        PartModule m = p.Modules["FARBasicDragModel"];
-                        m.OnStart(PartModule.StartState.Flying);
-
-                        updatedModules = true;
-                    }
-                }
-
-                //returnValue |= updatedModules;
-
-                FARPartModule b = p.GetComponent<FARPartModule>();
-                if (b != null)
-                    b.VesselPartList = p.vessel.Parts;             //This prevents every single part in the ship running this due to VesselPartsList not being initialized
-            }
-
-        }
-
-
-
-
-        void OnDestroy()
-        {
-            GameEvents.onVesselLoaded.Remove(FindPartsWithoutFARModel);
-            GameEvents.onVesselGoOffRails.Remove(FindPartsWithoutFARModel);
-            GameEvents.onVesselWasModified.Remove(UpdateFARPartModules);
-            GameEvents.onVesselCreate.Remove(UpdateFARPartModules);
-        }
-
-        public static void LoadConfigs()
-        {
-            FARPartClassification.LoadClassificationTemplates();
-            FARAeroUtil.LoadAeroDataFromConfig();
-        }
-    }
 }

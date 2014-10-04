@@ -50,18 +50,9 @@ namespace NEAR
         private List<Vector3> minBounds = new List<Vector3>();
         private List<Vector3> maxBounds = new List<Vector3>();
 
-        //private Vector3 minBounds = new Vector3();
-
-        //private Vector3 maxBounds = new Vector3();
-        private static StartState state;
-
-//        private LineRenderer line = null;
-
-
-        public override void OnStart(StartState start)
+        public override void Start()
         {
-            state = start;
-            base.OnStart(start);
+            base.Start();
             OnVesselPartsChange += FindShieldedParts;
             FindShieldedParts();
         }
@@ -74,24 +65,6 @@ namespace NEAR
             maxBounds.Clear();
             FindShieldedParts();
         }
-
-        public void FixedUpdate()
-        {
-//            if (start == StartState.Editor)
-//                return;
-
-            /*if (minBounds.Count == 0)
-            {
-                CalculateFairingBounds();
-                FindShieldedParts();
-            }*/
-            
-//            line.SetPosition(0, minBounds + part.transform.position);
-//            line.SetPosition(1, maxBounds + part.transform.position);
-            
-        }
-
-
 
         [KSPEvent(name = "FairingShapeChanged", active = true, guiActive = false, guiActiveUnfocused = false)]
         public void FairingShapeChanged()
@@ -108,21 +81,24 @@ namespace NEAR
         {
             Vector3 minBoundVec, maxBoundVec;
             minBoundVec = maxBoundVec = Vector3.zero;
-            foreach (Transform t in p.FindModelComponents<Transform>())
+            Transform[] transformList = part.FindModelComponents<Transform>();
+            for (int i = 0; i < transformList.Length; i++)
             {
+                Transform t = transformList[i];
+
                 MeshFilter mf = t.GetComponent<MeshFilter>();
-                if (mf == null)
+                if ((object)mf == null)
                     continue;
                 Mesh m = mf.mesh;
 
-                if (m == null)
+                if ((object)m == null)
                     continue;
 
                 var matrix = part.transform.worldToLocalMatrix * t.localToWorldMatrix;
 
-                foreach (Vector3 vertex in m.vertices)
+                for (int j = 0; j < m.vertices.Length; j++)
                 {
-                    Vector3 v = matrix.MultiplyPoint3x4(vertex);
+                    Vector3 v = matrix.MultiplyPoint3x4(m.vertices[j]);
 
                     maxBoundVec.x = Mathf.Max(maxBoundVec.x, v.x);
                     minBoundVec.x = Mathf.Min(minBoundVec.x, v.x);
@@ -145,27 +121,26 @@ namespace NEAR
         {
             if (part.parent != null)
             {
-                foreach (Part p in part.symmetryCounterparts)
+                for (int i = 0; i < part.symmetryCounterparts.Count; i++)
+                {
+                    Part p = part.symmetryCounterparts[i];
                     if (p.GetComponent<FARPayloadFairingModule>() != null)
                     {
                         CalculatePartBounds(p);
                     }
-
+                }
                 CalculatePartBounds(part);
             }
             else
                 CalculatePartBounds(part);
-
-            //minBounds.x *= 1.05f;
-            //maxBounds.x *= 1.05f;
-            //minBounds.z *= 1.05f;
-            //maxBounds.z *= 1.05f;
         }
 
         private void ClearShieldedParts()
         {
-            foreach (Part p in FARShieldedParts)
+            for (int i = 0; i < FARShieldedParts.Count; i++)
             {
+                Part p = FARShieldedParts[i];
+
                 if (p == null || p.Modules == null)
                     continue;
                 FARBaseAerodynamics b = null;
@@ -182,10 +157,9 @@ namespace NEAR
 
         private void FindShieldedParts()
         {
-            /*if (HighLogic.LoadedSceneIsEditor && FARAeroUtil.EditorAboutToAttach(false) &&
+            /*if (HighLogic.LoadedSceneIsEditor/* && FARAeroUtil.EditorAboutToAttach(false) &&
                 !FARAeroUtil.CurEditorParts.Contains(part))
                 return;*/
-
             if (minBounds.Count == 0)
             {
                 CalculateFairingBounds();
@@ -194,15 +168,17 @@ namespace NEAR
             ClearShieldedParts();
             UpdateShipPartsList();
 
-            foreach (Part p in VesselPartList)
+            for (int i = 0; i < VesselPartList.Count; i++)
             {
+                Part p = VesselPartList[i];
+
                 if (FARShieldedParts.Contains(p) || p == null || p == part || part.symmetryCounterparts.Contains(p))
                     continue;
-                
+
                 FARBaseAerodynamics b = null;
                 FARBasicDragModel d = null;
                 FARWingAerodynamicModel w = null;
-                Vector3 relPos = -this.part.transform.position;
+                Vector3 relPos = -part.transform.position;
                 w = p.GetComponent<FARWingAerodynamicModel>();
                 if ((object)w == null)
                 {
@@ -225,11 +201,11 @@ namespace NEAR
 
 
                 relPos = this.part.transform.worldToLocalMatrix.MultiplyVector(relPos);
-                for (int i = 0; i < minBounds.Count; i++)
+                for (int j = 0; j < minBounds.Count; j++)
                 {
                     Vector3 minBoundVec, maxBoundVec;
-                    minBoundVec = minBounds[i];
-                    maxBoundVec = maxBounds[i];
+                    minBoundVec = minBounds[j];
+                    maxBoundVec = maxBounds[j];
                     if (relPos.x < maxBoundVec.x && relPos.y < maxBoundVec.y && relPos.z < maxBoundVec.z && relPos.x > minBoundVec.x && relPos.y > minBoundVec.y && relPos.z > minBoundVec.z)
                     {
                         FARShieldedParts.Add(p);
@@ -238,8 +214,10 @@ namespace NEAR
                             b.isShielded = true;
                             //print("Shielded: " + p.partInfo.title);
                         }
-                        foreach (Part q in p.symmetryCounterparts)
+                        for (int k = 0; k < p.symmetryCounterparts.Count; k++)
                         {
+                            Part q = p.symmetryCounterparts[k];
+
                             if (q == null)
                                 continue;
                             FARShieldedParts.Add(q);
@@ -255,6 +233,12 @@ namespace NEAR
                 }
             }
             partsShielded = FARShieldedParts.Count;
+        }
+
+        //Blank save node ensures that nothing for this partmodule is saved
+        public override void OnSave(ConfigNode node)
+        {
+            //base.OnSave(node);
         }
     }
 }                                               

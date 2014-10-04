@@ -28,6 +28,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
  *
  */
 
+
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -48,23 +49,17 @@ namespace NEAR
         public Vector3 minBounds = new Vector3();
 
         public Vector3 maxBounds = new Vector3();
-        private static StartState state;
 
         private bool bayOpen = true;
 
-        //private PartModule BayAnim = null;
         private static int frameCounterCargo = 0;
         private static FARCargoBayModule BayController;
 
         private Animation bayAnim = null;
         private string bayAnimationName;
 
-//        [KSPField(guiActive = true, isPersistant = false)]
-//        private float bayProgress = 0;
-
         private bool bayAnimating = true;
 
-//        private LineRenderer line = null;
 
         [KSPEvent]
         private void UpdateCargoParts()
@@ -77,10 +72,9 @@ namespace NEAR
                 FindShieldedParts();
         }
 
-        public override void OnStart(StartState start)
+        public override void Start()
         {
-            state = start;
-            base.OnStart(start);
+            base.Start();
             BayAnimationSetup();
             OnVesselPartsChange += UpdateCargoParts;
         }
@@ -108,7 +102,6 @@ namespace NEAR
                         break;
                 }
             }
-            //bayProgress = bayAnim[bayAnimationName].normalizedTime;
         }
 
 
@@ -129,10 +122,11 @@ namespace NEAR
             float radius = Mathf.Min(1f, Mathf.Min(size.x, size.y, size.z) * 0.15f);
 
             RaycastHit[] hits = Physics.SphereCastAll(ray, radius, 100, FARAeroUtil.RaycastMask);
-            foreach (RaycastHit h in hits)
+            for (int i = 0; i < hits.Length; i++)
             {
+                RaycastHit h = hits[i];
                 if (h.collider.attachedRigidbody)
-                    if(h.collider.attachedRigidbody.GetComponent<Part>() == this.part)
+                    if (h.collider.attachedRigidbody.GetComponent<Part>() == this.part)
                     {
                         hitMyself = true;
                     }
@@ -183,7 +177,6 @@ namespace NEAR
         {
             if (HighLogic.LoadedSceneIsEditor)
                 return;
-
             if (bayAnim)
             {
                 if (bayAnim.isPlaying && !bayAnimating)
@@ -198,31 +191,34 @@ namespace NEAR
                     if (bayOpen && CheckBayClosed())
                         FindShieldedParts();
                 }
-//                bayProgress = bayAnim[bayAnimationName].normalizedTime;
 
             }
             else if (BayController == null)
                 BayController = this;
 
+
         }
 
         private void CalculateBayBounds()
         {
-            foreach (Transform t in part.FindModelComponents<Transform>())
+            Transform[] transformList = part.FindModelComponents<Transform>();
+            for (int i = 0; i < transformList.Length; i++)
             {
+                Transform t = transformList[i];
+
                 MeshFilter mf = t.GetComponent<MeshFilter>();
-                if (mf == null)
+                if ((object)mf == null)
                     continue;
                 Mesh m = mf.mesh;
 
-                if (m == null)
+                if ((object)m == null)
                     continue;
 
                 var matrix = part.transform.worldToLocalMatrix * t.localToWorldMatrix;
 
-                foreach (Vector3 vertex in m.vertices)
+                for (int j = 0; j < m.vertices.Length; j++)
                 {
-                    Vector3 v = matrix.MultiplyPoint3x4(vertex);
+                    Vector3 v = matrix.MultiplyPoint3x4(m.vertices[j]);
 
                     maxBounds.x = Mathf.Max(maxBounds.x, v.x);
                     minBounds.x = Mathf.Min(minBounds.x, v.x);
@@ -250,15 +246,17 @@ namespace NEAR
 
             double y_margin = Math.Max(0.12, 0.03 * (maxBounds.y-minBounds.y));
 
-            foreach (Part p in VesselPartList)
+            for (int i = 0; i < VesselPartList.Count; i++)
             {
+                Part p = VesselPartList[i];
+
                 if (FARShieldedParts.Contains(p)|| p == null || p == part || part.symmetryCounterparts.Contains(p))
                     continue;
 
                 FARBaseAerodynamics b = null;
                 FARBasicDragModel d = null;
                 FARWingAerodynamicModel w = null;
-                Vector3 relPos = -this.part.transform.position;
+                Vector3 relPos = -part.transform.position;
                 w = p.GetComponent<FARWingAerodynamicModel>();
                 if ((object)w == null)
                 {
@@ -289,27 +287,16 @@ namespace NEAR
                             p.parent == this.part && p.attachMode == AttachModes.STACK)
                             continue;
                     }
-/*                    if (w)
-                    {
-                        if (w.nonSideAttach <= 0)
-                        {
-                            relPos = p.transform.position - this.part.transform.position;
-                            relPos -= p.transform.right * Mathf.Sign(p.srfAttachNode.originalOrientation.x) * w.b_2;
 
-                            relPos = this.part.transform.worldToLocalMatrix.MultiplyVector(relPos);
-
-                            if (!(relPos.x < maxBounds.x && relPos.y < maxBounds.y && relPos.z < maxBounds.z && relPos.x > minBounds.x && relPos.y > minBounds.y && relPos.z > minBounds.z))
-                                continue;
-                        }
-                    }*/
                     FARShieldedParts.Add(p);
                     if (b)
                     {
                         b.isShielded = true;
                         //print("Shielded: " + p.partInfo.title);
                     }
-                    foreach (Part q in p.symmetryCounterparts)
+                    for (int j = 0; j < p.symmetryCounterparts.Count; j++)
                     {
+                        Part q = p.symmetryCounterparts[j];
                         if (q == null)
                             continue;
                         FARShieldedParts.Add(q);
@@ -322,41 +309,15 @@ namespace NEAR
                     }
                 }
             }
-            if (HighLogic.LoadedSceneIsEditor)
-                foreach (Vessel v in FlightGlobals.Vessels)
-                {
-                    if (v == this.vessel)
-                        continue;
-
-                    Vector3 relPos = v.transform.position - this.part.transform.position;
-                    relPos = this.part.transform.worldToLocalMatrix.MultiplyVector(relPos);
-                    if (relPos.x < maxBounds.x && relPos.y < maxBounds.y && relPos.z < maxBounds.z && relPos.x > minBounds.x && relPos.y > minBounds.y && relPos.z > minBounds.z)
-                    {
-                        foreach (Part p in v.Parts)
-                        {
-                            FARBaseAerodynamics b = null;
-                            b = p.GetComponent<FARBaseAerodynamics>();
-                            if (b == null)
-                                continue;
-
-                            FARShieldedParts.Add(p);
-                            if (b)
-                            {
-                                b.isShielded = true;
-                                //print("Shielded: " + p.partInfo.title);
-                            }
-
-                        }
-                    }
-                }
             partsShielded = FARShieldedParts.Count;
         }
 
         private void ClearShieldedParts()
         {
-//            print("Clearing Parts in Cargo Bay...");
-            foreach (Part p in FARShieldedParts)
+            for (int i = 0; i < FARShieldedParts.Count; i++)
             {
+                Part p = FARShieldedParts[i];
+
                 if (p == null)
                     continue;
                 FARBaseAerodynamics b = p.GetComponent<FARWingAerodynamicModel>() as FARBaseAerodynamics;
@@ -370,6 +331,11 @@ namespace NEAR
             FARShieldedParts.Clear();
             bayOpen = true;
             partsShielded = 0;
+        }
+
+        //Blank save node ensures that nothing for this partmodule is saved
+        public override void OnSave(ConfigNode node)
+        {
         }
     }
 }

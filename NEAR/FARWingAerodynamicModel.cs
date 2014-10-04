@@ -211,10 +211,9 @@ namespace NEAR
 
         #endregion
 
-        public override void OnStart(StartState state)
+        public override void Start()
         {
-            base.OnStart(state);
-
+            base.Start();
             if (part is ControlSurface)
             {
                 ControlSurface w = part as ControlSurface;

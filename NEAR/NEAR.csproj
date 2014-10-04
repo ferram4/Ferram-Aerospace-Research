@@ -55,9 +55,11 @@
     <Compile Include="FARBaseAerodynamics.cs" />
     <Compile Include="FARBasicDragModel.cs" />
     <Compile Include="FARCargoBayModule.cs" />
+    <Compile Include="FARCenterQuery.cs" />
     <Compile Include="FARControllableSurface.cs" />
     <Compile Include="FARGeoUtil.cs" />
-    <Compile Include="FARGlobalControlObject.cs" />
+    <Compile Include="FARGlobalControlEditorObject.cs" />
+    <Compile Include="FARGlobalControlFlightObject.cs" />
     <Compile Include="FARMathUtil.cs" />
     <Compile Include="FARPartClassification.cs" />
     <Compile Include="FARPartModule.cs" />

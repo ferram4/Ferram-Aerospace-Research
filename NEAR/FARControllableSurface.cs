@@ -28,20 +28,15 @@ Copyright 2014, Michael Ferrara, aka Ferram4
  *
  */
 
-
-
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using UnityEngine;
 using KSP;
 
 namespace NEAR
 {
     public class FARControllableSurface : FARWingAerodynamicModel
-    {
-        
-        
+    {        
         protected Transform movableSection = null;
 
         protected Transform MovableSection
@@ -50,7 +45,7 @@ namespace NEAR
             {
                 if (movableSection == null)
                 {
-                    movableSection = part.FindModelTransform("obj_ctrlSrf");     //And the transform
+                    movableSection = part.FindModelTransform(transformName);     //And the transform
                     if (!MovableOrigReady)
                     {
                         // In parts copied by symmetry, these fields should already be set,
@@ -76,6 +71,9 @@ namespace NEAR
         [KSPField(isPersistant = false)]
         public float ctrlSurfFrac = 1;
 
+        [KSPField(isPersistant = false)]
+        public string transformName = "obj_ctrlSrf";
+
         // These TWO fields MUST be set up so that they are copied by Object.Instantiate.
         // Otherwise detaching and re-attaching wings with deflected flaps etc breaks until save/load.
         [SerializeField]
@@ -97,23 +95,23 @@ namespace NEAR
         [KSPField(guiName = "Roll", isPersistant = true, guiActiveEditor = true, guiActive = false)]
         public bool rollaxis = true;
 
-        [UI_Toggle(enabledText = "True", scene = UI_Scene.Editor, disabledText = "False")]
-        [KSPField(guiName = "Use as flap", isPersistant = true, guiActiveEditor = true, guiActive = false)]
+        [UI_Toggle(enabledText = "Active", scene = UI_Scene.Editor, disabledText = "Inactive")]
+        [KSPField(guiName = "Flap", isPersistant = true, guiActiveEditor = true, guiActive = false)]
         public bool isFlap;
 
-        [UI_Toggle(enabledText = "True", scene = UI_Scene.Editor, disabledText = "False")]
-        [KSPField(guiName = "Use as spoiler", isPersistant = true, guiActiveEditor = true, guiActive = false)]
+        [UI_Toggle(enabledText = "Active", scene = UI_Scene.Editor, disabledText = "Inactive")]
+        [KSPField(guiName = "Spoiler", isPersistant = true, guiActiveEditor = true, guiActive = false)]
         public bool isSpoiler;
 
-        [KSPField(isPersistant = true, guiName = "Flap deflection")]
+        [KSPField(isPersistant = true, guiName = "Flap setting")]
         public int flapDeflectionLevel = 2;
 
         [UI_FloatRange(maxValue = 30, minValue = -15, scene = UI_Scene.Editor, stepIncrement = 0.5f)]
-        [KSPField(guiName = "Control Max Deflection", isPersistant = true)]
+        [KSPField(guiName = "Ctrl Dflct", isPersistant = true)]
         public float maxdeflect = 15;
 
         [UI_FloatRange(maxValue = 85, minValue = -30, scene = UI_Scene.Editor, stepIncrement = 0.5f)]
-        [KSPField(guiName = "Flap/Brake Max Deflection", isPersistant = true)]
+        [KSPField(guiName = "Flp/splr Dflct", isPersistant = true)]
         public float maxdeflectFlap = 15; 
         
         protected double PitchLocation = 0;
@@ -122,30 +120,30 @@ namespace NEAR
         protected int flapLocation = 0;
 
         private double AoAsign = 1;
-        private double AoAdesired = 0;
-        private double AoAfromflap = 0;
-        protected double AoAoffset = 0;
+        private double AoAdesiredControl = 0; //DaMichel: treat desired AoA's from flap and stick inputs separately for different animation rates
+        private double AoAdesiredFlap = 0;
+        private double AoAcurrentControl = 0; // current deflection due to control inputs
+        private double AoAcurrentFlap = 0; // current deflection due to flap/spoiler deployment
+        private double AoAoffset = 0; // total current deflection
 
         private double lastAoAoffset = 0;
-        private Vector3 deflectedNormal = Vector3.forward;
+        private Vector3d deflectedNormal = Vector3d.forward;
 
         public static double timeConstant = 0.25;
+        public static double timeConstantFlap = 0.2;
         private bool brake = false;
         private bool justStarted = false;
+
+        private Transform lastReferenceTransform = null;
 
 
         [KSPAction("Activate Spoiler", actionGroup = KSPActionGroup.Brakes)]
         public void ActivateSpoiler(KSPActionParam param)
         {
-            OnSpoilerActivate();
+            brake = !(param.type > 0);
         }
 
-        private void OnSpoilerActivate()
-        {
-            brake = !brake;
-        }
-
-        [KSPAction("Increase Flap Deflection")]
+        [KSPAction("Increase Flap Deflection", actionGroup = KSPActionGroup.None)]
         public void IncreaseDeflect(KSPActionParam param)
         {
             param.Cooldown = 0.25f;
@@ -159,7 +157,7 @@ namespace NEAR
             UpdateFlapDeflect();
         }
 
-        [KSPAction("Decrease Flap Deflection")]
+        [KSPAction("Decrease Flap Deflection", actionGroup = KSPActionGroup.None)]
         public void DecreaseDeflect(KSPActionParam param)
         {
             param.Cooldown = 0.25f;
@@ -174,10 +172,16 @@ namespace NEAR
         }
         private void UpdateFlapDeflect()
         {
-            foreach (Part p in part.symmetryCounterparts)
-                foreach (PartModule m in p.Modules)
+            for (int i = 0; i < part.symmetryCounterparts.Count; i++)
+            {
+                Part p = part.symmetryCounterparts[i];
+                for (int j = 0; j < p.Modules.Count; j++)
+                {
+                    PartModule m = p.Modules[j];
                     if (m is FARControllableSurface)
                         (m as FARControllableSurface).SetDeflection(this.flapDeflectionLevel);
+                }
+            }
         }
 
         private void SetDeflection(int newstate)
@@ -192,9 +196,9 @@ namespace NEAR
             Events["DeflectMore"].active = isFlap && flapDeflectionLevel < 3;
             Events["DeflectLess"].active = isFlap && flapDeflectionLevel > 0;
         }
-        public override void OnStart(StartState state)
+        public override void Start()
         {
-            base.OnStart(state);
+            base.Start();
             if (part.Modules.Contains("ModuleControlSurface"))
             {
                 part.RemoveModule(part.Modules["ModuleControlSurface"]);
@@ -203,6 +207,8 @@ namespace NEAR
             OnVesselPartsChange += CalculateSurfaceFunctions;
             UpdateEvents();
             justStarted = true;
+            if(vessel)
+                lastReferenceTransform = vessel.ReferenceTransform;
         }
 
         public override void FixedUpdate()
@@ -216,18 +222,26 @@ namespace NEAR
 
                 if (process && (object)MovableSection != null && part.Rigidbody)
                 {
+                    // Set member vars for desired AoA
                     if (isFlap == true)
                         AoAOffsetFromFlapDeflection();
                     else if (isSpoiler == true)
                         AoAOffsetFromSpoilerDeflection();
-                    
-                    AoAOffsetFromControl();
-
+                    AoAOffsetFromControl(); 
+                    //DaMichel: put deflection change here so that AoAOffsetFromControlInput does only the thing which the name suggests
+                    ChangeDeflection();
+                    DeflectionAnimation();
                 }
             }
 
             base.FixedUpdate();
             justStarted = false;
+
+            if(vessel && vessel.ReferenceTransform != lastReferenceTransform)
+            {
+                justStarted = true;
+                lastReferenceTransform = vessel.ReferenceTransform;
+            }
         }
 
         #region Deflection
@@ -256,16 +270,15 @@ namespace NEAR
             {
                 Vector3 CoM = Vector3.zero;
                 float mass = 0;
-                foreach (Part p in VesselPartList)
+                for (int i = 0; i < VesselPartList.Count; i++)
                 {
+                    Part p = VesselPartList[i];
+
                     CoM += p.transform.position * p.mass;
                     mass += p.mass;
+
                 }
-
                 CoM /= mass;
-
-                //if (HighLogic.LoadedSceneIsEditor && (isFlap || isSpoiler))
-                //    SetControlStateEditor(CoM, 0, 0, 0, FAREditorGUI.CurrentEditorFlapSetting, FAREditorGUI.CurrentEditorSpoilerSetting);
 
                 float roll2 = 0;
                 if (HighLogic.LoadedSceneIsEditor)
@@ -275,7 +288,7 @@ namespace NEAR
                     YawLocation = -Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.right) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.up));
                     RollLocation = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.forward) * Math.Sign(Vector3.Dot(CoMoffset, -EditorLogic.startPod.transform.right));
                     roll2 = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.right) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.forward));
-                    AoAsign = Math.Sign(Vector3.Dot(part.transform.up, vessel.transform.up));
+                    AoAsign = Math.Sign(Vector3.Dot(part.transform.up, EditorLogic.startPod.transform.up));
                 }
                 else
                 {
@@ -285,57 +298,58 @@ namespace NEAR
                     YawLocation = -Vector3.Dot(part.transform.forward, vessel.ReferenceTransform.right) * Math.Sign(Vector3.Dot(CoMoffset, vessel.ReferenceTransform.up));
                     RollLocation = Vector3.Dot(part.transform.forward, vessel.ReferenceTransform.forward) * Math.Sign(Vector3.Dot(CoMoffset, -vessel.ReferenceTransform.right));
                     roll2 = Vector3.Dot(part.transform.forward, vessel.ReferenceTransform.right) * Math.Sign(Vector3.Dot(CoMoffset, vessel.ReferenceTransform.forward));
-                    AoAsign = Math.Sign(Vector3.Dot(part.transform.up, vessel.transform.up));
+                    AoAsign = Math.Sign(Vector3.Dot(part.transform.up, vessel.ReferenceTransform.up));
                 }
                 //PitchLocation *= PitchLocation * Mathf.Sign(PitchLocation);
                 //YawLocation *= YawLocation * Mathf.Sign(YawLocation);
                 //RollLocation = RollLocation * RollLocation * Mathf.Sign(RollLocation) + roll2 * roll2 * Mathf.Sign(roll2);
                 RollLocation += roll2;
             }
+            //DaMichel: this is important to force a reset of the flap/spoiler model orientation to the desired value.
+            // What apparently happens on loading a new flight scene is that first the model (obj_ctrlSrf) 
+            // orientation is set correctly by DeflectionAnimation(). But then the orientations is mysteriously 
+            // zeroed-out. And this definitely doesn't happen in this module. However OnVesselPartsChange
+            // subscribers are called afterwards, so we have a chance to fix the broken orientation state.
+            lastAoAoffset = double.MaxValue;
         }
 
         private void AoAOffsetFromSpoilerDeflection()
         {
             if (brake)
-                AoAfromflap = maxdeflectFlap * flapLocation;
+                AoAdesiredFlap = maxdeflectFlap * flapLocation;
             else
-                AoAfromflap = 0;
-
-            AoAfromflap = FARMathUtil.Clamp(AoAfromflap, -Math.Abs(maxdeflectFlap), Math.Abs(maxdeflectFlap));
+                AoAdesiredFlap = 0;
+            AoAdesiredFlap = FARMathUtil.Clamp(AoAdesiredFlap, -Math.Abs(maxdeflectFlap), Math.Abs(maxdeflectFlap));
         }
 
         
         private void AoAOffsetFromFlapDeflection()
         {
-            AoAfromflap = maxdeflectFlap * flapLocation * flapDeflectionLevel * 0.33333333333;
-            AoAfromflap = FARMathUtil.Clamp(AoAfromflap, -Math.Abs(maxdeflectFlap), Math.Abs(maxdeflectFlap));
+            AoAdesiredFlap = maxdeflectFlap * flapLocation * flapDeflectionLevel * 0.33333333333;
+            AoAdesiredFlap = FARMathUtil.Clamp(AoAdesiredFlap, -Math.Abs(maxdeflectFlap), Math.Abs(maxdeflectFlap));
         }
 
         private void AoAOffsetFromControl()
         {
-            AoAdesired = 0;
+            AoAdesiredControl = 0;
             if ((object)vessel != null && vessel.staticPressure > 0)
             {
                 if (pitchaxis)
                 {
-                    AoAdesired += PitchLocation * vessel.ctrlState.pitch;
+                    AoAdesiredControl += PitchLocation * vessel.ctrlState.pitch;
                 }
                 if (yawaxis)
                 {
-                    AoAdesired += YawLocation * vessel.ctrlState.yaw;
+                    AoAdesiredControl += YawLocation * vessel.ctrlState.yaw;
                 }
                 if (rollaxis)
                 {
-                    AoAdesired += RollLocation * vessel.ctrlState.roll;
+                    AoAdesiredControl += RollLocation * vessel.ctrlState.roll;
                 }
 
-                AoAdesired *= AoAsign * maxdeflect;
-                AoAdesired = FARMathUtil.Clamp(AoAdesired, -Math.Abs(maxdeflect), Math.Abs(maxdeflect));
-                AoAdesired += AoAfromflap;
+                AoAdesiredControl *= AoAsign * maxdeflect;
+                AoAdesiredControl = FARMathUtil.Clamp(AoAdesiredControl, -Math.Abs(maxdeflect), Math.Abs(maxdeflect));
             }
-            ChangeDeflection(timeConstant);
-
-            DeflectionAnimation();
         }
 
         protected override double CalculateAoA(Vector3d velocity)
@@ -343,7 +357,7 @@ namespace NEAR
             // Use the vector computed by DeflectionAnimation
             Vector3d perp = part_transform.TransformDirection(deflectedNormal);
             double PerpVelocity = Vector3d.Dot(perp, velocity.normalized);
-            return Math.Asin(PerpVelocity);
+            return Math.Asin(FARMathUtil.Clamp(PerpVelocity, -1, 1));
         }
 
         // Had to add this one since the parent class don't use AoAoffset and adding it would break GetWingInFrontOf
@@ -355,22 +369,44 @@ namespace NEAR
             return Math.Asin(PerpVelocity);
         }
 
-        private void ChangeDeflection(double timeconstant)
+        //DaMichel: Factored the time evolution for deflection AoA into this function. This one results into an exponential asympotic
+        //"decay" towards the desired value. Good for stick inputs, i suppose, and the original method.
+        private static double BlendDeflectionExp(double current, double desired, double timeConstant, bool forceSetToDesired)
         {
-            if (AoAoffset != AoAdesired)
+            double error = desired - current;
+            if (!forceSetToDesired && Math.Abs(error) >= 0.1)  // DaMichel: i changed the threshold since i noticed a "bump" at max deflection
             {
-                double error = AoAdesired - AoAoffset;
-                if (!justStarted && Math.Abs(error) >= 0.5)
-                {
-                    double recip_timeconstant = 1 / timeconstant;
-                    double tmp1 = error * recip_timeconstant;
-                    //float tmp2 = (error + TimeWarp.deltaTime * tmp1) * recip_timeconstant;
-                    AoAoffset += FARMathUtil.Clamp((double)TimeWarp.deltaTime * tmp1, -Math.Abs(0.6 * error), Math.Abs(0.6 * error));
-
-                }
-                else
-                    AoAoffset = AoAdesired;
+                double recip_timeconstant = 1 / timeConstant;
+                double tmp1 = error * recip_timeconstant;
+                current += FARMathUtil.Clamp((double)TimeWarp.deltaTime * tmp1, -Math.Abs(0.6 * error), Math.Abs(0.6 * error));
             }
+            else
+                current = desired;
+            return current;
+        }
+
+        //DaMichel: Similarly, this is used for constant rate movment towards the desired value. I presume it is more realistic for 
+        //for slow moving flaps and spoilers. It looks better anyways.
+        private static double BlendDeflectionLinear(double current, double desired, double timeConstant, bool forceSetToDesired)
+        {
+            double error = desired - current;
+            if (!forceSetToDesired && Math.Abs(error) >= 0.1)
+            {
+                double recip_timeconstant = 1 / timeConstant;
+                double tmp1 = Math.Sign(error) * recip_timeconstant;
+                current += FARMathUtil.Clamp((double)TimeWarp.deltaTime * tmp1, -Math.Abs(0.6 * error), Math.Abs(0.6 * error));
+            }
+            else
+                current = desired;
+            return current;
+        }
+
+        // Determines current deflection contributions from stick and flap/spoiler settings and update current total deflection (AoAoffset).
+        private void ChangeDeflection()
+        {
+            if (AoAcurrentControl != AoAdesiredControl) AoAcurrentControl = BlendDeflectionExp(AoAcurrentControl, AoAdesiredControl, timeConstant, justStarted);
+            if (AoAcurrentFlap  != AoAdesiredFlap) AoAcurrentFlap = BlendDeflectionLinear(AoAcurrentFlap, AoAdesiredFlap, timeConstantFlap, justStarted);
+            AoAoffset = AoAcurrentFlap + AoAcurrentControl;
         }
 
         /// <summary>
@@ -386,7 +422,8 @@ namespace NEAR
 
             // Compute a vector for CalculateAoA
             double radAoAoffset = AoAoffset * FARMathUtil.deg2rad * ctrlSurfFrac;
-            deflectedNormal = new Vector3d(0, Math.Sin(radAoAoffset), Math.Cos(radAoAoffset));
+            deflectedNormal.y = Math.Sin(radAoAoffset);
+            deflectedNormal.z = Math.Cos(radAoAoffset);
 
             // Visually animate the surface
             MovableSection.localRotation = MovableOrig;
@@ -397,46 +434,6 @@ namespace NEAR
                 else
                     MovableSection.Rotate(controlSurfacePivot, (float)-AoAoffset);
             }
-        }
-
-        public void SetControlStateEditor(Vector3 CoM, float pitch, float yaw, float roll, int flap, bool brake)
-        {
-            if (HighLogic.LoadedSceneIsEditor)
-            {
-                Vector3 CoMoffset = (part.transform.position - CoM).normalized;
-                PitchLocation = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.forward) * Mathf.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.up));
-                YawLocation = -Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.right) * Mathf.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.up));
-                RollLocation = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.forward) * Mathf.Sign(Vector3.Dot(CoMoffset, -EditorLogic.startPod.transform.right));
-                AoAoffset = 0;
-                if (pitchaxis == true)
-                {
-                    AoAoffset += PitchLocation * pitch;
-                }
-                if (yawaxis == true)
-                {
-                    AoAoffset += YawLocation * yaw;
-                }
-                if (rollaxis == true)
-                {
-                    AoAoffset += RollLocation * roll;
-                }
-                AoAoffset = FARMathUtil.Clamp(AoAoffset, -1, 1) * maxdeflect;
-
-                if (isFlap == true)
-                {
-                    int flapDeflectionLevel = flap;
-                    flapLocation = (int)Math.Sign(Vector3.Dot(EditorLogic.startPod.transform.forward, part.transform.forward));      //figure out which way is up
-                    AoAoffset += maxdeflectFlap * flapLocation * flapDeflectionLevel * 0.3333333333333;
-                }
-                else if (isSpoiler == true)
-                {
-                    flapLocation = -(int)Math.Sign(Vector3.Dot(EditorLogic.startPod.transform.forward, part.transform.forward));      //figure out which way is up
-                    AoAoffset += brake ? maxdeflectFlap * flapLocation : 0;
-                }
-
-                DeflectionAnimation();
-            }
-
         }
         #endregion
     }
