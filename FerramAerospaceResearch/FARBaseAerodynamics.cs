@@ -108,23 +108,23 @@ namespace ferram4
                 bool active = FARControlSys.tintForCl || FARControlSys.tintForCd;
 
                 if (FARControlSys.tintForCl)
-                    satCl = (float)FARMathUtil.Clamp(Math.Abs(Cl / FARControlSys.fullySaturatedCl), 0, 1);
+                    satCl = (float)FARMathUtil.Clamp(Math.Abs(this.Cl / FARControlSys.fullySaturatedCl), 0, 1) * 255;
                 if (FARControlSys.tintForCd)
-                    satCd = (float)FARMathUtil.Clamp(Math.Abs(Cd / FARControlSys.fullySaturatedCd), 0, 1);
+                    satCd = (float)FARMathUtil.Clamp(Math.Abs(this.Cd / FARControlSys.fullySaturatedCd), 0, 1) * 255;
 
-                Color tintColor = new Color(satCd, 0.5f * (satCl + satCd), satCl);
+                Color tintColor = new Color(satCd, 0.5f * (satCl + satCd), satCl, 1);
 
                 if (active)
                 {
-                    part.SetHighlightType(Part.HighlightType.AlwaysOn);
-                    part.SetHighlightColor(tintColor);
-                    part.SetHighlight(true);
+                    this.part.SetHighlightType(Part.HighlightType.AlwaysOn);
+                    this.part.SetHighlightColor(tintColor);
+                    this.part.SetHighlight(true);
                 }
                 else if (part.highlightType != Part.HighlightType.OnMouseOver)
                 {
-                    part.SetHighlightType(Part.HighlightType.OnMouseOver);
-                    part.SetHighlightColor(FARGUIUtils.defaultHighlightColor);
-                    part.SetHighlight(false);
+                    this.part.SetHighlightType(Part.HighlightType.OnMouseOver);
+                    this.part.SetHighlightColor(FARGUIUtils.defaultHighlightColor);
+                    this.part.SetHighlight(false);
                 }
             }
         }
