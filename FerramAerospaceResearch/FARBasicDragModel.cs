@@ -304,7 +304,9 @@ namespace ferram4
                     // Check that rb is not destroyed, but vessel is just not null
                     if (rb && (object)vessel != null && vessel.atmDensity > 0)
                     {
-                        Vector3d velocity = rb.velocity + Krakensbane.GetFrameVelocity();
+                        Vector3d velocity = rb.velocity + Krakensbane.GetFrameVelocity()
+                            + FARWind.GetWind(FlightGlobals.currentMainBody, part, rb.position);
+
                         double soundspeed, v_scalar = velocity.magnitude;
 
                         double rho = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
