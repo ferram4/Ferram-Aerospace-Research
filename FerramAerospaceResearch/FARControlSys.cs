@@ -154,8 +154,8 @@ namespace ferram4
 
         internal static bool tintForCl = false;
         internal static bool tintForCd = false;
-        internal static double fullySaturatedCl = 2;
-        internal static double fullySaturatedCd = 2;
+        internal static double fullySaturatedCl = 0.5;
+        internal static double fullySaturatedCd = 0.1;
 
         public static bool minimize = true;
         public static bool hide = false;

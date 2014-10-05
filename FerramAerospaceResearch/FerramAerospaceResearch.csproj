@@ -72,6 +72,7 @@
     <Compile Include="FARControlSys.cs" />
     <Compile Include="FARGeoUtil.cs" />
     <Compile Include="FARGlobalControlEditorObject.cs" />
+    <Compile Include="FARGlobalControlFlightObject.cs" />
     <Compile Include="FARGUIUtils.cs" />
     <Compile Include="FARMathUtil.cs" />
     <Compile Include="FARMatrix.cs" />

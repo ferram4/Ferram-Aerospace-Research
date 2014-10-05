@@ -152,6 +152,7 @@ CHANGELOG
 
 0.14.1.2v------------------------------------
 Features:
+Prototype aero force visualization in flight
 More Get functions for the FARAPI  
 Estimated range and endurance readouts in the Flight Data UI  
 See and dump FAR module data in the VAB / SPH using the Editor GUI  
@@ -161,11 +162,13 @@ Contributed by Da Michel:
 	Allow preferred default action groups for spoilers / flaps  
 Contributed by regex:  
 	Add some RPM integration  
+Contributed by Ippo:  
+	FARWind class for 3rd-party wind implementation
 
 
 Bugfixes:
 Fixed some vessel-switching FAR GUI issues  
-Fixed control surface reversal on undocking or backwards root part selection
+Fixed control surface reversal on undocking or backwards root part selection  
 Fixed some issues involving CoL position with wings when dealing with parts that have multiple colliders  
 
 0.14.1.1v------------------------------------

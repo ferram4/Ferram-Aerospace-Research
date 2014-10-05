@@ -693,9 +693,9 @@ namespace ferram4
 
                     double Cmtmp;
                     if (node.pitchesAwayFromUpVec)
-                        Cmtmp = -0.25 * radius * node.areaValue / S * Math.Abs(liftProd);
+                        Cmtmp = -0.325 * radius * node.areaValue / S * Math.Abs(liftProd);
                     else
-                        Cmtmp = 0.25 * radius * node.areaValue / S * Math.Abs(liftProd);
+                        Cmtmp = 0.325 * radius * node.areaValue / S * Math.Abs(liftProd);
 
                     double tmpCdCl = Math.Sqrt(tmp * tmp + Cltmp * Cltmp);
 

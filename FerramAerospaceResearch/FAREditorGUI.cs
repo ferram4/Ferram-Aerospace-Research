@@ -395,7 +395,7 @@ namespace ferram4
 
             if (tmp)
             {
-                windowPos.height = 600;
+                windowPos.height = 150;
                 windowPos.width = 650;
             }
             List<Part> selectedParts = EditorActionGroups.Instance.GetSelectedParts();
@@ -409,12 +409,15 @@ namespace ferram4
                 else
                 {
                     FARWingAerodynamicModel w = p.GetComponent<FARWingAerodynamicModel>();
-                    if((object)w != null)
+                    if ((object)w != null)
                         DisplayFARModuleProperties(w);
                 }
             }
             else
+            {
                 GUILayout.Label("Switch to Action Groups Menu and select a part to display FAR Module Properties");
+                windowPos.height = 150;
+            }
         }
 
         private void DisplayFARModuleProperties(FARWingAerodynamicModel w)

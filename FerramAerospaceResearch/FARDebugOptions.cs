@@ -171,6 +171,7 @@ namespace ferram4
 
             GUI.DragWindow();
 
+            debugWinPos.height = 250;
             debugWinPos = FARGUIUtils.ClampToScreen(debugWinPos);
         }
 
