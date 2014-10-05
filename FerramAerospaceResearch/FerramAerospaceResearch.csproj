@@ -81,6 +81,7 @@
     <Compile Include="FARPayloadFairingModule.cs" />
     <Compile Include="FARPM.cs" />
     <Compile Include="FARRungeKutta.cs" />
+    <Compile Include="FARWind.cs" />
     <Compile Include="FARWingAerodynamicModel.cs" />
     <Compile Include="InstallChecker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
