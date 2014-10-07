@@ -1,5 +1,5 @@
 ﻿/*
-Neophyte's Elementary Aerodynamics Replacement v1.1.1
+Neophyte's Elementary Aerodynamics Replacement v1.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Neophyte's Elementary Aerodynamics Replacement.
@@ -200,8 +200,8 @@ namespace NEAR
 
             // Feed the precomputed values to the vanilla indicator
             CoLMarker.pos = GlobalCoL;
-            CoLMarker.dir = CoLForce.normalized;
-            CoLMarker.lift = CoLForce.magnitude * 50f;
+            CoLMarker.dir = Vector3.zero;
+            CoLMarker.lift = CoLForce.magnitude;
         }
 
         public override void OnLoad(ConfigNode node)

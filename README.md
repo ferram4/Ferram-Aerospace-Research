@@ -1,4 +1,4 @@
-Neophyte's Elementary Aerodynamics Replacement v1.1.1
+Neophyte's Elementary Aerodynamics Replacement v1.2
 =========================
 
 Simpler aerodynamics model for Kerbal Space Program, based on a stripped-down version of Ferram Aerospace Research
@@ -134,6 +134,18 @@ For both of these, set MaxDrag and MinDrag to 0
 
 CHANGELOG
 =======================================================
+
+1.2v------------------------------------
+Features:
+0.25 compatibility, with stock support for SP+ parts  
+Upgrade CompatibilityChecker  
+Disable functions on CompatibilityChecker warnings
+Removed vector from CoL indicator to reduce confusion  
+
+Bugfixes:
+Fixed control surface reversal on undocking or backwards root part selection  
+Fixed some issues involving CoL position with wings when dealing with parts that have multiple colliders  
+Fixed some payload fairing and cargo bay part detection issues  
 
 1.1.1v------------------------------------
 Tweaks:

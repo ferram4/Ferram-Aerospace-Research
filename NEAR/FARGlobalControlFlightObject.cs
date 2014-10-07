@@ -1,5 +1,5 @@
 ﻿/*
-Neophyte's Elementary Aerodynamics Replacement v1.1.1
+Neophyte's Elementary Aerodynamics Replacement v1.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Neophyte's Elementary Aerodynamics Replacement.
@@ -48,11 +48,17 @@ namespace NEAR
 
         public void Awake()
         {
+            if (!CompatibilityChecker.IsAllCompatible())
+                return;
+
             LoadConfigs();
         }
 
         public void Start()
         {
+            if (!CompatibilityChecker.IsAllCompatible())
+                return;
+
             GameEvents.onVesselLoaded.Add(FindPartsWithoutFARModel);
             GameEvents.onVesselGoOffRails.Add(FindPartsWithoutFARModel);
             GameEvents.onVesselWasModified.Add(UpdateFARPartModules);
@@ -185,6 +191,9 @@ namespace NEAR
 
         void OnDestroy()
         {
+            if (!CompatibilityChecker.IsAllCompatible())
+                return;
+
             //GameEvents.onVesselLoaded.Remove(FindPartsWithoutFARModel);
             GameEvents.onVesselLoaded.Remove(FindPartsWithoutFARModel);
             GameEvents.onVesselGoOffRails.Remove(FindPartsWithoutFARModel);

@@ -1,5 +1,5 @@
 ﻿/*
-Neophyte's Elementary Aerodynamics Replacement v1.1.1
+Neophyte's Elementary Aerodynamics Replacement v1.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Neophyte's Elementary Aerodynamics Replacement.
@@ -48,6 +48,12 @@ namespace NEAR
 
         public virtual void Start()
         {
+            if (!CompatibilityChecker.IsAllCompatible())
+            {
+                this.enabled = false;
+                return;
+            }
+
             OnVesselPartsChange = UpdateShipPartsList;
             UpdateShipPartsList();
 

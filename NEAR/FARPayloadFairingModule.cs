@@ -1,5 +1,5 @@
 ﻿/*
-Neophyte's Elementary Aerodynamics Replacement v1.1.1
+Neophyte's Elementary Aerodynamics Replacement v1.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Neophyte's Elementary Aerodynamics Replacement.
@@ -168,6 +168,18 @@ namespace NEAR
             ClearShieldedParts();
             UpdateShipPartsList();
 
+            Collider[] colliders;
+            try
+            {
+                colliders = part.GetComponentsInChildren<Collider>();
+            }
+            catch (Exception e)
+            {
+                //Fail silently because it's the only way to avoid issues with pWings
+                //Debug.LogException(e);
+                colliders = new Collider[1] { part.collider };
+            }
+
             for (int i = 0; i < VesselPartList.Count; i++)
             {
                 Part p = VesselPartList[i];
@@ -208,6 +220,23 @@ namespace NEAR
                     maxBoundVec = maxBounds[j];
                     if (relPos.x < maxBoundVec.x && relPos.y < maxBoundVec.y && relPos.z < maxBoundVec.z && relPos.x > minBoundVec.x && relPos.y > minBoundVec.y && relPos.z > minBoundVec.z)
                     {
+                        Vector3 vecFromPToCargoBayCenter = this.part.partTransform.position - p.partTransform.position;
+
+                        RaycastHit[] hits = Physics.RaycastAll(p.partTransform.position, vecFromPToCargoBayCenter, vecFromPToCargoBayCenter.magnitude, FARAeroUtil.RaycastMask);
+
+                        bool outsideMesh = false;
+
+                        for (int k = 0; k < hits.Length; k++)
+                        {
+                            if (colliders.Contains(hits[k].collider))
+                            {
+                                outsideMesh = true;
+                                break;
+                            }
+                        }
+                        if (outsideMesh)
+                            break;
+
                         FARShieldedParts.Add(p);
                         if (b)
                         {

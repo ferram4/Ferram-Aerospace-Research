@@ -1,5 +1,5 @@
 ﻿/*
-Neophyte's Elementary Aerodynamics Replacement v1.1.1
+Neophyte's Elementary Aerodynamics Replacement v1.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Neophyte's Elementary Aerodynamics Replacement.
@@ -240,12 +240,9 @@ namespace NEAR
 
         public void MathAndFunctionInitialization()
         {
-            double lengthScale = Math.Sqrt(FARAeroUtil.areaFactor);
-
-            b_2 *= lengthScale;
-            MAC *= lengthScale;
-
             S = b_2 * MAC;
+
+            S *= FARAeroUtil.areaFactor;
 
             if (part.srfAttachNode.originalOrientation.x < 0)
                 srfAttachNegative = -1;

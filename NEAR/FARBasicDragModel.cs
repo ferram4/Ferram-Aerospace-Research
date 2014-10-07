@@ -1,5 +1,5 @@
 ﻿/*
-Neophyte's Elementary Aerodynamics Replacement v1.1.1
+Neophyte's Elementary Aerodynamics Replacement v1.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Neophyte's Elementary Aerodynamics Replacement.
@@ -193,7 +193,7 @@ namespace NEAR
 
             OnVesselPartsChange += AttachNodeCdAdjust;
 
-            UpdateUpVector(false);
+            UpdateUpVector(false || this.part.Modules.Contains("ModuleResourceIntake"));
             PartModelTransforms = FARGeoUtil.PartModelTransformArray(part);
             AttachNodeCdAdjust();
             AnimationSetup();
