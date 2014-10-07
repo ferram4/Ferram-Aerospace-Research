@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.1.2
+Ferram Aerospace Research v0.14.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -328,12 +328,9 @@ namespace ferram4
 
         public void MathAndFunctionInitialization()
         {
-            double lengthScale = Math.Sqrt(FARAeroUtil.areaFactor);
-
-            b_2 *= lengthScale;
-            MAC *= lengthScale;
-
             S = b_2 * MAC;
+
+            S *= FARAeroUtil.areaFactor;
 
             if (part.srfAttachNode.originalOrientation.x < 0)
                 srfAttachNegative = -1;
@@ -550,6 +547,7 @@ namespace ferram4
             if ((object)parentWing != null)
             {
                 parentWing.GetRefAreaChildren();
+                parentWing.UpdateMassToAccountForArea();
             }
         }
 

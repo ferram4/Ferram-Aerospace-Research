@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.1.2
+Ferram Aerospace Research v0.14.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -44,8 +44,6 @@ namespace ferram4
 {
     static class FARGUIUtils
     {
-        public static Color defaultHighlightColor;
-
         public static Rect ClampToScreen(Rect window)
         {
             window.x = Mathf.Clamp(window.x, -window.width + 20, Screen.width - 20);

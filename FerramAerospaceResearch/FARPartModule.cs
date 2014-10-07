@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.1.2
+Ferram Aerospace Research v0.14.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -55,6 +55,12 @@ namespace ferram4
 
         public virtual void Start()
         {
+            if (!CompatibilityChecker.IsAllCompatible())
+            {
+                this.enabled = false;
+                return;
+            }
+
             OnVesselPartsChange = UpdateShipPartsList;
             UpdateShipPartsList();
 

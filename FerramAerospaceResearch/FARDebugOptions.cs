@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.1.2
+Ferram Aerospace Research v0.14.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -130,7 +130,7 @@ namespace ferram4
         {
             GUI.skin = HighLogic.Skin;
             if (debugMenu)
-                debugWinPos = GUILayout.Window("FARDebug".GetHashCode(), debugWinPos, debugWindow, "FAR Debug Options, v0.14.1.2", GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+                debugWinPos = GUILayout.Window("FARDebug".GetHashCode(), debugWinPos, debugWindow, "FAR Debug Options, v0.14.2", GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
         }
 
 
@@ -170,8 +170,6 @@ namespace ferram4
             //            SaveWindowPos.y = windowPos.y;
 
             GUI.DragWindow();
-
-            debugWinPos.height = 250;
             debugWinPos = FARGUIUtils.ClampToScreen(debugWinPos);
         }
 
@@ -184,32 +182,32 @@ namespace ferram4
 
             tmp = FARAeroUtil.areaFactor.ToString();
             FARGUIUtils.TextEntryField("Area Factor:", 160, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
+            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
             FARAeroUtil.areaFactor = Convert.ToDouble(tmp);
 
             tmp = (FARAeroUtil.attachNodeRadiusFactor * 2).ToString();
             FARGUIUtils.TextEntryField("Node Diameter Factor:", 160, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
+            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
             FARAeroUtil.attachNodeRadiusFactor = Convert.ToDouble(tmp) * 0.5;
 
             tmp = FARAeroUtil.incompressibleRearAttachDrag.ToString();
             FARGUIUtils.TextEntryField("Rear Node Drag, Incomp:", 160, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
+            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
             FARAeroUtil.incompressibleRearAttachDrag = Convert.ToDouble(tmp);
 
             tmp = FARAeroUtil.sonicRearAdditionalAttachDrag.ToString();
             FARGUIUtils.TextEntryField("Rear Node Drag, M = 1:", 160, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
+            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
             FARAeroUtil.sonicRearAdditionalAttachDrag = Convert.ToDouble(tmp);
 
             tmp = FARControllableSurface.timeConstant.ToString();
             FARGUIUtils.TextEntryField("Ctrl Surf Time Constant:", 160, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
+            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
             FARControllableSurface.timeConstant = Convert.ToDouble(tmp);
 
             tmp = FARControllableSurface.timeConstantFlap.ToString();
             FARGUIUtils.TextEntryField("Flap/Spoiler Time Constant:", 160, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
+            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
             FARControllableSurface.timeConstantFlap = Convert.ToDouble(tmp);
 
             GUILayout.EndVertical();
@@ -217,7 +215,7 @@ namespace ferram4
             GUILayout.Label("Celestial Body Atmosperic Properties");
 
             GUILayout.BeginHorizontal();
-            
+
             GUILayout.BeginVertical(boxStyle);
 
             GUILayout.BeginHorizontal();
@@ -250,14 +248,14 @@ namespace ferram4
 
             tmp = atmProperties.y.ToString();
             FARGUIUtils.TextEntryField("Ratio of Specific Heats:", 80, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
+            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
             atmProperties.y = Convert.ToDouble(tmp);
 
 
             double dTmp = 8314.5 / atmProperties.z;
             tmp = dTmp.ToString();
             FARGUIUtils.TextEntryField("Gas Molecular Mass:", 80, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
+            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
             atmProperties.z = 8314.5 / Convert.ToDouble(tmp);
 
             atmProperties.x = atmProperties.y * atmProperties.z;
@@ -324,19 +322,19 @@ namespace ferram4
 
             tmp = activeTemplate.YmaxStress.ToString();
             FARGUIUtils.TextEntryField("Axial (Y-axis) Max Stress:", 240, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
+                        tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
             activeTemplate.YmaxStress = Convert.ToDouble(tmp);
 
             tmp = activeTemplate.XZmaxStress.ToString();
             FARGUIUtils.TextEntryField("Lateral (X,Z-axis) Max Stress:", 240, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
+                        tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
             activeTemplate.XZmaxStress = Convert.ToDouble(tmp);
            
             activeTemplate.crewed = GUILayout.Toggle(activeTemplate.crewed, "Requires Crew Compartment");
 
             tmp = activeTemplate.minNumResources.ToString();
             FARGUIUtils.TextEntryField("Min Num Resources:", 80, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
+                        tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
             activeTemplate.minNumResources = Convert.ToInt32(tmp);
 
             GUILayout.Label("Req Resources:");

@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.1.2
+Ferram Aerospace Research v0.14.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -57,6 +57,9 @@ namespace ferram4
 
         public void Awake()
         {
+            if (!CompatibilityChecker.IsAllCompatible())
+                return;
+
             LoadConfigs();
             if (FARDebugValues.useBlizzyToolbar)
             {
@@ -101,6 +104,9 @@ namespace ferram4
 
         public void Start()
         {
+            if (!CompatibilityChecker.IsAllCompatible())
+                return;
+
             GameEvents.onVesselLoaded.Add(FindPartsWithoutFARModel);
             GameEvents.onVesselGoOffRails.Add(FindPartsWithoutFARModel);
             GameEvents.onVesselWasModified.Add(UpdateFARPartModules);
@@ -251,6 +257,8 @@ namespace ferram4
 
         public void LateUpdate()
         {
+            if (!CompatibilityChecker.IsAllCompatible())
+                return;
 
             if (FlightGlobals.ready)
             {
@@ -266,7 +274,10 @@ namespace ferram4
 
         void OnDestroy()
         {
-            if(config != null)
+            if (!CompatibilityChecker.IsAllCompatible())
+                return;
+
+            if (config != null)
                 SaveConfigs();
 
             GameEvents.onGUIApplicationLauncherReady.Remove(OnGUIAppLauncherReady);

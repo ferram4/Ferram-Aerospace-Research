@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.1.2
+Ferram Aerospace Research v0.14.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -62,6 +62,9 @@ namespace ferram4
 
         public void Awake()
         {
+            if (!CompatibilityChecker.IsAllCompatible())
+                return;
+
             LoadConfigs();
 
             if (FARDebugValues.useBlizzyToolbar)
@@ -133,6 +136,9 @@ namespace ferram4
 
         public void LateUpdate()
         {
+            if (!CompatibilityChecker.IsAllCompatible())
+                return;
+
             FARAeroUtil.ResetEditorParts();
             FARBaseAerodynamics.GlobalCoLReady = false;
 
@@ -297,6 +303,9 @@ namespace ferram4
 
         void OnDestroy()
         {
+            if (!CompatibilityChecker.IsAllCompatible())
+                return;
+
             SaveConfigs();
             GameEvents.onGUIApplicationLauncherReady.Remove(OnGUIAppLauncherReady);
             GameEvents.onShowUI.Remove(ShowUI);

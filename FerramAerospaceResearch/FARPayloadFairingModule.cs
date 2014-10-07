@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.1.2
+Ferram Aerospace Research v0.14.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -175,6 +175,18 @@ namespace ferram4
             ClearShieldedParts();
             UpdateShipPartsList();
 
+            Collider[] colliders;
+            try
+            {
+                colliders = part.GetComponentsInChildren<Collider>();
+            }
+            catch (Exception e)
+            {
+                //Fail silently because it's the only way to avoid issues with pWings
+                //Debug.LogException(e);
+                colliders = new Collider[1] { part.collider };
+            } 
+            
             for (int i = 0; i < VesselPartList.Count; i++)
             {
                 Part p = VesselPartList[i];
@@ -206,7 +218,6 @@ namespace ferram4
                     relPos += p.partTransform.TransformDirection(d.CenterOfDrag) + p.partTransform.position;       //No attach node shifting with this
                 }
 
-
                 relPos = this.part.transform.worldToLocalMatrix.MultiplyVector(relPos);
                 for (int j = 0; j < minBounds.Count; j++)
                 {
@@ -215,6 +226,23 @@ namespace ferram4
                     maxBoundVec = maxBounds[j];
                     if (relPos.x < maxBoundVec.x && relPos.y < maxBoundVec.y && relPos.z < maxBoundVec.z && relPos.x > minBoundVec.x && relPos.y > minBoundVec.y && relPos.z > minBoundVec.z)
                     {
+                        Vector3 vecFromPToCargoBayCenter = this.part.partTransform.position - p.partTransform.position;
+
+                        RaycastHit[] hits = Physics.RaycastAll(p.partTransform.position, vecFromPToCargoBayCenter, vecFromPToCargoBayCenter.magnitude, FARAeroUtil.RaycastMask);
+
+                        bool outsideMesh = false;
+
+                        for (int k = 0; k < hits.Length; k++)
+                        {
+                            if (colliders.Contains(hits[k].collider))
+                            {
+                                outsideMesh = true;
+                                break;
+                            }
+                        }
+                        if (outsideMesh)
+                            break;
+
                         FARShieldedParts.Add(p);
                         if (b)
                         {

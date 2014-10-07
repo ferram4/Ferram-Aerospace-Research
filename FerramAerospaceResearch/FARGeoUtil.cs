@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.1.2
+Ferram Aerospace Research v0.14.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -339,7 +339,7 @@ namespace ferram4
                         return Vector3.up;
                 }
 
-                Debug.Log(part.partInfo.title + ": Choosing " + (dirname == null ? "heuristic forward" : dirname) + " axis for FAR drag model.");
+                //Debug.Log(part.partInfo.title + ": Choosing " + (dirname == null ? "heuristic forward" : dirname) + " axis for FAR drag model.");
                 return dir;
             }
             else
@@ -405,7 +405,7 @@ namespace ferram4
             if (p.partTransform == null)
             {
                 bool root = p == p.vessel.rootPart;
-                Debug.Log("This one is busted: " + p.partInfo.title + " root? " + root);
+                //Debug.Log("This one is busted: " + p.partInfo.title + " root? " + root);
                 if (root)
                     p.partTransform = p.vessel.vesselTransform;
             } 
@@ -431,7 +431,7 @@ namespace ferram4
 
             //foreach (Transform t in returnList)
             //    Debug.Log(t.name);
-            Debug.Log("Part: " + p.partInfo.title + " Transforms: " + returnList.Count);
+            //Debug.Log("Part: " + p.partInfo.title + " Transforms: " + returnList.Count);
             return returnList;
         }
 
@@ -725,7 +725,7 @@ namespace ferram4
             //This is the cross-sectional area of the tapered section
 
 
-            Debug.Log(p.partInfo.title + ": Geometry model created; Size: " + size + ", LD " + lowerDiameters + ", UD " + upperDiameters + "\n\rSurface area: " + partGeometry.area + "\n\rFineness Ratio: " + partGeometry.finenessRatio + "\n\rTaperRatio: " + partGeometry.taperRatio + "\n\rCross Sectional Area: " + partGeometry.crossSectionalArea + "\n\rCross Sectional Tapered Area: " + partGeometry.taperCrossSectionArea + "\n\rMajor-minor axis ratio: " + partGeometry.majorMinorAxisRatio + "\n\rCentroid: " + partGeometry.originToCentroid);
+            //Debug.Log(p.partInfo.title + ": Geometry model created; Size: " + size + ", LD " + lowerDiameters + ", UD " + upperDiameters + "\n\rSurface area: " + partGeometry.area + "\n\rFineness Ratio: " + partGeometry.finenessRatio + "\n\rTaperRatio: " + partGeometry.taperRatio + "\n\rCross Sectional Area: " + partGeometry.crossSectionalArea + "\n\rCross Sectional Tapered Area: " + partGeometry.taperCrossSectionArea + "\n\rMajor-minor axis ratio: " + partGeometry.majorMinorAxisRatio + "\n\rCentroid: " + partGeometry.originToCentroid);
             return partGeometry;
         }
 

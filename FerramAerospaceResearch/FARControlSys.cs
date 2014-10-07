@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.1.2
+Ferram Aerospace Research v0.14.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -874,10 +874,10 @@ namespace ferram4
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
             GUILayout.Label("k:", GUILayout.Width(30));
             k_wingleveler_str = GUILayout.TextField(k_wingleveler_str, GUILayout.ExpandWidth(true));
-            k_wingleveler_str = Regex.Replace(k_wingleveler_str, @"[^-?\d*\.?\d*]", "");
+            k_wingleveler_str = Regex.Replace(k_wingleveler_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
             GUILayout.Label("kd:", GUILayout.Width(30));
             kd_wingleveler_str = GUILayout.TextField(kd_wingleveler_str, GUILayout.ExpandWidth(true));
-            kd_wingleveler_str = Regex.Replace(kd_wingleveler_str, @"[^-?\d*\.?\d*]", "");
+            kd_wingleveler_str = Regex.Replace(kd_wingleveler_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
             GUILayout.EndHorizontal();
 
 
@@ -886,14 +886,14 @@ namespace ferram4
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
             GUILayout.Label("k:", GUILayout.Width(30));
             k_yawdamper_str = GUILayout.TextField(k_yawdamper_str, GUILayout.ExpandWidth(true));
-            k_yawdamper_str = Regex.Replace(k_yawdamper_str, @"[^-?\d*\.?\d*]", "");
+            k_yawdamper_str = Regex.Replace(k_yawdamper_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
             GUILayout.EndHorizontal();
 
             GUILayout.Box("Pitch Damper", mySty, GUILayout.ExpandWidth(true));
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
             GUILayout.Label("k:", GUILayout.Width(30));
             k_pitchdamper_str = GUILayout.TextField(k_pitchdamper_str, GUILayout.ExpandWidth(true));
-            k_pitchdamper_str = Regex.Replace(k_pitchdamper_str, @"[^-?\d*\.?\d*]", "");
+            k_pitchdamper_str = Regex.Replace(k_pitchdamper_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
 
             GUILayout.EndHorizontal();
 
@@ -902,16 +902,16 @@ namespace ferram4
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
             GUILayout.Label("Upper Lim:", GUILayout.Width(75));
             upperLim_str = GUILayout.TextField(upperLim_str, GUILayout.ExpandWidth(true));
-            upperLim_str = Regex.Replace(upperLim_str, @"[^-?\d*\.?\d*]", "");
+            upperLim_str = Regex.Replace(upperLim_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
             GUILayout.Label("Lower Lim:", GUILayout.Width(75));
             lowerLim_str = GUILayout.TextField(lowerLim_str, GUILayout.ExpandWidth(true));
-            lowerLim_str = Regex.Replace(lowerLim_str, @"[^-?\d*\.?\d*]", "");
+            lowerLim_str = Regex.Replace(lowerLim_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
             GUILayout.Label("k:", GUILayout.Width(30));
             k_limiter_str = GUILayout.TextField(k_limiter_str, GUILayout.ExpandWidth(true));
-            k_limiter_str = Regex.Replace(k_limiter_str, @"[^-?\d*\.?\d*]", "");
+            k_limiter_str = Regex.Replace(k_limiter_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
 
             GUILayout.EndHorizontal();
 
@@ -921,14 +921,14 @@ namespace ferram4
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
             GUILayout.Label("Scaling Velocity:", GUILayout.Width(100));
             scaleVelocity_str = GUILayout.TextField(scaleVelocity_str, GUILayout.ExpandWidth(true));
-            scaleVelocity_str = Regex.Replace(scaleVelocity_str, @"[^-?\d*\.?\d*]", "");
+            scaleVelocity_str = Regex.Replace(scaleVelocity_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
             GUILayout.Label("Ctrl Factor:", GUILayout.Width(80));
             GUILayout.Box(scalingfactor.ToString("N4"), mySty, GUILayout.Width(90.0F), GUILayout.Height(30.0F));
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
             GUILayout.Label("Scaling Altitude:", GUILayout.Width(100));
             alt_str = GUILayout.TextField(alt_str, GUILayout.ExpandWidth(true));
-            alt_str = Regex.Replace(alt_str, @"[^-?\d*\.?\d*]", "");
+            alt_str = Regex.Replace(alt_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
 
             GUILayout.EndHorizontal(); 
             
@@ -1176,12 +1176,12 @@ namespace ferram4
 
             string tmp = fullySaturatedCl.ToString();
             FARGUIUtils.TextEntryField("Cl For Full Tint:", 80, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
+                        tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
             fullySaturatedCl = double.Parse(tmp);
 
             tmp = fullySaturatedCd.ToString();
             FARGUIUtils.TextEntryField("Cd For Full Tint:", 80, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^-?\d*\.?\d*]", "");
+                        tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
             fullySaturatedCd = double.Parse(tmp);
 
             GUI.DragWindow();
@@ -1250,7 +1250,7 @@ namespace ferram4
             GUI.skin = HighLogic.Skin;
             if (this == activeControlSys && !minimize && !hide)
             {
-                windowPos = GUILayout.Window(250, windowPos, WindowGUI, "FAR Flight Systems, v0.14.1.2", GUILayout.MinWidth(150));
+                windowPos = GUILayout.Window(250, windowPos, WindowGUI, "FAR Flight Systems, v0.14.2", GUILayout.MinWidth(150));
                 if (AutopilotWindow)
                 {
                     AutoPilotWindowPos = GUILayout.Window(251, AutoPilotWindowPos, AutopilotWindowGUI, "FAR Flight Assistance System Options", GUILayout.MinWidth(330));
@@ -1271,7 +1271,7 @@ namespace ferram4
                 }
                 if(AeroForceTintingWindow)
                 {
-                    AeroForceTintingPos = GUILayout.Window(257, AeroForceTintingPos, AeroForceTintingGUI, "FAR Aero Force Visualization", GUILayout.MinWidth(200));
+                    AeroForceTintingPos = GUILayout.Window(257, AeroForceTintingPos, AeroForceTintingGUI, "FAR Force Visualization", GUILayout.MinWidth(200));
                 }
 
             }

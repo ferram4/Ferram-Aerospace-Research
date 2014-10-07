@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.14.1.2
+Ferram Aerospace Research v0.14.2
 =========================
 
 Aerodynamics model for Kerbal Space Program
@@ -150,13 +150,19 @@ For both of these, set MaxDrag and MinDrag to 0
 CHANGELOG
 =======================================================
 
-0.14.1.2v------------------------------------
+0.14.2v------------------------------------
 Features:
-Prototype aero force visualization in flight
+0.25 compatibility, with stock support for SP+ parts  
+Upgrade CompatibilityChecker  
+Disable functions on CompatibilityChecker warnings
+
+Prototype aero force visualization in flight  
+Removed vector from CoL indicator to reduce confusion  
 More Get functions for the FARAPI  
 Estimated range and endurance readouts in the Flight Data UI  
 See and dump FAR module data in the VAB / SPH using the Editor GUI  
 Some runtime optimizations  
+
 Contributed by Da Michel:  
 	Implement separate deflection speeds for flaps / spoilers  
 	Allow preferred default action groups for spoilers / flaps  
@@ -170,6 +176,7 @@ Bugfixes:
 Fixed some vessel-switching FAR GUI issues  
 Fixed control surface reversal on undocking or backwards root part selection  
 Fixed some issues involving CoL position with wings when dealing with parts that have multiple colliders  
+Fixed some payload fairing and cargo bay part detection issues  
 
 0.14.1.1v------------------------------------
 Features:

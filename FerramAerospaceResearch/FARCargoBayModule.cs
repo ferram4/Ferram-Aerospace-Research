@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.1.2
+Ferram Aerospace Research v0.14.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -252,6 +252,18 @@ namespace ferram4
 
             double y_margin = Math.Max(0.12, 0.03 * (maxBounds.y-minBounds.y));
 
+            Collider[] colliders;
+            try
+            {
+                colliders = part.GetComponentsInChildren<Collider>();
+            }
+            catch (Exception e)
+            {
+                //Fail silently because it's the only way to avoid issues with pWings
+                //Debug.LogException(e);
+                colliders = new Collider[1] { part.collider };
+            }
+
             for (int i = 0; i < VesselPartList.Count; i++)
             {
                 Part p = VesselPartList[i];
@@ -293,6 +305,22 @@ namespace ferram4
                             p.parent == this.part && p.attachMode == AttachModes.STACK)
                             continue;
                     }
+                    Vector3 vecFromPToCargoBayCenter = this.part.partTransform.position - p.partTransform.position;
+
+                    RaycastHit[] hits = Physics.RaycastAll(p.partTransform.position, vecFromPToCargoBayCenter, vecFromPToCargoBayCenter.magnitude, FARAeroUtil.RaycastMask);
+
+                    bool outsideMesh = false;
+
+                    for (int j = 0; j < hits.Length; j++)
+                    {
+                        if (colliders.Contains(hits[j].collider))
+                        {
+                            outsideMesh = true;
+                            break;
+                        }
+                    }
+                    if (outsideMesh)
+                        break;
 
                     FARShieldedParts.Add(p);
                     if (b)

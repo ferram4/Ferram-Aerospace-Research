@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.1.2
+Ferram Aerospace Research v0.14.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -224,7 +224,7 @@ namespace ferram4
 
             if (!minimize && !hide)
             {
-                windowPos = GUILayout.Window(256, windowPos, ActualGUI, "FAR Control & Analysis Systems, v0.14.1.2");
+                windowPos = GUILayout.Window(256, windowPos, ActualGUI, "FAR Control & Analysis Systems, v0.14.2");
                 if (AnalysisHelp)
                 {
                     analysisHelpPos = GUILayout.Window(258, analysisHelpPos, AnalysisHelpGUI, "FAR Analysis Systems Help", GUILayout.Width(400), GUILayout.Height(Screen.height / 3));
@@ -570,12 +570,12 @@ namespace ferram4
                 dT = GUILayout.TextField(dT, GUILayout.ExpandWidth(true));
                 if (GUILayout.Button("Run Simulation", ButtonStyle, GUILayout.Width(150.0F), GUILayout.Height(25.0F)))
                 {
-                    u_init = Regex.Replace(u_init, @"[^-?\d*\.?\d*]", "");
-                    w_init = Regex.Replace(w_init, @"[^-?\d*\.?\d*]", "");
-                    q_init = Regex.Replace(q_init, @"[^-?\d*\.?\d*]", "");
-                    θ_init = Regex.Replace(θ_init, @"[^-?\d*\.?\d*]", "");
-                    time_end = Regex.Replace(time_end, @"[^-?\d*\.?\d*]", "");
-                    dT = Regex.Replace(dT, @"[^-?\d*\.?\d*]", "");
+                    u_init = Regex.Replace(u_init, @"[^-?[0-9]*(\.[0-9]*)?]", "");
+                    w_init = Regex.Replace(w_init, @"[^-?[0-9]*(\.[0-9]*)?]", "");
+                    q_init = Regex.Replace(q_init, @"[^-?[0-9]*(\.[0-9]*)?]", "");
+                    θ_init = Regex.Replace(θ_init, @"[^-?[0-9]*(\.[0-9]*)?]", "");
+                    time_end = Regex.Replace(time_end, @"[^-?[0-9]*(\.[0-9]*)?]", "");
+                    dT = Regex.Replace(dT, @"[^-?[0-9]*(\.[0-9]*)?]", "");
                     double[] InitCond = new double[4] { Convert.ToDouble(w_init), Convert.ToDouble(u_init), Convert.ToDouble(q_init) * Math.PI / 180, Convert.ToDouble(θ_init) * Math.PI / 180 };
                     RunTransientSimLongitudinal(Convert.ToDouble(time_end), Convert.ToDouble(dT), InitCond);
                 }
@@ -627,12 +627,12 @@ namespace ferram4
                 dT = GUILayout.TextField(dT, GUILayout.ExpandWidth(true));
                 if (GUILayout.Button("Run Simulation", ButtonStyle, GUILayout.Width(150.0F), GUILayout.Height(25.0F)))
                 {
-                    beta_init = Regex.Replace(beta_init, @"[^-?\d*\.?\d*]", "");
-                    r_init = Regex.Replace(r_init, @"[^-?\d*\.?\d*]", "");
-                    p_init = Regex.Replace(p_init, @"[^-?\d*\.?\d*]", "");
-                    φ_init = Regex.Replace(φ_init, @"[^-?\d*\.?\d*]", "");
-                    time_end = Regex.Replace(time_end, @"[^-?\d*\.?\d*]", "");
-                    dT = Regex.Replace(dT, @"[^-?\d*\.?\d*]", "");
+                    beta_init = Regex.Replace(beta_init, @"[^-?[0-9]*(\.[0-9]*)?]", "");
+                    r_init = Regex.Replace(r_init, @"[^-?[0-9]*(\.[0-9]*)?]", "");
+                    p_init = Regex.Replace(p_init, @"[^-?[0-9]*(\.[0-9]*)?]", "");
+                    φ_init = Regex.Replace(φ_init, @"[^-?[0-9]*(\.[0-9]*)?]", "");
+                    time_end = Regex.Replace(time_end, @"[^-?[0-9]*(\.[0-9]*)?]", "");
+                    dT = Regex.Replace(dT, @"[^-?[0-9]*(\.[0-9]*)?]", "");
                     double[] InitCond = new double[4] { Convert.ToDouble(beta_init) * Math.PI / 180, Convert.ToDouble(p_init) * Math.PI / 180, Convert.ToDouble(r_init) * Math.PI / 180, Convert.ToDouble(φ_init) * Math.PI / 180 };
                     RunTransientSimLateral(Convert.ToDouble(time_end), Convert.ToDouble(dT), InitCond);
                 }
@@ -952,9 +952,9 @@ namespace ferram4
             if (GUILayout.Button("Calculate Stability Derivatives", ButtonStyle, GUILayout.Width(250.0F), GUILayout.Height(25.0F)))
             {
                 FARAeroUtil.UpdateCurrentActiveBody(index, FlightGlobals.Bodies[1]);
-                atm_temp_str = Regex.Replace(atm_temp_str, @"[^-?\d*\.?\d*]", "");
-                rho_str = Regex.Replace(rho_str, @"[^-?\d*\.?\d*]", "");
-                Mach_str = Regex.Replace(Mach_str, @"[^-?\d*\.?\d*]", "");
+                atm_temp_str = Regex.Replace(atm_temp_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
+                rho_str = Regex.Replace(rho_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
+                Mach_str = Regex.Replace(Mach_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
 
                 double temp = Convert.ToSingle(atm_temp_str);
                 Mach = Convert.ToSingle(Mach_str);
@@ -1427,7 +1427,7 @@ namespace ferram4
             FlapToggle();
             GUILayout.Label("Pitch Setting:");
             pitch_str = GUILayout.TextField(pitch_str, GUILayout.ExpandWidth(true));
-            pitch_str = Regex.Replace(pitch_str, @"[^-?\d*\.?\d*]", "");
+            pitch_str = Regex.Replace(pitch_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
             GUILayout.Label("Fuel Status:");
             vehicleFueled = GUILayout.Toggle(vehicleFueled, vehicleFueled ? "Full" : "Empty");
             GUILayout.Label("Spoilers:");
@@ -1452,35 +1452,35 @@ namespace ferram4
             bool MSweep = GUILayout.Button("Sweep Mach", ButtonStyle, GUILayout.Width(100.0F), GUILayout.Height(25.0F));
             if (AoASweep)
             {
-                lowerBound_str = Regex.Replace(lowerBound_str, @"[^-?\d*\.?\d*]", "");
+                lowerBound_str = Regex.Replace(lowerBound_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
                 lowerBound = Convert.ToDouble(lowerBound_str);
                 lowerBound = FARMathUtil.Clamp(lowerBound, -90, 90);
                 lowerBound_str = lowerBound.ToString();
-                upperBound_str = Regex.Replace(upperBound_str, @"[^-?\d*\.?\d*]", "");
+                upperBound_str = Regex.Replace(upperBound_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
                 upperBound = Convert.ToDouble(upperBound_str);
                 upperBound = FARMathUtil.Clamp(upperBound, lowerBound, 90);
                 upperBound_str = upperBound.ToString();
-                numPoints_str = Regex.Replace(numPoints_str, @"[^-?\d*\.?\d*]", "");
+                numPoints_str = Regex.Replace(numPoints_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
                 numPoints = Convert.ToUInt32(numPoints_str);
                 double pitch = UpdateControlSettings();
-                extra_str = Regex.Replace(extra_str, @"[^-?\d*\.?\d*]", "");
+                extra_str = Regex.Replace(extra_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
                 double M = Math.Abs(Convert.ToDouble(extra_str));
                 AngleOfAttackSweep(M, pitch);
             }
             else if (MSweep)
             {
-                lowerBound_str = Regex.Replace(lowerBound_str, @"[^-?\d*\.?\d*]", "");
+                lowerBound_str = Regex.Replace(lowerBound_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
                 lowerBound = Convert.ToDouble(lowerBound_str);
                 lowerBound = FARMathUtil.Clamp(lowerBound, 0, double.PositiveInfinity);
                 lowerBound_str = lowerBound.ToString();
-                upperBound_str = Regex.Replace(upperBound_str, @"[^-?\d*\.?\d*]", "");
+                upperBound_str = Regex.Replace(upperBound_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
                 upperBound = Convert.ToDouble(upperBound_str);
                 upperBound = FARMathUtil.Clamp(upperBound, lowerBound, double.PositiveInfinity);
                 upperBound_str = upperBound.ToString();
-                numPoints_str = Regex.Replace(numPoints_str, @"[^-?\d*\.?\d*]", "");
+                numPoints_str = Regex.Replace(numPoints_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
                 numPoints = Convert.ToUInt32(numPoints_str);
                 double pitch = UpdateControlSettings();
-                extra_str = Regex.Replace(extra_str, @"[^-?\d*\.?\d*]", "");
+                extra_str = Regex.Replace(extra_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
                 double AoA = Math.Abs(Convert.ToDouble(extra_str));
                 MachNumberSweep(AoA, pitch);
             }

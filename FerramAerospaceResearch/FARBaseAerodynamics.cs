@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.1.2
+Ferram Aerospace Research v0.14.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -95,8 +95,6 @@ namespace ferram4
             {
                 Fields["Cl"].guiActive = Fields["Cd"].guiActive = Fields["Cm"].guiActive = FARDebugValues.displayCoefficients;
             }
-
-            FARGUIUtils.defaultHighlightColor = part.highlightColor;
         }
 
         public virtual void LateUpdate()
@@ -108,9 +106,9 @@ namespace ferram4
                 bool active = FARControlSys.tintForCl || FARControlSys.tintForCd;
 
                 if (FARControlSys.tintForCl)
-                    satCl = (float)FARMathUtil.Clamp(Math.Abs(this.Cl / FARControlSys.fullySaturatedCl), 0, 1) * 255;
+                    satCl = (float)Math.Abs(this.Cl / FARControlSys.fullySaturatedCl) * 10;
                 if (FARControlSys.tintForCd)
-                    satCd = (float)FARMathUtil.Clamp(Math.Abs(this.Cd / FARControlSys.fullySaturatedCd), 0, 1) * 255;
+                    satCd = (float)Math.Abs(this.Cd / FARControlSys.fullySaturatedCd) * 10;
 
                 Color tintColor = new Color(satCd, 0.5f * (satCl + satCd), satCl, 1);
 
@@ -118,12 +116,13 @@ namespace ferram4
                 {
                     this.part.SetHighlightType(Part.HighlightType.AlwaysOn);
                     this.part.SetHighlightColor(tintColor);
+                    this.part.highlightRecurse = false;
                     this.part.SetHighlight(true);
                 }
                 else if (part.highlightType != Part.HighlightType.OnMouseOver)
                 {
                     this.part.SetHighlightType(Part.HighlightType.OnMouseOver);
-                    this.part.SetHighlightColor(FARGUIUtils.defaultHighlightColor);
+                    this.part.SetHighlightColor(Part.defaultHighlightPart);
                     this.part.SetHighlight(false);
                 }
             }
@@ -268,8 +267,8 @@ namespace ferram4
 
             // Feed the precomputed values to the vanilla indicator
             CoLMarker.pos = GlobalCoL;
-            CoLMarker.dir = CoLForce.normalized;
-            CoLMarker.lift = CoLForce.magnitude * 50f;
+            CoLMarker.dir = Vector3.zero;
+            CoLMarker.lift = CoLForce.magnitude;
         }
 
         public override void OnLoad(ConfigNode node)
