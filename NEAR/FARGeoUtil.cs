@@ -1,5 +1,5 @@
 ﻿/*
-Neophyte's Elementary Aerodynamics Replacement v1.2
+Neophyte's Elementary Aerodynamics Replacement v1.2.1
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Neophyte's Elementary Aerodynamics Replacement.
@@ -333,7 +333,7 @@ namespace NEAR
                         return Vector3.up;
                 }
 
-                Debug.Log(part.partInfo.title + ": Choosing " + (dirname == null ? "heuristic forward" : dirname) + " axis for FAR drag model.");
+                Debug.Log(part.partInfo.title + ": Choosing " + (dirname == null ? "heuristic forward" : dirname) + " axis for NEAR drag model.");
                 return dir;
             }
             else

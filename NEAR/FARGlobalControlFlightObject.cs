@@ -1,5 +1,5 @@
 ﻿/*
-Neophyte's Elementary Aerodynamics Replacement v1.2
+Neophyte's Elementary Aerodynamics Replacement v1.2.1
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Neophyte's Elementary Aerodynamics Replacement.
@@ -110,7 +110,7 @@ namespace NEAR
                         {
                             PartModule m = modulesToRemove[j];
                             p.RemoveModule(m);
-                            Debug.Log("Removing Incomplete FAR Drag Module");
+                            Debug.Log("Removing Incomplete NEAR Drag Module");
                         }
                         if (p.Modules.Contains("FARPayloadFairingModule"))
                             p.RemoveModule(p.Modules["FARPayloadFairingModule"]);
@@ -123,14 +123,6 @@ namespace NEAR
 
                 if (p is StrutConnector || p is FuelLine || p is ControlSurface || p is Winglet || FARPartClassification.ExemptPartFromGettingDragModel(p, title))
                     continue;
-
-                if (p.Modules.Contains("ModuleCommand") && !p.Modules.Contains("FARControlSys"))
-                {
-                    p.AddModule("FARControlSys");
-                    PartModule m = p.Modules["FARControlSys"];
-                    m.OnStart(PartModule.StartState.Flying);
-                    //Debug.Log("Added FARControlSys to " + p.partInfo.title);
-                }
 
                 FARPartModule q = p.GetComponent<FARPartModule>();
                 if (q != null)
