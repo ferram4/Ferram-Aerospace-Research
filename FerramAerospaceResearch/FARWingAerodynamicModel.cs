@@ -52,6 +52,11 @@ namespace ferram4
     {
         public double AoAmax = 15;
 
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Mass/Strength Multiplier", guiFormat = "0.##"), UI_FloatRange(minValue = 0.05f, maxValue = 4.0f, stepIncrement = 0.05f)]
+        public float massMultiplier = 1.0f;
+
+        public float oldMassMultiplier = -1f;
+
         [KSPField(isPersistant = false)]
         public double MAC;
 
@@ -364,6 +369,10 @@ namespace ferram4
                         XZmaxForce *= S;
                         break;
                     }
+                double maxForceMult = Math.Pow(massMultiplier, FARAeroUtil.massStressPower);
+                YmaxForce *= maxForceMult;
+                XZmaxForce *= maxForceMult;
+                Debug.Log("For part " + part.name + "Maxes " + YmaxForce + "/" + XZmaxForce); // FIXME DBG
             }
         }
 
@@ -504,6 +513,12 @@ namespace ferram4
                 UpdateMassToAccountForArea();
                 updateMassNextFrame = false;
             }
+            else if (HighLogic.LoadedSceneIsEditor && massMultiplier != oldMassMultiplier)
+            {
+                GetRefAreaChildren();
+                UpdateMassToAccountForArea(false);
+            }
+
         }
 
         private void OnWingAttach()
@@ -522,12 +537,13 @@ namespace ferram4
                 parentWing.updateMassNextFrame = true;
         }
 
-        private void UpdateMassToAccountForArea()
+        private void UpdateMassToAccountForArea(bool printLog = true)
         {
             float supportedArea = (float)(refAreaChildren + S);
-            part.mass = supportedArea * (float)FARAeroUtil.massPerWingAreaSupported;
-
-            Debug.Log("Wing: " + part.partInfo.title + " mass set to: " + part.mass + " with a supported area of: " + supportedArea);
+            part.mass = supportedArea * (float)FARAeroUtil.massPerWingAreaSupported * massMultiplier;
+            oldMassMultiplier = massMultiplier;
+            if(printLog)
+                Debug.Log("Wing: " + part.partInfo.title + " mass set to: " + part.mass + " with a supported area of: " + supportedArea);
         }
 
         private void GetRefAreaChildren()
