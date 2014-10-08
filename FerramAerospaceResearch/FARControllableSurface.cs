@@ -223,19 +223,21 @@ namespace ferram4
                     if (temp.name == "ctrlSurfStress")
                     {
                         template = temp;
+                        double maxForceMult = Math.Pow(massMultiplier, FARAeroUtil.massStressPower);
 
                         YmaxForce *= 1 - ctrlSurfFrac;
                         XZmaxForce *= 1 - ctrlSurfFrac;
 
                         double tmp = template.YmaxStress;    //in MPa
-                        tmp *= S * ctrlSurfFrac;
+                        tmp *= S * ctrlSurfFrac * maxForceMult;
                         YmaxForce += tmp;
 
                         tmp = template.XZmaxStress;    //in MPa
-                        tmp *= S * ctrlSurfFrac;
+                        tmp *= S * ctrlSurfFrac * maxForceMult;
                         XZmaxForce += tmp;
                         break;
                     }
+                Debug.Log("For part " + part.name + "Maxes " + YmaxForce + "/" + XZmaxForce); // FIXME DBG
             }
         }
 
