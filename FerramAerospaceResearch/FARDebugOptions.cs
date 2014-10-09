@@ -84,6 +84,12 @@ namespace ferram4
 
         public void Awake()
         {
+            if (!CompatibilityChecker.IsAllCompatible())
+            {
+                this.enabled = false;
+                return;
+            }
+
             LoadConfigs();
             if (FARDebugValues.useBlizzyToolbar)
             {
@@ -508,6 +514,9 @@ namespace ferram4
         }
         void OnDestroy()
         {
+            if (!CompatibilityChecker.IsAllCompatible())
+                return;
+
             SaveConfigs();
             GameEvents.onGUIApplicationLauncherReady.Remove(OnGUIAppLauncherReady);
             if (FARDebugButtonStock != null)
