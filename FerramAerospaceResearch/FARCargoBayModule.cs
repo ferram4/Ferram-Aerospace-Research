@@ -62,7 +62,9 @@ namespace ferram4
         private static FARCargoBayModule BayController;
 
         private Animation bayAnim = null;
+        private AnimationState bayAnimState = null;
         private string bayAnimationName;
+        
 
         private bool bayAnimating = true;
 
@@ -105,7 +107,10 @@ namespace ferram4
                     bayAnim = part.FindModelAnimators(bayAnimationName).FirstOrDefault();
 
                     if (bayAnim != null)
+                    {
+                        bayAnimState = bayAnim[bayAnimationName];
                         break;
+                    }
                 }
             }
         }
@@ -185,12 +190,12 @@ namespace ferram4
                 return;
             if (bayAnim)
             {
-                if (bayAnim.isPlaying && !bayAnimating)
+                if ((bayAnim.isPlaying && bayAnimState.speed != 0) && !bayAnimating)
                 {
                     ClearShieldedParts();
                     bayAnimating = true;
                 }
-                else if (bayAnimating && !bayAnim.isPlaying)
+                else if (bayAnimating && (!bayAnim.isPlaying || bayAnimState.speed == 0))
                 {
                     bayAnimating = false;
 
@@ -305,7 +310,15 @@ namespace ferram4
                             p.parent == this.part && p.attachMode == AttachModes.STACK)
                             continue;
                     }
-                    Vector3 vecFromPToCargoBayCenter = this.part.partTransform.position - p.partTransform.position;
+                    Vector3 vecFromPToCargoBayCenter;
+                    /*if (d)
+                        vecFromPToCargoBayCenter = p.partTransform.InverseTransformPoint(d.CoDshift);
+                    else if (w)
+                        vecFromPToCargoBayCenter = w.WingCentroid();
+                    else*/
+                        vecFromPToCargoBayCenter = p.partTransform.position;
+
+                    vecFromPToCargoBayCenter = this.part.partTransform.position - vecFromPToCargoBayCenter;
 
                     RaycastHit[] hits = Physics.RaycastAll(p.partTransform.position, vecFromPToCargoBayCenter, vecFromPToCargoBayCenter.magnitude, FARAeroUtil.RaycastMask);
 

@@ -1572,17 +1572,10 @@ namespace ferram4
         {
             double forwardbackward = ParallelInPlaneLocal.y;
             double inwardoutward = ParallelInPlaneLocal.x * srfAttachNegative;
-            //ClExposureModifier = 0;
-            //CdExposureModifier = 0;
             //            LeExposure = 0;
             //            TeExposure = 0;
             WingtipExposure = 0;
             WingrootExposure = 0;
-
-            //LeExposure = forwardexposure * Mathf.Pow(Mathf.Clamp01(forwardbackward), 2) + backwardexposure * Mathf.Pow(Mathf.Clamp01(-forwardbackward), 2) + outwardexposure * Mathf.Pow(Mathf.Clamp01(inwardoutward), 2) + inwardexposure * Mathf.Pow(Mathf.Clamp01(-inwardoutward), 2);
-            //TeExposure = forwardexposure * Mathf.Pow(Mathf.Clamp01(-forwardbackward), 2) + backwardexposure * Mathf.Pow(Mathf.Clamp01(forwardbackward), 2) + outwardexposure * Mathf.Pow(Mathf.Clamp01(-inwardoutward), 2) + inwardexposure * Mathf.Pow(Mathf.Clamp01(inwardoutward), 2);
-            //WingtipExposure = forwardexposure * Mathf.Pow(Mathf.Clamp01(-inwardoutward), 2) + backwardexposure * Mathf.Pow(Mathf.Clamp01(inwardoutward), 2) + outwardexposure * Mathf.Pow(Mathf.Clamp01(forwardbackward), 2) + inwardexposure * Mathf.Pow(Mathf.Clamp01(-forwardbackward), 2);
-            //WingrootExposure = forwardexposure * Mathf.Pow(Mathf.Clamp01(inwardoutward), 2) + backwardexposure * Mathf.Pow(Mathf.Clamp01(-inwardoutward), 2) + outwardexposure * Mathf.Pow(Mathf.Clamp01(-forwardbackward), 2) + inwardexposure * Mathf.Pow(Mathf.Clamp01(forwardbackward), 2);
 
             if (forwardbackward > 0)
             {
@@ -1624,28 +1617,12 @@ namespace ferram4
 
             double effective_AR_modifier = (WingrootExposure + WingtipExposure);
 
-
-
             double e_AR;
 
             if (effective_AR_modifier < 1)
                 e_AR = transformed_AR * (effective_AR_modifier + 1);
             else
                 e_AR = transformed_AR * 2 * (2 - effective_AR_modifier) + 30 * (effective_AR_modifier - 1);
-
-            //            print(forwardexposure + " " + backwardexposure + " " + outwardexposure + " " + inwardexposure + " " + e_AR);
-
-            /*//This segment calculates Cl modifiers; uses the same variables for Cd later on
-            float LeModifier = 0.2f * LeExposure + 0.8f;
-            float TeModifier = 0.2f * TeExposure + 0.8f;
-
-            ClExposureModifier = LeModifier * TeModifier;
-
-            //This segment calculates Cd modifiers
-            LeModifier = 0.2f * LeExposure + 0.8f;
-            TeModifier = 0.2f * TeExposure + 0.8f;
-
-            CdExposureModifier = LeModifier * TeModifier;*/
 
             return e_AR;
 

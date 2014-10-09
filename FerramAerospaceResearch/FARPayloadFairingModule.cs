@@ -226,9 +226,17 @@ namespace ferram4
                     maxBoundVec = maxBounds[j];
                     if (relPos.x < maxBoundVec.x && relPos.y < maxBoundVec.y && relPos.z < maxBoundVec.z && relPos.x > minBoundVec.x && relPos.y > minBoundVec.y && relPos.z > minBoundVec.z)
                     {
-                        Vector3 vecFromPToCargoBayCenter = this.part.partTransform.position - p.partTransform.position;
+                        Vector3 vecFromPToPFCenter;
+                        if (d)
+                            vecFromPToPFCenter = p.partTransform.InverseTransformPoint(d.CoDshift);
+                        else if (w)
+                            vecFromPToPFCenter = w.WingCentroid();
+                        else
+                            vecFromPToPFCenter = p.partTransform.position;
 
-                        RaycastHit[] hits = Physics.RaycastAll(p.partTransform.position, vecFromPToCargoBayCenter, vecFromPToCargoBayCenter.magnitude, FARAeroUtil.RaycastMask);
+                        vecFromPToPFCenter = this.part.partTransform.position - vecFromPToPFCenter;
+
+                        RaycastHit[] hits = Physics.RaycastAll(p.partTransform.position, vecFromPToPFCenter, vecFromPToPFCenter.magnitude, FARAeroUtil.RaycastMask);
 
                         bool outsideMesh = false;
 
