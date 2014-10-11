@@ -154,6 +154,7 @@ namespace ferram4
 
         internal static bool tintForCl = false;
         internal static bool tintForCd = false;
+        internal static bool tintForStall = false;
         internal static double fullySaturatedCl = 0.5;
         internal static double fullySaturatedCd = 0.1;
 
@@ -1172,17 +1173,20 @@ namespace ferram4
             TabLabelStyle.alignment = TextAnchor.UpperCenter;
 
             tintForCl = GUILayout.Toggle(tintForCl, "Tint Cl");
-            tintForCd = GUILayout.Toggle(tintForCd, "Tint Cd");
-
             string tmp = fullySaturatedCl.ToString();
             FARGUIUtils.TextEntryField("Cl For Full Tint:", 80, ref tmp);
-                        tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
+            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
             fullySaturatedCl = double.Parse(tmp);
+
+            
+            tintForCd = GUILayout.Toggle(tintForCd, "Tint Cd");
 
             tmp = fullySaturatedCd.ToString();
             FARGUIUtils.TextEntryField("Cd For Full Tint:", 80, ref tmp);
                         tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
             fullySaturatedCd = double.Parse(tmp);
+
+            tintForStall = GUILayout.Toggle(tintForStall, "Tint Stall");
 
             GUI.DragWindow();
 

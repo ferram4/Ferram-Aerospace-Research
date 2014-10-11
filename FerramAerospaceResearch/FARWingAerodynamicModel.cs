@@ -52,7 +52,7 @@ namespace ferram4
     {
         public double AoAmax = 15;
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Mass/Strength Multiplier", guiFormat = "0.##"), UI_FloatRange(minValue = 0.05f, maxValue = 4.0f, stepIncrement = 0.05f)]
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Mass/Strength Multiplier", guiFormat = "0.##"), UI_FloatRange(minValue = 0.01f, maxValue = 2.0f, stepIncrement = 0.01f)]
         public float massMultiplier = 1.0f;
 
         public float oldMassMultiplier = -1f;
@@ -573,6 +573,16 @@ namespace ferram4
         {
             double PerpVelocity = Vector3d.Dot(part_transform.forward, velocity.normalized);
             return Math.Asin(FARMathUtil.Clamp(PerpVelocity, -1, 1));
+        }
+
+        protected override Color AeroVisualizationTintingCalculation()
+        {
+            if(FARControlSys.tintForStall)
+            {
+                return new Color((float)stall * 10, 0, 0, 1);
+            }
+            else
+                return base.AeroVisualizationTintingCalculation();
         }
 
         #region Interactive Effects

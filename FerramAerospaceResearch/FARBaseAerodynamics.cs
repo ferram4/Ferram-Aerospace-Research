@@ -101,18 +101,10 @@ namespace ferram4
         {
             if (HighLogic.LoadedSceneIsFlight)
             {
-                float satCl = 0, satCd = 0;
 
-                bool active = FARControlSys.tintForCl || FARControlSys.tintForCd;
+                Color tintColor = AeroVisualizationTintingCalculation();
 
-                if (FARControlSys.tintForCl)
-                    satCl = (float)Math.Abs(this.Cl / FARControlSys.fullySaturatedCl) * 10;
-                if (FARControlSys.tintForCd)
-                    satCd = (float)Math.Abs(this.Cd / FARControlSys.fullySaturatedCd) * 10;
-
-                Color tintColor = new Color(satCd, 0.5f * (satCl + satCd), satCl, 1);
-
-                if (active)
+                if (tintColor.a != 0)
                 {
                     this.part.SetHighlightType(Part.HighlightType.AlwaysOn);
                     this.part.SetHighlightColor(tintColor);
@@ -126,6 +118,24 @@ namespace ferram4
                     this.part.SetHighlight(false);
                 }
             }
+        }
+
+        //Returns the tinted color if active; else it returns an alpha 0 color
+        protected virtual Color AeroVisualizationTintingCalculation()
+        {
+            float satCl = 0, satCd = 0;
+
+            if (!FARControlSys.tintForCl && !FARControlSys.tintForCd)
+                return new Color(0, 0, 0, 0);
+
+            if (FARControlSys.tintForCl)
+                satCl = (float)Math.Abs(this.Cl / FARControlSys.fullySaturatedCl) * 10;
+            if (FARControlSys.tintForCd)
+                satCd = (float)Math.Abs(this.Cd / FARControlSys.fullySaturatedCd) * 10;
+
+            Color tintColor = new Color(satCd, 0.5f * (satCl + satCd), satCl, 1);
+
+            return tintColor;
         }
 
         public void ClearShielding()
