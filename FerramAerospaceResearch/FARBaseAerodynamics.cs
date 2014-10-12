@@ -106,9 +106,9 @@ namespace ferram4
 
                 if (tintColor.a != 0)
                 {
+                    this.part.highlightRecurse = false;
                     this.part.SetHighlightType(Part.HighlightType.AlwaysOn);
                     this.part.SetHighlightColor(tintColor);
-                    this.part.highlightRecurse = false;
                     this.part.SetHighlight(true);
                 }
                 else if (part.highlightType != Part.HighlightType.OnMouseOver)

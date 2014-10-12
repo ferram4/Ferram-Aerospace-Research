@@ -328,7 +328,7 @@ namespace ferram4
 
             OnWingAttach();
 
-            wingInteraction = new FARWingInteraction(this, this.part, this.part_transform, rootMidChordOffsetFromOrig, srfAttachNegative);
+            wingInteraction = new FARWingInteraction(this, this.part, rootMidChordOffsetFromOrig, srfAttachNegative);
 
             OnVesselPartsChange += UpdateWingInteractions;
             UpdateWingInteractions();

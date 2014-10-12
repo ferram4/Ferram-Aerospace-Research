@@ -44,7 +44,6 @@ namespace ferram4
     public class FARWingInteraction
     {
         private FARWingAerodynamicModel parentWingModule;
-        private Transform parentWingTransform;
         private Part parentWingPart;
         private Vector3 rootChordMidLocal;
         private Vector3 rootChordMidPt;
@@ -101,11 +100,10 @@ namespace ferram4
             private set { clInterferenceFactor = value; }
         }
         
-        public FARWingInteraction(FARWingAerodynamicModel parentModule, Part parentPart, Transform partTransform, Vector3 rootChordMid, short srfAttachNegative)
+        public FARWingInteraction(FARWingAerodynamicModel parentModule, Part parentPart, Vector3 rootChordMid, short srfAttachNegative)
         {
             parentWingModule = parentModule;
             parentWingPart = parentPart;
-            parentWingTransform = partTransform;
             rootChordMidLocal = rootChordMid;
             srfAttachFlipped = srfAttachNegative;
 
@@ -155,13 +153,13 @@ namespace ferram4
             float flt_MAC = (float)parentWingModule.MAC;
             float flt_b_2 = (float)parentWingModule.b_2;
 
-            rootChordMidPt = parentWingPart.transform.position + parentWingTransform.TransformDirection(rootChordMidLocal);
+            rootChordMidPt = parentWingPart.transform.position + parentWingPart.transform.TransformDirection(rootChordMidLocal);
 
             if(isSmallSrf)
             {
-                forwardExposure = ExposureSmallSrf(out nearbyWingModulesForward, parentWingPart.transform.up, VesselPartList, flt_b_2, flt_MAC);
+                forwardExposure = ExposureSmallSrf(out nearbyWingModulesForward, parentWingPart.transform.up, VesselPartList, flt_MAC, flt_MAC);
 
-                backwardExposure = ExposureSmallSrf(out nearbyWingModulesBackward , -parentWingPart.transform.up, VesselPartList, flt_b_2, flt_MAC);
+                backwardExposure = ExposureSmallSrf(out nearbyWingModulesBackward, -parentWingPart.transform.up, VesselPartList, flt_MAC, flt_MAC);
 
                 leftwardExposure = ExposureSmallSrf(out nearbyWingModulesLeftward, -parentWingPart.transform.right, VesselPartList, flt_b_2, flt_MAC);
 
@@ -171,7 +169,7 @@ namespace ferram4
             {
                 forwardExposure = ExposureInChordDirection(out nearbyWingModulesForward, parentWingPart.transform.up, VesselPartList, flt_b_2, flt_MAC);
 
-                backwardExposure = ExposureInChordDirection(out nearbyWingModulesBackward , -parentWingPart.transform.up, VesselPartList, flt_b_2, flt_MAC);
+                backwardExposure = ExposureInChordDirection(out nearbyWingModulesBackward, -parentWingPart.transform.up, VesselPartList, flt_b_2, flt_MAC);
 
                 leftwardExposure = ExposureInSpanDirection(out nearbyWingModulesLeftward, -parentWingPart.transform.right, VesselPartList, flt_b_2, flt_MAC);
 
@@ -291,13 +289,8 @@ namespace ferram4
                                 {
                                     exposure -= 0.2;
 
-                                    if (p.Modules.Contains("FARWingAerodynamicModel"))
-                                    {
-                                        FARWingAerodynamicModel hitModule = (FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
-                                        nearbyWings[i] = hitModule;
-                                    }
-                                    else
-                                        nearbyWings[i] = null;
+                                    FARWingAerodynamicModel hitModule = p.GetComponent<FARWingAerodynamicModel>();
+                                    nearbyWings[i] = hitModule;
 
                                     gotSomething = true;
 
@@ -360,13 +353,8 @@ namespace ferram4
                                 {
                                     exposure -= 0.2;
 
-                                    if (p.Modules.Contains("FARWingAerodynamicModel"))
-                                    {
-                                        FARWingAerodynamicModel hitModule = (FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
-                                        nearbyWings[i] = hitModule;
-                                    }
-                                    else
-                                        nearbyWings[i] = null;
+                                    FARWingAerodynamicModel hitModule = p.GetComponent<FARWingAerodynamicModel>();
+                                    nearbyWings[i] = hitModule;
 
                                     gotSomething = true;
                                     break;
@@ -386,7 +374,7 @@ namespace ferram4
 
         #region SmallSrfExposureDetection
 
-        private double ExposureSmallSrf(out FARWingAerodynamicModel[] nearbyWings, Vector3 rayDirection, List<Part> vesselPartList, float b_2, float MAC)
+        private double ExposureSmallSrf(out FARWingAerodynamicModel[] nearbyWings, Vector3 rayDirection, List<Part> vesselPartList, float rayCastDist, float MAC)
         {
             Ray ray = new Ray();
             ray.direction = rayDirection;
@@ -399,7 +387,7 @@ namespace ferram4
             ray.origin = rootChordMidPt - (float)(MAC * 0.7) * parentWingPart.transform.up.normalized;
 
             hit.distance = 0;
-            RaycastHit[] hits = Physics.RaycastAll(ray.origin, ray.direction, b_2, FARAeroUtil.RaycastMask);
+            RaycastHit[] hits = Physics.RaycastAll(ray.origin, ray.direction, rayCastDist, FARAeroUtil.RaycastMask);
             bool gotSomething = false;
             for (int j = 0; j < hits.Length; j++)
             {
@@ -428,13 +416,8 @@ namespace ferram4
                             {
                                 exposure -= 1;
 
-                                if (p.Modules.Contains("FARWingAerodynamicModel"))
-                                {
-                                    FARWingAerodynamicModel hitModule = (FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
-                                    nearbyWings[0] = hitModule;
-                                }
-                                else
-                                    nearbyWings[0] = null;
+                                FARWingAerodynamicModel hitModule = p.GetComponent<FARWingAerodynamicModel>();
+                                nearbyWings[0] = hitModule;
 
                                 gotSomething = true;
 
@@ -498,16 +481,18 @@ namespace ferram4
 
             foreach(KeyValuePair<FARWingAerodynamicModel, double> pair in nearbyUpstreamWingModulesAndInfluenceFactors)
             {
-                double tmp = Vector3d.Dot(pair.Key.GetLiftDirection(), parentWingModule.GetLiftDirection());
+                double tmp = Vector3.Dot(pair.Key.GetLiftDirection(), parentWingModule.GetLiftDirection());
 
-                effectiveUpstreamLiftSlope += pair.Key.GetLiftSlope() * pair.Value * Math.Abs(tmp);
-                effectiveUpstreamStall += pair.Key.GetStall() * pair.Value * Math.Abs(tmp);
-                effectiveUpstreamCosSweepAngle += pair.Key.GetCosSweepAngle() * pair.Value * Math.Abs(tmp);
-                effectiveUpstreamAoAMax += pair.Key.AoAmax * pair.Value * Math.Abs(tmp);
-                effectiveUpstreamCd0 += pair.Key.GetCd0() * pair.Value * Math.Abs(tmp);
+                effectiveUpstreamLiftSlope += pair.Key.GetLiftSlope() * pair.Value;
+                effectiveUpstreamStall += pair.Key.GetStall() * pair.Value;
+                effectiveUpstreamCosSweepAngle += pair.Key.GetCosSweepAngle() * pair.Value;
+                effectiveUpstreamAoAMax += pair.Key.AoAmax * pair.Value;
+                effectiveUpstreamCd0 += pair.Key.GetCd0() * pair.Value;
 
-                double wAoA = pair.Key.CalculateAoA(pair.Key.GetVelocity()) * Math.Sign(tmp);
-                tmp = (thisWingAoA - wAoA) * Math.Abs(tmp);                //First, make sure that the AoA are wrt the same direction; then account for any strange angling of the part that shouldn't be there
+                double tmpAbs = Math.Abs(tmp);
+
+                double wAoA = pair.Key.CalculateAoA(pair.Key.GetVelocity()) * Math.Sign(tmp) * pair.Value / tmpAbs;
+                tmp = (thisWingAoA - wAoA) * tmpAbs;                //First, make sure that the AoA are wrt the same direction; then account for any strange angling of the part that shouldn't be there
 
                 effectiveUpstreamAngle += tmp;
             }
@@ -622,6 +607,8 @@ namespace ferram4
                 //Account for the off-angle affect of this as well as the number of wings listed for this direction
                 double influenceFactor = directionalInfluence / numWingsInDirection;
 
+                influenceFactor *= Math.Abs(Vector3.Dot(upstreamWing.GetLiftDirection(), parentWingModule.GetLiftDirection()));
+
                 influenceFactor += nearbyUpstreamWingModulesAndInfluenceFactors[upstreamWing];  //Add the previous numbers
                 nearbyUpstreamWingModulesAndInfluenceFactors[upstreamWing] = influenceFactor;   //And update the dict value
             }
@@ -631,6 +618,8 @@ namespace ferram4
 
                 //Account for the off-angle affect of this as well as the number of wings listed for this direction
                 double influenceFactor = directionalInfluence / numWingsInDirection;
+
+                influenceFactor *= Math.Abs(Vector3.Dot(upstreamWing.GetLiftDirection(), parentWingModule.GetLiftDirection()));
 
                 nearbyUpstreamWingModulesAndInfluenceFactors[upstreamWing] = influenceFactor;   //And add it to the dictionary, along with the influence factor
             }
