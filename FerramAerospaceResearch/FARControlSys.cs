@@ -320,8 +320,8 @@ namespace ferram4
             }
 
             double soundspeed;
-            double density = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
-            double realToStockDensityRatio = vessel.atmDensity / density;
+            rho = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
+            double realToStockDensityRatio = vessel.atmDensity / rho;
 
             bool zero_q = FARMathUtil.Approximately(0, q);
             double drag_coeff = FlightGlobals.DragMultiplier * 1000 * realToStockDensityRatio;
@@ -426,7 +426,7 @@ namespace ferram4
             ballisticCoeff = mass * 1000 / DragArea;
 
             termVel = 2 * ballisticCoeff * geeForce;
-            termVel /= density;
+            termVel /= rho;
             termVel = Math.Sqrt(termVel);
 
             SetFlightStatusWindow();

@@ -66,7 +66,7 @@ namespace ferram4
         [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
         public bool isShielded = false;
 
-        
+        public double rho;
 
         public static bool GlobalCoLReady = false;
         private static Vector3d GlobalCoL;

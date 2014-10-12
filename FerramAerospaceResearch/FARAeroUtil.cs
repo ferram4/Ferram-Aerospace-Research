@@ -592,57 +592,6 @@ namespace ferram4
             }
         }
 
-        private static FloatCurve wingCamberFactor = null;
-        private static FloatCurve wingCamberMoment = null;
-
-        public static FloatCurve WingCamberFactor
-        {
-            get
-            {
-                if (wingCamberFactor == null)
-                {
-                    wingCamberFactor = new FloatCurve();
-                    wingCamberFactor.Add(0, 0);
-                    for (double i = 0.1; i <= 0.9; i += 0.1)
-                    {
-                        double tmp = i * 2;
-                        tmp--;
-                        tmp = Math.Acos(tmp);
-
-                        tmp = tmp - Math.Sin(tmp);
-                        tmp /= Math.PI;
-                        tmp = 1 - tmp;
-
-                        wingCamberFactor.Add((float)i, (float)tmp);
-                    }
-                    wingCamberFactor.Add(1, 1);
-                }
-                return wingCamberFactor;
-            }
-        }
-
-        public static FloatCurve WingCamberMoment
-        {
-            get
-            {
-                if (wingCamberMoment == null)
-                {
-                    wingCamberMoment = new FloatCurve();
-                    for (double i = 0; i <= 1; i += 0.1)
-                    {
-                        double tmp = i * 2;
-                        tmp--;
-                        tmp = Math.Acos(tmp);
-
-                        tmp = (Math.Sin(2 * tmp) - 2 * Math.Sin(tmp)) / (8 * (Math.PI - tmp + Math.Sin(tmp)));
-
-                        wingCamberMoment.Add((float)i, (float)tmp);
-                    }
-                }
-                return wingCamberMoment;
-            }
-        }
-
         public static bool IsNonphysical(Part p)
         {
             return p.physicalSignificance == Part.PhysicalSignificance.NONE ||

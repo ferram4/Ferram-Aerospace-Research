@@ -385,7 +385,7 @@ namespace ferram4
             }
         }
 
-        protected override double CalculateAoA(Vector3d velocity)
+        public override double CalculateAoA(Vector3d velocity)
         {
             // Use the vector computed by DeflectionAnimation
             Vector3d perp = part_transform.TransformDirection(deflectedNormal);

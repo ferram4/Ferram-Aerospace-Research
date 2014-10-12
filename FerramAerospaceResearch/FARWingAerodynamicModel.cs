@@ -47,10 +47,12 @@ using UnityEngine;
 
 namespace ferram4
 {
-
     public class FARWingAerodynamicModel : FARBaseAerodynamics
     {
         public double AoAmax = 15;
+
+        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
+        public float curWingMass = 1;
 
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Mass/Strength Multiplier", guiFormat = "0.##"), UI_FloatRange(minValue = 0.01f, maxValue = 2.0f, stepIncrement = 0.01f)]
         public float massMultiplier = 1.0f;
@@ -101,22 +103,11 @@ namespace ferram4
         protected float currentDrag = 0.0f;
 
         private double liftslope = 0;
-        protected double ClCdInterference = 1;
-
-        private double forwardexposure;
-        private double backwardexposure;
-        private double outwardexposure;
-        private double inwardexposure;
-
-        protected double WingtipExposure = 0;
-        protected double WingrootExposure = 0;
-
         protected double zeroLiftCdIncrement = 0;
 
         protected double criticalCl = 1.6;
 
         private double refAreaChildren = 0;
-
 
         public Vector3d AerodynamicCenter = Vector3d.zero;
         private Vector3d CurWingCentroid = Vector3d.zero;
@@ -128,23 +119,18 @@ namespace ferram4
         public Vector3 rootMidChordOffsetFromOrig;
 
         // in local coordinates
-        private Vector3d localWingCentroid = Vector3.zero;
+        private Vector3d localWingCentroid = Vector3d.zero;
         private Vector3d sweepPerpLocal, sweepPerp2Local;
-        private Vector3d ParallelInPlaneLocal = Vector3.zero;
+        private Vector3d ParallelInPlaneLocal = Vector3d.zero;
 
-        private Int16 srfAttachNegative = 1;
+        FARWingInteraction wingInteraction;
 
-        private Vector3d LastInFrontRaycast = Vector3.zero;
-        private int LastInFrontRaycastCount = 0;
-        private Part PartInFrontOf = null;
-        private FARWingAerodynamicModel WingInFrontOf = null;
+        private short srfAttachNegative = 1;
 
         private FARWingAerodynamicModel parentWing = null;
         private bool updateMassNextFrame = false;
 
-        protected double ClIncrementFromRear = 0f;
-
-        private double rho = 1;
+        protected double ClIncrementFromRear = 0;
 
         public double YmaxForce = double.MaxValue;
         public double XZmaxForce = double.MaxValue;
@@ -191,6 +177,20 @@ namespace ferram4
             return liftDirection;
         }
 
+        public double GetLiftSlope()
+        {
+            return liftslope;
+        }
+
+        public double GetCosSweepAngle()
+        {
+            return cosSweepAngle;
+        }
+
+        public double GetCd0()
+        {
+            return zeroLiftCdIncrement;
+        }
 
         #endregion
 
@@ -295,8 +295,6 @@ namespace ferram4
         {
             base.Start();
 
-            OnVesselPartsChange += RunExposure;
-
             if(HighLogic.LoadedSceneIsEditor)
             {
                 part.OnEditorAttach += OnWingAttach;
@@ -329,6 +327,11 @@ namespace ferram4
             Fields["currentDrag"].guiActive = FARDebugValues.displayForces;
 
             OnWingAttach();
+
+            wingInteraction = new FARWingInteraction(this, this.part, this.part_transform, rootMidChordOffsetFromOrig, srfAttachNegative);
+
+            OnVesselPartsChange += UpdateWingInteractions;
+            UpdateWingInteractions();
         }
 
         public void MathAndFunctionInitialization()
@@ -352,7 +355,6 @@ namespace ferram4
             sweepPerp2Local = Vector3d.up * Math.Sin(MidChordSweepSideways) - Vector3d.right * Math.Cos(MidChordSweepSideways) * srfAttachNegative; //Vector perpendicular to midChord line2
 
             PrecomputeCentroid();
-            RunExposure();
 
             if (FARDebugValues.allowStructuralFailures)
             {
@@ -376,11 +378,12 @@ namespace ferram4
             }
         }
 
-        private void RunExposure()
+        private void UpdateWingInteractions()
         {
-            LastInFrontRaycastCount = 0;
+            if(VesselPartList == null)
+                VesselPartList = GetShipPartList();
 
-            WingExposureFunction();
+            wingInteraction.UpdateWingInteraction(VesselPartList, nonSideAttach == 1);
         }
 
         #endregion
@@ -486,8 +489,7 @@ namespace ferram4
 
             Vector3d scaledForce = force;
             //This accounts for the effect of flap effects only being handled by the rearward surface
-            if ((object)WingInFrontOf != null)
-                scaledForce *= S / (S + WingInFrontOf.S);
+            scaledForce *= S / (S + wingInteraction.EffectiveUpstreamArea);
 
             if (Math.Abs(Vector3d.Dot(scaledForce, forward)) > YmaxForce || Vector3d.Exclude(forward, scaledForce).magnitude > XZmaxForce)
                 if (part.parent && !vessel.packed)
@@ -541,6 +543,7 @@ namespace ferram4
         {
             float supportedArea = (float)(refAreaChildren + S);
             part.mass = supportedArea * (float)FARAeroUtil.massPerWingAreaSupported * massMultiplier;
+            curWingMass = part.mass;
             oldMassMultiplier = massMultiplier;
             if(printLog)
                 Debug.Log("Wing: " + part.partInfo.title + " mass set to: " + part.mass + " with a supported area of: " + supportedArea);
@@ -569,7 +572,7 @@ namespace ferram4
 
         #endregion
 
-        protected virtual double CalculateAoA(Vector3d velocity)
+        public virtual double CalculateAoA(Vector3d velocity)
         {
             double PerpVelocity = Vector3d.Dot(part_transform.forward, velocity.normalized);
             return Math.Asin(FARMathUtil.Clamp(PerpVelocity, -1, 1));
@@ -587,191 +590,21 @@ namespace ferram4
 
         #region Interactive Effects
 
-        //Uses raycasting to find a wing part in front of this part
-        private void FindWingInFrontOf()
-        {
-            if (HighLogic.LoadedSceneIsFlight)
-            {
-                // Don't repeat traces until count expires or > 5 degree angle change
-                if (LastInFrontRaycastCount-- > 0 &&
-                    Vector3d.Dot(ParallelInPlaneLocal, LastInFrontRaycast) > 0.996)
-                    return;
-
-                LastInFrontRaycastCount = 10;
-                LastInFrontRaycast = ParallelInPlaneLocal;
-            }
-
-            PartInFrontOf = null;
-            WingInFrontOf = null;
-            //PartInfrontOfName = "";
-
-            if (ParallelInPlane != Vector3d.zero)
-            {
-                // Special case for control surfaces attached to a wing:
-                // If the ray direction is within 60 degrees of up, just use parent.
-                if (nonSideAttach > 0 && ParallelInPlaneLocal.y > 0.5 &&
-                    (part.parent || HighLogic.LoadedSceneIsEditor && part.potentialParent))
-                {
-                    Part parent = part.parent ?? part.potentialParent;
-                    FARWingAerodynamicModel w = parent.GetComponent<FARWingAerodynamicModel>();
-
-                    if (w != null)
-                    {
-                        PartInFrontOf = parent;
-                        WingInFrontOf = w;
-                        //PartInfrontOfName = PartInFrontOf.partInfo.title;
-                        return;
-                    }
-                }
-
-                RaycastHit hit = new RaycastHit();
-                float distance = Mathf.Max((float)(3 * effective_MAC), 0.1f);
-                Ray tmpRay = new Ray((Vector3)CurWingCentroid, (Vector3)ParallelInPlane);
-                float sphereRad = Mathf.Min((float)effective_MAC * 0.1f, distance * 0.05f);
-
-                RaycastHit[] hits = Physics.SphereCastAll(tmpRay, sphereRad, distance, FARAeroUtil.RaycastMask);
-
-                for (int i = 0; i < hits.Length; i++)
-                {
-                    RaycastHit h = hits[i];
-                    if (h.rigidbody == part.rigidbody)
-                        continue;
-
-                    Collider[] colliders;
-                    try
-                    {
-                        colliders = part.GetComponentsInChildren<Collider>();
-                    }
-                    catch (Exception e)
-                    {
-                        //Fail silently because it's the only way to avoid issues with pWings
-                        //Debug.LogException(e);
-                        colliders = new Collider[1] { part.collider };
-                    }
-                    for (int j = 0; j < colliders.Length; j++)
-                        if (h.collider == colliders[j])
-                            continue;
-                        
-                    else if (h.distance < distance)
-                    {
-                        distance = h.distance;
-                        hit = h;
-                    }
-                }
-                if (hit.distance != 0)
-                {
-                    if (hit.collider.attachedRigidbody || HighLogic.LoadedSceneIsEditor)
-                    {
-                        Part p = null;
-
-                        if (hit.collider.attachedRigidbody)
-                            p = hit.collider.attachedRigidbody.GetComponent<Part>();
-
-                        if ((object)p == null && HighLogic.LoadedSceneIsEditor)
-                            for (int i = 0; i < VesselPartList.Count; i++)
-                            {
-                                Part q = VesselPartList[i];
-                                bool breakBool = false;
-
-                                Collider[] colliders;
-                                try
-                                {
-                                    colliders = q.GetComponentsInChildren<Collider>();
-                                }
-                                catch (Exception e)
-                                {
-                                    //Fail silently because it's the only way to avoid issues with pWings
-                                    //Debug.LogException(e);
-                                    colliders = new Collider[1] { q.collider };
-                                }
-                                for (int j = 0; j < colliders.Length; j++)
-                                    if (hit.collider == colliders[j])
-                                    {
-                                        p = q;
-                                        breakBool = true;
-                                        break;
-                                    }
-
-                                if (breakBool)
-                                    break;
-                            }
-
-                        if (p != null && p != this.part)
-                        {
-                            if (HighLogic.LoadedSceneIsFlight && p.vessel != vessel)
-                                return;
-
-                            FARWingAerodynamicModel w = p.GetComponent<FARWingAerodynamicModel>();
-
-                            if (w != null)
-                            {
-                                PartInFrontOf = p;
-                                WingInFrontOf = w;
-                                //PartInfrontOfName = PartInFrontOf.partInfo.title;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
         //Calculates camber and flap effects due to wing interactions
-        private void CalculateWingCamberInteractions(double MachNumber, double AoA, out double ACshift, out double ACweight, out double wStall)
+        private void CalculateWingCamberInteractions(double MachNumber, double AoA, out double ACshift, out double ACweight)
         {
             ACshift = 0;
             ACweight = 0;
-            wStall = 0;
+            ClIncrementFromRear = 0;
 
-            FindWingInFrontOf();
+            AoAmax = CalculateAoAmax();
 
-            if ((object)WingInFrontOf != null)
+            wingInteraction.UpdateOrientationForInteraction(ParallelInPlaneLocal);
+            if (wingInteraction.HasWingsUpstream())
             {
-                FARWingAerodynamicModel w = WingInFrontOf;
-
-                double angle = Vector3.Dot(w.liftDirection, this.liftDirection);        //This deals with the effect of a part being attached at a strange angle and reducing the effect, so that a vertical stabilizer placed on a wing doesn't affect the lift of the wing
-                
-                double flapRatio = FARMathUtil.Clamp(this.effective_MAC / (this.effective_MAC + w.effective_MAC), 0, 1);
-                float flt_flapRatio = (float)flapRatio;
-                double flapFactor = FARAeroUtil.WingCamberFactor.Evaluate(flt_flapRatio);        //Flap Effectiveness Factor
-                double dCm_dCl = FARAeroUtil.WingCamberMoment.Evaluate(flt_flapRatio);           //Change in moment due to change in lift from flap
-
-                double liftDirVal = angle;
-                double wAoA = w.CalculateAoA(w.GetVelocity()) * Math.Sign(liftDirVal);
-                angle = (AoA - wAoA) * Math.Abs(angle);                //First, make sure that the AoA are wrt the same direction; then account for any strange angling of the part that shouldn't be there
-
-                //This accounts for the wing possibly having a longer span than the flap
-                double WingFraction = FARMathUtil.Clamp(this.effective_b_2 / w.effective_b_2, 0, 1);
-                //This accounts for the flap possibly having a longer span than the wing it's attached to
-                double FlapFraction = FARMathUtil.Clamp(w.effective_b_2 / this.effective_b_2, 0, 1);
-
-                double ClIncrement = flapFactor * w.liftslope * Math.Sin(2 * angle) * 0.5;   //Lift created by the flap interaction
-                ClIncrement *= (this.S * FlapFraction + w.S * WingFraction) / this.S;                   //Increase the Cl so that even though we're working with the flap's area, it accounts for the added lift across the entire object
-
-                double MachCoeff = FARMathUtil.Clamp(1 - MachNumber * MachNumber, 0, 1);
-
-                ACweight = ClIncrement * MachCoeff; // Total flap Cl for the purpose of applying ACshift, including the bit subtracted below
-
-                ClIncrement -= FlapFraction * w.liftslope * Math.Sin(2 * angle) * 0.5;        //Removing additional angle so that lift of the flap is calculated as lift at wing angle + lift due to flap interaction rather than being greater
-
-                ACshift = (dCm_dCl + 0.75 * (1 - flapRatio)) * (effective_MAC + w.effective_MAC);      //Change in Cm with change in Cl
-
-                this.ClIncrementFromRear = ClIncrement * MachCoeff;
-
-                liftslope = w.liftslope;
-                cosSweepAngle = w.cosSweepAngle;
-                
-
-                wStall = w.stall * Math.Abs(liftDirVal);
-                if (Math.Abs(liftDirVal) > 0.5)
-                {
-                    this.AoAmax = (w.AoAmax + CalculateAoAmax()) * 0.5;
-                    this.AoAmax += (AoA - wAoA) * Math.Sign(AoA); //  less efficient than before since we calculate AoA again
-                }
-                else
-                    AoAmax = CalculateAoAmax();
+                wingInteraction.CalculateEffectsOfUpstreamWing(AoA, MachNumber, ref ACweight, ref ACshift, ref ClIncrementFromRear);
+                AoAmax *= 1.5;
             }
-            else
-                AoAmax = CalculateAoAmax();
         }
 
         #endregion
@@ -780,23 +613,23 @@ namespace ferram4
         private void DetermineStall(double MachNumber, double AoA, out double ACshift, out double ACweight)
         {
             double lastStall = stall;
-            double tmp = 0;
+            double effectiveUpstreamStall = wingInteraction.EffectiveUpstreamStall;
             stall = 0;
 
-            CalculateWingCamberInteractions(MachNumber, AoA, out ACshift, out ACweight, out tmp);
+            CalculateWingCamberInteractions(MachNumber, AoA, out ACshift, out ACweight);
 
             double absAoA = Math.Abs(AoA);
 
             if (absAoA > AoAmax)
             {
                 stall = FARMathUtil.Clamp((absAoA - AoAmax) * 10, 0, 1);
-                stall += tmp;
+                stall += effectiveUpstreamStall;
                 stall = Math.Max(stall, lastStall);
             }
             else if (absAoA < AoAmax * 0.8)
             {
                 stall = 1 - FARMathUtil.Clamp((AoAmax * 0.8 - absAoA) * 20, 0, 1);
-                stall += tmp;
+                stall += effectiveUpstreamStall;
                 stall = Math.Min(stall, lastStall);
             }
             else
@@ -941,7 +774,7 @@ namespace ferram4
 
             AerodynamicCenter = AerodynamicCenter + ACShiftVec;
 
-            Cl *= ClCdInterference;
+            Cl *= wingInteraction.ClInterferenceFactor;
 
             ClIncrementFromRear = 0;
         }
@@ -1226,7 +1059,7 @@ namespace ferram4
 
             SetSweepAngle(sweepHalfChord);
 
-            effective_AR = EffectOfExposure();
+            effective_AR = wingInteraction.ARFactor;
 
             /*if (MachNumber < 1)
                 tmp = Mathf.Clamp(MachNumber, 0, 0.9f);
@@ -1279,9 +1112,9 @@ namespace ferram4
         private double CdCompressibilityZeroLiftIncrement(double M, double SweepAngle, double TanSweep, double beta_TanSweep, double beta)
         {
 
-            if ((object)WingInFrontOf != null)
+            if (wingInteraction.HasWingsUpstream())
             {
-                zeroLiftCdIncrement = WingInFrontOf.zeroLiftCdIncrement;
+                zeroLiftCdIncrement = wingInteraction.EffectiveUpstreamCd0;
                 return zeroLiftCdIncrement;
             }
 
@@ -1362,284 +1195,6 @@ namespace ferram4
         }
         #endregion
 
-        #region Exposure / Whole is greater than sum of parts
-
-        ///<summary>
-        /// This function calculates 4 Exposure values corresponding to the wing part's location wrt other wings and the fuselage
-        /// These values describe forward, backward, outward and inward exposure for the wing and have no formal basis other than "things block air, therefore adjust Cl and Cd"
-        /// </summary>
-        /// 
-
-        private void WingExposureFunction()
-        {
-            if (VesselPartList == null)
-                VesselPartList = GetShipPartList();
-
-            float flt_MAC = (float)MAC;
-            float flt_b_2 = (float)b_2;
-
-            ray.direction = part.transform.up;
-            forwardexposure = ExposureDirection(ray, hit, VesselPartList, flt_MAC, true);
-
-            ray.direction = -part.transform.up;
-            backwardexposure = ExposureDirection(ray, hit, VesselPartList, flt_MAC, true);
-
-            ray.direction = part.transform.right;
-            inwardexposure = ExposureDirection(ray, hit, VesselPartList, flt_b_2, false);
-
-            ray.direction = -part.transform.right;
-            outwardexposure = ExposureDirection(ray, hit, VesselPartList, flt_b_2, false);
-
-            //This part handles effects of biplanes, triplanes, etc.
-            ClCdInterference = 1;
-            ray.direction = part.transform.forward;
-            ClCdInterference *= WingInterference(ray, hit, VesselPartList, flt_b_2);
-            ray.direction = -part.transform.forward;
-            ClCdInterference *= WingInterference(ray, hit, VesselPartList, flt_b_2);
-        }
-
-        private double WingInterference(Ray ray, RaycastHit hit, List<Part> PartList, float dist)
-        {
-            double interferencevalue = 1;
-
-            ray.origin = WingCentroid();
-
-            bool gotSomething = false;
-
-            hit.distance = 0;
-            RaycastHit[] hits = Physics.RaycastAll(ray.origin, ray.direction, dist, FARAeroUtil.RaycastMask);
-            for (int i = 0; i < hits.Length; i++)
-            {
-                RaycastHit h = hits[i];
-                if (h.collider != null)
-                {
-                    for (int j = 0; j < PartList.Count; j++)
-                    {
-                        Part p = PartList[j];
-
-                        if (p == part)
-                            continue;
-
-                        Collider[] colliders;
-                        try
-                        {
-                            colliders = p.GetComponentsInChildren<Collider>();
-                        }
-                        catch (Exception e)
-                        {
-                            //Fail silently because it's the only way to avoid issues with pWings
-                            //Debug.LogException(e);
-                            colliders = new Collider[1] { p.collider };
-                        }
-                        if (p.Modules.Contains("FARWingAerodynamicModel"))
-                        {
-                            for (int k = 0; k < colliders.Length; k++)
-                                if (h.collider == colliders[k])
-                                {
-                                    if (h.distance > 0)
-                                    {
-                                        double tmp = h.distance / dist;
-                                        tmp = FARMathUtil.Clamp(tmp, 0, 1);
-                                        interferencevalue = Math.Min(tmp, interferencevalue);
-                                        gotSomething = true;
-                                    }
-                                    break;
-                                }
-                        }
-                        if (gotSomething)
-                            break;
-                    }
-                }
-            }
-            return interferencevalue;
-        }
-
-        private double ExposureDirection(Ray ray, RaycastHit hit, List<Part> PartList, float dist, bool span)
-        {
-            Vector3 pos = part.transform.position + part_transform.TransformDirection(rootMidChordOffsetFromOrig);
-
-            double exposure = 1;
-            if (nonSideAttach == 0)
-                for (int i = 0; i < 5; i++)
-                {
-                    //Vector3 centroid = WingCentroid();
-                    if (span)
-                    {
-                        ray.origin = pos - (float)(b_2 * (i * 0.2 + 0.1)) * part.transform.right.normalized * srfAttachNegative;
-                    }
-                    else
-                    {
-                        ray.origin = pos + (float)(MAC * i * 0.25 - (MAC * 0.5)) * part.transform.up.normalized * 0.8f;
-                        //                        ray.origin = part.transform.position + (MAC * i / 4 - (MAC / 2)) * part.transform.up.normalized * 0.8f;
-                        ray.origin -= (float)(b_2 * 0.5) * part.transform.right.normalized * srfAttachNegative;
-                    }
-
-                    if (dist <= 0)
-                        dist = 1;
-
-                    hit.distance = 0;
-                    RaycastHit[] hits = Physics.RaycastAll(ray.origin, ray.direction, dist, FARAeroUtil.RaycastMask);
-                    bool gotSomething = false;
-                    for (int j = 0; j < hits.Length; j++)
-                    {
-                        RaycastHit h = hits[j];
-                        if (h.collider != null)
-                        {
-                            for (int k = 0; k < PartList.Count; k++)
-                            {
-                                Part p = PartList[k];
-                                if (p == part)
-                                    continue;
-
-                                Collider[] colliders;
-                                try
-                                {
-                                    colliders = p.GetComponentsInChildren<Collider>();
-                                }
-                                catch (Exception e)
-                                {
-                                    //Fail silently because it's the only way to avoid issues with pWings
-                                    //Debug.LogException(e);
-                                    colliders = new Collider[1] { p.collider };
-                                }
-                                for (int l = 0; l < colliders.Length; l++)
-                                    if (h.collider == colliders[l])
-                                    {
-                                        if (h.distance > 0)
-                                        {
-                                            exposure -= 0.2;
-                                            gotSomething = true;
-                                        }
-                                        break;
-                                    }
-                                if (gotSomething)
-                                    break;
-                            }
-                        }
-                        if (gotSomething)
-                            break;
-                    }
-                }
-            else
-            {
-                ray.origin = pos - (float)(MAC * 0.7) * part.transform.up.normalized;
-
-
-                if (dist <= 0)
-                    dist = 1;
-
-                hit.distance = 0;
-                RaycastHit[] hits = Physics.RaycastAll(ray.origin, ray.direction, dist, FARAeroUtil.RaycastMask);
-                bool gotSomething = false;
-                for (int i = 0; i < hits.Length; i++)
-                {
-                    RaycastHit h = hits[i];
-                    if (h.collider != null)
-                    {
-                        for (int j = 0; j < PartList.Count; j++)
-                        {
-                            Part p = PartList[j];
-
-                            if (p == part)
-                                continue;
-
-                            Collider[] colliders;
-                            try
-                            {
-                                colliders = p.GetComponentsInChildren<Collider>();
-                            }
-                            catch (Exception e)
-                            {
-                                //Fail silently because it's the only way to avoid issues with pWings
-                                //Debug.LogException(e);
-                                colliders = new Collider[1] { p.collider };
-                            }
-                            for (int k = 0; k < colliders.Length; k++)
-                                if (h.collider == colliders[k])
-                                {
-                                    if (h.distance > 0)
-                                    {
-                                        exposure -= 1;
-                                        gotSomething = true;
-                                    }
-                                    break;
-                                }
-                            if (gotSomething)
-                                break;
-                        }
-                    }
-                    if (gotSomething)
-                        break;
-                }
-            }
-            return exposure;
-        }
-        /// <summary>
-        /// This function adjusts the lift and drag coefficients based on the 4 Exposure values
-        /// </summary>
-
-        private double EffectOfExposure()
-        {
-            double forwardbackward = ParallelInPlaneLocal.y;
-            double inwardoutward = ParallelInPlaneLocal.x * srfAttachNegative;
-            //            LeExposure = 0;
-            //            TeExposure = 0;
-            WingtipExposure = 0;
-            WingrootExposure = 0;
-
-            if (forwardbackward > 0)
-            {
-                forwardbackward *= forwardbackward;
-                //                LeExposure += forwardexposure * forwardbackward;
-                //                TeExposure += backwardexposure * forwardbackward;
-                WingtipExposure += outwardexposure * forwardbackward;
-                WingrootExposure += inwardexposure * forwardbackward;
-            }
-            else
-            {
-                forwardbackward *= forwardbackward;
-                //                LeExposure += backwardexposure * forwardbackward;
-                //                TeExposure += forwardexposure * forwardbackward;
-                WingtipExposure += inwardexposure * forwardbackward;
-                WingrootExposure += outwardexposure * forwardbackward;
-            }
-
-            if (inwardoutward > 0)
-            {
-                inwardoutward *= inwardoutward;
-                //                LeExposure += outwardexposure * inwardoutward;
-                //                TeExposure += inwardexposure * inwardoutward;
-                WingtipExposure += backwardexposure * inwardoutward;
-                WingrootExposure += forwardexposure * inwardoutward;
-            }
-            else
-            {
-                inwardoutward *= inwardoutward;
-                //                LeExposure += inwardexposure * inwardoutward;
-                //                TeExposure += outwardexposure * inwardoutward;
-                WingtipExposure += forwardexposure * inwardoutward;
-                WingrootExposure += backwardexposure * inwardoutward;
-            }
-
-            WingtipExposure = 1 - WingtipExposure;
-            WingrootExposure = 1 - WingrootExposure;
-
-
-            double effective_AR_modifier = (WingrootExposure + WingtipExposure);
-
-            double e_AR;
-
-            if (effective_AR_modifier < 1)
-                e_AR = transformed_AR * (effective_AR_modifier + 1);
-            else
-                e_AR = transformed_AR * 2 * (2 - effective_AR_modifier) + 30 * (effective_AR_modifier - 1);
-
-            return e_AR;
-
-        }
-
-        #endregion
-
         public override void OnLoad(ConfigNode node)
         {
             base.OnLoad(node);
@@ -1653,27 +1208,6 @@ namespace ferram4
                 int.TryParse(node.GetValue("nonSideAttach"), out nonSideAttach);
             if (node.HasValue("MidChordSweep"))
                 double.TryParse(node.GetValue("MidChordSweep"), out MidChordSweep);
-            /*if (node.HasValue("rootMidChordOffsetFromOrig"))
-            {
-                string s = node.GetValue("rootMidChordOffsetFromOrig");
-                string[] strs = s.Split(new char[] { ' ', ',' });
-                int j = 0;
-                rootMidChordOffsetFromOrig = new Vector3d();
-                for (int i = 0; i < strs.Length; i++)
-                {
-                    double tmp;
-                    if (double.TryParse(strs[i], out tmp))
-                    {
-                        rootMidChordOffsetFromOrig[j] = tmp;
-                        j++;
-                        if (j > 2)
-                            break;
-                    }
-                }
-            }*/
-
         }
     }
-
-
 }

@@ -82,18 +82,8 @@ namespace ferram4
         private static double upperBound = 20;
         private static uint numPoints = 10;
 
-        private static Part.HighlightType defaultHighlightType = Part.HighlightType.Disabled;
-        private static Color defaultHighlightColor = Color.clear;
-        private static bool defaultHighlight = false;
-
         private static bool vehicleFueled = true;
         private static bool spoilersDeployed = false;
-//        private static bool showDrag = false;
-//        private static bool showLift = false;
-
-
-//        private static bool TintForDrag = false;
-//        private static bool TintForLift = false;
 
 
         private AnalysisHelpTab analysisHelpTab = 0;
@@ -1489,86 +1479,6 @@ namespace ferram4
             GUILayout.EndHorizontal();
         }
 
-
-
-
-/*        private void StartDBSCAN(float eps, int NumPts)
-        {
-            WingGroups.Clear();
-            List<WingAerodynamicModel> CheckList = new List<WingAerodynamicModel>();
-            MonoBehaviour.print("Num wings: " + CheckList.Count);
-            while (CheckList.Count < AllWings.Count)
-            {
-                WingAerodynamicModel w = new WingAerodynamicModel();
-                for (int i = 0; i < AllWings.Count; i++)
-                    if(!CheckList.Contains(AllWings[i]))
-                    {
-                        w = AllWings[i];
-                        CheckList.Add(w);
-                        break;
-                    }
-                
-                List<Part> NearbyWingParts = NearbyWingQuery(w.part, eps);
-                if (NearbyWingParts.Count > NumPts)
-                {
-                    List<Part> wing = CreateAndExpandCluster(w.part, NearbyWingParts, eps, NumPts, CheckList);
-                    MonoBehaviour.print("Adding Wing Cluster");
-                    WingGroups.Add(wing);
-                }
-            }
-
-
-
-        }
-
-        private List<Part> CreateAndExpandCluster(Part point, List<Part> NearbyWingParts, float eps, int NumPts, List<WingAerodynamicModel> CheckList)
-        {
-            MonoBehaviour.print("Updating Clusters");
-            List<Part> Cluster = new List<Part>();
-            Cluster.Add(point);
-            List<Part> tmplist;
-            tmplist = NearbyWingParts;
-            foreach (Part p in tmplist)
-            {
-                WingAerodynamicModel w = p.GetComponent<WingAerodynamicModel>();
-                if (!CheckList.Contains(w) && w)
-                    CheckList.Add(w);
-
-                List<Part> NearbyWingPartsRecur = NearbyWingQuery(p, eps);
-
-                if (NearbyWingPartsRecur.Count > NumPts)
-                    foreach (Part q in NearbyWingPartsRecur)
-                        if (!NearbyWingParts.Contains(q))
-                            NearbyWingParts.Add(q);
-
-
-                foreach (List<Part> clust in WingGroups)
-                    if (!clust.Contains(p))
-                    {
-                        Cluster.Add(p);
-                        break;
-                    }
-            }
-
-            
-            return Cluster;
-        }
-
-
-        private List<Part> NearbyWingQuery(Part point, float eps)
-        {
-            List<Part> NearbyWings = new List<Part>();
-            //This is currently a brute-force search.  This must be improved.
-            foreach (WingAerodynamicModel w in AllWings)
-            {
-                Part p = w.part;
-                if ((p.transform.position - point.transform.position).magnitude <= eps && p != point)
-                    NearbyWings.Add(p);
-                
-            }
-            return NearbyWings;
-        }*/
-        // For parts being dragged around
         public static int CurrentEditorFlapSetting = 0;
         public static bool CurrentEditorSpoilerSetting = false;
 
@@ -1581,60 +1491,6 @@ namespace ferram4
             CurrentEditorSpoilerSetting = spoilersDeployed;
             return pitch;
         }
-
-        private void AerodynamicTinting(bool lift, bool drag)
-        {
-            double[] Cl = new double[FARAeroUtil.CurEditorParts.Count];
-            double[] Cd = new double[FARAeroUtil.CurEditorParts.Count];
-            Vector3 velocity = Vector3.forward - 0.1f * Vector3.up;
-            double M = 0.2f;
-            int i = 0;
-            foreach (Part p in FARAeroUtil.CurEditorParts)
-            {
-                foreach (PartModule m in p.Modules)
-                    if (m is FARWingAerodynamicModel)
-                    {
-                        FARWingAerodynamicModel w = m as FARWingAerodynamicModel;
-                        w.ComputeClCdEditor(velocity, M);
-                        Cl[i] = w.GetCl();
-                        Cd[i] = w.GetCd();
-                        break;
-                    }
-                    else if (m is FARBasicDragModel)
-                    {
-                        FARBasicDragModel d = m as FARBasicDragModel;
-                        Cd[i] = d.GetDragEditor(velocity, M);
-                        Cl[i] = d.GetLiftEditor();
-                        break;
-                    }
-                i++;
-            }
-            i = 0;
-            foreach (Part p in FARAeroUtil.CurEditorParts)
-            {
-                if (lift || drag)
-                {
-                    double red = 0;
-                    double green = 0;
-                    if (drag)
-                        red += FARMathUtil.Clamp(Cd[i] * 2, 0, 1);
-                    if (lift)
-                        green += FARMathUtil.Clamp(Cl[i] * 2, 0, 1);
-                    p.SetHighlightType(Part.HighlightType.AlwaysOn);
-                    p.SetHighlightColor(new Color((float)red, (float)green, 0));
-                    p.SetHighlight(true);
-                }
-                else
-                    if (p.highlightType != defaultHighlightType)
-                    {
-                        p.SetHighlightType(defaultHighlightType);
-                        p.SetHighlightColor(defaultHighlightColor);
-                        p.SetHighlight(defaultHighlight);
-                    }
-                i++;
-            }
-        }
-
 
         private void MachNumberSweep(double AoA, double pitch)
         {

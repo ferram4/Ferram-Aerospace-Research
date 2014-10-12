@@ -309,7 +309,7 @@ namespace ferram4
 
                         double soundspeed, v_scalar = velocity.magnitude;
 
-                        double rho = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
+                        rho = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
                         if (rho > 0 && v_scalar > 0.1)
                         {
                             Vector3d force = RunDragCalculation(velocity, v_scalar / soundspeed, rho);
