@@ -155,7 +155,7 @@ namespace ferram4
             float flt_MAC = (float)parentWingModule.MAC;
             float flt_b_2 = (float)parentWingModule.b_2;
 
-            rootChordMidPt = parentWingTransform.position + parentWingTransform.TransformDirection(rootChordMidLocal);
+            rootChordMidPt = parentWingPart.transform.position + parentWingTransform.TransformDirection(rootChordMidLocal);
 
             if(isSmallSrf)
             {
@@ -200,7 +200,7 @@ namespace ferram4
             bool gotSomething = false;
 
             hit.distance = 0;
-            RaycastHit[] hits = Physics.RaycastAll(ray.origin, ray.direction, dist, FARAeroUtil.RaycastMask);
+            RaycastHit[] hits = Physics.RaycastAll(ray, dist, FARAeroUtil.RaycastMask);
             for (int i = 0; i < hits.Length; i++)
             {
                 RaycastHit h = hits[i];
@@ -262,7 +262,7 @@ namespace ferram4
                 ray.origin = rootChordMidPt - (float)(b_2 * (i * 0.2 + 0.1)) * parentWingPart.transform.right.normalized * srfAttachFlipped;
 
                 hit.distance = 0;
-                RaycastHit[] hits = Physics.RaycastAll(ray.origin, ray.direction, b_2, FARAeroUtil.RaycastMask);
+                RaycastHit[] hits = Physics.RaycastAll(ray, b_2, FARAeroUtil.RaycastMask);
                 bool gotSomething = false;
                 for (int j = 0; j < hits.Length; j++)
                 {
@@ -331,7 +331,7 @@ namespace ferram4
                 ray.origin -= (float)(b_2 * 0.5) * parentWingPart.transform.right.normalized * srfAttachFlipped;
 
                 hit.distance = 0;
-                RaycastHit[] hits = Physics.RaycastAll(ray.origin, ray.direction, b_2, FARAeroUtil.RaycastMask);
+                RaycastHit[] hits = Physics.RaycastAll(ray, b_2, FARAeroUtil.RaycastMask);
                 bool gotSomething = false;
                 for (int j = 0; j < hits.Length; j++)
                 {
@@ -498,13 +498,14 @@ namespace ferram4
 
             foreach(KeyValuePair<FARWingAerodynamicModel, double> pair in nearbyUpstreamWingModulesAndInfluenceFactors)
             {
-                effectiveUpstreamLiftSlope += pair.Key.GetLiftSlope() * pair.Value;
-                effectiveUpstreamStall += pair.Key.GetStall() * pair.Value;
-                effectiveUpstreamCosSweepAngle += pair.Key.GetCosSweepAngle() * pair.Value;
-                effectiveUpstreamAoAMax += pair.Key.AoAmax * pair.Value;
-                effectiveUpstreamCd0 += pair.Key.GetCd0() * pair.Value;
-
                 double tmp = Vector3d.Dot(pair.Key.GetLiftDirection(), parentWingModule.GetLiftDirection());
+
+                effectiveUpstreamLiftSlope += pair.Key.GetLiftSlope() * pair.Value * Math.Abs(tmp);
+                effectiveUpstreamStall += pair.Key.GetStall() * pair.Value * Math.Abs(tmp);
+                effectiveUpstreamCosSweepAngle += pair.Key.GetCosSweepAngle() * pair.Value * Math.Abs(tmp);
+                effectiveUpstreamAoAMax += pair.Key.AoAmax * pair.Value * Math.Abs(tmp);
+                effectiveUpstreamCd0 += pair.Key.GetCd0() * pair.Value * Math.Abs(tmp);
+
                 double wAoA = pair.Key.CalculateAoA(pair.Key.GetVelocity()) * Math.Sign(tmp);
                 tmp = (thisWingAoA - wAoA) * Math.Abs(tmp);                //First, make sure that the AoA are wrt the same direction; then account for any strange angling of the part that shouldn't be there
 
@@ -618,11 +619,8 @@ namespace ferram4
             {
                 //If we do, add the appropriate influence to it
 
-                //Dot the lift directions to ensure that only wings that are lifting in the same plane influence each other
-                double influenceFactor = Vector3.Dot(parentWingModule.GetLiftDirection(), upstreamWing.GetLiftDirection());
-                influenceFactor *= directionalInfluence;    //Then multiply by directionalInfluence to account for any off-angle effects
-
-                influenceFactor /= numWingsInDirection;     //Account for the effect of multiple wing parts along this direction
+                //Account for the off-angle affect of this as well as the number of wings listed for this direction
+                double influenceFactor = directionalInfluence / numWingsInDirection;
 
                 influenceFactor += nearbyUpstreamWingModulesAndInfluenceFactors[upstreamWing];  //Add the previous numbers
                 nearbyUpstreamWingModulesAndInfluenceFactors[upstreamWing] = influenceFactor;   //And update the dict value
@@ -631,11 +629,8 @@ namespace ferram4
             {
                 //If we don't, add it, and set the influence factor
 
-                //Dot the lift directions to ensure that only wings that are lifting in the same plane influence each other
-                double influenceFactor = Vector3.Dot(parentWingModule.GetLiftDirection(), upstreamWing.GetLiftDirection());
-                influenceFactor *= directionalInfluence;    //Then multiply by directionalInfluence to account for any off-angle effects
-
-                influenceFactor /= numWingsInDirection;     //Account for the effect of multiple wing parts along this direction
+                //Account for the off-angle affect of this as well as the number of wings listed for this direction
+                double influenceFactor = directionalInfluence / numWingsInDirection;
 
                 nearbyUpstreamWingModulesAndInfluenceFactors[upstreamWing] = influenceFactor;   //And add it to the dictionary, along with the influence factor
             }

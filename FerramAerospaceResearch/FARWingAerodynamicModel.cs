@@ -374,7 +374,6 @@ namespace ferram4
                 double maxForceMult = Math.Pow(massMultiplier, FARAeroUtil.massStressPower);
                 YmaxForce *= maxForceMult;
                 XZmaxForce *= maxForceMult;
-                Debug.Log("For part " + part.name + "Maxes " + YmaxForce + "/" + XZmaxForce); // FIXME DBG
             }
         }
 
@@ -628,7 +627,7 @@ namespace ferram4
             }
             else if (absAoA < AoAmax * 0.8)
             {
-                stall = 1 - FARMathUtil.Clamp((AoAmax * 0.8 - absAoA) * 20, 0, 1);
+                stall = 1 - FARMathUtil.Clamp((AoAmax * 0.75 - absAoA) * 20, 0, 1);
                 stall += effectiveUpstreamStall;
                 stall = Math.Min(stall, lastStall);
             }

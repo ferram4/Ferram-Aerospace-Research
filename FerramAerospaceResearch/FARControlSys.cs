@@ -1288,7 +1288,7 @@ namespace ferram4
         
         public override void Start()
         {
-            minimize = true;
+            minimize = this.vessel == FlightGlobals.ActiveVessel;
             Fields["isShielded"].guiActive = false;
 
             Fields["Cl"].guiActive = Fields["Cd"].guiActive = Fields["Cm"].guiActive = false;
