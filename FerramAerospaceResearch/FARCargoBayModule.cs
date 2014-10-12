@@ -311,11 +311,9 @@ namespace ferram4
                             continue;
                     }
                     Vector3 vecFromPToCargoBayCenter;
-                    /*if (d)
-                        vecFromPToCargoBayCenter = p.partTransform.InverseTransformPoint(d.CoDshift);
-                    else if (w)
+                    if (w)
                         vecFromPToCargoBayCenter = w.WingCentroid();
-                    else*/
+                    else
                         vecFromPToCargoBayCenter = p.partTransform.position;
 
                     vecFromPToCargoBayCenter = this.part.partTransform.position - vecFromPToCargoBayCenter;

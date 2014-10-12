@@ -48,7 +48,7 @@ namespace ferram4
     /// </summary>
     public class FARPayloadFairingModule : FARPartModule
     {
-        [KSPField(guiActive = false, isPersistant = false)]
+        [KSPField(guiActive = false, guiActiveEditor = true, isPersistant = false)]
         private int partsShielded = 0;
 
 
@@ -78,6 +78,7 @@ namespace ferram4
         {
             minBounds.Clear();
             maxBounds.Clear();
+            FindShieldedParts();
             var d = part.GetComponent<FARBasicDragModel>();
             if (d != null) d.UpdatePropertiesWithShapeChange();
         }
@@ -226,10 +227,9 @@ namespace ferram4
                     maxBoundVec = maxBounds[j];
                     if (relPos.x < maxBoundVec.x && relPos.y < maxBoundVec.y && relPos.z < maxBoundVec.z && relPos.x > minBoundVec.x && relPos.y > minBoundVec.y && relPos.z > minBoundVec.z)
                     {
+                        
                         Vector3 vecFromPToPFCenter;
-                        if (d)
-                            vecFromPToPFCenter = p.partTransform.InverseTransformPoint(d.CoDshift);
-                        else if (w)
+                        if (w)
                             vecFromPToPFCenter = w.WingCentroid();
                         else
                             vecFromPToPFCenter = p.partTransform.position;
