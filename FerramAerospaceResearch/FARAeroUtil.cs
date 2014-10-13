@@ -208,7 +208,7 @@ namespace ferram4
             if (massPerWingAreaSupported == 0)
                 massPerWingAreaSupported = 0.05;
             if (massStressPower == 0)
-                massStressPower = 0.75;
+                massStressPower = 1.2;
         }
 
         public static double MaxPressureCoefficientCalc(double M)
