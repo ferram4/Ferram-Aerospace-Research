@@ -187,11 +187,28 @@ namespace ferram4
                 }
             }
 
-            
+            SetDefaultValuesIfNoValuesLoaded();
+          
             loaded = true;
 
             //Get Kerbin
             currentBodyAtm = bodyAtmosphereConfiguration[1];
+        }
+
+        private static void SetDefaultValuesIfNoValuesLoaded()
+        {
+            if (areaFactor == 0)
+                areaFactor = 1;
+            if (attachNodeRadiusFactor == 0)
+                attachNodeRadiusFactor = 0.625;
+            if (incompressibleRearAttachDrag == 0)
+                incompressibleRearAttachDrag = 0.01;
+            if (sonicRearAdditionalAttachDrag == 0)
+                sonicRearAdditionalAttachDrag = 0.2;
+            if (massPerWingAreaSupported == 0)
+                massPerWingAreaSupported = 0.05;
+            if (massStressPower == 0)
+                massStressPower = 0.75;
         }
 
         public static double MaxPressureCoefficientCalc(double M)
