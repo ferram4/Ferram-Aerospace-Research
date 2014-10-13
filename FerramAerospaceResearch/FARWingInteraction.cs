@@ -73,6 +73,7 @@ namespace ferram4
         private double effectiveUpstreamAoAMax;
         private double effectiveUpstreamAoA;
         private double effectiveUpstreamCd0;
+        private double effectiveUpstreamInfluence;
 
         public double EffectiveUpstreamMAC { get { return effectiveUpstreamMAC; } private set { effectiveUpstreamMAC = value; } }
         public double EffectiveUpstreamb_2 { get { return effectiveUpstreamb_2; } private set { effectiveUpstreamb_2 = value; } }
@@ -83,6 +84,7 @@ namespace ferram4
         public double EffectiveUpstreamAoAMax { get { return effectiveUpstreamAoAMax; } private set { effectiveUpstreamAoAMax = value; } }
         public double EffectiveUpstreamAoA { get { return effectiveUpstreamAoA; } private set { effectiveUpstreamAoA = value; } }
         public double EffectiveUpstreamCd0 { get { return effectiveUpstreamCd0; } private set { effectiveUpstreamCd0 = value; } }
+        public double EffectiveUpstreamInfluence { get { return effectiveUpstreamInfluence; } private set { effectiveUpstreamInfluence = value; } }
 
 
         private static FloatCurve wingCamberFactor = null;
@@ -255,8 +257,6 @@ namespace ferram4
             Ray ray = new Ray();
             ray.direction = rayDirection;
 
-            RaycastHit hit = new RaycastHit();
-
             nearbyWings = new FARWingAerodynamicModel[5];
 
             double exposure = 1;
@@ -264,54 +264,10 @@ namespace ferram4
             {
                 ray.origin = rootChordMidPt + (float)((i * 0.2 + 0.1)) * -b_2 * (parentWingPart.transform.right * srfAttachFlipped + parentWingPart.transform.up * (float)Math.Tan(MidChordSweep * FARMathUtil.deg2rad));   //shift the raycast origin along the midchord line
 
-                hit.distance = 0;
-                RaycastHit[] hits = Physics.RaycastAll(ray, b_2, FARAeroUtil.RaycastMask);
-                bool gotSomething = false;
+                RaycastHit[] hits = Physics.RaycastAll(ray, MAC, FARAeroUtil.RaycastMask);
 
-                RaycastHit[] sortedHits = SortHitsByDistance(hits);
-                for (int j = 0; j < sortedHits.Length; j++)
-                {
-                    RaycastHit h = hits[j];
-                    if (h.collider != null)
-                    {
-                        for (int k = 0; k < vesselPartList.Count; k++)
-                        {
-                            Part p = vesselPartList[k];
-                            if (p == parentWingPart)
-                                continue;
-
-                            Collider[] colliders;
-                            try
-                            {
-                                colliders = p.GetComponentsInChildren<Collider>();
-                            }
-                            catch (Exception e)
-                            {
-                                //Fail silently because it's the only way to avoid issues with pWings
-                                //Debug.LogException(e);
-                                colliders = new Collider[1] { p.collider };
-                            }
-                            for (int l = 0; l < colliders.Length; l++)
-                                if (h.collider == colliders[l] && h.distance > 0)
-                                {
-                                    exposure -= 0.2;
-
-                                    FARWingAerodynamicModel hitModule = p.GetComponent<FARWingAerodynamicModel>();
-                                    nearbyWings[i] = hitModule;
-
-                                    gotSomething = true;
-
-                                    break;
-                                }
-                            if (gotSomething)
-                                break;
-                        }
-                    }
-                    if (gotSomething)
-                        break;
-                }
+                nearbyWings[i] = ExposureHitDetectionAndWingDetection(hits, vesselPartList, ref exposure, 0.2);
             }
-
             return exposure;
         }
 
@@ -320,15 +276,13 @@ namespace ferram4
             Ray ray = new Ray();
             ray.direction = rayDirection;
 
-            RaycastHit hit = new RaycastHit();
-
             nearbyWings = new FARWingAerodynamicModel[5];
 
             double exposure = 1;
 
             for (int i = 0; i < 5; i++)
             {
-                ray.origin = rootChordMidPt + (float)(0.5f) * -b_2 * (parentWingPart.transform.right * srfAttachFlipped + parentWingPart.transform.up * (float)Math.Tan(MidChordSweep * FARMathUtil.deg2rad));   //shift the origin along the midchord line
+                ray.origin = rootChordMidPt + (0.5f) * -b_2 * (parentWingPart.transform.right * srfAttachFlipped + parentWingPart.transform.up * (float)Math.Tan(MidChordSweep * FARMathUtil.deg2rad));   //shift the origin along the midchord line
 
                 float chord_length = 2 * MAC / (1 + TaperRatio);    //first, calculate the root chord
 
@@ -336,53 +290,10 @@ namespace ferram4
 
                 ray.origin += (chord_length * (-0.4f + 0.2f * i) * parentWingPart.transform.up);
 
-                hit.distance = 0;
                 RaycastHit[] hits = Physics.RaycastAll(ray, b_2, FARAeroUtil.RaycastMask);
-                bool gotSomething = false;
 
-                RaycastHit[] sortedHits = SortHitsByDistance(hits);
-                for (int j = 0; j < sortedHits.Length; j++)
-                {
-                    RaycastHit h = hits[j];
-                    if (h.collider != null)
-                    {
-                        for (int k = 0; k < vesselPartList.Count; k++)
-                        {
-                            Part p = vesselPartList[k];
-                            if (p == parentWingPart)
-                                continue;
-
-                            Collider[] colliders;
-                            try
-                            {
-                                colliders = p.GetComponentsInChildren<Collider>();
-                            }
-                            catch (Exception e)
-                            {
-                                //Fail silently because it's the only way to avoid issues with pWings
-                                //Debug.LogException(e);
-                                colliders = new Collider[1] { p.collider };
-                            }
-                            for (int l = 0; l < colliders.Length; l++)
-                                if (h.collider == colliders[l] && h.distance > 0)
-                                {
-                                    exposure -= 0.2;
-
-                                    FARWingAerodynamicModel hitModule = p.GetComponent<FARWingAerodynamicModel>();
-                                    nearbyWings[i] = hitModule;
-
-                                    gotSomething = true;
-                                    break;
-                                }
-                            if (gotSomething)
-                                break;
-                        }
-                    }
-                    if (gotSomething)
-                        break;
-                }
+                nearbyWings[i] = ExposureHitDetectionAndWingDetection(hits, vesselPartList, ref exposure, 0.2);
             }
-
             return exposure;
         }
         #endregion
@@ -394,20 +305,31 @@ namespace ferram4
             Ray ray = new Ray();
             ray.direction = rayDirection;
 
-            RaycastHit hit = new RaycastHit();
-
             nearbyWings = new FARWingAerodynamicModel[1];
 
             double exposure = 1;
-            ray.origin = rootChordMidPt - (float)(MAC * 0.7) * parentWingPart.transform.up.normalized;
+            ray.origin = rootChordMidPt - (MAC * 0.7f) * parentWingPart.transform.up;
 
-            hit.distance = 0;
             RaycastHit[] hits = Physics.RaycastAll(ray.origin, ray.direction, rayCastDist, FARAeroUtil.RaycastMask);
+
+            nearbyWings[0] = ExposureHitDetectionAndWingDetection(hits, vesselPartList, ref exposure, 1);
+
+            return exposure;
+        }
+        #endregion
+
+        private FARWingAerodynamicModel ExposureHitDetectionAndWingDetection(RaycastHit[] hits, List<Part> vesselPartList, ref double exposure, double exposureDecreasePerHit)
+        {
             bool gotSomething = false;
+            bool firstHit = true;
+            double wingInteractionFactor = 0;
+
+            FARWingAerodynamicModel wingHit = null;
 
             RaycastHit[] sortedHits = SortHitsByDistance(hits);
             for (int j = 0; j < sortedHits.Length; j++)
             {
+                gotSomething = false;
                 RaycastHit h = sortedHits[j];
                 if (h.collider != null)
                 {
@@ -431,27 +353,32 @@ namespace ferram4
                         for (int l = 0; l < colliders.Length; l++)
                             if (h.collider == colliders[l] && h.distance > 0)
                             {
-                                exposure -= 1;
+                                if (firstHit)
+                                {
+                                    exposure -= exposureDecreasePerHit;
+                                    firstHit = false;
+                                }
 
                                 FARWingAerodynamicModel hitModule = p.GetComponent<FARWingAerodynamicModel>();
-                                nearbyWings[0] = hitModule;
-
+                                if ((object)hitModule != null)
+                                {
+                                    double tmp = Math.Abs(Vector3.Dot(p.transform.forward, parentWingPart.transform.forward));
+                                    if (tmp > wingInteractionFactor)
+                                    {
+                                        wingInteractionFactor = tmp;
+                                        wingHit = hitModule;
+                                    }
+                                }
                                 gotSomething = true;
-
                                 break;
                             }
                         if (gotSomething)
                             break;
                     }
                 }
-                if (gotSomething)
-                    break;
             }
-
-
-            return exposure;
+            return wingHit;
         }
-        #endregion
 
         private RaycastHit[] SortHitsByDistance(RaycastHit[] unsortedList)
         {
@@ -461,6 +388,8 @@ namespace ferram4
 
             for (int i = 0; i < unsortedList.Length; i++)
                 sortingList.Add(unsortedList[i].distance, unsortedList[i]);
+
+            string s = "";
 
             sortedHits = sortingList.Values.ToArray();
 
@@ -509,6 +438,7 @@ namespace ferram4
             effectiveUpstreamAoAMax = 0;
             effectiveUpstreamAoA = 0;
             effectiveUpstreamCd0 = 0;
+            effectiveUpstreamInfluence = 0;
 
             foreach(KeyValuePair<FARWingAerodynamicModel, double> pair in nearbyUpstreamWingModulesAndInfluenceFactors)
             {
@@ -519,6 +449,7 @@ namespace ferram4
                 effectiveUpstreamCosSweepAngle += pair.Key.GetCosSweepAngle() * pair.Value;
                 effectiveUpstreamAoAMax += pair.Key.AoAmax * pair.Value;
                 effectiveUpstreamCd0 += pair.Key.GetCd0() * pair.Value;
+                effectiveUpstreamInfluence += pair.Value;
 
                 double wAoA = pair.Key.CalculateAoA(pair.Key.GetVelocity()) * Math.Sign(tmp);
                 tmp = (thisWingAoA - wAoA) * pair.Value;                //First, make sure that the AoA are wrt the same direction; then account for any strange angling of the part that shouldn't be there

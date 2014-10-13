@@ -82,7 +82,6 @@ namespace ferram4
         [KSPField(isPersistant = false)]
         public double b_2;        //span
 
-
         [KSPField(isPersistant = false)]
         public double MidChordSweep;
         private double MidChordSweepSideways = 0;
@@ -120,6 +119,7 @@ namespace ferram4
         // in local coordinates
         private Vector3d localWingCentroid = Vector3d.zero;
         private Vector3d sweepPerpLocal, sweepPerp2Local;
+
         private Vector3d ParallelInPlaneLocal = Vector3d.zero;
 
         FARWingInteraction wingInteraction;
@@ -596,14 +596,23 @@ namespace ferram4
             ClIncrementFromRear = 0;
 
             AoAmax = 0;
+            double effectiveUpstreamInfluence = 0;
 
             wingInteraction.UpdateOrientationForInteraction(ParallelInPlaneLocal);
             if (wingInteraction.HasWingsUpstream())
             {
                 wingInteraction.CalculateEffectsOfUpstreamWing(AoA, MachNumber, ref ACweight, ref ACshift, ref ClIncrementFromRear);
+
+                effectiveUpstreamInfluence = wingInteraction.EffectiveUpstreamInfluence;
+
                 AoAmax = wingInteraction.EffectiveUpstreamAoAMax;
+                liftslope *= (1 - effectiveUpstreamInfluence);
+                liftslope += wingInteraction.EffectiveUpstreamLiftSlope;
+
+                cosSweepAngle *= (1 - effectiveUpstreamInfluence);
+                cosSweepAngle += wingInteraction.EffectiveUpstreamCosSweepAngle;
             }
-            AoAmax += CalculateAoAmax();
+            AoAmax += CalculateAoAmax(MachNumber) * (1 - effectiveUpstreamInfluence);
         }
 
         #endregion
@@ -1022,10 +1031,18 @@ namespace ferram4
         #endregion
 
         //Short calculation for peak AoA for stalling
-        protected double CalculateAoAmax()
+        protected double CalculateAoAmax(double MachNumber)
         {
             double StallAngle;
-            StallAngle = criticalCl / liftslope;
+            if (MachNumber < 0.8)
+                StallAngle = criticalCl / liftslope;
+            else if (MachNumber > 1.4)
+                StallAngle = 1.0471975511965977461542144610932;     //60 degrees in radians
+            else
+            {
+                double tmp = criticalCl / liftslope;
+                StallAngle = (MachNumber - 0.8) * (1.0471975511965977461542144610932 - tmp) * 1.6666666666666666666666666666667 + tmp;
+            }
 
             return StallAngle;
 
@@ -1058,7 +1075,7 @@ namespace ferram4
 
             SetSweepAngle(sweepHalfChord);
 
-            effective_AR = wingInteraction.ARFactor;
+            effective_AR = transformed_AR * wingInteraction.ARFactor;
 
             /*if (MachNumber < 1)
                 tmp = Mathf.Clamp(MachNumber, 0, 0.9f);
