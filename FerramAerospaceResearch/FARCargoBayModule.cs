@@ -311,14 +311,15 @@ namespace ferram4
                             continue;
                     }
                     Vector3 vecFromPToCargoBayCenter;
+                    Vector3 origin;
                     if (w)
-                        vecFromPToCargoBayCenter = w.WingCentroid();
+                        origin = w.WingCentroid();
                     else
-                        vecFromPToCargoBayCenter = p.partTransform.position;
+                        origin = p.transform.position;
 
-                    vecFromPToCargoBayCenter = this.part.partTransform.position - vecFromPToCargoBayCenter;
+                    vecFromPToCargoBayCenter = part.transform.position - origin;
 
-                    RaycastHit[] hits = Physics.RaycastAll(p.partTransform.position, vecFromPToCargoBayCenter, vecFromPToCargoBayCenter.magnitude, FARAeroUtil.RaycastMask);
+                    RaycastHit[] hits = Physics.RaycastAll(origin, vecFromPToCargoBayCenter, vecFromPToCargoBayCenter.magnitude, FARAeroUtil.RaycastMask);
 
                     bool outsideMesh = false;
 
@@ -331,7 +332,7 @@ namespace ferram4
                         }
                     }
                     if (outsideMesh)
-                        break;
+                        continue;
 
                     FARShieldedParts.Add(p);
                     if (b)

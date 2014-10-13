@@ -177,16 +177,16 @@ namespace ferram4
             UpdateShipPartsList();
 
             Collider[] colliders;
-            try
+            /*try
             {
                 colliders = part.GetComponentsInChildren<Collider>();
             }
             catch (Exception e)
-            {
+            {*/
                 //Fail silently because it's the only way to avoid issues with pWings
                 //Debug.LogException(e);
                 colliders = new Collider[1] { part.collider };
-            } 
+            //} 
             
             for (int i = 0; i < VesselPartList.Count; i++)
             {
@@ -229,14 +229,15 @@ namespace ferram4
                     {
                         
                         Vector3 vecFromPToPFCenter;
+                        Vector3 origin;
                         if (w)
-                            vecFromPToPFCenter = w.WingCentroid();
+                            origin = w.WingCentroid();
                         else
-                            vecFromPToPFCenter = p.partTransform.position;
+                            origin = p.partTransform.position;
 
-                        vecFromPToPFCenter = this.part.partTransform.position - vecFromPToPFCenter;
+                        vecFromPToPFCenter = this.part.partTransform.position - origin;
 
-                        RaycastHit[] hits = Physics.RaycastAll(p.partTransform.position, vecFromPToPFCenter, vecFromPToPFCenter.magnitude, FARAeroUtil.RaycastMask);
+                        RaycastHit[] hits = Physics.RaycastAll(origin, vecFromPToPFCenter, vecFromPToPFCenter.magnitude, FARAeroUtil.RaycastMask);
 
                         bool outsideMesh = false;
 
@@ -249,7 +250,7 @@ namespace ferram4
                             }
                         }
                         if (outsideMesh)
-                            break;
+                            continue;
 
                         FARShieldedParts.Add(p);
                         if (b)

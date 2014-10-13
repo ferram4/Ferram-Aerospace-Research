@@ -68,7 +68,6 @@ namespace ferram4
         [KSPField(isPersistant = false)]
         public int nonSideAttach;           //This is for ailerons and the small ctrl surf
 
-
         [KSPField(isPersistant = false)]
         public double TaperRatio;
 
@@ -596,14 +595,15 @@ namespace ferram4
             ACweight = 0;
             ClIncrementFromRear = 0;
 
-            AoAmax = CalculateAoAmax();
+            AoAmax = 0;
 
             wingInteraction.UpdateOrientationForInteraction(ParallelInPlaneLocal);
             if (wingInteraction.HasWingsUpstream())
             {
                 wingInteraction.CalculateEffectsOfUpstreamWing(AoA, MachNumber, ref ACweight, ref ACshift, ref ClIncrementFromRear);
-                AoAmax *= 1.5;
+                AoAmax = wingInteraction.EffectiveUpstreamAoAMax;
             }
+            AoAmax += CalculateAoAmax();
         }
 
         #endregion
