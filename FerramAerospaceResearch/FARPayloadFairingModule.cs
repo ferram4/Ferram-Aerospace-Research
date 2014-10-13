@@ -89,7 +89,7 @@ namespace ferram4
         {
             Vector3 minBoundVec, maxBoundVec;
             minBoundVec = maxBoundVec = Vector3.zero;
-            Transform[] transformList = part.FindModelComponents<Transform>();
+            Transform[] transformList = FARGeoUtil.PartModelTransformArray(p);
             for (int i = 0; i < transformList.Length; i++)
             {
                 Transform t = transformList[i];

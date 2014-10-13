@@ -212,7 +212,7 @@ namespace ferram4
 
         private void CalculateBayBounds()
         {
-            Transform[] transformList = part.FindModelComponents<Transform>();
+            Transform[] transformList = FARGeoUtil.PartModelTransformArray(part);
             for (int i = 0; i < transformList.Length; i++)
             {
                 Transform t = transformList[i];
