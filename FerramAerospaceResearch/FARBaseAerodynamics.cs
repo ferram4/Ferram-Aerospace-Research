@@ -84,6 +84,17 @@ namespace ferram4
             //Terrible, hacky fix for part.partTransform going bad
             if (part.partTransform == null && part == part.vessel.rootPart)
                 part_transform = vessel.vesselTransform;
+            if(HighLogic.LoadedSceneIsEditor && EditorLogic.SelectedPart)
+                for(int i = 0; i < EditorLogic.SelectedPart.symmetryCounterparts.Count; i++)
+                {
+                    List<Part> possibleSelectedParts = EditorLogic.SelectedPart.symmetryCounterparts[i].children;
+
+                    if (EditorLogic.SelectedPart == part || possibleSelectedParts.Contains(part))
+                    {
+                        part_transform = part.transform;
+                        break;
+                    }
+                }
         }
 
         public override void Start()
