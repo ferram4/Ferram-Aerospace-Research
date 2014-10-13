@@ -60,6 +60,9 @@ namespace ferram4
         protected static Ray ray;
         protected static RaycastHit hit;
 
+        //Reset tinting for this part and its children
+        private bool resetTinting;
+
         //[KSPField(isPersistant = false, guiActive = true)]
         public double S;
 
@@ -110,12 +113,21 @@ namespace ferram4
                     this.part.SetHighlightType(Part.HighlightType.AlwaysOn);
                     this.part.SetHighlightColor(tintColor);
                     this.part.SetHighlight(true);
+                    resetTinting = true;
                 }
                 else if (part.highlightType != Part.HighlightType.OnMouseOver)
                 {
+                    this.part.highlightRecurse = false;
                     this.part.SetHighlightType(Part.HighlightType.OnMouseOver);
                     this.part.SetHighlightColor(Part.defaultHighlightPart);
                     this.part.SetHighlight(false);
+                }
+                else if (resetTinting)
+                {
+                    this.part.highlightRecurse = true;
+                    this.part.SetHighlightType(Part.HighlightType.Disabled);
+                    this.part.SetHighlight(false);
+                    resetTinting = false;
                 }
             }
         }

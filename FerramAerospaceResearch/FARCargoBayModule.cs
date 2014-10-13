@@ -216,7 +216,7 @@ namespace ferram4
             for (int i = 0; i < transformList.Length; i++)
             {
                 Transform t = transformList[i];
-
+                
                 MeshFilter mf = t.GetComponent<MeshFilter>();
                 if ((object)mf == null)
                     continue;
