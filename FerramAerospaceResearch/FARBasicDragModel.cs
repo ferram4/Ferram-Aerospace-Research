@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.2
+Ferram Aerospace Research v0.14.3
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -291,7 +291,7 @@ namespace ferram4
 
             // With unity objects, "foo" or "foo != null" calls a method to check if
             // it's destroyed. (object)foo != null just checks if it is actually null.
-            if (HighLogic.LoadedSceneIsFlight && (object)part != null)
+            if (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && (object)part != null)
             {
                 if (animatingPart)
                     UpdatePropertiesWithAnimation();

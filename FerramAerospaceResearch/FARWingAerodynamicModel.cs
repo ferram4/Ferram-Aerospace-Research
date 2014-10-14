@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.2
+Ferram Aerospace Research v0.14.3
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -53,6 +53,9 @@ namespace ferram4
 
         [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
         public float curWingMass = 1;
+
+        [KSPField(isPersistant = false, guiActive = true)]
+        protected double effectiveInFrontStall = 0;
 
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Mass/Strength Multiplier", guiFormat = "0.##"), UI_FloatRange(minValue = 0.1f, maxValue = 2.0f, stepIncrement = 0.01f)]
         public float massMultiplier = 1.0f;
@@ -293,14 +296,19 @@ namespace ferram4
         public override void Start()
         {
             base.Start();
-
+            StartInitialization();
             if(HighLogic.LoadedSceneIsEditor)
             {
                 part.OnEditorAttach += OnWingAttach;
                 part.OnEditorDetach += OnWingDetach;
             }
-            MathAndFunctionInitialization();
 
+            OnVesselPartsChange += UpdateWingInteractions;
+        }
+
+        public void StartInitialization()
+        {
+            MathAndFunctionInitialization();
 
             if (part is ControlSurface)
             {
@@ -329,7 +337,6 @@ namespace ferram4
 
             wingInteraction = new FARWingInteraction(this, this.part, rootMidChordOffsetFromOrig, srfAttachNegative);
 
-            OnVesselPartsChange += UpdateWingInteractions;
             UpdateWingInteractions();
         }
 
@@ -394,7 +401,7 @@ namespace ferram4
 
             // With unity objects, "foo" or "foo != null" calls a method to check if
             // it's destroyed. (object)foo != null just checks if it is actually null.
-            if (HighLogic.LoadedSceneIsFlight && !isShielded && (object)part != null)
+            if (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !isShielded && (object)part != null)
             {
                 Rigidbody rb = part.Rigidbody;
                 Vessel vessel = part.vessel;
@@ -424,10 +431,18 @@ namespace ferram4
                         rb.AddForceAtPosition(force, AerodynamicCenter);            //and apply force
                     }
                     else
+                    {
                         stall = 0;
+                        wingInteraction.ResetWingInteractions();
+                        effectiveInFrontStall = 0;
+                    }
                 }
                 else
+                {
                     stall = 0;
+                    wingInteraction.ResetWingInteractions();
+                    effectiveInFrontStall = 0;
+                }
 
             }
         }
@@ -612,7 +627,7 @@ namespace ferram4
                 cosSweepAngle *= (1 - effectiveUpstreamInfluence);
                 cosSweepAngle += wingInteraction.EffectiveUpstreamCosSweepAngle;
             }
-            AoAmax += CalculateAoAmax(MachNumber) * (1 - effectiveUpstreamInfluence);
+            AoAmax += CalculateAoAmax(MachNumber);
         }
 
         #endregion
@@ -622,6 +637,7 @@ namespace ferram4
         {
             double lastStall = stall;
             double effectiveUpstreamStall = wingInteraction.EffectiveUpstreamStall;
+            effectiveInFrontStall = effectiveUpstreamStall;
             stall = 0;
 
             CalculateWingCamberInteractions(MachNumber, AoA, out ACshift, out ACweight);
@@ -631,14 +647,14 @@ namespace ferram4
             if (absAoA > AoAmax)
             {
                 stall = FARMathUtil.Clamp((absAoA - AoAmax) * 10, 0, 1);
-                stall += effectiveUpstreamStall;
                 stall = Math.Max(stall, lastStall);
+                stall += effectiveUpstreamStall;
             }
             else if (absAoA < AoAmax * 0.8)
             {
                 stall = 1 - FARMathUtil.Clamp((AoAmax * 0.75 - absAoA) * 20, 0, 1);
-                stall += effectiveUpstreamStall;
                 stall = Math.Min(stall, lastStall);
+                stall += effectiveUpstreamStall;
             }
             else
             {

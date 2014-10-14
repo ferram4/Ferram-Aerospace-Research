@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.2
+Ferram Aerospace Research v0.14.3
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -237,7 +237,6 @@ namespace ferram4
                         XZmaxForce += tmp;
                         break;
                     }
-                Debug.Log("For part " + part.name + "Maxes " + YmaxForce + "/" + XZmaxForce); // FIXME DBG
             }
         }
 
@@ -278,7 +277,7 @@ namespace ferram4
 
         public void CalculateSurfaceFunctions()
         {
-            if (HighLogic.LoadedSceneIsEditor && ((object)vessel == null || (object)part.transform == null))
+            if (HighLogic.LoadedSceneIsEditor && (!FlightGlobals.ready || (object)vessel == null || (object)part.transform == null))
                 return;
 
             if (isFlap == true)

@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.2
+Ferram Aerospace Research v0.14.3
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -40,6 +40,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using ferram4.PartExtensions;
 
 namespace ferram4
 {
@@ -176,17 +177,7 @@ namespace ferram4
             ClearShieldedParts();
             UpdateShipPartsList();
 
-            Collider[] colliders;
-            /*try
-            {
-                colliders = part.GetComponentsInChildren<Collider>();
-            }
-            catch (Exception e)
-            {*/
-                //Fail silently because it's the only way to avoid issues with pWings
-                //Debug.LogException(e);
-                colliders = new Collider[1] { part.collider };
-            //} 
+            Collider[] colliders = part.GetPartColliders();
             
             for (int i = 0; i < VesselPartList.Count; i++)
             {

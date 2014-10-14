@@ -150,6 +150,25 @@ For both of these, set MaxDrag and MinDrag to 0
 CHANGELOG
 =======================================================
 
+0.14.3v------------------------------------
+Features:
+Refactored wing interaction code:  
+	Wing interactions should be smoother  
+	Code should be less processor intensive  
+
+Upgrade to ModuleManager v2.5.1  
+Added stall visualization to aero force visualization  
+Added ability to scale wing mass up or down for additional strength / weight savings  
+Improved cargo bay and payload fairing detection algorithm  
+
+Tweaks:  
+Reduced intake drag  
+Decreased wing mass per area slightly  
+
+Bugfixes:
+Fixed aero visualization leaving parachutes glowing brightly
+Fixed some critical errors for when config files do not have values listed
+
 0.14.2v------------------------------------
 Features:
 0.25 compatibility, with stock support for SP+ parts  

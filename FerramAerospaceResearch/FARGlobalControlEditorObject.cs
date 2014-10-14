@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.2
+Ferram Aerospace Research v0.14.3
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -52,8 +52,9 @@ namespace ferram4
         private FAREditorGUI editorGUI = null;
         private int part_count_all = -1;
         private int part_count_ship = -1;
-        private IButton FAREditorButtonBlizzy;
-        private ApplicationLauncherButton FAREditorButtonStock;
+        private IButton FAREditorButtonBlizzy = null;
+        private ApplicationLauncherButton FAREditorButtonStock = null;
+        private bool buttonsNeedInitializing = true;
 
 
         public static bool EditorPartsChanged = true;
@@ -64,21 +65,8 @@ namespace ferram4
         {
             if (!CompatibilityChecker.IsAllCompatible())
                 return;
-
+                
             LoadConfigs();
-
-            if (FARDebugValues.useBlizzyToolbar)
-            {
-                FAREditorButtonBlizzy = ToolbarManager.Instance.add("ferram4", "FAREditorButton");
-                FAREditorButtonBlizzy.TexturePath = "FerramAerospaceResearch/Textures/icon_button_blizzy";
-                FAREditorButtonBlizzy.ToolTip = "FAR Editor Analysis";
-                FAREditorButtonBlizzy.OnClick += (e) => FAREditorGUI.minimize = !FAREditorGUI.minimize;
-            }
-            else
-                GameEvents.onGUIApplicationLauncherReady.Add(OnGUIAppLauncherReady);
-
-            GameEvents.onShowUI.Add(ShowUI);
-            GameEvents.onHideUI.Add(HideUI);
         }
 
         void OnGUIAppLauncherReady()
@@ -153,6 +141,9 @@ namespace ferram4
                 if (EditorLogic.startPod != null)
                 {
                     var editorShip = FARAeroUtil.AllEditorParts;
+
+                    if (buttonsNeedInitializing)
+                        InitializeButtons();
 
 
                     if (FARAeroUtil.EditorAboutToAttach() && count++ >= 10)
@@ -299,6 +290,24 @@ namespace ferram4
 
             }
             return returnValue;
+        }
+
+        void InitializeButtons()
+        {
+            if (FARDebugValues.useBlizzyToolbar && FAREditorButtonBlizzy == null)
+            {
+                FAREditorButtonBlizzy = ToolbarManager.Instance.add("ferram4", "FAREditorButton");
+                FAREditorButtonBlizzy.TexturePath = "FerramAerospaceResearch/Textures/icon_button_blizzy";
+                FAREditorButtonBlizzy.ToolTip = "FAR Editor Analysis";
+                FAREditorButtonBlizzy.OnClick += (e) => FAREditorGUI.minimize = !FAREditorGUI.minimize;
+            }
+            else if (FAREditorButtonStock == null)
+                GameEvents.onGUIApplicationLauncherReady.Add(OnGUIAppLauncherReady);
+
+            GameEvents.onShowUI.Add(ShowUI);
+            GameEvents.onHideUI.Add(HideUI);
+
+            buttonsNeedInitializing = false;
         }
 
         void OnDestroy()

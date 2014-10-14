@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.2
+Ferram Aerospace Research v0.14.3
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -40,6 +40,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
 using UnityEngine;
+using ferram4.PartExtensions;
 
 namespace ferram4
 {
@@ -85,6 +86,8 @@ namespace ferram4
             base.Start();
             BayAnimationSetup();
             OnVesselPartsChange += UpdateCargoParts;
+            if(HighLogic.LoadedSceneIsEditor)
+                FindShieldedParts();
         }
 
         public override void OnEditorAttach()
@@ -257,17 +260,7 @@ namespace ferram4
 
             double y_margin = Math.Max(0.12, 0.03 * (maxBounds.y-minBounds.y));
 
-            Collider[] colliders;
-            try
-            {
-                colliders = part.GetComponentsInChildren<Collider>();
-            }
-            catch (Exception e)
-            {
-                //Fail silently because it's the only way to avoid issues with pWings
-                //Debug.LogException(e);
-                colliders = new Collider[1] { part.collider };
-            }
+            Collider[] colliders = part.GetPartColliders();
 
             for (int i = 0; i < VesselPartList.Count; i++)
             {
@@ -318,6 +311,11 @@ namespace ferram4
                         origin = p.transform.position;
 
                     vecFromPToCargoBayCenter = part.transform.position - origin;
+
+                    if (w)  //This accounts for wings that are clipping into the cargo bay.
+                    {
+                        origin -= vecFromPToCargoBayCenter.normalized * 0.1f;
+                    }
 
                     RaycastHit[] hits = Physics.RaycastAll(origin, vecFromPToCargoBayCenter, vecFromPToCargoBayCenter.magnitude, FARAeroUtil.RaycastMask);
 

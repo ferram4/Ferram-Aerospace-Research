@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.2
+Ferram Aerospace Research v0.14.3
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -39,6 +39,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using ferram4.PartExtensions;
 
 namespace ferram4
 {
@@ -149,6 +150,20 @@ namespace ferram4
         }
 
         /// <summary>
+        /// Called when plane is stopped to get rid of old wing interaction data
+        /// </summary>
+        public void ResetWingInteractions()
+        {
+            effectiveUpstreamLiftSlope = 0;
+            effectiveUpstreamStall = 0;
+            effectiveUpstreamCosSweepAngle = 0;
+            effectiveUpstreamAoAMax = 0;
+            effectiveUpstreamAoA = 0;
+            effectiveUpstreamCd0 = 0;
+            effectiveUpstreamInfluence = 0;
+        }
+
+        /// <summary>
         /// Recalculates all nearby wings; call when vessel has changed shape
         /// </summary>
         /// <param name="VesselPartList">A list of all parts on this vessel</param>
@@ -218,17 +233,8 @@ namespace ferram4
                         if (p == parentWingPart)
                             continue;
 
-                        Collider[] colliders;
-                        try
-                        {
-                            colliders = p.GetComponentsInChildren<Collider>();
-                        }
-                        catch (Exception e)
-                        {
-                            //Fail silently because it's the only way to avoid issues with pWings
-                            //Debug.LogException(e);
-                            colliders = new Collider[1] { p.collider };
-                        }
+                        Collider[] colliders = p.GetPartColliders();
+
                         if (p.Modules.Contains("FARWingAerodynamicModel"))
                         {
                             for (int k = 0; k < colliders.Length; k++)
@@ -339,17 +345,8 @@ namespace ferram4
                         if (p == parentWingPart)
                             continue;
 
-                        Collider[] colliders;
-                        try
-                        {
-                            colliders = p.GetComponentsInChildren<Collider>();
-                        }
-                        catch (Exception e)
-                        {
-                            //Fail silently because it's the only way to avoid issues with pWings
-                            //Debug.LogException(e);
-                            colliders = new Collider[1] { p.collider };
-                        }
+                        Collider[] colliders = p.GetPartColliders();
+
                         for (int l = 0; l < colliders.Length; l++)
                             if (h.collider == colliders[l] && h.distance > 0)
                             {
@@ -363,7 +360,7 @@ namespace ferram4
                                 if ((object)hitModule != null)
                                 {
                                     double tmp = Math.Abs(Vector3.Dot(p.transform.forward, parentWingPart.transform.forward));
-                                    if (tmp > wingInteractionFactor)
+                                    if (tmp > wingInteractionFactor + 0.01)
                                     {
                                         wingInteractionFactor = tmp;
                                         wingHit = hitModule;
@@ -387,7 +384,8 @@ namespace ferram4
             SortedList<double, RaycastHit> sortingList = new SortedList<double, RaycastHit>();
 
             for (int i = 0; i < unsortedList.Length; i++)
-                sortingList.Add(unsortedList[i].distance, unsortedList[i]);
+                if (!sortingList.ContainsKey(unsortedList[i].distance))
+                    sortingList.Add(unsortedList[i].distance, unsortedList[i]);
 
             string s = "";
 
