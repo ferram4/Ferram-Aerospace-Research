@@ -1,5 +1,5 @@
 ﻿/*
-Neophyte's Elementary Aerodynamics Replacement v1.2.1
+Neophyte's Elementary Aerodynamics Replacement v1.3
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Neophyte's Elementary Aerodynamics Replacement.
@@ -34,6 +34,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
 using UnityEngine;
+using NEAR.PartExtensions;
 
 namespace NEAR
 {
@@ -246,17 +247,7 @@ namespace NEAR
 
             double y_margin = Math.Max(0.12, 0.03 * (maxBounds.y-minBounds.y));
 
-            Collider[] colliders;
-            try
-            {
-                colliders = part.GetComponentsInChildren<Collider>();
-            }
-            catch (Exception e)
-            {
-                //Fail silently because it's the only way to avoid issues with pWings
-                //Debug.LogException(e);
-                colliders = new Collider[1] { part.collider };
-            } 
+            Collider[] colliders = part.GetPartColliders();
             
             for (int i = 0; i < VesselPartList.Count; i++)
             {
@@ -300,9 +291,16 @@ namespace NEAR
                             continue;
                     }
 
-                    Vector3 vecFromPToCargoBayCenter = this.part.partTransform.position - p.partTransform.position;
+                    Vector3 vecFromPToCargoBayCenter;
+                    Vector3 origin;
+                    if (w)
+                        origin = w.WingCentroid();
+                    else
+                        origin = p.transform.position;
 
-                    RaycastHit[] hits = Physics.RaycastAll(p.partTransform.position, vecFromPToCargoBayCenter, vecFromPToCargoBayCenter.magnitude, FARAeroUtil.RaycastMask);
+                    vecFromPToCargoBayCenter = part.transform.position - origin;
+
+                    RaycastHit[] hits = Physics.RaycastAll(origin, vecFromPToCargoBayCenter, vecFromPToCargoBayCenter.magnitude, FARAeroUtil.RaycastMask);
 
                     bool outsideMesh = false;
 
@@ -315,7 +313,7 @@ namespace NEAR
                         }
                     }
                     if (outsideMesh)
-                        break;
+                        continue;
 
                     FARShieldedParts.Add(p);
                     if (b)
