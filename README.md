@@ -136,10 +136,10 @@ CHANGELOG
 =======================================================
 
 1.3v------------------------------------
-Features:
-Upgrade to ModuleManager v2.5.0
-Improved cargo bay and payload fairing detection algorithms
-Tweaked intake drag
+Features:  
+Upgrade to ModuleManager v2.5.1  
+Improved cargo bay and payload fairing detection algorithms  
+Tweaked intake drag  
 
 1.2.1v------------------------------------
 Bugfixes:
