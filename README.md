@@ -3,12 +3,12 @@ Ferram Aerospace Research v0.14.3
 
 Aerodynamics model for Kerbal Space Program
 
-   Serious thanks:		a.g., for tons of bugfixes and code-refactorings  
+   Serious thanks:		a.g., for tons of bugfixes and code-refactorings   
             			Taverius, for correcting a ton of incorrect values  
             			sarbian, for refactoring code for working with MechJeb, and the Module Manager 1.5 updates  
             			ialdabaoth (who is awesome), who originally created Module Manager  
                         	Regex, for adding RPM support  
-				DaMichel, for some ferramGraph updates and some control surface-related features
+				DaMichel, for some ferramGraph updates and some control surface-related features  
             			Duxwing, for copy editing the readme  
    
    CompatibilityChecker by Majiir, BSD 2-clause http://opensource.org/licenses/BSD-2-Clause
@@ -166,7 +166,7 @@ Reduced intake drag
 Decreased wing mass per area slightly  
 
 Bugfixes:
-Fixed aero visualization leaving parachutes glowing brightly
+Fixed aero visualization leaving parachutes glowing brightly  
 Fixed some critical errors for when config files do not have values listed
 
 0.14.2v------------------------------------
