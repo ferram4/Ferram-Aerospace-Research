@@ -146,7 +146,6 @@ namespace ferram4
                     if (buttonsNeedInitializing)
                         InitializeButtons();
 
-
                     if (FARAeroUtil.EditorAboutToAttach() && count++ >= 10)
                     {
                         EditorPartsChanged = true;
@@ -182,6 +181,8 @@ namespace ferram4
                         EditorPartsChanged = false;
                     }
                 }
+                else if (!buttonsNeedInitializing)
+                    DestroyButtons();
             }
         }
 
@@ -303,7 +304,12 @@ namespace ferram4
                 FAREditorButtonBlizzy.OnClick += (e) => FAREditorGUI.minimize = !FAREditorGUI.minimize;
             }
             else if (FAREditorButtonStock == null)
+            {
                 GameEvents.onGUIApplicationLauncherReady.Add(OnGUIAppLauncherReady);
+                if (ApplicationLauncher.Ready)
+                    OnGUIAppLauncherReady();
+            }
+            
 
             GameEvents.onShowUI.Add(ShowUI);
             GameEvents.onHideUI.Add(HideUI);
@@ -311,12 +317,8 @@ namespace ferram4
             buttonsNeedInitializing = false;
         }
 
-        void OnDestroy()
+        void DestroyButtons()
         {
-            if (!CompatibilityChecker.IsAllCompatible())
-                return;
-
-            SaveConfigs();
             GameEvents.onGUIApplicationLauncherReady.Remove(OnGUIAppLauncherReady);
             GameEvents.onShowUI.Remove(ShowUI);
             GameEvents.onHideUI.Remove(HideUI);
@@ -325,7 +327,20 @@ namespace ferram4
                 ApplicationLauncher.Instance.RemoveModApplication(FAREditorButtonStock);
             if (FAREditorButtonBlizzy != null)
                 FAREditorButtonBlizzy.Destroy();
+
+            buttonsNeedInitializing = true;
         }
+
+        void OnDestroy()
+        {
+            if (!CompatibilityChecker.IsAllCompatible())
+                return;
+
+            SaveConfigs();
+            DestroyButtons();
+        }
+
+
 
         public static void LoadConfigs()
         {
