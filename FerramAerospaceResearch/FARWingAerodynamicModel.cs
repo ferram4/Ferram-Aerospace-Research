@@ -54,6 +54,9 @@ namespace ferram4
         [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
         public float curWingMass = 1;
 
+        [KSPField(isPersistant = false, guiActive = true)]
+        protected double effectiveInfluence;
+
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Mass/Strength Multiplier", guiFormat = "0.##"), UI_FloatRange(minValue = 0.1f, maxValue = 2.0f, stepIncrement = 0.01f)]
         public float massMultiplier = 1.0f;
 
@@ -606,6 +609,7 @@ namespace ferram4
             AoAmax = 0;
             double effectiveUpstreamInfluence = 0;
 
+
             wingInteraction.UpdateOrientationForInteraction(ParallelInPlaneLocal);
             if (wingInteraction.HasWingsUpstream)
             {
@@ -613,6 +617,7 @@ namespace ferram4
 
                 effectiveUpstreamInfluence = wingInteraction.EffectiveUpstreamInfluence;
 
+                effectiveInfluence = effectiveUpstreamInfluence;
                 AoAmax = wingInteraction.EffectiveUpstreamAoAMax;
                 liftslope *= (1 - effectiveUpstreamInfluence);
                 liftslope += wingInteraction.EffectiveUpstreamLiftSlope;
@@ -630,6 +635,7 @@ namespace ferram4
         {
             double lastStall = stall;
             double effectiveUpstreamStall = wingInteraction.EffectiveUpstreamStall;
+
             stall = 0;
 
             CalculateWingCamberInteractions(MachNumber, AoA, out ACshift, out ACweight);

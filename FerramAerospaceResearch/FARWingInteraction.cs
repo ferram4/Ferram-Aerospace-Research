@@ -61,9 +61,6 @@ namespace ferram4
         private List<double> nearbyWingModulesLeftwardInfluence = new List<double>();
         private List<double> nearbyWingModulesRightwardInfluence = new List<double>();
 
-        private Vector3d previousParallelInPlaneLocal;
-        private int upstreamRecalculationCount = 10;
-
         private double forwardExposure;
         private double backwardExposure;
         private double leftwardExposure;
@@ -229,7 +226,7 @@ namespace ferram4
         {
             moduleList.Clear();
             associatedInfluences.Clear();
-            double influencePerIndex = 1 / arrayIn.Length;
+            double influencePerIndex = 1 / (double)arrayIn.Length;
 
             for(int i = 0; i < arrayIn.Length; i++)
             {
@@ -239,7 +236,7 @@ namespace ferram4
                 {
                     if(moduleList[j] == w)
                     {
-                        associatedInfluences[j] += influencePerIndex * Math.Abs(Vector3.Dot(parentWingModule.GetLiftDirection(), w.GetLiftDirection()));
+                        associatedInfluences[j] += influencePerIndex * Math.Abs(Vector3.Dot(parentWingPart.transform.forward, w.part.transform.forward));
                         foundModule = true;
                         break;
                     }
@@ -249,7 +246,7 @@ namespace ferram4
 
 
                 moduleList.Add(w);
-                associatedInfluences.Add(influencePerIndex * Vector3.Dot(parentWingModule.GetLiftDirection(), w.GetLiftDirection()));
+                associatedInfluences.Add(influencePerIndex * Math.Abs(Vector3.Dot(parentWingPart.transform.forward, w.part.transform.forward)));
             }
         }
 
@@ -485,6 +482,10 @@ namespace ferram4
             thisWingMAC = parentWingModule.GetMAC();
             thisWingb_2 = parentWingModule.Getb_2();
 
+            effectiveUpstreamMAC = 0;
+            effectiveUpstreamb_2 = 0;
+            effectiveUpstreamArea = 0;
+
             effectiveUpstreamLiftSlope = 0;
             effectiveUpstreamStall = 0;
             effectiveUpstreamCosSweepAngle = 0;
@@ -551,13 +552,6 @@ namespace ferram4
         /// <param name="parallelInPlaneLocal">Normalized local velocity vector projected onto wing surface</param>
         public void UpdateOrientationForInteraction(Vector3d parallelInPlaneLocal)
         {
-            if (upstreamRecalculationCount-- > 0 && Vector3d.Dot(parallelInPlaneLocal, previousParallelInPlaneLocal) > 0.996)
-            {
-                return;
-            }
-            upstreamRecalculationCount = 10;
-            previousParallelInPlaneLocal = parallelInPlaneLocal;
-
             double wingForwardDir = parallelInPlaneLocal.y;
             double wingRightwardDir = parallelInPlaneLocal.x * srfAttachFlipped;
 
@@ -572,7 +566,7 @@ namespace ferram4
                 FARWingAerodynamicModel wingModule = wingModules[i];
                 double wingInfluenceFactor = associatedInfluences[i] * directionalInfluence;
 
-                double tmp = Vector3.Dot(wingModule.GetLiftDirection(), parentWingModule.GetLiftDirection());
+                double tmp = Vector3.Dot(wingModule.transform.forward, parentWingModule.transform.forward);
 
                 effectiveUpstreamMAC += wingModule.GetMAC() * wingInfluenceFactor;
                 effectiveUpstreamb_2 += wingModule.Getb_2() * wingInfluenceFactor;
