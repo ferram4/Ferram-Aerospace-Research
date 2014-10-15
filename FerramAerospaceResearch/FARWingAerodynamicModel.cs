@@ -54,9 +54,6 @@ namespace ferram4
         [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
         public float curWingMass = 1;
 
-        [KSPField(isPersistant = false, guiActive = true)]
-        protected double effectiveInFrontStall = 0;
-
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Mass/Strength Multiplier", guiFormat = "0.##"), UI_FloatRange(minValue = 0.1f, maxValue = 2.0f, stepIncrement = 0.01f)]
         public float massMultiplier = 1.0f;
 
@@ -434,14 +431,12 @@ namespace ferram4
                     {
                         stall = 0;
                         wingInteraction.ResetWingInteractions();
-                        effectiveInFrontStall = 0;
                     }
                 }
                 else
                 {
                     stall = 0;
                     wingInteraction.ResetWingInteractions();
-                    effectiveInFrontStall = 0;
                 }
 
             }
@@ -531,7 +526,7 @@ namespace ferram4
             else if (HighLogic.LoadedSceneIsEditor && massMultiplier != oldMassMultiplier)
             {
                 GetRefAreaChildren();
-                UpdateMassToAccountForArea(false);
+                UpdateMassToAccountForArea();
             }
 
         }
@@ -552,14 +547,12 @@ namespace ferram4
                 parentWing.updateMassNextFrame = true;
         }
 
-        private void UpdateMassToAccountForArea(bool printLog = true)
+        private void UpdateMassToAccountForArea()
         {
             float supportedArea = (float)(refAreaChildren + S);
             part.mass = supportedArea * (float)FARAeroUtil.massPerWingAreaSupported * massMultiplier;
             curWingMass = part.mass;
             oldMassMultiplier = massMultiplier;
-            if(printLog)
-                Debug.Log("Wing: " + part.partInfo.title + " mass set to: " + part.mass + " with a supported area of: " + supportedArea);
         }
 
         private void GetRefAreaChildren()
@@ -637,7 +630,6 @@ namespace ferram4
         {
             double lastStall = stall;
             double effectiveUpstreamStall = wingInteraction.EffectiveUpstreamStall;
-            effectiveInFrontStall = effectiveUpstreamStall;
             stall = 0;
 
             CalculateWingCamberInteractions(MachNumber, AoA, out ACshift, out ACweight);

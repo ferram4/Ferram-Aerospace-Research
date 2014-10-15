@@ -239,7 +239,7 @@ namespace ferram4
                 {
                     if(moduleList[j] == w)
                     {
-                        associatedInfluences[j] += influencePerIndex;
+                        associatedInfluences[j] += influencePerIndex * Vector3.Dot(parentWingModule.GetLiftDirection(), w.GetLiftDirection());
                         foundModule = true;
                         break;
                     }
@@ -249,7 +249,7 @@ namespace ferram4
 
 
                 moduleList.Add(w);
-                associatedInfluences.Add(influencePerIndex);
+                associatedInfluences.Add(influencePerIndex * Vector3.Dot(parentWingModule.GetLiftDirection(), w.GetLiftDirection()));
             }
         }
 

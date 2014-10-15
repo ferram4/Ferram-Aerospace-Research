@@ -167,7 +167,8 @@ Decreased wing mass per area slightly
 
 Bugfixes:
 Fixed aero visualization leaving parachutes glowing brightly  
-Fixed some critical errors for when config files do not have values listed
+Fixed some critical errors for when config files do not have values listed  
+Fixed an issue with AppLauncher buttons multiplying when KSP fails at loading a particular vessel
 
 0.14.2v------------------------------------
 Features:

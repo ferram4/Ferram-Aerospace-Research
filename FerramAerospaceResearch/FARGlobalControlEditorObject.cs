@@ -65,7 +65,8 @@ namespace ferram4
         {
             if (!CompatibilityChecker.IsAllCompatible())
                 return;
-                
+
+            buttonsNeedInitializing = true;
             LoadConfigs();
         }
 
