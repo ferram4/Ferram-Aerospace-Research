@@ -614,9 +614,9 @@ namespace ferram4
             double effectiveUpstreamInfluence = 0;
 
             wingInteraction.UpdateOrientationForInteraction(ParallelInPlaneLocal);
-            if (wingInteraction.HasWingsUpstream())
+            if (wingInteraction.HasWingsUpstream)
             {
-                wingInteraction.CalculateEffectsOfUpstreamWing(AoA, MachNumber, ref ACweight, ref ACshift, ref ClIncrementFromRear);
+                wingInteraction.CalculateEffectsOfUpstreamWing(AoA, MachNumber, ParallelInPlaneLocal, ref ACweight, ref ACshift, ref ClIncrementFromRear);
 
                 effectiveUpstreamInfluence = wingInteraction.EffectiveUpstreamInfluence;
 
@@ -1144,7 +1144,7 @@ namespace ferram4
         private double CdCompressibilityZeroLiftIncrement(double M, double SweepAngle, double TanSweep, double beta_TanSweep, double beta)
         {
 
-            if (wingInteraction.HasWingsUpstream())
+            if (wingInteraction.HasWingsUpstream)
             {
                 zeroLiftCdIncrement = wingInteraction.EffectiveUpstreamCd0;
                 return zeroLiftCdIncrement;

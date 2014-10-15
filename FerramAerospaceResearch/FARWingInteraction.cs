@@ -51,12 +51,16 @@ namespace ferram4
         private Vector3 rootChordMidPt;
         private short srfAttachFlipped;
 
-        private FARWingAerodynamicModel[] nearbyWingModulesForward;
-        private FARWingAerodynamicModel[] nearbyWingModulesBackward;
-        private FARWingAerodynamicModel[] nearbyWingModulesLeftward;
-        private FARWingAerodynamicModel[] nearbyWingModulesRightward;
+        private List<FARWingAerodynamicModel> nearbyWingModulesForwardList = new List<FARWingAerodynamicModel>();
+        private List<FARWingAerodynamicModel> nearbyWingModulesBackwardList = new List<FARWingAerodynamicModel>();
+        private List<FARWingAerodynamicModel> nearbyWingModulesLeftwardList = new List<FARWingAerodynamicModel>();
+        private List<FARWingAerodynamicModel> nearbyWingModulesRightwardList = new List<FARWingAerodynamicModel>();
 
-        private Dictionary<FARWingAerodynamicModel, double> nearbyUpstreamWingModulesAndInfluenceFactors = new Dictionary<FARWingAerodynamicModel, double>();
+        private List<double> nearbyWingModulesForwardInfluence = new List<double>();
+        private List<double> nearbyWingModulesBackwardInfluence = new List<double>();
+        private List<double> nearbyWingModulesLeftwardInfluence = new List<double>();
+        private List<double> nearbyWingModulesRightwardInfluence = new List<double>();
+
         private Vector3d previousParallelInPlaneLocal;
         private int upstreamRecalculationCount = 10;
 
@@ -76,6 +80,8 @@ namespace ferram4
         private double effectiveUpstreamCd0;
         private double effectiveUpstreamInfluence;
 
+        private bool hasWingsUpstream = false;
+
         public double EffectiveUpstreamMAC { get { return effectiveUpstreamMAC; } private set { effectiveUpstreamMAC = value; } }
         public double EffectiveUpstreamb_2 { get { return effectiveUpstreamb_2; } private set { effectiveUpstreamb_2 = value; } }
         public double EffectiveUpstreamLiftSlope { get { return effectiveUpstreamLiftSlope; } private set { effectiveUpstreamLiftSlope = value; } }
@@ -86,6 +92,9 @@ namespace ferram4
         public double EffectiveUpstreamAoA { get { return effectiveUpstreamAoA; } private set { effectiveUpstreamAoA = value; } }
         public double EffectiveUpstreamCd0 { get { return effectiveUpstreamCd0; } private set { effectiveUpstreamCd0 = value; } }
         public double EffectiveUpstreamInfluence { get { return effectiveUpstreamInfluence; } private set { effectiveUpstreamInfluence = value; } }
+
+        public bool HasWingsUpstream { get { return hasWingsUpstream; } private set { hasWingsUpstream = value; } }
+
 
 
         private static FloatCurve wingCamberFactor = null;
@@ -175,6 +184,11 @@ namespace ferram4
             float flt_TaperRatio = (float)parentWingModule.TaperRatio;
             float flt_MidChordSweep = (float)parentWingModule.MidChordSweep;
 
+            FARWingAerodynamicModel[] nearbyWingModulesForward;
+            FARWingAerodynamicModel[] nearbyWingModulesBackward;
+            FARWingAerodynamicModel[] nearbyWingModulesLeftward;
+            FARWingAerodynamicModel[] nearbyWingModulesRightward;
+
             rootChordMidPt = parentWingPart.transform.position + parentWingPart.transform.TransformDirection(rootChordMidLocal);
 
             if(isSmallSrf)
@@ -198,12 +212,45 @@ namespace ferram4
                 rightwardExposure = ExposureInSpanDirection(out nearbyWingModulesRightward, parentWingPart.transform.right, VesselPartList, flt_b_2, flt_MAC, flt_TaperRatio, flt_MidChordSweep);
             }
 
+            CompressArrayToList(nearbyWingModulesForward, ref nearbyWingModulesForwardList, ref nearbyWingModulesForwardInfluence);
+            CompressArrayToList(nearbyWingModulesBackward, ref nearbyWingModulesBackwardList, ref nearbyWingModulesBackwardInfluence);
+            CompressArrayToList(nearbyWingModulesLeftward, ref nearbyWingModulesLeftwardList, ref nearbyWingModulesLeftwardInfluence);
+            CompressArrayToList(nearbyWingModulesRightward, ref nearbyWingModulesRightwardList, ref nearbyWingModulesRightwardInfluence);
+
             //This part handles effects of biplanes, triplanes, etc.
             double ClCdInterference = 1;
             ClCdInterference *= WingInterference(parentWingPart.transform.forward, VesselPartList, flt_b_2);
             ClCdInterference *= WingInterference(-parentWingPart.transform.forward, VesselPartList, flt_b_2);
 
             ClInterferenceFactor = ClCdInterference;
+        }
+
+        private void CompressArrayToList(FARWingAerodynamicModel[] arrayIn, ref List<FARWingAerodynamicModel> moduleList, ref List<double> associatedInfluences)
+        {
+            moduleList.Clear();
+            associatedInfluences.Clear();
+            double influencePerIndex = 1 / arrayIn.Length;
+
+            for(int i = 0; i < arrayIn.Length; i++)
+            {
+                FARWingAerodynamicModel w = arrayIn[i];
+                bool foundModule = false;
+                for(int j = 0; j < moduleList.Count; j++)
+                {
+                    if(moduleList[j] == w)
+                    {
+                        associatedInfluences[j] += influencePerIndex;
+                        foundModule = true;
+                        break;
+                    }
+                }
+                if (foundModule || (object)w == null)
+                    continue;
+
+
+                moduleList.Add(w);
+                associatedInfluences.Add(influencePerIndex);
+            }
         }
 
         private double WingInterference(Vector3 rayDirection, List<Part> PartList, float dist)
@@ -387,31 +434,39 @@ namespace ferram4
                 if (!sortingList.ContainsKey(unsortedList[i].distance))
                     sortingList.Add(unsortedList[i].distance, unsortedList[i]);
 
-            string s = "";
-
             sortedHits = sortingList.Values.ToArray();
 
             return sortedHits;
         }
 
-        public bool HasWingsUpstream()
+        private bool DetermineWingsUpstream(double wingForwardDir, double wingRightwardDir)
         {
-            return nearbyUpstreamWingModulesAndInfluenceFactors.Count > 0;
-        }
-
-        private void UpdateStaticEffectiveUpstreamValues()
-        {
-            effectiveUpstreamMAC = 0;
-            effectiveUpstreamb_2 = 0;
-            effectiveUpstreamArea = 0;
-
-            foreach (KeyValuePair<FARWingAerodynamicModel, double> pair in nearbyUpstreamWingModulesAndInfluenceFactors)
+            if (wingForwardDir > 0)
             {
-                effectiveUpstreamMAC += pair.Key.GetMAC() * pair.Value;
-                effectiveUpstreamb_2 += pair.Key.Getb_2() * pair.Value;
-                effectiveUpstreamArea += pair.Key.S * pair.Value;
+                if (nearbyWingModulesForwardList.Count > 0)
+                    return true;
             }
+            else
+            {
+                if (nearbyWingModulesBackwardList.Count > 0)
+                    return true;
+
+            }
+
+            if (wingRightwardDir > 0)
+            {
+                if (nearbyWingModulesRightwardList.Count > 0)
+                    return true;
+            }
+            else
+            {
+                if (nearbyWingModulesLeftwardList.Count > 0)
+                    return true;
+
+            }
+            return false;
         }
+
 
         /// <summary>
         /// Accounts for increments in lift due to camber changes from upstream wings, and returns changes for this wing part; returns true if there are wings in front of it
@@ -422,7 +477,7 @@ namespace ferram4
         /// <param name="ACShift">Value used to shift the wing AC due to interactive effects</param>
         /// <param name="ClIncrementFromRear">Increase in Cl due to this</param>
         /// <returns></returns>
-        public void CalculateEffectsOfUpstreamWing(double thisWingAoA, double thisWingMachNumber, 
+        public void CalculateEffectsOfUpstreamWing(double thisWingAoA, double thisWingMachNumber, Vector3d parallelInPlaneLocal,
             ref double ACweight, ref double ACshift, ref double ClIncrementFromRear)
         {
             double thisWingMAC, thisWingb_2;
@@ -438,21 +493,29 @@ namespace ferram4
             effectiveUpstreamCd0 = 0;
             effectiveUpstreamInfluence = 0;
 
-            foreach(KeyValuePair<FARWingAerodynamicModel, double> pair in nearbyUpstreamWingModulesAndInfluenceFactors)
+            double wingForwardDir = parallelInPlaneLocal.y;
+            double wingRightwardDir = parallelInPlaneLocal.x * srfAttachFlipped;
+
+            if (wingForwardDir > 0)
             {
-                double tmp = Vector3.Dot(pair.Key.GetLiftDirection(), parentWingModule.GetLiftDirection());
+                wingForwardDir *= wingForwardDir;
+                UpdateUpstreamValuesFromWingModules(nearbyWingModulesForwardList, nearbyWingModulesForwardInfluence, wingForwardDir, thisWingAoA);
+            }
+            else
+            {
+                wingForwardDir *= wingForwardDir;
+                UpdateUpstreamValuesFromWingModules(nearbyWingModulesBackwardList, nearbyWingModulesBackwardInfluence, wingForwardDir, thisWingAoA);
+            }
 
-                effectiveUpstreamLiftSlope += pair.Key.GetLiftSlope() * pair.Value;
-                effectiveUpstreamStall += pair.Key.GetStall() * pair.Value;
-                effectiveUpstreamCosSweepAngle += pair.Key.GetCosSweepAngle() * pair.Value;
-                effectiveUpstreamAoAMax += pair.Key.AoAmax * pair.Value;
-                effectiveUpstreamCd0 += pair.Key.GetCd0() * pair.Value;
-                effectiveUpstreamInfluence += pair.Value;
-
-                double wAoA = pair.Key.CalculateAoA(pair.Key.GetVelocity()) * Math.Sign(tmp);
-                tmp = (thisWingAoA - wAoA) * pair.Value;                //First, make sure that the AoA are wrt the same direction; then account for any strange angling of the part that shouldn't be there
-
-                effectiveUpstreamAoA += tmp;
+            if (wingRightwardDir > 0)
+            {
+                wingRightwardDir *= wingRightwardDir;
+                UpdateUpstreamValuesFromWingModules(nearbyWingModulesRightwardList, nearbyWingModulesRightwardInfluence, wingRightwardDir, thisWingAoA);
+            }
+            else
+            {
+                wingRightwardDir *= wingRightwardDir;
+                UpdateUpstreamValuesFromWingModules(nearbyWingModulesLeftwardList, nearbyWingModulesLeftwardInfluence, wingRightwardDir, thisWingAoA);
             }
 
             double MachCoeff = FARMathUtil.Clamp(1 - thisWingMachNumber * thisWingMachNumber, 0, 1);
@@ -499,89 +562,34 @@ namespace ferram4
             double wingRightwardDir = parallelInPlaneLocal.x * srfAttachFlipped;
 
             ARFactor = CalculateARFactor(wingForwardDir, wingRightwardDir);
-            UpdateUpstreamWingModules(wingForwardDir, wingRightwardDir);
-            if (HasWingsUpstream())
-                UpdateStaticEffectiveUpstreamValues();
+            hasWingsUpstream = DetermineWingsUpstream(wingForwardDir, wingRightwardDir);
         }
 
-        /// <summary>
-        /// Sets upstream wing modules for proper calculation of upstream and downstream influences on wings
-        /// </summary>
-        /// <param name="wingForwardDir">Local velocity vector forward component</param>
-        /// <param name="wingRightwardDir">Local velocity vector leftward component</param>
-        private void UpdateUpstreamWingModules(double wingForwardDir, double wingRightwardDir)
+        private void UpdateUpstreamValuesFromWingModules(List<FARWingAerodynamicModel> wingModules, List<double> associatedInfluences, double directionalInfluence, double thisWingAoA)
         {
-            nearbyUpstreamWingModulesAndInfluenceFactors.Clear();
-
-            if(wingForwardDir > 0)
+            for (int i = 0; i < wingModules.Count; i++)
             {
-                wingForwardDir *= wingForwardDir;
-                //If wingForwardDir > 0, then that means that the wingModulesForward are upstream; add them
+                FARWingAerodynamicModel wingModule = wingModules[i];
+                double wingInfluenceFactor = associatedInfluences[i] * directionalInfluence;
 
-                for(int i = 0; i < nearbyWingModulesForward.Length; i++)
-                {
-                    AddWingAndInfluenceToUpstreamWings(nearbyWingModulesForward[i], wingForwardDir, nearbyWingModulesForward.Length);
-                }
+                double tmp = Vector3.Dot(wingModule.GetLiftDirection(), parentWingModule.GetLiftDirection());
+
+                effectiveUpstreamMAC += wingModule.GetMAC() * wingInfluenceFactor;
+                effectiveUpstreamb_2 += wingModule.Getb_2() * wingInfluenceFactor;
+                effectiveUpstreamArea += wingModule.S * wingInfluenceFactor;
+
+                effectiveUpstreamLiftSlope += wingModule.GetLiftSlope() * wingInfluenceFactor;
+                effectiveUpstreamStall += wingModule.GetStall() * wingInfluenceFactor;
+                effectiveUpstreamCosSweepAngle += wingModule.GetCosSweepAngle() * wingInfluenceFactor;
+                effectiveUpstreamAoAMax += wingModule.AoAmax * wingInfluenceFactor;
+                effectiveUpstreamCd0 += wingModule.GetCd0() * wingInfluenceFactor;
+                effectiveUpstreamInfluence += wingInfluenceFactor;
+
+                double wAoA = wingModule.CalculateAoA(wingModule.GetVelocity()) * Math.Sign(tmp);
+                tmp = (thisWingAoA - wAoA) * wingInfluenceFactor;                //First, make sure that the AoA are wrt the same direction; then account for any strange angling of the part that shouldn't be there
+
+                effectiveUpstreamAoA += tmp;
             }
-            else
-            {
-                wingForwardDir *= wingForwardDir;
-                for (int i = 0; i < nearbyWingModulesBackward.Length; i++)
-                {
-                    AddWingAndInfluenceToUpstreamWings(nearbyWingModulesBackward[i], wingForwardDir, nearbyWingModulesBackward.Length);
-                }
-            }
-            
-            if(wingRightwardDir > 0)
-            {
-                wingRightwardDir *= wingRightwardDir;
-                for (int i = 0; i < nearbyWingModulesRightward.Length; i++)
-                {
-                    AddWingAndInfluenceToUpstreamWings(nearbyWingModulesRightward[i], wingRightwardDir, nearbyWingModulesLeftward.Length);
-                }
-            }
-            else
-            {
-                wingRightwardDir *= wingRightwardDir;
-                for (int i = 0; i < nearbyWingModulesLeftward.Length; i++)
-                {
-                    AddWingAndInfluenceToUpstreamWings(nearbyWingModulesLeftward[i], wingRightwardDir, nearbyWingModulesRightward.Length);
-                }
-            }
-
-        }
-
-        private void AddWingAndInfluenceToUpstreamWings(FARWingAerodynamicModel upstreamWing, double directionalInfluence, double numWingsInDirection)
-        {
-            //Null wings indicates there is nothing there
-            if ((object)upstreamWing == null)
-                return;
-
-            //Check to see if we already have this wing in the dict
-            if (nearbyUpstreamWingModulesAndInfluenceFactors.ContainsKey(upstreamWing))
-            {
-                //If we do, add the appropriate influence to it
-
-                //Account for the off-angle affect of this as well as the number of wings listed for this direction
-                double influenceFactor = directionalInfluence / numWingsInDirection;
-
-                influenceFactor *= Math.Abs(Vector3.Dot(upstreamWing.GetLiftDirection(), parentWingModule.GetLiftDirection()));
-
-                influenceFactor += nearbyUpstreamWingModulesAndInfluenceFactors[upstreamWing];  //Add the previous numbers
-                nearbyUpstreamWingModulesAndInfluenceFactors[upstreamWing] = influenceFactor;   //And update the dict value
-            }
-            else
-            {
-                //If we don't, add it, and set the influence factor
-
-                //Account for the off-angle affect of this as well as the number of wings listed for this direction
-                double influenceFactor = directionalInfluence / numWingsInDirection;
-
-                influenceFactor *= Math.Abs(Vector3.Dot(upstreamWing.GetLiftDirection(), parentWingModule.GetLiftDirection()));
-
-                nearbyUpstreamWingModulesAndInfluenceFactors[upstreamWing] = influenceFactor;   //And add it to the dictionary, along with the influence factor
-            }
-
         }
 
         /// <summary>

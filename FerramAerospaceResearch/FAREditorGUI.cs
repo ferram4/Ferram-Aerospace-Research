@@ -1116,7 +1116,19 @@ namespace ferram4
             double Ixz = 0;
 
             double nomCl = 0, nomCd = 0, nomCm = 0, nomCy = 0, nomCn = 0, nomC_roll = 0;
-            
+
+            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
+            {
+                Part p = FARAeroUtil.CurEditorParts[i];
+                for (int k = 0; k < p.Modules.Count; k++)
+                {
+                    PartModule m = p.Modules[k];
+                    if (m is FARPartModule)
+                    {
+                        (m as FARPartModule).ForceOnVesselPartsChange();
+                    }
+                }
+            }
 
             GetClCdCmSteady(Vector3d.zero, alpha, beta, phi, 0, 0, 0, M, 0, out nomCl, out nomCd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true);
 
@@ -1515,8 +1527,20 @@ namespace ferram4
                 CoM += partMass * (Vector3d)p.transform.TransformPoint(p.CoMOffset);
                 mass += partMass;
             }
-
             CoM /= mass;
+
+            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
+            {
+                Part p = FARAeroUtil.CurEditorParts[i];
+                for (int k = 0; k < p.Modules.Count; k++)
+                {
+                    PartModule m = p.Modules[k];
+                    if (m is FARPartModule)
+                    {
+                        (m as FARPartModule).ForceOnVesselPartsChange();
+                    }
+                }
+            }
 
             double[] ClValues = new double[(int)numPoints];
             double[] CdValues = new double[(int)numPoints];
@@ -1576,6 +1600,19 @@ namespace ferram4
                 mass += partMass;
             }
             CoM /= mass;
+
+            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
+            {
+                Part p = FARAeroUtil.CurEditorParts[i];
+                for (int k = 0; k < p.Modules.Count; k++)
+                {
+                    PartModule m = p.Modules[k];
+                    if (m is FARPartModule)
+                    {
+                        (m as FARPartModule).ForceOnVesselPartsChange();
+                    }
+                }
+            }
 
             double[] ClValues = new double[(int)numPoints];
             double[] CdValues = new double[(int)numPoints];
@@ -1661,21 +1698,6 @@ namespace ferram4
 
             Vector3d sideways = Vector3.Cross(velocity, liftVector);
 
-
-
-
-            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
-            {
-                Part p = FARAeroUtil.CurEditorParts[i];
-                for (int k = 0; k < p.Modules.Count; k++)
-                {
-                    PartModule m = p.Modules[k];
-                    if (m is FARPartModule)
-                    {
-                        (m as FARPartModule).ForceOnVesselPartsChange();
-                    }
-                }
-            }
             for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
             {
                 Part p = FARAeroUtil.CurEditorParts[i]; 
