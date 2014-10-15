@@ -158,7 +158,7 @@ Refactored wing interaction code:
 
 Upgrade to ModuleManager v2.5.1  
 Added stall visualization to aero force visualization  
-Added ability to scale wing mass up or down for additional strength / weight savings  
+Added ability to scale wing mass up or down for additional strength / weight savings (addedby NathanKell)   
 Improved cargo bay and payload fairing detection algorithm  
 
 Tweaks:  
