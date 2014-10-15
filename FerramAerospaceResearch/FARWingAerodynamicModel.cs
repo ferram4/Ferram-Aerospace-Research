@@ -213,12 +213,20 @@ namespace ferram4
 
         protected override Vector3d PrecomputeCenterOfLift(Vector3d velocity, double MachNumber, FARCenterQuery center)
         {
-            double AoA = CalculateAoA(velocity);
+            try
+            {
+                double AoA = CalculateAoA(velocity);
 
-            Vector3d force = CalculateForces(velocity, MachNumber, AoA);
-            center.AddForce(AerodynamicCenter, force);
+                Vector3d force = CalculateForces(velocity, MachNumber, AoA);
+                center.AddForce(AerodynamicCenter, force);
 
-            return force;
+                return force;
+            }
+            catch       //FIX ME!!!
+            {           //Yell at KSP devs so that I don't have to engage in bad code practice
+                //Debug.Log("The expected exception from the symmetry counterpart part transform internals was caught and suppressed");
+                return Vector3.zero;
+            }
         }
 
         public void EditorClClear(bool reset_stall)

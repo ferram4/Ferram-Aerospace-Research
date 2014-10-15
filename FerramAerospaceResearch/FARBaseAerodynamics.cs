@@ -75,6 +75,8 @@ namespace ferram4
         private static Vector3d GlobalCoL;
         private Vector3 CoLForce;
 
+        private int frameCountUntilSafe = 10;
+
         public override void OnAwake()
         {
             base.OnAwake();
@@ -209,6 +211,8 @@ namespace ferram4
         {
             return Vector3d.zero;
         }
+
+
 
         public static List<FARBaseAerodynamics> GetAllEditorModules()
         {

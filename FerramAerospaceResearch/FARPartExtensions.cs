@@ -79,8 +79,8 @@ namespace ferram4
                     else
                         colliders = part.GetComponentsInChildren<Collider>();
                 }
-                catch (Exception e)
-                {
+                catch
+                {   //FIXME
                     //Fail silently because it's the only way to avoid issues with pWings
                     //Debug.LogException(e);
                     colliders = new Collider[1] { part.collider };

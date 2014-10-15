@@ -278,10 +278,18 @@ namespace ferram4
 
         protected override Vector3d PrecomputeCenterOfLift(Vector3d velocity, double MachNumber, FARCenterQuery center)
         {
-            Vector3d force = RunDragCalculation(velocity, MachNumber, 1);
-            Vector3d pos = GetCoD();
-            center.AddForce(pos, force);
-            return force;
+            try
+            {
+                Vector3d force = RunDragCalculation(velocity, MachNumber, 1);
+                Vector3d pos = GetCoD();
+                center.AddForce(pos, force);
+                return force;
+            }
+            catch       //FIX ME!!!
+            {           //Yell at KSP devs so that I don't have to engage in bad code practice
+                //Debug.Log("The expected exception from the symmetry counterpart part transform internals was caught and suppressed");
+                return Vector3.zero;
+            }
         }
 
 
