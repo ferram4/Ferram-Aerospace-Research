@@ -59,6 +59,9 @@ namespace ferram4
 
         public float oldMassMultiplier = -1f;
 
+        [KSPField(isPersistant = false, guiActive = true)]
+        protected double inFrontStall = 0;
+
         [KSPField(isPersistant = false)]
         public double MAC;
 
@@ -616,10 +619,11 @@ namespace ferram4
 
 
             wingInteraction.UpdateOrientationForInteraction(ParallelInPlaneLocal);
-            if (wingInteraction.HasWingsUpstream)
-            {
-                wingInteraction.CalculateEffectsOfUpstreamWing(AoA, MachNumber, ParallelInPlaneLocal, ref ACweight, ref ACshift, ref ClIncrementFromRear);
+            wingInteraction.CalculateEffectsOfUpstreamWing(AoA, MachNumber, ParallelInPlaneLocal, ref ACweight, ref ACshift, ref ClIncrementFromRear);
+            effectiveUpstreamInfluence = wingInteraction.EffectiveUpstreamInfluence;
 
+            if (effectiveUpstreamInfluence > 0)
+            {
                 effectiveUpstreamInfluence = wingInteraction.EffectiveUpstreamInfluence;
 
                 AoAmax = wingInteraction.EffectiveUpstreamAoAMax;
@@ -639,6 +643,7 @@ namespace ferram4
         {
             double lastStall = stall;
             double effectiveUpstreamStall = wingInteraction.EffectiveUpstreamStall;
+            inFrontStall = effectiveUpstreamStall;
 
             stall = 0;
 
