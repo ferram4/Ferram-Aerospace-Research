@@ -79,6 +79,7 @@ namespace ferram4
         {
             minBounds.Clear();
             maxBounds.Clear();
+            this.PartColliders = part.GetPartColliders();
             FindShieldedParts();
             var d = part.GetComponent<FARBasicDragModel>();
             if (d != null) d.UpdatePropertiesWithShapeChange();
@@ -177,7 +178,7 @@ namespace ferram4
             ClearShieldedParts();
             UpdateShipPartsList();
 
-            Collider[] colliders = part.GetPartColliders();
+            Collider[] colliders = this.PartColliders;
             
             for (int i = 0; i < VesselPartList.Count; i++)
             {

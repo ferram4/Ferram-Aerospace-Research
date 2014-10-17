@@ -39,7 +39,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using ferram4.PartExtensions;
 
 namespace ferram4
 {
@@ -277,10 +276,12 @@ namespace ferram4
                         if (p == parentWingPart)
                             continue;
 
-                        Collider[] colliders = p.GetPartColliders();
+                        FARWingAerodynamicModel w = p.GetComponent<FARWingAerodynamicModel>();
 
-                        if (p.Modules.Contains("FARWingAerodynamicModel"))
+                        if ((object)w != null)
                         {
+                            Collider[] colliders = w.PartColliders;
+
                             for (int k = 0; k < colliders.Length; k++)
                                 if (h.collider == colliders[k] && h.distance > 0)
                                 {
@@ -389,7 +390,15 @@ namespace ferram4
                         if (p == parentWingPart)
                             continue;
 
-                        Collider[] colliders = p.GetPartColliders();
+                        FARPartModule farModule = p.GetComponent<FARPartModule>();
+
+                        Collider[] colliders;
+
+                        if ((object)farModule != null)
+                            colliders = farModule.PartColliders;
+                        else
+                            colliders = new Collider[1] { p.collider };
+                        
 
                         for (int l = 0; l < colliders.Length; l++)
                             if (h.collider == colliders[l] && h.distance > 0)

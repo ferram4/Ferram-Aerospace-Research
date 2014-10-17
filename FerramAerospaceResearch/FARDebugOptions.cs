@@ -445,10 +445,10 @@ namespace ferram4
             FARDebugValues.allowStructuralFailures = GUILayout.Toggle(FARDebugValues.allowStructuralFailures, "Allow Aero-structural Failures", thisStyle);
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
+            GUILayout.Label("Other Options"); // DaMichel: put it above the toolbar toggle
+            GUILayout.BeginVertical();
             if (ToolbarManager.ToolbarAvailable)
             {
-                GUILayout.Label("Other Options"); // DaMichel: put it above the toolbar toggle
-                GUILayout.BeginVertical();
                 FARDebugValues.useBlizzyToolbar = GUILayout.Toggle(FARDebugValues.useBlizzyToolbar, "Use Blizzy78 Toolbar instead of Stock AppManager", thisStyle);
                 bool tmp = FARDebugValues.useBlizzyToolbar;
 
@@ -470,9 +470,9 @@ namespace ferram4
                     else
                         GameEvents.onGUIApplicationLauncherReady.Add(OnGUIAppLauncherReady);
                 }
-                FARActionGroupConfiguration.DrawGUI();
-                GUILayout.EndVertical();
             }
+            FARActionGroupConfiguration.DrawGUI();
+            GUILayout.EndVertical();
         }
 
         public static void LoadConfigs()

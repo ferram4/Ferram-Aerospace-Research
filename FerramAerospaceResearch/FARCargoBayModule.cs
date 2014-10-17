@@ -40,7 +40,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
 using UnityEngine;
-using ferram4.PartExtensions;
 
 namespace ferram4
 {
@@ -260,7 +259,7 @@ namespace ferram4
 
             double y_margin = Math.Max(0.12, 0.03 * (maxBounds.y-minBounds.y));
 
-            Collider[] colliders = part.GetPartColliders();
+            Collider[] colliders = this.PartColliders;
 
             for (int i = 0; i < VesselPartList.Count; i++)
             {

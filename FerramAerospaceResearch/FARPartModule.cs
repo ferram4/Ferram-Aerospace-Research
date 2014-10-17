@@ -38,6 +38,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using ferram4.PartExtensions;
 
 namespace ferram4
 {
@@ -46,6 +47,9 @@ namespace ferram4
         protected Callback OnVesselPartsChange;
         public List<Part> VesselPartList = null;
         int VesselPartListCount = 0;
+        private Collider[] partColliders = null;
+
+        public Collider[] PartColliders { get { if(partColliders == null) TriggerPartColliderUpdate(); return partColliders; } protected set { partColliders = value; } }
 
         public void ForceOnVesselPartsChange()
         {
@@ -70,7 +74,25 @@ namespace ferram4
                 part.OnEditorDetach += OnEditorAttach;
                 part.OnEditorDestroy += OnEditorAttach;
             }
+            TriggerPartColliderUpdate();
         }        
+
+        protected void TriggerPartColliderUpdate()
+        {
+            //Set up part collider list to easy runtime overhead with memory churning
+            for (int i = 0; i < part.Modules.Count; i++)
+            {
+                PartModule m = part.Modules[i];
+                if (m is FARPartModule)
+                {
+                    FARPartModule farModule = (m as FARPartModule);
+                    if (farModule.partColliders != null)
+                        this.partColliders = farModule.partColliders;
+                }
+            }
+            if (this.partColliders == null)
+                this.partColliders = part.GetPartColliders();
+        }
 
         public virtual void OnEditorAttach()
         {

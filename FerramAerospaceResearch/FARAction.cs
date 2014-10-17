@@ -134,7 +134,7 @@ namespace ferram4
                     ok = true;
                     //Debug.Log(String.Format("FAR: set AG {0} to {1}", guiLabels[i], id2actionGroup[i]));
                 }
-                catch (Exception e)
+                catch   //FIXME with a dropdown list
                 {
                 }
                 GUILayout.Label(ok ? " Ok" : " Invalid", GUILayout.Width(50));

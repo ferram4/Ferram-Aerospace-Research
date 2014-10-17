@@ -75,8 +75,6 @@ namespace ferram4
         private static Vector3d GlobalCoL;
         private Vector3 CoLForce;
 
-        private int frameCountUntilSafe = 10;
-
         public override void OnAwake()
         {
             base.OnAwake();

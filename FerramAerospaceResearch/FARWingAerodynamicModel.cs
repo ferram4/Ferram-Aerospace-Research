@@ -65,7 +65,7 @@ namespace ferram4
         [KSPField(isPersistant = false)]
         public double MAC;
 
-        [KSPField(isPersistant = false)]
+        [KSPField(isPersistant = false, guiActive = true)]
         public double e;
 
         [KSPField(isPersistant = false)]
@@ -1099,6 +1099,8 @@ namespace ferram4
             SetSweepAngle(sweepHalfChord);
 
             effective_AR = transformed_AR * wingInteraction.ARFactor;
+
+            effective_AR = FARMathUtil.Clamp(effective_AR, 0.25, 30);   //Even this range of effective ARs is large, but it keeps the Oswald's Efficiency numbers in check
 
             /*if (MachNumber < 1)
                 tmp = Mathf.Clamp(MachNumber, 0, 0.9f);
