@@ -59,13 +59,10 @@ namespace ferram4
 
         public float oldMassMultiplier = -1f;
 
-        [KSPField(isPersistant = false, guiActive = true)]
-        protected double inFrontStall = 0;
-
         [KSPField(isPersistant = false)]
         public double MAC;
 
-        [KSPField(isPersistant = false, guiActive = true)]
+        [KSPField(isPersistant = false)]
         public double e;
 
         [KSPField(isPersistant = false)]
@@ -643,7 +640,6 @@ namespace ferram4
         {
             double lastStall = stall;
             double effectiveUpstreamStall = wingInteraction.EffectiveUpstreamStall;
-            inFrontStall = effectiveUpstreamStall;
 
             stall = 0;
 

@@ -77,7 +77,7 @@ namespace ferram4
             TriggerPartColliderUpdate();
         }        
 
-        protected void TriggerPartColliderUpdate()
+        public void TriggerPartColliderUpdate()
         {
             //Set up part collider list to easy runtime overhead with memory churning
             for (int i = 0; i < part.Modules.Count; i++)
