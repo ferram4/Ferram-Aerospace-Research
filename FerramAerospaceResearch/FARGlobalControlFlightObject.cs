@@ -85,7 +85,7 @@ namespace ferram4
                     DummyVoid,
                     DummyVoid,
                     DummyVoid,
-                    ApplicationLauncher.AppScenes.FLIGHT,
+                    ApplicationLauncher.AppScenes.ALWAYS,
                     (Texture)GameDatabase.Instance.GetTexture("FerramAerospaceResearch/Textures/icon_button_stock", false));
             }
         }
