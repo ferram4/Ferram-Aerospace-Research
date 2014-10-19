@@ -299,7 +299,7 @@ namespace ferram4
 
             // With unity objects, "foo" or "foo != null" calls a method to check if
             // it's destroyed. (object)foo != null just checks if it is actually null.
-            if (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && (object)part != null)
+            if (HighLogic.LoadedSceneIsFlight && (object)part != null && FlightGlobals.ready)
             {
                 if (animatingPart)
                     UpdatePropertiesWithAnimation();
@@ -310,7 +310,7 @@ namespace ferram4
                     Vessel vessel = part.vessel;
 
                     // Check that rb is not destroyed, but vessel is just not null
-                    if (rb && (object)vessel != null && vessel.atmDensity > 0)
+                    if (rb && (object)vessel != null && vessel.atmDensity > 0 && !vessel.packed)
                     {
                         Vector3d velocity = rb.velocity + Krakensbane.GetFrameVelocity()
                             + FARWind.GetWind(FlightGlobals.currentMainBody, part, rb.position);

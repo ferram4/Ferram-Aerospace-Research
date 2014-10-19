@@ -406,12 +406,12 @@ namespace ferram4
 
             // With unity objects, "foo" or "foo != null" calls a method to check if
             // it's destroyed. (object)foo != null just checks if it is actually null.
-            if (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !isShielded && (object)part != null)
+            if (HighLogic.LoadedSceneIsFlight && (object)part != null && FlightGlobals.ready && !isShielded)
             {
                 Rigidbody rb = part.Rigidbody;
                 Vessel vessel = part.vessel;
 
-                if (!rb || (object)vessel == null)
+                if (!rb || (object)vessel == null || vessel.packed)
                     return;
 
                 //bool set_vel = false;
