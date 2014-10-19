@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.3
+Ferram Aerospace Research v0.14.3.1
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -62,6 +62,10 @@ namespace ferram4
         public const int ID_INCREASE_FLAP_DEFLECTION = 1;
         public const int ID_DECREASE_FLAP_DEFLECTION = 2;
         public const int ACTION_COUNT = 3;
+
+        static int selectedConfig = -1;
+        static int selectedGroup = -1;
+        static Vector2 scrollPos = Vector2.zero;
         // private lookup tables
         static KSPActionGroup[] id2actionGroup = { KSPActionGroup.Brakes, KSPActionGroup.None, KSPActionGroup.None };
         // keys in the configuration file
