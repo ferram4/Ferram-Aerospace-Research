@@ -1279,8 +1279,8 @@ namespace ferram4
                 }
 
             }
-            if (this.part == null)
-                OnDestroy();
+            //if (this.part == null)
+            //    OnDestroy();
         }
 
 
@@ -1288,7 +1288,6 @@ namespace ferram4
         
         public override void Start()
         {
-            minimize = (this.vessel == FlightGlobals.ActiveVessel && minimize);
             Fields["isShielded"].guiActive = false;
 
             Fields["Cl"].guiActive = Fields["Cd"].guiActive = Fields["Cm"].guiActive = false;
@@ -1305,6 +1304,9 @@ namespace ferram4
                 vessel.OnFlyByWire -= new FlightInputCallback(StabilityAugmentation);
             }
             activeControlSys = null;
+
+            if (this.vessel == FlightGlobals.ActiveVessel)
+                minimize = true;
         }
 
         public static bool SetActiveControlSysAndStabilitySystem(Vessel vesselToChangeTo, Vessel vesselToChangeFrom)
