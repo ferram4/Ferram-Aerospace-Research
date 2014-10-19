@@ -150,14 +150,14 @@ For both of these, set MaxDrag and MinDrag to 0
 CHANGELOG
 =======================================================
 
-0.14.3.1v------------------------------------
-Features:
-Improved performance in editor and flight for vessel configuration changes
-Fliht GUI appears in mapview
+0.14.3.1v------------------------------------  
+Features:  
+Improved performance in editor and flight for vessel configuration changes  
+Fliht GUI appears in mapview  
 
-Bugfixes:
-Fixed neverending stall resulting from wing interactions with sudden changes in velocity vector direction
-Fixed flight GUI issues when passing another vehicle
+Bugfixes:  
+Fixed neverending stall resulting from wing interactions with sudden changes in velocity vector direction  
+Fixed flight GUI issues when passing another vehicle  
 
 
 0.14.3v------------------------------------
