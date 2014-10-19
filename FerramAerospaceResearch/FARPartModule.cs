@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.3.1
+Ferram Aerospace Research v0.14.3.2
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -74,7 +74,6 @@ namespace ferram4
                 part.OnEditorDetach += OnEditorAttach;
                 part.OnEditorDestroy += OnEditorAttach;
             }
-            TriggerPartColliderUpdate();
         }        
 
         public void TriggerPartColliderUpdate()
@@ -124,6 +123,13 @@ namespace ferram4
 //            print("Updated Vessel Part List...");
 
             return list;
+        }
+
+        public override void OnLoad(ConfigNode node)
+        {
+            base.OnLoad(node);
+            if(HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor)
+                TriggerPartColliderUpdate();
         }
 
         //public override void OnSave(ConfigNode node)
