@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.14.3.1
+Ferram Aerospace Research v0.14.3.2
 =========================
 
 Aerodynamics model for Kerbal Space Program
@@ -149,6 +149,16 @@ For both of these, set MaxDrag and MinDrag to 0
 
 CHANGELOG
 =======================================================
+
+0.14.3.2v------------------------------------  
+Features:  
+Contributed by Da Michel:  
+	Airspeed settings change readouts in cockpits  
+
+Bugfixes:  
+Fixed serious issues with the wing interaction code  
+Fixed an issue where wind velocity was applied in the opposite direction that was expected  
+
 
 0.14.3.1v------------------------------------  
 Features:  
