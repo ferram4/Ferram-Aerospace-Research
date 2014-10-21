@@ -251,6 +251,9 @@ namespace ferram4
         public static SurfaceVelMode velMode = SurfaceVelMode.TAS;
         public static SurfaceVelUnit unitMode = SurfaceVelUnit.M_S;
 
+        //DaMichel: cache references to current IVA speedometers
+        private static List<InternalSpeed> speedometers = null;
+
 /*        public void FlapChange()
         {
             if (Flaps == null)
@@ -1197,7 +1200,8 @@ namespace ferram4
 
         private void ChangeSurfVelocity(SurfaceVelMode velMode)
         {
-            if (FlightUIController.speedDisplayMode != FlightUIController.SpeedDisplayModes.Surface)
+            //DaMichel: Keep our fingers off of this also if there is no atmosphere (staticPressure <= 0)
+            if (FlightUIController.speedDisplayMode != FlightUIController.SpeedDisplayModes.Surface || vessel.staticPressure <= 0)
                 return;
 
             FlightUIController UI = FlightUIController.fetch;
@@ -1207,6 +1211,7 @@ namespace ferram4
 
             Vessel activeVessel = activeControlSys.vessel;
 
+            string speedometerCaption = "Surf: ";
             double unitConversion = 1;
             string unitString = "m/s";
             if (unitMode == SurfaceVelUnit.KNOTS)
@@ -1232,6 +1237,7 @@ namespace ferram4
             else if (velMode == SurfaceVelMode.IAS)
             {
                 UI.spdCaption.text = "IAS";
+                speedometerCaption = "IAS: ";
                 double densityRatio = (FARAeroUtil.GetCurrentDensity(activeVessel.mainBody, activeVessel.altitude) * invKerbinSLDensity);
                 double pressureRatio = FARAeroUtil.StagnationPressureCalc(MachNumber);
                 UI.speed.text = (activeVessel.srf_velocity.magnitude * Math.Sqrt(densityRatio) * pressureRatio * unitConversion).ToString("F1") + unitString;
@@ -1239,13 +1245,38 @@ namespace ferram4
             else if (velMode == SurfaceVelMode.EAS)
             {
                 UI.spdCaption.text = "EAS";
+                speedometerCaption = "EAS: ";
                 double densityRatio = (FARAeroUtil.GetCurrentDensity(activeVessel.mainBody, activeVessel.altitude) * invKerbinSLDensity);
                 UI.speed.text = (activeVessel.srf_velocity.magnitude * Math.Sqrt(densityRatio) * unitConversion).ToString("F1") + unitString;
             }
             else// if (velMode == SurfaceVelMode.MACH)
             {
                 UI.spdCaption.text = "Mach";
+                speedometerCaption = "Mach: ";
                 UI.speed.text = mach;
+            }
+
+            /* DaMichel: cache references to current IVA speedometers.
+             * IVA stuff is reallocated whenever you switch between vessels. So i see
+             * little point in storing the list of speedometers permanently. It just has
+             * to be freshly cached whenever something changes. */
+            if (speedometers == null )
+            {
+                speedometers = new List<InternalSpeed>();
+                for (int i=0; i<vessel.Parts.Count; ++i)
+                {
+                    Part p = vessel.Parts[i];
+                    if (p && p.internalModel)
+                    {
+                        speedometers.AddRange(p.internalModel.GetComponentsInChildren<InternalSpeed>());
+                    }
+                }
+                //Debug.Log("FAR: Got new references to speedometers"); // check if it is really only executed when vessel change
+            }
+            string text = speedometerCaption+UI.speed.text;
+            for (int i=0; i<speedometers.Count; ++i)
+            {
+                speedometers[i].textObject.text.Text = text; // replace with FAR velocity readout
             }
         }
 
@@ -1292,6 +1323,9 @@ namespace ferram4
 
             Fields["Cl"].guiActive = Fields["Cd"].guiActive = Fields["Cm"].guiActive = false;
             OnVesselPartsChange += GetNavball;
+            OnVesselPartsChange += () => {
+                speedometers = null; //DaMichel: needs to be cleared when the craft changes. New cockpit internals might be added.
+            };
             invKerbinSLDensity = 1 / FARAeroUtil.GetCurrentDensity(FlightGlobals.Bodies[1], 0);
             this.enabled = true;
         }
@@ -1307,10 +1341,13 @@ namespace ferram4
 
             if (this.vessel == FlightGlobals.ActiveVessel)
                 minimize = true;
+
+            speedometers = null;   // DaMichel: just to be sure
         }
 
         public static bool SetActiveControlSysAndStabilitySystem(Vessel vesselToChangeTo, Vessel vesselToChangeFrom)
         {
+            speedometers = null; // DaMichel: switch to another vessels? this needs to be cleared.
             if ((object)vesselToChangeFrom != null && (object)activeControlSys != null)
             {
                 vesselToChangeFrom.OnFlyByWire -= new FlightInputCallback(StabilityAugmentation);
@@ -1378,9 +1415,15 @@ namespace ferram4
 
         public override void LateUpdate()
         {
-            if (part)
+            /* DaMichel: added FlightGlobals.ready in the hope of preventing
+             * calls to ChacheSurfVelocity when a flight scene is unloaded.
+             * Otherwise i got NREs while trying to access the cockpit internals
+             * at the point where i think the vessel got unloaded. This seems
+             * to have fixed the issue. */
+            if (part && FlightGlobals.ready)
             {
-                ChangeSurfVelocity(velMode);
+                if (activeControlSys == this) // only need to do this once?!
+                    ChangeSurfVelocity(velMode);
                 if (activeControlSys == this && TimeWarp.CurrentRate <= 4)
                     GetFlightCondition();
             }
