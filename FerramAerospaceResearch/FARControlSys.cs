@@ -1340,7 +1340,7 @@ namespace ferram4
         {
             if (HighLogic.LoadedSceneIsFlight && part)
             {
-                if (vessel.isActiveVessel)
+                if (vessel.isActiveVessel && !vessel.packed)
                 {
                     if (activeControlSys == this)
                     {

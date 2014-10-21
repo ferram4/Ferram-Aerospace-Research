@@ -313,7 +313,7 @@ namespace ferram4
                     if (rb && (object)vessel != null && vessel.atmDensity > 0 && !vessel.packed)
                     {
                         Vector3d velocity = rb.velocity + Krakensbane.GetFrameVelocity()
-                            + FARWind.GetWind(FlightGlobals.currentMainBody, part, rb.position);
+                            - FARWind.GetWind(FlightGlobals.currentMainBody, part, rb.position);
 
                         double soundspeed, v_scalar = velocity.magnitude;
 

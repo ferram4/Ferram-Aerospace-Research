@@ -161,7 +161,7 @@ namespace ferram4
         {
             if (HighLogic.LoadedSceneIsFlight)
                 return part.Rigidbody.velocity + Krakensbane.GetFrameVelocityV3f()
-                    + FARWind.GetWind(FlightGlobals.currentMainBody, part, part.Rigidbody.position);
+                    - FARWind.GetWind(FlightGlobals.currentMainBody, part, part.Rigidbody.position);
             else
                 return velocityEditor;
         }
@@ -175,7 +175,7 @@ namespace ferram4
                     velocity += part.Rigidbody.GetPointVelocity(refPoint);
 
                 velocity += Krakensbane.GetFrameVelocity() - Krakensbane.GetLastCorrection() * TimeWarp.fixedDeltaTime;
-                velocity += FARWind.GetWind(FlightGlobals.currentMainBody, part, part.Rigidbody.position);
+                velocity -= FARWind.GetWind(FlightGlobals.currentMainBody, part, part.Rigidbody.position);
 
                 return velocity;
             }
