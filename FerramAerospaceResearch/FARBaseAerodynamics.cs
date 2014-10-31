@@ -75,6 +75,9 @@ namespace ferram4
         private static Vector3d GlobalCoL;
         private Vector3 CoLForce;
 
+        // Keep track if the tinting effect is active or not
+        private bool tintIsActive = false;
+
         public override void OnAwake()
         {
             base.OnAwake();
@@ -107,6 +110,23 @@ namespace ferram4
             if (HighLogic.LoadedSceneIsFlight)
             {
 
+                // If no tinting has been selected:
+                if (!FARControlSys.tintForCd && !FARControlSys.tintForCl && !FARControlSys.tintForStall)
+                {
+                    // If it's active, turn it off
+                    if (tintIsActive)
+                    {
+                        this.part.highlightRecurse = true;
+                        this.part.SetHighlightDefault();
+
+                        tintIsActive = false;
+                    }
+                    // else, nothing to do
+
+                    // and then return
+                    return;
+                }
+
                 Color tintColor = AeroVisualizationTintingCalculation();
 
                 if (tintColor.a != 0)
@@ -116,6 +136,8 @@ namespace ferram4
                     this.part.SetHighlightColor(tintColor);
                     this.part.SetHighlight(true);
                     resetTinting = true;
+
+                    tintIsActive = true;
                 }
                 else if (part.highlightType != Part.HighlightType.OnMouseOver)
                 {
