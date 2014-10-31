@@ -689,8 +689,8 @@ namespace ferram4
             double TanSweep = Math.Tan(FARMathUtil.Clamp(Math.Acos(cosSweepAngle), 0, Math.PI * 0.5));
             double beta_TanSweep = beta / TanSweep;
 
-            if (double.IsNaN(beta_TanSweep))
-                beta_TanSweep = 0;
+            if (double.IsNaN(beta_TanSweep) || beta < 0.66332495807107996982298654733414)
+                beta_TanSweep = 0.66332495807107996982298654733414;
 
             double Cd0 = CdCompressibilityZeroLiftIncrement(MachNumber, cosSweepAngle, TanSweep, beta_TanSweep, beta) + 0.006;
             e = FARAeroUtil.CalculateOswaldsEfficiency(effective_AR, cosSweepAngle, Cd0);
@@ -754,14 +754,6 @@ namespace ferram4
                 Cl *= subScale;
 
                 double M = FARMathUtil.Clamp(MachNumber, 1.2, double.PositiveInfinity);
-
-                if (double.IsNaN(beta) || beta < 0.66332495807107996982298654733414)
-                    beta = 0.66332495807107996982298654733414;
-
-                TanSweep = Math.Tan(FARMathUtil.Clamp(Math.Acos(cosSweepAngle), 0, Math.PI * 0.5));
-                beta_TanSweep = beta / TanSweep;
-                if (double.IsNaN(beta_TanSweep))
-                    beta_TanSweep = 0;
                 
                 double coefMult = 1 / (FARAeroUtil.currentBodyAtm.y * M * M);
 

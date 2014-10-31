@@ -217,6 +217,12 @@ namespace ferram4
                     Vector3 minBoundVec, maxBoundVec;
                     minBoundVec = minBounds[j];
                     maxBoundVec = maxBounds[j];
+
+                    Vector3 fairingCenter = maxBoundVec + minBoundVec;
+                    fairingCenter *= 0.5f;
+                    fairingCenter = this.part.partTransform.localToWorldMatrix.MultiplyVector(fairingCenter);
+                    fairingCenter += this.part.partTransform.position;
+
                     if (relPos.x < maxBoundVec.x && relPos.y < maxBoundVec.y && relPos.z < maxBoundVec.z && relPos.x > minBoundVec.x && relPos.y > minBoundVec.y && relPos.z > minBoundVec.z)
                     {
                         
@@ -227,7 +233,7 @@ namespace ferram4
                         else
                             origin = p.partTransform.position;
 
-                        vecFromPToPFCenter = this.part.partTransform.position - origin;
+                        vecFromPToPFCenter = fairingCenter - origin;
 
                         RaycastHit[] hits = Physics.RaycastAll(origin, vecFromPToPFCenter, vecFromPToPFCenter.magnitude, FARAeroUtil.RaycastMask);
 
