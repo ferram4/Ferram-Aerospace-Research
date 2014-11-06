@@ -686,11 +686,12 @@ namespace ferram4
             DetermineStall(MachNumber, AoA, out ACshift, out ACweight);
 
             double beta = Math.Sqrt(MachNumber * MachNumber - 1);
+            if (double.IsNaN(beta) || beta < 0.66332495807107996982298654733414)
+                beta = 0.66332495807107996982298654733414;
+
             double TanSweep = Math.Tan(FARMathUtil.Clamp(Math.Acos(cosSweepAngle), 0, Math.PI * 0.5));
             double beta_TanSweep = beta / TanSweep;
 
-            if (double.IsNaN(beta_TanSweep) || beta < 0.66332495807107996982298654733414)
-                beta_TanSweep = 0.66332495807107996982298654733414;
 
             double Cd0 = CdCompressibilityZeroLiftIncrement(MachNumber, cosSweepAngle, TanSweep, beta_TanSweep, beta) + 0.006;
             e = FARAeroUtil.CalculateOswaldsEfficiency(effective_AR, cosSweepAngle, Cd0);
@@ -768,7 +769,10 @@ namespace ferram4
                 double CosAoA = Math.Cos(AoA);
 
                 Cl += coefMult * normalForce * CosAoA * Math.Sign(AoA) * supersonicLENormalForceFactor * subScale;
-                Cd = Cl * Cl / piARe;
+
+                double effectiveBeta = beta * subScale + (1 - subScale);
+
+                Cd = effectiveBeta * Cl * Cl / piARe;
 
                 Cd += Cd0;
             }
