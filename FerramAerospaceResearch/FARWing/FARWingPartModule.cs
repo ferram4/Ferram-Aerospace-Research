@@ -2,13 +2,18 @@
 using System.Collections.Generic;
 using KSP;
 using UnityEngine;
-using ferram4;
 
 namespace ferram4.FARWing
 {
-    public class FARWingModule : PartModule
+    public class FARWingPartModule : PartModule
     {
         //An ordered list of the points that make up this planform, defined in part-local space
+        public List<Vector3d> WingPlanformPoints
+        {
+            get { return wingPlanformPoints; }
+            private set { wingPlanformPoints = value; }
+        }
+
         protected List<Vector3d> wingPlanformPoints = null;
 
         private LineRenderer line = null;
@@ -18,7 +23,7 @@ namespace ferram4.FARWing
             if(wingPlanformPoints == null)
             {
                 wingPlanformPoints = new List<Vector3d>();
-                FARWingGeometryCalculator wingGeoCalc = new FARWingGeometryCalculator(part);
+                FARWingMeshGeometryCalculator wingGeoCalc = new FARWingMeshGeometryCalculator(part);
                 wingPlanformPoints = wingGeoCalc.CalculateWingPlanformPoints();
             }
 
@@ -36,7 +41,7 @@ namespace ferram4.FARWing
             line.material = new Material(Shader.Find("Particles/Additive"));
             line.SetColors(Color.cyan, Color.cyan);
             line.SetWidth(0.1f, 0.1f);
-            line.SetVertexCount(wingPlanformPoints.Count);
+            line.SetVertexCount(wingPlanformPoints.Count + 1);
 
             string s = "";
             for (int i = 0; i < wingPlanformPoints.Count; i++)

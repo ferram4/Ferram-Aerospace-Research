@@ -85,8 +85,8 @@
     <Compile Include="FARWind.cs" />
     <Compile Include="FARWingAerodynamicModel.cs" />
     <Compile Include="FARWingInteraction.cs" />
-    <Compile Include="FARWing\FARWingGeometryCalculator.cs" />
-    <Compile Include="FARWing\FARWingModule.cs" />
+    <Compile Include="FARWing\FARWingMeshGeometryCalculator.cs" />
+    <Compile Include="FARWing\FARWingPartModule.cs" />
     <Compile Include="InstallChecker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ToolbarWrapper.cs" />

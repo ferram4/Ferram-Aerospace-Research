@@ -7,11 +7,11 @@ using ferram4;
 
 namespace ferram4.FARWing
 {
-    public class FARWingGeometryCalculator
+    public class FARWingMeshGeometryCalculator
     {
         private Part wingPart;
 
-        public FARWingGeometryCalculator(Part p)
+        public FARWingMeshGeometryCalculator(Part p)
         {
             wingPart = p;
         }
