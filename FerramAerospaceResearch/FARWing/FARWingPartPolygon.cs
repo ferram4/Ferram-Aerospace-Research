@@ -5,7 +5,7 @@ using System.Text;
 
 namespace FerramAerospaceResearch.FARWing
 {
-    public class FARWingPolygon
+    public class FARWingPartPolygon
     {
         private FARWingPartModule module;
         public FARWingPartModule WingModule
@@ -23,20 +23,32 @@ namespace FerramAerospaceResearch.FARWing
             get { return planformTestPoints; }
         }
 
+        private Vector3d centroid = new Vector3d();
+        public Vector3d Centroid
+        {
+            get { return centroid; }
+        }
+
         private Vector3d normVec;
         public Vector3d NormVec
         {
             get { return normVec; }
         }
+        private double area;
+        public double Area
+        {
+            get { return area; }
+        }
 
-        public FARWingPolygon(FARWingPartModule wingModule)
+        public FARWingPartPolygon(FARWingPartModule wingModule)
         {
             module = wingModule;
             normVec = wingModule.transform.forward;
 
             planformTestPoints = new List<Vector3d>();
+            area = 0;
 
-            //Create the test points for finding nearby (but non-intersecting) polygons
+            //Create the test points for finding nearby (but non-intersecting) polygons and calculate the area
             for(int i = 0; i < WingModulePlanformPoints.Count; i++)
             {
                 int ip1 = i + 1;
@@ -61,7 +73,13 @@ namespace FerramAerospaceResearch.FARWing
                 offsetVec *= 0.15;                  //Point shall be 0.15 m away from the line
 
                 planformTestPoints[i] = avg + offsetVec;    //and add the test point
+
+                area += pt1.x * pt2.y - pt2.x * pt1.y;
+
+                centroid += pt1;
             }
+            area *= 0.5;    //And finish calculating the area
+            centroid /= WingModulePlanformPoints.Count;
         }
 
         public bool PolygonContainsThisPoint(Vector3d testPoint, double verticalClearance)
