@@ -5,7 +5,7 @@ using KSP;
 using UnityEngine;
 using ferram4;
 
-namespace ferram4.FARWing
+namespace FerramAerospaceResearch.FARWing
 {
     public class FARWingMeshGeometryCalculator
     {

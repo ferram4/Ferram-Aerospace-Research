@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using KSP;
 using UnityEngine;
 
-namespace ferram4.FARWing
+namespace FerramAerospaceResearch.FARWing
 {
     public class FARWingPartModule : PartModule
     {
@@ -11,7 +11,6 @@ namespace ferram4.FARWing
         public List<Vector3d> WingPlanformPoints
         {
             get { return wingPlanformPoints; }
-            private set { wingPlanformPoints = value; }
         }
 
         protected List<Vector3d> wingPlanformPoints = null;
