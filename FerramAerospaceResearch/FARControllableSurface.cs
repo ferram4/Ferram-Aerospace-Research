@@ -89,19 +89,19 @@ namespace ferram4
 
 //        protected int MovableSectionFlip = 1;
 
-        [UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.Editor, stepIncrement = 10f)]
+        [UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.Editor, stepIncrement = 5f)]
         [KSPField(guiName = "Pitch %", isPersistant = true, guiActiveEditor = true, guiActive = false)]
         public float pitchaxis = 100.0f;
 
-		[UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.Editor, stepIncrement = 10f)]
+		[UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.Editor, stepIncrement = 5f)]
 		[KSPField(guiName = "Yaw %", isPersistant = true, guiActiveEditor = true, guiActive = false)]
 		public float yawaxis = 100.0f;
 
-		[UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.Editor, stepIncrement = 10f)]
+		[UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.Editor, stepIncrement = 5f)]
 		[KSPField(guiName = "Roll %", isPersistant = true, guiActiveEditor = true, guiActive = false)]
         public float rollaxis = 100.0f;
 
-		[UI_FloatRange(maxValue = 200.0f, minValue = -200f, scene = UI_Scene.Editor, stepIncrement = 10f)]
+		[UI_FloatRange(maxValue = 200.0f, minValue = -200f, scene = UI_Scene.Editor, stepIncrement = 5f)]
 		[KSPField(guiName = "AoA %", isPersistant = true, guiActiveEditor = true, guiActive = false)]
 		public float pitchaxisDueToAoA = 0.0f;
 
