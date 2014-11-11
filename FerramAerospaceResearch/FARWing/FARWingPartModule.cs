@@ -2,29 +2,29 @@
 using System.Collections.Generic;
 using KSP;
 using UnityEngine;
+using FerramAerospaceResearch.FARGeometry;
 
 namespace FerramAerospaceResearch.FARWing
 {
     public class FARWingPartModule : PartModule
     {
         //An ordered list of the points that make up this planform, defined in part-local space
-        public List<Vector3d> WingPlanformPoints
+        private FARGeometryPartPolygon poly;
+        public FARGeometryPartPolygon Poly
         {
-            get { return wingPlanformPoints; }
+            get { return poly; }
         }
-
-        protected List<Vector3d> wingPlanformPoints = null;
 
         private LineRenderer line = null;
 
         public void Start()
         {
-            if(wingPlanformPoints == null)
+            if (poly == null)
             {
-                wingPlanformPoints = new List<Vector3d>();
-                FARWingMeshGeometryCalculator wingGeoCalc = new FARWingMeshGeometryCalculator(part);
-                wingPlanformPoints = wingGeoCalc.CalculateWingPlanformPoints();
+                poly = new FARGeometryPartPolygon(this);
             }
+
+            List<Vector3d> wingPlanformPoints = poly.GetPolyPointsAsVectors();
 
             GameObject obj = new GameObject("Line");
 
@@ -48,11 +48,11 @@ namespace FerramAerospaceResearch.FARWing
                 s += "Point " + i + ": " + wingPlanformPoints[i] + "\n\r";
                 line.SetPosition(i, wingPlanformPoints[i]);
             }
-            line.SetPosition(0, wingPlanformPoints[0]);
+            line.SetPosition(wingPlanformPoints.Count, wingPlanformPoints[0]);
             Debug.Log(s);
         }
 
-        public override void OnLoad(ConfigNode node)
+/*        public override void OnLoad(ConfigNode node)
         {
             base.OnLoad(node);
             if(node.HasNode("wingPlanformPoints"))
@@ -72,6 +72,6 @@ namespace FerramAerospaceResearch.FARWing
                     wingPlanformPoints.Add(ithPoint);
                 }
             }
-        }
+        }*/
     }
 }

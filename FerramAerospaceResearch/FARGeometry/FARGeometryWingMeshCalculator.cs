@@ -5,18 +5,18 @@ using KSP;
 using UnityEngine;
 using ferram4;
 
-namespace FerramAerospaceResearch.FARWing
+namespace FerramAerospaceResearch.FARGeometry
 {
-    public class FARWingMeshGeometryCalculator
+    public class FARGeometryWingMeshCalculator
     {
         private Part wingPart;
 
-        public FARWingMeshGeometryCalculator(Part p)
+        public FARGeometryWingMeshCalculator(Part p)
         {
             wingPart = p;
         }
 
-        public List<Vector3d> CalculateWingPlanformPoints()
+        public List<FARGeometryPoint> CalculateWingPlanformPoints()
         {
             List<Vector3d> vertices = GetPlanformVertices();
 
@@ -56,25 +56,63 @@ namespace FerramAerospaceResearch.FARWing
             return hull;
         }
 
-        private List<Vector3d> GrahamsScan(List<Vector3d> points)
+        private List<Vector3d> GrahamsScanVerts(List<Vector3d> verts)
         {
-            Debug.Log(points.Count);
-            points = VectorMergeSort(points, 0);
-            Debug.Log(points.Count);
+            Debug.Log(verts.Count);
+            //verts = VectorMergeSort(verts, 0);
+            verts.Sort(new Vector3dXComparer());
+            Debug.Log(verts.Count);
             List<Vector3d> l = new List<Vector3d>();
             List<Vector3d> u = new List<Vector3d>();
-            for (int i = 0; i < points.Count; i++)
+            for (int i = 0; i < verts.Count; i++)
             {
-                l = CorrectHullMistakes(l, points[i]);
-                u = CorrectHullMistakes(u, points[points.Count - (1 + i)]);
+                l = CorrectHullMistakes(l, verts[i]);
+                u = CorrectHullMistakes(u, verts[verts.Count - (1 + i)]);
             }
 
-            points = l;
-            points.AddRange(u.GetRange(1, u.Count - 2));
+            verts = l;
+            verts.AddRange(u.GetRange(1, u.Count - 2));
 
+            return verts;
+        }
+
+        private List<FARGeometryPoint> GrahamsScan(List<Vector3d> verts)
+        {
+            verts = GrahamsScanVerts(verts);
+
+            List<FARGeometryPoint> points = new List<FARGeometryPoint>();
+            for (int i = 0; i < verts.Count; i++)
+            {
+                FARGeometryPoint newPoint = new FARGeometryPoint(verts[i]);
+                points.Add(newPoint);
+            }
+            for (int i = 0; i < verts.Count; i++)
+            {
+                int ip1 = i + 1;
+                int im1 = i - 1;
+
+                if(ip1 == verts.Count)
+                    ip1 = 0;
+                if(im1 == -1)
+                    im1 = verts.Count - 1;
+
+                points[i].connectedPoints.Add(points[ip1]);
+                points[i].connectedPoints.Add(points[im1]);
+            }
             return points;
         }
 
+        public class Vector3dXComparer : Comparer<Vector3d>
+        {
+            public override int Compare(Vector3d x, Vector3d y)
+            {
+                if (x.x > x.y)
+                    return 1;
+                else
+                    return -1;
+            }
+        }
+        /*
         private List<Vector3d> VectorMergeSort(List<Vector3d> list, int sortIndex)
         {
             // Base case. A list of zero or one elements is sorted, by definition.
@@ -121,7 +159,7 @@ namespace FerramAerospaceResearch.FARWing
                 }
             }
             return result;
-        }
+        }*/
 
 
         #endregion
