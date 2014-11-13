@@ -66,6 +66,8 @@
     <Compile Include="FARBasicDragModel.cs" />
     <Compile Include="FARCargoBayModule.cs" />
     <Compile Include="FARCenterQuery.cs" />
+    <Compile Include="FARCollections\RedBlackTree.cs" />
+    <Compile Include="FARCollections\RedBlackTreeNode.cs" />
     <Compile Include="FARControllableSurface.cs" />
     <Compile Include="FARDebugOptions.cs" />
     <Compile Include="FAREditorGUI.cs" />
@@ -83,6 +85,7 @@
     <Compile Include="FARPayloadFairingModule.cs" />
     <Compile Include="FARPM.cs" />
     <Compile Include="FARRungeKutta.cs" />
+    <Compile Include="FARTests\FARCollectionTests.cs" />
     <Compile Include="FARWind.cs" />
     <Compile Include="FARWingAerodynamicModel.cs" />
     <Compile Include="FARWingInteraction.cs" />
