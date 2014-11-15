@@ -47,7 +47,7 @@ namespace ferram4
     /// <summary>
     /// This class detects all parts inside it and sets their drag, lift and moment coefficients to zero so as to simulate a payload fairing
     /// </summary>
-    public class FARPayloadFairingModule : FARPartModule
+    public class FARPayloadFairingModule : FARPartModule, TweakScale.IRescalable<FARPayloadFairingModule>
     {
         [KSPField(guiActive = false, guiActiveEditor = true, isPersistant = false)]
         private int partsShielded = 0;
@@ -281,6 +281,11 @@ namespace ferram4
         public override void OnSave(ConfigNode node)
         {
             //base.OnSave(node);
+        }
+
+        public void OnRescale(TweakScale.ScalingFactor factor)
+        {
+            FairingShapeChanged();
         }
     }
 }                                               
