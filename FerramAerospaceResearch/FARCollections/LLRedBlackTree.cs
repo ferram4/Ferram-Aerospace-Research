@@ -22,19 +22,22 @@ namespace FerramAerospaceResearch.FARCollections
                 parent = newParent;
             }
         }
-        private RedBlackTreeNode treeRoot = null;
-        private Comparer<T> comparer;
+        private RedBlackTreeNode _treeRoot = null;
+        private Comparer<T> _comparer;
+        private int _count = 0;
+
+        public int Count { get { return _count; } }
 
         public LLRedBlackTree() : this(Comparer<T>.Default) { }
 
         public LLRedBlackTree(Comparer<T> newComparer)
         {
-            comparer = newComparer;
+            _comparer = newComparer;
         }
 
         private RedBlackTreeNode FindNode(T data, RedBlackTreeNode node)
         {
-            int cmp = comparer.Compare(data, node.data);
+            int cmp = _comparer.Compare(data, node.data);
 
             if (cmp == 0)
                 return node;
@@ -48,7 +51,7 @@ namespace FerramAerospaceResearch.FARCollections
 
         public T Next(T data)
         {
-            return Next(data, treeRoot);
+            return Next(data, _treeRoot);
         }
 
         private T Next(T data, RedBlackTreeNode node)
@@ -71,14 +74,14 @@ namespace FerramAerospaceResearch.FARCollections
                 if(node == null)
                     return default(T);
 
-            } while (comparer.Compare(data, node.data) > 0);
+            } while (_comparer.Compare(data, node.data) > 0);
 
             return node.data;
         }
 
         public T Prev(T data)
         {
-            return Prev(data, treeRoot);
+            return Prev(data, _treeRoot);
         }
 
         private T Prev(T data, RedBlackTreeNode node)
@@ -100,16 +103,17 @@ namespace FerramAerospaceResearch.FARCollections
                 if (node == null)
                     return default(T);
 
-            } while (comparer.Compare(data, node.data) < 0);
+            } while (_comparer.Compare(data, node.data) < 0);
 
             return node.data;
         }
         
         public void Insert(T data)
         {
-            treeRoot = Insert(data, treeRoot, null);
-            if (treeRoot != null)
-                treeRoot.color = BLACK;
+            _treeRoot = Insert(data, _treeRoot, null);
+            if (_treeRoot != null)
+                _treeRoot.color = BLACK;
+            _count++;
         }
 
         private RedBlackTreeNode Insert(T data, RedBlackTreeNode node, RedBlackTreeNode parent)
@@ -117,7 +121,7 @@ namespace FerramAerospaceResearch.FARCollections
             if (node == null)
                 return new RedBlackTreeNode(data, parent);
 
-            int cmp = comparer.Compare(data, node.data);
+            int cmp = _comparer.Compare(data, node.data);
 
             if (cmp == 0)
                 node.data = data;
@@ -140,34 +144,39 @@ namespace FerramAerospaceResearch.FARCollections
 
         public void DeleteMin()
         {
-            treeRoot = DeleteMin(treeRoot);
-            if(treeRoot != null)
-                treeRoot.color = BLACK;
+            _treeRoot = DeleteMin(_treeRoot);
+            if(_treeRoot != null)
+                _treeRoot.color = BLACK;
         }
 
         private RedBlackTreeNode DeleteMin(RedBlackTreeNode node)
         {
             if (node.left == null)
+            {
+                _count--;
                 return null;
+            }
 
             if (!isRed(node.left) && !isRed(node.left.left))
                 node = MoveRedLeft(node);
 
             node.left = DeleteMin(node.left);
+            if (node.left != null)
+                node.left.parent = node;
 
             return FixUp(node);
         }
 
         public void Delete(T data)
         {
-            treeRoot = Delete(data, treeRoot);
-            if(treeRoot != null)
-                treeRoot.color = BLACK;
+            _treeRoot = Delete(data, _treeRoot);
+            if(_treeRoot != null)
+                _treeRoot.color = BLACK;
         }
 
         private RedBlackTreeNode Delete(T data, RedBlackTreeNode node)
         {
-            if (comparer.Compare(data, node.data) < 0)
+            if (_comparer.Compare(data, node.data) < 0)
             {
                 if (!isRed(node.left) && !isRed(node.left.left))
                     node = MoveRedLeft(node);
@@ -181,13 +190,16 @@ namespace FerramAerospaceResearch.FARCollections
                 if (isRed(node.left))
                     node = RotateRight(node);
 
-                if (comparer.Compare(data, node.data) == 0 && (node.right == null))
+                if (_comparer.Compare(data, node.data) == 0 && (node.right == null))
+                {
+                    _count--;
                     return null;
+                }
 
                 if (node.right == null || (!isRed(node.right) && !isRed(node.right.left)))
                     node = MoveRedRight(node);
 
-                if (comparer.Compare(data, node.data) == 0)
+                if (_comparer.Compare(data, node.data) == 0)
                 {
                     node.data = Min(node.right).data;
                     node.right = DeleteMin(node.right);
@@ -257,7 +269,7 @@ namespace FerramAerospaceResearch.FARCollections
         public List<T> InOrderTraversal()
         {
             List<T> returnList = new List<T>();
-            InOrderTraversal(treeRoot, ref returnList);
+            InOrderTraversal(_treeRoot, ref returnList);
             return returnList;
         }
 
@@ -279,6 +291,8 @@ namespace FerramAerospaceResearch.FARCollections
 
             pivot.parent = root.parent;
             root.parent = pivot;
+            if (root.left != null)
+                root.left.parent = root;
 
             pivot.color = root.color;
             root.color = RED;
@@ -293,6 +307,8 @@ namespace FerramAerospaceResearch.FARCollections
 
             pivot.parent = root.parent;
             root.parent = pivot;
+            if (root.right != null)
+                root.right.parent = root;
 
             pivot.color = root.color;
             root.color = RED;

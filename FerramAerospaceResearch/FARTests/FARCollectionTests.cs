@@ -12,27 +12,19 @@ namespace FerramAerospaceResearch.FARTests
         void Start()
         {
             LLRedBlackTree<int> tree = new LLRedBlackTree<int>();
-            tree.Insert(5);
-            tree.Insert(1);
-            tree.Insert(10);
+            System.Random rand = new System.Random();
+            int counter = 0;
 
-            PrintTree(tree);
-
-            tree.Insert(3);
-            tree.Insert(7);
-            tree.Insert(-1);
-
-            PrintTree(tree);
-
-            tree.Delete(5);
-
-            PrintTree(tree);
-
-            tree.Insert(5);
-            tree.Insert(11);
-            tree.Delete(3);
-
-            PrintTree(tree);
+            while(counter < 10)
+            {
+                int removalInt = rand.Next(100);
+                tree.Insert(removalInt);
+                for (int j = 0; j < 5; j++)
+                    tree.Insert(rand.Next(100));
+                PrintTree(tree);
+                tree.Delete(removalInt);
+                counter++;
+            }
         }
 
         private void PrintTree(LLRedBlackTree<int> tree)
@@ -46,9 +38,14 @@ namespace FerramAerospaceResearch.FARTests
             s = "";
             for(int i = 0; i < list.Count; i++)
             {
-                s += "Value: " + list[i].ToString() + " Prev: " + tree.Prev(list[i]) + " Next: " + tree.Next(list[i]) + "\n\r";
+                int cur, prev, next;
+                cur = list[i];
+                prev = tree.Prev(cur);
+                next = tree.Next(cur);
+                s += "Value: " + cur.ToString() + " Prev: " + prev + " Next: " + next + (prev >= cur ? " Error: prev > input value" : "") + (next <= cur ? " Error: next < input value" : "") + "\n\r";
             }
             Debug.Log(s);
+            Debug.Log("Count: " + tree.Count);
         }
     }
 }
