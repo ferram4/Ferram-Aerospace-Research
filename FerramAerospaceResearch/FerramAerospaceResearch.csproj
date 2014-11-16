@@ -66,8 +66,7 @@
     <Compile Include="FARBasicDragModel.cs" />
     <Compile Include="FARCargoBayModule.cs" />
     <Compile Include="FARCenterQuery.cs" />
-    <Compile Include="FARCollections\RedBlackTree.cs" />
-    <Compile Include="FARCollections\RedBlackTreeNode.cs" />
+    <Compile Include="FARCollections\LLRedBlackTree.cs" />
     <Compile Include="FARControllableSurface.cs" />
     <Compile Include="FARDebugOptions.cs" />
     <Compile Include="FAREditorGUI.cs" />
