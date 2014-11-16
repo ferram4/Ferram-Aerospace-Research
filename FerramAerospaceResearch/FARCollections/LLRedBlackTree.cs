@@ -4,74 +4,58 @@ using UnityEngine;
 
 namespace FerramAerospaceResearch.FARCollections
 {
-    public class LLRedBlackTree<TKey, TVal>
+    public class LLRedBlackTree<T>
     {
         private const bool RED = true;
         private const bool BLACK = false;
 
         class RedBlackTreeNode
         {
-            public TKey key;
-            public TVal data;
+            public T data;
             public RedBlackTreeNode left, right, parent;
             public bool color;
 
-            public RedBlackTreeNode(TKey newKey, TVal newData, RedBlackTreeNode newParent)
+            public RedBlackTreeNode(T newData, RedBlackTreeNode newParent)
             {
                 this.color = RED;
                 data = newData;
-                key = newKey;
                 parent = newParent;
             }
         }
         private RedBlackTreeNode treeRoot = null;
-        private Comparer<TKey> comparer;
+        private Comparer<T> comparer;
 
-        public LLRedBlackTree() : this(Comparer<TKey>.Default) { }
+        public LLRedBlackTree() : this(Comparer<T>.Default) { }
 
-        public LLRedBlackTree(Comparer<TKey> newComparer)
+        public LLRedBlackTree(Comparer<T> newComparer)
         {
             comparer = newComparer;
         }
 
-        public TVal Search(TKey key)
+        private RedBlackTreeNode FindNode(T data, RedBlackTreeNode node)
         {
-            return Search(key, treeRoot);
-        }
-
-        private TVal Search(TKey key, RedBlackTreeNode node)
-        {
-            node = FindNode(key, node);
-            if (node == null)
-                return default(TVal);
-
-            return node.data;
-        }
-
-        private RedBlackTreeNode FindNode(TKey key, RedBlackTreeNode node)
-        {
-            int cmp = comparer.Compare(key, node.key);
+            int cmp = comparer.Compare(data, node.data);
 
             if (cmp == 0)
                 return node;
             else if (cmp < 0)
-                return FindNode(key, node.left);
+                return FindNode(data, node.left);
             else if (cmp > 0)
-                return FindNode(key, node.right);
+                return FindNode(data, node.right);
 
             return null;
         }
 
-        public TVal Next(TKey key)
+        public T Next(T data)
         {
-            return Next(key, treeRoot);
+            return Next(data, treeRoot);
         }
 
-        private TVal Next(TKey key, RedBlackTreeNode node)
+        private T Next(T data, RedBlackTreeNode node)
         {
-            node = FindNode(key, node);
+            node = FindNode(data, node);
             if (node == null)
-                return default(TVal);
+                return default(T);
 
             if (node.right != null)
             {
@@ -85,23 +69,23 @@ namespace FerramAerospaceResearch.FARCollections
             {
                 node = node.parent;
                 if(node == null)
-                    return default(TVal);
+                    return default(T);
 
-            } while (comparer.Compare(key, node.key) > 0);
+            } while (comparer.Compare(data, node.data) > 0);
 
             return node.data;
         }
 
-        public TVal Prev(TKey key)
+        public T Prev(T data)
         {
-            return Prev(key, treeRoot);
+            return Prev(data, treeRoot);
         }
 
-        private TVal Prev(TKey key, RedBlackTreeNode node)
+        private T Prev(T data, RedBlackTreeNode node)
         {
-            node = FindNode(key, node);
+            node = FindNode(data, node);
             if (node == null)
-                return default(TVal);
+                return default(T);
 
             if (node.left != null)
             {
@@ -114,33 +98,33 @@ namespace FerramAerospaceResearch.FARCollections
             {
                 node = node.parent;
                 if (node == null)
-                    return default(TVal);
+                    return default(T);
 
-            } while (comparer.Compare(key, node.key) < 0);
+            } while (comparer.Compare(data, node.data) < 0);
 
             return node.data;
         }
         
-        public void Insert(TKey key, TVal data)
+        public void Insert(T data)
         {
-            treeRoot = Insert(key, data, treeRoot, null);
+            treeRoot = Insert(data, treeRoot, null);
             if (treeRoot != null)
                 treeRoot.color = BLACK;
         }
 
-        private RedBlackTreeNode Insert(TKey key, TVal data, RedBlackTreeNode node, RedBlackTreeNode parent)
+        private RedBlackTreeNode Insert(T data, RedBlackTreeNode node, RedBlackTreeNode parent)
         {
             if (node == null)
-                return new RedBlackTreeNode(key, data, parent);
+                return new RedBlackTreeNode(data, parent);
 
-            int cmp = comparer.Compare(key, node.key);
+            int cmp = comparer.Compare(data, node.data);
 
             if (cmp == 0)
                 node.data = data;
             else if (cmp < 0)
-                node.left = Insert(key, data, node.left, node);
+                node.left = Insert(data, node.left, node);
             else if (cmp > 0)
-                node.right = Insert(key, data, node.right, node);
+                node.right = Insert(data, node.right, node);
 
             if (isRed(node.right) && !isRed(node.left))
                 node = RotateLeft(node);
@@ -174,20 +158,21 @@ namespace FerramAerospaceResearch.FARCollections
             return FixUp(node);
         }
 
-        public void Delete(TKey key)
+        public void Delete(T data)
         {
-            treeRoot = Delete(key, treeRoot);
+            treeRoot = Delete(data, treeRoot);
             if(treeRoot != null)
                 treeRoot.color = BLACK;
         }
 
-        private RedBlackTreeNode Delete(TKey key, RedBlackTreeNode node)
+        private RedBlackTreeNode Delete(T data, RedBlackTreeNode node)
         {
-            if (comparer.Compare(key, node.key) < 0)
+            if (comparer.Compare(data, node.data) < 0)
             {
                 if (!isRed(node.left) && !isRed(node.left.left))
                     node = MoveRedLeft(node);
-                node.left = Delete(key, node.left);
+
+                node.left = Delete(data, node.left);
                 if(node.left != null)
                     node.left.parent = node;
             }
@@ -196,23 +181,22 @@ namespace FerramAerospaceResearch.FARCollections
                 if (isRed(node.left))
                     node = RotateRight(node);
 
-                if (comparer.Compare(key, node.key) == 0 && (node.right == null))
+                if (comparer.Compare(data, node.data) == 0 && (node.right == null))
                     return null;
 
                 if (node.right == null || (!isRed(node.right) && !isRed(node.right.left)))
                     node = MoveRedRight(node);
 
-                if (comparer.Compare(key, node.key) == 0)
+                if (comparer.Compare(data, node.data) == 0)
                 {
-                    node.data = Search(Min(node.right).key, node.right);
-                    node.key = Min(node.right).key;
+                    node.data = Min(node.right).data;
                     node.right = DeleteMin(node.right);
                     if(node.right != null)
                         node.right.parent = node;
                 }
                 else
                 {
-                    node.right = Delete(key, node.right);
+                    node.right = Delete(data, node.right);
                     if (node.right != null)
                         node.right.parent = node;
                 }
@@ -256,7 +240,7 @@ namespace FerramAerospaceResearch.FARCollections
         {
             if(isRed(node.right))
             {
-                RotateLeft(node);
+                node = RotateLeft(node);
             }
             if (node.left != null && isRed(node.left) && isRed(node.left.left))
             {
@@ -270,14 +254,14 @@ namespace FerramAerospaceResearch.FARCollections
             return node;
         }
         
-        public List<TVal> InOrderTraversal()
+        public List<T> InOrderTraversal()
         {
-            List<TVal> returnList = new List<TVal>();
+            List<T> returnList = new List<T>();
             InOrderTraversal(treeRoot, ref returnList);
             return returnList;
         }
 
-        private void InOrderTraversal(RedBlackTreeNode node, ref List<TVal> returnList)
+        private void InOrderTraversal(RedBlackTreeNode node, ref List<T> returnList)
         {
             if (node == null)
                 return;
@@ -317,7 +301,7 @@ namespace FerramAerospaceResearch.FARCollections
 
         private void SwapNodeValues(RedBlackTreeNode node1, RedBlackTreeNode node2)
         {
-            TVal tmp = node1.data;
+            T tmp = node1.data;
             node1.data = node2.data;
             node2.data = tmp;
         }

@@ -11,16 +11,16 @@ namespace FerramAerospaceResearch.FARTests
     {
         void Start()
         {
-            LLRedBlackTree<int, int> tree = new LLRedBlackTree<int, int>();
-            tree.Insert(5, 5);
-            tree.Insert(1, 1);
-            tree.Insert(10, 10);
+            LLRedBlackTree<int> tree = new LLRedBlackTree<int>();
+            tree.Insert(5);
+            tree.Insert(1);
+            tree.Insert(10);
 
             PrintTree(tree);
 
-            tree.Insert(3, 3);
-            tree.Insert(7, 7);
-            tree.Insert(-1, -1);
+            tree.Insert(3);
+            tree.Insert(7);
+            tree.Insert(-1);
 
             PrintTree(tree);
 
@@ -28,14 +28,14 @@ namespace FerramAerospaceResearch.FARTests
 
             PrintTree(tree);
 
-            tree.Insert(5, 5);
-            tree.Insert(11, 11);
+            tree.Insert(5);
+            tree.Insert(11);
             tree.Delete(3);
 
             PrintTree(tree);
         }
 
-        private void PrintTree(LLRedBlackTree<int, int> tree)
+        private void PrintTree(LLRedBlackTree<int> tree)
         {
             List<int> list = tree.InOrderTraversal();
             string s = "";
