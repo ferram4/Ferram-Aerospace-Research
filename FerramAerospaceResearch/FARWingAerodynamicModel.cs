@@ -47,7 +47,7 @@ using UnityEngine;
 
 namespace ferram4
 {
-    public class FARWingAerodynamicModel : FARBaseAerodynamics
+    public class FARWingAerodynamicModel : FARBaseAerodynamics, TweakScale.IRescalable<FARWingAerodynamicModel>
     {
         public double AoAmax = 15;
 
@@ -1241,6 +1241,14 @@ namespace ferram4
                 int.TryParse(node.GetValue("nonSideAttach"), out nonSideAttach);
             if (node.HasValue("MidChordSweep"))
                 double.TryParse(node.GetValue("MidChordSweep"), out MidChordSweep);
+        }
+
+        public void OnRescale(TweakScale.ScalingFactor factor)
+        {
+            b_2 *= factor.relative.linear;
+            MAC *= factor.relative.linear;
+
+            StartInitialization();
         }
     }
 }

@@ -51,7 +51,7 @@ using UnityEngine;
 namespace ferram4
 {
 
-    public class FARBasicDragModel : FARBaseAerodynamics
+    public class FARBasicDragModel : FARBaseAerodynamics, TweakScale.IRescalable<FARBasicDragModel>
     {
         /// <summary>
         /// Cd_min (skin friction drag)
@@ -816,6 +816,11 @@ namespace ferram4
         public override void OnSave(ConfigNode node)
         {
             //base.OnSave(node);
+        }
+
+        public void OnRescale(TweakScale.ScalingFactor factor)
+        {
+            UpdatePropertiesWithShapeChange();
         }
     }
 }
