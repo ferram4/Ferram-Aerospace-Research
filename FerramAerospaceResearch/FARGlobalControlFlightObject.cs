@@ -316,8 +316,10 @@ namespace ferram4
             FARControlSys.kd_wingleveler = Convert.ToDouble(FARControlSys.kd_wingleveler_str);
             FARControlSys.k_yawdamper_str = config.GetValue("k_yawdamper", "0.1");
             FARControlSys.k_yawdamper = Convert.ToDouble(FARControlSys.k_yawdamper_str);
-            FARControlSys.k_pitchdamper_str = config.GetValue("k_pitchdamper", "0.25f");
+            FARControlSys.k_pitchdamper_str = config.GetValue("k_pitchdamper", "0.25");
             FARControlSys.k_pitchdamper = Convert.ToDouble(FARControlSys.k_pitchdamper_str);
+			FARControlSys.k2_pitchdamper_str = config.GetValue("k2_pitchdamper", "0.06");
+			FARControlSys.k2_pitchdamper = Convert.ToDouble(FARControlSys.k2_pitchdamper_str);
             FARControlSys.scaleVelocity_str = config.GetValue("scaleVelocity", "150");
             FARControlSys.scaleVelocity = Convert.ToDouble(FARControlSys.scaleVelocity_str);
             FARControlSys.alt_str = config.GetValue("alt", "0");
@@ -326,7 +328,7 @@ namespace ferram4
             FARControlSys.upperLim = Convert.ToDouble(FARControlSys.upperLim_str);
             FARControlSys.lowerLim_str = config.GetValue("lowerLim", "-25");
             FARControlSys.lowerLim = Convert.ToDouble(FARControlSys.lowerLim_str);
-            FARControlSys.k_limiter_str = config.GetValue("k_limiter", "0.25f");
+            FARControlSys.k_limiter_str = config.GetValue("k_limiter", "0.25");
             FARControlSys.k_limiter = Convert.ToDouble(FARControlSys.k_limiter_str);
 
             FARControlSys.unitMode = (FARControlSys.SurfaceVelUnit)config.GetValue("unitMode", 0);
@@ -357,7 +359,8 @@ namespace ferram4
             config.SetValue("k_wingleveler", (FARControlSys.k_wingleveler).ToString());
             config.SetValue("kd_wingleveler", (FARControlSys.kd_wingleveler).ToString());
             config.SetValue("k_yawdamper", (FARControlSys.k_yawdamper).ToString());
-            config.SetValue("k_pitchdamper", (FARControlSys.k_pitchdamper).ToString());
+			config.SetValue("k_pitchdamper", (FARControlSys.k_pitchdamper).ToString());
+			config.SetValue("k2_pitchdamper", (FARControlSys.k2_pitchdamper).ToString());
             config.SetValue("scaleVelocity", (FARControlSys.scaleVelocity).ToString());
             config.SetValue("alt", (FARControlSys.alt).ToString());
             config.SetValue("upperLim", (FARControlSys.upperLim).ToString());

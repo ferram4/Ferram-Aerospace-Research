@@ -91,6 +91,8 @@ namespace ferram4
         private static bool PitchDamperOn = false;
         public static string k_pitchdamper_str = "0.25";
         public static double k_pitchdamper = 0.25;
+		public static string k2_pitchdamper_str = "0.06";
+		public static double k2_pitchdamper = 0.06;
 
         private static double lastAlpha = 0;
 
@@ -898,7 +900,9 @@ namespace ferram4
             GUILayout.Label("k:", GUILayout.Width(30));
             k_pitchdamper_str = GUILayout.TextField(k_pitchdamper_str, GUILayout.ExpandWidth(true));
             k_pitchdamper_str = Regex.Replace(k_pitchdamper_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
-
+			GUILayout.Label("k2:", GUILayout.Width(40));
+			k2_pitchdamper_str = GUILayout.TextField(k2_pitchdamper_str, GUILayout.ExpandWidth(true));
+			k2_pitchdamper_str = Regex.Replace(k2_pitchdamper_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
             GUILayout.EndHorizontal();
 
             GUILayout.Box("AoA Limiter", mySty, GUILayout.ExpandWidth(true));
@@ -942,6 +946,7 @@ namespace ferram4
                 kd_wingleveler = Convert.ToDouble(kd_wingleveler_str);
                 k_yawdamper = Convert.ToDouble(k_yawdamper_str);
                 k_pitchdamper = Convert.ToDouble(k_pitchdamper_str);
+				k2_pitchdamper = Convert.ToDouble(k2_pitchdamper_str);
                 upperLim = Convert.ToDouble(upperLim_str);
                 lowerLim = Convert.ToDouble(lowerLim_str);
                 k_limiter = Convert.ToDouble(k_limiter_str);
@@ -1487,12 +1492,18 @@ namespace ferram4
                 double alpha = (-AoA * FARMathUtil.deg2rad + 0.5 * lastAlpha) * 0.66666667;
                 double d_alpha = (alpha - lastAlpha) * recipDt;
                 //float dd_alpha = (d_alpha - lastD_alpha) / dt;
-                if (Math.Abs(state.pitch - state.pitchTrim) < 0.01)
-                {
-                    tmp = k_pitchdamper * d_alpha;// +k_pitchdamper / 5 * dd_alpha;
-                    tmp = tmp * ctrlTimeConst / (1 - Math.Abs(tmp) * ctrlTimeConst);
-                    state.pitch = (float)FARMathUtil.Clamp(tmp + state.pitch, -1, 1);
-                }
+				if (Math.Abs(state.pitch - state.pitchTrim) < 0.01)
+				{
+					tmp = k_pitchdamper * d_alpha;// +k_pitchdamper / 5 * dd_alpha;
+					tmp = tmp * ctrlTimeConst / (1 - Math.Abs(tmp) * ctrlTimeConst);
+					state.pitch = (float)FARMathUtil.Clamp(tmp + state.pitch, -1, 1);
+				}
+				else
+				{
+					tmp = k2_pitchdamper * d_alpha;// +k_pitchdamper / 5 * dd_alpha;
+					tmp = tmp * ctrlTimeConst / (1 - Math.Abs(tmp) * ctrlTimeConst);
+					state.pitch = (float)FARMathUtil.Clamp(tmp + state.pitch, -1, 1);
+				}
                 lastAlpha = alpha;
                 //lastD_alpha = d_alpha;
             }

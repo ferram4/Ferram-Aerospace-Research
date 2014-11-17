@@ -43,7 +43,7 @@ using UnityEngine;
 
 namespace ferram4
 {
-    public class FARCargoBayModule : FARPartModule
+    public class FARCargoBayModule : FARPartModule, TweakScale.IRescalable<FARCargoBayModule>
     {
         [KSPField(guiActive = true, guiActiveEditor = true, isPersistant = false)]
         private int partsShielded = 0;
@@ -379,6 +379,11 @@ namespace ferram4
         //Blank save node ensures that nothing for this partmodule is saved
         public override void OnSave(ConfigNode node)
         {
+        }
+
+        public void OnRescale(TweakScale.ScalingFactor factor)
+        {
+            CalculateBayBounds();
         }
     }
 }
