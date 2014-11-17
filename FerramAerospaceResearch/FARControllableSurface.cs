@@ -89,17 +89,21 @@ namespace ferram4
 
 //        protected int MovableSectionFlip = 1;
 
-        [UI_Toggle(enabledText = "Active", scene = UI_Scene.Editor, disabledText = "Inactive")]
-        [KSPField(guiName = "Pitch", isPersistant = true, guiActiveEditor = true, guiActive = false)]
-        public bool pitchaxis = true;
+        [UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.Editor, stepIncrement = 5f)]
+        [KSPField(guiName = "Pitch %", isPersistant = true, guiActiveEditor = true, guiActive = false)]
+        public float pitchaxis = 100.0f;
 
-        [UI_Toggle(enabledText = "Active", scene = UI_Scene.Editor, disabledText = "Inactive")]
-        [KSPField(guiName = "Yaw", isPersistant = true, guiActiveEditor = true, guiActive = false)]
-        public bool yawaxis = true;
+		[UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.Editor, stepIncrement = 5f)]
+		[KSPField(guiName = "Yaw %", isPersistant = true, guiActiveEditor = true, guiActive = false)]
+		public float yawaxis = 100.0f;
 
-        [UI_Toggle(enabledText = "Active", scene = UI_Scene.Editor, disabledText = "Inactive")]
-        [KSPField(guiName = "Roll", isPersistant = true, guiActiveEditor = true, guiActive = false)]
-        public bool rollaxis = true;
+		[UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.Editor, stepIncrement = 5f)]
+		[KSPField(guiName = "Roll %", isPersistant = true, guiActiveEditor = true, guiActive = false)]
+        public float rollaxis = 100.0f;
+
+		[UI_FloatRange(maxValue = 200.0f, minValue = -200f, scene = UI_Scene.Editor, stepIncrement = 5f)]
+		[KSPField(guiName = "AoA %", isPersistant = true, guiActiveEditor = true, guiActive = false)]
+		public float pitchaxisDueToAoA = 0.0f;
 
         [UI_Toggle(enabledText = "Active", scene = UI_Scene.Editor, disabledText = "Inactive")]
         [KSPField(guiName = "Flap", isPersistant = true, guiActiveEditor = true, guiActive = false)]
@@ -112,11 +116,11 @@ namespace ferram4
         [KSPField(isPersistant = true, guiName = "Flap setting")]
         public int flapDeflectionLevel = 2;
 
-        [UI_FloatRange(maxValue = 30, minValue = -15, scene = UI_Scene.Editor, stepIncrement = 0.5f)]
+        [UI_FloatRange(maxValue = 40, minValue = -40, scene = UI_Scene.Editor, stepIncrement = 0.5f)]
         [KSPField(guiName = "Ctrl Dflct", isPersistant = true)]
         public float maxdeflect = 15;
 
-        [UI_FloatRange(maxValue = 85, minValue = -30, scene = UI_Scene.Editor, stepIncrement = 0.5f)]
+        [UI_FloatRange(maxValue = 85, minValue = -85, scene = UI_Scene.Editor, stepIncrement = 0.5f)]
         [KSPField(guiName = "Flp/splr Dflct", isPersistant = true)]
         public float maxdeflectFlap = 15; 
         
@@ -295,7 +299,7 @@ namespace ferram4
                     flapLocation = -(int)Math.Sign(Vector3.Dot(EditorLogic.startPod.transform.forward, part.transform.forward));      //figure out which way is up
             }
 
-            if (pitchaxis || yawaxis || rollaxis || HighLogic.LoadedSceneIsEditor)
+            if (pitchaxis != 0.0f || yawaxis != 0.0f || rollaxis != 0.0f || pitchaxisDueToAoA != 0.0f || HighLogic.LoadedSceneIsEditor)
             {
                 Vector3 CoM = Vector3.zero;
                 float mass = 0;
@@ -366,18 +370,27 @@ namespace ferram4
             AoAdesiredControl = 0;
             if ((object)vessel != null && vessel.staticPressure > 0)
             {
-                if (pitchaxis)
+                if (pitchaxis != 0.0f)
                 {
-                    AoAdesiredControl += PitchLocation * vessel.ctrlState.pitch;
+					AoAdesiredControl += PitchLocation * vessel.ctrlState.pitch * pitchaxis / 100f;
                 }
-                if (yawaxis)
+				if (yawaxis != 0.0f)
                 {
-                    AoAdesiredControl += YawLocation * vessel.ctrlState.yaw;
+					AoAdesiredControl += YawLocation * vessel.ctrlState.yaw * yawaxis / 100f;
                 }
-                if (rollaxis)
+				if (rollaxis != 0.0f)
                 {
-                    AoAdesiredControl += RollLocation * vessel.ctrlState.roll;
+					AoAdesiredControl += RollLocation * vessel.ctrlState.roll * rollaxis / 100f;
                 }
+				if (pitchaxisDueToAoA != 0.0f && vessel != null && HighLogic.LoadedSceneIsFlight == true)
+				{ 
+					Vector3 tmpVec = vessel.ReferenceTransform.up * Vector3.Dot(vessel.ReferenceTransform.up, vessel.srf_velocity.normalized) + vessel.ReferenceTransform.forward * Vector3.Dot(vessel.ReferenceTransform.forward, vessel.srf_velocity.normalized);   //velocity vector projected onto a plane that divides the airplane into left and right halves
+					double AoA = Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.forward);
+					AoA = FARMathUtil.rad2deg * Math.Asin(AoA);
+					if (double.IsNaN(AoA))
+						AoA = 0;
+					AoAdesiredControl += PitchLocation * AoA / maxdeflect * pitchaxisDueToAoA / 100f;
+				}
 
                 AoAdesiredControl *= AoAsign * maxdeflect;
                 AoAdesiredControl = FARMathUtil.Clamp(AoAdesiredControl, -Math.Abs(maxdeflect), Math.Abs(maxdeflect));
@@ -477,17 +490,17 @@ namespace ferram4
                 YawLocation = -Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.right) * Mathf.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.up));
                 RollLocation = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.forward) * Mathf.Sign(Vector3.Dot(CoMoffset, -EditorLogic.startPod.transform.right));
                 AoAcurrentControl = 0;
-                if (pitchaxis == true)
+                if (pitchaxis != 0.0f)
                 {
-                    AoAcurrentControl += PitchLocation * pitch;
+					AoAcurrentControl += PitchLocation * pitch * pitchaxis / 100f;
                 }
-                if (yawaxis == true)
+				if (yawaxis != 0.0f)
                 {
-                    AoAcurrentControl += YawLocation * yaw;
+					AoAcurrentControl += YawLocation * yaw * yawaxis / 100f;
                 }
-                if (rollaxis == true)
+				if (rollaxis != 0.0f)
                 {
-                    AoAcurrentControl += RollLocation * roll;
+					AoAcurrentControl += RollLocation * roll * rollaxis / 100f;
                 }
                 AoAcurrentControl = AoAdesiredControl = FARMathUtil.Clamp(AoAcurrentControl, -1, 1) * maxdeflect;
                 AoAcurrentFlap = 0;
