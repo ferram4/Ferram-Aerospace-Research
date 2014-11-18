@@ -370,29 +370,31 @@ namespace ferram4
             AoAdesiredControl = 0;
             if ((object)vessel != null && vessel.staticPressure > 0)
             {
-                if (pitchaxis != 0.0f)
+                if (pitchaxis != 0.0)
                 {
-					AoAdesiredControl += PitchLocation * vessel.ctrlState.pitch * pitchaxis / 100f;
+					AoAdesiredControl += PitchLocation * vessel.ctrlState.pitch * pitchaxis * 0.01;
                 }
-				if (yawaxis != 0.0f)
+				if (yawaxis != 0.0)
                 {
-					AoAdesiredControl += YawLocation * vessel.ctrlState.yaw * yawaxis / 100f;
+					AoAdesiredControl += YawLocation * vessel.ctrlState.yaw * yawaxis * 0.01;
                 }
-				if (rollaxis != 0.0f)
+				if (rollaxis != 0.0)
                 {
-					AoAdesiredControl += RollLocation * vessel.ctrlState.roll * rollaxis / 100f;
+					AoAdesiredControl += RollLocation * vessel.ctrlState.roll * rollaxis * 0.01;
                 }
-				if (pitchaxisDueToAoA != 0.0f && vessel != null && HighLogic.LoadedSceneIsFlight == true)
+                AoAdesiredControl *= maxdeflect;
+                if (pitchaxisDueToAoA != 0.0f && vessel != null && HighLogic.LoadedSceneIsFlight == true)
 				{ 
-					Vector3 tmpVec = vessel.ReferenceTransform.up * Vector3.Dot(vessel.ReferenceTransform.up, vessel.srf_velocity.normalized) + vessel.ReferenceTransform.forward * Vector3.Dot(vessel.ReferenceTransform.forward, vessel.srf_velocity.normalized);   //velocity vector projected onto a plane that divides the airplane into left and right halves
+                    Vector3d vel = this.GetVelocity();
+                    Vector3 tmpVec = vessel.ReferenceTransform.up * Vector3.Dot(vessel.ReferenceTransform.up, vel) + vessel.ReferenceTransform.forward * Vector3.Dot(vessel.ReferenceTransform.forward, vel);   //velocity vector projected onto a plane that divides the airplane into left and right halves
 					double AoA = Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.forward);
 					AoA = FARMathUtil.rad2deg * Math.Asin(AoA);
 					if (double.IsNaN(AoA))
 						AoA = 0;
-					AoAdesiredControl += PitchLocation * AoA / maxdeflect * pitchaxisDueToAoA / 100f;
+					AoAdesiredControl += PitchLocation * AoA * pitchaxisDueToAoA * 0.01;
 				}
 
-                AoAdesiredControl *= AoAsign * maxdeflect;
+                AoAdesiredControl *= AoAsign;
                 AoAdesiredControl = FARMathUtil.Clamp(AoAdesiredControl, -Math.Abs(maxdeflect), Math.Abs(maxdeflect));
             }
         }
