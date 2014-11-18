@@ -154,6 +154,8 @@ namespace ferram4
         private static bool DynCtrlHlp = false;
         private static bool AoAHlp = false;
 
+        private static FlightInputCallback stabilityAugCallback = null;
+
         internal static bool tintForCl = false;
         internal static bool tintForCd = false;
         internal static bool tintForStall = false;
@@ -1338,9 +1340,10 @@ namespace ferram4
 
         public void OnDestroy()
         {
-            if (activeControlSys == this)
+            if (activeControlSys == this && stabilityAugCallback != null)
             {
-                vessel.OnFlyByWire -= new FlightInputCallback(StabilityAugmentation);
+                vessel.OnFlyByWire -= stabilityAugCallback;
+                stabilityAugCallback = null;
             }
             activeControlSys = null;
 
@@ -1353,9 +1356,10 @@ namespace ferram4
         public static bool SetActiveControlSysAndStabilitySystem(Vessel vesselToChangeTo, Vessel vesselToChangeFrom)
         {
             speedometers = null; // DaMichel: switch to another vessels? this needs to be cleared.
-            if ((object)vesselToChangeFrom != null && (object)activeControlSys != null)
+            if ((object)vesselToChangeFrom != null && (object)activeControlSys != null && stabilityAugCallback != null)
             {
-                vesselToChangeFrom.OnFlyByWire -= new FlightInputCallback(StabilityAugmentation);
+                vesselToChangeFrom.OnFlyByWire -= stabilityAugCallback;
+                stabilityAugCallback = null;
             }
 
             for (int i = 0; i < vesselToChangeTo.Parts.Count; i++)
@@ -1372,7 +1376,8 @@ namespace ferram4
                 return false;
             }
             statusOverrideTimer = 0;
-            vesselToChangeTo.OnFlyByWire += new FlightInputCallback(StabilityAugmentation);
+            stabilityAugCallback = new FlightInputCallback(StabilityAugmentation);
+            vesselToChangeTo.OnFlyByWire += stabilityAugCallback;
 
             return true;
         }
