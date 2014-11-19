@@ -314,7 +314,7 @@ namespace ferram4
                 CoM /= mass;
 
                 if (HighLogic.LoadedSceneIsEditor && (isFlap || isSpoiler))
-                    SetControlStateEditor(CoM, 0, 0, 0, FAREditorGUI.CurrentEditorFlapSetting, FAREditorGUI.CurrentEditorSpoilerSetting);
+                    SetControlStateEditor(CoM, part.transform.up, 0, 0, 0, FAREditorGUI.CurrentEditorFlapSetting, FAREditorGUI.CurrentEditorSpoilerSetting);
 
                 float roll2 = 0;
                 if (HighLogic.LoadedSceneIsEditor)
@@ -383,7 +383,7 @@ namespace ferram4
 					AoAdesiredControl += RollLocation * vessel.ctrlState.roll * rollaxis * 0.01;
                 }
                 AoAdesiredControl *= maxdeflect;
-                if (pitchaxisDueToAoA != 0.0f && vessel != null && HighLogic.LoadedSceneIsFlight == true)
+                if (pitchaxisDueToAoA != 0.0)
 				{ 
                     Vector3d vel = this.GetVelocity();
                     Vector3 tmpVec = vessel.ReferenceTransform.up * Vector3.Dot(vessel.ReferenceTransform.up, vel) + vessel.ReferenceTransform.forward * Vector3.Dot(vessel.ReferenceTransform.forward, vel);   //velocity vector projected onto a plane that divides the airplane into left and right halves
@@ -483,7 +483,7 @@ namespace ferram4
             }
         }
 
-        public void SetControlStateEditor(Vector3 CoM, float pitch, float yaw, float roll, int flap, bool brake)
+        public void SetControlStateEditor(Vector3 CoM, Vector3 velocityVec, float pitch, float yaw, float roll, int flap, bool brake)
         {
             if (HighLogic.LoadedSceneIsEditor)
             {
@@ -491,20 +491,33 @@ namespace ferram4
                 PitchLocation = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.forward) * Mathf.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.up));
                 YawLocation = -Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.right) * Mathf.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.up));
                 RollLocation = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.forward) * Mathf.Sign(Vector3.Dot(CoMoffset, -EditorLogic.startPod.transform.right));
-                AoAcurrentControl = 0;
-                if (pitchaxis != 0.0f)
+                AoAsign = Math.Sign(Vector3.Dot(part.transform.up, EditorLogic.startPod.transform.up));
+                AoAdesiredControl = 0;
+                if (pitchaxis != 0.0)
                 {
-					AoAcurrentControl += PitchLocation * pitch * pitchaxis / 100f;
+					AoAdesiredControl += PitchLocation * pitch * pitchaxis * 0.01;
                 }
-				if (yawaxis != 0.0f)
+				if (yawaxis != 0.0)
                 {
-					AoAcurrentControl += YawLocation * yaw * yawaxis / 100f;
+					AoAdesiredControl += YawLocation * yaw * yawaxis * 0.01;
                 }
-				if (rollaxis != 0.0f)
+				if (rollaxis != 0.0)
                 {
-					AoAcurrentControl += RollLocation * roll * rollaxis / 100f;
+					AoAdesiredControl += RollLocation * roll * rollaxis * 0.01;
                 }
-                AoAcurrentControl = AoAdesiredControl = FARMathUtil.Clamp(AoAcurrentControl, -1, 1) * maxdeflect;
+                AoAdesiredControl *= maxdeflect;
+                if (pitchaxisDueToAoA != 0.0)
+                {
+                    Vector3 tmpVec = EditorLogic.startPod.transform.up * Vector3.Dot(EditorLogic.startPod.transform.up, velocityVec) + EditorLogic.startPod.transform.forward * Vector3.Dot(EditorLogic.startPod.transform.forward, velocityVec);   //velocity vector projected onto a plane that divides the airplane into left and right halves
+                    double AoA = Vector3.Dot(tmpVec.normalized, EditorLogic.startPod.transform.forward);
+                    AoA = FARMathUtil.rad2deg * Math.Asin(AoA);
+                    if (double.IsNaN(AoA))
+                        AoA = 0;
+                    AoAdesiredControl += PitchLocation * AoA * pitchaxisDueToAoA * 0.01;
+                }
+
+                AoAdesiredControl *= AoAsign;
+                AoAdesiredControl = FARMathUtil.Clamp(AoAdesiredControl, -Math.Abs(maxdeflect), Math.Abs(maxdeflect));
                 AoAcurrentFlap = 0;
                 if (isFlap == true)
                 {

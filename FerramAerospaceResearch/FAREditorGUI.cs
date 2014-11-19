@@ -1377,6 +1377,21 @@ namespace ferram4
             stabDerivs[23] = pertCn;
             stabDerivs[22] = pertC_roll;
 
+            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
+            {
+                Part p = FARAeroUtil.CurEditorParts[i];
+
+                if (FARAeroUtil.IsNonphysical(p))
+                    continue;
+                for (int k = 0; k < p.Modules.Count; k++)
+                {
+                    PartModule m = p.Modules[k];
+                    if (m is FARControllableSurface)
+                    {
+                        (m as FARControllableSurface).SetControlStateEditor(CoM, p.transform.up, (float)0, 0, 0, flap_setting, spoilersDeployed);
+                    }
+                }
+            }
 
             return stabDerivs;
         }
@@ -1568,6 +1583,22 @@ namespace ferram4
                 CmValues[i] = Cm;
                 LDValues[i] = Cl / Cd;
             }
+            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
+            {
+                Part p = FARAeroUtil.CurEditorParts[i];
+
+                if (FARAeroUtil.IsNonphysical(p))
+                    continue;
+                for (int k = 0; k < p.Modules.Count; k++)
+                {
+                    PartModule m = p.Modules[k];
+                    if (m is FARControllableSurface)
+                    {
+                        (m as FARControllableSurface).SetControlStateEditor(CoM, p.transform.up, (float)pitch, 0, 0, flap_setting, spoilersDeployed);
+                    }
+                }
+            }
+            
             string horizontalLabel = "Mach Number";
             UpdateGraph(AlphaValues, ClValues, CdValues, CmValues, LDValues, null, null, null, null, horizontalLabel);
         }
@@ -1654,6 +1685,23 @@ namespace ferram4
                     LDValues2[numPoints*2 - 1 - i] = Cl / Cd;                    
                 }
             }
+
+            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
+            {
+                Part p = FARAeroUtil.CurEditorParts[i];
+
+                if (FARAeroUtil.IsNonphysical(p))
+                    continue;
+                for (int k = 0; k < p.Modules.Count; k++)
+                {
+                    PartModule m = p.Modules[k];
+                    if (m is FARControllableSurface)
+                    {
+                        (m as FARControllableSurface).SetControlStateEditor(CoM, p.transform.up, (float)pitch, 0, 0, flap_setting, spoilersDeployed);
+                    }
+                }
+            }
+
             string horizontalLabel = "Angle of Attack, degrees";
             UpdateGraph(AlphaValues, 
                         ClValues, CdValues, CmValues, LDValues,
@@ -1712,8 +1760,13 @@ namespace ferram4
                         FARWingAerodynamicModel w = m as FARWingAerodynamicModel;
                         if (clear)
                             w.EditorClClear(reset_stall);
+
+                        Vector3 relPos = p.transform.position - CoM;
+
+                        Vector3 vel = velocity + Vector3.Cross(AngVel, relPos);
+
                         if (w is FARControllableSurface)
-                            (w as FARControllableSurface).SetControlStateEditor(CoM, (float)pitch, 0, 0, flap_setting, spoilersDeployed);
+                            (w as FARControllableSurface).SetControlStateEditor(CoM, vel, (float)pitch, 0, 0, flap_setting, spoilersDeployed);
                     }
                 }
             }
