@@ -24,5 +24,16 @@ namespace FerramAerospaceResearch.FARGeometry
                 return point1;
             return null;
         }
+
+        /// <summary>
+        /// Determines where a test point is in relation to this line
+        /// </summary>
+        /// <param name="pt">test point</param>
+        /// <returns>Returns 1 if pt is to left, -1 if pt is to right, and 0 if on line</returns>
+        public int pointToLeft(FARGeometryPoint pt)
+        {
+            double val = (point2.point.x - point1.point.x) * (pt.point.y - point1.point.y) - (pt.point.x - point1.point.x) * (point2.point.y - point1.point.y);
+            return val.CompareTo(0);
+        }
     }
 }

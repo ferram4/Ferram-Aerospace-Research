@@ -10,7 +10,6 @@ namespace FerramAerospaceResearch.FARGeometry
         public Vector3d point;
         public List<FARGeometryLineSegment> connectedLines;
         public Transform parentTransform;
-        public FARGeometryPartPolygon parentPoly;
 
         public FARGeometryPoint(Vector3d thisPoint)
         {
@@ -18,11 +17,10 @@ namespace FerramAerospaceResearch.FARGeometry
             point = thisPoint;
         }
 
-        public FARGeometryPoint(Vector3d thisPoint, FARGeometryPartPolygon poly, Transform transform)
+        public FARGeometryPoint(Vector3d thisPoint, Transform transform)
         {
             connectedLines = new List<FARGeometryLineSegment>();
             point = thisPoint;
-            parentPoly = poly;
             parentTransform = transform;
         }
 
