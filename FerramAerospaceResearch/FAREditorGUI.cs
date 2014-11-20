@@ -205,8 +205,7 @@ namespace ferram4
                 ButtonStyle.padding = new RectOffset(4, 4, 4, 4);
             }
 
-            mousePos = Input.mousePosition;         //Mouse location; based on Kerbal Engineer Redux code
-            mousePos.y = Screen.height - mousePos.y;
+            mousePos = FARGUIUtils.GetMousePos();
 
             EditorLogic EdLogInstance = EditorLogic.fetch;
 

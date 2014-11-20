@@ -80,6 +80,8 @@ namespace ferram4
                                               id2actionGroup[1].ToString(),
                                               id2actionGroup[2].ToString() };
 
+        static FARGUIDropDown<KSPActionGroup>[] actionGroupDropDown;
+
         public static KSPActionGroup map(int id)
         {
             return id2actionGroup[id];
@@ -87,6 +89,15 @@ namespace ferram4
 
         public static void LoadConfiguration()
         {
+            string[] names = Enum.GetNames(typeof(KSPActionGroup));
+            KSPActionGroup[] agTypes = new KSPActionGroup[names.Length];
+            actionGroupDropDown = new FARGUIDropDown<KSPActionGroup>[3];
+
+            for(int i = 0; i < agTypes.Length; i++)
+            {
+                agTypes[i] = (KSPActionGroup)Enum.Parse(typeof(KSPActionGroup), names[i]);
+            }
+
             // straight forward, reading the (action name, action group) tuples
             KSP.IO.PluginConfiguration config = FARDebugOptions.config;
             for (int i = 0; i < ACTION_COUNT; ++i)
@@ -101,6 +112,17 @@ namespace ferram4
                 {
                     Debug.LogWarning("FAR: error reading config key '" + configKeys[i] + "' with value '" + config.GetValue(configKeys[i], "n/a") + "' gave " + e.ToString());
                 }
+                int initIndex = 0;
+                for(int j = 0; j < agTypes.Length; j++)
+                {
+                    if(id2actionGroup[i] == agTypes[j])
+                    {
+                        initIndex = j;
+                        break;
+                    }
+                }
+                FARGUIDropDown<KSPActionGroup> dropDown = new FARGUIDropDown<KSPActionGroup>(names, agTypes, initIndex);
+                actionGroupDropDown[i] = dropDown;
             }
         }
 
@@ -129,7 +151,9 @@ namespace ferram4
             GUILayout.BeginVertical();
             for (int i = 0; i < FARActionGroupConfiguration.ACTION_COUNT; ++i)
             {
-                GUILayout.BeginHorizontal();
+                actionGroupDropDown[i].GUIDropDownDisplay(GUILayout.Width(150));
+                id2actionGroup[i] = actionGroupDropDown[i].ActiveSelection();
+/*                GUILayout.BeginHorizontal();
                 currentGuiStrings[i] = GUILayout.TextField(currentGuiStrings[i], GUILayout.Width(150));
                 bool ok = false;
                 try
@@ -142,11 +166,11 @@ namespace ferram4
                 {
                 }
                 GUILayout.Label(ok ? " Ok" : " Invalid", GUILayout.Width(50));
-                GUILayout.EndHorizontal();
+                GUILayout.EndHorizontal();*/
             }
             GUILayout.EndVertical();
             GUILayout.EndHorizontal(); // end of columns
-            GUILayout.BeginHorizontal(); // list admissible entries for ease of use. Unity has no comboboxes, so this has to do for now ...
+/*            GUILayout.BeginHorizontal(); // list admissible entries for ease of use. Unity has no comboboxes, so this has to do for now ...
             GUILayout.Label("Admissible Entries ", label);
             string[] names = Enum.GetNames(typeof(KSPActionGroup));
             var sb = new System.Text.StringBuilder(256);
@@ -156,7 +180,7 @@ namespace ferram4
                 if (i < names.Length - 1) sb.Append(',');
             }
             GUILayout.Label(sb.ToString());
-            GUILayout.EndHorizontal();
+            GUILayout.EndHorizontal();*/
         }
     }
 }
