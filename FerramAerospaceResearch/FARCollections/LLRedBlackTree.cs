@@ -23,14 +23,14 @@ namespace FerramAerospaceResearch.FARCollections
             }
         }
         private RedBlackTreeNode _treeRoot = null;
-        private Comparer<T> _comparer;
+        private IComparer<T> _comparer;
         private int _count = 0;
 
         public int Count { get { return _count; } }
 
         public LLRedBlackTree() : this(Comparer<T>.Default) { }
 
-        public LLRedBlackTree(Comparer<T> newComparer)
+        public LLRedBlackTree(IComparer<T> newComparer)
         {
             _comparer = newComparer;
         }

@@ -59,7 +59,10 @@ namespace FerramAerospaceResearch.FARGeometry
 
         private List<Vector3d> GrahamsScanVerts(List<Vector3d> verts)
         {
-            verts = verts.MergeSort(new Vector3dXComparer());
+            //verts = verts.MergeSort(new Vector3dXComparer());
+            //The above was necessary due to Sort()'s failures when the comparer used > / < rather than CompareTo
+
+            verts.Sort(new Vector3dXComparer());
 
             List<Vector3d> l = new List<Vector3d>();
             List<Vector3d> u = new List<Vector3d>();
@@ -102,19 +105,14 @@ namespace FerramAerospaceResearch.FARGeometry
             return lines;
         }
 
-        public class Vector3dXComparer : Comparer<Vector3d>
+        public class Vector3dXComparer : IComparer<Vector3d>
         {
-            public override int Compare(Vector3d x, Vector3d y)
+            public int Compare(Vector3d x, Vector3d y)
             {
-                if (x.x > y.x)
-                    return 1;
-                else if (x.x == y.x)
-                    if (x.y > y.y)
-                        return 1;
-                    else
-                        return -1;
-                else
-                    return -1;
+                int tmp = x.x.CompareTo(y.x);   //Must use CompareTo, not < / >
+                if (tmp == 0)
+                    return x.y.CompareTo(y.y);
+                return tmp;
             }
         }
 

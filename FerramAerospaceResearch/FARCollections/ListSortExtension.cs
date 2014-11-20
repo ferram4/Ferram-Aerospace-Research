@@ -12,7 +12,7 @@ namespace FerramAerospaceResearch.FARCollections
             return MergeSort<T>(list, Comparer<T>.Default);
         }
 
-        public static List<T> MergeSort<T>(this List<T> list, Comparer<T> comparer)
+        public static List<T> MergeSort<T>(this List<T> list, IComparer<T> comparer)
         {
             // Base case. A list of zero or one elements is sorted, by definition.
             if (list.Count <= 1)
@@ -30,7 +30,7 @@ namespace FerramAerospaceResearch.FARCollections
             return MergeSortBuildup<T>(left, right, comparer);
         }
 
-        private static List<T> MergeSortBuildup<T>(List<T> left, List<T> right, Comparer<T> comparer)
+        private static List<T> MergeSortBuildup<T>(List<T> left, List<T> right, IComparer<T> comparer)
         {
             List<T> result = new List<T>();
             while (left.Count > 0 || right.Count > 0)
