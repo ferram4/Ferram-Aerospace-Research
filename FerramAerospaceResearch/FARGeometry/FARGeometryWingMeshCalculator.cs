@@ -59,10 +59,11 @@ namespace FerramAerospaceResearch.FARGeometry
 
         private List<Vector3d> GrahamsScanVerts(List<Vector3d> verts)
         {
-            //verts = verts.MergeSort(new Vector3dXComparer());
-            //The above was necessary due to Sort()'s failures when the comparer used > / < rather than CompareTo
-
-            verts.Sort(new Vector3dXComparer());
+            verts = verts.MergeSort(new Vector3dXComparer());
+            
+            ////The above was necessary due to Sort()'s failures when the comparer used > / < rather than CompareTo
+            //Let's not take any chances with this, MergeSort hasn't had any issues
+            //verts.Sort(new Vector3dXComparer());
 
             List<Vector3d> l = new List<Vector3d>();
             List<Vector3d> u = new List<Vector3d>();
