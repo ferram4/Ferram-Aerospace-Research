@@ -64,6 +64,10 @@ namespace FerramAerospaceResearch.FARGeometry
             ////The above was necessary due to Sort()'s failures when the comparer used > / < rather than CompareTo
             //Let's not take any chances with this, MergeSort hasn't had any issues
             //verts.Sort(new Vector3dXComparer());
+            string s = "";
+            for (int i = 0; i < verts.Count; i++)
+                s += verts[i] + "\n\r";
+            Debug.Log(s);
 
             List<Vector3d> l = new List<Vector3d>();
             List<Vector3d> u = new List<Vector3d>();
