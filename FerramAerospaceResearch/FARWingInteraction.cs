@@ -387,7 +387,7 @@ namespace ferram4
                     for (int k = 0; k < vesselPartList.Count; k++)
                     {
                         Part p = vesselPartList[k];
-                        if (p == parentWingPart)
+                        if (p == null || p == parentWingPart)
                             continue;
 
                         FARPartModule farModule = p.GetComponent<FARPartModule>();
@@ -432,17 +432,19 @@ namespace ferram4
 
         private RaycastHit[] SortHitsByDistance(RaycastHit[] unsortedList)
         {
-            RaycastHit[] sortedHits = new RaycastHit[unsortedList.Length];
+            List<RaycastHit> sortedHits = unsortedList.ToList();
 
-            SortedList<double, RaycastHit> sortingList = new SortedList<double, RaycastHit>();
+            sortedHits.Sort(new RaycastHitComparer());
 
-            for (int i = 0; i < unsortedList.Length; i++)
-                if (!sortingList.ContainsKey(unsortedList[i].distance))
-                    sortingList.Add(unsortedList[i].distance, unsortedList[i]);
+            return sortedHits.ToArray();
+        }
 
-            sortedHits = sortingList.Values.ToArray();
-
-            return sortedHits;
+        private class RaycastHitComparer : IComparer<RaycastHit>
+        {
+            public int Compare(RaycastHit h1, RaycastHit h2)
+            {
+                return h1.distance.CompareTo(h2.distance);
+            }
         }
 
         private bool DetermineWingsUpstream(double wingForwardDir, double wingRightwardDir)
