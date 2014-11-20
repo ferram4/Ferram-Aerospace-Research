@@ -47,7 +47,7 @@ namespace ferram4
 {
     public class FAREditorGUI
     {
-        
+
         public static Rect windowPos;
         protected static Rect helpPos;
         protected static Rect analysisHelpPos;
@@ -71,6 +71,7 @@ namespace ferram4
 
         protected static ferramGraph graph = new ferramGraph(400, 275);
         protected static FARGUIDropDown<CelestialBody> celestialBodyDropdown;
+        private static CelestialBody activeBody;
 
         private static string lowerBound_str = "0";
         private static string upperBound_str = "25";
@@ -122,7 +123,7 @@ namespace ferram4
             "Debug FAR Modules"
         };
 
-        private SimMode simMode= 0;
+        private SimMode simMode = 0;
 
         private enum SimMode
         {
@@ -139,6 +140,7 @@ namespace ferram4
         int index = 1;
 
         string alt_str = "0";
+        double alt = 0;
         string Mach_str = "0.35";
         string alpha_str = "0.1";
         string beta_str = "0";
@@ -181,7 +183,7 @@ namespace ferram4
             celestialBodyDropdown = new FARGUIDropDown<CelestialBody>(bodyNames, bodies, kerbinIndex);
 
         }
-        
+
         public void OnDestroy()
         {
             EditorLogic.fetch.Unlock("FAREdLock");
@@ -273,7 +275,7 @@ namespace ferram4
             GUILayout.BeginVertical();
 
             GUILayout.Box("The analysis window is designed to help you determine the performance of your airplane before you attempt to fly it by calculating various aerodynamic parameters.", BackgroundStyle);
-            
+
             GUILayout.BeginVertical(BackgroundStyle);
             GUILayout.Label("<b>Analyzer modes:</b>\n\rSweep AoA (Angle of attack)\n\rSweep Mach\n\r\n\r<b>Sweep AoA:</b> Vary AoA of plane at a constant Mach number.  Set angles using lower and upper bounds and choose enough points for accuracy.  Analyzer will produce two curves; one with increasing AoA, one with decreasing to display effects of stall. The sweep from high to low AoA is displayed in darker tones. \n\r\n\r<b>Sweep Mach:</b> Vary Mach number at a constant AoA.  Will only sweep from lower Mach Number to upper.  Will not accept negative Mach Numbers.\n\r\n\r<b>Parameters Drawn:</b> Cl, Cd, Cm, L/D\n\r\n\r<b>Cl:</b> Lift coefficient; describes the lift of the plane after removing effects of air density and velocity.  Will increase with AoA until stall, where it will drop greatly.  AoA must be lowered greatly before stall ends.\n\r\n\r<b>Cd:</b> Drag coefficient; like the above, but for drag.  Notice the large increase following stall.\n\r\n\r<b>Cm:</b> Pitching moment coefficient; Angular force (think torque) applied to the plane when effects of air density and velocity are removed; must decrease with angle of attack for the plane to be stable.\n\r\n\r<b>L/D:</b> Lift over drag; measure of how efficiently the plane flies.");
             GUILayout.EndVertical();
@@ -286,7 +288,7 @@ namespace ferram4
         private void StabDerivHelpGUI(int windowID)
         {
             GUILayout.Box("The data and stability derivative GUI is designed to help you analyze the dynamic properties of your aircraft at a glance.  The simulation GUI is designed to display the dynamic motion of the vehicle as predicted from the stability derivatives.", BackgroundStyle);
-            
+
             analysisHelpTab = (AnalysisHelpTab)GUILayout.SelectionGrid((int)analysisHelpTab, AnalysisHelpTab_str, 3, ButtonStyle);
             GUILayout.BeginVertical(BackgroundStyle);
 
@@ -342,7 +344,7 @@ namespace ferram4
                 GUILayout.Label("<b>Dutch Roll Motion</b>");
                 GUILayout.Space(5);
                 GUILayout.Label("The dutch roll motion consists of an exchange between sideslip angle and roll angle that is best described by the plane \"wagging\" in flight; it is named after a motion that appears in ice skating.  While this motion is normally stable, it is often very lightly damped, which can make flight difficult.  It generally becomes less stable as velocity increases and attempts to make the dutch roll motion damp faster will inevitably cause lowered stability in the spiral motion (see above).");
-                
+
                 GUILayout.Space(10);
                 GUILayout.Label("<b>Stability Derivatives</b>");
                 GUILayout.Space(5);
@@ -429,9 +431,9 @@ namespace ferram4
 
             GUILayout.Label(w.part.partInfo.title + "\n\rFARWingAerodynamicModel Data");
             GUILayout.Box("Area (S): " + w.S +
-                "\n\rSemispan (b_2): " + w.b_2 + 
-                "\n\rMeanAeroChord (MAC): " + w.MAC + 
-                "\n\rTaperRatio: " + w.TaperRatio + 
+                "\n\rSemispan (b_2): " + w.b_2 +
+                "\n\rMeanAeroChord (MAC): " + w.MAC +
+                "\n\rTaperRatio: " + w.TaperRatio +
                 "\n\rMidChordSweep: " + w.MidChordSweep, boxStyle);
         }
 
@@ -707,7 +709,7 @@ namespace ferram4
                 }
 
             }
-            A.Add(9.81 * Math.Cos(stable_AoA * FARMathUtil.deg2rad) / u0, 3, 0);
+            A.Add(CalculateAccelerationDueToGravity(activeBody, alt) * Math.Cos(stable_AoA * FARMathUtil.deg2rad) / u0, 3, 0);
             A.Add(1, 1, 3);
 
 
@@ -823,7 +825,7 @@ namespace ferram4
                 }
 
             }
-            A.Add(-9.81f, 3, 1);
+            A.Add(-CalculateAccelerationDueToGravity(activeBody, alt), 3, 1);
             A.Add(1, 2, 3);
 
 
@@ -894,6 +896,16 @@ namespace ferram4
             graph.Update();
         }
 
+        private double CalculateAccelerationDueToGravity(CelestialBody body, double alt)
+        {
+            double radius = body.Radius + alt;
+            double mu = body.gravParameter;
+
+            double accel = radius * radius;
+            accel = mu / accel;
+            return accel;
+        }
+
 
 
         private void StabilityDerivativeGUI(bool tmp)
@@ -933,7 +945,7 @@ namespace ferram4
             GUILayout.Label("Planet:");
             celestialBodyDropdown.GUIDropDownDisplay();
 
-            CelestialBody body = celestialBodyDropdown.ActiveSelection();
+            activeBody = celestialBodyDropdown.ActiveSelection();
 
             GUILayout.Label("Altitude:");
             alt_str = GUILayout.TextField(alt_str, GUILayout.ExpandWidth(true));
@@ -945,7 +957,7 @@ namespace ferram4
             rho_str = GUILayout.TextField(rho_str, GUILayout.ExpandWidth(true));
             */
 
-            GUILayout.Label("Mach Number: ");
+            GUILayout.Label("m   Mach Number: ");
             Mach_str = GUILayout.TextField(Mach_str, GUILayout.ExpandWidth(true));
 
             GUILayout.EndHorizontal();
@@ -967,9 +979,9 @@ namespace ferram4
                 Mach_str = Regex.Replace(Mach_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
 
                 alt_str = Regex.Replace(alt_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
-                double alt = Convert.ToDouble(alt_str);
-                double temp = FlightGlobals.getExternalTemperature((float)alt, body);
-                double rho = FARAeroUtil.GetCurrentDensity(body, alt);
+                alt = Convert.ToDouble(alt_str);
+                double temp = FlightGlobals.getExternalTemperature((float)alt, activeBody);
+                double rho = FARAeroUtil.GetCurrentDensity(activeBody, alt);
                 //double temp = Convert.ToSingle(atm_temp_str);
                 Mach = Convert.ToSingle(Mach_str);
                 double sspeed = Math.Sqrt(FARAeroUtil.currentBodyAtm.x * Math.Max(0.1, temp + 273.15));
@@ -1113,9 +1125,9 @@ namespace ferram4
         private void FlapToggle()
         {
             GUIStyle style = new GUIStyle(GUI.skin.button);
-            style.padding = new RectOffset(2,2,0,0);
+            style.padding = new RectOffset(2, 2, 0, 0);
 
-            GUILayout.BeginHorizontal(GUILayout.Height(25), GUILayout.Width((30+4)*4));
+            GUILayout.BeginHorizontal(GUILayout.Height(25), GUILayout.Width((30 + 4) * 4));
             for (int i = 0; i <= 3; i++)
             {
                 bool on = GUILayout.Toggle(flap_setting == i, i.ToString(), style, GUILayout.Width(30), GUILayout.Height(25));
@@ -1260,14 +1272,15 @@ namespace ferram4
             stabDerivs[26] = Ixz;
 
 
-
-            double neededCl = mass * 9.81 / (q * area);
+            double effectiveG = CalculateAccelerationDueToGravity(activeBody, alt);     //This is the effect of gravity
+            effectiveG -= u0 * u0 / (alt + activeBody.Radius);                          //This is the effective reduction of gravity due to high velocity
+            double neededCl = mass * effectiveG / (q * area);
 
             //Longitudinal Mess
 
             double pertCl, pertCd, pertCm, pertCy, pertCn, pertC_roll;
             int iter = 7;
-            for(;;)
+            for (; ; )
             {
                 GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M, 0, out nomCl, out nomCd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true);
 
@@ -1622,7 +1635,7 @@ namespace ferram4
                     }
                 }
             }
-            
+
             string horizontalLabel = "Mach Number";
             UpdateGraph(AlphaValues, ClValues, CdValues, CmValues, LDValues, null, null, null, null, horizontalLabel);
         }
@@ -1682,7 +1695,7 @@ namespace ferram4
             for (int i = 0; i < 2 * numPoints; i++)
             {
                 double angle = 0;
-                if(i < numPoints)
+                if (i < numPoints)
                     angle = i / (double)numPoints * (upperBound - lowerBound) + lowerBound;
                 else
                     angle = (i - (double)numPoints + 1) / (double)numPoints * (lowerBound - upperBound) + upperBound;
@@ -1690,9 +1703,9 @@ namespace ferram4
                 double cy, cn, cr;
 
                 GetClCdCmSteady(CoM, angle, 0, 0, 0, 0, 0, M, pitch, out Cl, out Cd, out Cm, out cy, out cn, out cr, true, i == 0);
-                
 
-//                MonoBehaviour.print("Cl: " + Cl + " Cd: " + Cd);
+
+                //                MonoBehaviour.print("Cl: " + Cl + " Cd: " + Cd);
                 if (i < numPoints)
                 {
                     AlphaValues[i] = angle;
@@ -1703,10 +1716,10 @@ namespace ferram4
                 }
                 else
                 {
-                    ClValues2[numPoints*2 - 1 - i] = Cl;
-                    CdValues2[numPoints*2 - 1 - i] = Cd;
-                    CmValues2[numPoints*2 - 1 - i] = Cm;
-                    LDValues2[numPoints*2 - 1 - i] = Cl / Cd;                    
+                    ClValues2[numPoints * 2 - 1 - i] = Cl;
+                    CdValues2[numPoints * 2 - 1 - i] = Cd;
+                    CmValues2[numPoints * 2 - 1 - i] = Cm;
+                    LDValues2[numPoints * 2 - 1 - i] = Cl / Cd;
                 }
             }
 
@@ -1727,9 +1740,9 @@ namespace ferram4
             }
 
             string horizontalLabel = "Angle of Attack, degrees";
-            UpdateGraph(AlphaValues, 
+            UpdateGraph(AlphaValues,
                         ClValues, CdValues, CmValues, LDValues,
-                        ClValues2, CdValues2, CmValues2, LDValues2, 
+                        ClValues2, CdValues2, CmValues2, LDValues2,
                         horizontalLabel);
         }
 
@@ -1772,8 +1785,8 @@ namespace ferram4
 
             for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
             {
-                Part p = FARAeroUtil.CurEditorParts[i]; 
-                
+                Part p = FARAeroUtil.CurEditorParts[i];
+
                 if (FARAeroUtil.IsNonphysical(p))
                     continue;
                 for (int k = 0; k < p.Modules.Count; k++)
@@ -1798,8 +1811,8 @@ namespace ferram4
             {
                 for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
                 {
-                    Part p = FARAeroUtil.CurEditorParts[i]; 
-                    
+                    Part p = FARAeroUtil.CurEditorParts[i];
+
                     if (FARAeroUtil.IsNonphysical(p))
                         continue;
                     for (int k = 0; k < p.Modules.Count; k++)
@@ -1819,7 +1832,7 @@ namespace ferram4
             }
             for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
             {
-                Part p = FARAeroUtil.CurEditorParts[i]; 
+                Part p = FARAeroUtil.CurEditorParts[i];
                 if (FARAeroUtil.IsNonphysical(p))
                     continue;
                 for (int k = 0; k < p.Modules.Count; k++)
@@ -1827,7 +1840,7 @@ namespace ferram4
                     PartModule m = p.Modules[k];
                     if (m is FARWingAerodynamicModel)
                     {
-                       
+
                         FARWingAerodynamicModel w = m as FARWingAerodynamicModel;
                         if (w.isShielded)
                             break;
@@ -1856,8 +1869,8 @@ namespace ferram4
                         FARBasicDragModel d = m as FARBasicDragModel;
 
                         if (d.isShielded)
-                            break; 
-                        
+                            break;
+
                         Vector3d relPos = p.transform.position - CoM;
 
                         Vector3d vel = velocity + Vector3d.Cross(AngVel, relPos);
@@ -1930,7 +1943,7 @@ namespace ferram4
             double realMax = Math.Max(Math.Ceiling(maxBounds), 0.25);
 
             Color darkCyan = new Color(0f, 0.5f, 0.5f);
-            Color darkRed  = new Color(0.5f, 0f, 0f);
+            Color darkRed = new Color(0.5f, 0f, 0f);
             Color darkYellow = new Color(0.5f, 0.5f, 0f);
             Color darkGreen = new Color(0f, 0.5f, 0f);
             bool hasHighToLowAoA = ClValues2 != null && CdValues2 != null && CmValues2 != null && LDValues2 != null;
@@ -1941,20 +1954,20 @@ namespace ferram4
             if (hasHighToLowAoA)
                 graph.AddLine("Cd2", AlphaValues, CdValues2, darkRed, 1, false);
             graph.AddLine("Cd", AlphaValues, CdValues, Color.red);
-            
-            if (hasHighToLowAoA) 
+
+            if (hasHighToLowAoA)
                 graph.AddLine("Cl2", AlphaValues, ClValues2, darkCyan, 1, false);
             graph.AddLine("Cl", AlphaValues, ClValues, Color.cyan);
 
-            if (hasHighToLowAoA) 
+            if (hasHighToLowAoA)
                 graph.AddLine("L/D2", AlphaValues, LDValues2, darkGreen, 1, false);
             graph.AddLine("L/D", AlphaValues, LDValues, Color.green);
 
-            if (hasHighToLowAoA) 
+            if (hasHighToLowAoA)
                 graph.AddLine("Cm2", AlphaValues, CmValues2, darkYellow, 1, false);
             graph.AddLine("Cm", AlphaValues, CmValues, Color.yellow);
 
-            if (hasHighToLowAoA) 
+            if (hasHighToLowAoA)
             {
                 graph.SetLineVerticalScaling("L/D2", 0.1);
                 AddZeroMarks("Cm2", AlphaValues, CmValues2, upperBound - lowerBound, realMax - realMin, darkYellow);
@@ -1972,9 +1985,9 @@ namespace ferram4
         {
             int j = 0;
 
-            for (int i = 0; i < y.Length-1; i++)
+            for (int i = 0; i < y.Length - 1; i++)
             {
-                if (Math.Sign(y[i]) == Math.Sign(y[i+1]))
+                if (Math.Sign(y[i]) == Math.Sign(y[i + 1]))
                     continue;
 
                 /*// Don't display if slope is good enough?..
@@ -1998,7 +2011,7 @@ namespace ferram4
             AllControlSurfaces.Clear();
             RestartCtrlGUI();
         }
-        
+
         public void RestartCtrlGUI()
         {
             lastMinBounds = lastMaxBounds = 0;
@@ -2031,7 +2044,7 @@ namespace ferram4
                 FARWingAerodynamicModel w = nullWings[i];
                 if (AllWings.Contains(w))
                     AllWings.Remove(w);
-                if(AllControlSurfaces.Contains(w))
+                if (AllControlSurfaces.Contains(w))
                     AllControlSurfaces.Remove(w);
             }
 
@@ -2041,7 +2054,7 @@ namespace ferram4
                 {
                     Part p = FARAeroUtil.CurEditorParts[i];
                     FARWingAerodynamicModel w = p.GetComponent<FARWingAerodynamicModel>();
-                    if(w != null && !AllWings.Contains(w))
+                    if (w != null && !AllWings.Contains(w))
                     {
                         AllWings.Add(w);
                         if (w is FARControllableSurface)
@@ -2052,23 +2065,24 @@ namespace ferram4
             }
         }
 
-/*        public void SaveGUIParameters()
-        {
-            var config = KSP.IO.PluginConfiguration.CreateForType<FAREditorGUI>();
-            config.load();
-            config.SetValue("windowPos", windowPos);
-            config.SetValue("EditorGUIBool", minimize);
-            config.save();
-        }
+        /*        public void SaveGUIParameters()
+                {
+                    var config = KSP.IO.PluginConfiguration.CreateForType<FAREditorGUI>();
+                    config.load();
+                    config.SetValue("windowPos", windowPos);
+                    config.SetValue("EditorGUIBool", minimize);
+                    config.save();
+                }
 
-        public void LoadGUIParameters()
-        {
-            var config = KSP.IO.PluginConfiguration.CreateForType<FAREditorGUI>();
-            config.load();
-            windowPos = config.GetValue("windowPos", new Rect());
-            minimize = config.GetValue("EditorGUIBool", true);
-            if (windowPos.y < 75)
-                windowPos.y = 75;
-        } */
+                public void LoadGUIParameters()
+                {
+                    var config = KSP.IO.PluginConfiguration.CreateForType<FAREditorGUI>();
+                    config.load();
+                    windowPos = config.GetValue("windowPos", new Rect());
+                    minimize = config.GetValue("EditorGUIBool", true);
+                    if (windowPos.y < 75)
+                        windowPos.y = 75;
+                } */
     }
 }
+
