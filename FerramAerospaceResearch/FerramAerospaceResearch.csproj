@@ -66,11 +66,13 @@
     <Compile Include="FARBasicDragModel.cs" />
     <Compile Include="FARCargoBayModule.cs" />
     <Compile Include="FARCenterQuery.cs" />
+    <Compile Include="FARCollections\ListSortExtension.cs" />
     <Compile Include="FARCollections\LLRedBlackTree.cs" />
     <Compile Include="FARControllableSurface.cs" />
     <Compile Include="FARDebugOptions.cs" />
     <Compile Include="FAREditorGUI.cs" />
     <Compile Include="FARControlSys.cs" />
+    <Compile Include="FARGeometry\FARGeometryLineSegment.cs" />
     <Compile Include="FARGeometry\FARGeometryPoint.cs" />
     <Compile Include="FARGeoUtil.cs" />
     <Compile Include="FARGlobalControlEditorObject.cs" />

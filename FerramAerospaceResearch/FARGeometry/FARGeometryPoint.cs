@@ -8,19 +8,19 @@ namespace FerramAerospaceResearch.FARGeometry
     public class FARGeometryPoint
     {
         public Vector3d point;
-        public List<FARGeometryPoint> connectedPoints;
+        public List<FARGeometryLineSegment> connectedLines;
         public Transform parentTransform;
         public FARGeometryPartPolygon parentPoly;
 
         public FARGeometryPoint(Vector3d thisPoint)
         {
-            connectedPoints = new List<FARGeometryPoint>();
+            connectedLines = new List<FARGeometryLineSegment>();
             point = thisPoint;
         }
 
         public FARGeometryPoint(Vector3d thisPoint, FARGeometryPartPolygon poly, Transform transform)
         {
-            connectedPoints = new List<FARGeometryPoint>();
+            connectedLines = new List<FARGeometryLineSegment>();
             point = thisPoint;
             parentPoly = poly;
             parentTransform = transform;
@@ -30,11 +30,7 @@ namespace FerramAerospaceResearch.FARGeometry
         {
             Matrix4x4 transformMatrix = parentTransform.localToWorldMatrix;
             transformMatrix = transform.worldToLocalMatrix * transformMatrix;
-
-            for(int i = 0; i < connectedPoints.Count; i++)
-            {
-                connectedPoints[i].TransformToLocalSpace(transformMatrix, transform);
-            }
+            TransformToLocalSpace(transformMatrix, transform);
         }
 
         private void TransformToLocalSpace(Matrix4x4 transformMatrix, Transform transform)
@@ -43,11 +39,6 @@ namespace FerramAerospaceResearch.FARGeometry
                 return;
 
             point = transformMatrix.MultiplyPoint(point);
-
-            for (int i = 0; i < connectedPoints.Count; i++)
-            {
-                connectedPoints[i].TransformToLocalSpace(transformMatrix, transform);
-            }
         }
     }
 }

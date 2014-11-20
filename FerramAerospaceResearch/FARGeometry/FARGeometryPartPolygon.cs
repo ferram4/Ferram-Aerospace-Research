@@ -12,10 +12,10 @@ namespace FerramAerospaceResearch.FARGeometry
         {
             get { return module; }
         }
-        private List<FARGeometryPoint> planformBoundsPoints;
-        public List<FARGeometryPoint> PlanformBoundsPoints
+        private List<FARGeometryLineSegment> planformBoundsLines;
+        public List<FARGeometryLineSegment> PlanformBoundsLines
         {
-            get { return planformBoundsPoints; }
+            get { return planformBoundsLines; }
         }
 
         private List<Vector3d> planformTestPoints;
@@ -51,20 +51,18 @@ namespace FerramAerospaceResearch.FARGeometry
             normVec = wingModule.transform.forward;
 
             FARGeometryWingMeshCalculator wingGeoCalc = new FARGeometryWingMeshCalculator(wingModule.part);
-            planformBoundsPoints = wingGeoCalc.CalculateWingPlanformPoints();
+            planformBoundsLines = wingGeoCalc.CalculateWingPlanformPoints();
 
             planformTestPoints = new List<Vector3d>();
             area = 0;
 
             //Create the test points for finding nearby (but non-intersecting) polygons and calculate the area
-            for(int i = 0; i < PlanformBoundsPoints.Count; i++)
+            for(int i = 0; i < PlanformBoundsLines.Count; i++)
             {
                 int ip1 = i + 1;
-                if (ip1 == PlanformBoundsPoints.Count)  //if the index is out of bounds, wrap around to the first point
-                    ip1 = 0;
 
-                Vector3d pt1 = PlanformBoundsPoints[i].point;
-                Vector3d pt2 = PlanformBoundsPoints[ip1].point;
+                Vector3d pt1 = PlanformBoundsLines[i].point1.point;
+                Vector3d pt2 = PlanformBoundsLines[i].point2.point;
 
                 Vector3d avg = (pt1 + pt2) * 0.5;   //position halfway down the edge
 
@@ -87,14 +85,14 @@ namespace FerramAerospaceResearch.FARGeometry
                 centroid += pt1;
             }
             area *= 0.5;    //And finish calculating the area
-            centroid /= PlanformBoundsPoints.Count;
+            centroid /= PlanformBoundsLines.Count;
         }
 
         public List<Vector3d> GetPolyPointsAsVectors()
         {
             List<Vector3d> verts = new List<Vector3d>();
-            for (int i = 0; i < planformBoundsPoints.Count; i++)
-                verts.Add(planformBoundsPoints[i].point);
+            for (int i = 0; i < planformBoundsLines.Count; i++)
+                verts.Add(planformBoundsLines[i].point1.point);
 
             return verts;
         }
@@ -108,7 +106,12 @@ namespace FerramAerospaceResearch.FARGeometry
             int i;
             double xinters;
             Vector3d p1, p2;
-            List<FARGeometryPoint> planform = PlanformBoundsPoints;
+            List<FARGeometryPoint> planform = new List<FARGeometryPoint>();
+            for (i = 0; i < planformBoundsLines.Count; i++)
+                if (!planform.Contains(planformBoundsLines[i].point1))
+                    planform.Add(planformBoundsLines[i].point1);
+                else if (!planform.Contains(planformBoundsLines[i].point2))
+                    planform.Add(planformBoundsLines[i].point2);
 
             p1 = planform[0].point;
             for (i = 1; i <= planform.Count; i++)

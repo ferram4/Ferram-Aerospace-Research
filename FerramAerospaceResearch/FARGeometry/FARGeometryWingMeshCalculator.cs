@@ -4,6 +4,7 @@ using System.Linq;
 using KSP;
 using UnityEngine;
 using ferram4;
+using FerramAerospaceResearch.FARCollections;
 
 namespace FerramAerospaceResearch.FARGeometry
 {
@@ -16,7 +17,7 @@ namespace FerramAerospaceResearch.FARGeometry
             wingPart = p;
         }
 
-        public List<FARGeometryPoint> CalculateWingPlanformPoints()
+        public List<FARGeometryLineSegment> CalculateWingPlanformPoints()
         {
             List<Vector3d> vertices = GetPlanformVertices();
 
@@ -58,10 +59,8 @@ namespace FerramAerospaceResearch.FARGeometry
 
         private List<Vector3d> GrahamsScanVerts(List<Vector3d> verts)
         {
-            Debug.Log(verts.Count);
-            //verts = VectorMergeSort(verts, 0);
-            verts.Sort(new Vector3dXComparer());
-            Debug.Log(verts.Count);
+            verts = verts.MergeSort(new Vector3dXComparer());
+
             List<Vector3d> l = new List<Vector3d>();
             List<Vector3d> u = new List<Vector3d>();
             for (int i = 0; i < verts.Count; i++)
@@ -76,91 +75,48 @@ namespace FerramAerospaceResearch.FARGeometry
             return verts;
         }
 
-        private List<FARGeometryPoint> GrahamsScan(List<Vector3d> verts)
+        private List<FARGeometryLineSegment> GrahamsScan(List<Vector3d> verts)
         {
             verts = GrahamsScanVerts(verts);
 
             List<FARGeometryPoint> points = new List<FARGeometryPoint>();
+            List<FARGeometryLineSegment> lines = new List<FARGeometryLineSegment>();
             for (int i = 0; i < verts.Count; i++)
             {
                 FARGeometryPoint newPoint = new FARGeometryPoint(verts[i]);
                 points.Add(newPoint);
             }
-            for (int i = 0; i < verts.Count; i++)
+            for (int i = 0; i < points.Count; i++)
             {
                 int ip1 = i + 1;
-                int im1 = i - 1;
 
                 if(ip1 == verts.Count)
                     ip1 = 0;
-                if(im1 == -1)
-                    im1 = verts.Count - 1;
 
-                points[i].connectedPoints.Add(points[ip1]);
-                points[i].connectedPoints.Add(points[im1]);
+                FARGeometryLineSegment line = new FARGeometryLineSegment(points[i], points[ip1]);
+                points[i].connectedLines.Add(line);
+                points[ip1].connectedLines.Add(line);
+
+                lines.Add(line);
             }
-            return points;
+            return lines;
         }
 
         public class Vector3dXComparer : Comparer<Vector3d>
         {
             public override int Compare(Vector3d x, Vector3d y)
             {
-                if (x.x > x.y)
+                if (x.x > y.x)
                     return 1;
+                else if (x.x == y.x)
+                    if (x.y > y.y)
+                        return 1;
+                    else
+                        return -1;
                 else
                     return -1;
             }
         }
-        /*
-        private List<Vector3d> VectorMergeSort(List<Vector3d> list, int sortIndex)
-        {
-            // Base case. A list of zero or one elements is sorted, by definition.
-            if (list.Count <= 1)
-                return list;
-
-            int middle = (int)(list.Count * 0.5);
-
-            // Recursive case. First, *divide* the list into equal-sized sublists.
-            List<Vector3d> left = list.GetRange(0, middle);
-            List<Vector3d> right = list.GetRange(middle, list.Count - middle);
-
-            left = VectorMergeSort(left, sortIndex);
-            right = VectorMergeSort(right, sortIndex);
-
-            return VectorMerge(left, right, sortIndex);
-        }
-
-        private List<Vector3d> VectorMerge(List<Vector3d> left, List<Vector3d> right, int sortIndex)
-        {
-            List<Vector3d> result = new List<Vector3d>();
-            while (left.Count > 0 || right.Count > 0)
-            {
-                if (left.Count > 0 && right.Count > 0)
-                    if (left[0][sortIndex] <= right[0][sortIndex])
-                    {
-                        result.Add(left[0]);
-                        left.RemoveAt(0);
-                    }
-                    else
-                    {
-                        result.Add(right[0]);
-                        right.RemoveAt(0);
-                    }
-                else if (left.Count > 0)
-                {
-                    result.Add(left[0]);
-                    left.RemoveAt(0);
-                }
-                else if (right.Count > 0)
-                {
-                    result.Add(right[0]);
-                    right.RemoveAt(0);
-                }
-            }
-            return result;
-        }*/
-
 
         #endregion
 
