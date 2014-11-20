@@ -105,6 +105,10 @@ namespace ferram4
 		[KSPField(guiName = "AoA %", isPersistant = true, guiActiveEditor = true, guiActive = false)]
 		public float pitchaxisDueToAoA = 0.0f;
 
+        [UI_FloatRange(maxValue = 40, minValue = -40, scene = UI_Scene.Editor, stepIncrement = 0.5f)]
+        [KSPField(guiName = "Ctrl Dflct", isPersistant = true)]
+        public float maxdeflect = 15;
+
         [UI_Toggle(enabledText = "Active", scene = UI_Scene.Editor, disabledText = "Inactive")]
         [KSPField(guiName = "Flap", isPersistant = true, guiActiveEditor = true, guiActive = false)]
         public bool isFlap;
@@ -115,10 +119,6 @@ namespace ferram4
 
         [KSPField(isPersistant = true, guiName = "Flap setting")]
         public int flapDeflectionLevel = 2;
-
-        [UI_FloatRange(maxValue = 40, minValue = -40, scene = UI_Scene.Editor, stepIncrement = 0.5f)]
-        [KSPField(guiName = "Ctrl Dflct", isPersistant = true)]
-        public float maxdeflect = 15;
 
         [UI_FloatRange(maxValue = 85, minValue = -85, scene = UI_Scene.Editor, stepIncrement = 0.5f)]
         [KSPField(guiName = "Flp/splr Dflct", isPersistant = true)]
@@ -386,12 +386,13 @@ namespace ferram4
                 if (pitchaxisDueToAoA != 0.0)
 				{ 
                     Vector3d vel = this.GetVelocity();
-                    Vector3 tmpVec = vessel.ReferenceTransform.up * Vector3.Dot(vessel.ReferenceTransform.up, vel) + vessel.ReferenceTransform.forward * Vector3.Dot(vessel.ReferenceTransform.forward, vel);   //velocity vector projected onto a plane that divides the airplane into left and right halves
-					double AoA = Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.forward);
+                    //Vector3 tmpVec = vessel.ReferenceTransform.up * Vector3.Dot(vessel.ReferenceTransform.up, vel) + vessel.ReferenceTransform.forward * Vector3.Dot(vessel.ReferenceTransform.forward, vel);   //velocity vector projected onto a plane that divides the airplane into left and right halves
+					//double AoA = Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.forward);
+                    double AoA = base.CalculateAoA(vel.normalized);
 					AoA = FARMathUtil.rad2deg * Math.Asin(AoA);
 					if (double.IsNaN(AoA))
 						AoA = 0;
-					AoAdesiredControl += PitchLocation * AoA * pitchaxisDueToAoA * 0.01;
+					AoAdesiredControl += AoA * pitchaxisDueToAoA * 0.01;
 				}
 
                 AoAdesiredControl *= AoAsign;

@@ -1334,6 +1334,10 @@ namespace ferram4
                 speedometers = null; //DaMichel: needs to be cleared when the craft changes. New cockpit internals might be added.
             };
             invKerbinSLDensity = 1 / FARAeroUtil.GetCurrentDensity(FlightGlobals.Bodies[1], 0);
+
+            GameEvents.onPartUnpack.Add(EnableStabilityAugOutOfWarp);
+            GameEvents.onPartPack.Add(DisableStabilityAugInWarp);
+
             this.enabled = true;
         }
 
@@ -1351,6 +1355,8 @@ namespace ferram4
                 minimize = true;
 
             speedometers = null;   // DaMichel: just to be sure
+            GameEvents.onPartUnpack.Remove(EnableStabilityAugOutOfWarp);
+            GameEvents.onPartPack.Remove(DisableStabilityAugInWarp);
         }
 
         public static bool SetActiveControlSysAndStabilitySystem(Vessel vesselToChangeTo, Vessel vesselToChangeFrom)
@@ -1382,6 +1388,21 @@ namespace ferram4
             return true;
         }
 
+        private void DisableStabilityAugInWarp(Part p)
+        {
+            if(this == activeControlSys)
+            {
+                this.vessel.OnFlyByWire -= stabilityAugCallback;
+            }
+        }
+
+        private void EnableStabilityAugOutOfWarp(Part p)
+        {
+            if (this == activeControlSys)
+            {
+                this.vessel.OnFlyByWire += stabilityAugCallback;
+            }
+        }
 
         public void FixedUpdate()
         {
