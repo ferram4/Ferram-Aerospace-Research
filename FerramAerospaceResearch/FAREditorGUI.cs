@@ -71,6 +71,7 @@ namespace ferram4
 
         protected static ferramGraph graph = new ferramGraph(400, 275);
         protected static FARGUIDropDown<CelestialBody> celestialBodyDropdown;
+        private static CelestialBody activeBody;
 
         private static string lowerBound_str = "0";
         private static string upperBound_str = "25";
@@ -139,6 +140,7 @@ namespace ferram4
         int index = 1;
 
         string alt_str = "0";
+        double alt = 0;
         string Mach_str = "0.35";
         string alpha_str = "0.1";
         string beta_str = "0";
@@ -707,7 +709,7 @@ namespace ferram4
                 }
 
             }
-            A.Add(9.81 * Math.Cos(stable_AoA * FARMathUtil.deg2rad) / u0, 3, 0);
+            A.Add(CalculateAccelerationDueToGravity(activeBody, alt) * Math.Cos(stable_AoA * FARMathUtil.deg2rad) / u0, 3, 0);
             A.Add(1, 1, 3);
 
 
@@ -823,7 +825,7 @@ namespace ferram4
                 }
 
             }
-            A.Add(-9.81f, 3, 1);
+            A.Add(-CalculateAccelerationDueToGravity(activeBody, alt), 3, 1);
             A.Add(1, 2, 3);
 
 
@@ -894,6 +896,16 @@ namespace ferram4
             graph.Update();
         }
 
+        private double CalculateAccelerationDueToGravity(CelestialBody body, double alt)
+        {
+            double radius = body.Radius + alt;
+            double mu = body.gravParameter;
+
+            double accel = radius * radius;
+            accel = mu / accel;
+            return accel;
+        }
+
 
 
         private void StabilityDerivativeGUI(bool tmp)
@@ -933,7 +945,7 @@ namespace ferram4
             GUILayout.Label("Planet:");
             celestialBodyDropdown.GUIDropDownDisplay();
 
-            CelestialBody body = celestialBodyDropdown.ActiveSelection();
+            activeBody = celestialBodyDropdown.ActiveSelection();
 
             GUILayout.Label("Altitude:");
             alt_str = GUILayout.TextField(alt_str, GUILayout.ExpandWidth(true));
@@ -967,9 +979,9 @@ namespace ferram4
                 Mach_str = Regex.Replace(Mach_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
 
                 alt_str = Regex.Replace(alt_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
-                double alt = Convert.ToDouble(alt_str);
-                double temp = FlightGlobals.getExternalTemperature((float)alt, body);
-                double rho = FARAeroUtil.GetCurrentDensity(body, alt);
+                alt = Convert.ToDouble(alt_str);
+                double temp = FlightGlobals.getExternalTemperature((float)alt, activeBody);
+                double rho = FARAeroUtil.GetCurrentDensity(activeBody, alt);
                 //double temp = Convert.ToSingle(atm_temp_str);
                 Mach = Convert.ToSingle(Mach_str);
                 double sspeed = Math.Sqrt(FARAeroUtil.currentBodyAtm.x * Math.Max(0.1, temp + 273.15));
@@ -1260,8 +1272,9 @@ namespace ferram4
             stabDerivs[26] = Ixz;
 
 
-
-            double neededCl = mass * 9.81 / (q * area);
+            double effectiveG = CalculateAccelerationDueToGravity(activeBody, alt);     //This is the effect of gravity
+            effectiveG -= u0 * u0 / (alt + activeBody.Radius);                          //This is the effective reduction of gravity due to high velocity
+            double neededCl = mass * effectiveG / (q * area);
 
             //Longitudinal Mess
 
