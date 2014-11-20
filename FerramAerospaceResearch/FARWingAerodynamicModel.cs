@@ -47,7 +47,7 @@ using UnityEngine;
 
 namespace ferram4
 {
-    public class FARWingAerodynamicModel : FARBaseAerodynamics
+    public class FARWingAerodynamicModel : FARBaseAerodynamics, TweakScale.IRescalable<FARWingAerodynamicModel>
     {
         public double AoAmax = 15;
 
@@ -1144,11 +1144,16 @@ namespace ferram4
         /// </summary>
         private double CdCompressibilityZeroLiftIncrement(double M, double SweepAngle, double TanSweep, double beta_TanSweep, double beta)
         {
-
+            double thisInteractionFactor = 1;
             if (wingInteraction.HasWingsUpstream)
             {
-                zeroLiftCdIncrement = wingInteraction.EffectiveUpstreamCd0;
-                return zeroLiftCdIncrement;
+                if (wingInteraction.EffectiveUpstreamInfluence > 0.99)
+                {
+                    zeroLiftCdIncrement = wingInteraction.EffectiveUpstreamCd0;
+                    return zeroLiftCdIncrement;
+                }
+                else
+                    thisInteractionFactor = (1 - wingInteraction.EffectiveUpstreamInfluence);
             }
 
             //Based on the method of DATCOM Section 4.1.5.1-C
@@ -1164,6 +1169,8 @@ namespace ferram4
                 {
                     zeroLiftCdIncrement = 0.009216 / beta;
                 }
+                zeroLiftCdIncrement *= thisInteractionFactor;
+                zeroLiftCdIncrement += wingInteraction.EffectiveUpstreamCd0 * wingInteraction.EffectiveUpstreamInfluence;
                 return zeroLiftCdIncrement;
             }
 
@@ -1208,7 +1215,11 @@ namespace ferram4
             double scalingMachNumber = Math.Min(peak_MachNumber, 1.2);
 
             if (M < scalingMachNumber)
+            {
+                zeroLiftCdIncrement *= thisInteractionFactor;
+                zeroLiftCdIncrement += wingInteraction.EffectiveUpstreamCd0 * wingInteraction.EffectiveUpstreamInfluence;
                 return zeroLiftCdIncrement;
+            }
 
             double scale = (M - 1.4) / (scalingMachNumber - 1.4);
             zeroLiftCdIncrement *= scale;
@@ -1224,6 +1235,9 @@ namespace ferram4
             {
                 zeroLiftCdIncrement += 0.009216 / beta * scale;
             }
+            zeroLiftCdIncrement *= thisInteractionFactor;
+            zeroLiftCdIncrement += wingInteraction.EffectiveUpstreamCd0 * wingInteraction.EffectiveUpstreamInfluence;
+
             return zeroLiftCdIncrement;
         }
         #endregion
@@ -1241,6 +1255,14 @@ namespace ferram4
                 int.TryParse(node.GetValue("nonSideAttach"), out nonSideAttach);
             if (node.HasValue("MidChordSweep"))
                 double.TryParse(node.GetValue("MidChordSweep"), out MidChordSweep);
+        }
+
+        public void OnRescale(TweakScale.ScalingFactor factor)
+        {
+            b_2 *= factor.relative.linear;
+            MAC *= factor.relative.linear;
+
+            StartInitialization();
         }
     }
 }

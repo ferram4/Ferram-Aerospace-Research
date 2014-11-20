@@ -45,6 +45,10 @@
     <Reference Include="ferramGraph">
       <HintPath>..\ferramGraph\bin\Release\ferramGraph.dll</HintPath>
     </Reference>
+    <Reference Include="Scale_Redist, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\GameData\FerramAerospaceResearch\Plugins\Scale_Redist.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -77,6 +81,7 @@
     <Compile Include="FARGeoUtil.cs" />
     <Compile Include="FARGlobalControlEditorObject.cs" />
     <Compile Include="FARGlobalControlFlightObject.cs" />
+    <Compile Include="FARGUIDropDown.cs" />
     <Compile Include="FARGUIUtils.cs" />
     <Compile Include="FARMathUtil.cs" />
     <Compile Include="FARMatrix.cs" />

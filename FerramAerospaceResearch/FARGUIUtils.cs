@@ -59,5 +59,12 @@ namespace ferram4
             inputOutput = GUILayout.TextField(inputOutput);
             GUILayout.EndHorizontal();
         }
+
+        public static Vector3 GetMousePos()
+        {
+            Vector3 mousePos = Input.mousePosition;
+            mousePos.y = Screen.height - mousePos.y;
+            return mousePos;
+        }
     }
 }

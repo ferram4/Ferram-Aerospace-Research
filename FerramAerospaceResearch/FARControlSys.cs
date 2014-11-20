@@ -91,6 +91,8 @@ namespace ferram4
         private static bool PitchDamperOn = false;
         public static string k_pitchdamper_str = "0.25";
         public static double k_pitchdamper = 0.25;
+		public static string k2_pitchdamper_str = "0.06";
+		public static double k2_pitchdamper = 0.06;
 
         private static double lastAlpha = 0;
 
@@ -151,6 +153,8 @@ namespace ferram4
         private static bool PcDpHlp = false;
         private static bool DynCtrlHlp = false;
         private static bool AoAHlp = false;
+
+        private static FlightInputCallback stabilityAugCallback = null;
 
         internal static bool tintForCl = false;
         internal static bool tintForCd = false;
@@ -898,7 +902,9 @@ namespace ferram4
             GUILayout.Label("k:", GUILayout.Width(30));
             k_pitchdamper_str = GUILayout.TextField(k_pitchdamper_str, GUILayout.ExpandWidth(true));
             k_pitchdamper_str = Regex.Replace(k_pitchdamper_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
-
+			GUILayout.Label("k2:", GUILayout.Width(40));
+			k2_pitchdamper_str = GUILayout.TextField(k2_pitchdamper_str, GUILayout.ExpandWidth(true));
+			k2_pitchdamper_str = Regex.Replace(k2_pitchdamper_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
             GUILayout.EndHorizontal();
 
             GUILayout.Box("AoA Limiter", mySty, GUILayout.ExpandWidth(true));
@@ -942,6 +948,7 @@ namespace ferram4
                 kd_wingleveler = Convert.ToDouble(kd_wingleveler_str);
                 k_yawdamper = Convert.ToDouble(k_yawdamper_str);
                 k_pitchdamper = Convert.ToDouble(k_pitchdamper_str);
+				k2_pitchdamper = Convert.ToDouble(k2_pitchdamper_str);
                 upperLim = Convert.ToDouble(upperLim_str);
                 lowerLim = Convert.ToDouble(lowerLim_str);
                 k_limiter = Convert.ToDouble(k_limiter_str);
@@ -1327,15 +1334,20 @@ namespace ferram4
                 speedometers = null; //DaMichel: needs to be cleared when the craft changes. New cockpit internals might be added.
             };
             invKerbinSLDensity = 1 / FARAeroUtil.GetCurrentDensity(FlightGlobals.Bodies[1], 0);
+
+            GameEvents.onPartUnpack.Add(EnableStabilityAugOutOfWarp);
+            GameEvents.onPartPack.Add(DisableStabilityAugInWarp);
+
             this.enabled = true;
         }
 
 
         public void OnDestroy()
         {
-            if (activeControlSys == this)
+            if (activeControlSys == this && stabilityAugCallback != null)
             {
-                vessel.OnFlyByWire -= new FlightInputCallback(StabilityAugmentation);
+                vessel.OnFlyByWire -= stabilityAugCallback;
+                stabilityAugCallback = null;
             }
             activeControlSys = null;
 
@@ -1343,14 +1355,17 @@ namespace ferram4
                 minimize = true;
 
             speedometers = null;   // DaMichel: just to be sure
+            GameEvents.onPartUnpack.Remove(EnableStabilityAugOutOfWarp);
+            GameEvents.onPartPack.Remove(DisableStabilityAugInWarp);
         }
 
         public static bool SetActiveControlSysAndStabilitySystem(Vessel vesselToChangeTo, Vessel vesselToChangeFrom)
         {
             speedometers = null; // DaMichel: switch to another vessels? this needs to be cleared.
-            if ((object)vesselToChangeFrom != null && (object)activeControlSys != null)
+            if ((object)vesselToChangeFrom != null && (object)activeControlSys != null && stabilityAugCallback != null)
             {
-                vesselToChangeFrom.OnFlyByWire -= new FlightInputCallback(StabilityAugmentation);
+                vesselToChangeFrom.OnFlyByWire -= stabilityAugCallback;
+                stabilityAugCallback = null;
             }
 
             for (int i = 0; i < vesselToChangeTo.Parts.Count; i++)
@@ -1367,11 +1382,27 @@ namespace ferram4
                 return false;
             }
             statusOverrideTimer = 0;
-            vesselToChangeTo.OnFlyByWire += new FlightInputCallback(StabilityAugmentation);
+            stabilityAugCallback = new FlightInputCallback(StabilityAugmentation);
+            vesselToChangeTo.OnFlyByWire += stabilityAugCallback;
 
             return true;
         }
 
+        private void DisableStabilityAugInWarp(Part p)
+        {
+            if(this == activeControlSys)
+            {
+                this.vessel.OnFlyByWire -= stabilityAugCallback;
+            }
+        }
+
+        private void EnableStabilityAugOutOfWarp(Part p)
+        {
+            if (this == activeControlSys)
+            {
+                this.vessel.OnFlyByWire += stabilityAugCallback;
+            }
+        }
 
         public void FixedUpdate()
         {
@@ -1487,12 +1518,18 @@ namespace ferram4
                 double alpha = (-AoA * FARMathUtil.deg2rad + 0.5 * lastAlpha) * 0.66666667;
                 double d_alpha = (alpha - lastAlpha) * recipDt;
                 //float dd_alpha = (d_alpha - lastD_alpha) / dt;
-                if (Math.Abs(state.pitch - state.pitchTrim) < 0.01)
-                {
-                    tmp = k_pitchdamper * d_alpha;// +k_pitchdamper / 5 * dd_alpha;
-                    tmp = tmp * ctrlTimeConst / (1 - Math.Abs(tmp) * ctrlTimeConst);
-                    state.pitch = (float)FARMathUtil.Clamp(tmp + state.pitch, -1, 1);
-                }
+				if (Math.Abs(state.pitch - state.pitchTrim) < 0.01)
+				{
+					tmp = k_pitchdamper * d_alpha;// +k_pitchdamper / 5 * dd_alpha;
+					tmp = tmp * ctrlTimeConst / (1 - Math.Abs(tmp) * ctrlTimeConst);
+					state.pitch = (float)FARMathUtil.Clamp(tmp + state.pitch, -1, 1);
+				}
+				else
+				{
+					tmp = k2_pitchdamper * d_alpha;// +k_pitchdamper / 5 * dd_alpha;
+					tmp = tmp * ctrlTimeConst / (1 - Math.Abs(tmp) * ctrlTimeConst);
+					state.pitch = (float)FARMathUtil.Clamp(tmp + state.pitch, -1, 1);
+				}
                 lastAlpha = alpha;
                 //lastD_alpha = d_alpha;
             }

@@ -70,6 +70,7 @@ namespace ferram4
         private static double lastMaxBounds = 0;
 
         protected static ferramGraph graph = new ferramGraph(400, 275);
+        protected static FARGUIDropDown<CelestialBody> celestialBodyDropdown;
 
         private static string lowerBound_str = "0";
         private static string upperBound_str = "25";
@@ -137,8 +138,7 @@ namespace ferram4
 
         int index = 1;
 
-        string atm_temp_str = "20";
-        string rho_str = "1.225";
+        string alt_str = "0";
         string Mach_str = "0.35";
         string alpha_str = "0.1";
         string beta_str = "0";
@@ -169,6 +169,19 @@ namespace ferram4
 
         double[] MOI_stabDerivs = new double[27];
 
+        public FAREditorGUI()
+        {
+            CelestialBody[] bodies = FlightGlobals.Bodies.ToArray();
+            string[] bodyNames = new string[bodies.Length];
+            for (int i = 0; i < bodyNames.Length; i++)
+                bodyNames[i] = bodies[i].bodyName;
+
+            int kerbinIndex = 1;
+
+            celestialBodyDropdown = new FARGUIDropDown<CelestialBody>(bodyNames, bodies, kerbinIndex);
+
+        }
+        
         public void OnDestroy()
         {
             EditorLogic.fetch.Unlock("FAREdLock");
@@ -205,8 +218,7 @@ namespace ferram4
                 ButtonStyle.padding = new RectOffset(4, 4, 4, 4);
             }
 
-            mousePos = Input.mousePosition;         //Mouse location; based on Kerbal Engineer Redux code
-            mousePos.y = Screen.height - mousePos.y;
+            mousePos = FARGUIUtils.GetMousePos();
 
             EditorLogic EdLogInstance = EditorLogic.fetch;
 
@@ -918,12 +930,20 @@ namespace ferram4
 
             GUILayout.Label("Flight Condition:");
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Temperature: ");
+            GUILayout.Label("Planet:");
+            celestialBodyDropdown.GUIDropDownDisplay();
+
+            CelestialBody body = celestialBodyDropdown.ActiveSelection();
+
+            GUILayout.Label("Altitude:");
+            alt_str = GUILayout.TextField(alt_str, GUILayout.ExpandWidth(true));
+
+            /*GUILayout.Label("Temperature: ");
             atm_temp_str = GUILayout.TextField(atm_temp_str, GUILayout.ExpandWidth(true));
 
             GUILayout.Label("Density: ");
             rho_str = GUILayout.TextField(rho_str, GUILayout.ExpandWidth(true));
-
+            */
 
             GUILayout.Label("Mach Number: ");
             Mach_str = GUILayout.TextField(Mach_str, GUILayout.ExpandWidth(true));
@@ -942,18 +962,22 @@ namespace ferram4
             if (GUILayout.Button("Calculate Stability Derivatives", ButtonStyle, GUILayout.Width(250.0F), GUILayout.Height(25.0F)))
             {
                 FARAeroUtil.UpdateCurrentActiveBody(index, FlightGlobals.Bodies[1]);
-                atm_temp_str = Regex.Replace(atm_temp_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
-                rho_str = Regex.Replace(rho_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
+                //atm_temp_str = Regex.Replace(atm_temp_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
+                //rho_str = Regex.Replace(rho_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
                 Mach_str = Regex.Replace(Mach_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
 
-                double temp = Convert.ToSingle(atm_temp_str);
+                alt_str = Regex.Replace(alt_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
+                double alt = Convert.ToDouble(alt_str);
+                double temp = FlightGlobals.getExternalTemperature((float)alt, body);
+                double rho = FARAeroUtil.GetCurrentDensity(body, alt);
+                //double temp = Convert.ToSingle(atm_temp_str);
                 Mach = Convert.ToSingle(Mach_str);
                 double sspeed = Math.Sqrt(FARAeroUtil.currentBodyAtm.x * Math.Max(0.1, temp + 273.15));
                 double vel = sspeed * Mach;
 
                 UpdateControlSettings();
 
-                q = vel * vel * Convert.ToSingle(rho_str) * 0.5f;
+                q = vel * vel * rho * 0.5f;
                 alpha = Convert.ToSingle(alpha_str) * 180 / Mathf.PI;
                 beta = Convert.ToSingle(beta_str);
                 phi = Convert.ToSingle(phi_str);
@@ -1377,6 +1401,21 @@ namespace ferram4
             stabDerivs[23] = pertCn;
             stabDerivs[22] = pertC_roll;
 
+            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
+            {
+                Part p = FARAeroUtil.CurEditorParts[i];
+
+                if (FARAeroUtil.IsNonphysical(p))
+                    continue;
+                for (int k = 0; k < p.Modules.Count; k++)
+                {
+                    PartModule m = p.Modules[k];
+                    if (m is FARControllableSurface)
+                    {
+                        (m as FARControllableSurface).SetControlStateEditor(CoM, p.transform.up, (float)0, 0, 0, flap_setting, spoilersDeployed);
+                    }
+                }
+            }
 
             return stabDerivs;
         }
@@ -1568,6 +1607,22 @@ namespace ferram4
                 CmValues[i] = Cm;
                 LDValues[i] = Cl / Cd;
             }
+            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
+            {
+                Part p = FARAeroUtil.CurEditorParts[i];
+
+                if (FARAeroUtil.IsNonphysical(p))
+                    continue;
+                for (int k = 0; k < p.Modules.Count; k++)
+                {
+                    PartModule m = p.Modules[k];
+                    if (m is FARControllableSurface)
+                    {
+                        (m as FARControllableSurface).SetControlStateEditor(CoM, p.transform.up, (float)pitch, 0, 0, flap_setting, spoilersDeployed);
+                    }
+                }
+            }
+            
             string horizontalLabel = "Mach Number";
             UpdateGraph(AlphaValues, ClValues, CdValues, CmValues, LDValues, null, null, null, null, horizontalLabel);
         }
@@ -1654,6 +1709,23 @@ namespace ferram4
                     LDValues2[numPoints*2 - 1 - i] = Cl / Cd;                    
                 }
             }
+
+            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
+            {
+                Part p = FARAeroUtil.CurEditorParts[i];
+
+                if (FARAeroUtil.IsNonphysical(p))
+                    continue;
+                for (int k = 0; k < p.Modules.Count; k++)
+                {
+                    PartModule m = p.Modules[k];
+                    if (m is FARControllableSurface)
+                    {
+                        (m as FARControllableSurface).SetControlStateEditor(CoM, p.transform.up, (float)pitch, 0, 0, flap_setting, spoilersDeployed);
+                    }
+                }
+            }
+
             string horizontalLabel = "Angle of Attack, degrees";
             UpdateGraph(AlphaValues, 
                         ClValues, CdValues, CmValues, LDValues,
@@ -1712,8 +1784,13 @@ namespace ferram4
                         FARWingAerodynamicModel w = m as FARWingAerodynamicModel;
                         if (clear)
                             w.EditorClClear(reset_stall);
+
+                        Vector3 relPos = p.transform.position - CoM;
+
+                        Vector3 vel = velocity + Vector3.Cross(AngVel, relPos);
+
                         if (w is FARControllableSurface)
-                            (w as FARControllableSurface).SetControlStateEditor(CoM, (float)pitch, 0, 0, flap_setting, spoilersDeployed);
+                            (w as FARControllableSurface).SetControlStateEditor(CoM, vel, (float)pitch, 0, 0, flap_setting, spoilersDeployed);
                     }
                 }
             }
@@ -1931,6 +2008,7 @@ namespace ferram4
             RenderingManager.AddToPostDrawQueue(0, new Callback(OnGUI));
         }
         #endregion
+
 
         public void Update()
         {
