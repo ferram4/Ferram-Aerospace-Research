@@ -91,7 +91,7 @@ namespace FerramAerospaceResearch.FARGeometry
             List<FARGeometryLineSegment> lines = new List<FARGeometryLineSegment>();
             for (int i = 0; i < verts.Count; i++)
             {
-                FARGeometryPoint newPoint = new FARGeometryPoint(verts[i]);
+                FARGeometryPoint newPoint = new FARGeometryPoint(verts[i], wingPart);
                 points.Add(newPoint);
             }
             for (int i = 0; i < points.Count; i++)

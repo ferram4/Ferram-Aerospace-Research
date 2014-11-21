@@ -76,6 +76,8 @@
     <Compile Include="FARDebugOptions.cs" />
     <Compile Include="FAREditorGUI.cs" />
     <Compile Include="FARControlSys.cs" />
+    <Compile Include="FARGeometry\BentleyOttmann.cs" />
+    <Compile Include="FARGeometry\BentleyOttmannEventQueue.cs" />
     <Compile Include="FARGeometry\FARGeometryLineSegment.cs" />
     <Compile Include="FARGeometry\FARGeometryPoint.cs" />
     <Compile Include="FARGeoUtil.cs" />

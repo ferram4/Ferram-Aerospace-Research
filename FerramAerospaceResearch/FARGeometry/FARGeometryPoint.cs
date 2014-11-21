@@ -5,16 +5,19 @@ using KSP;
 
 namespace FerramAerospaceResearch.FARGeometry
 {
-    public class FARGeometryPoint
+    public class FARGeometryPoint : IComparable<FARGeometryPoint>
     {
         public Vector3d point;
+        public Part associatedPart;
         public List<FARGeometryLineSegment> connectedLines;
         public Transform parentTransform;
 
-        public FARGeometryPoint(Vector3d thisPoint)
+        public FARGeometryPoint(Vector3d thisPoint, Part p)
         {
             connectedLines = new List<FARGeometryLineSegment>();
             point = thisPoint;
+            associatedPart = p;
+            parentTransform = p.transform;
         }
 
         public FARGeometryPoint(Vector3d thisPoint, Transform transform)
@@ -38,5 +41,14 @@ namespace FerramAerospaceResearch.FARGeometry
 
             point = transformMatrix.MultiplyPoint(point);
         }
+
+        public int CompareTo(FARGeometryPoint other)
+        {
+            int tmp = this.point.x.CompareTo(other.point.x);   //Must use CompareTo, not < / >
+            if (tmp == 0)
+                return this.point.y.CompareTo(other.point.y);
+            return tmp;
+        }
+        
     }
 }

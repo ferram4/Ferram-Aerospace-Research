@@ -7,11 +7,6 @@ namespace FerramAerospaceResearch.FARGeometry
 {
     public class FARGeometryPartPolygon
     {
-        private FARWingPartModule module;
-        public FARWingPartModule WingModule
-        {
-            get { return module; }
-        }
         private List<FARGeometryLineSegment> planformBoundsLines;
         public List<FARGeometryLineSegment> PlanformBoundsLines
         {
@@ -45,12 +40,11 @@ namespace FerramAerospaceResearch.FARGeometry
         //Used for sorting parts into various planes
         public double normVecDot = 0;
 
-        public FARGeometryPartPolygon(FARWingPartModule wingModule)
+        public FARGeometryPartPolygon(Part p)
         {
-            module = wingModule;
-            normVec = wingModule.transform.forward;
+            normVec = p.transform.forward;
 
-            FARGeometryWingMeshCalculator wingGeoCalc = new FARGeometryWingMeshCalculator(wingModule.part);
+            FARGeometryWingMeshCalculator wingGeoCalc = new FARGeometryWingMeshCalculator(p);
             planformBoundsLines = wingGeoCalc.CalculateWingPlanformPoints();
 
             planformTestPoints = new List<Vector3d>();
@@ -92,7 +86,10 @@ namespace FerramAerospaceResearch.FARGeometry
         {
             List<Vector3d> verts = new List<Vector3d>();
             for (int i = 0; i < planformBoundsLines.Count; i++)
-                verts.Add(planformBoundsLines[i].point1.point);
+                if (!verts.Contains(planformBoundsLines[i].point1.point))
+                    verts.Add(planformBoundsLines[i].point1.point);
+                else if (!verts.Contains(planformBoundsLines[i].point2.point))
+                    verts.Add(planformBoundsLines[i].point2.point);
 
             return verts;
         }

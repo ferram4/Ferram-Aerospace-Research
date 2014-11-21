@@ -21,7 +21,7 @@ namespace FerramAerospaceResearch.FARWing
         {
             if (poly == null)
             {
-                poly = new FARGeometryPartPolygon(this);
+                poly = new FARGeometryPartPolygon(this.part);
             }
 
             List<Vector3d> wingPlanformPoints = poly.GetPolyPointsAsVectors();
