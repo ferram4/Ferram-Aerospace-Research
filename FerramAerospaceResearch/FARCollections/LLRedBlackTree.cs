@@ -315,6 +315,22 @@ namespace FerramAerospaceResearch.FARCollections
             return pivot;
         }
 
+        public bool TrySwapValues(T val1, T val2)
+        {
+            RedBlackTreeNode node1, node2;
+            node1 = FindNode(val1, _treeRoot);
+            if (node1 == null)
+                return false;
+
+            node2 = FindNode(val2, _treeRoot);
+            if (node2 == null)
+                return false;
+
+            SwapNodeValues(node1, node2);
+
+            return true;
+        }
+
         private void SwapNodeValues(RedBlackTreeNode node1, RedBlackTreeNode node2)
         {
             T tmp = node1.data;

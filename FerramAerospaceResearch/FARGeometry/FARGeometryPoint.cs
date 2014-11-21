@@ -12,6 +12,11 @@ namespace FerramAerospaceResearch.FARGeometry
         public List<FARGeometryLineSegment> connectedLines;
         public Transform parentTransform;
 
+        public double x { get { return point.x; } }
+        public double y { get { return point.y; } }
+        public double z { get { return point.z; } }
+    
+
         public FARGeometryPoint(Vector3d thisPoint, Part p)
         {
             connectedLines = new List<FARGeometryLineSegment>();

@@ -38,12 +38,17 @@ namespace FerramAerospaceResearch.FARGeometry
         List<Event> eventQueue;
         int index = 0;
 
+        public int Count { get { return eventQueue.Count - index; } }
+
         public BentleyOttmannEventQueue(List<FARGeometryLineSegment> lines)
         {
             eventQueue = new List<Event>();
             for (int i = 0; i < lines.Count; i++)
             {
                 FARGeometryLineSegment line = lines[i];
+
+                line.SetPoint1ToLeftMost();
+
                 LineEndPointEvent ev1 = new LineEndPointEvent();
                 LineEndPointEvent ev2 = new LineEndPointEvent();
 
@@ -53,11 +58,7 @@ namespace FerramAerospaceResearch.FARGeometry
                 ev2.line = line;
                 ev1.otherEnd = ev2;
                 ev2.otherEnd = ev1;
-                int cmp = ev1.point.CompareTo(ev2.point);
-                if (cmp > 1)
-                    ev2.isLeftEnd = true;
-                else
-                    ev1.isLeftEnd = true;
+                ev1.isLeftEnd = true;
 
                 eventQueue.Add(ev1);
                 eventQueue.Add(ev2);
