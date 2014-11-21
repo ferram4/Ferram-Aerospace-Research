@@ -8,7 +8,7 @@ namespace FerramAerospaceResearch.FARGeometry
 {
     public class BentleyOttmannEventQueue
     {
-        class Event : IComparable<Event>
+        public class Event : IComparable<Event>
         {
             public FARGeometryPoint point;
 
@@ -17,18 +17,18 @@ namespace FerramAerospaceResearch.FARGeometry
                 return this.point.CompareTo(x.point);
             }
         }
-        class LineEndPointEvent : Event
+        public class LineEndPointEvent : Event
         {
             public bool isLeftEnd = false;
             public LineEndPointEvent otherEnd;
             public FARGeometryLineSegment line;
         }
-        class IntersectionEvent : Event
+        public class IntersectionEvent : Event
         {
             public FARGeometryLineSegment line1;
             public FARGeometryLineSegment line2;
         }
-        class EventComparer : IComparer<Event>
+        public class EventComparer : IComparer<Event>
         {
             public int Compare(Event x, Event y)
             {
@@ -36,6 +36,7 @@ namespace FerramAerospaceResearch.FARGeometry
             }
         }
         List<Event> eventQueue;
+        int index = 0;
 
         public BentleyOttmannEventQueue(List<FARGeometryLineSegment> lines)
         {
@@ -72,7 +73,7 @@ namespace FerramAerospaceResearch.FARGeometry
             ev.line1 = line1;
             ev.line2 = line2;
 
-            for(int i = 0; i < eventQueue.Count; i++)
+            for(int i = index; i < eventQueue.Count; i++)
             {
                 int cmp = ev.CompareTo(eventQueue[i]);
                 if (cmp < 1)
@@ -83,6 +84,14 @@ namespace FerramAerospaceResearch.FARGeometry
                     break;
                 }
             }
+        }
+
+        public Event GetNextEvent()
+        {
+            Event ev = eventQueue[index];
+            index++;
+
+            return ev;
         }
     }
 }
