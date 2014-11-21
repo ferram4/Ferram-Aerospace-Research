@@ -537,5 +537,41 @@ namespace ferram4
             }
         }
         #endregion
+
+        public override void OnLoad(ConfigNode node)
+        {
+            base.OnLoad(node);
+            bool tmp;
+            if (node.HasValue("pitchaxis"))
+            {
+                if (bool.TryParse(node.GetValue("pitchaxis"), out tmp))
+                {
+                    if (tmp)
+                        pitchaxis = 100;
+                    else
+                        pitchaxis = 0;
+                }
+            }
+            if (node.HasValue("yawaxis"))
+            {
+                if (bool.TryParse(node.GetValue("yawaxis"), out tmp))
+                {
+                    if (tmp)
+                        yawaxis = 100;
+                    else
+                        yawaxis = 0;
+                }
+            }
+            if (node.HasValue("rollaxis"))
+            {
+                if (bool.TryParse(node.GetValue("rollaxis"), out tmp))
+                {
+                    if (tmp)
+                        rollaxis = 100;
+                    else
+                        rollaxis = 0;
+                }
+            }
+        }
     }
 }
