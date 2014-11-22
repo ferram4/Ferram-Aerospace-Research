@@ -57,6 +57,67 @@ namespace FerramAerospaceResearch.FARGeometry
                     ProcessIntersectEvent((BentleyOttmannEventQueue.IntersectionEvent)newEvent);
                 }
             }
+
+            AdjustLinesAfterCalculatingIntersections(poly1, poly2);
+
+        }
+
+        private void AdjustLinesAfterCalculatingIntersections(FARGeometryPartPolygon poly1, FARGeometryPartPolygon poly2)
+        {
+            for (int i = 0; i < finalIntersections.Count; i++)
+            {
+                Intersection intersect = finalIntersections[i];
+                FARGeometryLineSegment line1 = intersect.line1;
+                FARGeometryLineSegment line2 = intersect.line2;
+                if (poly1.PlanformBoundsLines.Contains(line1))
+                {
+                    if (poly1.PolygonContainsThisPoint(line2.point1.point, 0.1))        //point 2 is outside the other poly, but point 1 is inside it; replace point 1 with the intersection
+                    {
+                        if (!poly1.PolygonContainsThisPoint(line2.point2.point, 0.1))
+                            line2.point1 = intersect.point;
+                    }
+                    else if (poly1.PolygonContainsThisPoint(line2.point2.point, 0.1))   //And now, the other way around...
+                    {
+                        if (!poly1.PolygonContainsThisPoint(line2.point1.point, 0.1))
+                            line2.point2 = intersect.point;
+                    }
+
+                    if (poly2.PolygonContainsThisPoint(line1.point1.point, 0.1))        //point 2 is outside the other poly, but point 1 is inside it; replace point 1 with the intersection
+                    {
+                        if (!poly2.PolygonContainsThisPoint(line1.point2.point, 0.1))
+                            line1.point1 = intersect.point;
+                    }
+                    else if (poly2.PolygonContainsThisPoint(line1.point2.point, 0.1))
+                    {
+                        if (!poly2.PolygonContainsThisPoint(line1.point1.point, 0.1))
+                            line1.point2 = intersect.point;
+                    }
+                }
+                else
+                {
+                    if (poly2.PolygonContainsThisPoint(line2.point1.point, 0.1))        //point 2 is outside the other poly, but point 1 is inside it; replace point 1 with the intersection
+                    {
+                        if (!poly2.PolygonContainsThisPoint(line2.point2.point, 0.1))
+                            line2.point1 = intersect.point;
+                    }
+                    else if (poly2.PolygonContainsThisPoint(line2.point2.point, 0.1))
+                    {
+                        if (!poly2.PolygonContainsThisPoint(line2.point1.point, 0.1))
+                            line2.point2 = intersect.point;
+                    }
+
+                    if (poly1.PolygonContainsThisPoint(line1.point1.point, 0.1))        //point 2 is outside the other poly, but point 1 is inside it; replace point 1 with the intersection
+                    {
+                        if (!poly1.PolygonContainsThisPoint(line1.point2.point, 0.1))
+                            line1.point1 = intersect.point;
+                    }
+                    else if (poly1.PolygonContainsThisPoint(line1.point2.point, 0.1))
+                    {
+                        if (!poly2.PolygonContainsThisPoint(line1.point1.point, 0.1))
+                            line1.point2 = intersect.point;
+                    }
+                }
+            }
         }
 
         private void ProcessIntersectEvent(BentleyOttmannEventQueue.IntersectionEvent intersectEvent)
