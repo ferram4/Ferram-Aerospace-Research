@@ -53,7 +53,6 @@ namespace ferram4
         private ApplicationLauncherButton FARFlightButtonStock;
         //private Dictionary<Vessel, List<FARPartModule>> vesselFARPartModules = new Dictionary<Vessel, List<FARPartModule>>();
         static PluginConfiguration config;
-        private Vessel lastActiveVessel = null;
 
         public void Awake()
         {
@@ -251,8 +250,7 @@ namespace ferram4
 
         private void ChangeControlSys(Vessel v)
         {
-            if (FARControlSys.SetActiveControlSysAndStabilitySystem(v, lastActiveVessel))
-                lastActiveVessel = v;
+            FARControlSys.SetActiveControlSys(v);
         }
 
         public void LateUpdate()
@@ -266,8 +264,7 @@ namespace ferram4
 
                 if (FARControlSys.ActiveControlSys == null)
                 {
-                    if(FARControlSys.SetActiveControlSysAndStabilitySystem(FlightGlobals.ActiveVessel, lastActiveVessel))
-                        lastActiveVessel = FlightGlobals.ActiveVessel;
+                    FARControlSys.SetActiveControlSys(FlightGlobals.ActiveVessel);
                 }
             }
         }

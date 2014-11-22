@@ -154,7 +154,7 @@ namespace ferram4
         private static bool DynCtrlHlp = false;
         private static bool AoAHlp = false;
 
-        private static FlightInputCallback stabilityAugCallback = null;
+        private FlightInputCallback stabilityAugCallback = null;
 
         internal static bool tintForCl = false;
         internal static bool tintForCd = false;
@@ -1322,7 +1322,18 @@ namespace ferram4
         }
 
 
-
+        public static void SetActiveControlSys(Vessel v)
+        {
+            for (int i = 0; i < v.Parts.Count; i++)
+            {
+                Part p = v.Parts[i];
+                if (p.Modules.Contains("FARControlSys"))
+                {
+                    activeControlSys = p.Modules["FARControlSys"] as FARControlSys;
+                    break;
+                }
+            }
+        }
         
         public override void Start()
         {
@@ -1335,8 +1346,11 @@ namespace ferram4
             };
             invKerbinSLDensity = 1 / FARAeroUtil.GetCurrentDensity(FlightGlobals.Bodies[1], 0);
 
-            GameEvents.onPartUnpack.Add(EnableStabilityAugOutOfWarp);
-            GameEvents.onPartPack.Add(DisableStabilityAugInWarp);
+            stabilityAugCallback = new FlightInputCallback(StabilityAugmentation);
+            vessel.OnFlyByWire += stabilityAugCallback;
+
+            if (vessel == FlightGlobals.ActiveVessel)
+                activeControlSys = this;
 
             this.enabled = true;
         }
@@ -1344,64 +1358,18 @@ namespace ferram4
 
         public void OnDestroy()
         {
-            if (activeControlSys == this && stabilityAugCallback != null)
+            if (stabilityAugCallback != null)
             {
                 vessel.OnFlyByWire -= stabilityAugCallback;
                 stabilityAugCallback = null;
             }
-            activeControlSys = null;
+            if(this == activeControlSys)
+                activeControlSys = null;
 
             if (this.vessel == FlightGlobals.ActiveVessel)
                 minimize = true;
 
             speedometers = null;   // DaMichel: just to be sure
-            GameEvents.onPartUnpack.Remove(EnableStabilityAugOutOfWarp);
-            GameEvents.onPartPack.Remove(DisableStabilityAugInWarp);
-        }
-
-        public static bool SetActiveControlSysAndStabilitySystem(Vessel vesselToChangeTo, Vessel vesselToChangeFrom)
-        {
-            speedometers = null; // DaMichel: switch to another vessels? this needs to be cleared.
-            if ((object)vesselToChangeFrom != null && (object)activeControlSys != null && stabilityAugCallback != null)
-            {
-                vesselToChangeFrom.OnFlyByWire -= stabilityAugCallback;
-                stabilityAugCallback = null;
-            }
-
-            for (int i = 0; i < vesselToChangeTo.Parts.Count; i++)
-            {
-                Part p = vesselToChangeTo.Parts[i];
-                if (p.Modules.Contains("FARControlSys"))
-                {
-                    activeControlSys = p.Modules["FARControlSys"] as FARControlSys;
-                    break;
-                }
-            }
-            if ((object)activeControlSys == null)
-            {
-                return false;
-            }
-            statusOverrideTimer = 0;
-            stabilityAugCallback = new FlightInputCallback(StabilityAugmentation);
-            vesselToChangeTo.OnFlyByWire += stabilityAugCallback;
-
-            return true;
-        }
-
-        private void DisableStabilityAugInWarp(Part p)
-        {
-            if(this == activeControlSys)
-            {
-                this.vessel.OnFlyByWire -= stabilityAugCallback;
-            }
-        }
-
-        private void EnableStabilityAugOutOfWarp(Part p)
-        {
-            if (this == activeControlSys)
-            {
-                this.vessel.OnFlyByWire += stabilityAugCallback;
-            }
         }
 
         public void FixedUpdate()
@@ -1460,8 +1428,10 @@ namespace ferram4
             }
         }
 
-        public static void StabilityAugmentation(FlightCtrlState state)
+        public void StabilityAugmentation(FlightCtrlState state)
         {
+            if (this.vessel != FlightGlobals.ActiveVessel)
+                return;
 
             double tmp = 0;
             double dt = (TimeWarp.fixedDeltaTime + lastDt) * 0.5;      //Not really proper, but since dT jumps around a lot this should lower the jitters
