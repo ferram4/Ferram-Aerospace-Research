@@ -11,6 +11,20 @@ namespace FerramAerospaceResearch.FARGeometry
         private LLRedBlackTree<FARGeometryLineSegment> sweepLine;
         private BentleyOttmannEventQueue eventQueue;
 
+        private List<Intersection> finalIntersections;
+
+        class Intersection
+        {
+            public Intersection(FARGeometryPoint pt, FARGeometryLineSegment line1, FARGeometryLineSegment line2)
+            {
+                point = pt;
+                this.line1 = line1;
+                this.line2 = line2;
+            }
+            public FARGeometryPoint point;
+            public FARGeometryLineSegment line1;
+            public FARGeometryLineSegment line2;
+        }
 
         /// <summary>
         /// This merges two polygons using the Bentley-Ottmann Algorithm
@@ -26,14 +40,37 @@ namespace FerramAerospaceResearch.FARGeometry
 
             sweepLine = new LLRedBlackTree<FARGeometryLineSegment>(new IsLeftComparer());
 
+            finalIntersections = new List<Intersection>();
+
             while(eventQueue.Count > 0)
             {
                 BentleyOttmannEventQueue.Event newEvent = eventQueue.GetNextEvent();
+
                 if(newEvent is BentleyOttmannEventQueue.LineEndPointEvent)
                 {
                     ProcessLineEndPointEvent((BentleyOttmannEventQueue.LineEndPointEvent)newEvent);
                 }
+                else
+                {       //An event that is not a LineEndPointEvent must be an Intersect Event
+                    ProcessIntersectEvent((BentleyOttmannEventQueue.IntersectionEvent)newEvent);
+                }
             }
+        }
+
+        private void ProcessIntersectEvent(BentleyOttmannEventQueue.IntersectionEvent intersectEvent)
+        {
+            FARGeometryLineSegment newBelow = intersectEvent.above;
+            FARGeometryLineSegment newAbove = intersectEvent.below;
+            if (sweepLine.TrySwapValues(newBelow, newAbove))
+            {
+                FARGeometryLineSegment aboveNewAbove = sweepLine.Next(newAbove);        //The line below newAbove was the line responsible for the intersection we just processed
+                CalculateIntersection(newAbove, aboveNewAbove);                         //Assuming Euclidean geometry, they cannot intersect again, so we only need to check for the new "above"
+
+                FARGeometryLineSegment belowNewBelow = sweepLine.Prev(newBelow);        //Similar logic for newBelow
+                CalculateIntersection(newBelow, belowNewBelow);
+            }
+
+            finalIntersections.Add(new Intersection(intersectEvent.point, newBelow, newAbove));
         }
 
         private void ProcessLineEndPointEvent(BentleyOttmannEventQueue.LineEndPointEvent endEvent)
@@ -140,7 +177,12 @@ namespace FerramAerospaceResearch.FARGeometry
         private void AddIntersectionToQueue(FARGeometryLineSegment line1, FARGeometryLineSegment line2, Vector3d point)
         {
             Part p = line1.point1.associatedPart;
-            eventQueue.InsertIntersection(new FARGeometryPoint(point, p), line1, line2);
+            int isLeft = line1.pointToLeft(line2.point1);
+            if(isLeft >= 0)
+                eventQueue.InsertIntersection(new FARGeometryPoint(point, p), line1, line2);
+            else
+                eventQueue.InsertIntersection(new FARGeometryPoint(point, p), line2, line1);
+
         }
     }
 }

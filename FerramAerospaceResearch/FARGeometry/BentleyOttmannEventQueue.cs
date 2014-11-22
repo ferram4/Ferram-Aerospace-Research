@@ -25,8 +25,8 @@ namespace FerramAerospaceResearch.FARGeometry
         }
         public class IntersectionEvent : Event
         {
-            public FARGeometryLineSegment line1;
-            public FARGeometryLineSegment line2;
+            public FARGeometryLineSegment above;
+            public FARGeometryLineSegment below;
         }
         public class EventComparer : IComparer<Event>
         {
@@ -67,23 +67,26 @@ namespace FerramAerospaceResearch.FARGeometry
             eventQueue = eventQueue.MergeSort(new EventComparer());
         }
 
-        public void InsertIntersection(FARGeometryPoint intersect, FARGeometryLineSegment line1, FARGeometryLineSegment line2)
+        public void InsertIntersection(FARGeometryPoint intersect, FARGeometryLineSegment above, FARGeometryLineSegment below)
         {
             IntersectionEvent ev = new IntersectionEvent();
             ev.point = intersect;
-            ev.line1 = line1;
-            ev.line2 = line2;
+            ev.above = above;
+            ev.below = below;
 
             for(int i = index; i < eventQueue.Count; i++)
             {
                 int cmp = ev.CompareTo(eventQueue[i]);
                 if (cmp < 1)
                     continue;
-                else
+                else if (cmp == 1 && eventQueue[i] is IntersectionEvent)
                 {
-                    eventQueue.Insert(i, ev);
-                    break;
+                    IntersectionEvent prevIntersect = (IntersectionEvent)eventQueue[i];
+                    if (prevIntersect.above == above && ev.below == below)  //in this case, we have a repeat intersection; break out of that then
+                        break;
+
                 }
+                eventQueue.Insert(i, ev);       //This is only called if cmp > 1 or if cmp == 1, but it's not the same intersection
             }
         }
 
