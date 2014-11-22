@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 using KSP;
 using FerramAerospaceResearch.FARWing;
 
@@ -13,28 +14,16 @@ namespace FerramAerospaceResearch.FARGeometry
             get { return planformBoundsLines; }
         }
 
-        private List<Vector3d> planformTestPoints;
-        public List<Vector3d> PlanformTestPoints
-        {
-            get { return planformTestPoints; }
-        }
-
-        private Vector3d centroid = new Vector3d();
-        public Vector3d Centroid
-        {
-            get { return centroid; }
-        }
-
         private Vector3d normVec;
         public Vector3d NormVec
         {
             get { return normVec; }
         }
 
-        private double area;
-        public double Area
+        private Transform parentTransform;
+        public Transform ParentTransform
         {
-            get { return area; }
+            get { return parentTransform; }
         }
 
         //Used for sorting parts into various planes
@@ -43,43 +32,10 @@ namespace FerramAerospaceResearch.FARGeometry
         public FARGeometryPartPolygon(Part p)
         {
             normVec = p.transform.forward;
+            parentTransform = p.transform;
 
             FARGeometryWingMeshCalculator wingGeoCalc = new FARGeometryWingMeshCalculator(p);
             planformBoundsLines = wingGeoCalc.CalculateWingPlanformPoints();
-
-            planformTestPoints = new List<Vector3d>();
-            area = 0;
-
-            //Create the test points for finding nearby (but non-intersecting) polygons and calculate the area
-            for(int i = 0; i < PlanformBoundsLines.Count; i++)
-            {
-                int ip1 = i + 1;
-
-                Vector3d pt1 = PlanformBoundsLines[i].point1.point;
-                Vector3d pt2 = PlanformBoundsLines[i].point2.point;
-
-                Vector3d avg = (pt1 + pt2) * 0.5;   //position halfway down the edge
-
-                Vector3d offsetVec = pt2 - pt1;     //first, get a vector from pt1 to pt2
-                offsetVec.Normalize();              //normalize the vector
-
-                //Since the points are in CCW order, we must turn this vector 90 degrees clockwise in order to get a line pointing out of the polygon
-
-                offsetVec.z = -offsetVec.x;         //shift the -x value over to z temporarily
-                offsetVec.x = offsetVec.y;          
-                offsetVec.y = offsetVec.z;
-                offsetVec.z = 0;                    //set z to 0, and now the vector has been turned 90 degrees clockwise
-
-                offsetVec *= 0.15;                  //Point shall be 0.15 m away from the line
-
-                planformTestPoints.Add(avg + offsetVec);    //and add the test point
-
-                area += pt1.x * pt2.y - pt2.x * pt1.y;
-
-                centroid += pt1;
-            }
-            area *= 0.5;    //And finish calculating the area
-            centroid /= PlanformBoundsLines.Count;
         }
 
         public List<Vector3d> GetPolyPointsAsVectors()
@@ -92,6 +48,16 @@ namespace FerramAerospaceResearch.FARGeometry
                     verts.Add(planformBoundsLines[i].point2.point);
 
             return verts;
+        }
+
+        public void SetParentTransform(Transform t)
+        {
+            parentTransform = t;
+            for (int i = 0; i < planformBoundsLines.Count; i++)
+            {
+                planformBoundsLines[i].point1.TransformToLocalSpace(t);
+                planformBoundsLines[i].point2.TransformToLocalSpace(t);
+            }
         }
 
         private bool PolygonContainsThisPoint(Vector3d testPoint, double verticalClearance)

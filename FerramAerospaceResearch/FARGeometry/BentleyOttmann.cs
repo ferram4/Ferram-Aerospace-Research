@@ -33,6 +33,8 @@ namespace FerramAerospaceResearch.FARGeometry
         /// <param name="poly2">Poly to be merged</param>
         public void MergePolygons(ref FARGeometryPartPolygon poly1, FARGeometryPartPolygon poly2)
         {
+            poly2.SetParentTransform(poly1.ParentTransform);        //We do this to maintain points in the same coordinate system
+
             List<FARGeometryLineSegment> lines = new List<FARGeometryLineSegment>(poly1.PlanformBoundsLines);
             lines.AddRange(poly2.PlanformBoundsLines);
 
