@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.3.2
+Ferram Aerospace Research v0.14.4
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -1292,7 +1292,7 @@ namespace ferram4
             GUI.skin = HighLogic.Skin;
             if (this == activeControlSys && !minimize && !hide)
             {
-                windowPos = GUILayout.Window(250, windowPos, WindowGUI, "FAR Flight Systems, v0.14.3.2", GUILayout.MinWidth(150));
+                windowPos = GUILayout.Window(250, windowPos, WindowGUI, "FAR Flight Systems, v0.14.4", GUILayout.MinWidth(150));
                 if (AutopilotWindow)
                 {
                     AutoPilotWindowPos = GUILayout.Window(251, AutoPilotWindowPos, AutopilotWindowGUI, "FAR Flight Assistance System Options", GUILayout.MinWidth(330));
