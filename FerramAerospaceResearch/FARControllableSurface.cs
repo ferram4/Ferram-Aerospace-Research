@@ -242,6 +242,9 @@ namespace ferram4
                         break;
                     }
             }
+
+            if (HighLogic.LoadedSceneIsEditor)
+                FixAllUIRanges();
         }
 
         public override void FixedUpdate()
@@ -541,12 +544,12 @@ namespace ferram4
         public override void OnLoad(ConfigNode node)
         {
             base.OnLoad(node);
-            bool tmp;
+            bool tmpBool;
             if (node.HasValue("pitchaxis"))
             {
-                if (bool.TryParse(node.GetValue("pitchaxis"), out tmp))
+                if (bool.TryParse(node.GetValue("pitchaxis"), out tmpBool))
                 {
-                    if (tmp)
+                    if (tmpBool)
                         pitchaxis = 100;
                     else
                         pitchaxis = 0;
@@ -554,9 +557,9 @@ namespace ferram4
             }
             if (node.HasValue("yawaxis"))
             {
-                if (bool.TryParse(node.GetValue("yawaxis"), out tmp))
+                if (bool.TryParse(node.GetValue("yawaxis"), out tmpBool))
                 {
-                    if (tmp)
+                    if (tmpBool)
                         yawaxis = 100;
                     else
                         yawaxis = 0;
@@ -564,14 +567,30 @@ namespace ferram4
             }
             if (node.HasValue("rollaxis"))
             {
-                if (bool.TryParse(node.GetValue("rollaxis"), out tmp))
+                if (bool.TryParse(node.GetValue("rollaxis"), out tmpBool))
                 {
-                    if (tmp)
+                    if (tmpBool)
                         rollaxis = 100;
                     else
                         rollaxis = 0;
                 }
             }
+        }
+
+        private void FixAllUIRanges()
+        {
+            FixWrongUIRange("pitchaxis", 100, -100);
+            FixWrongUIRange("yawaxis", 100, -100);
+            FixWrongUIRange("rollaxis", 100, -100);
+            FixWrongUIRange("maxdeflect", 40, -40);
+            FixWrongUIRange("maxdeflectFlap", 85, -85);
+        }
+
+        private void FixWrongUIRange(string field, float upperRange, float lowerRange)
+        {
+            UI_FloatRange tmpUI = (UI_FloatRange)Fields[field].uiControlEditor;
+            tmpUI.maxValue = upperRange;
+            tmpUI.minValue = lowerRange;
         }
     }
 }
