@@ -947,7 +947,7 @@ namespace ferram4
 
             activeBody = celestialBodyDropdown.ActiveSelection();
 
-            GUILayout.Label("Altitude:");
+            GUILayout.Label("Altitude (km):");
             alt_str = GUILayout.TextField(alt_str, GUILayout.ExpandWidth(true));
 
             /*GUILayout.Label("Temperature: ");
@@ -957,7 +957,7 @@ namespace ferram4
             rho_str = GUILayout.TextField(rho_str, GUILayout.ExpandWidth(true));
             */
 
-            GUILayout.Label("m   Mach Number: ");
+            GUILayout.Label("Mach Number: ");
             Mach_str = GUILayout.TextField(Mach_str, GUILayout.ExpandWidth(true));
 
             GUILayout.EndHorizontal();
@@ -980,10 +980,14 @@ namespace ferram4
 
                 alt_str = Regex.Replace(alt_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
                 alt = Convert.ToDouble(alt_str);
+                alt *= 1000;
+
                 double temp = FlightGlobals.getExternalTemperature((float)alt, activeBody);
                 double rho = FARAeroUtil.GetCurrentDensity(activeBody, alt);
                 //double temp = Convert.ToSingle(atm_temp_str);
                 Mach = Convert.ToSingle(Mach_str);
+                Mach = FARMathUtil.Clamp(Mach, 0.001f, float.PositiveInfinity);
+
                 double sspeed = Math.Sqrt(FARAeroUtil.currentBodyAtm.x * Math.Max(0.1, temp + 273.15));
                 double vel = sspeed * Mach;
 
