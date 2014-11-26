@@ -577,6 +577,9 @@ namespace ferram4
             }
         }
 
+        //For some reason, all the UIRange values are saved in the config files, and there is no way to prevent that
+        //This makes the options limited for people loading old crafts with new FAR
+        //This resets the values to what they should be
         private void FixAllUIRanges()
         {
             FixWrongUIRange("pitchaxis", 100, -100);
