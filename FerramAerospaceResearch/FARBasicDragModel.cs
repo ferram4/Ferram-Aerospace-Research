@@ -820,7 +820,8 @@ namespace ferram4
 
         public void OnRescale(TweakScale.ScalingFactor factor)
         {
-            UpdatePropertiesWithShapeChange();
+            if(part.Modules != null)
+                UpdatePropertiesWithShapeChange();
         }
     }
 }
