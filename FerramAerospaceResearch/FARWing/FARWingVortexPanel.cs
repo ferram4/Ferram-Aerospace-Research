@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using KSP;
+using UnityEngine;
 
 namespace FerramAerospaceResearch.FARWing
 {
@@ -12,6 +14,7 @@ namespace FerramAerospaceResearch.FARWing
         double quarterHeight;
 
         Vector3d localPosition;
+        Vector3d localNorm;
         Vector3d flowFieldPosition;
 
         Vector3d flowFieldNormalVector;
@@ -20,6 +23,20 @@ namespace FerramAerospaceResearch.FARWing
         double strength;
         double normalVel;
 
+        public FARWingVortexPanel(double width, double height, Vector3d localPos, Vector3d localNorm)
+        {
+            localPosition = localPos;
+            this.localNorm = localNorm;
+            halfWidth = width * 0.5;
+            quarterHeight = height * 0.25;
+        }
+
+        public void TransformCoordinateSystem(Matrix4x4D transformMatrix)       //transforms the local coordinate system so that x is in the flow direction
+        {
+            flowFieldPosition = transformMatrix.TransformVector(localPosition);
+            flowFieldNormalVector = transformMatrix.TransformVector(localNorm);
+            flowFieldPerpVector = Vector3d.Cross(new Vector3d(1, 0, 0), flowFieldNormalVector);
+        }
         
         public void UpdateStrength(double beta)
         {
