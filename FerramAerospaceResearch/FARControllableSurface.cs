@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.3.2
+Ferram Aerospace Research v0.14.4
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -242,6 +242,9 @@ namespace ferram4
                         break;
                     }
             }
+
+            if (HighLogic.LoadedSceneIsEditor)
+                FixAllUIRanges();
         }
 
         public override void FixedUpdate()
@@ -537,5 +540,60 @@ namespace ferram4
             }
         }
         #endregion
+
+        public override void OnLoad(ConfigNode node)
+        {
+            base.OnLoad(node);
+            bool tmpBool;
+            if (node.HasValue("pitchaxis"))
+            {
+                if (bool.TryParse(node.GetValue("pitchaxis"), out tmpBool))
+                {
+                    if (tmpBool)
+                        pitchaxis = 100;
+                    else
+                        pitchaxis = 0;
+                }
+            }
+            if (node.HasValue("yawaxis"))
+            {
+                if (bool.TryParse(node.GetValue("yawaxis"), out tmpBool))
+                {
+                    if (tmpBool)
+                        yawaxis = 100;
+                    else
+                        yawaxis = 0;
+                }
+            }
+            if (node.HasValue("rollaxis"))
+            {
+                if (bool.TryParse(node.GetValue("rollaxis"), out tmpBool))
+                {
+                    if (tmpBool)
+                        rollaxis = 100;
+                    else
+                        rollaxis = 0;
+                }
+            }
+        }
+
+        //For some reason, all the UIRange values are saved in the config files, and there is no way to prevent that
+        //This makes the options limited for people loading old crafts with new FAR
+        //This resets the values to what they should be
+        private void FixAllUIRanges()
+        {
+            FixWrongUIRange("pitchaxis", 100, -100);
+            FixWrongUIRange("yawaxis", 100, -100);
+            FixWrongUIRange("rollaxis", 100, -100);
+            FixWrongUIRange("maxdeflect", 40, -40);
+            FixWrongUIRange("maxdeflectFlap", 85, -85);
+        }
+
+        private void FixWrongUIRange(string field, float upperRange, float lowerRange)
+        {
+            UI_FloatRange tmpUI = (UI_FloatRange)Fields[field].uiControlEditor;
+            tmpUI.maxValue = upperRange;
+            tmpUI.minValue = lowerRange;
+        }
     }
 }

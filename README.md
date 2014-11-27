@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.14.3.2
+Ferram Aerospace Research v0.14.4
 =========================
 
 Aerodynamics model for Kerbal Space Program
@@ -149,6 +149,26 @@ For both of these, set MaxDrag and MinDrag to 0
 
 CHANGELOG
 =======================================================
+
+0.14.4v------------------------------------
+Features:  
+Default ActionGroups now controlled throuhg dropdown menus rather than string entry  
+Stability Deriv tab now takes entry in terms of planet, altitude and Mach Number, not density, temperature and Mach number  
+Stability Deriv tab now accounts for reduced gravity due to high speeds
+
+Contributed by HoneyFox:  
+	Pitch damper now has an additional gain for greater tuning  
+	Control surfaces can now be set to deflect in response to local AoA changes  
+	Control surfaces are not On/Off for a given control direction; can be scaled from -100% to 100% for each  
+
+Contributed by Bitronic:  
+	Full Tweakscale Support
+
+BugFixes:  
+Fixed no shielding with some payload fairings (particularly resized procedural fairings)  
+Fixed aero tinting blocking tinting from other mods
+	
+
 
 0.14.3.2v------------------------------------  
 Features:  

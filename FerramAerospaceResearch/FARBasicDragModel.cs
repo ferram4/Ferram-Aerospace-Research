@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.3.2
+Ferram Aerospace Research v0.14.4
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -820,7 +820,8 @@ namespace ferram4
 
         public void OnRescale(TweakScale.ScalingFactor factor)
         {
-            UpdatePropertiesWithShapeChange();
+            if(part.Modules != null)
+                UpdatePropertiesWithShapeChange();
         }
     }
 }

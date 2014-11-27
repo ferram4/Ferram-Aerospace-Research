@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.3.2
+Ferram Aerospace Research v0.14.4
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -395,7 +395,14 @@ namespace ferram4
                         Collider[] colliders;
 
                         if ((object)farModule != null)
+                        {
                             colliders = farModule.PartColliders;
+                            if (colliders == null)
+                            {
+                                farModule.TriggerPartColliderUpdate();
+                                colliders = farModule.PartColliders;
+                            }
+                        }
                         else
                             colliders = new Collider[1] { p.collider };
                         
