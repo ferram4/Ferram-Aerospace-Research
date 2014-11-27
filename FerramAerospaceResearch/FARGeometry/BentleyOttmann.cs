@@ -13,6 +13,7 @@ namespace FerramAerospaceResearch.FARGeometry
 
         private List<Intersection> finalIntersections;
         private Dictionary<FARGeometryLineSegment, List<Intersection>> lineIntersections;
+        private Dictionary<FARGeometryLineSegment, FARGeometryPartPolygon> intersectedLines;
 
         class Intersection : IEquatable<Intersection>
         {
@@ -70,24 +71,46 @@ namespace FerramAerospaceResearch.FARGeometry
                     ProcessIntersectEvent((BentleyOttmannEventQueue.IntersectionEvent)newEvent);
                 }
             }
+
+            intersectedLines = new Dictionary<FARGeometryLineSegment, FARGeometryPartPolygon>();   //This will be used to determine which lines to do inside/outside polygons on for building the polys up.
             for (int i = 0; i < finalIntersections.Count; i++)
             {
-                AdjustLinesAfterCalculatingIntersections(poly1, poly2, finalIntersections[i]);
+                SplitLinesBasedOnIntersections(poly1, poly2, finalIntersections[i]);
             }
             FARGeometryPartPolygon returnPoly = new FARGeometryPartPolygon(poly1);
             return returnPoly;
         }
 
-        private void AdjustLinesAfterCalculatingIntersections(FARGeometryPartPolygon poly1, FARGeometryPartPolygon poly2, Intersection intersect)
+        private void SplitLinesBasedOnIntersections(FARGeometryPartPolygon poly1, FARGeometryPartPolygon poly2, Intersection intersect)
         {
             FARGeometryLineSegment line1 = intersect.line1;
             FARGeometryLineSegment line2 = intersect.line2;
 
-            SplitLine(line1, intersect);
-            SplitLine(line2, intersect);
+
+
+            if (poly1.PlanformBoundsLines.Contains(line1))
+            {
+                SplitIntersectedLine(line1, intersect, poly1);
+                SplitIntersectedLine(line2, intersect, poly2);
+
+                if (!intersectedLines.ContainsKey(line1))
+                    intersectedLines.Add(line1, poly1);
+                if (!intersectedLines.ContainsKey(line2))
+                    intersectedLines.Add(line2, poly2);
+            }
+            else
+            {
+                SplitIntersectedLine(line1, intersect, poly2);
+                SplitIntersectedLine(line2, intersect, poly1);
+
+                if (!intersectedLines.ContainsKey(line1))
+                    intersectedLines.Add(line1, poly2);
+                if (!intersectedLines.ContainsKey(line2))
+                    intersectedLines.Add(line2, poly1);
+            }
         }
 
-        private void SplitLine(FARGeometryLineSegment line, Intersection intersect)
+        private void SplitIntersectedLine(FARGeometryLineSegment line, Intersection intersect, FARGeometryPartPolygon poly)
         {
             List<Intersection> lineIntersects = lineIntersections[line];          //Get all the intersections for this line
             FARGeometryLineSegment lineRight = new FARGeometryLineSegment(intersect.point, line.point2);  //Split the line by creating a new one that extends from the intersect to point 2 (the rightmost point) of the original line
@@ -111,9 +134,12 @@ namespace FerramAerospaceResearch.FARGeometry
                 else
                     item.line2 = lineRight;
             }
+            intersectedLines.Add(lineRight, poly);
+
+            poly.PlanformBoundsLines.Add(lineRight);
         }
 
-        private void DetermineLineInsideOrOutsidePoly(FARGeometryLineSegment line, FARGeometryPartPolygon poly1, FARGeometryPartPolygon poly2)
+        private void DetermineLineInsideOrOutsidePoly(FARGeometryLineSegment line, FARGeometryPartPolygon poly)
         {
             /*if (poly1.PlanformBoundsLines.Contains(line1))
             {
