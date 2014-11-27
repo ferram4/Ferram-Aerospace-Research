@@ -12,8 +12,9 @@ namespace FerramAerospaceResearch.FARGeometry
         private BentleyOttmannEventQueue eventQueue;
 
         private List<Intersection> finalIntersections;
+        private Dictionary<FARGeometryLineSegment, List<Intersection>> lineIntersections;
 
-        class Intersection
+        class Intersection : IEquatable<Intersection>
         {
             public Intersection(FARGeometryPoint pt, FARGeometryLineSegment line1, FARGeometryLineSegment line2)
             {
@@ -24,14 +25,25 @@ namespace FerramAerospaceResearch.FARGeometry
             public FARGeometryPoint point;
             public FARGeometryLineSegment line1;
             public FARGeometryLineSegment line2;
+
+            public bool Equals(Intersection otherIntersect)
+            {
+                if(this.line1 == otherIntersect.line1)
+                {
+                    return this.line2 == otherIntersect.line2;
+                }
+                else if (this.line1 == otherIntersect.line2)
+                {
+                    return this.line2 == otherIntersect.line1;
+                }
+                return false;
+            }
         }
 
         /// <summary>
         /// This merges two polygons using the Bentley-Ottmann Algorithm
         /// </summary>
-        /// <param name="poly1">First poly; this will be used for unified transforms and will contain the output of this method</param>
-        /// <param name="poly2">Poly to be merged</param>
-        public void MergePolygons(ref FARGeometryPartPolygon poly1, FARGeometryPartPolygon poly2)
+        public FARGeometryPartPolygon MergePolygons(FARGeometryPartPolygon poly1, FARGeometryPartPolygon poly2)
         {
             poly2.SetParentTransform(poly1.ParentTransform);        //We do this to maintain points in the same coordinate system
 
@@ -43,6 +55,7 @@ namespace FerramAerospaceResearch.FARGeometry
             sweepLine = new LLRedBlackTree<FARGeometryLineSegment>(new IsLeftComparer());
 
             finalIntersections = new List<Intersection>();
+            lineIntersections = new Dictionary<FARGeometryLineSegment, List<Intersection>>();
 
             while(eventQueue.Count > 0)
             {
@@ -57,67 +70,75 @@ namespace FerramAerospaceResearch.FARGeometry
                     ProcessIntersectEvent((BentleyOttmannEventQueue.IntersectionEvent)newEvent);
                 }
             }
-
-            AdjustLinesAfterCalculatingIntersections(poly1, poly2);
-
-        }
-
-        private void AdjustLinesAfterCalculatingIntersections(FARGeometryPartPolygon poly1, FARGeometryPartPolygon poly2)
-        {
             for (int i = 0; i < finalIntersections.Count; i++)
             {
-                Intersection intersect = finalIntersections[i];
-                FARGeometryLineSegment line1 = intersect.line1;
-                FARGeometryLineSegment line2 = intersect.line2;
-                if (poly1.PlanformBoundsLines.Contains(line1))
-                {
-                    if (poly1.PolygonContainsThisPoint(line2.point1.point, 0.1))        //point 2 is outside the other poly, but point 1 is inside it; replace point 1 with the intersection
-                    {
-                        if (!poly1.PolygonContainsThisPoint(line2.point2.point, 0.1))
-                            line2.point1 = intersect.point;
-                    }
-                    else if (poly1.PolygonContainsThisPoint(line2.point2.point, 0.1))   //And now, the other way around...
-                    {
-                        if (!poly1.PolygonContainsThisPoint(line2.point1.point, 0.1))
-                            line2.point2 = intersect.point;
-                    }
-
-                    if (poly2.PolygonContainsThisPoint(line1.point1.point, 0.1))        //point 2 is outside the other poly, but point 1 is inside it; replace point 1 with the intersection
-                    {
-                        if (!poly2.PolygonContainsThisPoint(line1.point2.point, 0.1))
-                            line1.point1 = intersect.point;
-                    }
-                    else if (poly2.PolygonContainsThisPoint(line1.point2.point, 0.1))
-                    {
-                        if (!poly2.PolygonContainsThisPoint(line1.point1.point, 0.1))
-                            line1.point2 = intersect.point;
-                    }
-                }
-                else
-                {
-                    if (poly2.PolygonContainsThisPoint(line2.point1.point, 0.1))        //point 2 is outside the other poly, but point 1 is inside it; replace point 1 with the intersection
-                    {
-                        if (!poly2.PolygonContainsThisPoint(line2.point2.point, 0.1))
-                            line2.point1 = intersect.point;
-                    }
-                    else if (poly2.PolygonContainsThisPoint(line2.point2.point, 0.1))
-                    {
-                        if (!poly2.PolygonContainsThisPoint(line2.point1.point, 0.1))
-                            line2.point2 = intersect.point;
-                    }
-
-                    if (poly1.PolygonContainsThisPoint(line1.point1.point, 0.1))        //point 2 is outside the other poly, but point 1 is inside it; replace point 1 with the intersection
-                    {
-                        if (!poly1.PolygonContainsThisPoint(line1.point2.point, 0.1))
-                            line1.point1 = intersect.point;
-                    }
-                    else if (poly1.PolygonContainsThisPoint(line1.point2.point, 0.1))
-                    {
-                        if (!poly2.PolygonContainsThisPoint(line1.point1.point, 0.1))
-                            line1.point2 = intersect.point;
-                    }
-                }
+                AdjustLinesAfterCalculatingIntersections(poly1, poly2, finalIntersections[i]);
             }
+            FARGeometryPartPolygon returnPoly = new FARGeometryPartPolygon(poly1);
+            return returnPoly;
+        }
+
+        private void AdjustLinesAfterCalculatingIntersections(FARGeometryPartPolygon poly1, FARGeometryPartPolygon poly2, Intersection intersect)
+        {
+            FARGeometryLineSegment line1 = intersect.line1;
+            FARGeometryLineSegment line2 = intersect.line2;
+
+            SplitLine(line1, intersect);
+            SplitLine(line2, intersect);
+        }
+
+        private void SplitLine(FARGeometryLineSegment line, Intersection intersect)
+        {
+            List<Intersection> lineIntersects = lineIntersections[line];          //Get all the intersections for this line
+            FARGeometryLineSegment lineRight = new FARGeometryLineSegment(intersect.point, line.point2);  //Split the line by creating a new one that extends from the intersect to point 2 (the rightmost point) of the original line
+            line.point2 = intersect.point;     //And then set the rightmost point of the original line to the intersect point
+
+            lineIntersects.Remove(intersect);      //Get rid of this intersect item, since we don't care about it anymore
+
+            List<Intersection> lineRightIntersects = new List<Intersection>();
+
+            for (int i = 0; i < lineIntersects.Count; i++)
+            {
+                if (lineIntersects[i].point.CompareTo(intersect.point) > 0)        //If this intersect point is to the right of the intersect we care about here, it belongs to the other line
+                    lineRightIntersects.Add(lineIntersects[i]);
+            }
+            for (int i = 0; i < lineRightIntersects.Count; i++)
+            {
+                Intersection item = lineRightIntersects[i];
+                lineIntersects.Remove(item);        //Remove any intersects that shouldn't be there
+                if (item.line1 == line)
+                    item.line1 = lineRight;        //And change the line reference that the intersection points to
+                else
+                    item.line2 = lineRight;
+            }
+        }
+
+        private void DetermineLineInsideOrOutsidePoly(FARGeometryLineSegment line, FARGeometryPartPolygon poly1, FARGeometryPartPolygon poly2)
+        {
+            /*if (poly1.PlanformBoundsLines.Contains(line1))
+            {
+                if (poly1.PolygonContainsThisPoint(line2.point1.point, 0.1))        //point 2 is outside the other poly, but point 1 is inside it; replace point 1 with the intersection
+                {
+                    if (!poly1.PolygonContainsThisPoint(line2.point2.point, 0.1))
+                        line2.point1 = intersect.point;
+                }
+                else if (poly1.PolygonContainsThisPoint(line2.point2.point, 0.1))   //And now, the other way around...
+                {
+                    if (!poly1.PolygonContainsThisPoint(line2.point1.point, 0.1))
+                        line2.point2 = intersect.point;
+                }
+
+                if (poly2.PolygonContainsThisPoint(line1.point1.point, 0.1))        //point 2 is outside the other poly, but point 1 is inside it; replace point 1 with the intersection
+                {
+                    if (!poly2.PolygonContainsThisPoint(line1.point2.point, 0.1))
+                        line1.point1 = intersect.point;
+                }
+                else if (poly2.PolygonContainsThisPoint(line1.point2.point, 0.1))
+                {
+                    if (!poly2.PolygonContainsThisPoint(line1.point1.point, 0.1))
+                        line1.point2 = intersect.point;
+                }
+            }*/
         }
 
         private void ProcessIntersectEvent(BentleyOttmannEventQueue.IntersectionEvent intersectEvent)
@@ -132,8 +153,31 @@ namespace FerramAerospaceResearch.FARGeometry
                 FARGeometryLineSegment belowNewBelow = sweepLine.Prev(newBelow);        //Similar logic for newBelow
                 CalculateIntersection(newBelow, belowNewBelow);
             }
+            Intersection newIntersection = new Intersection(intersectEvent.point, newBelow, newAbove);
+            if(!finalIntersections.Contains(newIntersection))
+            {
+                finalIntersections.Add(new Intersection(intersectEvent.point, newBelow, newAbove));
+                if(lineIntersections.ContainsKey(newBelow))
+                {
+                    lineIntersections[newBelow].Add(newIntersection);
+                }
+                else
+                {
+                    lineIntersections.Add(newBelow, new List<Intersection>());
+                    lineIntersections[newBelow].Add(newIntersection);
+                }
 
-            finalIntersections.Add(new Intersection(intersectEvent.point, newBelow, newAbove));
+                if (lineIntersections.ContainsKey(newAbove))
+                {
+                    lineIntersections[newAbove].Add(newIntersection);
+                }
+                else
+                {
+                    lineIntersections.Add(newAbove, new List<Intersection>());
+                    lineIntersections[newAbove].Add(newIntersection);
+                }
+            }
+
         }
 
         private void ProcessLineEndPointEvent(BentleyOttmannEventQueue.LineEndPointEvent endEvent)

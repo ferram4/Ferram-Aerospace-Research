@@ -29,6 +29,14 @@ namespace FerramAerospaceResearch.FARGeometry
         //Used for sorting parts into various planes
         public double normVecDot = 0;
 
+        public FARGeometryPartPolygon(FARGeometryPartPolygon poly)
+        {
+            this.normVec = poly.normVec;
+            this.parentTransform = poly.parentTransform;
+            this.planformBoundsLines = new List<FARGeometryLineSegment>(poly.planformBoundsLines);
+            this.normVecDot = poly.normVecDot;
+        }
+
         public FARGeometryPartPolygon(Part p)
         {
             normVec = p.transform.forward;
