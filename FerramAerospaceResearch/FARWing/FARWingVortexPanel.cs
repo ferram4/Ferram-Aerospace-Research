@@ -21,7 +21,7 @@ namespace FerramAerospaceResearch.FARWing
         Vector3d flowFieldPerpVector;
 
         double strength;
-        double normalVel;
+        Vector3d flowFieldVelocity;
 
         public FARWingVortexPanel(double width, double height, Vector3d localPos, Vector3d localNorm)
         {
@@ -36,25 +36,38 @@ namespace FerramAerospaceResearch.FARWing
             flowFieldPosition = transformMatrix.TransformVector(localPosition);
             flowFieldNormalVector = transformMatrix.TransformVector(localNorm);
             flowFieldPerpVector = Vector3d.Cross(new Vector3d(1, 0, 0), flowFieldNormalVector);
+            flowFieldVelocity = Vector3d.zero;
         }
         
         public void UpdateStrength(double beta)
         {
-            double strengthChange = EstimateStrengthChange(beta) - strength;
+            double normalVel = Vector3d.Dot(flowFieldVelocity, flowFieldNormalVector);
+            double strengthChange = EstimateStrengthChange(normalVel, beta) - strength;
             strength += strength * 0.1;     //damping factor to prevent divergent behavior
         }
 
-        private double EstimateStrengthChange(double beta)
+        private double EstimateStrengthChange(double normalVel, double beta)
         {
-            Vector3d inducedInfluence = InducedInfluence(flowFieldPosition - new Vector3d(1, 0, 0) * quarterHeight, beta);
+            Vector3d inducedInfluence = InducedInfluence(this.GetControlPointPosition(), beta);
             double normalInfluence = Vector3d.Dot(inducedInfluence, flowFieldNormalVector);
 
             double newStrength = normalVel * FOUR_PI / normalInfluence;
 
             return newStrength;
         }
+
+        private Vector3d GetControlPointPosition()
+        {
+            return this.flowFieldPosition - new Vector3d(1, 0, 0) * this.quarterHeight;
+        }
+
+        public void CalculateInducedVelocityAtPanel(FARWingVortexPanel otherPanel, double beta)
+        {
+            Vector3d pointPosition = otherPanel.GetControlPointPosition();
+            otherPanel.flowFieldVelocity += InducedVelocity(pointPosition, beta);
+        }
         
-        public Vector3d InducedVelocity(Vector3d position, double beta)
+        private Vector3d InducedVelocity(Vector3d position, double beta)
         {
             Vector3d inducedVel = InducedInfluence(position, beta);
 
