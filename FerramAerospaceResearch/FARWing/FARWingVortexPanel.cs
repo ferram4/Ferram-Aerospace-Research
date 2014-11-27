@@ -19,6 +19,7 @@ namespace FerramAerospaceResearch.FARWing
 
         Vector3d flowFieldNormalVector;
         Vector3d flowFieldPerpVector;
+        Vector3d flowFieldInPlaneForwardVector;
 
         double strength;
         Vector3d flowFieldVelocity;
@@ -36,6 +37,7 @@ namespace FerramAerospaceResearch.FARWing
             flowFieldPosition = transformMatrix.TransformVector(localPosition);
             flowFieldNormalVector = transformMatrix.TransformVector(localNorm);
             flowFieldPerpVector = Vector3d.Cross(new Vector3d(1, 0, 0), flowFieldNormalVector);
+            flowFieldInPlaneForwardVector = Vector3d.Cross(flowFieldNormalVector, flowFieldPerpVector);
             flowFieldVelocity = Vector3d.zero;
         }
         
@@ -58,7 +60,7 @@ namespace FerramAerospaceResearch.FARWing
 
         private Vector3d GetControlPointPosition()
         {
-            return this.flowFieldPosition - new Vector3d(1, 0, 0) * this.quarterHeight;
+            return this.flowFieldPosition - flowFieldInPlaneForwardVector * this.quarterHeight;
         }
 
         public void CalculateInducedVelocityAtPanel(FARWingVortexPanel otherPanel, double beta)
@@ -81,10 +83,7 @@ namespace FerramAerospaceResearch.FARWing
         {
             Vector3d r1, r2;    //corners of horseshoe vortex
 
-            Vector3d forward = new Vector3d(1, 0, 0);
-
-
-            r1 = flowFieldPosition + quarterHeight * forward;
+            r1 = flowFieldPosition + quarterHeight * flowFieldInPlaneForwardVector;
             r2 = r1;
 
             r1 -= halfWidth * flowFieldPerpVector;      //set the start points of the horseshoe vertices
