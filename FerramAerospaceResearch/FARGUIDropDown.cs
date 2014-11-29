@@ -85,7 +85,7 @@ namespace ferram4
             if (GUILayout.Button(optionStrings[selectedOption], GUIoptions))
             {
                 Vector3 upperLeft = FARGUIUtils.GetMousePos();
-                listRect = new Rect(upperLeft.x - 5, upperLeft.y - 5, 100, 20 * options.Length);
+                listRect = new Rect(upperLeft.x - 5, upperLeft.y - 5, 100, 22 * options.Length);
                 listActive = true;
             }
             if (listStyle == null)
@@ -149,7 +149,7 @@ namespace ferram4
         {
             if (windowFunction != null)
             {
-                GUILayout.Window(windowID, displayRect, windowFunction, "", listStyle);
+                displayRect = GUILayout.Window(windowID, displayRect, windowFunction, "", listStyle);
             }
         }
 
