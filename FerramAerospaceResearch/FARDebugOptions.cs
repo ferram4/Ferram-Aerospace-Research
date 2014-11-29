@@ -51,6 +51,7 @@ namespace ferram4
         private IButton FARDebugButtonBlizzy = null;
         private ApplicationLauncherButton FARDebugButtonStock = null;
         private bool debugMenu = false;
+        private bool inputLocked = false;
         private Rect debugWinPos = new Rect(50, 50, 700, 250);
 
         private enum MenuTab
@@ -136,7 +137,24 @@ namespace ferram4
         {
             GUI.skin = HighLogic.Skin;
             if (debugMenu)
+            {
                 debugWinPos = GUILayout.Window("FARDebug".GetHashCode(), debugWinPos, debugWindow, "FAR Debug Options, v0.14.4", GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+                if (!inputLocked && debugWinPos.Contains(FARGUIUtils.GetMousePos()))
+                {
+                    InputLockManager.SetControlLock(ControlTypes.KSC_ALL, "FARDebugLock");
+                    inputLocked = true;
+                }
+                else if (inputLocked && !debugWinPos.Contains(FARGUIUtils.GetMousePos()))
+                {
+                    InputLockManager.RemoveControlLock("FARDebugLock");
+                    inputLocked = false;
+                }
+            }
+            else if (inputLocked)
+            {
+                InputLockManager.RemoveControlLock("FARDebugLock");
+                inputLocked = false;
+            }
         }
 
 
