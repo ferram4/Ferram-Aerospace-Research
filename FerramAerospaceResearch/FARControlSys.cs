@@ -185,6 +185,7 @@ namespace ferram4
         public static double ballisticCoeff;
         public static double TSFC;
         private static double L_W;
+        public static double excessPower;
 
         public static double AoA;
         private static double pitch;
@@ -429,6 +430,9 @@ namespace ferram4
                 L_W = 0;
                 stallPercentage = 0;
             }
+            excessPower = DragArea * q * 0.001;     //drag;
+            excessPower = totalthrust - excessPower;
+            excessPower *= vessel.srfSpeed;
 
             ballisticCoeff = mass * 1000 / DragArea;
 
@@ -558,7 +562,7 @@ namespace ferram4
 
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();
-            GUILayout.Box("Pitch Angle: \n\rHeading: \n\rRoll Angle: \n\r\n\rAngle of Attack: \n\rSideslip Angle: \n\r\n\rQ: \n\r\n\rCl: \n\rCd: \n\rReference Area: \n\rL/W: \n\r\n\rL/D: \n\rV*L/D: \n\r\n\rFuel Fraction: \n\rTSFC: \n\rAir Req Met: \n\r\n\rEst. Endurance: \n\rEst. Range: \n\r\n\rTerminal V: \n\rBC:", leftBox, GUILayout.Width(120));
+            GUILayout.Box("Pitch Angle: \n\rHeading: \n\rRoll Angle: \n\r\n\rAngle of Attack: \n\rSideslip Angle: \n\r\n\rQ: \n\r\n\rCl: \n\rCd: \n\rReference Area: \n\rL/W: \n\r\n\rL/D: \n\rV*L/D: \n\r\n\rFuel Fraction: \n\rTSFC: \n\rAir Req Met: \n\r\n\rEst. Endurance: \n\rEst. Range: \n\rExcess Power: \n\r\n\rTerminal V: \n\rBC:", leftBox, GUILayout.Width(120));
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical();
@@ -601,6 +605,7 @@ namespace ferram4
             readoutString.AppendLine();
             readoutString.AppendLine(endurance.ToString("N2") + " hr");
             readoutString.AppendLine(range.ToString("N2") + " km");
+            readoutString.AppendLine(excessPower.ToString("N2") + " kW");
             readoutString.AppendLine();
             readoutString.AppendLine(termVel.ToString("N0") + " m/s");
             readoutString.Append(ballisticCoeff.ToString("N1") + " kg/m²");
@@ -1239,7 +1244,7 @@ namespace ferram4
             if (velMode == SurfaceVelMode.TAS)
             {
                 UI.spdCaption.text = "Surface";
-                UI.speed.text = (activeVessel.srf_velocity.magnitude * unitConversion).ToString("F1") + unitString;
+                UI.speed.text = (activeVessel.srfSpeed * unitConversion).ToString("F1") + unitString;
             }
             else if (velMode == SurfaceVelMode.IAS)
             {
@@ -1247,14 +1252,14 @@ namespace ferram4
                 speedometerCaption = "IAS: ";
                 double densityRatio = (FARAeroUtil.GetCurrentDensity(activeVessel.mainBody, activeVessel.altitude) * invKerbinSLDensity);
                 double pressureRatio = FARAeroUtil.StagnationPressureCalc(MachNumber);
-                UI.speed.text = (activeVessel.srf_velocity.magnitude * Math.Sqrt(densityRatio) * pressureRatio * unitConversion).ToString("F1") + unitString;
+                UI.speed.text = (activeVessel.srfSpeed * Math.Sqrt(densityRatio) * pressureRatio * unitConversion).ToString("F1") + unitString;
             }
             else if (velMode == SurfaceVelMode.EAS)
             {
                 UI.spdCaption.text = "EAS";
                 speedometerCaption = "EAS: ";
                 double densityRatio = (FARAeroUtil.GetCurrentDensity(activeVessel.mainBody, activeVessel.altitude) * invKerbinSLDensity);
-                UI.speed.text = (activeVessel.srf_velocity.magnitude * Math.Sqrt(densityRatio) * unitConversion).ToString("F1") + unitString;
+                UI.speed.text = (activeVessel.srfSpeed * Math.Sqrt(densityRatio) * unitConversion).ToString("F1") + unitString;
             }
             else// if (velMode == SurfaceVelMode.MACH)
             {
