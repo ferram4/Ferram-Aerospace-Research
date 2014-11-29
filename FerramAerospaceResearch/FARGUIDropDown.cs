@@ -47,8 +47,7 @@ namespace ferram4
         int selectedOption;
         bool listActive = false;
         bool hasActivated = false;
-
-        Rect listRect;
+        Vector2 scroll;
 
         string[] optionStrings;
         T[] options;
@@ -84,8 +83,6 @@ namespace ferram4
         {
             if (GUILayout.Button(optionStrings[selectedOption], GUIoptions))
             {
-                Vector3 upperLeft = FARGUIUtils.GetMousePos();
-                listRect = new Rect(upperLeft.x - 5, upperLeft.y - 5, 100, 22 * options.Length);
                 listActive = true;
             }
             if (listStyle == null)
@@ -100,23 +97,24 @@ namespace ferram4
             }
             if (listActive && !hasActivated)
             {
-                displayObject.ActivateDisplay(this.GetHashCode(), listRect, ListDisplay, listStyle);
+                Vector3 upperLeft = FARGUIUtils.GetMousePos();
+                displayObject.ActivateDisplay(this.GetHashCode(), new Rect(upperLeft.x - 5, upperLeft.y - 5, 100, 150), ListDisplay, listStyle);
                 hasActivated = true;
-                //if (!listRect.Contains(FARGUIUtils.GetMousePos()))
-                //   listActive = false;
+                InputLockManager.SetControlLock(ControlTypes.All, "DropdownScrollLock");
             }
-            if(hasActivated)
-                if (!listRect.Contains(FARGUIUtils.GetMousePos()))
+            if (hasActivated)
+                if (!displayObject.displayRect.Contains(FARGUIUtils.GetMousePos()))
                 {
                     listActive = false;
                     hasActivated = false;
                     displayObject.DisableDisplay();
+                    InputLockManager.RemoveControlLock("DropdownScrollLock");
                 }
         }
 
         private void ListDisplay(int id)
         {
-            GUILayout.BeginVertical(listStyle, GUILayout.ExpandHeight(true));
+            scroll = GUILayout.BeginScrollView(scroll, listStyle);
             for (int i = 0; i < optionStrings.Length; i++)
             {
                 if (GUILayout.Button(optionStrings[i], buttonStyle, GUILayout.Height(20)))
@@ -126,15 +124,16 @@ namespace ferram4
                     listActive = false;
                     hasActivated = false;
                     displayObject.DisableDisplay();
+                    InputLockManager.RemoveControlLock("DropdownScrollLock");
                 }
             }
-            GUILayout.EndVertical();
+            GUILayout.EndScrollView();
         }
     }
 
     public class FARGUIDropDownDisplay : MonoBehaviour
     {
-        Rect displayRect;
+        public Rect displayRect;
         int windowID;
         GUI.WindowFunction windowFunction;
         GUIStyle listStyle;
