@@ -72,6 +72,7 @@
     <Compile Include="FARCenterQuery.cs" />
     <Compile Include="FARCollections\ListSortExtension.cs" />
     <Compile Include="FARCollections\LLRedBlackTree.cs" />
+    <Compile Include="FARCollections\MinHeap.cs" />
     <Compile Include="FARControllableSurface.cs" />
     <Compile Include="FARDebugOptions.cs" />
     <Compile Include="FAREditorGUI.cs" />

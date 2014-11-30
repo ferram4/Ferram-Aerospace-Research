@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FerramAerospaceResearch.FARCollections
 {
-    public class LLRedBlackTree<T>
+    class LLRedBlackTree<T>
     {
         private const bool RED = true;
         private const bool BLACK = false;
