@@ -334,7 +334,7 @@ namespace ferram4
                     FARShieldedParts.Add(p);
                     if (b)
                     {
-                        b.isShielded = true;
+                        b.ActivateShielding();
                         //print("Shielded: " + p.partInfo.title);
                     }
                     for (int j = 0; j < p.symmetryCounterparts.Count; j++)
@@ -346,7 +346,7 @@ namespace ferram4
                         b = q.GetComponent<FARBaseAerodynamics>();
                         if (b)
                         {
-                            b.isShielded = true;
+                            b.ActivateShielding();
                             //print("Shielded: " + p.partInfo.title);
                         }
                     }
