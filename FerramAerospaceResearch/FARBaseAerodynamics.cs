@@ -179,6 +179,15 @@ namespace ferram4
             isShielded = false;
         }
 
+        public void ActivateShielding()
+        {
+            isShielded = true;
+            Cl = 0;
+            Cd = 0;
+            Cm = 0;
+        }
+
+
         public virtual Vector3d GetVelocity()
         {
             if (HighLogic.LoadedSceneIsFlight)
