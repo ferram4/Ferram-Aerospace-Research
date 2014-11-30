@@ -1272,23 +1272,26 @@ namespace ferram4
              * IVA stuff is reallocated whenever you switch between vessels. So i see
              * little point in storing the list of speedometers permanently. It just has
              * to be freshly cached whenever something changes. */
-            if (speedometers == null )
+            if (FlightGlobals.ready)
             {
-                speedometers = new List<InternalSpeed>();
-                for (int i=0; i<vessel.Parts.Count; ++i)
+                if (speedometers == null)
                 {
-                    Part p = vessel.Parts[i];
-                    if (p && p.internalModel)
+                    speedometers = new List<InternalSpeed>();
+                    for (int i = 0; i < vessel.Parts.Count; ++i)
                     {
-                        speedometers.AddRange(p.internalModel.GetComponentsInChildren<InternalSpeed>());
+                        Part p = vessel.Parts[i];
+                        if (p && p.internalModel)
+                        {
+                            speedometers.AddRange(p.internalModel.GetComponentsInChildren<InternalSpeed>());
+                        }
                     }
+                    //Debug.Log("FAR: Got new references to speedometers"); // check if it is really only executed when vessel change
                 }
-                //Debug.Log("FAR: Got new references to speedometers"); // check if it is really only executed when vessel change
-            }
-            string text = speedometerCaption+UI.speed.text;
-            for (int i=0; i<speedometers.Count; ++i)
-            {
-                speedometers[i].textObject.text.Text = text; // replace with FAR velocity readout
+                string text = speedometerCaption + UI.speed.text;
+                for (int i = 0; i < speedometers.Count; ++i)
+                {
+                    speedometers[i].textObject.text.Text = text; // replace with FAR velocity readout
+                }
             }
         }
 
