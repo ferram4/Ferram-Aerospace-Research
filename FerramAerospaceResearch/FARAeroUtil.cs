@@ -222,15 +222,15 @@ namespace ferram4
             else
             {
 
-                value = (gamma + 1) * (gamma + 1);                  //Rayleigh Pitot Tube Formula; gives max stagnation pressure behind shock
-                value *= M * M;
+                value = (gamma + 1) * M;                  //Rayleigh Pitot Tube Formula; gives max stagnation pressure behind shock
+                value *= value;
                 value /= (4 * gamma * M * M - 2 * (gamma - 1));
                 value = Math.Pow(value, gamma / (gamma - 1));
 
                 value *= (1 - gamma + 2 * gamma * M * M);
                 value /= (gamma + 1);
             }
-            value--;                                //and now to conver to pressure coefficient
+            value--;                                //and now to convert to pressure coefficient
             value *= 2 / (gamma * M * M);
 
             return value;
@@ -286,16 +286,14 @@ namespace ferram4
                     MonoBehaviour.print("Stagnation Pressure Coefficient Curve Initialized");
                     maxPressureCoefficient = new FloatCurve();
 
-                    double M = 0.05;
+                    double M = 0.1;
                     //float gamma = 1.4f;
 
                     maxPressureCoefficient.Add(0, 1);
 
                     if (currentBodyAtm == new Vector3d())
                     {
-                        currentBodyAtm.y = 1.4;
-                        currentBodyAtm.z = 8.3145 * 1000 / 28.96;
-                        currentBodyAtm.x = currentBodyAtm.y * currentBodyAtm.z;
+                        UpdateCurrentActiveBody(0, FlightGlobals.Bodies[1]);
                     }
                     double gamma = currentBodyAtm.y;
 
@@ -337,7 +335,7 @@ namespace ferram4
                             d_value /= M * M * M * gamma * (gamma + 1);
 
                         }
-                        value--;                                //and now to conver to pressure coefficient
+                        value--;                                //and now to convert to pressure coefficient
                         value *= 2 / (gamma * M * M);
 
 
@@ -351,11 +349,7 @@ namespace ferram4
                         else
                             M += 2.5;
                     }
-
-
-
                 }
-
 
                 return maxPressureCoefficient;
             }
