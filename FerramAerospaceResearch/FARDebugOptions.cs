@@ -470,6 +470,7 @@ namespace ferram4
 
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
             GUILayout.Label("Other Options"); // DaMichel: put it above the toolbar toggle
             GUILayout.BeginVertical();
             if (ToolbarManager.ToolbarAvailable)
@@ -498,26 +499,27 @@ namespace ferram4
             }
             FARActionGroupConfiguration.DrawGUI();
             GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
         }
 
         private void ChangeColor(string colorTitle, ref Color input)
         {
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(false));
 
-            GUILayout.Label(colorTitle + " (r,g,b):", GUILayout.Width(150));
+            GUILayout.Label(colorTitle + " (r,g,b):", GUILayout.Width(80));
 
             string tmp = input.r.ToString();
-            FARGUIUtils.TextEntryField("", 80, ref tmp);
+            FARGUIUtils.TextEntryField("", 0, ref tmp);
             tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
             input.r = Convert.ToSingle(tmp);
 
             tmp = input.g.ToString();
-            FARGUIUtils.TextEntryField("", 80, ref tmp);
+            FARGUIUtils.TextEntryField("", 0, ref tmp);
             tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
             input.g = Convert.ToSingle(tmp);
 
             tmp = input.b.ToString();
-            FARGUIUtils.TextEntryField("", 80, ref tmp);
+            FARGUIUtils.TextEntryField("", 0, ref tmp);
             tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
             input.b = Convert.ToSingle(tmp);
 

@@ -751,7 +751,7 @@ namespace ferram4
                 else if (yVal[k] < -50)
                     yVal[k] = -50;
             }
-            graph.AddLine("β", transSolve.time, yVal, Color.green);
+            graph.AddLine("β", transSolve.time, yVal, l_DColor);
             yVal = transSolve.GetSolution(1);
             MonoBehaviour.print("Got 1");
             for (int k = 0; k < yVal.Length; k++)
@@ -762,7 +762,7 @@ namespace ferram4
                 else if (yVal[k] < -50)
                     yVal[k] = -50;
             }
-            graph.AddLine("p", transSolve.time, yVal, Color.yellow);
+            graph.AddLine("p", transSolve.time, yVal, cmColor);
             yVal = transSolve.GetSolution(2);
             for (int k = 0; k < yVal.Length; k++)
             {
@@ -773,7 +773,7 @@ namespace ferram4
                     yVal[k] = -50;
             }
             MonoBehaviour.print("Got 2");
-            graph.AddLine("r", transSolve.time, yVal, Color.blue);
+            graph.AddLine("r", transSolve.time, yVal, cdColor);
             yVal = transSolve.GetSolution(3);
             for (int k = 0; k < yVal.Length; k++)
             {
@@ -784,7 +784,7 @@ namespace ferram4
                     yVal[k] = -50;
             }
             MonoBehaviour.print("Got 3");
-            graph.AddLine("φ", transSolve.time, yVal, Color.cyan);
+            graph.AddLine("φ", transSolve.time, yVal, clColor);
             graph.SetBoundaries(0, endTime, -10, 10);
             graph.SetGridScaleUsingValues(1, 5);
             graph.horizontalLabel = "time";
@@ -864,7 +864,7 @@ namespace ferram4
                     yVal[k] = 50;
                 else if (yVal[k] < -50)
                     yVal[k] = -50;
-            graph.AddLine("w", transSolve.time, yVal, Color.green);
+            graph.AddLine("w", transSolve.time, yVal, l_DColor);
             yVal = transSolve.GetSolution(1);
             MonoBehaviour.print("Got 1");
             for (int k = 0; k < yVal.Length; k++)
@@ -872,7 +872,7 @@ namespace ferram4
                     yVal[k] = 50;
                 else if (yVal[k] < -50)
                     yVal[k] = -50;
-            graph.AddLine("u", transSolve.time, yVal, Color.yellow);
+            graph.AddLine("u", transSolve.time, yVal, cmColor);
             yVal = transSolve.GetSolution(2);
             for (int k = 0; k < yVal.Length; k++)
             {
@@ -883,7 +883,7 @@ namespace ferram4
                     yVal[k] = -50;
             }
             MonoBehaviour.print("Got 2");
-            graph.AddLine("q", transSolve.time, yVal, Color.blue);
+            graph.AddLine("q", transSolve.time, yVal, cdColor);
             yVal = transSolve.GetSolution(3);
             for (int k = 0; k < yVal.Length; k++)
             {
@@ -894,7 +894,7 @@ namespace ferram4
                     yVal[k] = -50;
             }
             MonoBehaviour.print("Got 3");
-            graph.AddLine("θ", transSolve.time, yVal, Color.cyan);
+            graph.AddLine("θ", transSolve.time, yVal, clColor);
             graph.SetBoundaries(0, endTime, -10, 10);
             graph.SetGridScaleUsingValues(1, 5);
             graph.horizontalLabel = "time";
