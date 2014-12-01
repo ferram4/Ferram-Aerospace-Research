@@ -30,17 +30,13 @@ namespace FerramAerospaceResearch.FARCollections
             UpHeap(insertIndex);
         }
 
-        public T DeleteMin()
+        public void DeleteMin()
         {
-            T val = _heapArray[0];
-
             int lastIndex = _heapArray.Count - 1;
 
             _heapArray[0] = _heapArray[lastIndex];
             _heapArray.RemoveAt(lastIndex);
             MinHeapify(0);
-
-            return val;
         }
 
         private void UpHeap(int index)
