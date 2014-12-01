@@ -172,7 +172,7 @@ namespace ferram4
         double u0 = 100;
 
         string time_end = "10";
-        string dT = "0.01";
+        string dT = "0.02";
 
         double[] MOI_stabDerivs = new double[27];
 
