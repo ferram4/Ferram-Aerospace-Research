@@ -87,6 +87,11 @@ namespace ferram4
         private static bool vehicleFueled = true;
         private static bool spoilersDeployed = false;
 
+        public static Color clColor;
+        public static Color cdColor;
+        public static Color cmColor;
+        public static Color l_DColor;
+
 
         private AnalysisHelpTab analysisHelpTab = 0;
 
@@ -167,7 +172,7 @@ namespace ferram4
         double u0 = 100;
 
         string time_end = "10";
-        string dT = "0.01";
+        string dT = "0.02";
 
         double[] MOI_stabDerivs = new double[27];
 
@@ -182,6 +187,8 @@ namespace ferram4
 
             celestialBodyDropdown = new FARGUIDropDown<CelestialBody>(bodyNames, bodies, kerbinIndex);
 
+            LoadColors();
+            windowPos.height = 500;
         }
 
         public void OnDestroy()
@@ -365,15 +372,14 @@ namespace ferram4
             TabLabelStyle.alignment = TextAnchor.UpperCenter;
             if (!minimize)
             {
-                bool tmp = false;
                 //GUILayout.BeginHorizontal();
 
                 FAREditorMode lastMode = Mode;
 
                 Mode = (FAREditorMode)GUILayout.SelectionGrid((int)Mode, FAReditorMode_str, 4, ButtonStyle);
 
-                if (lastMode != Mode)
-                    tmp = true;
+                bool tmp = !(lastMode == Mode);
+
 
                 //GUILayout.EndHorizontal();
                 if (Mode == FAREditorMode.STATIC)
@@ -745,7 +751,7 @@ namespace ferram4
                 else if (yVal[k] < -50)
                     yVal[k] = -50;
             }
-            graph.AddLine("β", transSolve.time, yVal, Color.green);
+            graph.AddLine("β", transSolve.time, yVal, l_DColor);
             yVal = transSolve.GetSolution(1);
             MonoBehaviour.print("Got 1");
             for (int k = 0; k < yVal.Length; k++)
@@ -756,7 +762,7 @@ namespace ferram4
                 else if (yVal[k] < -50)
                     yVal[k] = -50;
             }
-            graph.AddLine("p", transSolve.time, yVal, Color.yellow);
+            graph.AddLine("p", transSolve.time, yVal, cmColor);
             yVal = transSolve.GetSolution(2);
             for (int k = 0; k < yVal.Length; k++)
             {
@@ -767,7 +773,7 @@ namespace ferram4
                     yVal[k] = -50;
             }
             MonoBehaviour.print("Got 2");
-            graph.AddLine("r", transSolve.time, yVal, Color.blue);
+            graph.AddLine("r", transSolve.time, yVal, cdColor);
             yVal = transSolve.GetSolution(3);
             for (int k = 0; k < yVal.Length; k++)
             {
@@ -778,7 +784,7 @@ namespace ferram4
                     yVal[k] = -50;
             }
             MonoBehaviour.print("Got 3");
-            graph.AddLine("φ", transSolve.time, yVal, Color.cyan);
+            graph.AddLine("φ", transSolve.time, yVal, clColor);
             graph.SetBoundaries(0, endTime, -10, 10);
             graph.SetGridScaleUsingValues(1, 5);
             graph.horizontalLabel = "time";
@@ -858,7 +864,7 @@ namespace ferram4
                     yVal[k] = 50;
                 else if (yVal[k] < -50)
                     yVal[k] = -50;
-            graph.AddLine("w", transSolve.time, yVal, Color.green);
+            graph.AddLine("w", transSolve.time, yVal, l_DColor);
             yVal = transSolve.GetSolution(1);
             MonoBehaviour.print("Got 1");
             for (int k = 0; k < yVal.Length; k++)
@@ -866,7 +872,7 @@ namespace ferram4
                     yVal[k] = 50;
                 else if (yVal[k] < -50)
                     yVal[k] = -50;
-            graph.AddLine("u", transSolve.time, yVal, Color.yellow);
+            graph.AddLine("u", transSolve.time, yVal, cmColor);
             yVal = transSolve.GetSolution(2);
             for (int k = 0; k < yVal.Length; k++)
             {
@@ -877,7 +883,7 @@ namespace ferram4
                     yVal[k] = -50;
             }
             MonoBehaviour.print("Got 2");
-            graph.AddLine("q", transSolve.time, yVal, Color.blue);
+            graph.AddLine("q", transSolve.time, yVal, cdColor);
             yVal = transSolve.GetSolution(3);
             for (int k = 0; k < yVal.Length; k++)
             {
@@ -888,7 +894,7 @@ namespace ferram4
                     yVal[k] = -50;
             }
             MonoBehaviour.print("Got 3");
-            graph.AddLine("θ", transSolve.time, yVal, Color.cyan);
+            graph.AddLine("θ", transSolve.time, yVal, clColor);
             graph.SetBoundaries(0, endTime, -10, 10);
             graph.SetGridScaleUsingValues(1, 5);
             graph.horizontalLabel = "time";
@@ -1946,43 +1952,42 @@ namespace ferram4
             double realMin = Math.Min(Math.Floor(minBounds), -0.25);
             double realMax = Math.Max(Math.Ceiling(maxBounds), 0.25);
 
-            Color darkCyan = new Color(0f, 0.5f, 0.5f);
-            Color darkRed = new Color(0.5f, 0f, 0f);
-            Color darkYellow = new Color(0.5f, 0.5f, 0f);
-            Color darkGreen = new Color(0f, 0.5f, 0f);
+            Color darkCl = new Color(clColor.r * 0.5f, clColor.g * 0.5f, clColor.b * 0.5f);
+            Color darkCd = new Color(cdColor.r * 0.5f, cdColor.g * 0.5f, cdColor.b * 0.5f);
+            Color darkCm = new Color(cmColor.r * 0.5f, cmColor.g * 0.5f, cmColor.b * 0.5f);
+            Color darkL_D = new Color(l_DColor.r * 0.5f, l_DColor.g * 0.5f, l_DColor.b * 0.5f);
             bool hasHighToLowAoA = ClValues2 != null && CdValues2 != null && CmValues2 != null && LDValues2 != null;
             graph.Clear();
             graph.SetBoundaries(lowerBound, upperBound, realMin, realMax);
             graph.SetGridScaleUsingValues(5, 0.5);
 
             if (hasHighToLowAoA)
-                graph.AddLine("Cd2", AlphaValues, CdValues2, darkRed, 1, false);
-            graph.AddLine("Cd", AlphaValues, CdValues, Color.red);
+                graph.AddLine("Cd2", AlphaValues, CdValues2, darkCd, 1, false);
+            graph.AddLine("Cd", AlphaValues, CdValues, cdColor);
 
             if (hasHighToLowAoA)
-                graph.AddLine("Cl2", AlphaValues, ClValues2, darkCyan, 1, false);
-            graph.AddLine("Cl", AlphaValues, ClValues, Color.cyan);
+                graph.AddLine("Cl2", AlphaValues, ClValues2, darkCl, 1, false);
+            graph.AddLine("Cl", AlphaValues, ClValues, clColor);
 
             if (hasHighToLowAoA)
-                graph.AddLine("L/D2", AlphaValues, LDValues2, darkGreen, 1, false);
-            graph.AddLine("L/D", AlphaValues, LDValues, Color.green);
+                graph.AddLine("L/D2", AlphaValues, LDValues2, darkL_D, 1, false);
+            graph.AddLine("L/D", AlphaValues, LDValues, l_DColor);
 
             if (hasHighToLowAoA)
-                graph.AddLine("Cm2", AlphaValues, CmValues2, darkYellow, 1, false);
-            graph.AddLine("Cm", AlphaValues, CmValues, Color.yellow);
+                graph.AddLine("Cm2", AlphaValues, CmValues2, darkCm, 1, false);
+            graph.AddLine("Cm", AlphaValues, CmValues, cmColor);
 
             if (hasHighToLowAoA)
             {
                 graph.SetLineVerticalScaling("L/D2", 0.1);
-                AddZeroMarks("Cm2", AlphaValues, CmValues2, upperBound - lowerBound, realMax - realMin, darkYellow);
+                AddZeroMarks("Cm2", AlphaValues, CmValues2, upperBound - lowerBound, realMax - realMin, darkCm);
             }
             graph.SetLineVerticalScaling("L/D", 0.1);
-            AddZeroMarks("Cm", AlphaValues, CmValues, upperBound - lowerBound, realMax - realMin, Color.yellow);
+            AddZeroMarks("Cm", AlphaValues, CmValues, upperBound - lowerBound, realMax - realMin, cmColor);
 
             graph.horizontalLabel = horizontalLabel;
             graph.verticalLabel = "Cl\nCd\nCm\nL/D / 10";
             graph.Update();
-
         }
 
         private void AddZeroMarks(String key, double[] x, double[] y, double xsize, double ysize, Color color)
@@ -2069,6 +2074,91 @@ namespace ferram4
             }
         }
 
+        public static void LoadColors()
+        {
+            if (clColor != new Color())
+                return;
+
+            clColor = Color.cyan;
+            cdColor = Color.red;
+            cmColor = Color.yellow;
+            l_DColor = Color.green;
+
+            foreach (ConfigNode node in GameDatabase.Instance.GetConfigNodes("FARGUIColors"))
+            {
+                if (node.HasValue("ClColor"))
+                    clColor = ReadColor(node.GetValue("ClColor"));
+
+                if (node.HasValue("CdColor"))
+                    cdColor = ReadColor(node.GetValue("CdColor"));
+
+                if (node.HasValue("CmColor"))
+                    cmColor = ReadColor(node.GetValue("CmColor"));
+
+                if (node.HasValue("L_DColor"))
+                    l_DColor = ReadColor(node.GetValue("L_DColor"));
+            }
+        }
+
+        private static Color ReadColor(string input)
+        {
+            char[] separators = {',', ' ', ';'};
+            string[] splitValues = input.Split(separators);
+
+            int curIndex = 0;
+            Color color = new Color();
+            for(int i = 0; i < splitValues.Length; i++)
+            {
+                string s = splitValues[i];
+                if(s.Length > 0)
+                {
+                    float val;
+                    if(float.TryParse(s, out val))
+                    {
+                        if (curIndex == 0)
+                            color.r = val;
+                        else if (curIndex == 1)
+                            color.g = val;
+                        else
+                        {
+                            color.b = val;
+                            return color;
+                        }
+                        curIndex++;
+                    }
+                }
+            }
+
+            return color;
+        }
+
+        public static void SaveCustomColors()
+        {
+            ConfigNode node = new ConfigNode("@FARGUIColors[Default]:FINAL");
+            node.AddValue("ClColor", clColor.ToString());
+            node.AddValue("CdColor", cdColor.ToString());
+            node.AddValue("CmColor", cmColor.ToString());
+            node.AddValue("L_DColor", l_DColor.ToString());
+
+            ConfigNode saveNode = new ConfigNode();
+            saveNode.AddNode(node);
+            saveNode.Save(KSPUtil.ApplicationRootPath.Replace("\\", "/") + "GameData/FerramAerospaceResearch/CustomFARGUIColors.cfg");
+        }
+
+        private static ConfigNode StringOverrideNode(List<string> stringList, string nodeName, string fieldName)
+        {
+            ConfigNode node = new ConfigNode(nodeName);
+            int i = 0;
+
+            foreach (string s in stringList)
+            {
+                string tmp = fieldName;
+                i++;
+                node.AddValue(tmp, s);
+            }
+
+            return node;
+        }
         /*        public void SaveGUIParameters()
                 {
                     var config = KSP.IO.PluginConfiguration.CreateForType<FAREditorGUI>();

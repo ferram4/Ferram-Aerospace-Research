@@ -63,8 +63,6 @@ namespace ferram4
         public const int ID_DECREASE_FLAP_DEFLECTION = 2;
         public const int ACTION_COUNT = 3;
 
-        static int selectedConfig = -1;
-        static int selectedGroup = -1;
         static Vector2 scrollPos = Vector2.zero;
         // private lookup tables
         static KSPActionGroup[] id2actionGroup = { KSPActionGroup.Brakes, KSPActionGroup.None, KSPActionGroup.None };

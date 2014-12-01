@@ -461,8 +461,16 @@ namespace ferram4
             GUILayout.Label("Debug / Cheat Options");
             FARDebugValues.useSplinesForSupersonicMath = GUILayout.Toggle(FARDebugValues.useSplinesForSupersonicMath, "Use Splines for Supersonic Math", thisStyle);
             FARDebugValues.allowStructuralFailures = GUILayout.Toggle(FARDebugValues.allowStructuralFailures, "Allow Aero-structural Failures", thisStyle);
+            GUILayout.Label("Editor GUI Graph Colors");
+            ChangeColor("Cl", ref FAREditorGUI.clColor);
+            ChangeColor("Cd", ref FAREditorGUI.cdColor);
+            ChangeColor("Cm", ref FAREditorGUI.cmColor);
+            ChangeColor("L_D", ref FAREditorGUI.l_DColor);
+            
+
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
             GUILayout.Label("Other Options"); // DaMichel: put it above the toolbar toggle
             GUILayout.BeginVertical();
             if (ToolbarManager.ToolbarAvailable)
@@ -491,6 +499,31 @@ namespace ferram4
             }
             FARActionGroupConfiguration.DrawGUI();
             GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+        }
+
+        private void ChangeColor(string colorTitle, ref Color input)
+        {
+            GUILayout.BeginHorizontal(GUILayout.ExpandWidth(false));
+
+            GUILayout.Label(colorTitle + " (r,g,b):", GUILayout.Width(80));
+
+            string tmp = input.r.ToString();
+            FARGUIUtils.TextEntryField("", 0, ref tmp);
+            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
+            input.r = Convert.ToSingle(tmp);
+
+            tmp = input.g.ToString();
+            FARGUIUtils.TextEntryField("", 0, ref tmp);
+            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
+            input.g = Convert.ToSingle(tmp);
+
+            tmp = input.b.ToString();
+            FARGUIUtils.TextEntryField("", 0, ref tmp);
+            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
+            input.b = Convert.ToSingle(tmp);
+
+            GUILayout.EndHorizontal();
         }
 
         public static void LoadConfigs()
@@ -509,6 +542,7 @@ namespace ferram4
             FARPartClassification.LoadClassificationTemplates();
             FARAeroUtil.LoadAeroDataFromConfig();
             FARActionGroupConfiguration.LoadConfiguration();
+            FAREditorGUI.LoadColors();
         }
 
         public static void SaveConfigs()
@@ -528,6 +562,7 @@ namespace ferram4
             FARPartClassification.SaveCustomClassificationTemplates();
             FARAeroStress.SaveCustomStressTemplates();
             FARActionGroupConfiguration.SaveConfigruration();
+            FAREditorGUI.SaveCustomColors();
             config.save();
         }
         void OnDestroy()
