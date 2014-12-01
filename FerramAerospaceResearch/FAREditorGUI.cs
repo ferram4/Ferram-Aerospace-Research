@@ -188,6 +188,7 @@ namespace ferram4
             celestialBodyDropdown = new FARGUIDropDown<CelestialBody>(bodyNames, bodies, kerbinIndex);
 
             LoadColors();
+            windowPos.height = 500;
         }
 
         public void OnDestroy()
@@ -371,15 +372,14 @@ namespace ferram4
             TabLabelStyle.alignment = TextAnchor.UpperCenter;
             if (!minimize)
             {
-                bool tmp = false;
                 //GUILayout.BeginHorizontal();
 
                 FAREditorMode lastMode = Mode;
 
                 Mode = (FAREditorMode)GUILayout.SelectionGrid((int)Mode, FAReditorMode_str, 4, ButtonStyle);
 
-                if (lastMode != Mode)
-                    tmp = true;
+                bool tmp = !(lastMode == Mode);
+
 
                 //GUILayout.EndHorizontal();
                 if (Mode == FAREditorMode.STATIC)

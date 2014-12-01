@@ -289,7 +289,7 @@ namespace ferram4
                     double M = 0.1;
                     //float gamma = 1.4f;
 
-                    maxPressureCoefficient.Add(0, 1);
+                    maxPressureCoefficient.Add(0, 1, 0, 0);
 
                     if (currentBodyAtm == new Vector3d())
                     {
@@ -305,20 +305,20 @@ namespace ferram4
                         {
                             value = StagnationPressureCalc(M);
 
-                            d_value = M * M * (gamma - 1) * 0.5;
-                            d_value++;
-                            d_value = Math.Pow(d_value, 1 / (gamma - 1));
-                            d_value *= gamma * M * M;
+                            d_value = (gamma - 1) * M * M * 0.5 + 1;
+                            d_value *= M;
+                            d_value = value * 2 / d_value;
 
-                            d_value -= 2 * value;
-                            d_value += 2;
-                            d_value *= 2;
-                            d_value /= (gamma * M * M * M);
+                            double tmp = value - 1;
+                            tmp *= 4;
+                            tmp /= gamma * M * M * M;
+                            d_value -= tmp;
+
                         }
                         else
                         {
-                            value = (gamma + 1) * (gamma + 1);                  //Rayleigh Pitot Tube Formula; gives max stagnation pressure behind shock
-                            value *= M * M;
+                            value = (gamma + 1) * M;                  //Rayleigh Pitot Tube Formula; gives max stagnation pressure behind shock
+                            value *= value;
 
                             d_value = value;
 
@@ -330,11 +330,12 @@ namespace ferram4
 
                             d_value /= (4 * M * M - 2) * gamma + 2;
                             d_value = Math.Pow(d_value, gamma / (gamma - 1));
-                            d_value = gamma + 1 - d_value;
+                            //d_value = gamma + 1 - d_value;
                             d_value *= 4;
                             d_value /= M * M * M * gamma * (gamma + 1);
 
                         }
+
                         value--;                                //and now to convert to pressure coefficient
                         value *= 2 / (gamma * M * M);
 
