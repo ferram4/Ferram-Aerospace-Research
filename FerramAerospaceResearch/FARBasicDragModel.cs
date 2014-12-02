@@ -336,7 +336,7 @@ namespace ferram4
 
         public double GetDragEditor(Vector3d velocityVector, double MachNumber)
         {
-            AttachNodeCdAdjust();
+            //AttachNodeCdAdjust();     //shouldn't be necessary anymore
             velocityEditor = velocityVector;
             if (part)
                 RunDragCalculation(velocityEditor, MachNumber, 1);

@@ -98,12 +98,12 @@ namespace ferram4
             //string s = "";
 
             int xPixel = 0, yPixel = 0, lastXPixel = 0, lastYPixel = 0;
-            while (curAltitude < maxAlt)
+            while (curAltitude <= maxAlt)
             {
                 double tmp = (curAltitude - minAlt) / (maxAlt - minAlt);
                 lastYPixel = yPixel;
                 yPixel = (int)(tmp * height);
-                while (curMach < maxMach)// && (specExcessPower >= 0 || curMach < 0.5))
+                while (curMach <= maxMach)// && (specExcessPower >= 0 || curMach < 0.5))
                 {
                     double vel = Math.Sqrt((FlightGlobals.getExternalTemperature((float)curAltitude, body) + 273.15 + FARAeroUtil.currentBodyTemp) * FARAeroUtil.currentBodyAtm.x) * curMach;
 
@@ -113,7 +113,7 @@ namespace ferram4
 
                     Vector3d velocity = Vector3d.forward * Math.Cos(alpha) - Vector3d.up * Math.Sin(alpha);
                     double thrust = CalculateThrust(curMach, vel, curAltitude, velocity, body, standardLegacyEngines, standardFXEngines, ajeJetEngines, ajePropEngines, ajeInlets);
-                    specExcessPower = vel * (thrust - drag) / mass * 1000;
+                    specExcessPower = vel * (thrust - drag) / mass;
 
                     lastXPixel = xPixel;
                     tmp = (curMach - minMach) / (maxMach - minMach);
@@ -282,8 +282,6 @@ namespace ferram4
             {
                 area = 1;
             }
-
-            mass *= 1000;
         }
 
         //This needs heavy optimization for the chart to be usable; it takes too long to hit all the points
@@ -294,7 +292,7 @@ namespace ferram4
             double effectiveG = CalculateAccelerationDueToGravity(body, alt);     //This is the effect of gravity
             double q = FARAeroUtil.GetCurrentDensity(body, alt) * u0 * u0 * 0.5;
             effectiveG -= u0 * u0 / (alt + body.Radius);                          //This is the effective reduction of gravity due to high velocity
-            double neededCl = mass * effectiveG / (q * area);
+            double neededCl = mass * effectiveG * 1000 / (q * area);
 
             double lowerAlpha, upperAlpha;
             lowerAlpha = -10;
@@ -384,7 +382,7 @@ namespace ferram4
 
             Vector3d velocity = forward * Math.Cos(alpha) - up * Math.Sin(alpha);
 
-            velocity.Normalize();
+            //velocity.Normalize();
 
             Vector3d liftVector = -forward * Math.Sin(alpha) - up * Math.Cos(alpha);
 
@@ -398,8 +396,6 @@ namespace ferram4
 
                 if (clear)
                     w.EditorClClear(reset_stall);
-
-                Vector3d relPos = w.GetAerodynamicCenter() - CoM;
 
                 if (w is FARControllableSurface)
                     (w as FARControllableSurface).SetControlStateEditor(CoM, velocity, 0, 0, 0, flap_setting, spoilersDeployed);
@@ -481,7 +477,7 @@ namespace ferram4
 
             Vector3d velocity = forward * Math.Cos(alpha) * Math.Cos(beta) + right * (Math.Sin(phi) * Math.Sin(alpha) * Math.Cos(beta) - Math.Cos(phi) * Math.Sin(beta)) - up * (Math.Cos(phi) * Math.Sin(alpha) * Math.Cos(beta) - Math.Cos(phi) * Math.Sin(beta));
 
-            velocity.Normalize();
+            //velocity.Normalize();
 
             Vector3d liftVector = -forward * Math.Sin(alpha) + right * Math.Sin(phi) * Math.Cos(alpha) - up * Math.Cos(phi) * Math.Cos(alpha);
 
