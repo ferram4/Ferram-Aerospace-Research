@@ -1277,9 +1277,11 @@ namespace ferram4
             double neededCl = mass * effectiveG / (q * area);
 
             //Longitudinal Mess
+            aeroSim.SetState(M, neededCl, CoM, 0, flap_setting, spoilersDeployed);
+
 
             double pertCl, pertCd, pertCm, pertCy, pertCn, pertC_roll;
-            int iter = 7;
+/*            int iter = 7;
             for (; ; )
             {
                 aeroSim.GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M, 0, out nomCl, out nomCd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true, flap_setting, spoilersDeployed);
@@ -1295,7 +1297,14 @@ namespace ferram4
                 double delta = -(neededCl - nomCl) / ((pertCl - nomCl) * 100);
                 delta = Math.Sign(delta) * Math.Min(0.4f * iter * iter, Math.Abs(delta));
                 alpha = Math.Max(-5f, Math.Min(25f, alpha + delta));
-            };
+            };*/
+            alpha = FARMathUtil.BrentsMethod(aeroSim.FunctionIterateForAlpha, -5, 25);
+            nomCl = neededCl;
+            nomCd = aeroSim.Cd;
+            nomCm = aeroSim.Cm;
+            nomCy = aeroSim.Cy;
+            nomCn = aeroSim.Cn;
+            nomC_roll = aeroSim.C_roll;
 
             //alpha_str = (alpha * Mathf.PI / 180).ToString();
 

@@ -177,5 +177,31 @@ namespace ferram4
             Cn *= recipArea / b_2;
             C_roll *= recipArea / b_2;
         }
+
+        private double MachNumber;
+        private double neededCl;
+        Vector3d CoM;
+        double pitch;
+        int flaps;
+        bool spoilers;
+
+        public void SetState(double M, double Cl, Vector3d CoM, double pitch, int flapSetting, bool spoilers)
+        {
+            MachNumber = M;
+            neededCl = Cl;
+            this.CoM = CoM;
+            this.pitch = pitch;
+            flaps = flapSetting;
+            this.spoilers = spoilers;
+        }
+
+        public double FunctionIterateForAlpha(double alpha)
+        {
+            double Cl;
+            GetClCdCmSteady(CoM, alpha, 0, 0, 0, 0, 0, MachNumber, pitch, out Cl, out Cd, out Cm, out Cy, out Cn, out C_roll, true, true, flaps, spoilers);
+            return Cl - neededCl;
+        }
+
+        public double Cd, Cm, Cy, Cn, C_roll;
     }
 }

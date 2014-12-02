@@ -165,5 +165,89 @@ namespace ferram4
             int tmp2 = (int)(b * (tmp - 1072632447) + 1072632447);
             return BitConverter.Int64BitsToDouble(((long)tmp2) << 32);
         }
+
+        public static double BrentsMethod(Func<double, double> function, double a, double b, double epsilon = 0.001)
+        {
+            double fa, fb;
+            fa = function(a);
+            fb = function(b);
+
+            if (fa * fb > 0)
+                return 0;
+
+            if(Math.Abs(fa) < Math.Abs(fb))
+            {
+                double tmp = fa;
+                fa = fb;
+                fb = tmp;
+
+                tmp = a;
+                a = b;
+                b = tmp;
+            }
+
+            double c = a, d = a, fc = function(c);
+
+            double s = 0, fs = 10; 
+
+            bool flag = true;
+            while(fs != 0 && Math.Abs(a - b) > epsilon)
+            {
+                if(fa != fc && fb != fc)
+                {
+                    s = a * fc * fb / ((fa - fb) * (fa - fc));
+                    s += b * fc * fa / ((fb - fa) * (fb - fc));
+                    s += c * fc * fb / ((fc - fa) * (fc - fb));
+                }
+                else
+                {
+                    s = (b - a) / (fb - fa);
+                    s *= fb;
+                    s = b - s;
+                }
+
+                double b_s = b - s, b_c = b-c, c_d = c - d;
+
+                if ((b_s) * ((3 * a + b) * 0.25 - s) < 0 ||
+                    flag && Math.Abs(b_s) >= Math.Abs(b_c) * 0.5 ||
+                    !flag && Math.Abs(b_s) >= Math.Abs(c_d) * 0.5 ||
+                    flag && Math.Abs(b_c) < epsilon ||
+                    !flag && Math.Abs(c_d) < epsilon)
+                {
+                    s = a + b;
+                    s *= 0.5;
+                    flag = true;
+                }
+                else
+                    flag = false;
+
+                fs = function(s);
+                d = c;
+                c = b;
+                if (fa * fs < 0)
+                {
+                    b = s;
+                    fb = fs;
+                }
+                else
+                {
+                    a = s;
+                    fa = fs;
+                }
+
+                if (Math.Abs(fa) < Math.Abs(fb))
+                {
+                    double tmp = fa;
+                    fa = fb;
+                    fb = tmp;
+
+                    tmp = a;
+                    a = b;
+                    b = tmp;
+                }
+
+            }
+            return s;
+        }
     }
 }
