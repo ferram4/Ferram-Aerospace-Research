@@ -612,6 +612,29 @@ namespace ferram4
                     p.PhysicsSignificance == (int)Part.PhysicalSignificance.NONE);
         }
 
+        private static List<FARWingAerodynamicModel> curEditorWingCache = null;
+        private static List<FARBasicDragModel> curEditorOtherDragCache = null;
+
+        public static List<FARWingAerodynamicModel> CurEditorWings
+        {
+            get
+            {
+                if (curEditorWingCache == null)
+                    curEditorWingCache = ListEditorWings(false);
+                return curEditorWingCache;
+            }
+        }
+
+        public static List<FARBasicDragModel> CurEditorOtherDrag
+        {
+            get
+            {
+                if (curEditorOtherDragCache == null)
+                    curEditorOtherDragCache = ListEditorOtherDrag(false);
+                return curEditorOtherDragCache;
+            }
+        }
+
         // Parts currently added to the vehicle in the editor
         private static List<Part> CurEditorPartsCache = null;
 
@@ -641,6 +664,8 @@ namespace ferram4
         public static void ResetEditorParts()
         {
             AllEditorPartsCache = CurEditorPartsCache = null;
+            curEditorWingCache = null;
+            curEditorOtherDragCache = null;
         }
 
         // Checks if there are any ghost parts almost attached to the craft
@@ -671,6 +696,36 @@ namespace ferram4
             }
 
             return list;
+        }
+
+        public static List<FARWingAerodynamicModel> ListEditorWings(bool include_selected)
+        {
+            List<Part> list = CurEditorParts;
+
+            List<FARWingAerodynamicModel> wings = new List<FARWingAerodynamicModel>();
+            for(int i = 0; i < list.Count; i++)
+            {
+                Part p = list[i];
+                FARWingAerodynamicModel wing = p.GetComponent<FARWingAerodynamicModel>();
+                if ((object)wing != null)
+                    wings.Add(wing);
+            }
+            return wings;
+        }
+
+        public static List<FARBasicDragModel> ListEditorOtherDrag(bool include_selected)
+        {
+            List<Part> list = CurEditorParts;
+
+            List<FARBasicDragModel> otherDrag = new List<FARBasicDragModel>();
+            for (int i = 0; i < list.Count; i++)
+            {
+                Part p = list[i];
+                FARBasicDragModel dragModule = p.GetComponent<FARBasicDragModel>();
+                if ((object)dragModule != null)
+                    otherDrag.Add(dragModule);
+            }
+            return otherDrag;
         }
 
         private static void RecursePartList(List<Part> list, Part part)
