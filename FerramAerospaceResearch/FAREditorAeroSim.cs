@@ -111,8 +111,8 @@ namespace ferram4
                     alpha = 0;
                     alpha *= FARMathUtil.deg2rad;
 
-                    Vector3d velocity = Vector3d.forward * Math.Cos(alpha) - Vector3d.up * Math.Sin(alpha);
-                    double thrust = CalculateThrust(curMach, vel, curAltitude, velocity, body, standardLegacyEngines, standardFXEngines, ajeJetEngines, ajePropEngines, ajeInlets);
+                    Vector3d velocityVec = Vector3d.forward * Math.Cos(alpha) - Vector3d.up * Math.Sin(alpha);
+                    double thrust = CalculateThrust(curMach, vel, curAltitude, velocityVec, body, standardLegacyEngines, standardFXEngines, ajeJetEngines, ajePropEngines, ajeInlets);
                     specExcessPower = vel * (thrust - drag) / mass;
 
                     lastXPixel = xPixel;
@@ -270,6 +270,9 @@ namespace ferram4
                 if (FARAeroUtil.IsNonphysical(p))
                     continue;
                 double partMass = p.mass;
+                if (p.Resources.Count > 0)
+                    partMass += p.GetResourceMass();
+
                 CoM += partMass * (Vector3d)p.transform.TransformPoint(p.CoMOffset);
                 mass += partMass;
                 FARWingAerodynamicModel w = p.GetComponent<FARWingAerodynamicModel>();
@@ -293,7 +296,7 @@ namespace ferram4
             double neededCl = mass * effectiveG * 1000 / (q * area);
 
             SetState(M, neededCl, CoM, 0, 0, false);
-            alpha = FARMathUtil.BrentsMethod(FunctionIterateForAlpha, -5, 25, 10, 0.05);
+            alpha = FARMathUtil.BrentsMethod(FunctionIterateForAlpha, -5, 25, 10, 0.1);
             //double Cd = this.Cd;
 
             if (alpha >= 25)
