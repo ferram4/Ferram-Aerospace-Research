@@ -121,11 +121,11 @@ namespace ferram4
                     //Debug.Log("Mach: " + curMach + " Alt: " + curAltitude + " thrust: " + thrust + " drag: " + drag + " vel: " + vel + " AoA: " + alpha + "\n\r");
                     if (xPixel < lastXPixel)
                     {
-                        texture.SetPixel(xPixel, yPixel, ColorFromVal(maxExcessPower, specExcessPower));
-                        curMach += 0.01;
+                        texture.SetPixel(xPixel, yPixel, ColorFromVal((float)maxExcessPower, specExcessPower));
+                        curMach += 0.025;
                         continue;
                     }
-                    Color topRightColor = ColorFromVal(maxExcessPower, specExcessPower);
+                    Color topRightColor = ColorFromVal((float)maxExcessPower, specExcessPower);
                     Color bottomLeftColor = texture.GetPixel(lastXPixel, lastYPixel);
                     Color topLeftColor = texture.GetPixel(lastXPixel, yPixel);
                     Color bottomRightColor = texture.GetPixel(xPixel, lastYPixel);
@@ -139,9 +139,9 @@ namespace ferram4
                             texture.SetPixel(i, j, bottomLeftColor + xFrac * (bottomRightColor - bottomLeftColor) + yFrac * (topLeftColor - bottomLeftColor) + xFrac * yFrac * (bottomLeftColor + topRightColor - bottomRightColor - topLeftColor));
                         }
                     }
-                    curMach += 0.01;
+                    curMach += 0.025;
                 }
-                curAltitude += 100;
+                curAltitude += 150;
                 curMach = minMach;
             }
             texture.Apply();
@@ -150,7 +150,7 @@ namespace ferram4
             return texture;
         }
 
-        private Color ColorFromVal(double maximumVal, double val)
+        private Color ColorFromVal(float maximumVal, double val)
         {
             float fracMaxVal = (float)(val / maximumVal);
 
@@ -218,14 +218,15 @@ namespace ferram4
                 MethodInfo calcThrust = engineType.GetMethod("CalculateThrust");
                 calcThrust.Invoke(m, new object[] { 1 });
 
-                if(m.part.Modules.Contains("ModuleEngines"))
-                {
-                    thrust += ((ModuleEngines)m.part.Modules["ModuleEngines"]).maxThrust;
-                }
-                else if (m.part.Modules.Contains("ModuleEnginesFX"))
-                {
-                    thrust += ((ModuleEnginesFX)m.part.Modules["ModuleEnginesFX"]).maxThrust;
-                }
+                if(m.part.temperature <= m.part.maxTemp)
+                    if(m.part.Modules.Contains("ModuleEngines"))
+                    {
+                        thrust += ((ModuleEngines)m.part.Modules["ModuleEngines"]).maxThrust;
+                    }
+                    else if (m.part.Modules.Contains("ModuleEnginesFX"))
+                    {
+                        thrust += ((ModuleEnginesFX)m.part.Modules["ModuleEnginesFX"]).maxThrust;
+                    }
             }
             return thrust;
         }
@@ -296,7 +297,7 @@ namespace ferram4
             double neededCl = mass * effectiveG * 1000 / (q * area);
 
             SetState(M, neededCl, CoM, 0, 0, false);
-            alpha = FARMathUtil.BrentsMethod(FunctionIterateForAlpha, -5, 25, 10, 0.1);
+            alpha = FARMathUtil.BrentsMethod(FunctionIterateForAlphaExcessPower, -5, 25, 10, 0.1);
             //double Cd = this.Cd;
 
             if (alpha >= 25)
@@ -539,6 +540,14 @@ namespace ferram4
             flaps = flapSetting;
             this.spoilers = spoilers;
         }
+
+        public double FunctionIterateForAlphaExcessPower(double alpha)
+        {
+            double Cl;
+            GetClCdCmSteady(CoM, alpha, MachNumber, out Cl, out Cd, true, true, flaps, spoilers);
+            return Cl - neededCl;
+        }
+
 
         public double FunctionIterateForAlpha(double alpha)
         {
