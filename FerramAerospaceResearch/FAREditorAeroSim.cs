@@ -98,16 +98,20 @@ namespace ferram4
             //string s = "";
 
             int xPixel = 0, yPixel = 0, lastXPixel = 0, lastYPixel = 0;
-            while (curAltitude <= maxAlt)
+            while (curMach <= maxMach)
             {
-                double tmp = (curAltitude - minAlt) / (maxAlt - minAlt);
-                lastYPixel = yPixel;
-                yPixel = (int)(tmp * height);
-                while (curMach <= maxMach)// && (specExcessPower >= 0 || curMach < 0.5))
+                lastXPixel = xPixel;
+                double tmp = (curMach - minMach) / (maxMach - minMach);
+                xPixel = (int)(tmp * width);
+
+                bool contAltUntilPosPower = true;
+                double estLiftSlope = EstimateLiftSlope(CoM, curMach);
+
+                while (curAltitude <= maxAlt && (contAltUntilPosPower || specExcessPower > 0))
                 {
                     double vel = Math.Sqrt((FlightGlobals.getExternalTemperature((float)curAltitude, body) + FARAeroUtil.currentBodyTemp) * FARAeroUtil.currentBodyAtm.x) * curMach;
 
-                    double drag = IterateToSteadyFlightDrag(out alpha, vel, curAltitude, curMach, body, mass, area, CoM);
+                    double drag = IterateToSteadyFlightDrag(out alpha, estLiftSlope, vel, curAltitude, curMach, body, mass, area, CoM);
                     alpha = 0;
                     alpha *= FARMathUtil.deg2rad;
 
@@ -115,14 +119,18 @@ namespace ferram4
                     double thrust = CalculateThrust(curMach, vel, curAltitude, velocityVec, body, standardLegacyEngines, standardFXEngines, ajeJetEngines, ajePropEngines, ajeInlets);
                     specExcessPower = vel * (thrust - drag) / mass;
 
-                    lastXPixel = xPixel;
-                    tmp = (curMach - minMach) / (maxMach - minMach);
-                    xPixel = (int)(tmp * width);
+                    if (specExcessPower > 0)
+                        contAltUntilPosPower = false;       //this handles spec power being < 0 for Mach > 1 near the ground
+
                     //Debug.Log("Mach: " + curMach + " Alt: " + curAltitude + " thrust: " + thrust + " drag: " + drag + " vel: " + vel + " AoA: " + alpha + "\n\r");
+                    tmp = (curAltitude - minAlt) / (maxAlt - minAlt);
+                    lastYPixel = yPixel;
+                    yPixel = (int)(tmp * height);
+
                     if (xPixel < lastXPixel)
                     {
                         texture.SetPixel(xPixel, yPixel, ColorFromVal((float)maxExcessPower, specExcessPower));
-                        curMach += 0.025;
+                        curAltitude += 150;
                         continue;
                     }
                     Color topRightColor = ColorFromVal((float)maxExcessPower, specExcessPower);
@@ -139,10 +147,20 @@ namespace ferram4
                             texture.SetPixel(i, j, bottomLeftColor + xFrac * (bottomRightColor - bottomLeftColor) + yFrac * (topLeftColor - bottomLeftColor) + xFrac * yFrac * (bottomLeftColor + topRightColor - bottomRightColor - topLeftColor));
                         }
                     }
-                    curMach += 0.025;
+                    curAltitude += 150;
                 }
-                curAltitude += 150;
-                curMach = minMach;
+
+                if(curAltitude < maxAlt)
+                {
+                    for (int i = lastXPixel; i <= xPixel; i++)
+                        for (int j = yPixel; j < texture.height; j++)
+                        {
+                            texture.SetPixel(i, j, Color.black);
+                        }
+                    
+                }
+                curAltitude = minAlt;
+                curMach += 0.025;
             }
             texture.Apply();
             //Debug.Log(s);
@@ -289,21 +307,37 @@ namespace ferram4
         }
 
         //This needs heavy optimization for the chart to be usable; it takes too long to hit all the points
-        private double IterateToSteadyFlightDrag(out double alpha, double u0, double alt, double M, CelestialBody body, double mass, double area, Vector3d CoM)
+        private double IterateToSteadyFlightDrag(out double alpha, double estLiftSlope, double u0, double alt, double M, CelestialBody body, double mass, double area, Vector3d CoM)
         {
             double effectiveG = CalculateAccelerationDueToGravity(body, alt);     //This is the effect of gravity
             double q = FARAeroUtil.GetCurrentDensity(body, alt) * u0 * u0 * 0.5;
             effectiveG -= u0 * u0 / (alt + body.Radius);                          //This is the effective reduction of gravity due to high velocity
             double neededCl = mass * effectiveG * 1000 / (q * area);
 
-            SetState(M, neededCl, CoM, 0, 0, false);
-            alpha = FARMathUtil.BrentsMethod(FunctionIterateForAlphaExcessPower, -5, 25, 10, 0.1);
-            //double Cd = this.Cd;
+            alpha = neededCl / estLiftSlope;
 
             if (alpha >= 25)
                 return Double.PositiveInfinity;
 
+            double lowerAlpha = alpha - 5;
+            double upperAlpha = alpha + 5;
+
+            SetState(M, neededCl, CoM, 0, 0, false);
+            alpha = FARMathUtil.BrentsMethod(FunctionIterateForAlphaExcessPower, lowerAlpha, upperAlpha, 10, 0.1);
+            //double Cd = this.Cd;
+
+
             return Cd * area * q * 0.001;
+        }
+
+        //Returns Cl per degree
+        private double EstimateLiftSlope(Vector3d CoM, double MachNumber)
+        {
+            double zeroCl, pertCl, tmp;
+            GetClCdCmSteady(CoM, 0, MachNumber, out zeroCl, out tmp, true, true, flaps, spoilers);
+            GetClCdCmSteady(CoM, 0.1, MachNumber, out pertCl, out tmp, true, true, flaps, spoilers);
+
+            return (pertCl - zeroCl) * 10;
         }
 
         public double CalculateAccelerationDueToGravity(CelestialBody body, double alt)
