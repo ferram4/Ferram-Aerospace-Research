@@ -123,7 +123,7 @@ namespace ferram4
             DEBUG
         }
 
-        private static string[] FAReditorMode_str = 
+        private static string[] FAReditorMode_str =
         {
             "Static",
             "Performance",
@@ -131,6 +131,7 @@ namespace ferram4
             "Simulation",
             "Debug FAR Modules"
         };
+
 
         private SimMode simMode = 0;
 
@@ -177,7 +178,6 @@ namespace ferram4
         string upperMach = "2";
         string lowerAlt = "0";
         string upperAlt = "20";
-
         Texture2D plotExcessPower;
 
         double u0 = 100;
@@ -404,19 +404,14 @@ namespace ferram4
                     SimulationGUI(tmp);
                 else
                     DebugGUI(tmp);
-
             }
-
             GUI.DragWindow();
-
         }
-
         private void PerformanceGUI(bool tmp)
         {
             GUIStyle TabLabelStyle = new GUIStyle(GUI.skin.label);
             TabLabelStyle.fontStyle = FontStyle.Bold;
             TabLabelStyle.alignment = TextAnchor.UpperCenter;
-
             if (tmp)
             {
                 windowPos.height = 600;
@@ -427,22 +422,20 @@ namespace ferram4
             lowerAlt = GUILayout.TextField(lowerAlt, GUILayout.ExpandWidth(true));
             GUILayout.Label("Upper Lim:");
             upperAlt = GUILayout.TextField(upperAlt, GUILayout.ExpandWidth(true));
-
             GUILayout.Label("Mach Number; Lower Lim:");
             lowerMach = GUILayout.TextField(lowerMach, GUILayout.ExpandWidth(true));
             GUILayout.Label("Upper Lim:");
             upperMach = GUILayout.TextField(upperMach, GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
-            if(GUILayout.Button("Calculate Spec. Excess Power"))
+            if (GUILayout.Button("Calculate Spec. Excess Power"))
             {
                 lowerMach = Regex.Replace(lowerMach, @"[^-?[0-9]*(\.[0-9]*)?]", "");
                 upperMach = Regex.Replace(upperMach, @"[^-?[0-9]*(\.[0-9]*)?]", "");
                 lowerAlt = Regex.Replace(lowerAlt, @"[^-?[0-9]*(\.[0-9]*)?]", "");
                 upperAlt = Regex.Replace(upperAlt, @"[^-?[0-9]*(\.[0-9]*)?]", "");
-
                 plotExcessPower = aeroSim.CalculateExcessPowerPlot(Double.Parse(lowerMach), Double.Parse(upperMach), double.Parse(lowerAlt) * 1000, double.Parse(upperAlt) * 1000, activeBody, 400, 400, 1000);
             }
-            if(plotExcessPower != null)
+            if (plotExcessPower != null)
             {
                 GUI.DrawTexture(new Rect(75, 150, 400, 400), plotExcessPower);
             }
@@ -1325,9 +1318,11 @@ namespace ferram4
             double neededCl = mass * effectiveG / (q * area);
 
             //Longitudinal Mess
+            aeroSim.SetState(M, neededCl, CoM, 0, flap_setting, spoilersDeployed);
+
 
             double pertCl, pertCd, pertCm, pertCy, pertCn, pertC_roll;
-            int iter = 7;
+/*            int iter = 7;
             for (; ; )
             {
                 aeroSim.GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M, 0, out nomCl, out nomCd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true, flap_setting, spoilersDeployed);
@@ -1343,7 +1338,14 @@ namespace ferram4
                 double delta = -(neededCl - nomCl) / ((pertCl - nomCl) * 100);
                 delta = Math.Sign(delta) * Math.Min(0.4f * iter * iter, Math.Abs(delta));
                 alpha = Math.Max(-5f, Math.Min(25f, alpha + delta));
-            };
+            };*/
+            alpha = FARMathUtil.BrentsMethod(aeroSim.FunctionIterateForAlpha, -5, 25);
+            nomCl = neededCl;
+            nomCd = aeroSim.Cd;
+            nomCm = aeroSim.Cm;
+            nomCy = aeroSim.Cy;
+            nomCn = aeroSim.Cn;
+            nomC_roll = aeroSim.C_roll;
 
             //alpha_str = (alpha * Mathf.PI / 180).ToString();
 

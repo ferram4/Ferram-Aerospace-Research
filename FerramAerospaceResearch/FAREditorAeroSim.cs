@@ -287,63 +287,14 @@ namespace ferram4
         //This needs heavy optimization for the chart to be usable; it takes too long to hit all the points
         private double IterateToSteadyFlightDrag(out double alpha, double u0, double alt, double M, CelestialBody body, double mass, double area, Vector3d CoM)
         {
-            double Cl = 0;
             double Cd = 0;
             double effectiveG = CalculateAccelerationDueToGravity(body, alt);     //This is the effect of gravity
             double q = FARAeroUtil.GetCurrentDensity(body, alt) * u0 * u0 * 0.5;
             effectiveG -= u0 * u0 / (alt + body.Radius);                          //This is the effective reduction of gravity due to high velocity
             double neededCl = mass * effectiveG * 1000 / (q * area);
 
-            double lowerAlpha, upperAlpha;
-            lowerAlpha = -10;
-            upperAlpha = 25;
-
-            double lowerClOffset, upperClOffset;
-            GetClCdCmSteady(CoM, upperAlpha, M, out upperClOffset, out Cd, true, true);
-            GetClCdCmSteady(CoM, lowerAlpha, M, out lowerClOffset, out Cd, true, true);
-
-            lowerClOffset -= neededCl;
-            upperClOffset -= neededCl;
-
-            if (lowerClOffset * upperClOffset > 0)
-            {
-                alpha = 25;
-                return Double.PositiveInfinity;
-            }
-
-            int iter = 7;
-            for (; ; )      //iterate using Ridder's method
-            {
-                alpha = (upperAlpha + lowerAlpha) * 0.5;
-                GetClCdCmSteady(CoM, alpha, M, out Cl, out Cd, true, true);
-
-                Cl -= neededCl;
-                if (--iter <= 0 || Math.Abs(Cl / neededCl) < 0.1)
-                    break; 
-                
-                /*double s = Math.Sqrt(Cl * Cl - lowerClOffset * upperClOffset);
-                if (s == 0)
-                    break;
-
-                double newAlpha = alpha + (alpha - lowerAlpha) * Math.Sign(lowerClOffset - upperClOffset) * Cl / s;
-
-                if (newAlpha - alpha < 0.1)
-                    break;*/
-
-                if(lowerClOffset * Cl > 0)
-                {
-                    lowerAlpha = alpha;
-                    GetClCdCmSteady(CoM, lowerAlpha, M, out lowerClOffset, out Cd, true, true);
-                    lowerClOffset -= neededCl;
-                }
-                else
-                {
-                    upperAlpha = alpha;
-                    GetClCdCmSteady(CoM, upperAlpha, M, out upperClOffset, out Cd, true, true);
-                    upperClOffset -= neededCl;
-                }
-
-            }
+            SetState(M, neededCl, CoM, 0, 0, false);
+            alpha = FARMathUtil.BrentsMethod(FunctionIterateForAlpha, -5, 25);
 
             if (alpha >= 25)
                 return Double.PositiveInfinity;
@@ -568,5 +519,31 @@ namespace ferram4
             Cn *= recipArea / b_2;
             C_roll *= recipArea / b_2;
         }
+
+        private double MachNumber;
+        private double neededCl;
+        Vector3d CoM;
+        double pitch;
+        int flaps;
+        bool spoilers;
+
+        public void SetState(double M, double Cl, Vector3d CoM, double pitch, int flapSetting, bool spoilers)
+        {
+            MachNumber = M;
+            neededCl = Cl;
+            this.CoM = CoM;
+            this.pitch = pitch;
+            flaps = flapSetting;
+            this.spoilers = spoilers;
+        }
+
+        public double FunctionIterateForAlpha(double alpha)
+        {
+            double Cl;
+            GetClCdCmSteady(CoM, alpha, 0, 0, 0, 0, 0, MachNumber, pitch, out Cl, out Cd, out Cm, out Cy, out Cn, out C_roll, true, true, flaps, spoilers);
+            return Cl - neededCl;
+        }
+
+        public double Cd, Cm, Cy, Cn, C_roll;
     }
 }
