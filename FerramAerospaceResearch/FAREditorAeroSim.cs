@@ -131,13 +131,14 @@ namespace ferram4
                     Color bottomRightColor = texture.GetPixel(xPixel, lastYPixel);
 
                     for (int i = lastXPixel; i <= xPixel; i++)
+                    {
+                        float xFrac = (float)(i - lastXPixel) / (float)(xPixel - lastXPixel);
                         for (int j = lastYPixel; j <= yPixel; j++)
                         {
-                            float xFrac = (float)(i - lastXPixel) / (float)(xPixel - lastXPixel);
                             float yFrac = (float)(j - lastYPixel) / (float)(yPixel - lastYPixel);
                             texture.SetPixel(i, j, bottomLeftColor + xFrac * (bottomRightColor - bottomLeftColor) + yFrac * (topLeftColor - bottomLeftColor) + xFrac * yFrac * (bottomLeftColor + topRightColor - bottomRightColor - topLeftColor));
                         }
-
+                    }
                     curMach += 0.01;
                 }
                 curAltitude += 100;
@@ -163,13 +164,13 @@ namespace ferram4
                 return new Color(0, 1, 2 - 5 * fracMaxVal);
 
             if (fracMaxVal < 0.6f)
-                return new Color(fracMaxVal * 5 - 0.4f, 1, 0);
+                return new Color(fracMaxVal * 5 - 2, 1, 0);
 
             if(fracMaxVal < 0.8f)
-                return new Color(1, 3 - 4 * fracMaxVal, 0);
+                return new Color(1, 4 - 5 * fracMaxVal, 0);
 
             if (fracMaxVal < 1)
-                return new Color(1, 1, 5 * fracMaxVal - 0.8f);
+                return new Color(1, 5 * fracMaxVal - 4, 5 * fracMaxVal - 4);
 
             return Color.white;
         }
@@ -295,48 +296,52 @@ namespace ferram4
             effectiveG -= u0 * u0 / (alt + body.Radius);                          //This is the effective reduction of gravity due to high velocity
             double neededCl = mass * effectiveG / (q * area);
 
-
-            double nomCm, nomCy, nomCn, nomC_roll;
             double lowerAlpha, upperAlpha;
             lowerAlpha = -10;
             upperAlpha = 25;
 
             double lowerClOffset, upperClOffset;
-            GetClCdCmSteady(CoM, upperAlpha, 0, 0, 0, 0, 0, M, 0, out upperClOffset, out Cd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true);
-            GetClCdCmSteady(CoM, lowerAlpha, 0, 0, 0, 0, 0, M, 0, out lowerClOffset, out Cd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true);
+            GetClCdCmSteady(CoM, upperAlpha, M, out upperClOffset, out Cd, true, true);
+            GetClCdCmSteady(CoM, lowerAlpha, M, out lowerClOffset, out Cd, true, true);
 
             lowerClOffset -= neededCl;
             upperClOffset -= neededCl;
+
+            if (lowerClOffset * upperClOffset > 0)
+            {
+                alpha = 25;
+                return Double.PositiveInfinity;
+            }
 
             int iter = 7;
             for (; ; )      //iterate using Ridder's method
             {
                 alpha = (upperAlpha + lowerAlpha) * 0.5;
-                GetClCdCmSteady(CoM, alpha, 0, 0, 0, 0, 0, M, 0, out Cl, out Cd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true);
+                GetClCdCmSteady(CoM, alpha, M, out Cl, out Cd, true, true);
 
                 Cl -= neededCl;
                 if (--iter <= 0 || Math.Abs(Cl / neededCl) < 0.1)
                     break; 
                 
-                double s = Math.Sqrt(Cl * Cl - lowerClOffset * upperClOffset);
+                /*double s = Math.Sqrt(Cl * Cl - lowerClOffset * upperClOffset);
                 if (s == 0)
                     break;
 
                 double newAlpha = alpha + (alpha - lowerAlpha) * Math.Sign(lowerClOffset - upperClOffset) * Cl / s;
 
                 if (newAlpha - alpha < 0.1)
-                    break;
+                    break;*/
 
                 if(lowerClOffset * Cl > 0)
                 {
-                    lowerAlpha = newAlpha;
-                    GetClCdCmSteady(CoM, lowerAlpha, 0, 0, 0, 0, 0, M, 0, out lowerClOffset, out Cd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true);
+                    lowerAlpha = alpha;
+                    GetClCdCmSteady(CoM, lowerAlpha, M, out lowerClOffset, out Cd, true, true);
                     lowerClOffset -= neededCl;
                 }
                 else
                 {
-                    upperAlpha = newAlpha;
-                    GetClCdCmSteady(CoM, lowerAlpha, 0, 0, 0, 0, 0, M, 0, out upperClOffset, out Cd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true);
+                    upperAlpha = alpha;
+                    GetClCdCmSteady(CoM, upperAlpha, M, out upperClOffset, out Cd, true, true);
                     upperClOffset -= neededCl;
                 }
 
@@ -358,6 +363,93 @@ namespace ferram4
             return accel;
         }
         
+        public void GetClCdCmSteady(Vector3d CoM, double alpha, double M, out double Cl, out double Cd, bool clear, bool reset_stall = false, int flap_setting = 0, bool spoilersDeployed = false, bool vehicleFueled = true)
+        {
+            Cl = 0;
+            Cd = 0;
+            double area = 0;
+
+            alpha *= FARMathUtil.deg2rad;
+
+            Vector3d forward = Vector3.forward;
+            Vector3d up = Vector3.up;
+            Vector3d right = Vector3.right;
+
+            if (EditorLogic.fetch.editorType == EditorLogic.EditorMode.VAB)
+            {
+                forward = Vector3.up;
+                up = -Vector3.forward;
+            }
+
+
+            Vector3d velocity = forward * Math.Cos(alpha) - up * Math.Sin(alpha);
+
+            velocity.Normalize();
+
+            Vector3d liftVector = -forward * Math.Sin(alpha) - up * Math.Cos(alpha);
+
+            Vector3d sideways = Vector3.Cross(velocity, liftVector);
+
+            for (int i = 0; i < FARAeroUtil.CurEditorWings.Count; i++)
+            {
+                FARWingAerodynamicModel w = FARAeroUtil.CurEditorWings[i];
+                if (w.isShielded)
+                    continue;
+
+                if (clear)
+                    w.EditorClClear(reset_stall);
+
+                Vector3d relPos = w.GetAerodynamicCenter() - CoM;
+
+                if (w is FARControllableSurface)
+                    (w as FARControllableSurface).SetControlStateEditor(CoM, velocity, 0, 0, 0, flap_setting, spoilersDeployed);
+
+                w.ComputeClCdEditor(velocity, M);
+
+                double tmpCl = w.GetCl() * w.S;
+                Cl += tmpCl * -Vector3d.Dot(w.GetLiftDirection(), liftVector);
+                double tmpCd = w.GetCd() * w.S;
+                Cd += tmpCd;
+                area += w.S;
+            }
+            for (int i = 0; i < FARAeroUtil.CurEditorOtherDrag.Count; i++)
+            {
+                FARBasicDragModel d = FARAeroUtil.CurEditorOtherDrag[i];
+                if (d.isShielded)
+                    continue;
+
+
+                double tmpCd = d.GetDragEditor(velocity, M);
+                Cd += tmpCd;
+                double tmpCl = d.GetLiftEditor();
+                Cl += tmpCl * -Vector3d.Dot(d.GetLiftDirection(), liftVector);
+            }
+            /*for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
+            {
+                Part p = FARAeroUtil.CurEditorParts[i];
+                if (FARAeroUtil.IsNonphysical(p))
+                    continue;
+
+                Vector3 part_pos = p.transform.TransformPoint(p.CoMOffset) - CoM;
+                double partMass = p.mass;
+                if (vehicleFueled && p.Resources.Count > 0)
+                    partMass += p.GetResourceMass();
+
+                double stock_drag = partMass * p.maximum_drag * FlightGlobals.DragMultiplier * 1000;
+                Cd += stock_drag;
+                Cm += stock_drag * -Vector3d.Dot(part_pos, liftVector);
+                Cn += stock_drag * Vector3d.Dot(part_pos, sideways);
+            }*/
+            if (area == 0)
+            {
+                area = 1;
+            }
+
+            double recipArea = 1 / area;
+
+            Cl *= recipArea;
+            Cd *= recipArea;
+        }
         public void GetClCdCmSteady(Vector3d CoM, double alpha, double beta, double phi, double alphaDot, double betaDot, double phiDot, double M, double pitch, out double Cl, out double Cd, out double Cm, out double Cy, out double Cn, out double C_roll, bool clear, bool reset_stall = false, int flap_setting = 0, bool spoilersDeployed = false, bool vehicleFueled = true)
         {
             Cl = 0;
