@@ -117,6 +117,7 @@ namespace ferram4
         private enum FAREditorMode
         {
             STATIC,
+            PERFORMANCE,
             STABILITY,
             SIMULATION,
             DEBUG
@@ -125,6 +126,7 @@ namespace ferram4
         private static string[] FAReditorMode_str = 
         {
             "Static",
+            "Performance",
             "Data + Stability Derivatives",
             "Simulation",
             "Debug FAR Modules"
@@ -171,6 +173,13 @@ namespace ferram4
         double stable_AoA = 0;
         string stable_AoA_state = "";
 
+        string lowerMach = "0.05";
+        string upperMach = "2";
+        string lowerAlt = "0";
+        string upperAlt = "20";
+
+        Texture2D plotExcessPower;
+
         double u0 = 100;
 
         string time_end = "10";
@@ -188,7 +197,7 @@ namespace ferram4
             int kerbinIndex = 1;
 
             celestialBodyDropdown = new FARGUIDropDown<CelestialBody>(bodyNames, bodies, kerbinIndex);
-
+            activeBody = bodies[1];
             LoadColors();
             windowPos.height = 500;
             aeroSim = new FAREditorAeroSim();
@@ -379,7 +388,7 @@ namespace ferram4
 
                 FAREditorMode lastMode = Mode;
 
-                Mode = (FAREditorMode)GUILayout.SelectionGrid((int)Mode, FAReditorMode_str, 4, ButtonStyle);
+                Mode = (FAREditorMode)GUILayout.SelectionGrid((int)Mode, FAReditorMode_str, 3, ButtonStyle);
 
                 bool tmp = !(lastMode == Mode);
 
@@ -387,6 +396,8 @@ namespace ferram4
                 //GUILayout.EndHorizontal();
                 if (Mode == FAREditorMode.STATIC)
                     GraphGUI(tmp);
+                else if (Mode == FAREditorMode.PERFORMANCE)
+                    PerformanceGUI(tmp);
                 else if (Mode == FAREditorMode.STABILITY)
                     StabilityDerivativeGUI(tmp);
                 else if (Mode == FAREditorMode.SIMULATION)
@@ -400,6 +411,42 @@ namespace ferram4
 
         }
 
+        private void PerformanceGUI(bool tmp)
+        {
+            GUIStyle TabLabelStyle = new GUIStyle(GUI.skin.label);
+            TabLabelStyle.fontStyle = FontStyle.Bold;
+            TabLabelStyle.alignment = TextAnchor.UpperCenter;
+
+            if (tmp)
+            {
+                windowPos.height = 600;
+                windowPos.width = 650;
+            }
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Altitude (km); Lower Lim:");
+            lowerAlt = GUILayout.TextField(lowerAlt, GUILayout.ExpandWidth(true));
+            GUILayout.Label("Upper Lim:");
+            upperAlt = GUILayout.TextField(upperAlt, GUILayout.ExpandWidth(true));
+
+            GUILayout.Label("Mach Number; Lower Lim:");
+            lowerMach = GUILayout.TextField(lowerMach, GUILayout.ExpandWidth(true));
+            GUILayout.Label("Upper Lim:");
+            upperMach = GUILayout.TextField(upperMach, GUILayout.ExpandWidth(true));
+            GUILayout.EndHorizontal();
+            if(GUILayout.Button("Calculate Spec. Excess Power"))
+            {
+                lowerMach = Regex.Replace(lowerMach, @"[^-?[0-9]*(\.[0-9]*)?]", "");
+                upperMach = Regex.Replace(upperMach, @"[^-?[0-9]*(\.[0-9]*)?]", "");
+                lowerAlt = Regex.Replace(lowerAlt, @"[^-?[0-9]*(\.[0-9]*)?]", "");
+                upperAlt = Regex.Replace(upperAlt, @"[^-?[0-9]*(\.[0-9]*)?]", "");
+
+                plotExcessPower = aeroSim.CalculateExcessPowerPlot(Double.Parse(lowerMach), Double.Parse(upperMach), double.Parse(lowerAlt) * 1000, double.Parse(upperAlt) * 1000, activeBody, 400, 400, 1000);
+            }
+            if(plotExcessPower != null)
+            {
+                GUI.DrawTexture(new Rect(75, 150, 400, 400), plotExcessPower);
+            }
+        }
         private void DebugGUI(bool tmp)
         {
             GUIStyle TabLabelStyle = new GUIStyle(GUI.skin.label);
@@ -970,7 +1017,7 @@ namespace ferram4
 
             if (GUILayout.Button("Calculate Stability Derivatives", ButtonStyle, GUILayout.Width(250.0F), GUILayout.Height(25.0F)))
             {
-                FARAeroUtil.UpdateCurrentActiveBody(index, FlightGlobals.Bodies[1]);
+                FARAeroUtil.UpdateCurrentActiveBody(index, activeBody);
                 //atm_temp_str = Regex.Replace(atm_temp_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
                 //rho_str = Regex.Replace(rho_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
                 Mach_str = Regex.Replace(Mach_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
@@ -1293,7 +1340,7 @@ namespace ferram4
                 if (--iter <= 0 || Math.Abs((nomCl - neededCl) / neededCl) < 0.1)
                     break;
 
-                double delta = (neededCl - nomCl) / pertCl * FARMathUtil.rad2deg;
+                double delta = -(neededCl - nomCl) / ((pertCl - nomCl) * 100);
                 delta = Math.Sign(delta) * Math.Min(0.4f * iter * iter, Math.Abs(delta));
                 alpha = Math.Max(-5f, Math.Min(25f, alpha + delta));
             };

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using KSP;
@@ -8,7 +9,7 @@ namespace ferram4
 {
     class FAREditorAeroSim
     {
-        public void CalculateExcessPowerPlot(out Dictionary<string, double[]> plotXValues, out Dictionary<string, double[]> plotYValues, double minMach, double maxMach, double minAlt, double maxAlt, CelestialBody body, int contourStep)
+        public Texture2D CalculateExcessPowerPlot(double minMach, double maxMach, double minAlt, double maxAlt, CelestialBody body, int width, int height, double maxExcessPower)
         {
             List<ModuleEngines> standardLegacyEngines = new List<ModuleEngines>();
             List<ModuleEnginesFX> standardFXEngines = new List<ModuleEnginesFX>();
@@ -47,62 +48,94 @@ namespace ferram4
             }
             double curMach = minMach;
             double curAltitude = minAlt;
-            double excessPower = 0;
             double mass, area;  //Establish vehicle characteristics
             Vector3d CoM;
             SetVehicleCharacteristics(out mass, out area, out CoM);
-
-            double lastMach = -1;
-            double lastExcessPower = 0;
-
             double specExcessPower = 0;
 
             double alpha;
 
-            Dictionary<int, List<double>> xValues = new Dictionary<int, List<double>>();
-            Dictionary<int, List<double>> yValues = new Dictionary<int, List<double>>();
+            Texture2D texture = new Texture2D(width, height);
 
+            FARAeroUtil.UpdateCurrentActiveBody(body);
+
+            //string s = "";
+
+            int xPixel = 0, yPixel = 0, lastXPixel = 0, lastYPixel = 0;
             while (curAltitude < maxAlt)
             {
-                while (curMach < maxMach || (excessPower < 0 && curMach > 1.2))
+                double tmp = (curAltitude - minAlt) / (maxAlt - minAlt);
+                lastYPixel = yPixel;
+                yPixel = (int)(tmp * height);
+                while (curMach < maxMach)// && (specExcessPower >= 0 || curMach < 0.5))
                 {
-                    lastExcessPower = specExcessPower;
-                    double vel = Math.Sqrt(FlightGlobals.getExternalTemperature((float)curAltitude, body) * FARAeroUtil.currentBodyAtm.x) * curMach;
+                    double vel = Math.Sqrt((FlightGlobals.getExternalTemperature((float)curAltitude, body) + 273.15 + FARAeroUtil.currentBodyTemp) * FARAeroUtil.currentBodyAtm.x) * curMach;
 
                     double drag = IterateToSteadyFlightDrag(out alpha, vel, curAltitude, curMach, body, mass, area, CoM);
+                    alpha = 0;
+                    alpha *= FARMathUtil.deg2rad;
 
                     Vector3d velocity = Vector3d.forward * Math.Cos(alpha) - Vector3d.up * Math.Sin(alpha);
                     double thrust = CalculateThrust(curMach, vel, curAltitude, velocity, body, standardLegacyEngines, standardFXEngines, ajeJetEngines, ajePropEngines, ajeInlets);
-                    specExcessPower = vel * (thrust - drag) / mass;
+                    specExcessPower = vel * (thrust - drag) / mass * 1000;
 
-                    int curContour, lastContour;
-                    curContour = (int)specExcessPower / contourStep;
-                    lastContour = (int)lastExcessPower / contourStep;
-
-                    if (curContour != lastContour)
+                    lastXPixel = xPixel;
+                    tmp = (curMach - minMach) / (maxMach - minMach);
+                    xPixel = (int)(tmp * width);
+                    //s += "Mach: " + curMach + " Alt: " + curAltitude + " thrust: " + thrust + " drag: " + drag + " vel: " + vel + "\n\r";
+                    if (xPixel < lastXPixel)
                     {
-                        int contour = Math.Max(curContour, lastContour);
-                        double xVal = (contour - lastExcessPower) * (curMach - lastMach) / (specExcessPower - lastExcessPower) + lastMach;
-
-                        if (xValues.ContainsKey(contour))
-                        {
-                            xValues[contour].Add(xVal);
-                            yValues[contour].Add(curAltitude);
-                        }
-                        else
-                        {
-                            xValues[contour] = new List<double>();
-                            yValues[contour] = new List<double>();
-
-                            xValues[contour].Add(xVal);
-                            yValues[contour].Add(curAltitude);
-                        }
+                        texture.SetPixel(xPixel, yPixel, ColorFromVal(maxExcessPower, specExcessPower));
+                        curMach += 0.01;
+                        continue;
                     }
-                    lastMach = curMach;
-                    curMach += 0.05;
+                    Color topRightColor = ColorFromVal(maxExcessPower, specExcessPower);
+                    Color bottomLeftColor = texture.GetPixel(lastXPixel, lastYPixel);
+                    Color topLeftColor = texture.GetPixel(lastXPixel, yPixel);
+                    Color bottomRightColor = texture.GetPixel(xPixel, lastYPixel);
+
+                    for (int i = lastXPixel; i <= xPixel; i++)
+                        for (int j = lastYPixel; j <= yPixel; j++)
+                        {
+                            float xFrac = (float)(i - lastXPixel) / (float)(xPixel - lastXPixel);
+                            float yFrac = (float)(j - lastYPixel) / (float)(yPixel - lastYPixel);
+                            texture.SetPixel(i, j, bottomLeftColor + xFrac * (bottomRightColor - bottomLeftColor) + yFrac * (topLeftColor - bottomLeftColor) + xFrac * yFrac * (bottomLeftColor + topRightColor - bottomRightColor - topLeftColor));
+                        }
+
+                    curMach += 0.01;
                 }
-                curAltitude += 500;
+                curAltitude += 100;
+                curMach = minMach;
             }
+            texture.Apply();
+            //Debug.Log(s);
+
+            return texture;
+        }
+
+        private Color ColorFromVal(double maximumVal, double val)
+        {
+            float fracMaxVal = (float)(val / maximumVal);
+
+            if (fracMaxVal < 0)
+                return Color.black;
+
+            if (fracMaxVal < 0.2f)
+                return new Color(0, fracMaxVal * 5, 1);
+
+            if (fracMaxVal < 0.4f)
+                return new Color(0, 1, 2 - 5 * fracMaxVal);
+
+            if (fracMaxVal < 0.6f)
+                return new Color(fracMaxVal * 5 - 0.4f, 1, 0);
+
+            if(fracMaxVal < 0.8f)
+                return new Color(1, 3 - 4 * fracMaxVal, 0);
+
+            if (fracMaxVal < 1)
+                return new Color(1, 1, 5 * fracMaxVal - 0.8f);
+
+            return Color.white;
         }
 
         private double CalculateThrust(double mach, double vel, double alt, Vector3d velNormVector, CelestialBody body, List<ModuleEngines> standardLegacyEngines,
@@ -140,7 +173,7 @@ namespace ferram4
                 Type engineType = m.GetType();
 
                 MethodInfo inlet = engineType.GetMethod("UpdateInletEffects");
-                inlet.Invoke(m, new object[]{FARAeroUtil.CurEditorParts});
+                inlet.Invoke(m, new object[] { FARAeroUtil.CurEditorParts });
 
                 MethodInfo flightCondition = engineType.GetMethod("UpdateFlightCondition");
                 flightCondition.Invoke(m, new object[] { alt, vel, body});
@@ -212,6 +245,8 @@ namespace ferram4
             {
                 area = 1;
             }
+
+            mass *= 1000;
         }
 
         private double IterateToSteadyFlightDrag(out double alpha, double u0, double alt, double M, CelestialBody body, double mass, double area, Vector3d CoM)
@@ -223,24 +258,30 @@ namespace ferram4
             effectiveG -= u0 * u0 / (alt + body.Radius);                          //This is the effective reduction of gravity due to high velocity
             double neededCl = mass * effectiveG / (q * area);
 
-            alpha = 2;
+            alpha = 10;
 
-            double pertCl, nomCm, nomCy, nomCn, nomC_roll;
+            double pertCl = 1, pertCd, nomCm, nomCy, nomCn, nomC_roll;
+
             int iter = 7;
             for (; ; )
             {
                 GetClCdCmSteady(CoM, alpha, 0, 0, 0, 0, 0, M, 0, out Cl, out Cd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true);
 
-                GetClCdCmSteady(CoM, alpha, 0, 0, 0, 0, 0, M, 0, out pertCl, out Cd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true);
+                GetClCdCmSteady(CoM, alpha + 0.01, 0, 0, 0, 0, 0, M, 0, out pertCl, out pertCd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true);
                 if (--iter <= 0 || Math.Abs((Cl - neededCl) / neededCl) < 0.1)
                     break;
 
-                double delta = (neededCl - Cl) / pertCl * FARMathUtil.rad2deg;
+                double delta = -(neededCl - Cl) / ((pertCl - Cl) * 100);
+                if (double.IsNaN(delta))
+                    break;
                 delta = Math.Sign(delta) * Math.Min(0.4f * iter * iter, Math.Abs(delta));
                 alpha = Math.Max(-5f, Math.Min(25f, alpha + delta));
             }
 
-            return Cd * area * q;
+            if (alpha >= 25)
+                return Double.PositiveInfinity;
+
+            return Cd * area * q * 0.001;
         }
 
         public double CalculateAccelerationDueToGravity(CelestialBody body, double alt)
@@ -290,110 +331,62 @@ namespace ferram4
 
             Vector3d sideways = Vector3.Cross(velocity, liftVector);
 
+            for (int i = 0; i < FARAeroUtil.CurEditorWings.Count; i++ )
+            {
+                FARWingAerodynamicModel w = FARAeroUtil.CurEditorWings[i];
+                if (w.isShielded)
+                    continue;
+
+                if (clear)
+                    w.EditorClClear(reset_stall);
+
+                Vector3d relPos = w.GetAerodynamicCenter() - CoM;
+
+                Vector3d vel = velocity + Vector3d.Cross(AngVel, relPos);
+
+                if (w is FARControllableSurface)
+                    (w as FARControllableSurface).SetControlStateEditor(CoM, vel, (float)pitch, 0, 0, flap_setting, spoilersDeployed);
+
+                w.ComputeClCdEditor(vel, M);
+
+                double tmpCl = w.GetCl() * w.S;
+                Cl += tmpCl * -Vector3d.Dot(w.GetLiftDirection(), liftVector);
+                Cy += tmpCl * -Vector3d.Dot(w.GetLiftDirection(), sideways);
+                double tmpCd = w.GetCd() * w.S;
+                Cd += tmpCd;
+                Cm += tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(w.GetLiftDirection(), liftVector) + tmpCd * -Vector3d.Dot((relPos), liftVector);
+                Cn += tmpCd * Vector3d.Dot((relPos), sideways) + tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(w.GetLiftDirection(), sideways);
+                C_roll += tmpCl * Vector3d.Dot((relPos), sideways) * -Vector3d.Dot(w.GetLiftDirection(), liftVector);
+                area += w.S;
+                MAC += w.GetMAC() * w.S;
+                b_2 += w.Getb_2() * w.S;
+            }
+            for (int i = 0; i < FARAeroUtil.CurEditorOtherDrag.Count; i++)
+            {
+                FARBasicDragModel d = FARAeroUtil.CurEditorOtherDrag[i];
+                if (d.isShielded)
+                    continue;
+
+                Vector3d relPos = d.part.transform.position - CoM;
+
+                Vector3d vel = velocity + Vector3d.Cross(AngVel, relPos);
+
+                double tmpCd = d.GetDragEditor(vel, M);
+                Cd += tmpCd;
+                double tmpCl = d.GetLiftEditor();
+                Cl += tmpCl * -Vector3d.Dot(d.GetLiftDirection(), liftVector);
+                Cy += tmpCl * -Vector3d.Dot(d.GetLiftDirection(), sideways);
+                relPos = d.GetCoDEditor() - CoM;
+                Cm += d.GetMomentEditor() + tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(d.GetLiftDirection(), liftVector) + tmpCd * -Vector3d.Dot((relPos), liftVector);
+                Cn += tmpCd * Vector3d.Dot((relPos), sideways) + tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(d.GetLiftDirection(), sideways);
+                C_roll += tmpCl * Vector3d.Dot((relPos), sideways) * -Vector3d.Dot(d.GetLiftDirection(), liftVector);
+
+            }
             for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
             {
                 Part p = FARAeroUtil.CurEditorParts[i];
-
                 if (FARAeroUtil.IsNonphysical(p))
                     continue;
-                for (int k = 0; k < p.Modules.Count; k++)
-                {
-                    PartModule m = p.Modules[k];
-                    if (m is FARWingAerodynamicModel)
-                    {
-                        FARWingAerodynamicModel w = m as FARWingAerodynamicModel;
-                        if (clear)
-                            w.EditorClClear(reset_stall);
-
-                        Vector3 relPos = p.transform.position - CoM;
-
-                        Vector3 vel = velocity + Vector3.Cross(AngVel, relPos);
-
-                        if (w is FARControllableSurface)
-                            (w as FARControllableSurface).SetControlStateEditor(CoM, vel, (float)pitch, 0, 0, flap_setting, spoilersDeployed);
-                    }
-                }
-            }
-            for (int j = 0; j < 3; j++)
-            {
-                for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
-                {
-                    Part p = FARAeroUtil.CurEditorParts[i];
-
-                    if (FARAeroUtil.IsNonphysical(p))
-                        continue;
-                    for (int k = 0; k < p.Modules.Count; k++)
-                    {
-                        PartModule m = p.Modules[k];
-                        if (m is FARWingAerodynamicModel)
-                        {
-                            Vector3 relPos = p.transform.position - CoM;
-
-                            Vector3 vel = velocity + Vector3.Cross(AngVel, relPos);
-
-                            FARWingAerodynamicModel w = m as FARWingAerodynamicModel;
-                            w.ComputeClCdEditor(vel, M);
-                        }
-                    }
-                }
-            }
-            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
-            {
-                Part p = FARAeroUtil.CurEditorParts[i];
-                if (FARAeroUtil.IsNonphysical(p))
-                    continue;
-                for (int k = 0; k < p.Modules.Count; k++)
-                {
-                    PartModule m = p.Modules[k];
-                    if (m is FARWingAerodynamicModel)
-                    {
-
-                        FARWingAerodynamicModel w = m as FARWingAerodynamicModel;
-                        if (w.isShielded)
-                            break;
-
-                        Vector3d relPos = w.GetAerodynamicCenter() - CoM;
-
-                        Vector3d vel = velocity + Vector3d.Cross(AngVel, relPos);
-
-                        w.ComputeClCdEditor(vel, M);
-
-                        double tmpCl = w.GetCl() * w.S;
-                        Cl += tmpCl * -Vector3d.Dot(w.GetLiftDirection(), liftVector);
-                        Cy += tmpCl * -Vector3d.Dot(w.GetLiftDirection(), sideways);
-                        double tmpCd = w.GetCd() * w.S;
-                        Cd += tmpCd;
-                        Cm += tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(w.GetLiftDirection(), liftVector) + tmpCd * -Vector3d.Dot((relPos), liftVector);
-                        Cn += tmpCd * Vector3d.Dot((relPos), sideways) + tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(w.GetLiftDirection(), sideways);
-                        C_roll += tmpCl * Vector3d.Dot((relPos), sideways) * -Vector3d.Dot(w.GetLiftDirection(), liftVector);
-                        area += w.S;
-                        MAC += w.GetMAC() * w.S;
-                        b_2 += w.Getb_2() * w.S;
-                        break;
-                    }
-                    else if (m is FARBasicDragModel)
-                    {
-                        FARBasicDragModel d = m as FARBasicDragModel;
-
-                        if (d.isShielded)
-                            break;
-
-                        Vector3d relPos = p.transform.position - CoM;
-
-                        Vector3d vel = velocity + Vector3d.Cross(AngVel, relPos);
-
-                        double tmpCd = d.GetDragEditor(vel, M);
-                        Cd += tmpCd;
-                        double tmpCl = d.GetLiftEditor();
-                        Cl += tmpCl * -Vector3d.Dot(d.GetLiftDirection(), liftVector);
-                        Cy += tmpCl * -Vector3d.Dot(d.GetLiftDirection(), sideways);
-                        relPos = d.GetCoDEditor() - CoM;
-                        Cm += d.GetMomentEditor() + tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(d.GetLiftDirection(), liftVector) + tmpCd * -Vector3d.Dot((relPos), liftVector);
-                        Cn += tmpCd * Vector3d.Dot((relPos), sideways) + tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(d.GetLiftDirection(), sideways);
-                        C_roll += tmpCl * Vector3d.Dot((relPos), sideways) * -Vector3d.Dot(d.GetLiftDirection(), liftVector);
-                        break;
-                    }
-                }
 
                 Vector3 part_pos = p.transform.TransformPoint(p.CoMOffset) - CoM;
                 double partMass = p.mass;
