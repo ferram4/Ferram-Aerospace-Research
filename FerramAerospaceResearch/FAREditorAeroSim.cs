@@ -295,24 +295,51 @@ namespace ferram4
             effectiveG -= u0 * u0 / (alt + body.Radius);                          //This is the effective reduction of gravity due to high velocity
             double neededCl = mass * effectiveG / (q * area);
 
-            alpha = 10;
 
-            double pertCl = 1, pertCd, nomCm, nomCy, nomCn, nomC_roll;
+            double nomCm, nomCy, nomCn, nomC_roll;
+            double lowerAlpha, upperAlpha;
+            lowerAlpha = -10;
+            upperAlpha = 25;
+
+            double lowerClOffset, upperClOffset;
+            GetClCdCmSteady(CoM, upperAlpha, 0, 0, 0, 0, 0, M, 0, out upperClOffset, out Cd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true);
+            GetClCdCmSteady(CoM, lowerAlpha, 0, 0, 0, 0, 0, M, 0, out lowerClOffset, out Cd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true);
+
+            lowerClOffset -= neededCl;
+            upperClOffset -= neededCl;
 
             int iter = 7;
-            for (; ; )
+            for (; ; )      //iterate using Ridder's method
             {
+                alpha = (upperAlpha + lowerAlpha) * 0.5;
                 GetClCdCmSteady(CoM, alpha, 0, 0, 0, 0, 0, M, 0, out Cl, out Cd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true);
 
-                GetClCdCmSteady(CoM, alpha + 0.01, 0, 0, 0, 0, 0, M, 0, out pertCl, out pertCd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true);
-                if (--iter <= 0 || Math.Abs((Cl - neededCl) / neededCl) < 0.1)
+                Cl -= neededCl;
+                if (--iter <= 0 || Math.Abs(Cl / neededCl) < 0.1)
+                    break; 
+                
+                double s = Math.Sqrt(Cl * Cl - lowerClOffset * upperClOffset);
+                if (s == 0)
                     break;
 
-                double delta = -(neededCl - Cl) / ((pertCl - Cl) * 100);
-                if (double.IsNaN(delta))
+                double newAlpha = alpha + (alpha - lowerAlpha) * Math.Sign(lowerClOffset - upperClOffset) * Cl / s;
+
+                if (newAlpha - alpha < 0.1)
                     break;
-                delta = Math.Sign(delta) * Math.Min(0.4f * iter * iter, Math.Abs(delta));
-                alpha = Math.Max(-5f, Math.Min(25f, alpha + delta));
+
+                if(lowerClOffset * Cl > 0)
+                {
+                    lowerAlpha = newAlpha;
+                    GetClCdCmSteady(CoM, lowerAlpha, 0, 0, 0, 0, 0, M, 0, out lowerClOffset, out Cd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true);
+                    lowerClOffset -= neededCl;
+                }
+                else
+                {
+                    upperAlpha = newAlpha;
+                    GetClCdCmSteady(CoM, lowerAlpha, 0, 0, 0, 0, 0, M, 0, out upperClOffset, out Cd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true);
+                    upperClOffset -= neededCl;
+                }
+
             }
 
             if (alpha >= 25)
@@ -419,7 +446,7 @@ namespace ferram4
                 C_roll += tmpCl * Vector3d.Dot((relPos), sideways) * -Vector3d.Dot(d.GetLiftDirection(), liftVector);
 
             }
-            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
+            /*for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
             {
                 Part p = FARAeroUtil.CurEditorParts[i];
                 if (FARAeroUtil.IsNonphysical(p))
@@ -434,7 +461,7 @@ namespace ferram4
                 Cd += stock_drag;
                 Cm += stock_drag * -Vector3d.Dot(part_pos, liftVector);
                 Cn += stock_drag * Vector3d.Dot(part_pos, sideways);
-            }
+            }*/
             if (area == 0)
             {
                 area = 1;
