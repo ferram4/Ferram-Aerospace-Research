@@ -105,7 +105,7 @@ namespace ferram4
                 yPixel = (int)(tmp * height);
                 while (curMach <= maxMach)// && (specExcessPower >= 0 || curMach < 0.5))
                 {
-                    double vel = Math.Sqrt((FlightGlobals.getExternalTemperature((float)curAltitude, body) + 273.15 + FARAeroUtil.currentBodyTemp) * FARAeroUtil.currentBodyAtm.x) * curMach;
+                    double vel = Math.Sqrt((FlightGlobals.getExternalTemperature((float)curAltitude, body) + FARAeroUtil.currentBodyTemp) * FARAeroUtil.currentBodyAtm.x) * curMach;
 
                     double drag = IterateToSteadyFlightDrag(out alpha, vel, curAltitude, curMach, body, mass, area, CoM);
                     alpha = 0;
@@ -118,7 +118,7 @@ namespace ferram4
                     lastXPixel = xPixel;
                     tmp = (curMach - minMach) / (maxMach - minMach);
                     xPixel = (int)(tmp * width);
-                    //s += "Mach: " + curMach + " Alt: " + curAltitude + " thrust: " + thrust + " drag: " + drag + " vel: " + vel + "\n\r";
+                    //Debug.Log("Mach: " + curMach + " Alt: " + curAltitude + " thrust: " + thrust + " drag: " + drag + " vel: " + vel + " AoA: " + alpha + "\n\r");
                     if (xPixel < lastXPixel)
                     {
                         texture.SetPixel(xPixel, yPixel, ColorFromVal(maxExcessPower, specExcessPower));
@@ -287,14 +287,14 @@ namespace ferram4
         //This needs heavy optimization for the chart to be usable; it takes too long to hit all the points
         private double IterateToSteadyFlightDrag(out double alpha, double u0, double alt, double M, CelestialBody body, double mass, double area, Vector3d CoM)
         {
-            double Cd = 0;
             double effectiveG = CalculateAccelerationDueToGravity(body, alt);     //This is the effect of gravity
             double q = FARAeroUtil.GetCurrentDensity(body, alt) * u0 * u0 * 0.5;
             effectiveG -= u0 * u0 / (alt + body.Radius);                          //This is the effective reduction of gravity due to high velocity
             double neededCl = mass * effectiveG * 1000 / (q * area);
 
             SetState(M, neededCl, CoM, 0, 0, false);
-            alpha = FARMathUtil.BrentsMethod(FunctionIterateForAlpha, -5, 25);
+            alpha = FARMathUtil.BrentsMethod(FunctionIterateForAlpha, -5, 25, 10, 0.05);
+            //double Cd = this.Cd;
 
             if (alpha >= 25)
                 return Double.PositiveInfinity;
