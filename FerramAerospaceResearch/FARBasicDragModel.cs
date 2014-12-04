@@ -261,7 +261,7 @@ namespace ferram4
         {
             Vector3d backward;
             if (HighLogic.LoadedSceneIsEditor)
-                backward = -EditorLogic.startPod.transform.forward;
+                backward = -EditorLogic.RootPart.transform.forward;
             else
                 backward = -vessel.transform.forward;
             double ClUpwards;

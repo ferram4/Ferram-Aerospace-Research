@@ -249,12 +249,6 @@ namespace ferram4
                     stabDerivHelpPos = GUILayout.Window(259, stabDerivHelpPos, StabDerivHelpGUI, "FAR Data & Stability Derivative Help", GUILayout.Width(600), GUILayout.Height(Screen.height / 3));
                     stabDerivHelpPos = FARGUIUtils.ClampToScreen(stabDerivHelpPos);
                 }
-
-                if (EdLogInstance.UndoRedo())
-                {
-                    ResetAll();
-                }
-
                 cursorInGUI = windowPos.Contains(mousePos);
 
                 if (AnalysisHelp)
@@ -411,7 +405,7 @@ namespace ferram4
                 windowPos.width = 650;
             }
             List<Part> selectedParts = EditorActionGroups.Instance.GetSelectedParts();
-            if (EditorLogic.fetch.editorScreen == EditorLogic.EditorScreen.Actions && selectedParts.Count > 0)
+            if (selectedParts.Count > 0)
             {
                 Part p = selectedParts[0];  //Selected parts should only ever be symmetry counterparts
                 FARBasicDragModel d = null;
@@ -1472,7 +1466,7 @@ namespace ferram4
             if (GUILayout.Button("Update CoL", ButtonStyle))
             {
                 FARGlobalControlEditorObject.EditorPartsChanged = true;
-                ResetAll();
+                ResetAll(null);
             }
             GUILayout.Space(20F);
             AnalysisHelp = GUILayout.Toggle(AnalysisHelp, "?", ButtonStyle);
@@ -1841,7 +1835,7 @@ namespace ferram4
 
         #region GUI Start / End Functions
 
-        private void ResetAll()
+        public void ResetAll(ShipConstruct c)
         {
             RenderingManager.RemoveFromPostDrawQueue(0, new Callback(OnGUI));
             AllWings.Clear();
@@ -1872,7 +1866,7 @@ namespace ferram4
             for (int i = 0; i < AllWings.Count; i++)
             {
                 FARWingAerodynamicModel w = AllWings[i];
-                if (w.part == null || (w.part.parent == null && w.part != EditorLogic.startPod))
+                if (w.part == null || (w.part.parent == null && w.part != EditorLogic.RootPart))
                     nullWings.Add(w);
             }
 
@@ -1885,7 +1879,7 @@ namespace ferram4
                     AllControlSurfaces.Remove(w);
             }
 
-            if (EditorLogic.startPod)
+            if (EditorLogic.RootPart)
             {
                 for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
                 {

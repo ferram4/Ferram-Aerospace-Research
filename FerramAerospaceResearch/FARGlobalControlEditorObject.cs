@@ -74,7 +74,7 @@ namespace ferram4
         {
             if (ApplicationLauncher.Ready)
             {
-                if (EditorLogic.fetch.editorType == EditorLogic.EditorMode.VAB)
+                if (EditorDriver.editorFacility == EditorFacility.VAB)
                 {
                     FAREditorButtonStock = ApplicationLauncher.Instance.AddModApplication(
                         onAppLaunchToggleOn,
@@ -138,8 +138,10 @@ namespace ferram4
                     editorGUI = new FAREditorGUI();
                     //editorGUI.LoadGUIParameters();
                     editorGUI.RestartCtrlGUI();
+                    GameEvents.onEditorUndo.Add(editorGUI.ResetAll);
+                    GameEvents.onEditorRedo.Add(editorGUI.ResetAll);
                 }
-                if (EditorLogic.startPod != null)
+                if (EditorLogic.RootPart != null)
                 {
                     var editorShip = FARAeroUtil.AllEditorParts;
 

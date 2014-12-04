@@ -292,14 +292,14 @@ namespace ferram4
                 if (HighLogic.LoadedSceneIsFlight)
                     flapLocation = (int)Math.Sign(Vector3.Dot(vessel.ReferenceTransform.forward, part.transform.forward));      //figure out which way is up
                 else
-                    flapLocation = (int)Math.Sign(Vector3.Dot(EditorLogic.startPod.transform.forward, part.transform.forward));      //figure out which way is up
+                    flapLocation = (int)Math.Sign(Vector3.Dot(EditorLogic.RootPart.transform.forward, part.transform.forward));      //figure out which way is up
             }
             else if (isSpoiler == true)
             {
                 if (HighLogic.LoadedSceneIsFlight)
                     flapLocation = -(int)Math.Sign(Vector3.Dot(vessel.ReferenceTransform.forward, part.transform.forward));      //figure out which way is up
                 else
-                    flapLocation = -(int)Math.Sign(Vector3.Dot(EditorLogic.startPod.transform.forward, part.transform.forward));      //figure out which way is up
+                    flapLocation = -(int)Math.Sign(Vector3.Dot(EditorLogic.RootPart.transform.forward, part.transform.forward));      //figure out which way is up
             }
 
             if (pitchaxis != 0.0f || yawaxis != 0.0f || rollaxis != 0.0f || pitchaxisDueToAoA != 0.0f || HighLogic.LoadedSceneIsEditor)
@@ -323,11 +323,11 @@ namespace ferram4
                 if (HighLogic.LoadedSceneIsEditor)
                 {
                     Vector3 CoMoffset = (part.transform.position - CoM).normalized;
-                    PitchLocation = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.forward) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.up));
-                    YawLocation = -Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.right) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.up));
-                    RollLocation = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.forward) * Math.Sign(Vector3.Dot(CoMoffset, -EditorLogic.startPod.transform.right));
-                    roll2 = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.right) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.forward));
-                    AoAsign = Math.Sign(Vector3.Dot(part.transform.up, EditorLogic.startPod.transform.up));
+                    PitchLocation = Vector3.Dot(part.transform.forward, EditorLogic.RootPart.transform.forward) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.RootPart.transform.up));
+                    YawLocation = -Vector3.Dot(part.transform.forward, EditorLogic.RootPart.transform.right) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.RootPart.transform.up));
+                    RollLocation = Vector3.Dot(part.transform.forward, EditorLogic.RootPart.transform.forward) * Math.Sign(Vector3.Dot(CoMoffset, -EditorLogic.RootPart.transform.right));
+                    roll2 = Vector3.Dot(part.transform.forward, EditorLogic.RootPart.transform.right) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.RootPart.transform.forward));
+                    AoAsign = Math.Sign(Vector3.Dot(part.transform.up, EditorLogic.RootPart.transform.up));
                 }
                 else
                 {
@@ -492,10 +492,10 @@ namespace ferram4
             if (HighLogic.LoadedSceneIsEditor)
             {
                 Vector3 CoMoffset = (part.transform.position - CoM).normalized;
-                PitchLocation = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.forward) * Mathf.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.up));
-                YawLocation = -Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.right) * Mathf.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.up));
-                RollLocation = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.forward) * Mathf.Sign(Vector3.Dot(CoMoffset, -EditorLogic.startPod.transform.right));
-                AoAsign = Math.Sign(Vector3.Dot(part.transform.up, EditorLogic.startPod.transform.up));
+                PitchLocation = Vector3.Dot(part.transform.forward, EditorLogic.RootPart.transform.forward) * Mathf.Sign(Vector3.Dot(CoMoffset, EditorLogic.RootPart.transform.up));
+                YawLocation = -Vector3.Dot(part.transform.forward, EditorLogic.RootPart.transform.right) * Mathf.Sign(Vector3.Dot(CoMoffset, EditorLogic.RootPart.transform.up));
+                RollLocation = Vector3.Dot(part.transform.forward, EditorLogic.RootPart.transform.forward) * Mathf.Sign(Vector3.Dot(CoMoffset, -EditorLogic.RootPart.transform.right));
+                AoAsign = Math.Sign(Vector3.Dot(part.transform.up, EditorLogic.RootPart.transform.up));
                 AoAdesiredControl = 0;
                 if (pitchaxis != 0.0)
                 {
@@ -512,8 +512,8 @@ namespace ferram4
                 AoAdesiredControl *= maxdeflect;
                 if (pitchaxisDueToAoA != 0.0)
                 {
-                    Vector3 tmpVec = EditorLogic.startPod.transform.up * Vector3.Dot(EditorLogic.startPod.transform.up, velocityVec) + EditorLogic.startPod.transform.forward * Vector3.Dot(EditorLogic.startPod.transform.forward, velocityVec);   //velocity vector projected onto a plane that divides the airplane into left and right halves
-                    double AoA = Vector3.Dot(tmpVec.normalized, EditorLogic.startPod.transform.forward);
+                    Vector3 tmpVec = EditorLogic.RootPart.transform.up * Vector3.Dot(EditorLogic.RootPart.transform.up, velocityVec) + EditorLogic.RootPart.transform.forward * Vector3.Dot(EditorLogic.RootPart.transform.forward, velocityVec);   //velocity vector projected onto a plane that divides the airplane into left and right halves
+                    double AoA = Vector3.Dot(tmpVec.normalized, EditorLogic.RootPart.transform.forward);
                     AoA = FARMathUtil.rad2deg * Math.Asin(AoA);
                     if (double.IsNaN(AoA))
                         AoA = 0;
@@ -526,12 +526,12 @@ namespace ferram4
                 if (isFlap == true)
                 {
                     int flapDeflectionLevel = flap;
-                    flapLocation = (int)Math.Sign(Vector3.Dot(EditorLogic.startPod.transform.forward, part.transform.forward));      //figure out which way is up
+                    flapLocation = (int)Math.Sign(Vector3.Dot(EditorLogic.RootPart.transform.forward, part.transform.forward));      //figure out which way is up
                     AoAcurrentFlap += maxdeflectFlap * flapLocation * flapDeflectionLevel * 0.3333333333333;
                 }
                 else if (isSpoiler == true)
                 {
-                    flapLocation = -(int)Math.Sign(Vector3.Dot(EditorLogic.startPod.transform.forward, part.transform.forward));      //figure out which way is up
+                    flapLocation = -(int)Math.Sign(Vector3.Dot(EditorLogic.RootPart.transform.forward, part.transform.forward));      //figure out which way is up
                     AoAcurrentFlap += brake ? maxdeflectFlap * flapLocation : 0;
                 }
                 AoAdesiredFlap = AoAcurrentFlap;

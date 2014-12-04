@@ -608,7 +608,7 @@ namespace ferram4
         {
             return p.physicalSignificance == Part.PhysicalSignificance.NONE ||
                    (HighLogic.LoadedSceneIsEditor &&
-                    p != EditorLogic.startPod &&
+                    p != EditorLogic.RootPart &&
                     p.PhysicsSignificance == (int)Part.PhysicalSignificance.NONE);
         }
 
@@ -674,15 +674,15 @@ namespace ferram4
             return HighLogic.LoadedSceneIsEditor &&
                    EditorLogic.SelectedPart != null &&
                    (EditorLogic.SelectedPart.potentialParent != null ||
-                     (move_too && EditorLogic.SelectedPart == EditorLogic.startPod));
+                     (move_too && EditorLogic.SelectedPart == EditorLogic.RootPart));
         }
 
         public static List<Part> ListEditorParts(bool include_selected)
         {
             var list = new List<Part>();
 
-            if (EditorLogic.startPod)
-                RecursePartList(list, EditorLogic.startPod);
+            if (EditorLogic.RootPart)
+                RecursePartList(list, EditorLogic.RootPart);
 
             if (include_selected && EditorAboutToAttach())
             {
