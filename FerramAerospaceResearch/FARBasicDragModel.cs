@@ -41,6 +41,7 @@ using System.Text.RegularExpressions;
 using System.Reflection;
 using System.Linq;
 using UnityEngine;
+using CompoundParts;
 
 /// <summary>
 /// This calculates the drag for any general non-wing part, accounting for attachments and orientation
@@ -268,6 +269,7 @@ namespace ferram4
             ClUpwards = Vector3d.Dot(liftDir, backward);
             ClUpwards *= Cl;
 
+            
             return ClUpwards;
         }
 
