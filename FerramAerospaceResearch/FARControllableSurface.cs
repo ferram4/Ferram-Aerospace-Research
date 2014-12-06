@@ -443,10 +443,11 @@ namespace ferram4
         //assuming that it was proportional to only the initial error, not the error as a function of time
         private static double BlendDeflectionLinear(double current, double desired, double maximumDeflection, double timeConstant, bool forceSetToDesired)
         {
-            if (!forceSetToDesired)
+            double error = desired - current;
+            if (!forceSetToDesired && Math.Abs(error) >= 0.1)
             {
                 double degreesPerSecond = maximumDeflection / timeConstant;
-                current += (double)TimeWarp.fixedDeltaTime * degreesPerSecond;
+                current += (double)TimeWarp.fixedDeltaTime * degreesPerSecond * Math.Sign(desired - current);
                 current = FARMathUtil.Clamp(current, -maximumDeflection, maximumDeflection);
             }
             else

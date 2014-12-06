@@ -1211,7 +1211,7 @@ namespace ferram4
 
             FlightUIController UI = FlightUIController.fetch;
 
-            if ((object)activeControlSys == null)
+            if ((object)activeControlSys == null || UI.spdCaption == null || UI.speed == null)
                 return;
 
             Vessel activeVessel = activeControlSys.vessel;
@@ -1325,6 +1325,7 @@ namespace ferram4
 
         public static void SetActiveControlSys(Vessel v)
         {
+            speedometers = null;        //force update of internal speedometer objects
             for (int i = 0; i < v.Parts.Count; i++)
             {
                 Part p = v.Parts[i];
