@@ -207,7 +207,8 @@ namespace ferram4
             FARAeroUtil.incompressibleRearAttachDrag = FARGUIUtils.TextEntryForDouble("Rear Node Drag, Incomp:", 160, FARAeroUtil.incompressibleRearAttachDrag);
             FARAeroUtil.sonicRearAdditionalAttachDrag = FARGUIUtils.TextEntryForDouble("Rear Node Drag, M = 1:", 160, FARAeroUtil.sonicRearAdditionalAttachDrag);
             FARControllableSurface.timeConstant = FARGUIUtils.TextEntryForDouble("Ctrl Surf Time Constant:", 160, FARControllableSurface.timeConstant);
-            FARControllableSurface.timeConstantFlap = FARGUIUtils.TextEntryForDouble("Flap/Spoiler Time Constant:", 160, FARControllableSurface.timeConstantFlap);
+            FARControllableSurface.timeConstantFlap = FARGUIUtils.TextEntryForDouble("Flap Time Constant:", 160, FARControllableSurface.timeConstantFlap);
+            FARControllableSurface.timeConstantSpoiler = FARGUIUtils.TextEntryForDouble("Spoiler Time Constant:", 160, FARControllableSurface.timeConstantSpoiler);
 
 
             GUILayout.EndVertical();

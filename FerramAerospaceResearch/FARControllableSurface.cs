@@ -140,8 +140,8 @@ namespace ferram4
         private Vector3d deflectedNormal = Vector3d.forward;
 
         public static double timeConstant = 0.25;
-        public static double timeConstantFlap = 0.2;
-        public static double timeConstantSpoiler = 0.25;
+        public static double timeConstantFlap = 10;
+        public static double timeConstantSpoiler = 0.75;
         private bool brake = false;
         private bool justStarted = false;
 
@@ -430,7 +430,7 @@ namespace ferram4
             {
                 double recip_timeconstant = 1 / timeConstant;
                 double tmp1 = error * recip_timeconstant;
-                current += FARMathUtil.Clamp((double)TimeWarp.deltaTime * tmp1, -Math.Abs(0.6 * error), Math.Abs(0.6 * error));
+                current += FARMathUtil.Clamp((double)TimeWarp.fixedDeltaTime * tmp1, -Math.Abs(0.6 * error), Math.Abs(0.6 * error));
             }
             else
                 current = desired;
@@ -439,17 +439,19 @@ namespace ferram4
 
         //DaMichel: Similarly, this is used for constant rate movment towards the desired value. I presume it is more realistic for 
         //for slow moving flaps and spoilers. It looks better anyways.
-        private static double BlendDeflectionLinear(double current, double desired, double timeConstant, bool forceSetToDesired)
+        //ferram4: The time constant specifies the time it would take for a first-order system to reach its steady-state value, 
+        //assuming that it was proportional to only the initial error, not the error as a function of time
+        private static double BlendDeflectionLinear(double current, double desired, double maximumDeflection, double timeConstant, bool forceSetToDesired)
         {
-            double error = desired - current;
-            if (!forceSetToDesired && Math.Abs(error) >= 0.1)
+            if (!forceSetToDesired)
             {
-                double recip_timeconstant = 1 / timeConstant;
-                double tmp1 = Math.Sign(error) * recip_timeconstant;
-                current += FARMathUtil.Clamp((double)TimeWarp.deltaTime * tmp1, -Math.Abs(0.6 * error), Math.Abs(0.6 * error));
+                double degreesPerSecond = maximumDeflection / timeConstant;
+                current += (double)TimeWarp.fixedDeltaTime * degreesPerSecond;
+                current = FARMathUtil.Clamp(current, -maximumDeflection, maximumDeflection);
             }
             else
-                current = desired;
+                return desired;
+
             return current;
         }
 
@@ -460,7 +462,7 @@ namespace ferram4
                 AoAcurrentControl = BlendDeflectionExp(AoAcurrentControl, AoAdesiredControl, timeConstant, justStarted);
 
             if (AoAcurrentFlap  != AoAdesiredFlap)
-                AoAcurrentFlap = BlendDeflectionLinear(AoAcurrentFlap, AoAdesiredFlap, isSpoiler ? timeConstantSpoiler : timeConstantFlap, justStarted);
+                AoAcurrentFlap = BlendDeflectionLinear(AoAcurrentFlap, AoAdesiredFlap, maxdeflectFlap, isSpoiler ? timeConstantSpoiler : timeConstantFlap, justStarted);
             AoAoffset = AoAcurrentFlap + AoAcurrentControl;
         }
 
