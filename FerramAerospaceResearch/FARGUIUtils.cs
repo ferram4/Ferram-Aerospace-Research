@@ -38,6 +38,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
 
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace ferram4
@@ -50,6 +51,17 @@ namespace ferram4
             window.y = Mathf.Clamp(window.y, -window.height + 20, Screen.height - 20);
 
             return window;
+        }
+
+        public static double TextEntryForDouble(string label, int labelWidth, double prevValue)
+        {
+            string valString = prevValue.ToString();
+            FARGUIUtils.TextEntryField("Cd For Full Tint:", 80, ref valString);
+
+            if (!Regex.IsMatch(valString, @"^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$"))
+                return prevValue;
+
+            return double.Parse(valString);
         }
 
         public static void TextEntryField(string label, int labelWidth, ref string inputOutput)

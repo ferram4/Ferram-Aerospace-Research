@@ -202,37 +202,13 @@ namespace ferram4
             int i = 0;
             GUILayout.BeginVertical(boxStyle);
 
-            string tmp;
+            FARAeroUtil.areaFactor = FARGUIUtils.TextEntryForDouble("Area Factor:", 160, FARAeroUtil.areaFactor);
+            FARAeroUtil.attachNodeRadiusFactor = FARGUIUtils.TextEntryForDouble("Node Diameter Factor:", 160, FARAeroUtil.attachNodeRadiusFactor * 2) * 0.5;
+            FARAeroUtil.incompressibleRearAttachDrag = FARGUIUtils.TextEntryForDouble("Rear Node Drag, Incomp:", 160, FARAeroUtil.incompressibleRearAttachDrag);
+            FARAeroUtil.sonicRearAdditionalAttachDrag = FARGUIUtils.TextEntryForDouble("Rear Node Drag, M = 1:", 160, FARAeroUtil.sonicRearAdditionalAttachDrag);
+            FARControllableSurface.timeConstant = FARGUIUtils.TextEntryForDouble("Ctrl Surf Time Constant:", 160, FARControllableSurface.timeConstant);
+            FARControllableSurface.timeConstantFlap = FARGUIUtils.TextEntryForDouble("Flap/Spoiler Time Constant:", 160, FARControllableSurface.timeConstantFlap);
 
-            tmp = FARAeroUtil.areaFactor.ToString();
-            FARGUIUtils.TextEntryField("Area Factor:", 160, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            FARAeroUtil.areaFactor = Convert.ToDouble(tmp);
-
-            tmp = (FARAeroUtil.attachNodeRadiusFactor * 2).ToString();
-            FARGUIUtils.TextEntryField("Node Diameter Factor:", 160, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            FARAeroUtil.attachNodeRadiusFactor = Convert.ToDouble(tmp) * 0.5;
-
-            tmp = FARAeroUtil.incompressibleRearAttachDrag.ToString();
-            FARGUIUtils.TextEntryField("Rear Node Drag, Incomp:", 160, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            FARAeroUtil.incompressibleRearAttachDrag = Convert.ToDouble(tmp);
-
-            tmp = FARAeroUtil.sonicRearAdditionalAttachDrag.ToString();
-            FARGUIUtils.TextEntryField("Rear Node Drag, M = 1:", 160, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            FARAeroUtil.sonicRearAdditionalAttachDrag = Convert.ToDouble(tmp);
-
-            tmp = FARControllableSurface.timeConstant.ToString();
-            FARGUIUtils.TextEntryField("Ctrl Surf Time Constant:", 160, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            FARControllableSurface.timeConstant = Convert.ToDouble(tmp);
-
-            tmp = FARControllableSurface.timeConstantFlap.ToString();
-            FARGUIUtils.TextEntryField("Flap/Spoiler Time Constant:", 160, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            FARControllableSurface.timeConstantFlap = Convert.ToDouble(tmp);
 
             GUILayout.EndVertical();
             GUILayout.BeginVertical();
@@ -270,17 +246,12 @@ namespace ferram4
 
             Vector3d atmProperties = FARAeroUtil.bodyAtmosphereConfiguration[flightGlobalsIndex];
 
-            tmp = atmProperties.y.ToString();
-            FARGUIUtils.TextEntryField("Ratio of Specific Heats:", 80, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            atmProperties.y = Convert.ToDouble(tmp);
+            atmProperties.y = FARGUIUtils.TextEntryForDouble("Ratio of Specific Heats:", 80, atmProperties.y);
 
 
             double dTmp = 8314.5 / atmProperties.z;
-            tmp = dTmp.ToString();
-            FARGUIUtils.TextEntryField("Gas Molecular Mass:", 80, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            atmProperties.z = 8314.5 / Convert.ToDouble(tmp);
+            dTmp = FARGUIUtils.TextEntryForDouble("Gas Molecular Mass:", 80, dTmp);
+            atmProperties.z = 8314.5 / dTmp;
 
             atmProperties.x = atmProperties.y * atmProperties.z;
 
@@ -344,21 +315,14 @@ namespace ferram4
 
             FARGUIUtils.TextEntryField("Name:", 80, ref activeTemplate.name);
 
-            tmp = activeTemplate.YmaxStress.ToString();
-            FARGUIUtils.TextEntryField("Axial (Y-axis) Max Stress:", 240, ref tmp);
-                        tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            activeTemplate.YmaxStress = Convert.ToDouble(tmp);
-
-            tmp = activeTemplate.XZmaxStress.ToString();
-            FARGUIUtils.TextEntryField("Lateral (X,Z-axis) Max Stress:", 240, ref tmp);
-                        tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            activeTemplate.XZmaxStress = Convert.ToDouble(tmp);
+            activeTemplate.YmaxStress = FARGUIUtils.TextEntryForDouble("Axial (Y-axis) Max Stress:", 240, activeTemplate.YmaxStress);
+            activeTemplate.XZmaxStress = FARGUIUtils.TextEntryForDouble("Lateral (X,Z-axis) Max Stress:", 240, activeTemplate.XZmaxStress);
            
             activeTemplate.crewed = GUILayout.Toggle(activeTemplate.crewed, "Requires Crew Compartment");
 
             tmp = activeTemplate.minNumResources.ToString();
             FARGUIUtils.TextEntryField("Min Num Resources:", 80, ref tmp);
-                        tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
+                        tmp = Regex.Replace(tmp, @"[^\d]", "");
             activeTemplate.minNumResources = Convert.ToInt32(tmp);
 
             GUILayout.Label("Req Resources:");
@@ -508,20 +472,10 @@ namespace ferram4
 
             GUILayout.Label(colorTitle + " (r,g,b):", GUILayout.Width(80));
 
-            string tmp = input.r.ToString();
-            FARGUIUtils.TextEntryField("", 0, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            input.r = Convert.ToSingle(tmp);
 
-            tmp = input.g.ToString();
-            FARGUIUtils.TextEntryField("", 0, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            input.g = Convert.ToSingle(tmp);
-
-            tmp = input.b.ToString();
-            FARGUIUtils.TextEntryField("", 0, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            input.b = Convert.ToSingle(tmp);
+            input.r = (float)FARGUIUtils.TextEntryForDouble("", 0, input.r);
+            input.g = (float)FARGUIUtils.TextEntryForDouble("", 0, input.g);
+            input.b = (float)FARGUIUtils.TextEntryForDouble("", 0, input.b);
 
             GUILayout.EndHorizontal();
         }
