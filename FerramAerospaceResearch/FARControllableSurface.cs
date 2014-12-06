@@ -141,6 +141,7 @@ namespace ferram4
 
         public static double timeConstant = 0.25;
         public static double timeConstantFlap = 0.2;
+        public static double timeConstantSpoiler = 0.25;
         private bool brake = false;
         private bool justStarted = false;
 
@@ -455,8 +456,11 @@ namespace ferram4
         // Determines current deflection contributions from stick and flap/spoiler settings and update current total deflection (AoAoffset).
         private void ChangeDeflection()
         {
-            if (AoAcurrentControl != AoAdesiredControl) AoAcurrentControl = BlendDeflectionExp(AoAcurrentControl, AoAdesiredControl, timeConstant, justStarted);
-            if (AoAcurrentFlap  != AoAdesiredFlap) AoAcurrentFlap = BlendDeflectionLinear(AoAcurrentFlap, AoAdesiredFlap, timeConstantFlap, justStarted);
+            if (AoAcurrentControl != AoAdesiredControl)
+                AoAcurrentControl = BlendDeflectionExp(AoAcurrentControl, AoAdesiredControl, timeConstant, justStarted);
+
+            if (AoAcurrentFlap  != AoAdesiredFlap)
+                AoAcurrentFlap = BlendDeflectionLinear(AoAcurrentFlap, AoAdesiredFlap, isSpoiler ? timeConstantSpoiler : timeConstantFlap, justStarted);
             AoAoffset = AoAcurrentFlap + AoAcurrentControl;
         }
 
