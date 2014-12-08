@@ -42,6 +42,7 @@ using System.Reflection;
 using System.Linq;
 using UnityEngine;
 using CompoundParts;
+using ferram4.PartExtensions;
 
 /// <summary>
 /// This calculates the drag for any general non-wing part, accounting for attachments and orientation
@@ -267,24 +268,6 @@ namespace ferram4
             to_model_rotation = Quaternion.Inverse(to_local);
         }
 
-        /*private void ConvertDragTypeToEnum()
-        {
-            if (DragType.ToLowerInvariant() == "nosecone")
-                DragEnumType = DragModelType.NOSECONE;
-            else if (DragType.ToLowerInvariant() == "cone")
-                DragEnumType = DragModelType.CONE;
-            else if (DragType.ToLowerInvariant() == "tailpylon")
-                DragEnumType = DragModelType.TAILPYLON;
-            else if (DragType.ToLowerInvariant() == "engine")
-                DragEnumType = DragModelType.ENGINE;
-            else if (DragType.ToLowerInvariant() == "skinfriction")
-                DragEnumType = DragModelType.SKINFRICTION;
-            else if (DragType.ToLowerInvariant() == "commandpod")
-                DragEnumType = DragModelType.COMMANDPOD;
-            else
-                DragEnumType = DragModelType.CYLINDER;
-        }*/
-
         public double GetCl()
         {
             Vector3d backward;
@@ -383,25 +366,6 @@ namespace ferram4
             return Cl * S;
         }
 
-        /*
-        public Vector3 UpdateDirectionVector(string vecName)
-        {
-            Vector3 vec;
-            if (vecName == "forward")
-                vec = part.transform.forward;
-            else if (vecName == "right")
-                vec = part.transform.right;
-            else if (vecName == "backward")
-                vec = -part.transform.forward;
-            else if (vecName == "left")
-                vec = -part.transform.right;
-            else
-                vec = part.transform.up;
-
-            return vec;
-        }
-        */
-
         public double GetMomentEditor()
         {
             return Cm * S;
@@ -423,7 +387,6 @@ namespace ferram4
                 Cd = 0;
 
                 Vector3d velocity_normalized = velocity / v_scalar;
-                //float Parallel = Vector3.Dot(upVector, velocity_normalized);
 
                 Vector3d upVector = part_transform.TransformDirection(localUpVector);
                 perp = Vector3d.Cross(upVector, velocity).normalized;
@@ -431,15 +394,6 @@ namespace ferram4
 
                 Vector3d local_velocity = part_transform.InverseTransformDirection(velocity_normalized);
                 DragModel(local_velocity, MachNumber);
-
-                //if(gear && start != StartState.Editor)
-                //    if(gear.gearState != ModuleLandingGear.GearStates.RETRACTED)
-                //        Cd += 0.1f;
-               /* if(anim)
-                    if (anim.Progress > 0.5f)
-                        Cd *= 1.5f;*/
-
-
 
                 double qS = 0.5 * rho * v_scalar * v_scalar * S;   //dynamic pressure, q
                 Vector3d D = velocity_normalized * (-qS * Cd);                         //drag
@@ -459,17 +413,9 @@ namespace ferram4
 
                         rot *= (-0.00001 * qS);
 
-                        // This seems redundant due to the moment addition below?
-                        /*
-                        if(!float.IsNaN(rot.sqrMagnitude))
-                            part.Rigidbody.AddTorque(rot);
-                        */
 
                         moment += rot;
                     }
-                    //moment = (moment + lastMoment) / 2;
-                    //lastMoment = moment;
-//                    CoDshift += CenterOfDrag;
                 }
 
                 //Must handle aero-structural failure before transforming CoD pos and adding pitching moment to forces or else parts with blunt body drag fall apart too easily
@@ -526,24 +472,20 @@ namespace ferram4
             SPlusAttachArea = S;
 
             Vector3d partUpVector = transform.TransformDirection(localUpVector);
+            Bounds[] colliderBounds = part.GetColliderBounds();
 
             //print("Updating drag for " + part.partInfo.title);
             foreach (AttachNode Attach in part.attachNodes)
             {
                 if (Attach.nodeType == AttachNode.NodeType.Stack)
                 {
-                    if (Attach.attachedPart != null)
-                    {
-                        continue;
-                    }
                     if (Attach.id.ToLowerInvariant() == "strut")
-                        continue;                        
-
-                    Ray ray = new Ray();
+                        continue;
 
                     Vector3d relPos = Attach.position + Attach.offset;
+                    Ray ray = new Ray();
 
-                    if(part.Modules.Contains("FARCargoBayModule"))
+                    if (part.Modules.Contains("FARCargoBayModule"))
                     {
                         FARCargoBayModule bay = (FARCargoBayModule)part.Modules["FARCargoBayModule"];
 
@@ -552,70 +494,86 @@ namespace ferram4
 
                         if (relPos.x < maxBounds.x && relPos.y < maxBounds.y && relPos.z < maxBounds.z && relPos.x > minBounds.x && relPos.y > minBounds.y && relPos.z > minBounds.z)
                         {
-                            return;
+                            continue;
                         }
+                    }
+
+                    if (Attach.attachedPart != null)
+                    {
+                        if (AttachedPartIsNotClipping(Attach.attachedPart, colliderBounds))
+                            continue;
                     }
 
                     Vector3d origToNode = transform.localToWorldMatrix.MultiplyVector(relPos);
-
-                    double mag = (origToNode).magnitude;
-
-
-
-                    //print(part.partInfo.title + " Part Loc: " + part.transform.position + " Attach Loc: " + (origToNode + part.transform.position) + " Dist: " + mag);
-
-                    ray.direction = origToNode;
-                    ray.origin = transform.position;
-
                     double attachSize = FARMathUtil.Clamp(Attach.size, 0.5, double.PositiveInfinity);
 
-                    bool gotIt = false;
-                    RaycastHit[] hits = Physics.RaycastAll(ray, (float)(mag + attachSize), FARAeroUtil.RaycastMask);
-                    foreach (RaycastHit h in hits)
-                    {
-                        if (h.collider == part.collider)
-                            continue;
-                        if (h.distance < (mag + attachSize) && h.distance > (mag - attachSize))
-                            foreach (Part p in VesselPartList)
-                                if (p.collider == h.collider)
-                                {
-                                    gotIt = true;
-                                    break;
-                                }
-                        if (gotIt)
-                        {
-                            break;
-                        }
-                    }
-                        
-                    if (!gotIt)
-                    {
-                        attachNodeData newAttachNodeData = new attachNodeData();
+                    if (UnattachedPartRightAgainstNode(origToNode, attachSize, relPos))
+                        continue;
 
-                        double exposedAttachArea = attachSize * FARAeroUtil.attachNodeRadiusFactor;
+                    attachNodeData newAttachNodeData = new attachNodeData();
 
-                        newAttachNodeData.recipDiameter = 1 / (2 * exposedAttachArea);
+                    double exposedAttachArea = attachSize * FARAeroUtil.attachNodeRadiusFactor;
 
-                        exposedAttachArea *= exposedAttachArea;
-                        exposedAttachArea *= Math.PI * FARAeroUtil.areaFactor;
+                    newAttachNodeData.recipDiameter = 1 / (2 * exposedAttachArea);
 
-                        SPlusAttachArea += exposedAttachArea;
+                    exposedAttachArea *= exposedAttachArea;
+                    exposedAttachArea *= Math.PI * FARAeroUtil.areaFactor;
 
-                        exposedAttachArea /= FARMathUtil.Clamp(S, 0.01, double.PositiveInfinity);
+                    SPlusAttachArea += exposedAttachArea;
 
-                        newAttachNodeData.areaValue = exposedAttachArea;
-                        if (Vector3d.Dot(origToNode, partUpVector) > 1)
-                            newAttachNodeData.pitchesAwayFromUpVec = true;
-                        else
-                            newAttachNodeData.pitchesAwayFromUpVec = false;
+                    exposedAttachArea /= FARMathUtil.Clamp(S, 0.01, double.PositiveInfinity);
 
-                        newAttachNodeData.location = transform.worldToLocalMatrix.MultiplyVector(origToNode);
+                    newAttachNodeData.areaValue = exposedAttachArea;
+                    if (Vector3d.Dot(origToNode, partUpVector) > 1)
+                        newAttachNodeData.pitchesAwayFromUpVec = true;
+                    else
+                        newAttachNodeData.pitchesAwayFromUpVec = false;
 
-                        attachNodeDragList.Add(newAttachNodeData);
-                    }
+                    newAttachNodeData.location = transform.worldToLocalMatrix.MultiplyVector(origToNode);
+
+                    attachNodeDragList.Add(newAttachNodeData);
                 }
             }
         }
+
+        private bool AttachedPartIsNotClipping(Part attachedPart, Bounds[] colliderBounds)
+        {
+            //string s = "";
+            for (int i = 0; i < colliderBounds.Length; i++)
+            {
+                Bounds bound = colliderBounds[i];
+                // s += "Min: " + bound.min.ToString() + " Max: " + bound.max.ToString() + "\n\r";
+                if (bound.Contains(attachedPart.transform.position))
+                    return false;
+                //s += "Found containing point\n\r";
+            }
+            //Debug.Log(s);
+            return true;
+        }
+
+        private bool UnattachedPartRightAgainstNode(Vector3d origToNode, double attachSize, Vector3d relPos)
+        {
+            double mag = (origToNode).magnitude;
+
+            ray.direction = origToNode;
+
+            ray.origin = part.transform.position;
+
+            RaycastHit[] hits = Physics.RaycastAll(ray, (float)(mag + attachSize), FARAeroUtil.RaycastMask);
+            foreach (RaycastHit h in hits)
+            {
+                if (h.collider == part.collider)
+                    continue;
+                if (h.distance < (mag + attachSize) && h.distance > (mag - attachSize))
+                    foreach (Part p in VesselPartList)
+                        if (p.collider == h.collider)
+                        {
+                            return true;
+                        }
+            }
+            return false;
+        }
+
         /// <summary>
         /// These are just a few different attempts to figure drag for various blunt bodies
         /// </summary>
