@@ -328,7 +328,7 @@ namespace ferram4
             }
 
             double soundspeed;
-            rho = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
+            rho = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed, false);
             double realToStockDensityRatio = vessel.atmDensity / rho;
 
             bool zero_q = FARMathUtil.Approximately(0, q);
@@ -1245,7 +1245,7 @@ namespace ferram4
                 {
                     UI.spdCaption.text = "IAS";
                     speedometerCaption = "IAS: ";
-                    double densityRatio = (FARAeroUtil.GetCurrentDensity(activeVessel.mainBody, activeVessel.altitude) * invKerbinSLDensity);
+                    double densityRatio = (FARAeroUtil.GetCurrentDensity(activeVessel.mainBody, activeVessel.altitude, false) * invKerbinSLDensity);
                     double pressureRatio = FARAeroUtil.StagnationPressureCalc(MachNumber);
                     UI.speed.text = (activeVessel.srfSpeed * Math.Sqrt(densityRatio) * pressureRatio * unitConversion).ToString("F1") + unitString;
                 }
@@ -1253,7 +1253,7 @@ namespace ferram4
                 {
                     UI.spdCaption.text = "EAS";
                     speedometerCaption = "EAS: ";
-                    double densityRatio = (FARAeroUtil.GetCurrentDensity(activeVessel.mainBody, activeVessel.altitude) * invKerbinSLDensity);
+                    double densityRatio = (FARAeroUtil.GetCurrentDensity(activeVessel.mainBody, activeVessel.altitude, false) * invKerbinSLDensity);
                     UI.speed.text = (activeVessel.srfSpeed * Math.Sqrt(densityRatio) * unitConversion).ToString("F1") + unitString;
                 }
                 else// if (velMode == SurfaceVelMode.MACH)
@@ -1349,7 +1349,7 @@ namespace ferram4
             OnVesselPartsChange += () => {
                 speedometers = null; //DaMichel: needs to be cleared when the craft changes. New cockpit internals might be added.
             };
-            invKerbinSLDensity = 1 / FARAeroUtil.GetCurrentDensity(FlightGlobals.Bodies[1], 0);
+            invKerbinSLDensity = 1 / FARAeroUtil.GetCurrentDensity(FlightGlobals.Bodies[1], 0, false);
 
             stabilityAugCallback = new FlightInputCallback(StabilityAugmentation);
             vessel.OnFlyByWire += stabilityAugCallback;
@@ -1388,7 +1388,7 @@ namespace ferram4
                         if (vessel.staticPressure > 0)
                         {
                             double soundspeed;
-                            airDensity = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
+                            airDensity = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed, false);
 
                             //this.vessel.srf_velocity += FARWind.GetWind(this.vessel.mainBody, part, vessel.transform.position);
 

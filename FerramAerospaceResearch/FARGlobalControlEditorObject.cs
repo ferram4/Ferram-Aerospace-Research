@@ -55,6 +55,7 @@ namespace ferram4
         private IButton FAREditorButtonBlizzy = null;
         private ApplicationLauncherButton FAREditorButtonStock = null;
         private bool buttonsNeedInitializing = true;
+        private List<Part> editorShip;
 
 
         public static bool EditorPartsChanged = true;
@@ -66,6 +67,7 @@ namespace ferram4
             if (!CompatibilityChecker.IsAllCompatible())
                 return;
 
+            GameEvents.onEditorPartEvent.Add(UpdateWingInteractionsEvent);
             buttonsNeedInitializing = true;
             LoadConfigs();
         }
@@ -123,7 +125,56 @@ namespace ferram4
             FAREditorGUI.hide = false;
         }
 
+        private void UpdateWingInteractionsEvent(ConstructionEventType type, Part pEvent)
+        {
+            if (type == ConstructionEventType.PartRotating ||
+                type == ConstructionEventType.PartOffsetting ||
+                type == ConstructionEventType.PartAttached ||
+                type == ConstructionEventType.PartDetached)
+            {
+                if (editorShip == null)
+                    return;
+                FindPartsWithoutFARModel(editorShip);
+                for (int i = 0; i < editorShip.Count; i++)
+                {
+                    Part p = editorShip[i];
+                    for (int j = 0; j < p.Modules.Count; j++)
+                    {
+                        PartModule m = p.Modules[j];
+                        if (m is FARBaseAerodynamics)
+                            (m as FARBaseAerodynamics).ClearShielding();
+                    }
+                }
 
+                for (int i = 0; i < editorShip.Count; i++)
+                {
+                    Part p = editorShip[i];
+                    for (int j = 0; j < p.Modules.Count; j++)
+                    {
+                        PartModule m = p.Modules[j];
+                        if (m is FARPartModule)
+                            (m as FARPartModule).ForceOnVesselPartsChange();
+                    }
+                }
+                part_count_all = editorShip.Count;
+                part_count_ship = EditorLogic.SortedShipList.Count;
+                EditorPartsChanged = false;
+            }
+        }
+
+        private void UpdateWingInteractionsPart(ConstructionEventType type, Part p)
+        {
+            EditorPartsChanged = true;
+            FARWingAerodynamicModel w = p.GetComponent<FARWingAerodynamicModel>();
+            if ((object)w != null)
+            {
+                if (type == ConstructionEventType.PartAttached)
+                    w.OnWingAttach();
+                else if (type == ConstructionEventType.PartDetached)
+                    w.OnWingDetach();
+                w.EditorUpdateWingInteractions();
+            }
+        }
 
         public void LateUpdate()
         {
@@ -145,7 +196,7 @@ namespace ferram4
                 }
                 if (EditorLogic.RootPart != null)
                 {
-                    var editorShip = FARAeroUtil.AllEditorParts;
+                    editorShip = FARAeroUtil.AllEditorParts;
 
                     if (buttonsNeedInitializing)
                         InitializeButtons();
@@ -156,34 +207,10 @@ namespace ferram4
                         count = 0;
                     }
 
-                    if (part_count_all != editorShip.Count || part_count_ship != EditorLogic.SortedShipList.Count || EditorPartsChanged)
+                    /*if (part_count_all != editorShip.Count || part_count_ship != EditorLogic.SortedShipList.Count || EditorPartsChanged)
                     {
-                        FindPartsWithoutFARModel(editorShip);
-                        for (int i = 0; i < editorShip.Count; i++)
-                        {
-                            Part p = editorShip[i];
-                            for (int j = 0; j < p.Modules.Count; j++)
-                            {
-                                PartModule m = p.Modules[j];
-                                if (m is FARBaseAerodynamics)
-                                    (m as FARBaseAerodynamics).ClearShielding();
-                            }
-                        }
 
-                        for (int i = 0; i < editorShip.Count; i++)
-                        {
-                            Part p = editorShip[i];
-                            for (int j = 0; j < p.Modules.Count; j++)
-                            {
-                                PartModule m = p.Modules[j];
-                                if (m is FARPartModule)
-                                    (m as FARPartModule).ForceOnVesselPartsChange();
-                            }
-                        }
-                        part_count_all = editorShip.Count;
-                        part_count_ship = EditorLogic.SortedShipList.Count;
-                        EditorPartsChanged = false;
-                    }
+                    }*/
                 }
                 else if (!buttonsNeedInitializing)
                     DestroyButtons();
@@ -340,6 +367,7 @@ namespace ferram4
             if (!CompatibilityChecker.IsAllCompatible())
                 return;
 
+            GameEvents.onEditorPartEvent.Remove(UpdateWingInteractionsEvent);
             SaveConfigs();
             DestroyButtons();
         }

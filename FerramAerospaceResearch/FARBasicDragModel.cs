@@ -124,6 +124,11 @@ namespace ferram4
         public double YmaxForce = double.MaxValue;
         public double XZmaxForce = double.MaxValue;
 
+        //Forces for blunt body AoA per unit area
+        private static double bluntBodySinForceParameter;
+        private static double bluntBodyCosForceParameter;
+        private static double bluntBodyMomentParameter;
+
         private void AnimationSetup()
         {
             if (ignoreAnim)
@@ -154,6 +159,28 @@ namespace ferram4
                     }
                 }
             }
+        }
+
+        public static void SetBluntBodyParams(double radiusCurvatureRatio)
+        {
+            double sinThetaMax = 0.5 / radiusCurvatureRatio;
+            double thetaMax = Math.Asin(sinThetaMax);
+            double cosThetaMax = Math.Cos(thetaMax);
+
+            double refAreaOfSphericalCap = radiusCurvatureRatio * radiusCurvatureRatio;
+            refAreaOfSphericalCap = 1 - 1 / refAreaOfSphericalCap;
+            refAreaOfSphericalCap = Math.Sqrt(refAreaOfSphericalCap);
+            refAreaOfSphericalCap = 1 - refAreaOfSphericalCap;
+            refAreaOfSphericalCap *= 2 * Math.PI;
+
+            bluntBodySinForceParameter = thetaMax - cosThetaMax * sinThetaMax;
+            bluntBodySinForceParameter *= 0.5;
+            bluntBodySinForceParameter /= (refAreaOfSphericalCap);
+
+            bluntBodyCosForceParameter = thetaMax + cosThetaMax * sinThetaMax;
+            bluntBodyCosForceParameter /= (refAreaOfSphericalCap);
+
+            bluntBodyMomentParameter = -2 * sinThetaMax * radiusCurvatureRatio / (3 * refAreaOfSphericalCap);
         }
 
         public void UpdatePropertiesWithShapeChange()
@@ -563,7 +590,12 @@ namespace ferram4
                         
                     if (!gotIt)
                     {
+                        attachNodeData newAttachNodeData = new attachNodeData();
+
                         double exposedAttachArea = attachSize * FARAeroUtil.attachNodeRadiusFactor;
+
+                        newAttachNodeData.recipDiameter = 1 / (2 * exposedAttachArea);
+
                         exposedAttachArea *= exposedAttachArea;
                         exposedAttachArea *= Math.PI * FARAeroUtil.areaFactor;
 
@@ -571,7 +603,6 @@ namespace ferram4
 
                         exposedAttachArea /= FARMathUtil.Clamp(S, 0.01, double.PositiveInfinity);
 
-                        attachNodeData newAttachNodeData = new attachNodeData();
                         newAttachNodeData.areaValue = exposedAttachArea;
                         if (Vector3d.Dot(origToNode, partUpVector) > 1)
                             newAttachNodeData.pitchesAwayFromUpVec = true;
@@ -691,7 +722,27 @@ namespace ferram4
                 {
                     Vector3d worldPairVec = part_transform.TransformDirection(node.location.normalized);
                     double dotProd_2 = dotProd * dotProd;
+                    double liftProd_2 = 1 - dotProd_2;
                     double liftProd = Vector3d.Dot(worldPairVec, liftDir);
+
+                    double forceCoefficient = dotProd_2 * bluntBodyCosForceParameter;
+                    forceCoefficient += liftProd_2 * bluntBodySinForceParameter;
+                    forceCoefficient *= maxPressureCoeff * node.areaValue;      //force applied perependicular to the flat end of the node
+
+                    tmp = forceCoefficient * dotProd;
+                    Cltmp = -forceCoefficient * liftProd;       //negative because lift is in opposite direction of projection of velocity vector onto node direction
+
+                    double Cmtmp = dotProd * liftProd * bluntBodyMomentParameter;
+                    Cmtmp *= node.areaValue * node.recipDiameter;
+
+                    if (!node.pitchesAwayFromUpVec)
+                        Cmtmp *= -1;
+
+                    Cm += Cmtmp;
+
+                    double tmpCdCl = Math.Sqrt(tmp * tmp + Cltmp * Cltmp);
+                    CoDshift += node.location * (tmpCdCl / (tmpCdCl + Math.Sqrt(Cd * Cd + Cl * Cl)));
+                    /*double liftProd = Vector3d.Dot(worldPairVec, liftDir);
 
                     tmp = maxPressureCoeff * dotProd_2 * dotProd;
                     tmp *= node.areaValue;
@@ -713,7 +764,7 @@ namespace ferram4
 
                     CoDshift += node.location * (tmpCdCl / (tmpCdCl + Math.Sqrt(Cd * Cd + Cl * Cl))) + CoDshiftOffset;
 
-                    Cm += Cmtmp;
+                    Cm += Cmtmp;*/
                 }
 
                 CdAdd += tmp;
@@ -762,6 +813,7 @@ namespace ferram4
         public struct attachNodeData
         {
             public double areaValue;
+            public double recipDiameter;
             public bool pitchesAwayFromUpVec;
             public Vector3d location;
         }

@@ -60,6 +60,7 @@ namespace ferram4
         public static double sonicRearAdditionalAttachDrag;
         public static double massPerWingAreaSupported;
         public static double massStressPower;
+        public static double radiusOfCurvatureBluntBody;
         public static bool AJELoaded;
 
         public static Dictionary<int, Vector3d> bodyAtmosphereConfiguration = null;
@@ -69,6 +70,9 @@ namespace ferram4
         public static double currentBodyAtmPressureOffset = 0;
 
         public static bool loaded = false;
+        
+        //Based on ratio of density of water to density of air at SL
+        private const double UNDERWATER_DENSITY_FACTOR_MINUS_ONE = 814.51020408163265306122448979592;
 
         public static void SaveCustomAeroDataToConfig()
         {
@@ -77,6 +81,7 @@ namespace ferram4
             node.AddValue("%attachNodeDiameterFactor", attachNodeRadiusFactor * 2);
             node.AddValue("%incompressibleRearAttachDrag", incompressibleRearAttachDrag);
             node.AddValue("%sonicRearAdditionalAttachDrag", sonicRearAdditionalAttachDrag);
+            node.AddValue("%radiusOfCurvatureBluntBody", radiusOfCurvatureBluntBody);
             node.AddValue("%massPerWingAreaSupported", massPerWingAreaSupported);
             node.AddValue("%massStressPower", massStressPower);
             node.AddValue("%ctrlSurfTimeConstant", FARControllableSurface.timeConstant);
@@ -128,6 +133,9 @@ namespace ferram4
                     double.TryParse(node.GetValue("incompressibleRearAttachDrag"), out incompressibleRearAttachDrag);
                 if (node.HasValue("sonicRearAdditionalAttachDrag"))
                     double.TryParse(node.GetValue("sonicRearAdditionalAttachDrag"), out sonicRearAdditionalAttachDrag);
+                if (node.HasValue("radiusOfCurvatureBluntBody"))
+                    double.TryParse(node.GetValue("radiusOfCurvatureBluntBody"), out radiusOfCurvatureBluntBody);
+
 
                 if (node.HasValue("massPerWingAreaSupported"))
                     double.TryParse(node.GetValue("massPerWingAreaSupported"), out massPerWingAreaSupported);
@@ -191,7 +199,10 @@ namespace ferram4
                 }
             }
 
+            
+
             SetDefaultValuesIfNoValuesLoaded();
+            FARBasicDragModel.SetBluntBodyParams(radiusOfCurvatureBluntBody);
           
             loaded = true;
 
@@ -1151,7 +1162,7 @@ namespace ferram4
             return MachNumber;
         }
 
-        public static double GetCurrentDensity(CelestialBody body, Vector3 worldLocation)
+        public static double GetCurrentDensity(CelestialBody body, Vector3 worldLocation, bool densitySmoothingAtOcean = true)
         {
             UpdateCurrentActiveBody(body);
 
@@ -1161,10 +1172,19 @@ namespace ferram4
             if (pressure > 0)
                 pressure = (pressure - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
 
+            double altitude = body.GetAltitude(worldLocation);
+            if (altitude < 1 && densitySmoothingAtOcean)
+            {
+                double densityMultFromOcean = (1 - altitude) * 0.5;
+                densityMultFromOcean *= UNDERWATER_DENSITY_FACTOR_MINUS_ONE;
+                densityMultFromOcean++;
+                pressure *= densityMultFromOcean;
+            }
+
             return pressure / (temp * currentBodyAtm.z);
         }
 
-        public static double GetCurrentDensity(CelestialBody body, double altitude)
+        public static double GetCurrentDensity(CelestialBody body, double altitude, bool densitySmoothingAtOcean = true)
         {
             UpdateCurrentActiveBody(body);
 
@@ -1177,11 +1197,19 @@ namespace ferram4
             if (pressure > 0)
                 pressure = (pressure - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
 
+            if (altitude < 1 && densitySmoothingAtOcean)
+            {
+                double densityMultFromOcean = (1 - altitude) * 0.5;
+                densityMultFromOcean *= UNDERWATER_DENSITY_FACTOR_MINUS_ONE;
+                densityMultFromOcean++;
+                pressure *= densityMultFromOcean;
+            }
+
             return pressure / (temp * currentBodyAtm.z);
         }
 
         // Vessel has altitude and cached pressure, and both density and sound speed need temperature
-        public static double GetCurrentDensity(Vessel vessel, out double soundspeed)
+        public static double GetCurrentDensity(Vessel vessel, out double soundspeed, bool densitySmoothingAtOcean = true)
         {
             double altitude = vessel.altitude;
             CelestialBody body = vessel.mainBody;
@@ -1200,6 +1228,14 @@ namespace ferram4
                 pressure = (vessel.staticPressure - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
 
             soundspeed = Math.Sqrt(temp * currentBodyAtm.x); // * 401.8f;              //Calculation for speed of sound in ideal gas using air constants of gamma = 1.4 and R = 287 kJ/kg*K
+
+            if (altitude < 1 && densitySmoothingAtOcean)
+            {
+                double densityMultFromOcean = (1 - altitude) * 0.5;
+                densityMultFromOcean *= UNDERWATER_DENSITY_FACTOR_MINUS_ONE;
+                densityMultFromOcean++;
+                pressure *= densityMultFromOcean;
+            }
 
             return pressure / (temp * currentBodyAtm.z);
         }

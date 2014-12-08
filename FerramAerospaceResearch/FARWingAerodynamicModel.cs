@@ -308,7 +308,7 @@ namespace ferram4
                 part.OnEditorDetach += OnWingDetach;
             }
 
-            OnVesselPartsChange += UpdateWingInteractions;
+            OnVesselPartsChange += UpdateThisWingInteractions;
         }
 
         public void StartInitialization()
@@ -342,7 +342,7 @@ namespace ferram4
 
             wingInteraction = new FARWingInteraction(this, this.part, rootMidChordOffsetFromOrig, srfAttachNegative);
 
-            UpdateWingInteractions();
+            UpdateThisWingInteractions();
         }
 
         public void MathAndFunctionInitialization()
@@ -388,7 +388,14 @@ namespace ferram4
             }
         }
 
-        private void UpdateWingInteractions()
+        public void EditorUpdateWingInteractions()
+        {
+            HashSet<FARWingAerodynamicModel> wingsHandled = wingInteraction.UpdateNearbyWingInteractions();     //first update the old nearby wings
+            UpdateThisWingInteractions();
+            wingInteraction.UpdateNearbyWingInteractions(wingsHandled);     //then update the new nearby wings, not doing the ones already handled
+        }
+
+        public void UpdateThisWingInteractions()
         {
             if(VesselPartList == null)
                 VesselPartList = GetShipPartList();
@@ -539,7 +546,7 @@ namespace ferram4
 
         }
 
-        private void OnWingAttach()
+        public void OnWingAttach()
         {
             if(part.parent)
                 parentWing = part.parent.GetComponent<FARWingAerodynamicModel>();
@@ -549,7 +556,7 @@ namespace ferram4
             UpdateMassToAccountForArea();
         }
 
-        private void OnWingDetach()
+        public void OnWingDetach()
         {
             if ((object)parentWing != null)
                 parentWing.updateMassNextFrame = true;
