@@ -53,6 +53,10 @@ namespace ferram4
         private bool debugMenu = false;
         private bool inputLocked = false;
         private Rect debugWinPos = new Rect(50, 50, 700, 250);
+        private static Texture2D cLTexture = new Texture2D(25, 15);
+        private static Texture2D cDTexture = new Texture2D(25, 15);
+        private static Texture2D cMTexture = new Texture2D(25, 15);
+        private static Texture2D l_DTexture = new Texture2D(25, 15);
 
         private enum MenuTab
         {
@@ -427,10 +431,10 @@ namespace ferram4
             FARDebugValues.useSplinesForSupersonicMath = GUILayout.Toggle(FARDebugValues.useSplinesForSupersonicMath, "Use Splines for Supersonic Math", thisStyle);
             FARDebugValues.allowStructuralFailures = GUILayout.Toggle(FARDebugValues.allowStructuralFailures, "Allow Aero-structural Failures", thisStyle);
             GUILayout.Label("Editor GUI Graph Colors");
-            ChangeColor("Cl", ref FAREditorGUI.clColor);
-            ChangeColor("Cd", ref FAREditorGUI.cdColor);
-            ChangeColor("Cm", ref FAREditorGUI.cmColor);
-            ChangeColor("L_D", ref FAREditorGUI.l_DColor);
+            ChangeColor("Cl", ref FAREditorGUI.clColor, ref cLTexture);
+            ChangeColor("Cd", ref FAREditorGUI.cdColor, ref cDTexture);
+            ChangeColor("Cm", ref FAREditorGUI.cmColor, ref cMTexture);
+            ChangeColor("L_D", ref FAREditorGUI.l_DColor, ref l_DTexture);
             
 
             GUILayout.EndVertical();
@@ -467,18 +471,48 @@ namespace ferram4
             GUILayout.EndHorizontal();
         }
 
-        private void ChangeColor(string colorTitle, ref Color input)
+        private void ChangeColor(string colorTitle, ref Color input, ref Texture2D texture)
         {
-            GUILayout.BeginHorizontal(GUILayout.ExpandWidth(false));
+            GUILayout.BeginHorizontal();
 
             GUILayout.Label(colorTitle + " (r,g,b):", GUILayout.Width(80));
 
+            bool updateTexture = false;
 
+            GUILayout.BeginHorizontal(GUILayout.Width(150));
+            float tmp = input.r;
             input.r = (float)FARGUIUtils.TextEntryForDouble("", 0, input.r);
-            input.g = (float)FARGUIUtils.TextEntryForDouble("", 0, input.g);
-            input.b = (float)FARGUIUtils.TextEntryForDouble("", 0, input.b);
-
+            updateTexture |= tmp != input.r;
             GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal(GUILayout.Width(150));
+            tmp = input.g;
+            input.g = (float)FARGUIUtils.TextEntryForDouble("", 0, input.g);
+            updateTexture |= tmp != input.g;
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal(GUILayout.Width(150));
+            tmp = input.b;
+            input.b = (float)FARGUIUtils.TextEntryForDouble("", 0, input.b);
+            updateTexture |= tmp != input.b;
+            GUILayout.EndHorizontal();
+
+            if (updateTexture)
+                ReColorTexture(ref input, ref texture);
+
+            Rect textRect = GUILayoutUtility.GetRect(25, 15);
+            textRect.Set(textRect.x, textRect.y + 10, textRect.width, textRect.height);
+            GUI.DrawTexture(textRect, texture);
+            GUILayout.EndHorizontal();
+        }
+
+        public static void ReColorTexture(ref Color color, ref Texture2D texture)
+        {
+            for (int i = 0; i < texture.width; i++)
+                for (int j = 0; j < texture.height; j++)
+                    texture.SetPixel(i, j, color);
+
+            texture.Apply();
         }
 
         public static void LoadConfigs()
@@ -498,6 +532,10 @@ namespace ferram4
             FARAeroUtil.LoadAeroDataFromConfig();
             FARActionGroupConfiguration.LoadConfiguration();
             FAREditorGUI.LoadColors();
+            ReColorTexture(ref FAREditorGUI.clColor, ref cLTexture);
+            ReColorTexture(ref FAREditorGUI.cdColor, ref cDTexture);
+            ReColorTexture(ref FAREditorGUI.cmColor, ref cMTexture);
+            ReColorTexture(ref FAREditorGUI.l_DColor, ref l_DTexture);
         }
 
         public static void SaveConfigs()

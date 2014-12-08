@@ -1239,26 +1239,29 @@ namespace ferram4
                 UI.spdCaption.text = "Surface";
                 UI.speed.text = (activeVessel.srfSpeed * unitConversion).ToString("F1") + unitString;
             }
-            else if (velMode == SurfaceVelMode.IAS)
+            else
             {
-                UI.spdCaption.text = "IAS";
-                speedometerCaption = "IAS: ";
-                double densityRatio = (FARAeroUtil.GetCurrentDensity(activeVessel.mainBody, activeVessel.altitude) * invKerbinSLDensity);
-                double pressureRatio = FARAeroUtil.StagnationPressureCalc(MachNumber);
-                UI.speed.text = (activeVessel.srfSpeed * Math.Sqrt(densityRatio) * pressureRatio * unitConversion).ToString("F1") + unitString;
-            }
-            else if (velMode == SurfaceVelMode.EAS)
-            {
-                UI.spdCaption.text = "EAS";
-                speedometerCaption = "EAS: ";
-                double densityRatio = (FARAeroUtil.GetCurrentDensity(activeVessel.mainBody, activeVessel.altitude) * invKerbinSLDensity);
-                UI.speed.text = (activeVessel.srfSpeed * Math.Sqrt(densityRatio) * unitConversion).ToString("F1") + unitString;
-            }
-            else// if (velMode == SurfaceVelMode.MACH)
-            {
-                UI.spdCaption.text = "Mach";
-                speedometerCaption = "Mach: ";
-                UI.speed.text = mach;
+                if (velMode == SurfaceVelMode.IAS)
+                {
+                    UI.spdCaption.text = "IAS";
+                    speedometerCaption = "IAS: ";
+                    double densityRatio = (FARAeroUtil.GetCurrentDensity(activeVessel.mainBody, activeVessel.altitude) * invKerbinSLDensity);
+                    double pressureRatio = FARAeroUtil.StagnationPressureCalc(MachNumber);
+                    UI.speed.text = (activeVessel.srfSpeed * Math.Sqrt(densityRatio) * pressureRatio * unitConversion).ToString("F1") + unitString;
+                }
+                else if (velMode == SurfaceVelMode.EAS)
+                {
+                    UI.spdCaption.text = "EAS";
+                    speedometerCaption = "EAS: ";
+                    double densityRatio = (FARAeroUtil.GetCurrentDensity(activeVessel.mainBody, activeVessel.altitude) * invKerbinSLDensity);
+                    UI.speed.text = (activeVessel.srfSpeed * Math.Sqrt(densityRatio) * unitConversion).ToString("F1") + unitString;
+                }
+                else// if (velMode == SurfaceVelMode.MACH)
+                {
+                    UI.spdCaption.text = "Mach";
+                    speedometerCaption = "Mach: ";
+                    UI.speed.text = mach;
+                }
             }
 
             /* DaMichel: cache references to current IVA speedometers.
@@ -1386,6 +1389,9 @@ namespace ferram4
                         {
                             double soundspeed;
                             airDensity = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
+
+                            //this.vessel.srf_velocity += FARWind.GetWind(this.vessel.mainBody, part, vessel.transform.position);
+
                             MachNumber = this.vessel.srf_velocity.magnitude / soundspeed;
 
                             if (DensityRelative)
@@ -1421,11 +1427,10 @@ namespace ferram4
              * Otherwise i got NREs while trying to access the cockpit internals
              * at the point where i think the vessel got unloaded. This seems
              * to have fixed the issue. */
-            if (part && FlightGlobals.ready)
+            if (part && FlightGlobals.ready && activeControlSys == this)
             {
-                if (activeControlSys == this) // only need to do this once?!
-                    ChangeSurfVelocity(velMode);
-                if (activeControlSys == this && TimeWarp.CurrentRate <= 4)
+                ChangeSurfVelocity(velMode);
+                if (TimeWarp.CurrentRate <= 4)
                     GetFlightCondition();
             }
         }

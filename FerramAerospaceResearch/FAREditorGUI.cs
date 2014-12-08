@@ -1292,7 +1292,7 @@ namespace ferram4
                 delta = Math.Sign(delta) * Math.Min(0.4f * iter * iter, Math.Abs(delta));
                 alpha = Math.Max(-5f, Math.Min(25f, alpha + delta));
             };*/
-            alpha = FARMathUtil.BrentsMethod(aeroSim.FunctionIterateForAlpha, -5, 25);
+            alpha = FARMathUtil.BrentsMethod(aeroSim.FunctionIterateForAlpha, -5, 25, 0.01, 35);
             nomCl = neededCl;
             nomCd = aeroSim.Cd;
             nomCm = aeroSim.Cm;

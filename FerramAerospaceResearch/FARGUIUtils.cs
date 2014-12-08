@@ -56,7 +56,7 @@ namespace ferram4
         public static double TextEntryForDouble(string label, int labelWidth, double prevValue)
         {
             string valString = prevValue.ToString();
-            FARGUIUtils.TextEntryField("Cd For Full Tint:", 80, ref valString);
+            FARGUIUtils.TextEntryField(label, labelWidth, ref valString);
 
             if (!Regex.IsMatch(valString, @"^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$"))
                 return prevValue;
