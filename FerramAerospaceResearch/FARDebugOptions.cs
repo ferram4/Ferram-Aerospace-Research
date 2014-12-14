@@ -249,16 +249,19 @@ namespace ferram4
 
             int flightGlobalsIndex = FlightGlobals.Bodies[atmBodyIndex].flightGlobalsIndex;
 
-            Vector3d atmProperties = FARAeroUtil.bodyAtmosphereConfiguration[flightGlobalsIndex];
+            double[] atmProperties = FARAeroUtil.bodyAtmosphereConfiguration[flightGlobalsIndex];
 
-            atmProperties.y = FARGUIUtils.TextEntryForDouble("Ratio of Specific Heats:", 80, atmProperties.y);
+            atmProperties[1] = FARGUIUtils.TextEntryForDouble("Ratio of Specific Heats:", 80, atmProperties[1]);
 
 
-            double dTmp = 8314.5 / atmProperties.z;
+            double dTmp = 8314.5 / atmProperties[2];
             dTmp = FARGUIUtils.TextEntryForDouble("Gas Molecular Mass:", 80, dTmp);
-            atmProperties.z = 8314.5 / dTmp;
+            atmProperties[2] = 8314.5 / dTmp;
 
-            atmProperties.x = atmProperties.y * atmProperties.z;
+            atmProperties[0] = atmProperties[1] * atmProperties[2];
+
+            atmProperties[3] = FARGUIUtils.TextEntryForDouble("Gas Viscosity:", 80, atmProperties[3]);
+            atmProperties[4] = FARGUIUtils.TextEntryForDouble("Ref Temp for Viscosity:", 80, atmProperties[4]);
 
             FARAeroUtil.bodyAtmosphereConfiguration[flightGlobalsIndex] = atmProperties;
 

@@ -383,6 +383,7 @@ namespace ferram4
             FARDebugValues.displayShielding = Convert.ToBoolean(config.GetValue("displayShielding", "false"));
 
             FAREditorGUI.windowPos = config.GetValue("windowPos", new Rect());
+            FAREditorGUI.minimize = true;
             //FAREditorGUI.minimize = config.GetValue("EditorGUIBool", true);
             if (FAREditorGUI.windowPos.y < 75)
                 FAREditorGUI.windowPos.y = 75;

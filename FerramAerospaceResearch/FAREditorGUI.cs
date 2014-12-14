@@ -973,12 +973,12 @@ namespace ferram4
                 alt *= 1000;
 
                 double temp = FlightGlobals.getExternalTemperature((float)alt, activeBody);
-                double rho = FARAeroUtil.GetCurrentDensity(activeBody, alt);
+                double rho = FARAeroUtil.GetCurrentDensity(activeBody, alt, false);
                 //double temp = Convert.ToSingle(atm_temp_str);
                 Mach = Convert.ToSingle(Mach_str);
                 Mach = FARMathUtil.Clamp(Mach, 0.001f, float.PositiveInfinity);
 
-                double sspeed = Math.Sqrt(FARAeroUtil.currentBodyAtm.x * Math.Max(0.1, temp + 273.15));
+                double sspeed = Math.Sqrt(FARAeroUtil.currentBodyAtm[0] * Math.Max(0.1, temp + 273.15));
                 double vel = sspeed * Mach;
 
                 UpdateControlSettings();
@@ -1171,6 +1171,8 @@ namespace ferram4
                 double partMass = p.mass;
                 if (vehicleFueled && p.Resources.Count > 0)
                     partMass += p.GetResourceMass();
+
+                partMass += p.GetModuleMass(p.mass);
                 CoM += partMass * (Vector3d)p.transform.TransformPoint(p.CoMOffset);
                 mass += partMass;
                 FARWingAerodynamicModel w = p.GetComponent<FARWingAerodynamicModel>();
@@ -1217,6 +1219,8 @@ namespace ferram4
                 double partMass = p.mass;
                 if (vehicleFueled && p.Resources.Count > 0)
                     partMass += p.GetResourceMass();
+
+                partMass += p.GetModuleMass(p.mass);
 
                 Ix += (y2 + z2) * partMass;
                 Iy += (x2 + z2) * partMass;
@@ -1579,6 +1583,8 @@ namespace ferram4
                 double partMass = p.mass;
                 if (vehicleFueled && p.Resources.Count > 0)
                     partMass += p.GetResourceMass();
+
+                partMass += p.GetModuleMass(p.mass);
                 CoM += partMass * (Vector3d)p.transform.TransformPoint(p.CoMOffset);
                 mass += partMass;
             }
@@ -1667,6 +1673,8 @@ namespace ferram4
                 double partMass = p.mass;
                 if (vehicleFueled && p.Resources.Count > 0)
                     partMass += p.GetResourceMass();
+
+                partMass += p.GetModuleMass(p.mass);
                 CoM += partMass * (Vector3d)p.transform.TransformPoint(p.CoMOffset);
                 mass += partMass;
             }

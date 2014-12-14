@@ -648,9 +648,12 @@ namespace ferram4
 
             double MachMultiplier = MachDragEffect(M);
 
-            Cd += 0.003;       //Skin friction drag
-
             Cd *= MachMultiplier;
+
+            if (HighLogic.LoadedSceneIsFlight)
+                Cd += FARAeroUtil.SkinFrictionDrag(rho, 1, local_velocity.magnitude, M, FlightGlobals.getExternalTemperature(part.transform.position) + FARAeroUtil.currentBodyTemp);       //Skin friction drag
+            else
+                Cd += 0.005;
 
             for (int i = 0; i < attachNodeDragList.Count; i++)
             {

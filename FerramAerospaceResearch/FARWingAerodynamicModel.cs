@@ -47,7 +47,7 @@ using UnityEngine;
 
 namespace ferram4
 {
-    public class FARWingAerodynamicModel : FARBaseAerodynamics, TweakScale.IRescalable<FARWingAerodynamicModel>
+    public class FARWingAerodynamicModel : FARBaseAerodynamics, TweakScale.IRescalable<FARWingAerodynamicModel>, IPartMassModifier
     {
         public double AoAmax = 15;
 
@@ -494,7 +494,12 @@ namespace ferram4
             AerodynamicCenter = CalculateAerodynamicCenter(MachNumber, AoA, CurWingCentroid);
 
             //Throw AoA into lifting line theory and adjust for part exposure and compressibility effects
-            CalculateCoefficients(MachNumber, AoA);
+
+
+            if (HighLogic.LoadedSceneIsFlight)
+                CalculateCoefficients(MachNumber, AoA, FARAeroUtil.SkinFrictionDrag(rho, effective_MAC, v_scalar, MachNumber, FlightGlobals.getExternalTemperature(part.transform.position) + FARAeroUtil.currentBodyTemp));
+            else
+                CalculateCoefficients(MachNumber, AoA, 0.01);
 
 
 
@@ -546,6 +551,11 @@ namespace ferram4
 
         }
 
+        public float GetModuleMass(float mass)
+        {
+            return curWingMass;
+        }
+
         public void OnWingAttach()
         {
             if(part.parent)
@@ -560,13 +570,13 @@ namespace ferram4
         {
             if ((object)parentWing != null)
                 parentWing.updateMassNextFrame = true;
+
         }
 
         private void UpdateMassToAccountForArea()
         {
             float supportedArea = (float)(refAreaChildren + S);
-            part.mass = supportedArea * (float)FARAeroUtil.massPerWingAreaSupported * massMultiplier;
-            curWingMass = part.mass;
+            curWingMass = supportedArea * (float)FARAeroUtil.massPerWingAreaSupported * massMultiplier - part.partInfo.partPrefab.mass;
             oldMassMultiplier = massMultiplier;
         }
 
@@ -681,7 +691,7 @@ namespace ferram4
         /// <summary>
         /// This calculates the lift and drag coefficients
         /// </summary>
-        private void CalculateCoefficients(double MachNumber, double AoA)
+        private void CalculateCoefficients(double MachNumber, double AoA, double skinFrictionCoefficient)
         {
 
             minStall = 0;
@@ -700,7 +710,7 @@ namespace ferram4
             double beta_TanSweep = beta / TanSweep;
 
 
-            double Cd0 = CdCompressibilityZeroLiftIncrement(MachNumber, cosSweepAngle, TanSweep, beta_TanSweep, beta) + 0.006;
+            double Cd0 = CdCompressibilityZeroLiftIncrement(MachNumber, cosSweepAngle, TanSweep, beta_TanSweep, beta) + 2 * skinFrictionCoefficient;
             e = FARAeroUtil.CalculateOswaldsEfficiency(effective_AR, cosSweepAngle, Cd0);
             piARe = effective_AR * e * Math.PI;
 
@@ -723,7 +733,7 @@ namespace ferram4
              */
             else if (MachNumber > 1.4)
             {
-                double coefMult = 1 / (FARAeroUtil.currentBodyAtm.y * MachNumber * MachNumber);
+                double coefMult = 1 / (FARAeroUtil.currentBodyAtm[1] * MachNumber * MachNumber);
 
                 double supersonicLENormalForceFactor = CalculateSupersonicLEFactor(beta, TanSweep, beta_TanSweep);
 
@@ -763,7 +773,7 @@ namespace ferram4
 
                 double M = FARMathUtil.Clamp(MachNumber, 1.2, double.PositiveInfinity);
                 
-                double coefMult = 1 / (FARAeroUtil.currentBodyAtm.y * M * M);
+                double coefMult = 1 / (FARAeroUtil.currentBodyAtm[1] * M * M);
 
                 double supersonicLENormalForceFactor = CalculateSupersonicLEFactor(beta, TanSweep, beta_TanSweep);
 
@@ -852,7 +862,7 @@ namespace ferram4
         {
             double pRatio;
 
-            double maxSinBeta = FARAeroUtil.CalculateSinMaxShockAngle(M, FARAeroUtil.currentBodyAtm.y);//GetBetaMax(M) * FARMathUtil.deg2rad;
+            double maxSinBeta = FARAeroUtil.CalculateSinMaxShockAngle(M, FARAeroUtil.currentBodyAtm[1]);//GetBetaMax(M) * FARMathUtil.deg2rad;
             double minSinBeta = 1 / M;
 
 
@@ -889,7 +899,7 @@ namespace ferram4
         private double ShockWaveCalculationNoSpline(double angle, double inM, out double outM, double maxSinBeta, double minSinBeta)
         {
             //float sinBeta = (maxBeta - minBeta) * angle / maxTheta + minBeta;
-            double sinBeta = FARAeroUtil.CalculateSinWeakObliqueShockAngle(inM, FARAeroUtil.currentBodyAtm.y, angle);
+            double sinBeta = FARAeroUtil.CalculateSinWeakObliqueShockAngle(inM, FARAeroUtil.currentBodyAtm[1], angle);
             if (double.IsNaN(sinBeta))
                 sinBeta = maxSinBeta;
 
@@ -956,7 +966,7 @@ namespace ferram4
         {
             double pRatio;
 
-            double maxSinBeta = FARAeroUtil.CalculateSinMaxShockAngle(M, FARAeroUtil.currentBodyAtm.y);//GetBetaMax(M) * FARMathUtil.deg2rad;
+            double maxSinBeta = FARAeroUtil.CalculateSinMaxShockAngle(M, FARAeroUtil.currentBodyAtm[1]);//GetBetaMax(M) * FARMathUtil.deg2rad;
             double minSinBeta = 1 / M;
 
             double halfAngle = 0.05;            //Corresponds to ~2.8 degrees or approximately what you would get from a ~4.8% thick diamond airfoil
@@ -992,7 +1002,7 @@ namespace ferram4
         private double ShockWaveCalculation(double angle, double inM, out double outM, double maxSinBeta, double minSinBeta)
         {
             //float sinBeta = (maxBeta - minBeta) * angle / maxTheta + minBeta;
-            double sinBeta = FARAeroUtil.CalculateSinWeakObliqueShockAngle(inM, FARAeroUtil.currentBodyAtm.y, angle);
+            double sinBeta = FARAeroUtil.CalculateSinWeakObliqueShockAngle(inM, FARAeroUtil.currentBodyAtm[1], angle);
             if (double.IsNaN(sinBeta))
                 sinBeta = maxSinBeta;
 
