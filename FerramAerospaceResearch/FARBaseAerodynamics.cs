@@ -264,7 +264,7 @@ namespace ferram4
 
             Vector3 vel_base, vel_fuzz;
 
-            if (EditorLogic.)
+            if (EditorLogic.fetch.editorType == EditorLogic.EditorMode.SPH)
             {
                 vel_base = Vector3.forward;
                 vel_fuzz = 0.02f * Vector3.up;
