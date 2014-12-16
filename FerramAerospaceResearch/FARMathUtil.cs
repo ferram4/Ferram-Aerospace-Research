@@ -166,7 +166,7 @@ namespace ferram4
             return BitConverter.Int64BitsToDouble(((long)tmp2) << 32);
         }
 
-        public static double BrentsMethod(Func<double, double> function, double a, double b, double epsilon = 0.001)
+        public static double BrentsMethod(Func<double, double> function, double a, double b, double epsilon = 0.001, int maxIter = int.MaxValue)
         {
             double fa, fb;
             fa = function(a);
@@ -191,7 +191,8 @@ namespace ferram4
             double s = 0, fs = 10; 
 
             bool flag = true;
-            while(fs != 0 && Math.Abs(a - b) > epsilon)
+            int iter = 0;
+            while(fs != 0 && Math.Abs(a - b) > epsilon && iter < maxIter)
             {
                 if(fa != fc && fb != fc)
                 {
@@ -245,7 +246,7 @@ namespace ferram4
                     a = b;
                     b = tmp;
                 }
-
+                iter++;
             }
             return s;
         }

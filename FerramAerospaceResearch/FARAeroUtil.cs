@@ -63,13 +63,18 @@ namespace ferram4
         public static double massStressPower;
         public static bool AJELoaded;
 
-        public static Dictionary<int, Vector3d> bodyAtmosphereConfiguration = null;
+        public static Dictionary<int, double[]> bodyAtmosphereConfiguration = null;
         public static int prevBody = -1;
-        public static Vector3d currentBodyAtm = new Vector3d();
+        public static double[] currentBodyAtm = new double[5];
         public static double currentBodyTemp = 273.15;
         public static double currentBodyAtmPressureOffset = 0;
 
         public static bool loaded = false;
+        
+        //Based on ratio of density of water to density of air at SL
+        private const double UNDERWATER_DENSITY_FACTOR_MINUS_ONE = 814.51020408163265306122448979592;
+        //Standard Reynolds number for transition from laminar to turbulent flow
+        private const double TRANSITION_REYNOLDS_NUMBER = 5e5;
 
         public static void SaveCustomAeroDataToConfig()
         {
@@ -83,10 +88,11 @@ namespace ferram4
             node.AddValue("%massStressPower", massStressPower);
             node.AddValue("%ctrlSurfTimeConstant", FARControllableSurface.timeConstant);
             node.AddValue("%ctrlSurfTimeConstantFlap", FARControllableSurface.timeConstantFlap);
+            node.AddValue("%ctrlSurfTimeConstantSpoiler", FARControllableSurface.timeConstantSpoiler);
 
             node.AddNode(new ConfigNode("!BodyAtmosphericData,*"));
 
-            foreach (KeyValuePair<int, Vector3d> pair in bodyAtmosphereConfiguration)
+            foreach (KeyValuePair<int, double[]> pair in bodyAtmosphereConfiguration)
             {
                 node.AddNode(CreateAtmConfigurationConfigNode(pair.Key, pair.Value));
             }
@@ -96,14 +102,16 @@ namespace ferram4
             saveNode.Save(KSPUtil.ApplicationRootPath.Replace("\\", "/") + "GameData/FerramAerospaceResearch/CustomFARAeroData.cfg");
         }
 
-        private static ConfigNode CreateAtmConfigurationConfigNode(int bodyIndex, Vector3d atmProperties)
+        private static ConfigNode CreateAtmConfigurationConfigNode(int bodyIndex, double[] atmProperties)
         {
             ConfigNode node = new ConfigNode("BodyAtmosphericData");
             node.AddValue("index", bodyIndex);
 
-            double gasMolecularWeight = 8314.5 / atmProperties.z;
-            node.AddValue("specHeatRatio", atmProperties.y);
+            double gasMolecularWeight = 8314.5 / atmProperties[2];
+            node.AddValue("specHeatRatio", atmProperties[1]);
             node.AddValue("gasMolecularWeight", gasMolecularWeight);
+            node.AddValue("viscosityAtReferenceTemp", atmProperties[3]);
+            node.AddValue("referenceTemp", atmProperties[4]);
 
             return node;
         }
@@ -129,8 +137,10 @@ namespace ferram4
                     double.TryParse(node.GetValue("incompressibleRearAttachDrag"), out incompressibleRearAttachDrag);
                 if (node.HasValue("sonicRearAdditionalAttachDrag"))
                     double.TryParse(node.GetValue("sonicRearAdditionalAttachDrag"), out sonicRearAdditionalAttachDrag);
+
                 if (node.HasValue("radiusOfCurvatureBluntBody"))
                     double.TryParse(node.GetValue("radiusOfCurvatureBluntBody"), out radiusOfCurvatureBluntBody);
+
                 if (node.HasValue("massPerWingAreaSupported"))
                     double.TryParse(node.GetValue("massPerWingAreaSupported"), out massPerWingAreaSupported);
 
@@ -143,22 +153,34 @@ namespace ferram4
                 if (node.HasValue("ctrlSurfTimeConstantFlap"))
                     double.TryParse(node.GetValue("ctrlSurfTimeConstantFlap"), out FARControllableSurface.timeConstantFlap);
 
-                FARAeroUtil.bodyAtmosphereConfiguration = new Dictionary<int, Vector3d>();
+                if (node.HasValue("ctrlSurfTimeConstantSpoiler"))
+                    double.TryParse(node.GetValue("ctrlSurfTimeConstantSpoiler"), out FARControllableSurface.timeConstantSpoiler);
+
+                FARAeroUtil.bodyAtmosphereConfiguration = new Dictionary<int, double[]>();
                 foreach (ConfigNode bodyProperties in node.GetNodes("BodyAtmosphericData"))
                 {
-                    if (bodyProperties == null || !bodyProperties.HasValue("index") || !bodyProperties.HasValue("specHeatRatio") || !bodyProperties.HasValue("gasMolecularWeight"))
+                    if (bodyProperties == null || !bodyProperties.HasValue("index") || !bodyProperties.HasValue("specHeatRatio")
+                        || !bodyProperties.HasValue("gasMolecularWeight") || !bodyProperties.HasValue("viscosityAtReferenceTemp")
+                        || !bodyProperties.HasValue("referenceTemp"))
                         continue;
 
-                    Vector3d Rgamma_and_gamma = new Vector3d();
+                    double[] Rgamma_and_gamma = new double[5];
                     double tmp;
                     double.TryParse(bodyProperties.GetValue("specHeatRatio"), out tmp);
-                    Rgamma_and_gamma.y = tmp;
+                    Rgamma_and_gamma[1] = tmp;
 
                     double.TryParse(bodyProperties.GetValue("gasMolecularWeight"), out tmp);
 
-                    Rgamma_and_gamma.z = 8.3145 * 1000 / tmp;
-                    Rgamma_and_gamma.x = Rgamma_and_gamma.y * Rgamma_and_gamma.z;
+                    Rgamma_and_gamma[2] = 8.3145 * 1000 / tmp;
+                    Rgamma_and_gamma[0] = Rgamma_and_gamma[1] * Rgamma_and_gamma[2];
 
+                    double.TryParse(bodyProperties.GetValue("viscosityAtReferenceTemp"), out tmp);
+
+                    Rgamma_and_gamma[3] = tmp;
+
+                    double.TryParse(bodyProperties.GetValue("referenceTemp"), out tmp);
+
+                    Rgamma_and_gamma[4] = tmp;
                     int index;
                     int.TryParse(bodyProperties.GetValue("index"), out index);
 
@@ -173,10 +195,13 @@ namespace ferram4
                 if (bodyAtmosphereConfiguration.ContainsKey(body.flightGlobalsIndex))
                     continue;
 
-                Vector3d Rgamma_and_gamma = new Vector3d();
-                Rgamma_and_gamma.y = 1.4;
-                Rgamma_and_gamma.z = 8.3145 * 1000 / 28.96;
-                Rgamma_and_gamma.x = Rgamma_and_gamma.y * Rgamma_and_gamma.z;
+                double[] Rgamma_and_gamma = new double[5];
+                Rgamma_and_gamma[1] = 1.4;
+                Rgamma_and_gamma[2] = 8.3145 * 1000 / 28.96;
+                Rgamma_and_gamma[0] = Rgamma_and_gamma[1] * Rgamma_and_gamma[2];
+
+                Rgamma_and_gamma[3] = 1.7894e-5;
+                Rgamma_and_gamma[4] = 288;
 
                 FARAeroUtil.bodyAtmosphereConfiguration.Add(body.flightGlobalsIndex, Rgamma_and_gamma);
             }
@@ -190,9 +215,12 @@ namespace ferram4
                 }
             }
 
+            
+
             SetDefaultValuesIfNoValuesLoaded();
 
             FARBasicDragModel.SetBluntBodyParams(radiusOfCurvatureBluntBody);
+          
             loaded = true;
 
             //Get Kerbin
@@ -220,7 +248,7 @@ namespace ferram4
             if (M <= 0)
                 return 1;
             double value;
-            double gamma = currentBodyAtm.y;
+            double gamma = currentBodyAtm[1];
             if (M <= 1)
                 value = StagnationPressureCalc(M);
             else
@@ -244,7 +272,7 @@ namespace ferram4
         {
 
             double ratio;
-            double gamma = currentBodyAtm.y;
+            double gamma = currentBodyAtm[1];
             ratio = M * M;
             ratio *= (gamma - 1);
             ratio *= 0.5;
@@ -257,7 +285,7 @@ namespace ferram4
         public static double PressureBehindShockCalc(double M)
         {
             double ratio;
-            double gamma = currentBodyAtm.y;
+            double gamma = currentBodyAtm[1];
             ratio = M * M;
             ratio--;
             ratio *= 2 * gamma;
@@ -271,7 +299,7 @@ namespace ferram4
         public static double MachBehindShockCalc(double M)
         {
             double ratio;
-            double gamma = currentBodyAtm.y;
+            double gamma = currentBodyAtm[1];
             ratio = (gamma - 1) * 0.5;
             ratio *= M * M;
             ratio++;
@@ -295,11 +323,11 @@ namespace ferram4
 
                     maxPressureCoefficient.Add(0, 1, 0, 0);
 
-                    if (currentBodyAtm == new Vector3d())
+                    if (currentBodyAtm[0] == 0)
                     {
                         UpdateCurrentActiveBody(0, FlightGlobals.Bodies[1]);
                     }
-                    double gamma = currentBodyAtm.y;
+                    double gamma = currentBodyAtm[1];
 
                     while (M < 50)
                     {
@@ -371,7 +399,7 @@ namespace ferram4
                     double M = 1;
                     //float gamma = 1.4f;
 
-                    double gamma_ = Math.Sqrt((currentBodyAtm.y + 1) / (currentBodyAtm.y - 1));
+                    double gamma_ = Math.Sqrt((currentBodyAtm[1] + 1) / (currentBodyAtm[1] - 1));
 
                     while (M < 250)
                     {
@@ -382,7 +410,7 @@ namespace ferram4
                         nu -= Math.Atan(mach);
                         nu *= FARMathUtil.rad2deg;
 
-                        double nu_mach = (currentBodyAtm.y - 1) / 2;
+                        double nu_mach = (currentBodyAtm[1] - 1) / 2;
                         nu_mach *= M * M;
                         nu_mach++;
                         nu_mach *= M;
@@ -424,7 +452,7 @@ namespace ferram4
                     double M = 1;
                     //float gamma = 1.4f;
 
-                    double gamma_ = Math.Sqrt((currentBodyAtm.y + 1) / (currentBodyAtm.y - 1));
+                    double gamma_ = Math.Sqrt((currentBodyAtm[1] + 1) / (currentBodyAtm[1] - 1));
 
                     while (M < 250)
                     {
@@ -435,7 +463,7 @@ namespace ferram4
                         nu -= Math.Atan(mach);
                         nu *= FARMathUtil.rad2deg;
 
-                        double nu_mach = (currentBodyAtm.y - 1) / 2;
+                        double nu_mach = (currentBodyAtm[1] - 1) / 2;
                         nu_mach *= M * M;
                         nu_mach++;
                         nu_mach *= M;
@@ -482,12 +510,12 @@ namespace ferram4
                     {
                         ratio = M * M;
                         ratio--;
-                        ratio *= 2 * currentBodyAtm.y;
-                        ratio /= (currentBodyAtm.y + 1);
+                        ratio *= 2 * currentBodyAtm[1];
+                        ratio /= (currentBodyAtm[1] + 1);
                         ratio++;
 
-                        d_ratio = M * 4 * currentBodyAtm.y;
-                        d_ratio /= (currentBodyAtm.y + 1);
+                        d_ratio = M * 4 * currentBodyAtm[1];
+                        d_ratio /= (currentBodyAtm[1] + 1);
 
                         pressureBehindShock.Add((float)M, (float)ratio, (float)d_ratio, (float)d_ratio);
                         if (M < 3)
@@ -518,14 +546,14 @@ namespace ferram4
                     //float gamma = 1.4f;
                     while (M < 250)  //Calculates the pressure behind a normal shock
                     {
-                        ratio = (currentBodyAtm.y - 1) / 2;
+                        ratio = (currentBodyAtm[1] - 1) / 2;
                         ratio *= M * M;
                         ratio++;
-                        ratio /= (currentBodyAtm.y * M * M - (currentBodyAtm.y - 1) / 2);
+                        ratio /= (currentBodyAtm[1] * M * M - (currentBodyAtm[1] - 1) / 2);
 
-                        d_ratio = 4 * currentBodyAtm.y * currentBodyAtm.y * Math.Pow(M, 4) - 4 * (currentBodyAtm.y - 1) * currentBodyAtm.y * M * M + Math.Pow(currentBodyAtm.y - 1, 2);
+                        d_ratio = 4 * currentBodyAtm[1] * currentBodyAtm[1] * Math.Pow(M, 4) - 4 * (currentBodyAtm[1] - 1) * currentBodyAtm[1] * M * M + Math.Pow(currentBodyAtm[1] - 1, 2);
                         d_ratio = 1 / d_ratio;
-                        d_ratio *= 4 * (currentBodyAtm.y * M * M - (currentBodyAtm.y - 1) / 2) * (currentBodyAtm.y - 1) * M - 8 * currentBodyAtm.y * M * (1 + (currentBodyAtm.y - 1) / 2 * M * M);
+                        d_ratio *= 4 * (currentBodyAtm[1] * M * M - (currentBodyAtm[1] - 1) / 2) * (currentBodyAtm[1] - 1) * M - 8 * currentBodyAtm[1] * M * (1 + (currentBodyAtm[1] - 1) / 2 * M * M);
 
                         machBehindShock.Add((float)Math.Sqrt(M), (float)ratio, (float)d_ratio, (float)d_ratio);
                         if (M < 3)
@@ -557,16 +585,16 @@ namespace ferram4
                     while (M < 250)  //calculates stagnation pressure
                     {
                         ratio = M * M;
-                        ratio *= (currentBodyAtm.y - 1);
+                        ratio *= (currentBodyAtm[1] - 1);
                         ratio /= 2;
                         ratio++;
                         
                         d_ratio = ratio;
 
-                        ratio = Math.Pow(ratio, currentBodyAtm.y / (currentBodyAtm.y - 1));
+                        ratio = Math.Pow(ratio, currentBodyAtm[1] / (currentBodyAtm[1] - 1));
 
-                        d_ratio = Math.Pow(d_ratio, (currentBodyAtm.y / (currentBodyAtm.y - 1)) - 1);
-                        d_ratio *= M * currentBodyAtm.y;
+                        d_ratio = Math.Pow(d_ratio, (currentBodyAtm[1] / (currentBodyAtm[1] - 1)) - 1);
+                        d_ratio *= M * currentBodyAtm[1];
 
                         stagnationPressure.Add((float)M, (float)ratio, (float)d_ratio, (float)d_ratio);
                         if (M < 3)
@@ -612,7 +640,7 @@ namespace ferram4
         {
             return p.physicalSignificance == Part.PhysicalSignificance.NONE ||
                    (HighLogic.LoadedSceneIsEditor &&
-                    p != EditorLogic.startPod &&
+                    p != EditorLogic.RootPart &&
                     p.PhysicsSignificance == (int)Part.PhysicalSignificance.NONE);
         }
 
@@ -678,15 +706,15 @@ namespace ferram4
             return HighLogic.LoadedSceneIsEditor &&
                    EditorLogic.SelectedPart != null &&
                    (EditorLogic.SelectedPart.potentialParent != null ||
-                     (move_too && EditorLogic.SelectedPart == EditorLogic.startPod));
+                     (move_too && EditorLogic.SelectedPart == EditorLogic.RootPart));
         }
 
         public static List<Part> ListEditorParts(bool include_selected)
         {
             var list = new List<Part>();
 
-            if (EditorLogic.startPod)
-                RecursePartList(list, EditorLogic.startPod);
+            if (EditorLogic.RootPart)
+                RecursePartList(list, EditorLogic.RootPart);
 
             if (include_selected && EditorAboutToAttach())
             {
@@ -1140,7 +1168,7 @@ namespace ferram4
                 //continue updating Mach Number for debris
                 UpdateCurrentActiveBody(body);
                 double temp = Math.Max(0.1, currentBodyTemp + FlightGlobals.getExternalTemperature((float)altitude, body));
-                double Soundspeed = Math.Sqrt(temp * currentBodyAtm.x);// * 401.8f;              //Calculation for speed of sound in ideal gas using air constants of gamma = 1.4 and R = 287 kJ/kg*K
+                double Soundspeed = Math.Sqrt(temp * currentBodyAtm[0]);// * 401.8f;              //Calculation for speed of sound in ideal gas using air constants of gamma = 1.4 and R = 287 kJ/kg*K
 
                 MachNumber = velocity.magnitude / Soundspeed;
 
@@ -1151,7 +1179,7 @@ namespace ferram4
             return MachNumber;
         }
 
-        public static double GetCurrentDensity(CelestialBody body, Vector3 worldLocation)
+        public static double GetCurrentDensity(CelestialBody body, Vector3 worldLocation, bool densitySmoothingAtOcean = true)
         {
             UpdateCurrentActiveBody(body);
 
@@ -1161,10 +1189,19 @@ namespace ferram4
             if (pressure > 0)
                 pressure = (pressure - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
 
-            return pressure / (temp * currentBodyAtm.z);
+            double altitude = body.GetAltitude(worldLocation);
+            if (altitude < 1 && densitySmoothingAtOcean)
+            {
+                double densityMultFromOcean = (1 - altitude) * 0.5;
+                densityMultFromOcean *= UNDERWATER_DENSITY_FACTOR_MINUS_ONE;
+                densityMultFromOcean++;
+                pressure *= densityMultFromOcean;
+            }
+
+            return pressure / (temp * currentBodyAtm[2]);
         }
 
-        public static double GetCurrentDensity(CelestialBody body, double altitude)
+        public static double GetCurrentDensity(CelestialBody body, double altitude, bool densitySmoothingAtOcean = true)
         {
             UpdateCurrentActiveBody(body);
 
@@ -1177,11 +1214,19 @@ namespace ferram4
             if (pressure > 0)
                 pressure = (pressure - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
 
-            return pressure / (temp * currentBodyAtm.z);
+            if (altitude < 1 && densitySmoothingAtOcean)
+            {
+                double densityMultFromOcean = (1 - altitude) * 0.5;
+                densityMultFromOcean *= UNDERWATER_DENSITY_FACTOR_MINUS_ONE;
+                densityMultFromOcean++;
+                pressure *= densityMultFromOcean;
+            }
+
+            return pressure / (temp * currentBodyAtm[2]);
         }
 
         // Vessel has altitude and cached pressure, and both density and sound speed need temperature
-        public static double GetCurrentDensity(Vessel vessel, out double soundspeed)
+        public static double GetCurrentDensity(Vessel vessel, out double soundspeed, bool densitySmoothingAtOcean = true)
         {
             double altitude = vessel.altitude;
             CelestialBody body = vessel.mainBody;
@@ -1199,9 +1244,70 @@ namespace ferram4
             if (vessel.staticPressure > 0)
                 pressure = (vessel.staticPressure - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
 
-            soundspeed = Math.Sqrt(temp * currentBodyAtm.x); // * 401.8f;              //Calculation for speed of sound in ideal gas using air constants of gamma = 1.4 and R = 287 kJ/kg*K
+            soundspeed = Math.Sqrt(temp * currentBodyAtm[0]); // * 401.8f;              //Calculation for speed of sound in ideal gas using air constants of gamma = 1.4 and R = 287 kJ/kg*K
 
-            return pressure / (temp * currentBodyAtm.z);
+            if (altitude < 1 && densitySmoothingAtOcean)
+            {
+                double densityMultFromOcean = (1 - altitude) * 0.5;
+                densityMultFromOcean *= UNDERWATER_DENSITY_FACTOR_MINUS_ONE;
+                densityMultFromOcean++;
+                pressure *= densityMultFromOcean;
+            }
+
+            return pressure / (temp * currentBodyAtm[2]);
+        }
+
+        public static double CalculateCurrentViscosity(double tempInK)
+        {
+            double visc = currentBodyAtm[3];        //get viscosity
+
+            double tempRat = tempInK / currentBodyAtm[4];
+            tempRat *= tempRat * tempRat;
+            tempRat = Math.Sqrt(tempRat);
+
+            visc *= (currentBodyAtm[4] + 110);
+            visc /= (tempInK + 110);
+            visc *= tempRat;
+
+            return visc;
+        }
+
+
+        public static double ReferenceTemperatureRatio(double machNumber, double recoveryFactor)
+        {
+            double tempRatio = machNumber * machNumber;
+            tempRatio *= (currentBodyAtm[1] - 1);
+            tempRatio *= 0.5;       //account for stagnation temp
+
+            tempRatio *= recoveryFactor;    //this accounts for adiabatic wall temp ratio
+
+            tempRatio *= 0.58;
+            tempRatio += 0.032 * machNumber * machNumber;
+
+            tempRatio++;
+            return tempRatio;
+        }
+
+
+        public static double SkinFrictionDrag(double density, double lengthScale, double vel, double machNumber, double temp)
+        {
+            if (lengthScale == 0)
+                return 0;
+
+            double refTemp = temp * ReferenceTemperatureRatio(machNumber, 0.843);
+            double visc = CalculateCurrentViscosity(refTemp);
+            double Re = lengthScale * density * vel / visc;
+
+            if(Re < TRANSITION_REYNOLDS_NUMBER)
+                return 1.328 / Math.Sqrt(Re);
+
+            double transitionFraction = TRANSITION_REYNOLDS_NUMBER / Re;
+
+            double laminarCf = 1.328 / Math.Sqrt(TRANSITION_REYNOLDS_NUMBER);
+            double turbulentCfInLaminar = 0.074 / Math.Pow(TRANSITION_REYNOLDS_NUMBER, 0.2);
+            double turbulentCf = 0.074 / Math.Pow(Re, 0.2);
+
+            return turbulentCf - transitionFraction * (turbulentCfInLaminar - laminarCf);
         }
 
         public static void UpdateCurrentActiveBody(CelestialBody body)

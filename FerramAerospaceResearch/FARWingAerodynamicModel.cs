@@ -496,9 +496,10 @@ namespace ferram4
             //Throw AoA into lifting line theory and adjust for part exposure and compressibility effects
 
 
-
-            CalculateCoefficients(MachNumber, AoA, 0.006);
-
+            if (HighLogic.LoadedSceneIsFlight)
+                CalculateCoefficients(MachNumber, AoA, FARAeroUtil.SkinFrictionDrag(rho, effective_MAC, v_scalar, MachNumber, FlightGlobals.getExternalTemperature(part.transform.position) + FARAeroUtil.currentBodyTemp));
+            else
+                CalculateCoefficients(MachNumber, AoA, 0.01);
 
 
             //lift and drag vectors

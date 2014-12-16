@@ -41,6 +41,7 @@ using System.Text.RegularExpressions;
 using System.Reflection;
 using System.Linq;
 using UnityEngine;
+using CompoundParts;
 using ferram4.PartExtensions;
 
 /// <summary>
@@ -271,7 +272,7 @@ namespace ferram4
         {
             Vector3d backward;
             if (HighLogic.LoadedSceneIsEditor)
-                backward = -EditorLogic.startPod.transform.forward;
+                backward = -EditorLogic.RootPart.transform.forward;
             else
                 backward = -vessel.transform.forward;
             double ClUpwards;
@@ -649,8 +650,10 @@ namespace ferram4
 
             Cd *= MachMultiplier;
 
-
-            Cd += 0.003;
+            if (HighLogic.LoadedSceneIsFlight)
+                Cd += FARAeroUtil.SkinFrictionDrag(rho, 1, local_velocity.magnitude, M, FlightGlobals.getExternalTemperature(part.transform.position) + FARAeroUtil.currentBodyTemp);       //Skin friction drag
+            else
+                Cd += 0.005;
 
             for (int i = 0; i < attachNodeDragList.Count; i++)
             {

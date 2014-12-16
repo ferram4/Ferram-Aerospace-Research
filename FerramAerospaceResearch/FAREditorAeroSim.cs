@@ -75,7 +75,7 @@ namespace ferram4
             Vector3d up = Vector3.up;
             Vector3d right = Vector3.right;
 
-            if (EditorLogic.fetch.editorType == EditorLogic.EditorMode.VAB)
+            if (EditorDriver.editorFacility == EditorFacility.VAB)
             {
                 forward = Vector3.up;
                 up = -Vector3.forward;

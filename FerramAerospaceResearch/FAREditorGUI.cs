@@ -249,12 +249,6 @@ namespace ferram4
                     stabDerivHelpPos = GUILayout.Window(259, stabDerivHelpPos, StabDerivHelpGUI, "FAR Data & Stability Derivative Help", GUILayout.Width(600), GUILayout.Height(Screen.height / 3));
                     stabDerivHelpPos = FARGUIUtils.ClampToScreen(stabDerivHelpPos);
                 }
-
-                if (EdLogInstance.UndoRedo())
-                {
-                    ResetAll();
-                }
-
                 cursorInGUI = windowPos.Contains(mousePos);
 
                 if (AnalysisHelp)
@@ -411,7 +405,7 @@ namespace ferram4
                 windowPos.width = 650;
             }
             List<Part> selectedParts = EditorActionGroups.Instance.GetSelectedParts();
-            if (EditorLogic.fetch.editorScreen == EditorLogic.EditorScreen.Actions && selectedParts.Count > 0)
+            if (selectedParts.Count > 0)
             {
                 Part p = selectedParts[0];  //Selected parts should only ever be symmetry counterparts
                 FARBasicDragModel d = null;
@@ -979,12 +973,12 @@ namespace ferram4
                 alt *= 1000;
 
                 double temp = FlightGlobals.getExternalTemperature((float)alt, activeBody);
-                double rho = FARAeroUtil.GetCurrentDensity(activeBody, alt);
+                double rho = FARAeroUtil.GetCurrentDensity(activeBody, alt, false);
                 //double temp = Convert.ToSingle(atm_temp_str);
                 Mach = Convert.ToSingle(Mach_str);
                 Mach = FARMathUtil.Clamp(Mach, 0.001f, float.PositiveInfinity);
 
-                double sspeed = Math.Sqrt(FARAeroUtil.currentBodyAtm.x * Math.Max(0.1, temp + 273.15));
+                double sspeed = Math.Sqrt(FARAeroUtil.currentBodyAtm[0] * Math.Max(0.1, temp + 273.15));
                 double vel = sspeed * Mach;
 
                 UpdateControlSettings();
@@ -1177,6 +1171,8 @@ namespace ferram4
                 double partMass = p.mass;
                 if (vehicleFueled && p.Resources.Count > 0)
                     partMass += p.GetResourceMass();
+
+                partMass += p.GetModuleMass(p.mass);
                 CoM += partMass * (Vector3d)p.transform.TransformPoint(p.CoMOffset);
                 mass += partMass;
                 FARWingAerodynamicModel w = p.GetComponent<FARWingAerodynamicModel>();
@@ -1223,6 +1219,8 @@ namespace ferram4
                 double partMass = p.mass;
                 if (vehicleFueled && p.Resources.Count > 0)
                     partMass += p.GetResourceMass();
+
+                partMass += p.GetModuleMass(p.mass);
 
                 Ix += (y2 + z2) * partMass;
                 Iy += (x2 + z2) * partMass;
@@ -1298,7 +1296,7 @@ namespace ferram4
                 delta = Math.Sign(delta) * Math.Min(0.4f * iter * iter, Math.Abs(delta));
                 alpha = Math.Max(-5f, Math.Min(25f, alpha + delta));
             };*/
-            alpha = FARMathUtil.BrentsMethod(aeroSim.FunctionIterateForAlpha, -5, 25);
+            alpha = FARMathUtil.BrentsMethod(aeroSim.FunctionIterateForAlpha, -5, 25, 0.01, 35);
             nomCl = neededCl;
             nomCd = aeroSim.Cd;
             nomCm = aeroSim.Cm;
@@ -1472,7 +1470,7 @@ namespace ferram4
             if (GUILayout.Button("Update CoL", ButtonStyle))
             {
                 FARGlobalControlEditorObject.EditorPartsChanged = true;
-                ResetAll();
+                ResetAll(null);
             }
             GUILayout.Space(20F);
             AnalysisHelp = GUILayout.Toggle(AnalysisHelp, "?", ButtonStyle);
@@ -1585,6 +1583,8 @@ namespace ferram4
                 double partMass = p.mass;
                 if (vehicleFueled && p.Resources.Count > 0)
                     partMass += p.GetResourceMass();
+
+                partMass += p.GetModuleMass(p.mass);
                 CoM += partMass * (Vector3d)p.transform.TransformPoint(p.CoMOffset);
                 mass += partMass;
             }
@@ -1673,6 +1673,8 @@ namespace ferram4
                 double partMass = p.mass;
                 if (vehicleFueled && p.Resources.Count > 0)
                     partMass += p.GetResourceMass();
+
+                partMass += p.GetModuleMass(p.mass);
                 CoM += partMass * (Vector3d)p.transform.TransformPoint(p.CoMOffset);
                 mass += partMass;
             }
@@ -1841,7 +1843,7 @@ namespace ferram4
 
         #region GUI Start / End Functions
 
-        private void ResetAll()
+        public void ResetAll(ShipConstruct c)
         {
             RenderingManager.RemoveFromPostDrawQueue(0, new Callback(OnGUI));
             AllWings.Clear();
@@ -1872,7 +1874,7 @@ namespace ferram4
             for (int i = 0; i < AllWings.Count; i++)
             {
                 FARWingAerodynamicModel w = AllWings[i];
-                if (w.part == null || (w.part.parent == null && w.part != EditorLogic.startPod))
+                if (w.part == null || (w.part.parent == null && w.part != EditorLogic.RootPart))
                     nullWings.Add(w);
             }
 
@@ -1885,7 +1887,7 @@ namespace ferram4
                     AllControlSurfaces.Remove(w);
             }
 
-            if (EditorLogic.startPod)
+            if (EditorLogic.RootPart)
             {
                 for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
                 {
