@@ -47,7 +47,7 @@ using UnityEngine;
 
 namespace ferram4
 {
-    public class FARWingAerodynamicModel : FARBaseAerodynamics, TweakScale.IRescalable<FARWingAerodynamicModel>, IPartMassModifier
+    public class FARWingAerodynamicModel : FARBaseAerodynamics, TweakScale.IRescalable<FARWingAerodynamicModel>
     {
         public double AoAmax = 15;
 
@@ -551,11 +551,6 @@ namespace ferram4
 
         }
 
-        public float GetModuleMass(float mass)
-        {
-            return curWingMass;
-        }
-
         public void OnWingAttach()
         {
             if(part.parent)
@@ -576,7 +571,8 @@ namespace ferram4
         private void UpdateMassToAccountForArea()
         {
             float supportedArea = (float)(refAreaChildren + S);
-            curWingMass = supportedArea * (float)FARAeroUtil.massPerWingAreaSupported * massMultiplier - part.partInfo.partPrefab.mass;
+            curWingMass = supportedArea * (float)FARAeroUtil.massPerWingAreaSupported * massMultiplier;
+            part.mass = curWingMass;
             oldMassMultiplier = massMultiplier;
         }
 
