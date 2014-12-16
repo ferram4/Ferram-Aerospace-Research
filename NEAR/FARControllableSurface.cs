@@ -1,5 +1,5 @@
 ﻿/*
-Neophyte's Elementary Aerodynamics Replacement v1.3
+Neophyte's Elementary Aerodynamics Replacement v1.3.1
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Neophyte's Elementary Aerodynamics Replacement.
@@ -256,14 +256,14 @@ namespace NEAR
                 if (HighLogic.LoadedSceneIsFlight)
                     flapLocation = (int)Math.Sign(Vector3.Dot(vessel.ReferenceTransform.forward, part.transform.forward));      //figure out which way is up
                 else
-                    flapLocation = (int)Math.Sign(Vector3.Dot(EditorLogic.startPod.transform.forward, part.transform.forward));      //figure out which way is up
+                    flapLocation = (int)Math.Sign(Vector3.Dot(EditorLogic.RootPart.transform.forward, part.transform.forward));      //figure out which way is up
             }
             else if (isSpoiler == true)
             {
                 if (HighLogic.LoadedSceneIsFlight)
                     flapLocation = -(int)Math.Sign(Vector3.Dot(vessel.ReferenceTransform.forward, part.transform.forward));      //figure out which way is up
                 else
-                    flapLocation = -(int)Math.Sign(Vector3.Dot(EditorLogic.startPod.transform.forward, part.transform.forward));      //figure out which way is up
+                    flapLocation = -(int)Math.Sign(Vector3.Dot(EditorLogic.RootPart.transform.forward, part.transform.forward));      //figure out which way is up
             }
 
             if (pitchaxis || yawaxis || rollaxis || HighLogic.LoadedSceneIsEditor)
@@ -284,11 +284,11 @@ namespace NEAR
                 if (HighLogic.LoadedSceneIsEditor)
                 {
                     Vector3 CoMoffset = (part.transform.position - CoM).normalized;
-                    PitchLocation = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.forward) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.up));
-                    YawLocation = -Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.right) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.up));
-                    RollLocation = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.forward) * Math.Sign(Vector3.Dot(CoMoffset, -EditorLogic.startPod.transform.right));
-                    roll2 = Vector3.Dot(part.transform.forward, EditorLogic.startPod.transform.right) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.startPod.transform.forward));
-                    AoAsign = Math.Sign(Vector3.Dot(part.transform.up, EditorLogic.startPod.transform.up));
+                    PitchLocation = Vector3.Dot(part.transform.forward, EditorLogic.RootPart.transform.forward) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.RootPart.transform.up));
+                    YawLocation = -Vector3.Dot(part.transform.forward, EditorLogic.RootPart.transform.right) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.RootPart.transform.up));
+                    RollLocation = Vector3.Dot(part.transform.forward, EditorLogic.RootPart.transform.forward) * Math.Sign(Vector3.Dot(CoMoffset, -EditorLogic.RootPart.transform.right));
+                    roll2 = Vector3.Dot(part.transform.forward, EditorLogic.RootPart.transform.right) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.RootPart.transform.forward));
+                    AoAsign = Math.Sign(Vector3.Dot(part.transform.up, EditorLogic.RootPart.transform.up));
                 }
                 else
                 {

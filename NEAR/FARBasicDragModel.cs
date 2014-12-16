@@ -1,5 +1,5 @@
 ﻿/*
-Neophyte's Elementary Aerodynamics Replacement v1.3
+Neophyte's Elementary Aerodynamics Replacement v1.3.1
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Neophyte's Elementary Aerodynamics Replacement.
@@ -245,7 +245,7 @@ namespace NEAR
         {
             Vector3d backward;
             if (HighLogic.LoadedSceneIsEditor)
-                backward = -EditorLogic.startPod.transform.forward;
+                backward = -EditorLogic.RootPart.transform.forward;
             else
                 backward = -vessel.transform.forward;
             double ClUpwards;

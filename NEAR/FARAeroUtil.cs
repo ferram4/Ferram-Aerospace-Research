@@ -1,5 +1,5 @@
 ﻿/*
-Neophyte's Elementary Aerodynamics Replacement v1.3
+Neophyte's Elementary Aerodynamics Replacement v1.3.1
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Neophyte's Elementary Aerodynamics Replacement.
@@ -74,7 +74,7 @@ namespace NEAR
         {
             return p.physicalSignificance == Part.PhysicalSignificance.NONE ||
                    (HighLogic.LoadedSceneIsEditor &&
-                    p != EditorLogic.startPod &&
+                    p != EditorLogic.RootPart &&
                     p.PhysicsSignificance == (int)Part.PhysicalSignificance.NONE);
         }
 
@@ -115,15 +115,15 @@ namespace NEAR
             return HighLogic.LoadedSceneIsEditor &&
                    EditorLogic.SelectedPart != null &&
                    (EditorLogic.SelectedPart.potentialParent != null ||
-                     (move_too && EditorLogic.SelectedPart == EditorLogic.startPod));
+                     (move_too && EditorLogic.SelectedPart == EditorLogic.RootPart));
         }
 
         public static List<Part> ListEditorParts(bool include_selected)
         {
             var list = new List<Part>();
 
-            if (EditorLogic.startPod)
-                RecursePartList(list, EditorLogic.startPod);
+            if (EditorLogic.RootPart)
+                RecursePartList(list, EditorLogic.RootPart);
 
             if (include_selected && EditorAboutToAttach())
             {

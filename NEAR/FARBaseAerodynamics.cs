@@ -1,5 +1,5 @@
 ﻿/*
-Neophyte's Elementary Aerodynamics Replacement v1.3
+Neophyte's Elementary Aerodynamics Replacement v1.3.1
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Neophyte's Elementary Aerodynamics Replacement.
@@ -140,7 +140,7 @@ namespace NEAR
 
             Vector3 vel_base, vel_fuzz;
 
-            if (EditorLogic.fetch.editorType == EditorLogic.EditorMode.SPH)
+            if (EditorDriver.editorFacility == EditorFacility.SPH)
             {
                 vel_base = Vector3.forward;
                 vel_fuzz = 0.02f * Vector3.up;
