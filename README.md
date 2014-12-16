@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.14.4.1
+Ferram Aerospace Research v0.14.5
 =========================
 
 Aerodynamics model for Kerbal Space Program
@@ -150,10 +150,22 @@ For both of these, set MaxDrag and MinDrag to 0
 CHANGELOG
 =======================================================
 
-0.14.4.1v------------------------------------
-Features:
-Added changes to blunt body drag to make command pods more stable on reentry
-Attempt to account for most inaccurate effects of part clipping
+0.14.5V------------------------------------  
+Features:  
+Skin friction drag now varies with Reynolds number; this means much higher skin friction drags at higher altitudes  
+Added simple attempt at handling hydrodynamic effects; not detailed, but objects in oceans move much less  
+Added color changing options for colorblind users  
+Tweak flap and spoiler deflection functions  
+Give spoilers faster deflection coefficients  
+Update to ModuleManager 2.5.4
+
+Bugfixes:  
+Removed spontaneous aero-spline warp drive in some Linux64 versions
+
+0.14.4.1v------------------------------------  
+Features:  
+Added changes to blunt body drag to make command pods more stable on reentry  
+Attempt to account for most inaccurate effects of part clipping  
 
 0.14.4v------------------------------------
 Features:  
