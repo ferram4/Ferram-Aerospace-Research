@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.14.4
+Ferram Aerospace Research v0.14.4.1
 =========================
 
 Aerodynamics model for Kerbal Space Program
@@ -149,6 +149,11 @@ For both of these, set MaxDrag and MinDrag to 0
 
 CHANGELOG
 =======================================================
+
+0.14.4.1v------------------------------------
+Features:
+Added changes to blunt body drag to make command pods more stable on reentry
+Attempt to account for most inaccurate effects of part clipping
 
 0.14.4v------------------------------------
 Features:  
