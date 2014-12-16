@@ -58,6 +58,7 @@ namespace ferram4
         public static double attachNodeRadiusFactor;
         public static double incompressibleRearAttachDrag;
         public static double sonicRearAdditionalAttachDrag;
+        public static double radiusOfCurvatureBluntBody;
         public static double massPerWingAreaSupported;
         public static double massStressPower;
         public static bool AJELoaded;
@@ -77,6 +78,7 @@ namespace ferram4
             node.AddValue("%attachNodeDiameterFactor", attachNodeRadiusFactor * 2);
             node.AddValue("%incompressibleRearAttachDrag", incompressibleRearAttachDrag);
             node.AddValue("%sonicRearAdditionalAttachDrag", sonicRearAdditionalAttachDrag);
+            node.AddValue("%radiusOfCurvatureBluntBody", radiusOfCurvatureBluntBody); 
             node.AddValue("%massPerWingAreaSupported", massPerWingAreaSupported);
             node.AddValue("%massStressPower", massStressPower);
             node.AddValue("%ctrlSurfTimeConstant", FARControllableSurface.timeConstant);
@@ -127,7 +129,8 @@ namespace ferram4
                     double.TryParse(node.GetValue("incompressibleRearAttachDrag"), out incompressibleRearAttachDrag);
                 if (node.HasValue("sonicRearAdditionalAttachDrag"))
                     double.TryParse(node.GetValue("sonicRearAdditionalAttachDrag"), out sonicRearAdditionalAttachDrag);
-
+                if (node.HasValue("radiusOfCurvatureBluntBody"))
+                    double.TryParse(node.GetValue("radiusOfCurvatureBluntBody"), out radiusOfCurvatureBluntBody);
                 if (node.HasValue("massPerWingAreaSupported"))
                     double.TryParse(node.GetValue("massPerWingAreaSupported"), out massPerWingAreaSupported);
 
@@ -188,7 +191,8 @@ namespace ferram4
             }
 
             SetDefaultValuesIfNoValuesLoaded();
-          
+
+            FARBasicDragModel.SetBluntBodyParams(radiusOfCurvatureBluntBody);
             loaded = true;
 
             //Get Kerbin
