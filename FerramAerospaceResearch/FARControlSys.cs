@@ -55,8 +55,9 @@ namespace ferram4
 
 
         public double MachNumber;
+        public double reynoldsNumber;
 
-        private static string mach;
+        private static string mach_str;
 
         public static double activeMach
         {
@@ -339,6 +340,9 @@ namespace ferram4
 
             //stuff that needs to iterate through all the vessel's parts
             int iCount = vessel.parts.Count;
+            double lengthScale = 0;
+            int k = 0;
+            
             for (int i = 0; i < iCount; i++)
             {
                 Part p = vessel.parts[i];
@@ -356,6 +360,7 @@ namespace ferram4
                 mass += p.mass;
 
                 int jCount = p.Modules.Count;
+
                 for (int j = 0; j < jCount; j++)
                 {
                     PartModule m = p.Modules[j];
@@ -386,6 +391,8 @@ namespace ferram4
                             DragArea += w.S * w.GetCd();
                             LiftArea += w.S * w.Cl * Vector3.Dot(w.GetLiftDirection(), lift_axis);
                             stallArea += w.S * w.GetStall();
+                            lengthScale += w.GetMAC();
+                            k++;
                             break;
                         }
                         else if (m is FARBasicDragModel)
@@ -394,6 +401,8 @@ namespace ferram4
                             DragArea += d.S * d.Cd;
                             LiftArea += d.S * d.Cl * Vector3.Dot(d.GetLiftDirection(), lift_axis);
                             otherArea += d.S;
+                            lengthScale += d.lengthScale;
+                            k++;
                             break;
                         }
                     }
@@ -401,6 +410,18 @@ namespace ferram4
                 DragArea += (p.mass + rmass) * p.maximum_drag * drag_coeff; //Resources matter here
             }
             intakeDeficit = airAvailable / airDemand;
+
+            lengthScale /= (double)k;
+
+            double temp = FlightGlobals.getExternalTemperature((float)vessel.altitude, vessel.mainBody) + FARAeroUtil.currentBodyTemp;
+
+            temp *= FARAeroUtil.ReferenceTemperatureRatio(MachNumber, 0.843);
+            double visc = FARAeroUtil.CalculateCurrentViscosity(temp);
+
+            if (vessel.staticPressure > 0)
+                reynoldsNumber = airDensity * vessel.srfSpeed * lengthScale / visc;
+            else
+                reynoldsNumber = 0;
 
             TSFC = 0;
 
@@ -1010,7 +1031,7 @@ namespace ferram4
 
                 GUILayout.BeginVertical(GUILayout.Height(100));
                 GUILayout.BeginHorizontal();
-                GUILayout.Box("Mach Number: " + mach, mySty, GUILayout.ExpandWidth(true));
+                GUILayout.Box("Mach: " + mach_str + "   Reynolds: " + reynoldsNumber.ToString("e2"), mySty, GUILayout.ExpandWidth(true));
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
                 if (DensityRelative)
@@ -1260,7 +1281,7 @@ namespace ferram4
                 {
                     UI.spdCaption.text = "Mach";
                     speedometerCaption = "Mach: ";
-                    UI.speed.text = mach;
+                    UI.speed.text = mach_str;
                 }
             }
 
@@ -1402,12 +1423,12 @@ namespace ferram4
 
                             q = airDensity * vessel.srf_velocity.sqrMagnitude * 0.5;
 
-                            mach = MachNumber.ToString("F3");
+                            mach_str = MachNumber.ToString("F3");
                         }
                         else
                         {
                             q = 0;
-                            mach = "0.000";
+                            mach_str = "0.000";
                             airDensity_str = "0.000";
                         }
 
