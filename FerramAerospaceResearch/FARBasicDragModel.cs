@@ -121,6 +121,7 @@ namespace ferram4
         protected float currentDrag = 0.0f;
 
         public double SPlusAttachArea = 0;
+        public double lengthScale = 1;
 
         public double YmaxForce = double.MaxValue;
         public double XZmaxForce = double.MaxValue;
@@ -208,7 +209,7 @@ namespace ferram4
             }
         }
 
-        public void BuildNewDragModel(double newS, FloatCurve newCd, FloatCurve newClPotential, FloatCurve newClViscous, FloatCurve newCm, Vector3 newCoD, double newMajorMinorAxisRatio, double newCosCutoffAngle, double newTaperCrossSectionArea, double newYmaxForce, double newXZmaxForce)
+        public void BuildNewDragModel(double newS, FloatCurve newCd, FloatCurve newClPotential, FloatCurve newClViscous, FloatCurve newCm, Vector3 newCoD, double newMajorMinorAxisRatio, double newCosCutoffAngle, double newTaperCrossSectionArea, double newYmaxForce, double newXZmaxForce, double newLengthScale)
         {
             S = newS;
             CdCurve = newCd;
@@ -224,6 +225,7 @@ namespace ferram4
             YmaxForce = newYmaxForce;
             XZmaxForce = newXZmaxForce;
 
+            lengthScale = newLengthScale;
             UpdateUpVector(true);
         }
 
@@ -483,7 +485,6 @@ namespace ferram4
                         continue;
 
                     Vector3d relPos = Attach.position + Attach.offset;
-                    Ray ray = new Ray();
 
                     if (part.Modules.Contains("FARCargoBayModule"))
                     {
@@ -651,7 +652,7 @@ namespace ferram4
             Cd *= MachMultiplier;
 
             if (HighLogic.LoadedSceneIsFlight)
-                Cd += FARAeroUtil.SkinFrictionDrag(rho, 1, local_velocity.magnitude, M, FlightGlobals.getExternalTemperature(part.transform.position) + FARAeroUtil.currentBodyTemp);       //Skin friction drag
+                Cd += FARAeroUtil.SkinFrictionDrag(rho, lengthScale, local_velocity.magnitude, M, FlightGlobals.getExternalTemperature(part.transform.position) + FARAeroUtil.currentBodyTemp);       //Skin friction drag
             else
                 Cd += 0.005;
 

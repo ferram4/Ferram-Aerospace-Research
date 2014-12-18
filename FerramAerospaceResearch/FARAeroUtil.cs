@@ -854,7 +854,7 @@ namespace ferram4
 
 
 
-                d.BuildNewDragModel(data.area * FARAeroUtil.areaFactor, TempCurve1, TempCurve2, TempCurve4, TempCurve3, data.originToCentroid, data.majorMinorAxisRatio, 0, data.taperCrossSectionArea, double.MaxValue, double.MaxValue);
+                d.BuildNewDragModel(data.area * FARAeroUtil.areaFactor, TempCurve1, TempCurve2, TempCurve4, TempCurve3, data.originToCentroid, data.majorMinorAxisRatio, 0, data.taperCrossSectionArea, double.MaxValue, double.MaxValue, Math.Sqrt(data.crossSectionalArea / Math.PI) * data.finenessRatio * FARAeroUtil.areaFactor);
                 return;
             }
             else if (FARPartClassification.IncludePartInGreeble(p, title))
@@ -879,10 +879,10 @@ namespace ferram4
                 TempCurve3.Add(-1, 0);
                 TempCurve3.Add(1, 0);
 
+                FARGeoUtil.BodyGeometryForDrag data = FARGeoUtil.CalcBodyGeometryFromMesh(p);
 
-                double area = FARGeoUtil.CalcBodyGeometryFromMesh(p).area;
 
-                d.BuildNewDragModel(area * FARAeroUtil.areaFactor, TempCurve1, TempCurve2, TempCurve4, TempCurve3, Vector3.zero, 1, 0, 0, double.MaxValue, double.MaxValue);
+                d.BuildNewDragModel(data.area * FARAeroUtil.areaFactor, TempCurve1, TempCurve2, TempCurve4, TempCurve3, Vector3.zero, 1, 0, 0, double.MaxValue, double.MaxValue, Math.Sqrt(data.crossSectionalArea / Math.PI) * data.finenessRatio * FARAeroUtil.areaFactor);
                 return;
             }
             else
@@ -1009,7 +1009,7 @@ namespace ferram4
 
                 }
 
-                d.BuildNewDragModel(data.area * FARAeroUtil.areaFactor, TempCurve1, TempCurve2, TempCurve4, TempCurve3, data.originToCentroid, data.majorMinorAxisRatio, cosCutoffAngle, data.taperCrossSectionArea, YmaxForce, XZmaxForce);
+                d.BuildNewDragModel(data.area * FARAeroUtil.areaFactor, TempCurve1, TempCurve2, TempCurve4, TempCurve3, data.originToCentroid, data.majorMinorAxisRatio, cosCutoffAngle, data.taperCrossSectionArea, YmaxForce, XZmaxForce, Math.Sqrt(data.crossSectionalArea / Math.PI) * data.finenessRatio * FARAeroUtil.areaFactor);
                 return;
             }
         }
@@ -1298,8 +1298,18 @@ namespace ferram4
             double visc = CalculateCurrentViscosity(refTemp);
             double Re = lengthScale * density * vel / visc;
 
-            if(Re < TRANSITION_REYNOLDS_NUMBER)
-                return 1.328 / Math.Sqrt(Re);
+            if (Re < TRANSITION_REYNOLDS_NUMBER)
+            {
+                double invSqrtRe = 1 / Math.Sqrt(Re);
+                double lamCf = 1.328 * invSqrtRe;
+
+                double rarefiedGasVal = machNumber * invSqrtRe;
+                if(rarefiedGasVal > 0.01)
+                {
+                    return lamCf + (0.25 - lamCf) * (rarefiedGasVal - 0.01) / (1 + rarefiedGasVal);
+                }
+                return lamCf;
+            }
 
             double transitionFraction = TRANSITION_REYNOLDS_NUMBER / Re;
 
