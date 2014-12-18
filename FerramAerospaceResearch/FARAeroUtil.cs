@@ -1306,7 +1306,7 @@ namespace ferram4
                 double rarefiedGasVal = machNumber * invSqrtRe;
                 if(rarefiedGasVal > 0.01)
                 {
-                    return lamCf + (0.25 - lamCf) * (rarefiedGasVal - 0.01) / (1 + rarefiedGasVal);
+                    return lamCf + (0.25 - lamCf) * (rarefiedGasVal - 0.01) / (0.99 + rarefiedGasVal);
                 }
                 return lamCf;
             }
