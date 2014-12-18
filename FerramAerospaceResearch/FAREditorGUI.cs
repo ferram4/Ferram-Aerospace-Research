@@ -974,21 +974,26 @@ namespace ferram4
 
                 double temp = FlightGlobals.getExternalTemperature((float)alt, activeBody);
                 double rho = FARAeroUtil.GetCurrentDensity(activeBody, alt, false);
-                //double temp = Convert.ToSingle(atm_temp_str);
-                Mach = Convert.ToSingle(Mach_str);
-                Mach = FARMathUtil.Clamp(Mach, 0.001f, float.PositiveInfinity);
+                if (rho > 0)
+                {
+                    //double temp = Convert.ToSingle(atm_temp_str);
+                    Mach = Convert.ToSingle(Mach_str);
+                    Mach = FARMathUtil.Clamp(Mach, 0.001f, float.PositiveInfinity);
 
-                double sspeed = Math.Sqrt(FARAeroUtil.currentBodyAtm[0] * Math.Max(0.1, temp + 273.15));
-                double vel = sspeed * Mach;
+                    double sspeed = Math.Sqrt(FARAeroUtil.currentBodyAtm[0] * Math.Max(0.1, temp + 273.15));
+                    double vel = sspeed * Mach;
 
-                UpdateControlSettings();
+                    UpdateControlSettings();
 
-                q = vel * vel * rho * 0.5f;
-                alpha = Convert.ToSingle(alpha_str) * 180 / Mathf.PI;
-                beta = Convert.ToSingle(beta_str);
-                phi = Convert.ToSingle(phi_str);
-                MOI_stabDerivs = CalculateStabilityDerivs(vel, q, Mach, alpha, beta, phi);
-                u0 = vel;
+                    q = vel * vel * rho * 0.5f;
+                    alpha = Convert.ToSingle(alpha_str) * 180 / Mathf.PI;
+                    beta = Convert.ToSingle(beta_str);
+                    phi = Convert.ToSingle(phi_str);
+                    MOI_stabDerivs = CalculateStabilityDerivs(vel, q, Mach, alpha, beta, phi);
+                    u0 = vel;
+                }
+                else
+                    PopupDialog.SpawnPopupDialog("Error!", "Altitude was above atmosphere", "OK", false, HighLogic.Skin);
             }
             GUILayout.BeginHorizontal();
             GUILayout.Label("Aircraft Properties", GUILayout.Width(180));
