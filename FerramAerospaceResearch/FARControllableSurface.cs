@@ -446,7 +446,7 @@ namespace ferram4
             double error = desired - current;
             if (!forceSetToDesired && Math.Abs(error) >= 0.1)
             {
-                double degreesPerSecond = maximumDeflection / timeConstant;
+                double degreesPerSecond = Math.Abs(maximumDeflection) / timeConstant;
                 double tmp = current + (double)TimeWarp.fixedDeltaTime * degreesPerSecond * Math.Sign(desired - current);
                 if(error > 0)
                     current = FARMathUtil.Clamp(tmp, current, desired);
