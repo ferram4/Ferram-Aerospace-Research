@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.5
+Ferram Aerospace Research v0.14.5.1
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -238,7 +238,7 @@ namespace ferram4
 
             if (!minimize && !hide)
             {
-                windowPos = GUILayout.Window(256, windowPos, ActualGUI, "FAR Control & Analysis Systems, v0.14.5");
+                windowPos = GUILayout.Window(256, windowPos, ActualGUI, "FAR Control & Analysis Systems, v0.14.5.1");
                 if (AnalysisHelp)
                 {
                     analysisHelpPos = GUILayout.Window(258, analysisHelpPos, AnalysisHelpGUI, "FAR Analysis Systems Help", GUILayout.Width(400), GUILayout.Height(Screen.height / 3));
