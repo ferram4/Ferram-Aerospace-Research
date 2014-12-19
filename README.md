@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.14.5
+Ferram Aerospace Research v0.14.5.1
 =========================
 
 Aerodynamics model for Kerbal Space Program
@@ -149,6 +149,18 @@ For both of these, set MaxDrag and MinDrag to 0
 
 CHANGELOG
 =======================================================
+
+0.14.5.1V------------------------------------  
+Features:  
+Add Reynolds Number readout to main flight GUI
+
+Tweaks:  
+Adjust skin friction drag for rarefied atmosphere
+
+Bugfixes:  
+Fix Stab Deriv GUI from breaking for altitudes above atmosphere  
+Fix flaps and spoilers not functioning with negative deflections
+
 
 0.14.5V------------------------------------  
 Features:  
