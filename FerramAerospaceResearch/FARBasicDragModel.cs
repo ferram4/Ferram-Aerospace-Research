@@ -474,7 +474,7 @@ namespace ferram4
             SPlusAttachArea = S;
 
             Vector3d partUpVector = transform.TransformDirection(localUpVector);
-            Bounds[] colliderBounds = part.GetColliderBounds();
+            Bounds[] rendererBounds = part.GetRendererBounds();
 
             //print("Updating drag for " + part.partInfo.title);
             foreach (AttachNode Attach in part.attachNodes)
@@ -501,14 +501,14 @@ namespace ferram4
 
                     if (Attach.attachedPart != null)
                     {
-                        if (AttachedPartIsNotClipping(Attach.attachedPart, colliderBounds))
+                        if (AttachedPartIsNotClipping(Attach.attachedPart, rendererBounds))
                             continue;
                     }
 
                     Vector3d origToNode = transform.localToWorldMatrix.MultiplyVector(relPos);
                     double attachSize = FARMathUtil.Clamp(Attach.size, 0.5, double.PositiveInfinity);
 
-                    if (UnattachedPartRightAgainstNode(origToNode, attachSize, relPos))
+                    if (UnattachedPartRightAgainstNode(origToNode, attachSize, relPos, Attach.attachedPart))
                         continue;
 
                     attachNodeData newAttachNodeData = new attachNodeData();
@@ -543,16 +543,18 @@ namespace ferram4
             for (int i = 0; i < colliderBounds.Length; i++)
             {
                 Bounds bound = colliderBounds[i];
-                // s += "Min: " + bound.min.ToString() + " Max: " + bound.max.ToString() + "\n\r";
-                if (bound.Contains(attachedPart.transform.position))
-                    return false;
-                //s += "Found containing point\n\r";
+                 //s += "Min: " + bound.min.ToString() + " Max: " + bound.max.ToString() + "\n\r";
+                 if (bound.Contains(attachedPart.transform.position))
+                 {
+                     return false;
+                     //s += "Found containing point\n\r";
+                 }
             }
             //Debug.Log(s);
             return true;
         }
 
-        private bool UnattachedPartRightAgainstNode(Vector3d origToNode, double attachSize, Vector3d relPos)
+        private bool UnattachedPartRightAgainstNode(Vector3d origToNode, double attachSize, Vector3d relPos, Part attachedPart)
         {
             double mag = (origToNode).magnitude;
 
@@ -569,6 +571,8 @@ namespace ferram4
                     foreach (Part p in VesselPartList)
                         if (p.collider == h.collider)
                         {
+                            if (p == attachedPart)
+                                continue;
                             return true;
                         }
             }
