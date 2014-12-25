@@ -395,7 +395,7 @@ namespace ferram4
                 liftDir = Vector3d.Cross(velocity, perp).normalized;
 
                 Vector3d local_velocity = part_transform.InverseTransformDirection(velocity_normalized);
-                DragModel(local_velocity, MachNumber);
+                DragModel(local_velocity, MachNumber, rho);
 
                 double qS = 0.5 * rho * v_scalar * v_scalar * S;   //dynamic pressure, q
                 Vector3d D = velocity_normalized * (-qS * Cd);                         //drag
@@ -582,7 +582,7 @@ namespace ferram4
         /// <summary>
         /// These are just a few different attempts to figure drag for various blunt bodies
         /// </summary>
-        private void DragModel(Vector3d local_velocity, double M)
+        private void DragModel(Vector3d local_velocity, double M, double rho)
         {
             // Has the same x/y/z as the vertices in PartMaxBoundaries etc
             Vector3d model_velocity = to_model_rotation * local_velocity;

@@ -54,7 +54,7 @@ namespace ferram4
             accel = mu / accel;
             return accel;
         }
-        
+
         public void GetClCdCmSteady(Vector3d CoM, double alpha, double beta, double phi, double alphaDot, double betaDot, double phiDot, double M, double pitch, out double Cl, out double Cd, out double Cm, out double Cy, out double Cn, out double C_roll, bool clear, bool reset_stall = false, int flap_setting = 0, bool spoilersDeployed = false, bool vehicleFueled = true)
         {
             Cl = 0;
@@ -92,7 +92,8 @@ namespace ferram4
 
             Vector3d sideways = Vector3.Cross(velocity, liftVector);
 
-            for (int i = 0; i < FARAeroUtil.CurEditorWings.Count; i++ )
+
+            for (int i = 0; i < FARAeroUtil.CurEditorWings.Count; i++)
             {
                 FARWingAerodynamicModel w = FARAeroUtil.CurEditorWings[i];
                 if (w.isShielded)
@@ -107,6 +108,22 @@ namespace ferram4
 
                 if (w is FARControllableSurface)
                     (w as FARControllableSurface).SetControlStateEditor(CoM, vel, (float)pitch, 0, 0, flap_setting, spoilersDeployed);
+
+                w.ComputeClCdEditor(vel, M);
+            }
+            
+            for (int i = 0; i < FARAeroUtil.CurEditorWings.Count; i++)
+            {
+                FARWingAerodynamicModel w = FARAeroUtil.CurEditorWings[i];
+                if (w.isShielded)
+                    continue;
+
+                if (clear)
+                    w.EditorClClear(reset_stall);
+
+                Vector3d relPos = w.GetAerodynamicCenter() - CoM;
+
+                Vector3d vel = velocity + Vector3d.Cross(AngVel, relPos);
 
                 w.ComputeClCdEditor(vel, M);
 

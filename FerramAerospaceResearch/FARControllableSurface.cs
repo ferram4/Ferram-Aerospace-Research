@@ -418,7 +418,7 @@ namespace ferram4
             double radAoAoffset = AoAoffset * FARMathUtil.deg2rad * ctrlSurfFrac;
             Vector3 perp = part_transform.TransformDirection(new Vector3d(0, Math.Sin(radAoAoffset), Math.Cos(radAoAoffset)));
             double PerpVelocity = Vector3d.Dot(perp, velocity.normalized);
-            return Math.Asin(PerpVelocity);
+            return Math.Asin(FARMathUtil.Clamp(PerpVelocity, -1, 1));
         }
 
         //DaMichel: Factored the time evolution for deflection AoA into this function. This one results into an exponential asympotic
@@ -532,6 +532,7 @@ namespace ferram4
 
                 AoAdesiredControl *= AoAsign;
                 AoAdesiredControl = FARMathUtil.Clamp(AoAdesiredControl, -Math.Abs(maxdeflect), Math.Abs(maxdeflect));
+                AoAcurrentControl = AoAdesiredControl;
                 AoAcurrentFlap = 0;
                 if (isFlap == true)
                 {

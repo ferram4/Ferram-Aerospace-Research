@@ -35,13 +35,14 @@ Copyright 2014, Michael Ferrara, aka Ferram4
  */
 
 
+//TODO:
+//Fix requirement to double-run stability deriv sim
 
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Linq;
 using UnityEngine;
-//using ferramGraph;
 
 namespace ferram4
 {
@@ -71,6 +72,7 @@ namespace ferram4
 
         protected static ferramGraph graph = new ferramGraph(400, 275);
         protected static FARGUIDropDown<CelestialBody> celestialBodyDropdown;
+        protected static FARGUIDropDown<int> flapSettingDropdown;
         private static CelestialBody activeBody;
 
         private static string lowerBound_str = "0";
@@ -188,6 +190,8 @@ namespace ferram4
             int kerbinIndex = 1;
 
             celestialBodyDropdown = new FARGUIDropDown<CelestialBody>(bodyNames, bodies, kerbinIndex);
+            flapSettingDropdown = new FARGUIDropDown<int>(new string[] { "0 (up)", "1 (init climb)", "2 (takeoff)", "3 (landing)" }, new int[] { 0, 1, 2, 3 }, 0);
+            flap_setting = 0;
             activeBody = bodies[1];
             LoadColors();
             windowPos.height = 500;
@@ -954,7 +958,8 @@ namespace ferram4
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Flap Setting: ");
-            FlapToggle();
+            flapSettingDropdown.GUIDropDownDisplay();
+            flap_setting = flapSettingDropdown.ActiveSelection();
             GUILayout.Label("Fuel Status:");
             vehicleFueled = GUILayout.Toggle(vehicleFueled, vehicleFueled ? "Full" : "Empty", GUILayout.Width(100));
             GUILayout.Label("Spoilers:");
@@ -989,6 +994,7 @@ namespace ferram4
                     alpha = Convert.ToSingle(alpha_str) * 180 / Mathf.PI;
                     beta = Convert.ToSingle(beta_str);
                     phi = Convert.ToSingle(phi_str);
+                    CalculateStabilityDerivs(vel, q, Mach, alpha, beta, phi);       //FIX ME; this provides a solution, but the sim should be redone to find why it needs to be repeated to converge
                     MOI_stabDerivs = CalculateStabilityDerivs(vel, q, Mach, alpha, beta, phi);
                     u0 = vel;
                 }
@@ -1121,7 +1127,7 @@ namespace ferram4
             GUILayout.Label(new GUIContent(text1 + val.ToString("G6") + text2, tooltip), style, GUILayout.Width(width));
         }
 
-        private void FlapToggle()
+        /*private void FlapToggle()
         {
             GUIStyle style = new GUIStyle(GUI.skin.button);
             style.padding = new RectOffset(2, 2, 0, 0);
@@ -1133,7 +1139,7 @@ namespace ferram4
                 if (on) flap_setting = i;
             }
             GUILayout.EndHorizontal();
-        }
+        }*/
 
         private double[] CalculateStabilityDerivs(double u0, double q, double M, double alpha, double beta, double phi)
         {
@@ -1186,6 +1192,10 @@ namespace ferram4
                     area += w.S;
                     MAC += w.GetMAC() * w.S;
                     b += w.Getb_2() * w.S;
+                    if (w is FARControllableSurface)
+                    {
+                        (w as FARControllableSurface).SetControlStateEditor(CoM, p.transform.up, 0, 0, 0, flap_setting, spoilersDeployed);
+                    }
                 }
             }
             if (area == 0)
@@ -1282,8 +1292,8 @@ namespace ferram4
             //Longitudinal Mess
             aeroSim.SetState(M, neededCl, CoM, 0, flap_setting, spoilersDeployed);
 
-
             double pertCl, pertCd, pertCm, pertCy, pertCn, pertC_roll;
+            //aeroSim.GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M, 0, out nomCl, out nomCd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true, flap_setting, spoilersDeployed);
 /*            int iter = 7;
             for (; ; )
             {
@@ -1426,7 +1436,7 @@ namespace ferram4
             stabDerivs[23] = pertCn;
             stabDerivs[22] = pertC_roll;
 
-            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
+            /*for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
             {
                 Part p = FARAeroUtil.CurEditorParts[i];
 
@@ -1440,7 +1450,7 @@ namespace ferram4
                         (m as FARControllableSurface).SetControlStateEditor(CoM, p.transform.up, (float)0, 0, 0, flap_setting, spoilersDeployed);
                     }
                 }
-            }
+            }*/
 
             return stabDerivs;
         }
@@ -1490,7 +1500,8 @@ namespace ferram4
 
             GUILayout.BeginVertical();
             GUILayout.Label("Flap Setting:");
-            FlapToggle();
+            flapSettingDropdown.GUIDropDownDisplay();
+            flap_setting = flapSettingDropdown.ActiveSelection();
             GUILayout.Label("Pitch Setting:");
             pitch_str = GUILayout.TextField(pitch_str, GUILayout.ExpandWidth(true));
             pitch_str = Regex.Replace(pitch_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");

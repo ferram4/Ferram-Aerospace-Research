@@ -322,6 +322,9 @@ namespace ferram4
                     {
                         Part p = PartList[j];
 
+                        if (p == null)
+                            continue;
+
                         if (p == parentWingPart)
                             continue;
 
