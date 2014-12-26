@@ -205,7 +205,7 @@ namespace ferram4
                         PartModule m = p.Modules["FARCargoBayModule"];
                         m.OnStart(PartModule.StartState.Flying);
 
-                        FARAeroUtil.AddBasicDragModule(p);
+                        FARAeroUtil.AddBasicDragModuleWithoutDragPropertySetup(p);
                         m = p.Modules["FARBasicDragModel"];
                         m.OnStart(PartModule.StartState.Flying);
 
@@ -222,7 +222,7 @@ namespace ferram4
                             PartModule m = p.Modules["FARPayloadFairingModule"];
                             m.OnStart(PartModule.StartState.Flying);
 
-                            FARAeroUtil.AddBasicDragModule(p);
+                            FARAeroUtil.AddBasicDragModuleWithoutDragPropertySetup(p);
                             m = p.Modules["FARBasicDragModel"];
                             m.OnStart(PartModule.StartState.Flying);
                             updatedModules = true;
@@ -231,7 +231,7 @@ namespace ferram4
 
                     if (!updatedModules && !p.Modules.Contains("FARBasicDragModel"))
                     {
-                        FARAeroUtil.AddBasicDragModule(p);
+                        FARAeroUtil.AddBasicDragModuleWithoutDragPropertySetup(p);
                         PartModule m = p.Modules["FARBasicDragModel"];
                         m.OnStart(PartModule.StartState.Flying);
 
@@ -244,6 +244,15 @@ namespace ferram4
                 FARPartModule b = p.GetComponent<FARPartModule>();
                 if (b != null)
                     b.VesselPartList = p.vessel.Parts;             //This prevents every single part in the ship running this due to VesselPartsList not being initialized
+            }
+            for (int i = 0; i < v.parts.Count; i++)
+            {
+                Part p = v.parts[i];
+                FARBasicDragModel d = p.GetComponent<FARBasicDragModel>();
+                if(d != null)
+                {
+                    d.UpdatePropertiesWithShapeChange();
+                }
             }
             UpdateFARPartModules(v);
         }

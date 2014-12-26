@@ -402,12 +402,12 @@ namespace ferram4
             List<Transform> returnList = new List<Transform>();
 
             //Very hacky, but is necessary for root parts with broken transforms
-            if (p.partTransform == null)
+            if (p.transform == null)
             {
                 bool root = p == p.vessel.rootPart;
                 //Debug.Log("This one is busted: " + p.partInfo.title + " root? " + root);
-                if (root)
-                    p.partTransform = p.vessel.vesselTransform;
+                //if (root)
+                //    p.transform = p.vessel.vesselTransform;
             } 
             
             Transform[] propellersToIgnore = IgnoreModelTransformArray(p);
@@ -697,9 +697,18 @@ namespace ferram4
 
             double lowerR = lowerDiameters.magnitude * 0.5;
             double upperR = upperDiameters.magnitude * 0.5;
-            centroid.y = 4 * (lowerR * lowerR + lowerR * upperR + upperR * upperR);
-            centroid.y = size.y * (lowerR * lowerR + 2 * lowerR * upperR + 3 * upperR * upperR) / centroid.y;
-            centroid.y += minBounds.y;
+            if (lowerR > upperR)
+            {
+                centroid.y = 4 * (lowerR * lowerR + lowerR * upperR + upperR * upperR);
+                centroid.y = size.y * (lowerR * lowerR + 2 * lowerR * upperR + 3 * upperR * upperR) / centroid.y;
+                centroid.y += minBounds.y;
+            }
+            else
+            {
+                centroid.y = 4 * (lowerR * lowerR + lowerR * upperR + upperR * upperR);
+                centroid.y = -size.y * (3* lowerR * lowerR + 2 * lowerR * upperR + upperR * upperR) / centroid.y;
+                centroid.y += maxBounds.y;
+            }
             centroid.x = (maxBounds.x + minBounds.x);
             centroid.z = (maxBounds.z + minBounds.z);
 

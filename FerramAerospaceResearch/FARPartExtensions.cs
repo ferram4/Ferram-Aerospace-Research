@@ -88,6 +88,36 @@ namespace ferram4
 
                 return colliders;
             }
+            
+            public static Bounds[] GetPartMeshBoundsInPartSpace(this Part part)
+            {
+                Transform[] transforms = part.FindModelComponents<Transform>();
+                Bounds[] bounds = new Bounds[transforms.Length];
+                Matrix4x4 partMatrix = part.transform.worldToLocalMatrix;
+                for(int i = 0; i < transforms.Length; i++)
+                {
+                    Bounds newBounds = new Bounds();
+                    Transform t = transforms[i];
+
+                    MeshFilter mf = t.GetComponent<MeshFilter>();
+                    if (mf == null)
+                        continue;
+                    Mesh m = mf.mesh;
+
+                    if (m == null)
+                        continue;
+                    Matrix4x4 matrix = partMatrix * t.localToWorldMatrix;
+                    
+                    for (int j = 0; j < m.vertices.Length; j++)
+                    {
+                        newBounds.Encapsulate(matrix.MultiplyPoint(m.vertices[j]));
+                    }
+
+                    bounds[i] = newBounds;
+                }
+                return bounds;
+            }
+
         }
     }
 }

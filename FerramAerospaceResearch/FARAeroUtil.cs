@@ -800,11 +800,13 @@ namespace ferram4
 
         public static void AddBasicDragModule(Part p)
         {
-            //if (IsNonphysical(p))
-            //    return;
+            AddBasicDragModuleWithoutDragPropertySetup(p);
 
-            //MonoBehaviour.print(p + ": " + p.PhysicsSignificance + " " + p.physicalSignificance);
+            SetBasicDragModuleProperties(p);
+        }
 
+        public static void AddBasicDragModuleWithoutDragPropertySetup(Part p)
+        {
             if (p.Modules.Contains("KerbalEVA"))
                 return;
 
@@ -819,9 +821,6 @@ namespace ferram4
 
 
             p.AddModule("FARBasicDragModel");
-
-
-            SetBasicDragModuleProperties(p);
         }
 
         public static void SetBasicDragModuleProperties(Part p)

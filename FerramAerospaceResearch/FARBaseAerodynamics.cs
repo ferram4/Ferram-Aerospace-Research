@@ -81,11 +81,11 @@ namespace ferram4
         public override void OnAwake()
         {
             base.OnAwake();
-            part_transform = part.partTransform;
+            part_transform = part.transform;
 
             //refArea = S;
-            //Terrible, hacky fix for part.partTransform going bad
-            if (part.partTransform == null && part == part.vessel.rootPart)
+            //Terrible, hacky fix for part.transform going bad
+            if (part.transform == null && part == part.vessel.rootPart)
                 part_transform = vessel.vesselTransform;
             if(HighLogic.LoadedSceneIsEditor)
                 part_transform = part.transform;

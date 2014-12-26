@@ -86,7 +86,10 @@ namespace ferram4
                 {
                     FARPartModule farModule = (m as FARPartModule);
                     if (farModule.partColliders != null)
+                    {
                         this.partColliders = farModule.partColliders;
+                        break;
+                    }
                 }
             }
             if (this.partColliders == null)

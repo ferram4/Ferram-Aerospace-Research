@@ -299,7 +299,7 @@ namespace ferram4
                     {
                         p.AddModule("FARCargoBayModule");
                         p.Modules["FARCargoBayModule"].OnStart(PartModule.StartState.Editor);
-                        FARAeroUtil.AddBasicDragModule(p);
+                        FARAeroUtil.AddBasicDragModuleWithoutDragPropertySetup(p);
                         p.Modules["FARBasicDragModel"].OnStart(PartModule.StartState.Editor);
                         updatedModules = true;
                     }
@@ -312,7 +312,7 @@ namespace ferram4
                         {
                             p.AddModule("FARPayloadFairingModule");
                             p.Modules["FARPayloadFairingModule"].OnStart(PartModule.StartState.Editor);
-                            FARAeroUtil.AddBasicDragModule(p);
+                            FARAeroUtil.AddBasicDragModuleWithoutDragPropertySetup(p);
                             p.Modules["FARBasicDragModel"].OnStart(PartModule.StartState.Editor);
                             updatedModules = true;
                         }
@@ -320,7 +320,7 @@ namespace ferram4
 
                     if (!updatedModules && !p.Modules.Contains("FARBasicDragModel"))
                     {
-                        FARAeroUtil.AddBasicDragModule(p);
+                        FARAeroUtil.AddBasicDragModuleWithoutDragPropertySetup(p);
                         p.Modules["FARBasicDragModel"].OnStart(PartModule.StartState.Editor);
                         updatedModules = true;
                     }
@@ -333,6 +333,15 @@ namespace ferram4
                     b.VesselPartList = editorShip;             //This prevents every single part in the ship running this due to VesselPartsList not being initialized
 
 
+            }
+            for (int i = 0; i < editorShip.Count; i++ )
+            {
+                Part p = editorShip[i];
+                FARBasicDragModel d = p.GetComponent<FARBasicDragModel>();
+                if(d != null)
+                {
+                    d.UpdatePropertiesWithShapeChange();
+                }
             }
             return returnValue;
         }

@@ -154,7 +154,7 @@ namespace ferram4
                 double tmpCl = d.GetLiftEditor();
                 Cl += tmpCl * -Vector3d.Dot(d.GetLiftDirection(), liftVector);
                 Cy += tmpCl * -Vector3d.Dot(d.GetLiftDirection(), sideways);
-                relPos = d.GetCoDEditor() - CoM;
+                relPos = d.GetCoDWithoutMomentShift() - CoM;
                 Cm += d.GetMomentEditor() + tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(d.GetLiftDirection(), liftVector) + tmpCd * -Vector3d.Dot((relPos), liftVector);
                 Cn += tmpCd * Vector3d.Dot((relPos), sideways) + tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(d.GetLiftDirection(), sideways);
                 C_roll += tmpCl * Vector3d.Dot((relPos), sideways) * -Vector3d.Dot(d.GetLiftDirection(), liftVector);

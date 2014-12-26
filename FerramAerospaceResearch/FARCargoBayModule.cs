@@ -289,7 +289,7 @@ namespace ferram4
                 else
                 {
                     b = d as FARBaseAerodynamics;
-                    relPos += p.partTransform.TransformDirection(d.CenterOfDrag) + p.partTransform.position;       //No attach node shifting with this
+                    relPos += p.transform.TransformDirection(d.CenterOfDrag) + p.transform.position;       //No attach node shifting with this
                 }
 
                 relPos = this.part.transform.worldToLocalMatrix.MultiplyVector(relPos);

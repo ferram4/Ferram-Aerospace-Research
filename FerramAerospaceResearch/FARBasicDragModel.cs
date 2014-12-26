@@ -241,7 +241,7 @@ namespace ferram4
 
             UpdateUpVector(false || this.part.Modules.Contains("ModuleResourceIntake"));
             //PartModelTransforms = FARGeoUtil.PartModelTransformArray(part);
-            AttachNodeCdAdjust();
+            //AttachNodeCdAdjust();
             AnimationSetup();
             Fields["currentDrag"].guiActive = FARDebugValues.displayForces;
         }
@@ -342,7 +342,7 @@ namespace ferram4
             }
         }
 
-        public Vector3d GetCoDEditor()
+        public Vector3d GetCoDWithoutMomentShift()
         {
             // no globalCoDshift because of separate GetMomentEditor
             return part_transform.TransformPoint(CoDshift);
@@ -461,7 +461,7 @@ namespace ferram4
 
             attachNodeDragList.Clear();
 
-            Transform transform = part.partTransform;
+            Transform transform = part.transform;
 
             if (transform == null)
                 transform = part.transform;
@@ -474,7 +474,7 @@ namespace ferram4
             SPlusAttachArea = S;
 
             Vector3d partUpVector = transform.TransformDirection(localUpVector);
-            Bounds[] rendererBounds = part.GetRendererBounds();
+            Bounds[] partBounds = part.GetPartMeshBoundsInPartSpace();
 
             //print("Updating drag for " + part.partInfo.title);
             foreach (AttachNode Attach in part.attachNodes)
@@ -484,7 +484,7 @@ namespace ferram4
                     if (Attach.id.ToLowerInvariant() == "strut")
                         continue;
 
-                    Vector3d relPos = Attach.position + Attach.offset;
+                    Vector3d relPos = Attach.position;// +Attach.offset;
 
                     if (part.Modules.Contains("FARCargoBayModule"))
                     {
@@ -499,16 +499,26 @@ namespace ferram4
                         }
                     }
 
-                    if (Attach.attachedPart != null)
-                    {
-                        if (AttachedPartIsNotClipping(Attach.attachedPart, rendererBounds))
-                            continue;
-                    }
-
                     Vector3d origToNode = transform.localToWorldMatrix.MultiplyVector(relPos);
                     double attachSize = FARMathUtil.Clamp(Attach.size, 0.5, double.PositiveInfinity);
 
-                    if (UnattachedPartRightAgainstNode(origToNode, attachSize, relPos, Attach.attachedPart))
+                    if (Attach.attachedPart != null)
+                    {
+                        Vector3 location = Attach.attachedPart.transform.position;
+                        FARBasicDragModel d = Attach.attachedPart.GetComponent<FARBasicDragModel>();
+                        if (d != null)
+                            location += Attach.attachedPart.transform.localToWorldMatrix.MultiplyVector(d.CenterOfDrag);
+
+                        //Debug.Log(Attach.attachedPart.partInfo.title + " " + location + " " + Attach.attachedPart.transform.position + " " + (origToNode + part.transform.position));
+
+                        if (AttachedPartCoDIsFurtherThanAttachLocation(location, origToNode))
+                            continue;
+                        if (AttachedPartIsNotClipping(location, partBounds))
+                            continue;
+                    }
+
+
+                    if (UnattachedPartRightAgainstNode(origToNode, attachSize, Attach.attachedPart))
                         continue;
 
                     attachNodeData newAttachNodeData = new attachNodeData();
@@ -525,36 +535,48 @@ namespace ferram4
                     exposedAttachArea /= FARMathUtil.Clamp(S, 0.01, double.PositiveInfinity);
 
                     newAttachNodeData.areaValue = exposedAttachArea;
-                    if (Vector3d.Dot(origToNode, partUpVector) > 1)
+                    if (Vector3d.Dot(origToNode, partUpVector) > 0)
                         newAttachNodeData.pitchesAwayFromUpVec = true;
                     else
                         newAttachNodeData.pitchesAwayFromUpVec = false;
 
-                    newAttachNodeData.location = transform.worldToLocalMatrix.MultiplyVector(origToNode);
-
+                    newAttachNodeData.location = relPos;
+                    //Debug.Log(part.partInfo.title + " found open node");
                     attachNodeDragList.Add(newAttachNodeData);
                 }
             }
         }
 
-        private bool AttachedPartIsNotClipping(Part attachedPart, Bounds[] colliderBounds)
+        private bool AttachedPartCoDIsFurtherThanAttachLocation(Vector3 location, Vector3 origToNode)
+        {
+            Vector3 testPoint = location - this.transform.position;
+            float threshold = origToNode.magnitude;
+            float dot = Vector3.Dot(origToNode, testPoint);
+            if (dot >= threshold)
+                return true;
+            return false;
+        }
+
+        private bool AttachedPartIsNotClipping(Vector3 worldLocation, Bounds[] bounds)
         {
             //string s = "";
-            for (int i = 0; i < colliderBounds.Length; i++)
+
+            Vector3 localLocation = part.transform.worldToLocalMatrix.MultiplyPoint(worldLocation);
+            for (int i = 0; i < bounds.Length; i++)
             {
-                Bounds bound = colliderBounds[i];
-                 //s += "Min: " + bound.min.ToString() + " Max: " + bound.max.ToString() + "\n\r";
-                 if (bound.Contains(attachedPart.transform.position))
+                 Bounds bound = bounds[i];
+                 //s += bound + "\n\r";
+                 if (bound.Contains(localLocation))
                  {
+                     //Debug.Log(s + "Found point");
                      return false;
-                     //s += "Found containing point\n\r";
                  }
             }
             //Debug.Log(s);
             return true;
         }
 
-        private bool UnattachedPartRightAgainstNode(Vector3d origToNode, double attachSize, Vector3d relPos, Part attachedPart)
+        private bool UnattachedPartRightAgainstNode(Vector3d origToNode, double attachSize, Part attachedPart)
         {
             double mag = (origToNode).magnitude;
 
@@ -567,14 +589,29 @@ namespace ferram4
             {
                 if (h.collider == part.collider)
                     continue;
-                if (h.distance < (mag + attachSize) && h.distance > (mag - attachSize))
+                if (h.distance < (mag + attachSize) && h.distance > (mag - attachSize * 0.01))
                     foreach (Part p in VesselPartList)
-                        if (p.collider == h.collider)
+                    {
+                        if (p == null || p == attachedPart)
+                            continue;
+
+                        FARPartModule m = p.GetComponent<FARPartModule>();
+                        if (m == null)
                         {
-                            if (p == attachedPart)
-                                continue;
-                            return true;
+                            if (p.GetPartColliders().Contains(h.collider))
+                                return true;
                         }
+                        else
+                        {
+                            if (m.PartColliders == null)
+                                m.TriggerPartColliderUpdate();
+
+                            if (m.PartColliders.Contains(h.collider))
+                            {
+                                return true;
+                            }
+                        }
+                    }
             }
             return false;
         }

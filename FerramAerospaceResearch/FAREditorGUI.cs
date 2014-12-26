@@ -452,7 +452,8 @@ namespace ferram4
             string s = "Area (S): " + d.S +
                 "\n\rcosAngleCutoff: " + d.cosAngleCutoff +
                 "\n\rtaperCrossSectionAreaRatio: " + d.taperCrossSectionAreaRatio +
-                "\n\rmajorMinorAxisRatio" + d.majorMinorAxisRatio;
+                "\n\rmajorMinorAxisRatio: " + d.majorMinorAxisRatio +
+                "\n\rCenterOfDrag: " + d.CenterOfDrag;
             s += "\n\r\n\rCdCurve\n\r" + FloatCurveToString(d.CdCurve);
             s += "\n\rClPotentialCurve\n\r" + FloatCurveToString(d.ClPotentialCurve);
             GUILayout.BeginHorizontal();
@@ -474,6 +475,7 @@ namespace ferram4
             node.AddValue("cosAngleCutoff", d.cosAngleCutoff);
             node.AddValue("majorMinorAxisRatio", d.majorMinorAxisRatio);
             node.AddValue("taperCrossSectionAreaRatio", d.taperCrossSectionAreaRatio);
+            node.AddValue("CenterOfDrag", d.CenterOfDrag);
             node.AddValue("ignoreAnim", d.ignoreAnim);
 
             ConfigNode newNode = new ConfigNode("CdCurve");

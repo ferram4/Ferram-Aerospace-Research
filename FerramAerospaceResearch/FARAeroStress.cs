@@ -263,13 +263,13 @@ namespace ferram4
                             return false;
                         }
 
-                    Transform selfTransform = p.partTransform;
+                    Transform selfTransform = p.transform;
                     if ((object)selfTransform == null)
                     {
                         selfTransform = p.vessel.vesselTransform;
                     }
 
-                    Transform parentTransform = p.parent.partTransform;
+                    Transform parentTransform = p.parent.transform;
                     if ((object)parentTransform == null)
                     {
                         parentTransform = p.vessel.vesselTransform;
