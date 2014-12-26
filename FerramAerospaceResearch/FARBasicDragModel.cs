@@ -474,7 +474,6 @@ namespace ferram4
             SPlusAttachArea = S;
 
             Vector3d partUpVector = transform.TransformDirection(localUpVector);
-            Bounds[] partBounds = part.GetPartMeshBoundsInPartSpace();
 
             //print("Updating drag for " + part.partInfo.title);
             foreach (AttachNode Attach in part.attachNodes)
@@ -513,7 +512,7 @@ namespace ferram4
 
                         if (AttachedPartCoDIsFurtherThanAttachLocation(location, origToNode))
                             continue;
-                        if (AttachedPartIsNotClipping(location, partBounds))
+                        if (AttachedPartIsNotClipping(location, PartBounds))
                             continue;
                     }
 

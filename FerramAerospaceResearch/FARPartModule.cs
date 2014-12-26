@@ -48,8 +48,10 @@ namespace ferram4
         public List<Part> VesselPartList = null;
         int VesselPartListCount = 0;
         private Collider[] partColliders = null;
+        private Bounds[] partBounds = null;
 
         public Collider[] PartColliders { get { if(partColliders == null) TriggerPartColliderUpdate(); return partColliders; } protected set { partColliders = value; } }
+        public Bounds[] PartBounds { get { if (partBounds == null) TriggerPartBoundsUpdate(); return partBounds; } protected set { partBounds = value; } }
 
         public void ForceOnVesselPartsChange()
         {
@@ -74,7 +76,27 @@ namespace ferram4
                 part.OnEditorDetach += OnEditorAttach;
                 part.OnEditorDestroy += OnEditorAttach;
             }
-        }        
+        }
+
+        public void TriggerPartBoundsUpdate()
+        {
+            //Set up part collider list to easy runtime overhead with memory churning
+            for (int i = 0; i < part.Modules.Count; i++)
+            {
+                PartModule m = part.Modules[i];
+                if (m is FARPartModule)
+                {
+                    FARPartModule farModule = (m as FARPartModule);
+                    if (farModule.partBounds != null)
+                    {
+                        this.partBounds = farModule.partBounds;
+                        break;
+                    }
+                }
+            }
+            if (this.partBounds == null)
+                this.partBounds = part.GetPartMeshBoundsInPartSpace();
+        }
 
         public void TriggerPartColliderUpdate()
         {
