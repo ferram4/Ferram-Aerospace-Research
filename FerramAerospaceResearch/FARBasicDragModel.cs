@@ -329,12 +329,14 @@ namespace ferram4
                         Vector3d velocity = rb.velocity + Krakensbane.GetFrameVelocity()
                             - FARWind.GetWind(FlightGlobals.currentMainBody, part, rb.position);
 
-                        double soundspeed, v_scalar = velocity.magnitude;
+                        double machNumber, v_scalar = velocity.magnitude;
 
-                        rho = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
+                        rho = FARAeroUtil.GetCurrentDensity(vessel.mainBody, part.transform.position);
+                        machNumber = GetMachNumber(vessel.mainBody, vessel.altitude, velocity);
                         if (rho > 0 && v_scalar > 0.1)
                         {
-                            Vector3d force = RunDragCalculation(velocity, v_scalar / soundspeed, rho);
+                            double failureForceScaling = FARAeroUtil.GetFailureForceScaling(vessel);
+                            Vector3d force = RunDragCalculation(velocity, machNumber, rho, failureForceScaling);
                             rb.AddForceAtPosition(force, GetCoD());
                         }
                     }
@@ -374,6 +376,11 @@ namespace ferram4
         }
 
         public Vector3d RunDragCalculation(Vector3d velocity, double MachNumber, double rho)
+        {
+            return RunDragCalculation(velocity, MachNumber, rho, 1);
+        }
+
+        public Vector3d RunDragCalculation(Vector3d velocity, double MachNumber, double rho, double failureForceScaling)
         {
             if (isShielded)
             {
@@ -420,13 +427,15 @@ namespace ferram4
                     }
                 }
 
+
                 //Must handle aero-structural failure before transforming CoD pos and adding pitching moment to forces or else parts with blunt body drag fall apart too easily
-                if (Math.Abs(Vector3d.Dot(force, upVector)) > YmaxForce || Vector3d.Exclude(upVector, force).magnitude > XZmaxForce)
+                if (Math.Abs(Vector3d.Dot(force, upVector)) > YmaxForce * failureForceScaling || Vector3d.Exclude(upVector, force).magnitude > XZmaxForce * failureForceScaling)
                     if (part.parent && !vessel.packed)
                     {
                         part.SendEvent("AerodynamicFailureStatus");
                         FlightLogger.eventLog.Add("[" + FARMathUtil.FormatTime(vessel.missionTime) + "] Joint between " + part.partInfo.title + " and " + part.parent.partInfo.title + " failed due to aerodynamic stresses.");
                         part.decouple(25);
+                        FXMonger.Explode(part, part.transform.position, 5);
                     }
 
                 globalCoDShift = Vector3d.Cross(force, moment) / (force_scalar * force_scalar);
@@ -435,9 +444,12 @@ namespace ferram4
                 {
                     Debug.LogWarning("FAR Error: Aerodynamic force = " + force.magnitude + " Aerodynamic moment = " + moment.magnitude + " CoD Local = " + CoDshift.magnitude + " CoD Global = " + globalCoDShift.magnitude + " " + part.partInfo.title);
                     force = moment = CoDshift = globalCoDShift = Vector3.zero;
+
+
                     return force;
                 }
-
+                double numericalControlFactor = (rb.mass * v_scalar * 0.67) / (force_scalar * TimeWarp.fixedDeltaTime);
+                force *= Math.Min(numericalControlFactor, 1);
 
                 //part.Rigidbody.AddTorque(moment);
                 return force;

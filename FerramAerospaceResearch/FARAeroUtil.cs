@@ -1159,7 +1159,12 @@ namespace ferram4
         }
 
 
-        public static double GetMachNumber(CelestialBody body, double altitude, Vector3 velocity)
+        public static double GetMachNumber(CelestialBody body, double altitude, Vector3d velocity)
+        {
+            return GetMachNumber(body, altitude, velocity.magnitude);
+        }
+        
+        public static double GetMachNumber(CelestialBody body, double altitude, double v_scalar)
         {
             double MachNumber = 0;
             if (HighLogic.LoadedSceneIsFlight)
@@ -1169,7 +1174,7 @@ namespace ferram4
                 double temp = Math.Max(0.1, currentBodyTemp + FlightGlobals.getExternalTemperature((float)altitude, body));
                 double Soundspeed = Math.Sqrt(temp * currentBodyAtm[0]);// * 401.8f;              //Calculation for speed of sound in ideal gas using air constants of gamma = 1.4 and R = 287 kJ/kg*K
 
-                MachNumber = velocity.magnitude / Soundspeed;
+                MachNumber = v_scalar / Soundspeed;
 
                 if (MachNumber < 0)
                     MachNumber = 0;
@@ -1178,20 +1183,48 @@ namespace ferram4
             return MachNumber;
         }
 
+        public static double GetFailureForceScaling(CelestialBody body, double altitude)
+        {
+            if (!body.ocean || altitude > 0)
+                return 1;
+
+            double densityMultFactor = Math.Max(-altitude, 1);
+            densityMultFactor *= UNDERWATER_DENSITY_FACTOR_MINUS_ONE * 0.05;     //base it on the density factor
+
+            return densityMultFactor;
+        }
+
+        public static double GetFailureForceScaling(Vessel vessel)
+        {
+            if (!vessel.mainBody.ocean || vessel.altitude > 0)
+                return 1;
+
+            double densityMultFactor = Math.Max(-vessel.altitude, 1);
+            densityMultFactor *= UNDERWATER_DENSITY_FACTOR_MINUS_ONE * 0.05;     //base it on the density factor
+
+            return densityMultFactor;
+        }
+
         public static double GetCurrentDensity(CelestialBody body, Vector3 worldLocation, bool densitySmoothingAtOcean = true)
+        {
+            return GetCurrentDensity(body, (Vector3d)worldLocation, densitySmoothingAtOcean);
+        }
+
+        public static double GetCurrentDensity(CelestialBody body, Vector3d worldLocation, bool densitySmoothingAtOcean = true)
         {
             UpdateCurrentActiveBody(body);
 
-            double temp = Math.Max(0.1, currentBodyTemp + FlightGlobals.getExternalTemperature(worldLocation));
+            double altitude = body.GetAltitude(worldLocation);
+
+            double temp = Math.Max(0.1, currentBodyTemp + FlightGlobals.getExternalTemperature((float)altitude, body));
 
             double pressure = FlightGlobals.getStaticPressure(worldLocation, body);
             if (pressure > 0)
                 pressure = (pressure - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
 
-            double altitude = body.GetAltitude(worldLocation);
-            if (altitude < 1 && densitySmoothingAtOcean)
+            if (altitude < 0 && densitySmoothingAtOcean)
             {
-                double densityMultFromOcean = (1 - altitude) * 0.5;
+                double densityMultFromOcean = Math.Max(-altitude, 1);
                 densityMultFromOcean *= UNDERWATER_DENSITY_FACTOR_MINUS_ONE;
                 densityMultFromOcean++;
                 pressure *= densityMultFromOcean;
@@ -1213,9 +1246,9 @@ namespace ferram4
             if (pressure > 0)
                 pressure = (pressure - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
 
-            if (altitude < 1 && densitySmoothingAtOcean)
+            if (altitude < 0 && densitySmoothingAtOcean)
             {
-                double densityMultFromOcean = (1 - altitude) * 0.5;
+                double densityMultFromOcean = Math.Max(-altitude, 1);
                 densityMultFromOcean *= UNDERWATER_DENSITY_FACTOR_MINUS_ONE;
                 densityMultFromOcean++;
                 pressure *= densityMultFromOcean;
@@ -1245,9 +1278,9 @@ namespace ferram4
 
             soundspeed = Math.Sqrt(temp * currentBodyAtm[0]); // * 401.8f;              //Calculation for speed of sound in ideal gas using air constants of gamma = 1.4 and R = 287 kJ/kg*K
 
-            if (altitude < 1 && densitySmoothingAtOcean)
+            if (altitude < 0 && densitySmoothingAtOcean)
             {
-                double densityMultFromOcean = (1 - altitude) * 0.5;
+                double densityMultFromOcean = Math.Max(-altitude, 1);
                 densityMultFromOcean *= UNDERWATER_DENSITY_FACTOR_MINUS_ONE;
                 densityMultFromOcean++;
                 pressure *= densityMultFromOcean;

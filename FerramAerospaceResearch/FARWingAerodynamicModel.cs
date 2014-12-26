@@ -431,14 +431,15 @@ namespace ferram4
                     Vector3d velocity = rb.GetPointVelocity(CurWingCentroid) + Krakensbane.GetFrameVelocity()
                         - FARWind.GetWind(FlightGlobals.currentMainBody, part, rb.position);
 
-                    double soundspeed, v_scalar = velocity.magnitude;
+                    double machNumber, v_scalar = velocity.magnitude;
 
-                    rho = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
+                    rho = FARAeroUtil.GetCurrentDensity(vessel.mainBody, part.transform.position);
+                    machNumber = GetMachNumber(vessel.mainBody, vessel.altitude, velocity);
                     if (rho > 0 && v_scalar > 0.1)
                     {
-                        double MachNumber = v_scalar / soundspeed;
                         double AoA = CalculateAoA(velocity);
-                        Vector3d force = DoCalculateForces(velocity, MachNumber, AoA);
+                        double failureForceScaling = FARAeroUtil.GetFailureForceScaling(vessel);
+                        Vector3d force = DoCalculateForces(velocity, machNumber, AoA, failureForceScaling);
 
                         rb.AddForceAtPosition(force, AerodynamicCenter);            //and apply force
                     }
@@ -465,6 +466,11 @@ namespace ferram4
         }
 
         private Vector3d DoCalculateForces(Vector3d velocity, double MachNumber, double AoA)
+        {
+            return DoCalculateForces(velocity, MachNumber, AoA, 1);
+        }
+
+        private Vector3d DoCalculateForces(Vector3d velocity, double MachNumber, double AoA, double failureForceScaling)
         {
             //This calculates the angle of attack, adjusting the part's orientation for any deflection
             //CalculateAoA();
@@ -518,13 +524,18 @@ namespace ferram4
             //This accounts for the effect of flap effects only being handled by the rearward surface
             scaledForce *= S / (S + wingInteraction.EffectiveUpstreamArea);
 
-            if (Math.Abs(Vector3d.Dot(scaledForce, forward)) > YmaxForce || Vector3d.Exclude(forward, scaledForce).magnitude > XZmaxForce)
+            if (Math.Abs(Vector3d.Dot(scaledForce, forward)) > YmaxForce * failureForceScaling || Vector3d.Exclude(forward, scaledForce).magnitude > XZmaxForce * failureForceScaling)
                 if (part.parent && !vessel.packed)
                 {
                     part.SendEvent("AerodynamicFailureStatus");
                     FlightLogger.eventLog.Add("[" + FARMathUtil.FormatTime(vessel.missionTime) + "] Joint between " + part.partInfo.title + " and " + part.parent.partInfo.title + " failed due to aerodynamic stresses.");
                     part.decouple(25);
+                    FXMonger.Explode(part, AerodynamicCenter, 1);
                 }
+
+            double numericalControlFactor = (part.rb.mass * v_scalar * 0.67) / (force.magnitude * TimeWarp.fixedDeltaTime);
+            force *= Math.Min(numericalControlFactor, 1);
+
 
             return force;
 
