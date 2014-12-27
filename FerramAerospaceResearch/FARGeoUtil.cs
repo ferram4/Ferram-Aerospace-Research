@@ -306,13 +306,13 @@ namespace ferram4
             {
                 ModuleResourceIntake i = part.Modules["ModuleResourceIntake"] as ModuleResourceIntake;
                 Transform intakeTrans = part.FindModelTransform(i.intakeTransformName);
-                if ((object) intakeTrans != null)
+                if ((object)intakeTrans != null)
                 {
                     return part.transform.InverseTransformDirection(intakeTrans.forward);
                 }
             }
             // If surface attachable, and node normal is up, check stack nodes or use forward
-            else if (part.srfAttachNode != null &&
+            if (part.srfAttachNode != null &&
                      part.attachRules.srfAttach &&
                      Mathf.Abs(part.srfAttachNode.orientation.normalized.y) > 0.9f)
             {
