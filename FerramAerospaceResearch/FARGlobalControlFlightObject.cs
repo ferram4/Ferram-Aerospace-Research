@@ -106,7 +106,7 @@ namespace ferram4
             if (!CompatibilityChecker.IsAllCompatible())
                 return;
 
-            GameEvents.onVesselLoaded.Add(FindPartsWithoutFARModel);
+            //GameEvents.onVesselLoaded.Add(FindPartsWithoutFARModel);
             GameEvents.onVesselGoOffRails.Add(FindPartsWithoutFARModel);
             GameEvents.onVesselWasModified.Add(UpdateFARPartModules);
             GameEvents.onVesselCreate.Add(UpdateFARPartModules);
@@ -294,7 +294,6 @@ namespace ferram4
                 FARFlightButtonBlizzy.Destroy();
 
             //GameEvents.onVesselLoaded.Remove(FindPartsWithoutFARModel);
-            GameEvents.onVesselLoaded.Remove(FindPartsWithoutFARModel);
             GameEvents.onVesselGoOffRails.Remove(FindPartsWithoutFARModel);
             GameEvents.onVesselWasModified.Remove(UpdateFARPartModules);
             GameEvents.onVesselCreate.Remove(UpdateFARPartModules);

@@ -405,12 +405,12 @@ namespace ferram4
             List<Transform> returnList = new List<Transform>();
 
             //Very hacky, but is necessary for root parts with broken transforms
-            if (p.transform == null)
+            if (p.partTransform == null)
             {
                 bool root = p == p.vessel.rootPart;
                 //Debug.Log("This one is busted: " + p.partInfo.title + " root? " + root);
-                //if (root)
-                //    p.transform = p.vessel.vesselTransform;
+                if (root)
+                    p.partTransform = p.vessel.vesselTransform;
             } 
             
             Transform[] propellersToIgnore = IgnoreModelTransformArray(p);
