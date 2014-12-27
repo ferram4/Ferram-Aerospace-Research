@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.14.5.1
+Ferram Aerospace Research v0.14.6
 =========================
 
 Aerodynamics model for Kerbal Space Program
@@ -149,6 +149,15 @@ For both of these, set MaxDrag and MinDrag to 0
 
 CHANGELOG
 =======================================================
+
+0.14.6V------------------------------------  
+Features:  
+Modified skin friction variation with M and Re to closer to that expected by using the Knudsen number
+Changed saving and loading method to allow better behavior when settings need to be cleaned during updates, especially for automated installs
+
+Bugfixes:
+
+
 
 0.14.5.1V------------------------------------  
 Features:  

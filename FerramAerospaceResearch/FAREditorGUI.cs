@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.5.1
+Ferram Aerospace Research v0.14.6
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -242,7 +242,7 @@ namespace ferram4
 
             if (!minimize && !hide)
             {
-                windowPos = GUILayout.Window(256, windowPos, ActualGUI, "FAR Control & Analysis Systems, v0.14.5.1");
+                windowPos = GUILayout.Window(256, windowPos, ActualGUI, "FAR Control & Analysis Systems, v0.14.6");
                 if (AnalysisHelp)
                 {
                     analysisHelpPos = GUILayout.Window(258, analysisHelpPos, AnalysisHelpGUI, "FAR Analysis Systems Help", GUILayout.Width(400), GUILayout.Height(Screen.height / 3));
@@ -996,7 +996,6 @@ namespace ferram4
                     alpha = Convert.ToSingle(alpha_str) * 180 / Mathf.PI;
                     beta = Convert.ToSingle(beta_str);
                     phi = Convert.ToSingle(phi_str);
-                    CalculateStabilityDerivs(vel, q, Mach, alpha, beta, phi);       //FIX ME; this provides a solution, but the sim should be redone to find why it needs to be repeated to converge
                     MOI_stabDerivs = CalculateStabilityDerivs(vel, q, Mach, alpha, beta, phi);
                     u0 = vel;
                 }

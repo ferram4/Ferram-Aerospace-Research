@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.5.1
+Ferram Aerospace Research v0.14.6
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -108,23 +108,7 @@ namespace ferram4
 
                 if (w is FARControllableSurface)
                     (w as FARControllableSurface).SetControlStateEditor(CoM, vel, (float)pitch, 0, 0, flap_setting, spoilersDeployed);
-
-                w.ComputeClCdEditor(vel, M);
-            }
-            
-            for (int i = 0; i < FARAeroUtil.CurEditorWings.Count; i++)
-            {
-                FARWingAerodynamicModel w = FARAeroUtil.CurEditorWings[i];
-                if (w.isShielded)
-                    continue;
-
-                if (clear)
-                    w.EditorClClear(reset_stall);
-
-                Vector3d relPos = w.GetAerodynamicCenter() - CoM;
-
-                Vector3d vel = velocity + Vector3d.Cross(AngVel, relPos);
-
+                
                 w.ComputeClCdEditor(vel, M);
 
                 double tmpCl = w.GetCl() * w.S;

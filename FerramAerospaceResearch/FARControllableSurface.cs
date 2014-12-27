@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.5.1
+Ferram Aerospace Research v0.14.6
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -471,7 +471,7 @@ namespace ferram4
         }
 
         /// <summary>
-        /// This animates a deflection;
+        /// This animates a deflection based on AoAoffset
         /// </summary>
         protected void DeflectionAnimation()
         {
@@ -546,7 +546,7 @@ namespace ferram4
                     AoAcurrentFlap += brake ? maxdeflectFlap * flapLocation : 0;
                 }
                 AoAdesiredFlap = AoAcurrentFlap;
-                AoAoffset = AoAdesiredFlap + AoAdesiredControl;
+                AoAoffset = AoAcurrentFlap + AoAcurrentControl;
                 DeflectionAnimation();
             }
         }

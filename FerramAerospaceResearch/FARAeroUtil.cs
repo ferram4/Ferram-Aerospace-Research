@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.5.1
+Ferram Aerospace Research v0.14.6
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -1337,7 +1337,7 @@ namespace ferram4
                 double invSqrtRe = 1 / Math.Sqrt(Re);
                 double lamCf = 1.328 * invSqrtRe;
 
-                double rarefiedGasVal = machNumber * invSqrtRe;
+                double rarefiedGasVal = machNumber / Re;
                 if(rarefiedGasVal > 0.01)
                 {
                     return lamCf + (0.25 - lamCf) * (rarefiedGasVal - 0.01) / (0.99 + rarefiedGasVal);
