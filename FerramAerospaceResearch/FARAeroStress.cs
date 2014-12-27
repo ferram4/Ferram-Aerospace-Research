@@ -52,7 +52,7 @@ namespace ferram4
 
         public static void SaveCustomStressTemplates()
         {
-            ConfigNode node = new ConfigNode("@FARAeroStress[default]:FINAL");
+            ConfigNode node = new ConfigNode("@FARAeroStress[default]:FOR[FerramAerospaceResearch]");
             int i = 0;
             node.AddNode(new ConfigNode("!FARPartStressTemplate,*"));
 

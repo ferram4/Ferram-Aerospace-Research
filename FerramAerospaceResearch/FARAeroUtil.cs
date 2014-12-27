@@ -38,6 +38,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using UnityEngine;
 
 namespace ferram4
@@ -78,7 +79,7 @@ namespace ferram4
 
         public static void SaveCustomAeroDataToConfig()
         {
-            ConfigNode node = new ConfigNode("@FARAeroData[default]:FINAL");
+            ConfigNode node = new ConfigNode("@FARAeroData[default]:FOR[FerramAerospaceResearch]");
             node.AddValue("%areaFactor", areaFactor);
             node.AddValue("%attachNodeDiameterFactor", attachNodeRadiusFactor * 2);
             node.AddValue("%incompressibleRearAttachDrag", incompressibleRearAttachDrag);
@@ -215,13 +216,15 @@ namespace ferram4
                 }
             }
 
-            
-
             SetDefaultValuesIfNoValuesLoaded();
 
             FARBasicDragModel.SetBluntBodyParams(radiusOfCurvatureBluntBody);
           
             loaded = true;
+
+            string forceUpdatePath = KSPUtil.ApplicationRootPath.Replace("\\", "/") + "GameData/FerramAerospaceResearch/FARForceDataUpdate.cfg";
+            if (File.Exists(forceUpdatePath))
+                File.Delete(forceUpdatePath);
 
             //Get Kerbin
             currentBodyAtm = bodyAtmosphereConfiguration[1];

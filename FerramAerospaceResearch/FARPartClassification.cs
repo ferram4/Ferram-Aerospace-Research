@@ -58,7 +58,7 @@ namespace ferram4
 
         public static void SaveCustomClassificationTemplates()
         {
-            ConfigNode node = new ConfigNode("@FARPartClassification[Default]:FINAL");
+            ConfigNode node = new ConfigNode("@FARPartClassification[Default]:FOR[FerramAerospaceResearch]");
             node.AddNode(new ConfigNode("!GreebleTitle"));
             node.AddNode(StringOverrideNode(greebleTitles, "GreebleTitle", "titleContains"));
             node.AddNode(new ConfigNode("!GreebleModule"));

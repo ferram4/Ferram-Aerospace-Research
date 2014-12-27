@@ -1982,7 +1982,7 @@ namespace ferram4
 
         public static void SaveCustomColors()
         {
-            ConfigNode node = new ConfigNode("@FARGUIColors[Default]:FINAL");
+            ConfigNode node = new ConfigNode("@FARGUIColors[Default]:FOR[FerramAerospaceResearch]");
             node.AddValue("ClColor", clColor.ToString());
             node.AddValue("CdColor", cdColor.ToString());
             node.AddValue("CmColor", cmColor.ToString());
