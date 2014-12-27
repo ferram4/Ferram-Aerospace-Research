@@ -212,7 +212,6 @@ namespace ferram4
                 if (assembly.assembly.GetName().Name == "AJE")
                 {
                     AJELoaded = true;
-                    return;
                 }
             }
 
