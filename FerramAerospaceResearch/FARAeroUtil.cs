@@ -817,9 +817,9 @@ namespace ferram4
             p.dragModelType = "override";
             p.angularDrag = 0;
 
-            if (p.Modules.Contains("ModuleResourceIntake"))
+            /*if (p.Modules.Contains("ModuleResourceIntake"))
                 if (AJELoaded)
-                    return;
+                    return;*/
 
 
             p.AddModule("FARBasicDragModel");
@@ -896,7 +896,13 @@ namespace ferram4
                 double YmaxForce = double.MaxValue;
                 double XZmaxForce = double.MaxValue;
 
-                double Cn1, Cn2, cutoffAngle, cosCutoffAngle = 0;
+                double Cn1, Cn2, intakeCd = 0, cutoffAngle, cosCutoffAngle = 0;
+
+                ModuleResourceIntake intake = p.GetComponent<ModuleResourceIntake>();
+                if(intake != null)
+                {
+                    intakeCd = GetIntakeDragEstimate(intake, data.area);
+                }
 
                 if (title.Contains("truss") || title.Contains("strut") || title.Contains("railing") || p.Modules.Contains("ModuleWheel"))
                 {
@@ -930,9 +936,9 @@ namespace ferram4
 
                         double axialPressureDrag = PressureDragDueToTaperingConic(data.finenessRatio, data.taperRatio, data.crossSectionalArea, data.area);
 
-                        TempCurve1.Add(-1, (float)axialPressureDrag);
-                        TempCurve1.Add(0, (float)Cn2);
-                        TempCurve1.Add(1, (float)axialPressureDrag);
+                        TempCurve1.Add(-1, (float)axialPressureDrag, 0, 0);
+                        TempCurve1.Add(0, (float)Math.Max(Cn2, intakeCd), 0, 0);
+                        TempCurve1.Add(1, (float)axialPressureDrag, 0, 0);
 
 
                         TempCurve2.Add((float)cosCutoffAngle, 0, (float)Cn1, 0);
@@ -962,7 +968,7 @@ namespace ferram4
                         double axialPressureDrag = PressureDragDueToTaperingConic(data.finenessRatio, 1 / data.taperRatio, data.crossSectionalArea, data.area);
 
                         TempCurve1.Add(-1, (float)axialPressureDrag, 0, 0);
-                        TempCurve1.Add(0, (float)Cn2, 0, 0);
+                        TempCurve1.Add(0, (float)Math.Max(Cn2, intakeCd), 0, 0);
                         TempCurve1.Add(1, (float)axialPressureDrag, 0, 0);
 
 
@@ -1015,6 +1021,11 @@ namespace ferram4
             }
         }
 
+        private static double GetIntakeDragEstimate(ModuleResourceIntake intake, double refArea)
+        {
+            double dragArea = 0.3819719 * 158.859927382939 * intake.area;       //this is based on a Cd of 0.3819719 for a ref area of 158.859927382939 per unit intake.area
+            return dragArea / refArea;
+        }
 
         //Approximate drag of a tapering conic body
         public static double PressureDragDueToTaperingConic(double finenessRatio, double taperRatio, double crossSectionalArea, double surfaceArea)

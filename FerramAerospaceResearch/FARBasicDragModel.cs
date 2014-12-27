@@ -435,7 +435,8 @@ namespace ferram4
                         part.SendEvent("AerodynamicFailureStatus");
                         FlightLogger.eventLog.Add("[" + FARMathUtil.FormatTime(vessel.missionTime) + "] Joint between " + part.partInfo.title + " and " + part.parent.partInfo.title + " failed due to aerodynamic stresses.");
                         part.decouple(25);
-                        FXMonger.Explode(part, part.transform.position, 5);
+                        if (FARDebugValues.aeroFailureExplosions)
+                            FXMonger.Explode(part, GetCoDWithoutMomentShift(), 5);
                     }
 
                 globalCoDShift = Vector3d.Cross(force, moment) / (force_scalar * force_scalar);

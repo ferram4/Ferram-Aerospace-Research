@@ -530,7 +530,8 @@ namespace ferram4
                     part.SendEvent("AerodynamicFailureStatus");
                     FlightLogger.eventLog.Add("[" + FARMathUtil.FormatTime(vessel.missionTime) + "] Joint between " + part.partInfo.title + " and " + part.parent.partInfo.title + " failed due to aerodynamic stresses.");
                     part.decouple(25);
-                    FXMonger.Explode(part, AerodynamicCenter, 1);
+                    if(FARDebugValues.aeroFailureExplosions)
+                        FXMonger.Explode(part, AerodynamicCenter, 1);
                 }
 
             double numericalControlFactor = (part.rb.mass * v_scalar * 0.67) / (force.magnitude * TimeWarp.fixedDeltaTime);

@@ -445,6 +445,7 @@ namespace ferram4
             GUILayout.BeginHorizontal();
             GUILayout.Label("Other Options"); // DaMichel: put it above the toolbar toggle
             GUILayout.BeginVertical();
+            FARDebugValues.aeroFailureExplosions = GUILayout.Toggle(FARDebugValues.aeroFailureExplosions, "Aero Failures Create Explosions", thisStyle);
             if (ToolbarManager.ToolbarAvailable)
             {
                 FARDebugValues.useBlizzyToolbar = GUILayout.Toggle(FARDebugValues.useBlizzyToolbar, "Use Blizzy78 Toolbar instead of Stock AppManager", thisStyle);
@@ -529,6 +530,7 @@ namespace ferram4
             FARDebugValues.allowStructuralFailures = Convert.ToBoolean(config.GetValue("allowStructuralFailures", "true"));
 
             FARDebugValues.useBlizzyToolbar = Convert.ToBoolean(config.GetValue("useBlizzyToolbar", "false"));
+            FARDebugValues.aeroFailureExplosions = Convert.ToBoolean(config.GetValue("aeroFailureExplosions", "true"));
 
             FARAeroStress.LoadStressTemplates();
             FARPartClassification.LoadClassificationTemplates();
@@ -551,6 +553,7 @@ namespace ferram4
             config.SetValue("allowStructuralFailures", FARDebugValues.allowStructuralFailures.ToString());
 
             config.SetValue("useBlizzyToolbar", FARDebugValues.useBlizzyToolbar.ToString());
+            config.SetValue("aeroFailureExplosions", FARDebugValues.aeroFailureExplosions.ToString());
 
             FARDebugValues.useBlizzyToolbar &= ToolbarManager.ToolbarAvailable;
 
@@ -588,5 +591,6 @@ namespace ferram4
         public static bool allowStructuralFailures = true;
 
         public static bool useBlizzyToolbar = false;
+        public static bool aeroFailureExplosions = true;
     }
 }
