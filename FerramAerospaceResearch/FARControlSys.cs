@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.4
+Ferram Aerospace Research v0.14.6
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -55,8 +55,9 @@ namespace ferram4
 
 
         public double MachNumber;
+        public double reynoldsNumber;
 
-        private static string mach;
+        private static string mach_str;
 
         public static double activeMach
         {
@@ -329,7 +330,7 @@ namespace ferram4
             }
 
             double soundspeed;
-            rho = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
+            rho = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed, false);
             double realToStockDensityRatio = vessel.atmDensity / rho;
 
             bool zero_q = FARMathUtil.Approximately(0, q);
@@ -340,6 +341,9 @@ namespace ferram4
 
             //stuff that needs to iterate through all the vessel's parts
             int iCount = vessel.parts.Count;
+            double lengthScale = 0;
+            int k = 0;
+            
             for (int i = 0; i < iCount; i++)
             {
                 Part p = vessel.parts[i];
@@ -357,6 +361,7 @@ namespace ferram4
                 mass += p.mass;
 
                 int jCount = p.Modules.Count;
+
                 for (int j = 0; j < jCount; j++)
                 {
                     PartModule m = p.Modules[j];
@@ -387,6 +392,8 @@ namespace ferram4
                             DragArea += w.S * w.GetCd();
                             LiftArea += w.S * w.Cl * Vector3.Dot(w.GetLiftDirection(), lift_axis);
                             stallArea += w.S * w.GetStall();
+                            lengthScale += w.GetMAC();
+                            k++;
                             break;
                         }
                         else if (m is FARBasicDragModel)
@@ -395,6 +402,8 @@ namespace ferram4
                             DragArea += d.S * d.Cd;
                             LiftArea += d.S * d.Cl * Vector3.Dot(d.GetLiftDirection(), lift_axis);
                             otherArea += d.S;
+                            lengthScale += d.lengthScale;
+                            k++;
                             break;
                         }
                     }
@@ -402,6 +411,18 @@ namespace ferram4
                 DragArea += (p.mass + rmass) * p.maximum_drag * drag_coeff; //Resources matter here
             }
             intakeDeficit = airAvailable / airDemand;
+
+            lengthScale /= (double)k;
+
+            double temp = FlightGlobals.getExternalTemperature((float)vessel.altitude, vessel.mainBody) + FARAeroUtil.currentBodyTemp;
+
+            temp *= FARAeroUtil.ReferenceTemperatureRatio(MachNumber, 0.843);
+            double visc = FARAeroUtil.CalculateCurrentViscosity(temp);
+
+            if (vessel.staticPressure > 0)
+                reynoldsNumber = airDensity * vessel.srfSpeed * lengthScale / visc;
+            else
+                reynoldsNumber = 0;
 
             TSFC = 0;
 
@@ -1012,7 +1033,7 @@ namespace ferram4
 
                 GUILayout.BeginVertical(GUILayout.Height(100));
                 GUILayout.BeginHorizontal();
-                GUILayout.Box("Mach Number: " + mach, mySty, GUILayout.ExpandWidth(true));
+                GUILayout.Box("Mach: " + mach_str + "   Reynolds: " + reynoldsNumber.ToString("e2"), mySty, GUILayout.ExpandWidth(true));
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
                 if (DensityRelative)
@@ -1190,18 +1211,11 @@ namespace ferram4
             TabLabelStyle.alignment = TextAnchor.UpperCenter;
 
             tintForCl = GUILayout.Toggle(tintForCl, "Tint Cl");
-            string tmp = fullySaturatedCl.ToString();
-            FARGUIUtils.TextEntryField("Cl For Full Tint:", 80, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            fullySaturatedCl = double.Parse(tmp);
+            fullySaturatedCl = FARGUIUtils.TextEntryForDouble("Cl For Full Tint:", 80, fullySaturatedCl);
 
             
             tintForCd = GUILayout.Toggle(tintForCd, "Tint Cd");
-
-            tmp = fullySaturatedCd.ToString();
-            FARGUIUtils.TextEntryField("Cd For Full Tint:", 80, ref tmp);
-                        tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            fullySaturatedCd = double.Parse(tmp);
+            fullySaturatedCd = FARGUIUtils.TextEntryForDouble("Cd For Full Tint:", 80, fullySaturatedCd);
 
             tintForStall = GUILayout.Toggle(tintForStall, "Tint Stall");
 
@@ -1220,7 +1234,7 @@ namespace ferram4
 
             FlightUIController UI = FlightUIController.fetch;
 
-            if ((object)activeControlSys == null)
+            if ((object)activeControlSys == null || UI.spdCaption == null || UI.speed == null)
                 return;
 
             Vessel activeVessel = activeControlSys.vessel;
@@ -1248,26 +1262,29 @@ namespace ferram4
                 UI.spdCaption.text = "Surface";
                 UI.speed.text = (activeVessel.srfSpeed * unitConversion).ToString("F1") + unitString;
             }
-            else if (velMode == SurfaceVelMode.IAS)
+            else
             {
-                UI.spdCaption.text = "IAS";
-                speedometerCaption = "IAS: ";
-                double densityRatio = (FARAeroUtil.GetCurrentDensity(activeVessel.mainBody, activeVessel.altitude) * invKerbinSLDensity);
-                double pressureRatio = FARAeroUtil.StagnationPressureCalc(MachNumber);
-                UI.speed.text = (activeVessel.srfSpeed * Math.Sqrt(densityRatio) * pressureRatio * unitConversion).ToString("F1") + unitString;
-            }
-            else if (velMode == SurfaceVelMode.EAS)
-            {
-                UI.spdCaption.text = "EAS";
-                speedometerCaption = "EAS: ";
-                double densityRatio = (FARAeroUtil.GetCurrentDensity(activeVessel.mainBody, activeVessel.altitude) * invKerbinSLDensity);
-                UI.speed.text = (activeVessel.srfSpeed * Math.Sqrt(densityRatio) * unitConversion).ToString("F1") + unitString;
-            }
-            else// if (velMode == SurfaceVelMode.MACH)
-            {
-                UI.spdCaption.text = "Mach";
-                speedometerCaption = "Mach: ";
-                UI.speed.text = mach;
+                if (velMode == SurfaceVelMode.IAS)
+                {
+                    UI.spdCaption.text = "IAS";
+                    speedometerCaption = "IAS: ";
+                    double densityRatio = (FARAeroUtil.GetCurrentDensity(activeVessel.mainBody, activeVessel.altitude, false) * invKerbinSLDensity);
+                    double pressureRatio = FARAeroUtil.StagnationPressureCalc(MachNumber);
+                    UI.speed.text = (activeVessel.srfSpeed * Math.Sqrt(densityRatio) * pressureRatio * unitConversion).ToString("F1") + unitString;
+                }
+                else if (velMode == SurfaceVelMode.EAS)
+                {
+                    UI.spdCaption.text = "EAS";
+                    speedometerCaption = "EAS: ";
+                    double densityRatio = (FARAeroUtil.GetCurrentDensity(activeVessel.mainBody, activeVessel.altitude, false) * invKerbinSLDensity);
+                    UI.speed.text = (activeVessel.srfSpeed * Math.Sqrt(densityRatio) * unitConversion).ToString("F1") + unitString;
+                }
+                else// if (velMode == SurfaceVelMode.MACH)
+                {
+                    UI.spdCaption.text = "Mach";
+                    speedometerCaption = "Mach: ";
+                    UI.speed.text = mach_str;
+                }
             }
 
             /* DaMichel: cache references to current IVA speedometers.
@@ -1302,7 +1319,7 @@ namespace ferram4
             GUI.skin = HighLogic.Skin;
             if (this == activeControlSys && !minimize && !hide)
             {
-                windowPos = GUILayout.Window(250, windowPos, WindowGUI, "FAR Flight Systems, v0.14.4", GUILayout.MinWidth(150));
+                windowPos = GUILayout.Window(250, windowPos, WindowGUI, "FAR Flight Systems, v0.14.6", GUILayout.MinWidth(150));
                 if (AutopilotWindow)
                 {
                     AutoPilotWindowPos = GUILayout.Window(251, AutoPilotWindowPos, AutopilotWindowGUI, "FAR Flight Assistance System Options", GUILayout.MinWidth(330));
@@ -1334,6 +1351,7 @@ namespace ferram4
 
         public static void SetActiveControlSys(Vessel v)
         {
+            speedometers = null;        //force update of internal speedometer objects
             for (int i = 0; i < v.Parts.Count; i++)
             {
                 Part p = v.Parts[i];
@@ -1354,7 +1372,7 @@ namespace ferram4
             OnVesselPartsChange += () => {
                 speedometers = null; //DaMichel: needs to be cleared when the craft changes. New cockpit internals might be added.
             };
-            invKerbinSLDensity = 1 / FARAeroUtil.GetCurrentDensity(FlightGlobals.Bodies[1], 0);
+            invKerbinSLDensity = 1 / FARAeroUtil.GetCurrentDensity(FlightGlobals.Bodies[1], 0, false);
 
             stabilityAugCallback = new FlightInputCallback(StabilityAugmentation);
             vessel.OnFlyByWire += stabilityAugCallback;
@@ -1393,7 +1411,10 @@ namespace ferram4
                         if (vessel.staticPressure > 0)
                         {
                             double soundspeed;
-                            airDensity = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
+                            airDensity = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed, false);
+
+                            //this.vessel.srf_velocity += FARWind.GetWind(this.vessel.mainBody, part, vessel.transform.position);
+
                             MachNumber = this.vessel.srf_velocity.magnitude / soundspeed;
 
                             if (DensityRelative)
@@ -1404,12 +1425,12 @@ namespace ferram4
 
                             q = airDensity * vessel.srf_velocity.sqrMagnitude * 0.5;
 
-                            mach = MachNumber.ToString("F3");
+                            mach_str = MachNumber.ToString("F3");
                         }
                         else
                         {
                             q = 0;
-                            mach = "0.000";
+                            mach_str = "0.000";
                             airDensity_str = "0.000";
                         }
 
@@ -1429,11 +1450,10 @@ namespace ferram4
              * Otherwise i got NREs while trying to access the cockpit internals
              * at the point where i think the vessel got unloaded. This seems
              * to have fixed the issue. */
-            if (part && FlightGlobals.ready)
+            if (part && FlightGlobals.ready && activeControlSys == this)
             {
-                if (activeControlSys == this) // only need to do this once?!
-                    ChangeSurfVelocity(velMode);
-                if (activeControlSys == this && TimeWarp.CurrentRate <= 4)
+                ChangeSurfVelocity(velMode);
+                if (TimeWarp.CurrentRate <= 4)
                     GetFlightCondition();
             }
         }

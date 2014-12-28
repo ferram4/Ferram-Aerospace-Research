@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.4
+Ferram Aerospace Research v0.14.6
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -208,7 +208,7 @@ namespace ferram4
                 else
                 {
                     b = d as FARBaseAerodynamics;
-                    relPos += p.partTransform.TransformDirection(d.CenterOfDrag) + p.partTransform.position;       //No attach node shifting with this
+                    relPos += p.transform.TransformDirection(d.CenterOfDrag) + p.transform.position;       //No attach node shifting with this
                 }
 
                 relPos = this.part.transform.worldToLocalMatrix.MultiplyVector(relPos);
@@ -220,8 +220,8 @@ namespace ferram4
 
                     Vector3 fairingCenter = maxBoundVec + minBoundVec;
                     fairingCenter *= 0.5f;
-                    fairingCenter = this.part.partTransform.localToWorldMatrix.MultiplyVector(fairingCenter);
-                    fairingCenter += this.part.partTransform.position;
+                    fairingCenter = this.part.transform.localToWorldMatrix.MultiplyVector(fairingCenter);
+                    fairingCenter += this.part.transform.position;
 
                     if (relPos.x < maxBoundVec.x && relPos.y < maxBoundVec.y && relPos.z < maxBoundVec.z && relPos.x > minBoundVec.x && relPos.y > minBoundVec.y && relPos.z > minBoundVec.z)
                     {
@@ -231,7 +231,7 @@ namespace ferram4
                         if (w)
                             origin = w.WingCentroid();
                         else
-                            origin = p.partTransform.position;
+                            origin = p.transform.position;
 
                         vecFromPToPFCenter = fairingCenter - origin;
 

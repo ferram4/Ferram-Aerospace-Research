@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.4
+Ferram Aerospace Research v0.14.6
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -52,7 +52,7 @@ namespace ferram4
 
         public static void SaveCustomStressTemplates()
         {
-            ConfigNode node = new ConfigNode("@FARAeroStress[default]:FINAL");
+            ConfigNode node = new ConfigNode("@FARAeroStress[default]:FOR[FerramAerospaceResearch]");
             int i = 0;
             node.AddNode(new ConfigNode("!FARPartStressTemplate,*"));
 
@@ -263,13 +263,13 @@ namespace ferram4
                             return false;
                         }
 
-                    Transform selfTransform = p.partTransform;
+                    Transform selfTransform = p.transform;
                     if ((object)selfTransform == null)
                     {
                         selfTransform = p.vessel.vesselTransform;
                     }
 
-                    Transform parentTransform = p.parent.partTransform;
+                    Transform parentTransform = p.parent.transform;
                     if ((object)parentTransform == null)
                     {
                         parentTransform = p.vessel.vesselTransform;

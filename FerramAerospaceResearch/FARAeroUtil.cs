@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.4
+Ferram Aerospace Research v0.14.6
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -38,6 +38,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using UnityEngine;
 
 namespace ferram4
@@ -58,33 +59,41 @@ namespace ferram4
         public static double attachNodeRadiusFactor;
         public static double incompressibleRearAttachDrag;
         public static double sonicRearAdditionalAttachDrag;
+        public static double radiusOfCurvatureBluntBody;
         public static double massPerWingAreaSupported;
         public static double massStressPower;
         public static bool AJELoaded;
 
-        public static Dictionary<int, Vector3d> bodyAtmosphereConfiguration = null;
+        public static Dictionary<int, double[]> bodyAtmosphereConfiguration = null;
         public static int prevBody = -1;
-        public static Vector3d currentBodyAtm = new Vector3d();
+        public static double[] currentBodyAtm = new double[5];
         public static double currentBodyTemp = 273.15;
         public static double currentBodyAtmPressureOffset = 0;
 
         public static bool loaded = false;
+        
+        //Based on ratio of density of water to density of air at SL
+        private const double UNDERWATER_DENSITY_FACTOR_MINUS_ONE = 814.51020408163265306122448979592;
+        //Standard Reynolds number for transition from laminar to turbulent flow
+        private const double TRANSITION_REYNOLDS_NUMBER = 5e5;
 
         public static void SaveCustomAeroDataToConfig()
         {
-            ConfigNode node = new ConfigNode("@FARAeroData[default]:FINAL");
+            ConfigNode node = new ConfigNode("@FARAeroData[default]:FOR[FerramAerospaceResearch]");
             node.AddValue("%areaFactor", areaFactor);
             node.AddValue("%attachNodeDiameterFactor", attachNodeRadiusFactor * 2);
             node.AddValue("%incompressibleRearAttachDrag", incompressibleRearAttachDrag);
             node.AddValue("%sonicRearAdditionalAttachDrag", sonicRearAdditionalAttachDrag);
+            node.AddValue("%radiusOfCurvatureBluntBody", radiusOfCurvatureBluntBody); 
             node.AddValue("%massPerWingAreaSupported", massPerWingAreaSupported);
             node.AddValue("%massStressPower", massStressPower);
             node.AddValue("%ctrlSurfTimeConstant", FARControllableSurface.timeConstant);
             node.AddValue("%ctrlSurfTimeConstantFlap", FARControllableSurface.timeConstantFlap);
+            node.AddValue("%ctrlSurfTimeConstantSpoiler", FARControllableSurface.timeConstantSpoiler);
 
             node.AddNode(new ConfigNode("!BodyAtmosphericData,*"));
 
-            foreach (KeyValuePair<int, Vector3d> pair in bodyAtmosphereConfiguration)
+            foreach (KeyValuePair<int, double[]> pair in bodyAtmosphereConfiguration)
             {
                 node.AddNode(CreateAtmConfigurationConfigNode(pair.Key, pair.Value));
             }
@@ -94,14 +103,16 @@ namespace ferram4
             saveNode.Save(KSPUtil.ApplicationRootPath.Replace("\\", "/") + "GameData/FerramAerospaceResearch/CustomFARAeroData.cfg");
         }
 
-        private static ConfigNode CreateAtmConfigurationConfigNode(int bodyIndex, Vector3d atmProperties)
+        private static ConfigNode CreateAtmConfigurationConfigNode(int bodyIndex, double[] atmProperties)
         {
             ConfigNode node = new ConfigNode("BodyAtmosphericData");
             node.AddValue("index", bodyIndex);
 
-            double gasMolecularWeight = 8314.5 / atmProperties.z;
-            node.AddValue("specHeatRatio", atmProperties.y);
+            double gasMolecularWeight = 8314.5 / atmProperties[2];
+            node.AddValue("specHeatRatio", atmProperties[1]);
             node.AddValue("gasMolecularWeight", gasMolecularWeight);
+            node.AddValue("viscosityAtReferenceTemp", atmProperties[3]);
+            node.AddValue("referenceTemp", atmProperties[4]);
 
             return node;
         }
@@ -128,6 +139,9 @@ namespace ferram4
                 if (node.HasValue("sonicRearAdditionalAttachDrag"))
                     double.TryParse(node.GetValue("sonicRearAdditionalAttachDrag"), out sonicRearAdditionalAttachDrag);
 
+                if (node.HasValue("radiusOfCurvatureBluntBody"))
+                    double.TryParse(node.GetValue("radiusOfCurvatureBluntBody"), out radiusOfCurvatureBluntBody);
+
                 if (node.HasValue("massPerWingAreaSupported"))
                     double.TryParse(node.GetValue("massPerWingAreaSupported"), out massPerWingAreaSupported);
 
@@ -140,22 +154,34 @@ namespace ferram4
                 if (node.HasValue("ctrlSurfTimeConstantFlap"))
                     double.TryParse(node.GetValue("ctrlSurfTimeConstantFlap"), out FARControllableSurface.timeConstantFlap);
 
-                FARAeroUtil.bodyAtmosphereConfiguration = new Dictionary<int, Vector3d>();
+                if (node.HasValue("ctrlSurfTimeConstantSpoiler"))
+                    double.TryParse(node.GetValue("ctrlSurfTimeConstantSpoiler"), out FARControllableSurface.timeConstantSpoiler);
+
+                FARAeroUtil.bodyAtmosphereConfiguration = new Dictionary<int, double[]>();
                 foreach (ConfigNode bodyProperties in node.GetNodes("BodyAtmosphericData"))
                 {
-                    if (bodyProperties == null || !bodyProperties.HasValue("index") || !bodyProperties.HasValue("specHeatRatio") || !bodyProperties.HasValue("gasMolecularWeight"))
+                    if (bodyProperties == null || !bodyProperties.HasValue("index") || !bodyProperties.HasValue("specHeatRatio")
+                        || !bodyProperties.HasValue("gasMolecularWeight") || !bodyProperties.HasValue("viscosityAtReferenceTemp")
+                        || !bodyProperties.HasValue("referenceTemp"))
                         continue;
 
-                    Vector3d Rgamma_and_gamma = new Vector3d();
+                    double[] Rgamma_and_gamma = new double[5];
                     double tmp;
                     double.TryParse(bodyProperties.GetValue("specHeatRatio"), out tmp);
-                    Rgamma_and_gamma.y = tmp;
+                    Rgamma_and_gamma[1] = tmp;
 
                     double.TryParse(bodyProperties.GetValue("gasMolecularWeight"), out tmp);
 
-                    Rgamma_and_gamma.z = 8.3145 * 1000 / tmp;
-                    Rgamma_and_gamma.x = Rgamma_and_gamma.y * Rgamma_and_gamma.z;
+                    Rgamma_and_gamma[2] = 8.3145 * 1000 / tmp;
+                    Rgamma_and_gamma[0] = Rgamma_and_gamma[1] * Rgamma_and_gamma[2];
 
+                    double.TryParse(bodyProperties.GetValue("viscosityAtReferenceTemp"), out tmp);
+
+                    Rgamma_and_gamma[3] = tmp;
+
+                    double.TryParse(bodyProperties.GetValue("referenceTemp"), out tmp);
+
+                    Rgamma_and_gamma[4] = tmp;
                     int index;
                     int.TryParse(bodyProperties.GetValue("index"), out index);
 
@@ -170,10 +196,13 @@ namespace ferram4
                 if (bodyAtmosphereConfiguration.ContainsKey(body.flightGlobalsIndex))
                     continue;
 
-                Vector3d Rgamma_and_gamma = new Vector3d();
-                Rgamma_and_gamma.y = 1.4;
-                Rgamma_and_gamma.z = 8.3145 * 1000 / 28.96;
-                Rgamma_and_gamma.x = Rgamma_and_gamma.y * Rgamma_and_gamma.z;
+                double[] Rgamma_and_gamma = new double[5];
+                Rgamma_and_gamma[1] = 1.4;
+                Rgamma_and_gamma[2] = 8.3145 * 1000 / 28.96;
+                Rgamma_and_gamma[0] = Rgamma_and_gamma[1] * Rgamma_and_gamma[2];
+
+                Rgamma_and_gamma[3] = 1.7894e-5;
+                Rgamma_and_gamma[4] = 288;
 
                 FARAeroUtil.bodyAtmosphereConfiguration.Add(body.flightGlobalsIndex, Rgamma_and_gamma);
             }
@@ -183,13 +212,18 @@ namespace ferram4
                 if (assembly.assembly.GetName().Name == "AJE")
                 {
                     AJELoaded = true;
-                    return;
                 }
             }
 
             SetDefaultValuesIfNoValuesLoaded();
+
+            FARBasicDragModel.SetBluntBodyParams(radiusOfCurvatureBluntBody);
           
             loaded = true;
+
+            string forceUpdatePath = KSPUtil.ApplicationRootPath.Replace("\\", "/") + "GameData/FerramAerospaceResearch/FARForceDataUpdate.cfg";
+            if (File.Exists(forceUpdatePath))
+                File.Delete(forceUpdatePath);
 
             //Get Kerbin
             currentBodyAtm = bodyAtmosphereConfiguration[1];
@@ -216,7 +250,7 @@ namespace ferram4
             if (M <= 0)
                 return 1;
             double value;
-            double gamma = currentBodyAtm.y;
+            double gamma = currentBodyAtm[1];
             if (M <= 1)
                 value = StagnationPressureCalc(M);
             else
@@ -240,7 +274,7 @@ namespace ferram4
         {
 
             double ratio;
-            double gamma = currentBodyAtm.y;
+            double gamma = currentBodyAtm[1];
             ratio = M * M;
             ratio *= (gamma - 1);
             ratio *= 0.5;
@@ -253,7 +287,7 @@ namespace ferram4
         public static double PressureBehindShockCalc(double M)
         {
             double ratio;
-            double gamma = currentBodyAtm.y;
+            double gamma = currentBodyAtm[1];
             ratio = M * M;
             ratio--;
             ratio *= 2 * gamma;
@@ -267,7 +301,7 @@ namespace ferram4
         public static double MachBehindShockCalc(double M)
         {
             double ratio;
-            double gamma = currentBodyAtm.y;
+            double gamma = currentBodyAtm[1];
             ratio = (gamma - 1) * 0.5;
             ratio *= M * M;
             ratio++;
@@ -291,11 +325,11 @@ namespace ferram4
 
                     maxPressureCoefficient.Add(0, 1, 0, 0);
 
-                    if (currentBodyAtm == new Vector3d())
+                    if (currentBodyAtm[0] == 0)
                     {
                         UpdateCurrentActiveBody(0, FlightGlobals.Bodies[1]);
                     }
-                    double gamma = currentBodyAtm.y;
+                    double gamma = currentBodyAtm[1];
 
                     while (M < 50)
                     {
@@ -367,7 +401,7 @@ namespace ferram4
                     double M = 1;
                     //float gamma = 1.4f;
 
-                    double gamma_ = Math.Sqrt((currentBodyAtm.y + 1) / (currentBodyAtm.y - 1));
+                    double gamma_ = Math.Sqrt((currentBodyAtm[1] + 1) / (currentBodyAtm[1] - 1));
 
                     while (M < 250)
                     {
@@ -378,7 +412,7 @@ namespace ferram4
                         nu -= Math.Atan(mach);
                         nu *= FARMathUtil.rad2deg;
 
-                        double nu_mach = (currentBodyAtm.y - 1) / 2;
+                        double nu_mach = (currentBodyAtm[1] - 1) / 2;
                         nu_mach *= M * M;
                         nu_mach++;
                         nu_mach *= M;
@@ -420,7 +454,7 @@ namespace ferram4
                     double M = 1;
                     //float gamma = 1.4f;
 
-                    double gamma_ = Math.Sqrt((currentBodyAtm.y + 1) / (currentBodyAtm.y - 1));
+                    double gamma_ = Math.Sqrt((currentBodyAtm[1] + 1) / (currentBodyAtm[1] - 1));
 
                     while (M < 250)
                     {
@@ -431,7 +465,7 @@ namespace ferram4
                         nu -= Math.Atan(mach);
                         nu *= FARMathUtil.rad2deg;
 
-                        double nu_mach = (currentBodyAtm.y - 1) / 2;
+                        double nu_mach = (currentBodyAtm[1] - 1) / 2;
                         nu_mach *= M * M;
                         nu_mach++;
                         nu_mach *= M;
@@ -478,12 +512,12 @@ namespace ferram4
                     {
                         ratio = M * M;
                         ratio--;
-                        ratio *= 2 * currentBodyAtm.y;
-                        ratio /= (currentBodyAtm.y + 1);
+                        ratio *= 2 * currentBodyAtm[1];
+                        ratio /= (currentBodyAtm[1] + 1);
                         ratio++;
 
-                        d_ratio = M * 4 * currentBodyAtm.y;
-                        d_ratio /= (currentBodyAtm.y + 1);
+                        d_ratio = M * 4 * currentBodyAtm[1];
+                        d_ratio /= (currentBodyAtm[1] + 1);
 
                         pressureBehindShock.Add((float)M, (float)ratio, (float)d_ratio, (float)d_ratio);
                         if (M < 3)
@@ -514,14 +548,14 @@ namespace ferram4
                     //float gamma = 1.4f;
                     while (M < 250)  //Calculates the pressure behind a normal shock
                     {
-                        ratio = (currentBodyAtm.y - 1) / 2;
+                        ratio = (currentBodyAtm[1] - 1) / 2;
                         ratio *= M * M;
                         ratio++;
-                        ratio /= (currentBodyAtm.y * M * M - (currentBodyAtm.y - 1) / 2);
+                        ratio /= (currentBodyAtm[1] * M * M - (currentBodyAtm[1] - 1) / 2);
 
-                        d_ratio = 4 * currentBodyAtm.y * currentBodyAtm.y * Math.Pow(M, 4) - 4 * (currentBodyAtm.y - 1) * currentBodyAtm.y * M * M + Math.Pow(currentBodyAtm.y - 1, 2);
+                        d_ratio = 4 * currentBodyAtm[1] * currentBodyAtm[1] * Math.Pow(M, 4) - 4 * (currentBodyAtm[1] - 1) * currentBodyAtm[1] * M * M + Math.Pow(currentBodyAtm[1] - 1, 2);
                         d_ratio = 1 / d_ratio;
-                        d_ratio *= 4 * (currentBodyAtm.y * M * M - (currentBodyAtm.y - 1) / 2) * (currentBodyAtm.y - 1) * M - 8 * currentBodyAtm.y * M * (1 + (currentBodyAtm.y - 1) / 2 * M * M);
+                        d_ratio *= 4 * (currentBodyAtm[1] * M * M - (currentBodyAtm[1] - 1) / 2) * (currentBodyAtm[1] - 1) * M - 8 * currentBodyAtm[1] * M * (1 + (currentBodyAtm[1] - 1) / 2 * M * M);
 
                         machBehindShock.Add((float)Math.Sqrt(M), (float)ratio, (float)d_ratio, (float)d_ratio);
                         if (M < 3)
@@ -553,16 +587,16 @@ namespace ferram4
                     while (M < 250)  //calculates stagnation pressure
                     {
                         ratio = M * M;
-                        ratio *= (currentBodyAtm.y - 1);
+                        ratio *= (currentBodyAtm[1] - 1);
                         ratio /= 2;
                         ratio++;
                         
                         d_ratio = ratio;
 
-                        ratio = Math.Pow(ratio, currentBodyAtm.y / (currentBodyAtm.y - 1));
+                        ratio = Math.Pow(ratio, currentBodyAtm[1] / (currentBodyAtm[1] - 1));
 
-                        d_ratio = Math.Pow(d_ratio, (currentBodyAtm.y / (currentBodyAtm.y - 1)) - 1);
-                        d_ratio *= M * currentBodyAtm.y;
+                        d_ratio = Math.Pow(d_ratio, (currentBodyAtm[1] / (currentBodyAtm[1] - 1)) - 1);
+                        d_ratio *= M * currentBodyAtm[1];
 
                         stagnationPressure.Add((float)M, (float)ratio, (float)d_ratio, (float)d_ratio);
                         if (M < 3)
@@ -608,8 +642,31 @@ namespace ferram4
         {
             return p.physicalSignificance == Part.PhysicalSignificance.NONE ||
                    (HighLogic.LoadedSceneIsEditor &&
-                    p != EditorLogic.startPod &&
+                    p != EditorLogic.RootPart &&
                     p.PhysicsSignificance == (int)Part.PhysicalSignificance.NONE);
+        }
+
+        private static List<FARWingAerodynamicModel> curEditorWingCache = null;
+        private static List<FARBasicDragModel> curEditorOtherDragCache = null;
+
+        public static List<FARWingAerodynamicModel> CurEditorWings
+        {
+            get
+            {
+                if (curEditorWingCache == null)
+                    curEditorWingCache = ListEditorWings(false);
+                return curEditorWingCache;
+            }
+        }
+
+        public static List<FARBasicDragModel> CurEditorOtherDrag
+        {
+            get
+            {
+                if (curEditorOtherDragCache == null)
+                    curEditorOtherDragCache = ListEditorOtherDrag(false);
+                return curEditorOtherDragCache;
+            }
         }
 
         // Parts currently added to the vehicle in the editor
@@ -641,6 +698,8 @@ namespace ferram4
         public static void ResetEditorParts()
         {
             AllEditorPartsCache = CurEditorPartsCache = null;
+            curEditorWingCache = null;
+            curEditorOtherDragCache = null;
         }
 
         // Checks if there are any ghost parts almost attached to the craft
@@ -649,15 +708,15 @@ namespace ferram4
             return HighLogic.LoadedSceneIsEditor &&
                    EditorLogic.SelectedPart != null &&
                    (EditorLogic.SelectedPart.potentialParent != null ||
-                     (move_too && EditorLogic.SelectedPart == EditorLogic.startPod));
+                     (move_too && EditorLogic.SelectedPart == EditorLogic.RootPart));
         }
 
         public static List<Part> ListEditorParts(bool include_selected)
         {
             var list = new List<Part>();
 
-            if (EditorLogic.startPod)
-                RecursePartList(list, EditorLogic.startPod);
+            if (EditorLogic.RootPart)
+                RecursePartList(list, EditorLogic.RootPart);
 
             if (include_selected && EditorAboutToAttach())
             {
@@ -671,6 +730,36 @@ namespace ferram4
             }
 
             return list;
+        }
+
+        public static List<FARWingAerodynamicModel> ListEditorWings(bool include_selected)
+        {
+            List<Part> list = CurEditorParts;
+
+            List<FARWingAerodynamicModel> wings = new List<FARWingAerodynamicModel>();
+            for(int i = 0; i < list.Count; i++)
+            {
+                Part p = list[i];
+                FARWingAerodynamicModel wing = p.GetComponent<FARWingAerodynamicModel>();
+                if ((object)wing != null)
+                    wings.Add(wing);
+            }
+            return wings;
+        }
+
+        public static List<FARBasicDragModel> ListEditorOtherDrag(bool include_selected)
+        {
+            List<Part> list = CurEditorParts;
+
+            List<FARBasicDragModel> otherDrag = new List<FARBasicDragModel>();
+            for (int i = 0; i < list.Count; i++)
+            {
+                Part p = list[i];
+                FARBasicDragModel dragModule = p.GetComponent<FARBasicDragModel>();
+                if ((object)dragModule != null)
+                    otherDrag.Add(dragModule);
+            }
+            return otherDrag;
         }
 
         private static void RecursePartList(List<Part> list, Part part)
@@ -713,11 +802,13 @@ namespace ferram4
 
         public static void AddBasicDragModule(Part p)
         {
-            //if (IsNonphysical(p))
-            //    return;
+            AddBasicDragModuleWithoutDragPropertySetup(p);
 
-            //MonoBehaviour.print(p + ": " + p.PhysicsSignificance + " " + p.physicalSignificance);
+            SetBasicDragModuleProperties(p);
+        }
 
+        public static void AddBasicDragModuleWithoutDragPropertySetup(Part p)
+        {
             if (p.Modules.Contains("KerbalEVA"))
                 return;
 
@@ -726,15 +817,12 @@ namespace ferram4
             p.dragModelType = "override";
             p.angularDrag = 0;
 
-            if (p.Modules.Contains("ModuleResourceIntake"))
+            /*if (p.Modules.Contains("ModuleResourceIntake"))
                 if (AJELoaded)
-                    return;
+                    return;*/
 
 
             p.AddModule("FARBasicDragModel");
-
-
-            SetBasicDragModuleProperties(p);
         }
 
         public static void SetBasicDragModuleProperties(Part p)
@@ -767,7 +855,7 @@ namespace ferram4
 
 
 
-                d.BuildNewDragModel(data.area * FARAeroUtil.areaFactor, TempCurve1, TempCurve2, TempCurve4, TempCurve3, data.originToCentroid, data.majorMinorAxisRatio, 0, data.taperCrossSectionArea, double.MaxValue, double.MaxValue);
+                d.BuildNewDragModel(data.area * FARAeroUtil.areaFactor, TempCurve1, TempCurve2, TempCurve4, TempCurve3, data.originToCentroid, data.majorMinorAxisRatio, 0, data.taperCrossSectionArea, double.MaxValue, double.MaxValue, Math.Sqrt(data.crossSectionalArea / Math.PI) * data.finenessRatio * FARAeroUtil.areaFactor);
                 return;
             }
             else if (FARPartClassification.IncludePartInGreeble(p, title))
@@ -792,10 +880,10 @@ namespace ferram4
                 TempCurve3.Add(-1, 0);
                 TempCurve3.Add(1, 0);
 
+                FARGeoUtil.BodyGeometryForDrag data = FARGeoUtil.CalcBodyGeometryFromMesh(p);
 
-                double area = FARGeoUtil.CalcBodyGeometryFromMesh(p).area;
 
-                d.BuildNewDragModel(area * FARAeroUtil.areaFactor, TempCurve1, TempCurve2, TempCurve4, TempCurve3, Vector3.zero, 1, 0, 0, double.MaxValue, double.MaxValue);
+                d.BuildNewDragModel(data.area * FARAeroUtil.areaFactor, TempCurve1, TempCurve2, TempCurve4, TempCurve3, Vector3.zero, 1, 0, 0, double.MaxValue, double.MaxValue, Math.Sqrt(data.crossSectionalArea / Math.PI) * data.finenessRatio * FARAeroUtil.areaFactor);
                 return;
             }
             else
@@ -808,7 +896,13 @@ namespace ferram4
                 double YmaxForce = double.MaxValue;
                 double XZmaxForce = double.MaxValue;
 
-                double Cn1, Cn2, cutoffAngle, cosCutoffAngle = 0;
+                double Cn1, Cn2, intakeCd = 0, cutoffAngle, cosCutoffAngle = 0;
+
+                ModuleResourceIntake intake = p.GetComponent<ModuleResourceIntake>();
+                if(intake != null)
+                {
+                    intakeCd = GetIntakeDragEstimate(intake, data.area);
+                }
 
                 if (title.Contains("truss") || title.Contains("strut") || title.Contains("railing") || p.Modules.Contains("ModuleWheel"))
                 {
@@ -842,9 +936,9 @@ namespace ferram4
 
                         double axialPressureDrag = PressureDragDueToTaperingConic(data.finenessRatio, data.taperRatio, data.crossSectionalArea, data.area);
 
-                        TempCurve1.Add(-1, (float)axialPressureDrag);
-                        TempCurve1.Add(0, (float)Cn2);
-                        TempCurve1.Add(1, (float)axialPressureDrag);
+                        TempCurve1.Add(-1, (float)axialPressureDrag, 0, 0);
+                        TempCurve1.Add(0, (float)Math.Max(Cn2, intakeCd), 0, 0);
+                        TempCurve1.Add(1, (float)axialPressureDrag, 0, 0);
 
 
                         TempCurve2.Add((float)cosCutoffAngle, 0, (float)Cn1, 0);
@@ -874,7 +968,7 @@ namespace ferram4
                         double axialPressureDrag = PressureDragDueToTaperingConic(data.finenessRatio, 1 / data.taperRatio, data.crossSectionalArea, data.area);
 
                         TempCurve1.Add(-1, (float)axialPressureDrag, 0, 0);
-                        TempCurve1.Add(0, (float)Cn2, 0, 0);
+                        TempCurve1.Add(0, (float)Math.Max(Cn2, intakeCd), 0, 0);
                         TempCurve1.Add(1, (float)axialPressureDrag, 0, 0);
 
 
@@ -922,11 +1016,16 @@ namespace ferram4
 
                 }
 
-                d.BuildNewDragModel(data.area * FARAeroUtil.areaFactor, TempCurve1, TempCurve2, TempCurve4, TempCurve3, data.originToCentroid, data.majorMinorAxisRatio, cosCutoffAngle, data.taperCrossSectionArea, YmaxForce, XZmaxForce);
+                d.BuildNewDragModel(data.area * FARAeroUtil.areaFactor, TempCurve1, TempCurve2, TempCurve4, TempCurve3, data.originToCentroid, data.majorMinorAxisRatio, cosCutoffAngle, data.taperCrossSectionArea, YmaxForce, XZmaxForce, Math.Sqrt(data.crossSectionalArea / Math.PI) * data.finenessRatio * FARAeroUtil.areaFactor);
                 return;
             }
         }
 
+        private static double GetIntakeDragEstimate(ModuleResourceIntake intake, double refArea)
+        {
+            double dragArea = 0.3819719 * 158.859927382939 * intake.area;       //this is based on a Cd of 0.3819719 for a ref area of 158.859927382939 per unit intake.area
+            return dragArea / refArea;
+        }
 
         //Approximate drag of a tapering conic body
         public static double PressureDragDueToTaperingConic(double finenessRatio, double taperRatio, double crossSectionalArea, double surfaceArea)
@@ -1073,7 +1172,12 @@ namespace ferram4
         }
 
 
-        public static double GetMachNumber(CelestialBody body, double altitude, Vector3 velocity)
+        public static double GetMachNumber(CelestialBody body, double altitude, Vector3d velocity)
+        {
+            return GetMachNumber(body, altitude, velocity.magnitude);
+        }
+        
+        public static double GetMachNumber(CelestialBody body, double altitude, double v_scalar)
         {
             double MachNumber = 0;
             if (HighLogic.LoadedSceneIsFlight)
@@ -1081,9 +1185,9 @@ namespace ferram4
                 //continue updating Mach Number for debris
                 UpdateCurrentActiveBody(body);
                 double temp = Math.Max(0.1, currentBodyTemp + FlightGlobals.getExternalTemperature((float)altitude, body));
-                double Soundspeed = Math.Sqrt(temp * currentBodyAtm.x);// * 401.8f;              //Calculation for speed of sound in ideal gas using air constants of gamma = 1.4 and R = 287 kJ/kg*K
+                double Soundspeed = Math.Sqrt(temp * currentBodyAtm[0]);// * 401.8f;              //Calculation for speed of sound in ideal gas using air constants of gamma = 1.4 and R = 287 kJ/kg*K
 
-                MachNumber = velocity.magnitude / Soundspeed;
+                MachNumber = v_scalar / Soundspeed;
 
                 if (MachNumber < 0)
                     MachNumber = 0;
@@ -1092,20 +1196,57 @@ namespace ferram4
             return MachNumber;
         }
 
-        public static double GetCurrentDensity(CelestialBody body, Vector3 worldLocation)
+        public static double GetFailureForceScaling(CelestialBody body, double altitude)
+        {
+            if (!body.ocean || altitude > 0)
+                return 1;
+
+            double densityMultFactor = Math.Max(-altitude, 1);
+            densityMultFactor *= UNDERWATER_DENSITY_FACTOR_MINUS_ONE * 0.05;     //base it on the density factor
+
+            return densityMultFactor;
+        }
+
+        public static double GetFailureForceScaling(Vessel vessel)
+        {
+            if (!vessel.mainBody.ocean || vessel.altitude > 0)
+                return 1;
+
+            double densityMultFactor = Math.Max(-vessel.altitude, 1);
+            densityMultFactor *= UNDERWATER_DENSITY_FACTOR_MINUS_ONE * 0.05;     //base it on the density factor
+
+            return densityMultFactor;
+        }
+
+        public static double GetCurrentDensity(CelestialBody body, Vector3 worldLocation, bool densitySmoothingAtOcean = true)
+        {
+            return GetCurrentDensity(body, (Vector3d)worldLocation, densitySmoothingAtOcean);
+        }
+
+        public static double GetCurrentDensity(CelestialBody body, Vector3d worldLocation, bool densitySmoothingAtOcean = true)
         {
             UpdateCurrentActiveBody(body);
 
-            double temp = Math.Max(0.1, currentBodyTemp + FlightGlobals.getExternalTemperature(worldLocation));
+            double altitude = body.GetAltitude(worldLocation);
+
+            double temp = Math.Max(0.1, currentBodyTemp + FlightGlobals.getExternalTemperature((float)altitude, body));
 
             double pressure = FlightGlobals.getStaticPressure(worldLocation, body);
             if (pressure > 0)
                 pressure = (pressure - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
 
-            return pressure / (temp * currentBodyAtm.z);
+            if (altitude < 0 && densitySmoothingAtOcean)
+            {
+                double densityMultFromOcean = Math.Max(-altitude, 1);
+                densityMultFromOcean *= UNDERWATER_DENSITY_FACTOR_MINUS_ONE;
+                densityMultFromOcean++;
+                pressure *= densityMultFromOcean;
+            }
+
+            return pressure / (temp * currentBodyAtm[2]);
         }
 
-        public static double GetCurrentDensity(CelestialBody body, double altitude)
+        public static double GetCurrentDensity(CelestialBody body, double altitude, bool densitySmoothingAtOcean = true)
         {
             UpdateCurrentActiveBody(body);
 
@@ -1118,11 +1259,19 @@ namespace ferram4
             if (pressure > 0)
                 pressure = (pressure - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
 
-            return pressure / (temp * currentBodyAtm.z);
+            if (altitude < 0 && densitySmoothingAtOcean)
+            {
+                double densityMultFromOcean = Math.Max(-altitude, 1);
+                densityMultFromOcean *= UNDERWATER_DENSITY_FACTOR_MINUS_ONE;
+                densityMultFromOcean++;
+                pressure *= densityMultFromOcean;
+            }
+
+            return pressure / (temp * currentBodyAtm[2]);
         }
 
         // Vessel has altitude and cached pressure, and both density and sound speed need temperature
-        public static double GetCurrentDensity(Vessel vessel, out double soundspeed)
+        public static double GetCurrentDensity(Vessel vessel, out double soundspeed, bool densitySmoothingAtOcean = true)
         {
             double altitude = vessel.altitude;
             CelestialBody body = vessel.mainBody;
@@ -1140,9 +1289,80 @@ namespace ferram4
             if (vessel.staticPressure > 0)
                 pressure = (vessel.staticPressure - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
 
-            soundspeed = Math.Sqrt(temp * currentBodyAtm.x); // * 401.8f;              //Calculation for speed of sound in ideal gas using air constants of gamma = 1.4 and R = 287 kJ/kg*K
+            soundspeed = Math.Sqrt(temp * currentBodyAtm[0]); // * 401.8f;              //Calculation for speed of sound in ideal gas using air constants of gamma = 1.4 and R = 287 kJ/kg*K
 
-            return pressure / (temp * currentBodyAtm.z);
+            if (altitude < 0 && densitySmoothingAtOcean)
+            {
+                double densityMultFromOcean = Math.Max(-altitude, 1);
+                densityMultFromOcean *= UNDERWATER_DENSITY_FACTOR_MINUS_ONE;
+                densityMultFromOcean++;
+                pressure *= densityMultFromOcean;
+            }
+
+            return pressure / (temp * currentBodyAtm[2]);
+        }
+
+        public static double CalculateCurrentViscosity(double tempInK)
+        {
+            double visc = currentBodyAtm[3];        //get viscosity
+
+            double tempRat = tempInK / currentBodyAtm[4];
+            tempRat *= tempRat * tempRat;
+            tempRat = Math.Sqrt(tempRat);
+
+            visc *= (currentBodyAtm[4] + 110);
+            visc /= (tempInK + 110);
+            visc *= tempRat;
+
+            return visc;
+        }
+
+
+        public static double ReferenceTemperatureRatio(double machNumber, double recoveryFactor)
+        {
+            double tempRatio = machNumber * machNumber;
+            tempRatio *= (currentBodyAtm[1] - 1);
+            tempRatio *= 0.5;       //account for stagnation temp
+
+            tempRatio *= recoveryFactor;    //this accounts for adiabatic wall temp ratio
+
+            tempRatio *= 0.58;
+            tempRatio += 0.032 * machNumber * machNumber;
+
+            tempRatio++;
+            return tempRatio;
+        }
+
+
+        public static double SkinFrictionDrag(double density, double lengthScale, double vel, double machNumber, double temp)
+        {
+            if (lengthScale == 0)
+                return 0;
+
+            double refTemp = temp * ReferenceTemperatureRatio(machNumber, 0.843);
+            double visc = CalculateCurrentViscosity(refTemp);
+            double Re = lengthScale * density * vel / visc;
+
+            if (Re < TRANSITION_REYNOLDS_NUMBER)
+            {
+                double invSqrtRe = 1 / Math.Sqrt(Re);
+                double lamCf = 1.328 * invSqrtRe;
+
+                double rarefiedGasVal = machNumber / Re;
+                if(rarefiedGasVal > 0.01)
+                {
+                    return lamCf + (0.25 - lamCf) * (rarefiedGasVal - 0.01) / (0.99 + rarefiedGasVal);
+                }
+                return lamCf;
+            }
+
+            double transitionFraction = TRANSITION_REYNOLDS_NUMBER / Re;
+
+            double laminarCf = 1.328 / Math.Sqrt(TRANSITION_REYNOLDS_NUMBER);
+            double turbulentCfInLaminar = 0.074 / Math.Pow(TRANSITION_REYNOLDS_NUMBER, 0.2);
+            double turbulentCf = 0.074 / Math.Pow(Re, 0.2);
+
+            return turbulentCf - transitionFraction * (turbulentCfInLaminar - laminarCf);
         }
 
         public static void UpdateCurrentActiveBody(CelestialBody body)

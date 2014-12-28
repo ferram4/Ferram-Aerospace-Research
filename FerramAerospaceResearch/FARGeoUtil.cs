@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.4
+Ferram Aerospace Research v0.14.6
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -306,10 +306,13 @@ namespace ferram4
             {
                 ModuleResourceIntake i = part.Modules["ModuleResourceIntake"] as ModuleResourceIntake;
                 Transform intakeTrans = part.FindModelTransform(i.intakeTransformName);
-                return part.transform.InverseTransformDirection(intakeTrans.forward);
+                if ((object)intakeTrans != null)
+                {
+                    return part.transform.InverseTransformDirection(intakeTrans.forward);
+                }
             }
             // If surface attachable, and node normal is up, check stack nodes or use forward
-            else if (part.srfAttachNode != null &&
+            if (part.srfAttachNode != null &&
                      part.attachRules.srfAttach &&
                      Mathf.Abs(part.srfAttachNode.orientation.normalized.y) > 0.9f)
             {
@@ -697,9 +700,18 @@ namespace ferram4
 
             double lowerR = lowerDiameters.magnitude * 0.5;
             double upperR = upperDiameters.magnitude * 0.5;
-            centroid.y = 4 * (lowerR * lowerR + lowerR * upperR + upperR * upperR);
-            centroid.y = size.y * (lowerR * lowerR + 2 * lowerR * upperR + 3 * upperR * upperR) / centroid.y;
-            centroid.y += minBounds.y;
+            if (lowerR > upperR)
+            {
+                centroid.y = 4 * (lowerR * lowerR + lowerR * upperR + upperR * upperR);
+                centroid.y = size.y * (lowerR * lowerR + 2 * lowerR * upperR + 3 * upperR * upperR) / centroid.y;
+                centroid.y += minBounds.y;
+            }
+            else
+            {
+                centroid.y = 4 * (lowerR * lowerR + lowerR * upperR + upperR * upperR);
+                centroid.y = -size.y * (3* lowerR * lowerR + 2 * lowerR * upperR + upperR * upperR) / centroid.y;
+                centroid.y += maxBounds.y;
+            }
             centroid.x = (maxBounds.x + minBounds.x);
             centroid.z = (maxBounds.z + minBounds.z);
 

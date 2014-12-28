@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.4
+Ferram Aerospace Research v0.14.6
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -53,6 +53,10 @@ namespace ferram4
         private bool debugMenu = false;
         private bool inputLocked = false;
         private Rect debugWinPos = new Rect(50, 50, 700, 250);
+        private static Texture2D cLTexture = new Texture2D(25, 15);
+        private static Texture2D cDTexture = new Texture2D(25, 15);
+        private static Texture2D cMTexture = new Texture2D(25, 15);
+        private static Texture2D l_DTexture = new Texture2D(25, 15);
 
         private enum MenuTab
         {
@@ -138,7 +142,7 @@ namespace ferram4
             GUI.skin = HighLogic.Skin;
             if (debugMenu)
             {
-                debugWinPos = GUILayout.Window("FARDebug".GetHashCode(), debugWinPos, debugWindow, "FAR Debug Options, v0.14.4", GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+                debugWinPos = GUILayout.Window("FARDebug".GetHashCode(), debugWinPos, debugWindow, "FAR Debug Options, v0.14.6", GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
                 if (!inputLocked && debugWinPos.Contains(FARGUIUtils.GetMousePos()))
                 {
                     InputLockManager.SetControlLock(ControlTypes.KSC_ALL, "FARDebugLock");
@@ -202,37 +206,14 @@ namespace ferram4
             int i = 0;
             GUILayout.BeginVertical(boxStyle);
 
-            string tmp;
+            FARAeroUtil.areaFactor = FARGUIUtils.TextEntryForDouble("Area Factor:", 160, FARAeroUtil.areaFactor);
+            FARAeroUtil.attachNodeRadiusFactor = FARGUIUtils.TextEntryForDouble("Node Diameter Factor:", 160, FARAeroUtil.attachNodeRadiusFactor * 2) * 0.5;
+            FARAeroUtil.incompressibleRearAttachDrag = FARGUIUtils.TextEntryForDouble("Rear Node Drag, Incomp:", 160, FARAeroUtil.incompressibleRearAttachDrag);
+            FARAeroUtil.sonicRearAdditionalAttachDrag = FARGUIUtils.TextEntryForDouble("Rear Node Drag, M = 1:", 160, FARAeroUtil.sonicRearAdditionalAttachDrag);
+            FARControllableSurface.timeConstant = FARGUIUtils.TextEntryForDouble("Ctrl Surf Time Constant:", 160, FARControllableSurface.timeConstant);
+            FARControllableSurface.timeConstantFlap = FARGUIUtils.TextEntryForDouble("Flap Time Constant:", 160, FARControllableSurface.timeConstantFlap);
+            FARControllableSurface.timeConstantSpoiler = FARGUIUtils.TextEntryForDouble("Spoiler Time Constant:", 160, FARControllableSurface.timeConstantSpoiler);
 
-            tmp = FARAeroUtil.areaFactor.ToString();
-            FARGUIUtils.TextEntryField("Area Factor:", 160, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            FARAeroUtil.areaFactor = Convert.ToDouble(tmp);
-
-            tmp = (FARAeroUtil.attachNodeRadiusFactor * 2).ToString();
-            FARGUIUtils.TextEntryField("Node Diameter Factor:", 160, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            FARAeroUtil.attachNodeRadiusFactor = Convert.ToDouble(tmp) * 0.5;
-
-            tmp = FARAeroUtil.incompressibleRearAttachDrag.ToString();
-            FARGUIUtils.TextEntryField("Rear Node Drag, Incomp:", 160, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            FARAeroUtil.incompressibleRearAttachDrag = Convert.ToDouble(tmp);
-
-            tmp = FARAeroUtil.sonicRearAdditionalAttachDrag.ToString();
-            FARGUIUtils.TextEntryField("Rear Node Drag, M = 1:", 160, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            FARAeroUtil.sonicRearAdditionalAttachDrag = Convert.ToDouble(tmp);
-
-            tmp = FARControllableSurface.timeConstant.ToString();
-            FARGUIUtils.TextEntryField("Ctrl Surf Time Constant:", 160, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            FARControllableSurface.timeConstant = Convert.ToDouble(tmp);
-
-            tmp = FARControllableSurface.timeConstantFlap.ToString();
-            FARGUIUtils.TextEntryField("Flap/Spoiler Time Constant:", 160, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            FARControllableSurface.timeConstantFlap = Convert.ToDouble(tmp);
 
             GUILayout.EndVertical();
             GUILayout.BeginVertical();
@@ -268,21 +249,19 @@ namespace ferram4
 
             int flightGlobalsIndex = FlightGlobals.Bodies[atmBodyIndex].flightGlobalsIndex;
 
-            Vector3d atmProperties = FARAeroUtil.bodyAtmosphereConfiguration[flightGlobalsIndex];
+            double[] atmProperties = FARAeroUtil.bodyAtmosphereConfiguration[flightGlobalsIndex];
 
-            tmp = atmProperties.y.ToString();
-            FARGUIUtils.TextEntryField("Ratio of Specific Heats:", 80, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            atmProperties.y = Convert.ToDouble(tmp);
+            atmProperties[1] = FARGUIUtils.TextEntryForDouble("Ratio of Specific Heats:", 80, atmProperties[1]);
 
 
-            double dTmp = 8314.5 / atmProperties.z;
-            tmp = dTmp.ToString();
-            FARGUIUtils.TextEntryField("Gas Molecular Mass:", 80, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            atmProperties.z = 8314.5 / Convert.ToDouble(tmp);
+            double dTmp = 8314.5 / atmProperties[2];
+            dTmp = FARGUIUtils.TextEntryForDouble("Gas Molecular Mass:", 80, dTmp);
+            atmProperties[2] = 8314.5 / dTmp;
 
-            atmProperties.x = atmProperties.y * atmProperties.z;
+            atmProperties[0] = atmProperties[1] * atmProperties[2];
+
+            atmProperties[3] = FARGUIUtils.TextEntryForDouble("Gas Viscosity:", 80, atmProperties[3]);
+            atmProperties[4] = FARGUIUtils.TextEntryForDouble("Ref Temp for Viscosity:", 80, atmProperties[4]);
 
             FARAeroUtil.bodyAtmosphereConfiguration[flightGlobalsIndex] = atmProperties;
 
@@ -344,21 +323,14 @@ namespace ferram4
 
             FARGUIUtils.TextEntryField("Name:", 80, ref activeTemplate.name);
 
-            tmp = activeTemplate.YmaxStress.ToString();
-            FARGUIUtils.TextEntryField("Axial (Y-axis) Max Stress:", 240, ref tmp);
-                        tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            activeTemplate.YmaxStress = Convert.ToDouble(tmp);
-
-            tmp = activeTemplate.XZmaxStress.ToString();
-            FARGUIUtils.TextEntryField("Lateral (X,Z-axis) Max Stress:", 240, ref tmp);
-                        tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            activeTemplate.XZmaxStress = Convert.ToDouble(tmp);
+            activeTemplate.YmaxStress = FARGUIUtils.TextEntryForDouble("Axial (Y-axis) Max Stress:", 240, activeTemplate.YmaxStress);
+            activeTemplate.XZmaxStress = FARGUIUtils.TextEntryForDouble("Lateral (X,Z-axis) Max Stress:", 240, activeTemplate.XZmaxStress);
            
             activeTemplate.crewed = GUILayout.Toggle(activeTemplate.crewed, "Requires Crew Compartment");
 
             tmp = activeTemplate.minNumResources.ToString();
             FARGUIUtils.TextEntryField("Min Num Resources:", 80, ref tmp);
-                        tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
+                        tmp = Regex.Replace(tmp, @"[^\d]", "");
             activeTemplate.minNumResources = Convert.ToInt32(tmp);
 
             GUILayout.Label("Req Resources:");
@@ -462,10 +434,10 @@ namespace ferram4
             FARDebugValues.useSplinesForSupersonicMath = GUILayout.Toggle(FARDebugValues.useSplinesForSupersonicMath, "Use Splines for Supersonic Math", thisStyle);
             FARDebugValues.allowStructuralFailures = GUILayout.Toggle(FARDebugValues.allowStructuralFailures, "Allow Aero-structural Failures", thisStyle);
             GUILayout.Label("Editor GUI Graph Colors");
-            ChangeColor("Cl", ref FAREditorGUI.clColor);
-            ChangeColor("Cd", ref FAREditorGUI.cdColor);
-            ChangeColor("Cm", ref FAREditorGUI.cmColor);
-            ChangeColor("L_D", ref FAREditorGUI.l_DColor);
+            ChangeColor("Cl", ref FAREditorGUI.clColor, ref cLTexture);
+            ChangeColor("Cd", ref FAREditorGUI.cdColor, ref cDTexture);
+            ChangeColor("Cm", ref FAREditorGUI.cmColor, ref cMTexture);
+            ChangeColor("L_D", ref FAREditorGUI.l_DColor, ref l_DTexture);
             
 
             GUILayout.EndVertical();
@@ -473,6 +445,7 @@ namespace ferram4
             GUILayout.BeginHorizontal();
             GUILayout.Label("Other Options"); // DaMichel: put it above the toolbar toggle
             GUILayout.BeginVertical();
+            FARDebugValues.aeroFailureExplosions = GUILayout.Toggle(FARDebugValues.aeroFailureExplosions, "Aero Failures Create Explosions", thisStyle);
             if (ToolbarManager.ToolbarAvailable)
             {
                 FARDebugValues.useBlizzyToolbar = GUILayout.Toggle(FARDebugValues.useBlizzyToolbar, "Use Blizzy78 Toolbar instead of Stock AppManager", thisStyle);
@@ -502,28 +475,48 @@ namespace ferram4
             GUILayout.EndHorizontal();
         }
 
-        private void ChangeColor(string colorTitle, ref Color input)
+        private void ChangeColor(string colorTitle, ref Color input, ref Texture2D texture)
         {
-            GUILayout.BeginHorizontal(GUILayout.ExpandWidth(false));
+            GUILayout.BeginHorizontal();
 
             GUILayout.Label(colorTitle + " (r,g,b):", GUILayout.Width(80));
 
-            string tmp = input.r.ToString();
-            FARGUIUtils.TextEntryField("", 0, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            input.r = Convert.ToSingle(tmp);
+            bool updateTexture = false;
 
-            tmp = input.g.ToString();
-            FARGUIUtils.TextEntryField("", 0, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            input.g = Convert.ToSingle(tmp);
-
-            tmp = input.b.ToString();
-            FARGUIUtils.TextEntryField("", 0, ref tmp);
-            tmp = Regex.Replace(tmp, @"[^\d+-\.]", "");
-            input.b = Convert.ToSingle(tmp);
-
+            GUILayout.BeginHorizontal(GUILayout.Width(150));
+            float tmp = input.r;
+            input.r = (float)FARGUIUtils.TextEntryForDouble("", 0, input.r);
+            updateTexture |= tmp != input.r;
             GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal(GUILayout.Width(150));
+            tmp = input.g;
+            input.g = (float)FARGUIUtils.TextEntryForDouble("", 0, input.g);
+            updateTexture |= tmp != input.g;
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal(GUILayout.Width(150));
+            tmp = input.b;
+            input.b = (float)FARGUIUtils.TextEntryForDouble("", 0, input.b);
+            updateTexture |= tmp != input.b;
+            GUILayout.EndHorizontal();
+
+            if (updateTexture)
+                ReColorTexture(ref input, ref texture);
+
+            Rect textRect = GUILayoutUtility.GetRect(25, 15);
+            textRect.Set(textRect.x, textRect.y + 10, textRect.width, textRect.height);
+            GUI.DrawTexture(textRect, texture);
+            GUILayout.EndHorizontal();
+        }
+
+        public static void ReColorTexture(ref Color color, ref Texture2D texture)
+        {
+            for (int i = 0; i < texture.width; i++)
+                for (int j = 0; j < texture.height; j++)
+                    texture.SetPixel(i, j, color);
+
+            texture.Apply();
         }
 
         public static void LoadConfigs()
@@ -537,12 +530,17 @@ namespace ferram4
             FARDebugValues.allowStructuralFailures = Convert.ToBoolean(config.GetValue("allowStructuralFailures", "true"));
 
             FARDebugValues.useBlizzyToolbar = Convert.ToBoolean(config.GetValue("useBlizzyToolbar", "false"));
+            FARDebugValues.aeroFailureExplosions = Convert.ToBoolean(config.GetValue("aeroFailureExplosions", "true"));
 
             FARAeroStress.LoadStressTemplates();
             FARPartClassification.LoadClassificationTemplates();
             FARAeroUtil.LoadAeroDataFromConfig();
             FARActionGroupConfiguration.LoadConfiguration();
             FAREditorGUI.LoadColors();
+            ReColorTexture(ref FAREditorGUI.clColor, ref cLTexture);
+            ReColorTexture(ref FAREditorGUI.cdColor, ref cDTexture);
+            ReColorTexture(ref FAREditorGUI.cmColor, ref cMTexture);
+            ReColorTexture(ref FAREditorGUI.l_DColor, ref l_DTexture);
         }
 
         public static void SaveConfigs()
@@ -555,6 +553,7 @@ namespace ferram4
             config.SetValue("allowStructuralFailures", FARDebugValues.allowStructuralFailures.ToString());
 
             config.SetValue("useBlizzyToolbar", FARDebugValues.useBlizzyToolbar.ToString());
+            config.SetValue("aeroFailureExplosions", FARDebugValues.aeroFailureExplosions.ToString());
 
             FARDebugValues.useBlizzyToolbar &= ToolbarManager.ToolbarAvailable;
 
@@ -592,5 +591,6 @@ namespace ferram4
         public static bool allowStructuralFailures = true;
 
         public static bool useBlizzyToolbar = false;
+        public static bool aeroFailureExplosions = true;
     }
 }

@@ -75,6 +75,7 @@
     <Compile Include="FARCollections\MinHeap.cs" />
     <Compile Include="FARControllableSurface.cs" />
     <Compile Include="FARDebugOptions.cs" />
+    <Compile Include="FAREditorAeroSim.cs" />
     <Compile Include="FAREditorGUI.cs" />
     <Compile Include="FARControlSys.cs" />
     <Compile Include="FARGeometry\BentleyOttmann.cs" />

@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.4
+Ferram Aerospace Research v0.14.6
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -35,13 +35,14 @@ Copyright 2014, Michael Ferrara, aka Ferram4
  */
 
 
+//TODO:
+//Fix requirement to double-run stability deriv sim
 
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Linq;
 using UnityEngine;
-//using ferramGraph;
 
 namespace ferram4
 {
@@ -71,6 +72,7 @@ namespace ferram4
 
         protected static ferramGraph graph = new ferramGraph(400, 275);
         protected static FARGUIDropDown<CelestialBody> celestialBodyDropdown;
+        protected static FARGUIDropDown<int> flapSettingDropdown;
         private static CelestialBody activeBody;
 
         private static string lowerBound_str = "0";
@@ -91,6 +93,8 @@ namespace ferram4
         public static Color cdColor;
         public static Color cmColor;
         public static Color l_DColor;
+
+        private static FAREditorAeroSim aeroSim;
 
 
         private AnalysisHelpTab analysisHelpTab = 0;
@@ -186,9 +190,12 @@ namespace ferram4
             int kerbinIndex = 1;
 
             celestialBodyDropdown = new FARGUIDropDown<CelestialBody>(bodyNames, bodies, kerbinIndex);
-
+            flapSettingDropdown = new FARGUIDropDown<int>(new string[] { "0 (up)", "1 (init climb)", "2 (takeoff)", "3 (landing)" }, new int[] { 0, 1, 2, 3 }, 0);
+            flap_setting = 0;
+            activeBody = bodies[1];
             LoadColors();
             windowPos.height = 500;
+            aeroSim = new FAREditorAeroSim();
         }
 
         public void OnDestroy()
@@ -235,7 +242,7 @@ namespace ferram4
 
             if (!minimize && !hide)
             {
-                windowPos = GUILayout.Window(256, windowPos, ActualGUI, "FAR Control & Analysis Systems, v0.14.4");
+                windowPos = GUILayout.Window(256, windowPos, ActualGUI, "FAR Control & Analysis Systems, v0.14.6");
                 if (AnalysisHelp)
                 {
                     analysisHelpPos = GUILayout.Window(258, analysisHelpPos, AnalysisHelpGUI, "FAR Analysis Systems Help", GUILayout.Width(400), GUILayout.Height(Screen.height / 3));
@@ -246,12 +253,6 @@ namespace ferram4
                     stabDerivHelpPos = GUILayout.Window(259, stabDerivHelpPos, StabDerivHelpGUI, "FAR Data & Stability Derivative Help", GUILayout.Width(600), GUILayout.Height(Screen.height / 3));
                     stabDerivHelpPos = FARGUIUtils.ClampToScreen(stabDerivHelpPos);
                 }
-
-                if (EdLogInstance.UndoRedo())
-                {
-                    ResetAll();
-                }
-
                 cursorInGUI = windowPos.Contains(mousePos);
 
                 if (AnalysisHelp)
@@ -396,7 +397,6 @@ namespace ferram4
             GUI.DragWindow();
 
         }
-
         private void DebugGUI(bool tmp)
         {
             GUIStyle TabLabelStyle = new GUIStyle(GUI.skin.label);
@@ -409,7 +409,7 @@ namespace ferram4
                 windowPos.width = 650;
             }
             List<Part> selectedParts = EditorActionGroups.Instance.GetSelectedParts();
-            if (EditorLogic.fetch.editorScreen == EditorLogic.EditorScreen.Actions && selectedParts.Count > 0)
+            if (selectedParts.Count > 0)
             {
                 Part p = selectedParts[0];  //Selected parts should only ever be symmetry counterparts
                 FARBasicDragModel d = null;
@@ -452,7 +452,8 @@ namespace ferram4
             string s = "Area (S): " + d.S +
                 "\n\rcosAngleCutoff: " + d.cosAngleCutoff +
                 "\n\rtaperCrossSectionAreaRatio: " + d.taperCrossSectionAreaRatio +
-                "\n\rmajorMinorAxisRatio" + d.majorMinorAxisRatio;
+                "\n\rmajorMinorAxisRatio: " + d.majorMinorAxisRatio +
+                "\n\rCenterOfDrag: " + d.CenterOfDrag;
             s += "\n\r\n\rCdCurve\n\r" + FloatCurveToString(d.CdCurve);
             s += "\n\rClPotentialCurve\n\r" + FloatCurveToString(d.ClPotentialCurve);
             GUILayout.BeginHorizontal();
@@ -474,6 +475,7 @@ namespace ferram4
             node.AddValue("cosAngleCutoff", d.cosAngleCutoff);
             node.AddValue("majorMinorAxisRatio", d.majorMinorAxisRatio);
             node.AddValue("taperCrossSectionAreaRatio", d.taperCrossSectionAreaRatio);
+            node.AddValue("CenterOfDrag", d.CenterOfDrag);
             node.AddValue("ignoreAnim", d.ignoreAnim);
 
             ConfigNode newNode = new ConfigNode("CdCurve");
@@ -715,7 +717,7 @@ namespace ferram4
                 }
 
             }
-            A.Add(CalculateAccelerationDueToGravity(activeBody, alt) * Math.Cos(stable_AoA * FARMathUtil.deg2rad) / u0, 3, 0);
+            A.Add(aeroSim.CalculateAccelerationDueToGravity(activeBody, alt) * Math.Cos(stable_AoA * FARMathUtil.deg2rad) / u0, 3, 0);
             A.Add(1, 1, 3);
 
 
@@ -831,7 +833,7 @@ namespace ferram4
                 }
 
             }
-            A.Add(-CalculateAccelerationDueToGravity(activeBody, alt), 3, 1);
+            A.Add(-aeroSim.CalculateAccelerationDueToGravity(activeBody, alt), 3, 1);
             A.Add(1, 2, 3);
 
 
@@ -902,18 +904,6 @@ namespace ferram4
             graph.Update();
         }
 
-        private double CalculateAccelerationDueToGravity(CelestialBody body, double alt)
-        {
-            double radius = body.Radius + alt;
-            double mu = body.gravParameter;
-
-            double accel = radius * radius;
-            accel = mu / accel;
-            return accel;
-        }
-
-
-
         private void StabilityDerivativeGUI(bool tmp)
         {
             GUIStyle ButtonStyle = new GUIStyle(GUI.skin.button);
@@ -970,7 +960,8 @@ namespace ferram4
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Flap Setting: ");
-            FlapToggle();
+            flapSettingDropdown.GUIDropDownDisplay();
+            flap_setting = flapSettingDropdown.ActiveSelection();
             GUILayout.Label("Fuel Status:");
             vehicleFueled = GUILayout.Toggle(vehicleFueled, vehicleFueled ? "Full" : "Empty", GUILayout.Width(100));
             GUILayout.Label("Spoilers:");
@@ -979,7 +970,7 @@ namespace ferram4
 
             if (GUILayout.Button("Calculate Stability Derivatives", ButtonStyle, GUILayout.Width(250.0F), GUILayout.Height(25.0F)))
             {
-                FARAeroUtil.UpdateCurrentActiveBody(index, FlightGlobals.Bodies[1]);
+                FARAeroUtil.UpdateCurrentActiveBody(index, activeBody);
                 //atm_temp_str = Regex.Replace(atm_temp_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
                 //rho_str = Regex.Replace(rho_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
                 Mach_str = Regex.Replace(Mach_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
@@ -989,22 +980,27 @@ namespace ferram4
                 alt *= 1000;
 
                 double temp = FlightGlobals.getExternalTemperature((float)alt, activeBody);
-                double rho = FARAeroUtil.GetCurrentDensity(activeBody, alt);
-                //double temp = Convert.ToSingle(atm_temp_str);
-                Mach = Convert.ToSingle(Mach_str);
-                Mach = FARMathUtil.Clamp(Mach, 0.001f, float.PositiveInfinity);
+                double rho = FARAeroUtil.GetCurrentDensity(activeBody, alt, false);
+                if (rho > 0)
+                {
+                    //double temp = Convert.ToSingle(atm_temp_str);
+                    Mach = Convert.ToSingle(Mach_str);
+                    Mach = FARMathUtil.Clamp(Mach, 0.001f, float.PositiveInfinity);
 
-                double sspeed = Math.Sqrt(FARAeroUtil.currentBodyAtm.x * Math.Max(0.1, temp + 273.15));
-                double vel = sspeed * Mach;
+                    double sspeed = Math.Sqrt(FARAeroUtil.currentBodyAtm[0] * Math.Max(0.1, temp + 273.15));
+                    double vel = sspeed * Mach;
 
-                UpdateControlSettings();
+                    UpdateControlSettings();
 
-                q = vel * vel * rho * 0.5f;
-                alpha = Convert.ToSingle(alpha_str) * 180 / Mathf.PI;
-                beta = Convert.ToSingle(beta_str);
-                phi = Convert.ToSingle(phi_str);
-                MOI_stabDerivs = CalculateStabilityDerivs(vel, q, Mach, alpha, beta, phi);
-                u0 = vel;
+                    q = vel * vel * rho * 0.5f;
+                    alpha = Convert.ToSingle(alpha_str) * 180 / Mathf.PI;
+                    beta = Convert.ToSingle(beta_str);
+                    phi = Convert.ToSingle(phi_str);
+                    MOI_stabDerivs = CalculateStabilityDerivs(vel, q, Mach, alpha, beta, phi);
+                    u0 = vel;
+                }
+                else
+                    PopupDialog.SpawnPopupDialog("Error!", "Altitude was above atmosphere", "OK", false, HighLogic.Skin);
             }
             GUILayout.BeginHorizontal();
             GUILayout.Label("Aircraft Properties", GUILayout.Width(180));
@@ -1132,7 +1128,7 @@ namespace ferram4
             GUILayout.Label(new GUIContent(text1 + val.ToString("G6") + text2, tooltip), style, GUILayout.Width(width));
         }
 
-        private void FlapToggle()
+        /*private void FlapToggle()
         {
             GUIStyle style = new GUIStyle(GUI.skin.button);
             style.padding = new RectOffset(2, 2, 0, 0);
@@ -1144,7 +1140,7 @@ namespace ferram4
                 if (on) flap_setting = i;
             }
             GUILayout.EndHorizontal();
-        }
+        }*/
 
         private double[] CalculateStabilityDerivs(double u0, double q, double M, double alpha, double beta, double phi)
         {
@@ -1176,7 +1172,7 @@ namespace ferram4
                 }
             }
 
-            GetClCdCmSteady(Vector3d.zero, alpha, beta, phi, 0, 0, 0, M, 0, out nomCl, out nomCd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true);
+            aeroSim.GetClCdCmSteady(Vector3d.zero, alpha, beta, phi, 0, 0, 0, M, 0, out nomCl, out nomCd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true, flap_setting, spoilersDeployed);
 
             for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
             {
@@ -1187,6 +1183,8 @@ namespace ferram4
                 double partMass = p.mass;
                 if (vehicleFueled && p.Resources.Count > 0)
                     partMass += p.GetResourceMass();
+
+                partMass += p.GetModuleMass(p.mass);
                 CoM += partMass * (Vector3d)p.transform.TransformPoint(p.CoMOffset);
                 mass += partMass;
                 FARWingAerodynamicModel w = p.GetComponent<FARWingAerodynamicModel>();
@@ -1195,6 +1193,10 @@ namespace ferram4
                     area += w.S;
                     MAC += w.GetMAC() * w.S;
                     b += w.Getb_2() * w.S;
+                    if (w is FARControllableSurface)
+                    {
+                        (w as FARControllableSurface).SetControlStateEditor(CoM, p.transform.up, 0, 0, 0, flap_setting, spoilersDeployed);
+                    }
                 }
             }
             if (area == 0)
@@ -1233,6 +1235,8 @@ namespace ferram4
                 double partMass = p.mass;
                 if (vehicleFueled && p.Resources.Count > 0)
                     partMass += p.GetResourceMass();
+
+                partMass += p.GetModuleMass(p.mass);
 
                 Ix += (y2 + z2) * partMass;
                 Iy += (x2 + z2) * partMass;
@@ -1282,34 +1286,43 @@ namespace ferram4
             stabDerivs[26] = Ixz;
 
 
-            double effectiveG = CalculateAccelerationDueToGravity(activeBody, alt);     //This is the effect of gravity
+            double effectiveG = aeroSim.CalculateAccelerationDueToGravity(activeBody, alt);     //This is the effect of gravity
             effectiveG -= u0 * u0 / (alt + activeBody.Radius);                          //This is the effective reduction of gravity due to high velocity
             double neededCl = mass * effectiveG / (q * area);
 
             //Longitudinal Mess
+            aeroSim.SetState(M, neededCl, CoM, 0, flap_setting, spoilersDeployed);
 
             double pertCl, pertCd, pertCm, pertCy, pertCn, pertC_roll;
-            int iter = 7;
+            //aeroSim.GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M, 0, out nomCl, out nomCd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true, flap_setting, spoilersDeployed);
+/*            int iter = 7;
             for (; ; )
             {
-                GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M, 0, out nomCl, out nomCd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true);
+                aeroSim.GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M, 0, out nomCl, out nomCd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true, flap_setting, spoilersDeployed);
 
 
-                GetClCdCmSteady(CoM, alpha + 0.1, beta, phi, 0, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true);
+                aeroSim.GetClCdCmSteady(CoM, alpha + 0.1, beta, phi, 0, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true, false, flap_setting, spoilersDeployed);
                 pertCl = (pertCl - nomCl) / 0.1 * FARMathUtil.rad2deg;                   //vert vel derivs
 
 
                 if (--iter <= 0 || Math.Abs((nomCl - neededCl) / neededCl) < 0.1)
                     break;
 
-                double delta = (neededCl - nomCl) / pertCl * FARMathUtil.rad2deg;
+                double delta = -(neededCl - nomCl) / ((pertCl - nomCl) * 100);
                 delta = Math.Sign(delta) * Math.Min(0.4f * iter * iter, Math.Abs(delta));
                 alpha = Math.Max(-5f, Math.Min(25f, alpha + delta));
-            };
+            };*/
+            alpha = FARMathUtil.BrentsMethod(aeroSim.FunctionIterateForAlpha, -5, 25, 0.01, 35);
+            nomCl = neededCl;
+            nomCd = aeroSim.Cd;
+            nomCm = aeroSim.Cm;
+            nomCy = aeroSim.Cy;
+            nomCn = aeroSim.Cn;
+            nomC_roll = aeroSim.C_roll;
 
             //alpha_str = (alpha * Mathf.PI / 180).ToString();
 
-            GetClCdCmSteady(CoM, alpha + 0.1, beta, phi, 0, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true, true);
+            aeroSim.GetClCdCmSteady(CoM, alpha + 0.1, beta, phi, 0, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true, true, flap_setting, spoilersDeployed);
 
             stable_Cl = neededCl;
             stable_Cd = nomCd;
@@ -1335,7 +1348,7 @@ namespace ferram4
             stabDerivs[4] = pertCd;
             stabDerivs[5] = pertCm;
 
-            GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M + 0.01, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true);
+            aeroSim.GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M + 0.01, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true, false, flap_setting, spoilersDeployed);
 
             pertCl = (pertCl - nomCl) / 0.01 * M;                   //fwd vel derivs
             pertCd = (pertCd - nomCd) / 0.01 * M;
@@ -1352,8 +1365,8 @@ namespace ferram4
             stabDerivs[7] = pertCd;
             stabDerivs[8] = pertCm;
 
-            GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true);
-            GetClCdCmSteady(CoM, alpha, beta, phi, -0.05, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, false);
+            aeroSim.GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true, false, flap_setting, spoilersDeployed);
+            aeroSim.GetClCdCmSteady(CoM, alpha, beta, phi, -0.05, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, false, false, flap_setting, spoilersDeployed);
             pertCl = (pertCl - nomCl) / 0.05;                   //pitch rate derivs
             pertCd = (pertCd - nomCd) / 0.05;
             pertCm = (pertCm - nomCm) / 0.05;
@@ -1366,7 +1379,7 @@ namespace ferram4
             stabDerivs[10] = pertCd;
             stabDerivs[11] = pertCm;
 
-            GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M, 0.1, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true);
+            aeroSim.GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M, 0.1, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true, false, flap_setting, spoilersDeployed);
             pertCl = (pertCl - nomCl) / 0.1;                   //elevator derivs
             pertCd = (pertCd - nomCd) / 0.1;
             pertCm = (pertCm - nomCm) / 0.1;
@@ -1381,7 +1394,7 @@ namespace ferram4
 
             //Lateral Mess
 
-            GetClCdCmSteady(CoM, alpha, beta + 0.1, phi, 0, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true);
+            aeroSim.GetClCdCmSteady(CoM, alpha, beta + 0.1, phi, 0, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true, false, flap_setting, spoilersDeployed);
             pertCy = (pertCy - nomCy) / 0.1 * FARMathUtil.rad2deg;                   //sideslip angle derivs
             pertCn = (pertCn - nomCn) / 0.1 * FARMathUtil.rad2deg;
             pertC_roll = (pertC_roll - nomC_roll) / 0.1 * FARMathUtil.rad2deg;
@@ -1395,8 +1408,8 @@ namespace ferram4
             stabDerivs[16] = pertC_roll;
 
 
-            GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true);
-            GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0.05, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, false);
+            aeroSim.GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true, false, flap_setting, spoilersDeployed);
+            aeroSim.GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0.05, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, false, false, flap_setting, spoilersDeployed);
             pertCy = (pertCy - nomCy) / 0.05;                   //roll rate derivs
             pertCn = (pertCn - nomCn) / 0.05;
             pertC_roll = (pertC_roll - nomC_roll) / 0.05;
@@ -1410,8 +1423,8 @@ namespace ferram4
             stabDerivs[19] = pertC_roll;
 
 
-            GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true);
-            GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0.05f, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, false);
+            aeroSim.GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, true, false, flap_setting, spoilersDeployed);
+            aeroSim.GetClCdCmSteady(CoM, alpha, beta, phi, 0, 0.05f, 0, M, 0, out pertCl, out pertCd, out pertCm, out pertCy, out pertCn, out pertC_roll, false, false, flap_setting, spoilersDeployed);
             pertCy = (pertCy - nomCy) / 0.05f;                   //yaw rate derivs
             pertCn = (pertCn - nomCn) / 0.05f;
             pertC_roll = (pertC_roll - nomC_roll) / 0.05f;
@@ -1424,7 +1437,7 @@ namespace ferram4
             stabDerivs[23] = pertCn;
             stabDerivs[22] = pertC_roll;
 
-            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
+            /*for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
             {
                 Part p = FARAeroUtil.CurEditorParts[i];
 
@@ -1438,7 +1451,7 @@ namespace ferram4
                         (m as FARControllableSurface).SetControlStateEditor(CoM, p.transform.up, (float)0, 0, 0, flap_setting, spoilersDeployed);
                     }
                 }
-            }
+            }*/
 
             return stabDerivs;
         }
@@ -1473,7 +1486,7 @@ namespace ferram4
             if (GUILayout.Button("Update CoL", ButtonStyle))
             {
                 FARGlobalControlEditorObject.EditorPartsChanged = true;
-                ResetAll();
+                ResetAll(null);
             }
             GUILayout.Space(20F);
             AnalysisHelp = GUILayout.Toggle(AnalysisHelp, "?", ButtonStyle);
@@ -1488,7 +1501,8 @@ namespace ferram4
 
             GUILayout.BeginVertical();
             GUILayout.Label("Flap Setting:");
-            FlapToggle();
+            flapSettingDropdown.GUIDropDownDisplay();
+            flap_setting = flapSettingDropdown.ActiveSelection();
             GUILayout.Label("Pitch Setting:");
             pitch_str = GUILayout.TextField(pitch_str, GUILayout.ExpandWidth(true));
             pitch_str = Regex.Replace(pitch_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
@@ -1586,6 +1600,8 @@ namespace ferram4
                 double partMass = p.mass;
                 if (vehicleFueled && p.Resources.Count > 0)
                     partMass += p.GetResourceMass();
+
+                partMass += p.GetModuleMass(p.mass);
                 CoM += partMass * (Vector3d)p.transform.TransformPoint(p.CoMOffset);
                 mass += partMass;
             }
@@ -1620,7 +1636,7 @@ namespace ferram4
 
                 double cy, cn, cr;
 
-                GetClCdCmSteady(CoM, AoA, 0, 0, 0, 0, 0, M, pitch, out Cl, out Cd, out Cm, out cy, out cn, out cr, true, i == 0);
+                aeroSim.GetClCdCmSteady(CoM, AoA, 0, 0, 0, 0, 0, M, pitch, out Cl, out Cd, out Cm, out cy, out cn, out cr, true, i == 0);
 
 
                 //                MonoBehaviour.print("Cl: " + Cl + " Cd: " + Cd);
@@ -1674,6 +1690,8 @@ namespace ferram4
                 double partMass = p.mass;
                 if (vehicleFueled && p.Resources.Count > 0)
                     partMass += p.GetResourceMass();
+
+                partMass += p.GetModuleMass(p.mass);
                 CoM += partMass * (Vector3d)p.transform.TransformPoint(p.CoMOffset);
                 mass += partMass;
             }
@@ -1712,7 +1730,7 @@ namespace ferram4
 
                 double cy, cn, cr;
 
-                GetClCdCmSteady(CoM, angle, 0, 0, 0, 0, 0, M, pitch, out Cl, out Cd, out Cm, out cy, out cn, out cr, true, i == 0);
+                aeroSim.GetClCdCmSteady(CoM, angle, 0, 0, 0, 0, 0, M, pitch, out Cl, out Cd, out Cm, out cy, out cn, out cr, true, i == 0);
 
 
                 //                MonoBehaviour.print("Cl: " + Cl + " Cd: " + Cd);
@@ -1754,177 +1772,6 @@ namespace ferram4
                         ClValues, CdValues, CmValues, LDValues,
                         ClValues2, CdValues2, CmValues2, LDValues2,
                         horizontalLabel);
-        }
-
-        private void GetClCdCmSteady(Vector3d CoM, double alpha, double beta, double phi, double alphaDot, double betaDot, double phiDot, double M, double pitch, out double Cl, out double Cd, out double Cm, out double Cy, out double Cn, out double C_roll, bool clear, bool reset_stall = false)
-        {
-            Cl = 0;
-            Cd = 0;
-            Cm = 0;
-            Cy = 0;
-            Cn = 0;
-            C_roll = 0;
-            double area = 0;
-            double MAC = 0;
-            double b_2 = 0;
-
-            alpha *= FARMathUtil.deg2rad;
-            beta *= FARMathUtil.deg2rad;
-            phi *= FARMathUtil.deg2rad;
-
-            Vector3d forward = Vector3.forward;
-            Vector3d up = Vector3.up;
-            Vector3d right = Vector3.right;
-
-            if (EditorLogic.fetch.editorType == EditorLogic.EditorMode.VAB)
-            {
-                forward = Vector3.up;
-                up = -Vector3.forward;
-            }
-
-            Vector3d AngVel = (phiDot - Math.Sin(alpha) * betaDot) * forward + (Math.Cos(phi) * alphaDot + Math.Cos(alpha) * Math.Sin(phi) * betaDot) * right + (Math.Sin(phi) * alphaDot - Math.Cos(alpha) * Math.Cos(phi) * betaDot) * up;
-
-
-            Vector3d velocity = forward * Math.Cos(alpha) * Math.Cos(beta) + right * (Math.Sin(phi) * Math.Sin(alpha) * Math.Cos(beta) - Math.Cos(phi) * Math.Sin(beta)) - up * (Math.Cos(phi) * Math.Sin(alpha) * Math.Cos(beta) - Math.Cos(phi) * Math.Sin(beta));
-
-            velocity.Normalize();
-
-            Vector3d liftVector = -forward * Math.Sin(alpha) + right * Math.Sin(phi) * Math.Cos(alpha) - up * Math.Cos(phi) * Math.Cos(alpha);
-
-            Vector3d sideways = Vector3.Cross(velocity, liftVector);
-
-            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
-            {
-                Part p = FARAeroUtil.CurEditorParts[i];
-
-                if (FARAeroUtil.IsNonphysical(p))
-                    continue;
-                for (int k = 0; k < p.Modules.Count; k++)
-                {
-                    PartModule m = p.Modules[k];
-                    if (m is FARWingAerodynamicModel)
-                    {
-                        FARWingAerodynamicModel w = m as FARWingAerodynamicModel;
-                        if (clear)
-                            w.EditorClClear(reset_stall);
-
-                        Vector3 relPos = p.transform.position - CoM;
-
-                        Vector3 vel = velocity + Vector3.Cross(AngVel, relPos);
-
-                        if (w is FARControllableSurface)
-                            (w as FARControllableSurface).SetControlStateEditor(CoM, vel, (float)pitch, 0, 0, flap_setting, spoilersDeployed);
-                    }
-                }
-            }
-            for (int j = 0; j < 3; j++)
-            {
-                for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
-                {
-                    Part p = FARAeroUtil.CurEditorParts[i];
-
-                    if (FARAeroUtil.IsNonphysical(p))
-                        continue;
-                    for (int k = 0; k < p.Modules.Count; k++)
-                    {
-                        PartModule m = p.Modules[k];
-                        if (m is FARWingAerodynamicModel)
-                        {
-                            Vector3 relPos = p.transform.position - CoM;
-
-                            Vector3 vel = velocity + Vector3.Cross(AngVel, relPos);
-
-                            FARWingAerodynamicModel w = m as FARWingAerodynamicModel;
-                            w.ComputeClCdEditor(vel, M);
-                        }
-                    }
-                }
-            }
-            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
-            {
-                Part p = FARAeroUtil.CurEditorParts[i];
-                if (FARAeroUtil.IsNonphysical(p))
-                    continue;
-                for (int k = 0; k < p.Modules.Count; k++)
-                {
-                    PartModule m = p.Modules[k];
-                    if (m is FARWingAerodynamicModel)
-                    {
-
-                        FARWingAerodynamicModel w = m as FARWingAerodynamicModel;
-                        if (w.isShielded)
-                            break;
-
-                        Vector3d relPos = w.GetAerodynamicCenter() - CoM;
-
-                        Vector3d vel = velocity + Vector3d.Cross(AngVel, relPos);
-
-                        w.ComputeClCdEditor(vel, M);
-
-                        double tmpCl = w.GetCl() * w.S;
-                        Cl += tmpCl * -Vector3d.Dot(w.GetLiftDirection(), liftVector);
-                        Cy += tmpCl * -Vector3d.Dot(w.GetLiftDirection(), sideways);
-                        double tmpCd = w.GetCd() * w.S;
-                        Cd += tmpCd;
-                        Cm += tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(w.GetLiftDirection(), liftVector) + tmpCd * -Vector3d.Dot((relPos), liftVector);
-                        Cn += tmpCd * Vector3d.Dot((relPos), sideways) + tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(w.GetLiftDirection(), sideways);
-                        C_roll += tmpCl * Vector3d.Dot((relPos), sideways) * -Vector3d.Dot(w.GetLiftDirection(), liftVector);
-                        area += w.S;
-                        MAC += w.GetMAC() * w.S;
-                        b_2 += w.Getb_2() * w.S;
-                        break;
-                    }
-                    else if (m is FARBasicDragModel)
-                    {
-                        FARBasicDragModel d = m as FARBasicDragModel;
-
-                        if (d.isShielded)
-                            break;
-
-                        Vector3d relPos = p.transform.position - CoM;
-
-                        Vector3d vel = velocity + Vector3d.Cross(AngVel, relPos);
-
-                        double tmpCd = d.GetDragEditor(vel, M);
-                        Cd += tmpCd;
-                        double tmpCl = d.GetLiftEditor();
-                        Cl += tmpCl * -Vector3d.Dot(d.GetLiftDirection(), liftVector);
-                        Cy += tmpCl * -Vector3d.Dot(d.GetLiftDirection(), sideways);
-                        relPos = d.GetCoDEditor() - CoM;
-                        Cm += d.GetMomentEditor() + tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(d.GetLiftDirection(), liftVector) + tmpCd * -Vector3d.Dot((relPos), liftVector);
-                        Cn += tmpCd * Vector3d.Dot((relPos), sideways) + tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(d.GetLiftDirection(), sideways);
-                        C_roll += tmpCl * Vector3d.Dot((relPos), sideways) * -Vector3d.Dot(d.GetLiftDirection(), liftVector);
-                        break;
-                    }
-                }
-
-                Vector3 part_pos = p.transform.TransformPoint(p.CoMOffset) - CoM;
-                double partMass = p.mass;
-                if (vehicleFueled && p.Resources.Count > 0)
-                    partMass += p.GetResourceMass();
-
-                double stock_drag = partMass * p.maximum_drag * FlightGlobals.DragMultiplier * 1000;
-                Cd += stock_drag;
-                Cm += stock_drag * -Vector3d.Dot(part_pos, liftVector);
-                Cn += stock_drag * Vector3d.Dot(part_pos, sideways);
-            }
-            if (area == 0)
-            {
-                area = 1;
-                b_2 = 1;
-                MAC = 1;
-            }
-
-            double recipArea = 1 / area;
-
-            MAC *= recipArea;
-            b_2 *= recipArea;
-            Cl *= recipArea;
-            Cd *= recipArea;
-            Cm *= recipArea / MAC;
-            Cy *= recipArea;
-            Cn *= recipArea / b_2;
-            C_roll *= recipArea / b_2;
         }
 
         private void InitGraph()
@@ -2013,7 +1860,7 @@ namespace ferram4
 
         #region GUI Start / End Functions
 
-        private void ResetAll()
+        public void ResetAll(ShipConstruct c)
         {
             RenderingManager.RemoveFromPostDrawQueue(0, new Callback(OnGUI));
             AllWings.Clear();
@@ -2044,7 +1891,7 @@ namespace ferram4
             for (int i = 0; i < AllWings.Count; i++)
             {
                 FARWingAerodynamicModel w = AllWings[i];
-                if (w.part == null || (w.part.parent == null && w.part != EditorLogic.startPod))
+                if (w.part == null || (w.part.parent == null && w.part != EditorLogic.RootPart))
                     nullWings.Add(w);
             }
 
@@ -2057,7 +1904,7 @@ namespace ferram4
                     AllControlSurfaces.Remove(w);
             }
 
-            if (EditorLogic.startPod)
+            if (EditorLogic.RootPart)
             {
                 for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
                 {
@@ -2134,7 +1981,7 @@ namespace ferram4
 
         public static void SaveCustomColors()
         {
-            ConfigNode node = new ConfigNode("@FARGUIColors[Default]:FINAL");
+            ConfigNode node = new ConfigNode("@FARGUIColors[Default]:FOR[FerramAerospaceResearch]");
             node.AddValue("ClColor", clColor.ToString());
             node.AddValue("CdColor", cdColor.ToString());
             node.AddValue("CmColor", cmColor.ToString());

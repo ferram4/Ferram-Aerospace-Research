@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.4
+Ferram Aerospace Research v0.14.6
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -81,11 +81,11 @@ namespace ferram4
         public override void OnAwake()
         {
             base.OnAwake();
-            part_transform = part.partTransform;
+            part_transform = part.transform;
 
             //refArea = S;
-            //Terrible, hacky fix for part.partTransform going bad
-            if (part.partTransform == null && part == part.vessel.rootPart)
+            //Terrible, hacky fix for part.transform going bad
+            if (part.transform == null && part == part.vessel.rootPart)
                 part_transform = vessel.vesselTransform;
             if(HighLogic.LoadedSceneIsEditor)
                 part_transform = part.transform;
@@ -116,7 +116,6 @@ namespace ferram4
                     // If it's active, turn it off
                     if (tintIsActive)
                     {
-                        this.part.highlightRecurse = true;
                         this.part.SetHighlightDefault();
 
                         tintIsActive = false;
@@ -131,26 +130,23 @@ namespace ferram4
 
                 if (tintColor.a != 0)
                 {
-                    this.part.highlightRecurse = false;
                     this.part.SetHighlightType(Part.HighlightType.AlwaysOn);
                     this.part.SetHighlightColor(tintColor);
-                    this.part.SetHighlight(true);
+                    this.part.SetHighlight(true, false);
                     resetTinting = true;
 
                     tintIsActive = true;
                 }
                 else if (part.highlightType != Part.HighlightType.OnMouseOver)
                 {
-                    this.part.highlightRecurse = false;
                     this.part.SetHighlightType(Part.HighlightType.OnMouseOver);
                     this.part.SetHighlightColor(Part.defaultHighlightPart);
-                    this.part.SetHighlight(false);
+                    this.part.SetHighlight(false, false);
                 }
                 else if (resetTinting)
                 {
-                    this.part.highlightRecurse = true;
                     this.part.SetHighlightType(Part.HighlightType.Disabled);
-                    this.part.SetHighlight(false);
+                    this.part.SetHighlight(false, true);
                     resetTinting = false;
                 }
             }
@@ -216,13 +212,18 @@ namespace ferram4
 
         public double GetMachNumber(CelestialBody body, double altitude, Vector3d velocity)
         {
+            return GetMachNumber(body, altitude, velocity.magnitude);
+        }
+
+        public double GetMachNumber(CelestialBody body, double altitude, double v_scalar)
+        {
             if (HighLogic.LoadedSceneIsFlight)
             {
 
                 if (FARControl != null)
                     return FARControl.MachNumber;
                 else
-                    return FARAeroUtil.GetMachNumber(body, altitude, velocity);
+                    return FARAeroUtil.GetMachNumber(body, altitude, v_scalar);
             }
             else
             {
@@ -264,7 +265,7 @@ namespace ferram4
 
             Vector3 vel_base, vel_fuzz;
 
-            if (EditorLogic.fetch.editorType == EditorLogic.EditorMode.SPH)
+            if (EditorDriver.editorFacility == EditorFacility.SPH)
             {
                 vel_base = Vector3.forward;
                 vel_fuzz = 0.02f * Vector3.up;

@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.4
+Ferram Aerospace Research v0.14.6
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -221,6 +221,55 @@ namespace ferram4
             ClInterferenceFactor = ClCdInterference;
         }
 
+        public HashSet<FARWingAerodynamicModel> UpdateNearbyWingInteractions()
+        {
+            return UpdateNearbyWingInteractions(new HashSet<FARWingAerodynamicModel>());
+        }
+
+        //This updates the interactions of all wings near this one; call this one when somethign changes rather than all of them at once
+        public HashSet<FARWingAerodynamicModel> UpdateNearbyWingInteractions(HashSet<FARWingAerodynamicModel> wingsHandled)
+        {
+            //Hashset to avoid repeating the same one affected
+
+            for (int i = 0; i < nearbyWingModulesForwardList.Count; i++)
+            {
+                FARWingAerodynamicModel w = nearbyWingModulesForwardList[i];
+                if (!wingsHandled.Contains(w))
+                {
+                    w.UpdateThisWingInteractions();
+                    wingsHandled.Add(w);
+                }
+            }
+            for (int i = 0; i < nearbyWingModulesBackwardList.Count; i++)
+            {
+                FARWingAerodynamicModel w = nearbyWingModulesBackwardList[i];
+                if (!wingsHandled.Contains(w))
+                {
+                    w.UpdateThisWingInteractions();
+                    wingsHandled.Add(w);
+                }
+            }
+            for (int i = 0; i < nearbyWingModulesRightwardList.Count; i++)
+            {
+                FARWingAerodynamicModel w = nearbyWingModulesRightwardList[i];
+                if (!wingsHandled.Contains(w))
+                {
+                    w.UpdateThisWingInteractions();
+                    wingsHandled.Add(w);
+                }
+            }
+            for (int i = 0; i < nearbyWingModulesLeftwardList.Count; i++)
+            {
+                FARWingAerodynamicModel w = nearbyWingModulesLeftwardList[i];
+                if (!wingsHandled.Contains(w))
+                {
+                    w.UpdateThisWingInteractions();
+                    wingsHandled.Add(w);
+                }
+            }
+            return wingsHandled;
+        }
+
         private void CompressArrayToList(FARWingAerodynamicModel[] arrayIn, ref List<FARWingAerodynamicModel> moduleList, ref List<double> associatedInfluences)
         {
             moduleList.Clear();
@@ -272,6 +321,9 @@ namespace ferram4
                     for (int j = 0; j < PartList.Count; j++)
                     {
                         Part p = PartList[j];
+
+                        if (p == null)
+                            continue;
 
                         if (p == parentWingPart)
                             continue;
