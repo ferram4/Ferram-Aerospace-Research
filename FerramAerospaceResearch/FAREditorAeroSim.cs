@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.4
+Ferram Aerospace Research v0.14.6
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -109,7 +109,7 @@ namespace ferram4
 
                 while (curAltitude <= maxAlt && (contAltUntilPosPower || specExcessPower > 0))
                 {
-                    double vel = Math.Sqrt((FlightGlobals.getExternalTemperature((float)curAltitude, body) + FARAeroUtil.currentBodyTemp) * FARAeroUtil.currentBodyAtm.x) * curMach;
+                    double vel = Math.Sqrt((FlightGlobals.getExternalTemperature((float)curAltitude, body) + FARAeroUtil.currentBodyTemp) * FARAeroUtil.currentBodyAtm[0]) * curMach;
 
                     double drag = IterateToSteadyFlightDrag(out alpha, estLiftSlope, vel, curAltitude, curMach, body, mass, area, CoM);
                     alpha = 0;
@@ -323,7 +323,7 @@ namespace ferram4
             double upperAlpha = alpha + 5;
 
             SetState(M, neededCl, CoM, 0, 0, false);
-            alpha = FARMathUtil.BrentsMethod(FunctionIterateForAlphaExcessPower, lowerAlpha, upperAlpha, 10, 0.1);
+            alpha = FARMathUtil.BrentsMethod(FunctionIterateForAlphaExcessPower, lowerAlpha, upperAlpha, 0.1, 10);
             //double Cd = this.Cd;
 
 
@@ -362,7 +362,7 @@ namespace ferram4
             Vector3d up = Vector3.up;
             Vector3d right = Vector3.right;
 
-            if (EditorLogic.fetch.editorType == EditorLogic.EditorMode.VAB)
+            if (EditorDriver.editorFacility == EditorFacility.VAB)
             {
                 forward = Vector3.up;
                 up = -Vector3.forward;
@@ -435,6 +435,7 @@ namespace ferram4
             Cl *= recipArea;
             Cd *= recipArea;
         }
+
         public void GetClCdCmSteady(Vector3d CoM, double alpha, double beta, double phi, double alphaDot, double betaDot, double phiDot, double M, double pitch, out double Cl, out double Cd, out double Cm, out double Cy, out double Cn, out double C_roll, bool clear, bool reset_stall = false, int flap_setting = 0, bool spoilersDeployed = false, bool vehicleFueled = true)
         {
             Cl = 0;
@@ -455,7 +456,7 @@ namespace ferram4
             Vector3d up = Vector3.up;
             Vector3d right = Vector3.right;
 
-            if (EditorLogic.fetch.editorType == EditorLogic.EditorMode.VAB)
+            if (EditorDriver.editorFacility == EditorFacility.VAB)
             {
                 forward = Vector3.up;
                 up = -Vector3.forward;
@@ -472,7 +473,8 @@ namespace ferram4
 
             Vector3d sideways = Vector3.Cross(velocity, liftVector);
 
-            for (int i = 0; i < FARAeroUtil.CurEditorWings.Count; i++ )
+
+            for (int i = 0; i < FARAeroUtil.CurEditorWings.Count; i++)
             {
                 FARWingAerodynamicModel w = FARAeroUtil.CurEditorWings[i];
                 if (w.isShielded)
@@ -487,7 +489,7 @@ namespace ferram4
 
                 if (w is FARControllableSurface)
                     (w as FARControllableSurface).SetControlStateEditor(CoM, vel, (float)pitch, 0, 0, flap_setting, spoilersDeployed);
-
+                
                 w.ComputeClCdEditor(vel, M);
 
                 double tmpCl = w.GetCl() * w.S;
@@ -517,7 +519,7 @@ namespace ferram4
                 double tmpCl = d.GetLiftEditor();
                 Cl += tmpCl * -Vector3d.Dot(d.GetLiftDirection(), liftVector);
                 Cy += tmpCl * -Vector3d.Dot(d.GetLiftDirection(), sideways);
-                relPos = d.GetCoDEditor() - CoM;
+                relPos = d.GetCoDWithoutMomentShift() - CoM;
                 Cm += d.GetMomentEditor() + tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(d.GetLiftDirection(), liftVector) + tmpCd * -Vector3d.Dot((relPos), liftVector);
                 Cn += tmpCd * Vector3d.Dot((relPos), sideways) + tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(d.GetLiftDirection(), sideways);
                 C_roll += tmpCl * Vector3d.Dot((relPos), sideways) * -Vector3d.Dot(d.GetLiftDirection(), liftVector);

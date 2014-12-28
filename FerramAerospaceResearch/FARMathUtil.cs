@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.4
+Ferram Aerospace Research v0.14.6
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -166,7 +166,8 @@ namespace ferram4
             return BitConverter.Int64BitsToDouble(((long)tmp2) << 32);
         }
 
-        public static double BrentsMethod(Func<double, double> function, double a, double b, int maxIterations = int.MaxValue, double epsilon = 0.001)
+
+        public static double BrentsMethod(Func<double, double> function, double a, double b, double epsilon = 0.001, int maxIter = int.MaxValue)
         {
             double fa, fb;
             fa = function(a);
@@ -193,7 +194,7 @@ namespace ferram4
             bool flag = true;
             int iter = 0;
 
-            while(fs != 0 && Math.Abs(a - b) > epsilon && iter < maxIterations)
+            while(fs != 0 && Math.Abs(a - b) > epsilon && iter < maxIter)
             {
                 if(fa != fc && fb != fc)
                 {

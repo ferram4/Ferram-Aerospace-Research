@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.14.4
+Ferram Aerospace Research v0.14.6
 =========================
 
 Aerodynamics model for Kerbal Space Program
@@ -149,6 +149,51 @@ For both of these, set MaxDrag and MinDrag to 0
 
 CHANGELOG
 =======================================================
+
+0.14.6V------------------------------------  
+Features:  
+Modified skin friction variation with M and Re to closer to that expected by using the Knudsen number  
+Changed saving and loading method to allow better behavior when settings need to be cleaned during updates, especially for automated installs  
+Modified aerodynamic failures for water landings for compatibility with upcoming BetterBuoyancy  
+Option for aerodynamic failures to result in explosions at the joint during failure.  
+Serious reworking to handle edge cases with lightly-clipped parts and their effects on blunt body drag (read: when people clip heatshields into the bottom of Mk1 pods and cause problems)  
+Upgrade to MM 2.5.6
+
+Bugfixes:  
+Fixed an issue that prevented Trajectories from functioning  
+Fixed blunt body drag errors with AJE  
+Fixed issues involving editor GUI and control surface deflections  
+Fixed edge cases involving attach-node blunt body drag being applied when it shouldn't have  
+Fixed issues with command pods containing intakes
+
+0.14.5.1V------------------------------------  
+Features:  
+Add Reynolds Number readout to main flight GUI
+
+Tweaks:  
+Adjust skin friction drag for rarefied atmosphere
+
+Bugfixes:  
+Fix Stab Deriv GUI from breaking for altitudes above atmosphere  
+Fix flaps and spoilers not functioning with negative deflections
+
+
+0.14.5V------------------------------------  
+Features:  
+Skin friction drag now varies with Reynolds number; this means much higher skin friction drags at higher altitudes  
+Added simple attempt at handling hydrodynamic effects; not detailed, but objects in oceans move much less  
+Added color changing options for colorblind users  
+Tweak flap and spoiler deflection functions  
+Give spoilers faster deflection coefficients  
+Update to ModuleManager 2.5.4
+
+Bugfixes:  
+Removed spontaneous aero-spline warp drive in some Linux64 versions
+
+0.14.4.1v------------------------------------  
+Features:  
+Added changes to blunt body drag to make command pods more stable on reentry  
+Attempt to account for most inaccurate effects of part clipping  
 
 0.14.4v------------------------------------
 Features:  

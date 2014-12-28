@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.4
+Ferram Aerospace Research v0.14.6
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -58,7 +58,7 @@ namespace ferram4
 
         public static void SaveCustomClassificationTemplates()
         {
-            ConfigNode node = new ConfigNode("@FARPartClassification[Default]:FINAL");
+            ConfigNode node = new ConfigNode("@FARPartClassification[Default]:FOR[FerramAerospaceResearch]");
             node.AddNode(new ConfigNode("!GreebleTitle"));
             node.AddNode(StringOverrideNode(greebleTitles, "GreebleTitle", "titleContains"));
             node.AddNode(new ConfigNode("!GreebleModule"));

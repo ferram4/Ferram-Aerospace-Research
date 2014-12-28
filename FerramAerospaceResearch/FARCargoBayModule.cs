@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.4
+Ferram Aerospace Research v0.14.6
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -289,7 +289,7 @@ namespace ferram4
                 else
                 {
                     b = d as FARBaseAerodynamics;
-                    relPos += p.partTransform.TransformDirection(d.CenterOfDrag) + p.partTransform.position;       //No attach node shifting with this
+                    relPos += p.transform.TransformDirection(d.CenterOfDrag) + p.transform.position;       //No attach node shifting with this
                 }
 
                 relPos = this.part.transform.worldToLocalMatrix.MultiplyVector(relPos);

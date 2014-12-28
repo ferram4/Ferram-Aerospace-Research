@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.14.4
+Ferram Aerospace Research v0.14.6
 Copyright 2014, Michael Ferrara, aka Ferram4
 
     This file is part of Ferram Aerospace Research.
@@ -308,7 +308,7 @@ namespace ferram4
                 part.OnEditorDetach += OnWingDetach;
             }
 
-            OnVesselPartsChange += UpdateWingInteractions;
+            OnVesselPartsChange += UpdateThisWingInteractions;
         }
 
         public void StartInitialization()
@@ -342,7 +342,7 @@ namespace ferram4
 
             wingInteraction = new FARWingInteraction(this, this.part, rootMidChordOffsetFromOrig, srfAttachNegative);
 
-            UpdateWingInteractions();
+            UpdateThisWingInteractions();
         }
 
         public void MathAndFunctionInitialization()
@@ -388,7 +388,14 @@ namespace ferram4
             }
         }
 
-        private void UpdateWingInteractions()
+        public void EditorUpdateWingInteractions()
+        {
+            HashSet<FARWingAerodynamicModel> wingsHandled = wingInteraction.UpdateNearbyWingInteractions();     //first update the old nearby wings
+            UpdateThisWingInteractions();
+            wingInteraction.UpdateNearbyWingInteractions(wingsHandled);     //then update the new nearby wings, not doing the ones already handled
+        }
+
+        public void UpdateThisWingInteractions()
         {
             if(VesselPartList == null)
                 VesselPartList = GetShipPartList();
@@ -424,14 +431,15 @@ namespace ferram4
                     Vector3d velocity = rb.GetPointVelocity(CurWingCentroid) + Krakensbane.GetFrameVelocity()
                         - FARWind.GetWind(FlightGlobals.currentMainBody, part, rb.position);
 
-                    double soundspeed, v_scalar = velocity.magnitude;
+                    double machNumber, v_scalar = velocity.magnitude;
 
-                    rho = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed);
+                    rho = FARAeroUtil.GetCurrentDensity(vessel.mainBody, part.transform.position);
+                    machNumber = GetMachNumber(vessel.mainBody, vessel.altitude, velocity);
                     if (rho > 0 && v_scalar > 0.1)
                     {
-                        double MachNumber = v_scalar / soundspeed;
                         double AoA = CalculateAoA(velocity);
-                        Vector3d force = DoCalculateForces(velocity, MachNumber, AoA);
+                        double failureForceScaling = FARAeroUtil.GetFailureForceScaling(vessel);
+                        Vector3d force = DoCalculateForces(velocity, machNumber, AoA, failureForceScaling);
 
                         rb.AddForceAtPosition(force, AerodynamicCenter);            //and apply force
                     }
@@ -458,6 +466,11 @@ namespace ferram4
         }
 
         private Vector3d DoCalculateForces(Vector3d velocity, double MachNumber, double AoA)
+        {
+            return DoCalculateForces(velocity, MachNumber, AoA, 1);
+        }
+
+        private Vector3d DoCalculateForces(Vector3d velocity, double MachNumber, double AoA, double failureForceScaling)
         {
             //This calculates the angle of attack, adjusting the part's orientation for any deflection
             //CalculateAoA();
@@ -487,8 +500,12 @@ namespace ferram4
             AerodynamicCenter = CalculateAerodynamicCenter(MachNumber, AoA, CurWingCentroid);
 
             //Throw AoA into lifting line theory and adjust for part exposure and compressibility effects
-            CalculateCoefficients(MachNumber, AoA);
 
+
+            if (HighLogic.LoadedSceneIsFlight)
+                CalculateCoefficients(MachNumber, AoA, FARAeroUtil.SkinFrictionDrag(rho, effective_MAC, v_scalar, MachNumber, FlightGlobals.getExternalTemperature(part.transform.position) + FARAeroUtil.currentBodyTemp));
+            else
+                CalculateCoefficients(MachNumber, AoA, 0.01);
 
 
             //lift and drag vectors
@@ -507,13 +524,19 @@ namespace ferram4
             //This accounts for the effect of flap effects only being handled by the rearward surface
             scaledForce *= S / (S + wingInteraction.EffectiveUpstreamArea);
 
-            if (Math.Abs(Vector3d.Dot(scaledForce, forward)) > YmaxForce || Vector3d.Exclude(forward, scaledForce).magnitude > XZmaxForce)
+            if (Math.Abs(Vector3d.Dot(scaledForce, forward)) > YmaxForce * failureForceScaling || Vector3d.Exclude(forward, scaledForce).magnitude > XZmaxForce * failureForceScaling)
                 if (part.parent && !vessel.packed)
                 {
                     part.SendEvent("AerodynamicFailureStatus");
                     FlightLogger.eventLog.Add("[" + FARMathUtil.FormatTime(vessel.missionTime) + "] Joint between " + part.partInfo.title + " and " + part.parent.partInfo.title + " failed due to aerodynamic stresses.");
                     part.decouple(25);
+                    if(FARDebugValues.aeroFailureExplosions)
+                        FXMonger.Explode(part, AerodynamicCenter, 1);
                 }
+
+            double numericalControlFactor = (part.rb.mass * v_scalar * 0.67) / (force.magnitude * TimeWarp.fixedDeltaTime);
+            force *= Math.Min(numericalControlFactor, 1);
+
 
             return force;
 
@@ -539,7 +562,7 @@ namespace ferram4
 
         }
 
-        private void OnWingAttach()
+        public void OnWingAttach()
         {
             if(part.parent)
                 parentWing = part.parent.GetComponent<FARWingAerodynamicModel>();
@@ -549,17 +572,18 @@ namespace ferram4
             UpdateMassToAccountForArea();
         }
 
-        private void OnWingDetach()
+        public void OnWingDetach()
         {
             if ((object)parentWing != null)
                 parentWing.updateMassNextFrame = true;
+
         }
 
         private void UpdateMassToAccountForArea()
         {
             float supportedArea = (float)(refAreaChildren + S);
-            part.mass = supportedArea * (float)FARAeroUtil.massPerWingAreaSupported * massMultiplier;
-            curWingMass = part.mass;
+            curWingMass = supportedArea * (float)FARAeroUtil.massPerWingAreaSupported * massMultiplier;
+            part.mass = curWingMass;
             oldMassMultiplier = massMultiplier;
         }
 
@@ -674,7 +698,7 @@ namespace ferram4
         /// <summary>
         /// This calculates the lift and drag coefficients
         /// </summary>
-        private void CalculateCoefficients(double MachNumber, double AoA)
+        private void CalculateCoefficients(double MachNumber, double AoA, double skinFrictionCoefficient)
         {
 
             minStall = 0;
@@ -693,7 +717,7 @@ namespace ferram4
             double beta_TanSweep = beta / TanSweep;
 
 
-            double Cd0 = CdCompressibilityZeroLiftIncrement(MachNumber, cosSweepAngle, TanSweep, beta_TanSweep, beta) + 0.006;
+            double Cd0 = CdCompressibilityZeroLiftIncrement(MachNumber, cosSweepAngle, TanSweep, beta_TanSweep, beta) + 2 * skinFrictionCoefficient;
             e = FARAeroUtil.CalculateOswaldsEfficiency(effective_AR, cosSweepAngle, Cd0);
             piARe = effective_AR * e * Math.PI;
 
@@ -716,7 +740,7 @@ namespace ferram4
              */
             else if (MachNumber > 1.4)
             {
-                double coefMult = 1 / (FARAeroUtil.currentBodyAtm.y * MachNumber * MachNumber);
+                double coefMult = 1 / (FARAeroUtil.currentBodyAtm[1] * MachNumber * MachNumber);
 
                 double supersonicLENormalForceFactor = CalculateSupersonicLEFactor(beta, TanSweep, beta_TanSweep);
 
@@ -756,7 +780,7 @@ namespace ferram4
 
                 double M = FARMathUtil.Clamp(MachNumber, 1.2, double.PositiveInfinity);
                 
-                double coefMult = 1 / (FARAeroUtil.currentBodyAtm.y * M * M);
+                double coefMult = 1 / (FARAeroUtil.currentBodyAtm[1] * M * M);
 
                 double supersonicLENormalForceFactor = CalculateSupersonicLEFactor(beta, TanSweep, beta_TanSweep);
 
@@ -845,7 +869,7 @@ namespace ferram4
         {
             double pRatio;
 
-            double maxSinBeta = FARAeroUtil.CalculateSinMaxShockAngle(M, FARAeroUtil.currentBodyAtm.y);//GetBetaMax(M) * FARMathUtil.deg2rad;
+            double maxSinBeta = FARAeroUtil.CalculateSinMaxShockAngle(M, FARAeroUtil.currentBodyAtm[1]);//GetBetaMax(M) * FARMathUtil.deg2rad;
             double minSinBeta = 1 / M;
 
 
@@ -882,7 +906,7 @@ namespace ferram4
         private double ShockWaveCalculationNoSpline(double angle, double inM, out double outM, double maxSinBeta, double minSinBeta)
         {
             //float sinBeta = (maxBeta - minBeta) * angle / maxTheta + minBeta;
-            double sinBeta = FARAeroUtil.CalculateSinWeakObliqueShockAngle(inM, FARAeroUtil.currentBodyAtm.y, angle);
+            double sinBeta = FARAeroUtil.CalculateSinWeakObliqueShockAngle(inM, FARAeroUtil.currentBodyAtm[1], angle);
             if (double.IsNaN(sinBeta))
                 sinBeta = maxSinBeta;
 
@@ -949,7 +973,7 @@ namespace ferram4
         {
             double pRatio;
 
-            double maxSinBeta = FARAeroUtil.CalculateSinMaxShockAngle(M, FARAeroUtil.currentBodyAtm.y);//GetBetaMax(M) * FARMathUtil.deg2rad;
+            double maxSinBeta = FARAeroUtil.CalculateSinMaxShockAngle(M, FARAeroUtil.currentBodyAtm[1]);//GetBetaMax(M) * FARMathUtil.deg2rad;
             double minSinBeta = 1 / M;
 
             double halfAngle = 0.05;            //Corresponds to ~2.8 degrees or approximately what you would get from a ~4.8% thick diamond airfoil
@@ -985,7 +1009,7 @@ namespace ferram4
         private double ShockWaveCalculation(double angle, double inM, out double outM, double maxSinBeta, double minSinBeta)
         {
             //float sinBeta = (maxBeta - minBeta) * angle / maxTheta + minBeta;
-            double sinBeta = FARAeroUtil.CalculateSinWeakObliqueShockAngle(inM, FARAeroUtil.currentBodyAtm.y, angle);
+            double sinBeta = FARAeroUtil.CalculateSinWeakObliqueShockAngle(inM, FARAeroUtil.currentBodyAtm[1], angle);
             if (double.IsNaN(sinBeta))
                 sinBeta = maxSinBeta;
 
