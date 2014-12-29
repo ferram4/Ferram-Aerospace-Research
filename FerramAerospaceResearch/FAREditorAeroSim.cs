@@ -194,6 +194,16 @@ namespace ferram4
             this.pitch = pitch;
             flaps = flapSetting;
             this.spoilers = spoilers;
+
+            for (int i = 0; i < FARAeroUtil.CurEditorWings.Count; i++)
+            {
+                FARWingAerodynamicModel w = FARAeroUtil.CurEditorWings[i];
+                if (w.isShielded)
+                    continue;
+
+                if (w is FARControllableSurface)
+                    (w as FARControllableSurface).SetControlStateEditor(CoM, Vector3.up, (float)pitch, 0, 0, flapSetting, spoilers);
+            }
         }
 
         public double FunctionIterateForAlpha(double alpha)

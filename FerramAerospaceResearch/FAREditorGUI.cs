@@ -1159,19 +1159,6 @@ namespace ferram4
 
             double nomCl = 0, nomCd = 0, nomCm = 0, nomCy = 0, nomCn = 0, nomC_roll = 0;
 
-            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
-            {
-                Part p = FARAeroUtil.CurEditorParts[i];
-                for (int k = 0; k < p.Modules.Count; k++)
-                {
-                    PartModule m = p.Modules[k];
-                    if (m is FARPartModule)
-                    {
-                        (m as FARPartModule).ForceOnVesselPartsChange();
-                    }
-                }
-            }
-
             aeroSim.GetClCdCmSteady(Vector3d.zero, alpha, beta, phi, 0, 0, 0, M, 0, out nomCl, out nomCd, out nomCm, out nomCy, out nomCn, out nomC_roll, true, true, flap_setting, spoilersDeployed);
 
             for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
@@ -1607,18 +1594,7 @@ namespace ferram4
             }
             CoM /= mass;
 
-            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
-            {
-                Part p = FARAeroUtil.CurEditorParts[i];
-                for (int k = 0; k < p.Modules.Count; k++)
-                {
-                    PartModule m = p.Modules[k];
-                    if (m is FARPartModule)
-                    {
-                        (m as FARPartModule).ForceOnVesselPartsChange();
-                    }
-                }
-            }
+
 
             double[] ClValues = new double[(int)numPoints];
             double[] CdValues = new double[(int)numPoints];
@@ -1636,7 +1612,7 @@ namespace ferram4
 
                 double cy, cn, cr;
 
-                aeroSim.GetClCdCmSteady(CoM, AoA, 0, 0, 0, 0, 0, M, pitch, out Cl, out Cd, out Cm, out cy, out cn, out cr, true, i == 0);
+                aeroSim.GetClCdCmSteady(CoM, AoA, 0, 0, 0, 0, 0, M, pitch, out Cl, out Cd, out Cm, out cy, out cn, out cr, true, i == 0, flap_setting, spoilersDeployed, vehicleFueled);
 
 
                 //                MonoBehaviour.print("Cl: " + Cl + " Cd: " + Cd);
@@ -1645,21 +1621,6 @@ namespace ferram4
                 CdValues[i] = Cd;
                 CmValues[i] = Cm;
                 LDValues[i] = Cl / Cd;
-            }
-            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
-            {
-                Part p = FARAeroUtil.CurEditorParts[i];
-
-                if (FARAeroUtil.IsNonphysical(p))
-                    continue;
-                for (int k = 0; k < p.Modules.Count; k++)
-                {
-                    PartModule m = p.Modules[k];
-                    if (m is FARControllableSurface)
-                    {
-                        (m as FARControllableSurface).SetControlStateEditor(CoM, p.transform.up, (float)pitch, 0, 0, flap_setting, spoilersDeployed);
-                    }
-                }
             }
 
             string horizontalLabel = "Mach Number";
@@ -1697,19 +1658,6 @@ namespace ferram4
             }
             CoM /= mass;
 
-            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
-            {
-                Part p = FARAeroUtil.CurEditorParts[i];
-                for (int k = 0; k < p.Modules.Count; k++)
-                {
-                    PartModule m = p.Modules[k];
-                    if (m is FARPartModule)
-                    {
-                        (m as FARPartModule).ForceOnVesselPartsChange();
-                    }
-                }
-            }
-
             double[] ClValues = new double[(int)numPoints];
             double[] CdValues = new double[(int)numPoints];
             double[] CmValues = new double[(int)numPoints];
@@ -1730,7 +1678,7 @@ namespace ferram4
 
                 double cy, cn, cr;
 
-                aeroSim.GetClCdCmSteady(CoM, angle, 0, 0, 0, 0, 0, M, pitch, out Cl, out Cd, out Cm, out cy, out cn, out cr, true, i == 0);
+                aeroSim.GetClCdCmSteady(CoM, angle, 0, 0, 0, 0, 0, M, pitch, out Cl, out Cd, out Cm, out cy, out cn, out cr, true, i == 0, flap_setting, spoilersDeployed, vehicleFueled);
 
 
                 //                MonoBehaviour.print("Cl: " + Cl + " Cd: " + Cd);
@@ -1748,22 +1696,6 @@ namespace ferram4
                     CdValues2[numPoints * 2 - 1 - i] = Cd;
                     CmValues2[numPoints * 2 - 1 - i] = Cm;
                     LDValues2[numPoints * 2 - 1 - i] = Cl / Cd;
-                }
-            }
-
-            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
-            {
-                Part p = FARAeroUtil.CurEditorParts[i];
-
-                if (FARAeroUtil.IsNonphysical(p))
-                    continue;
-                for (int k = 0; k < p.Modules.Count; k++)
-                {
-                    PartModule m = p.Modules[k];
-                    if (m is FARControllableSurface)
-                    {
-                        (m as FARControllableSurface).SetControlStateEditor(CoM, p.transform.up, (float)pitch, 0, 0, flap_setting, spoilersDeployed);
-                    }
                 }
             }
 
