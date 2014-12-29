@@ -489,14 +489,14 @@ namespace ferram4
             Vector3d partUpVector = transform.TransformDirection(localUpVector);
 
             //print("Updating drag for " + part.partInfo.title);
-            foreach (AttachNode Attach in part.attachNodes)
+            foreach (AttachNode attach in part.attachNodes)
             {
-                if (Attach.nodeType == AttachNode.NodeType.Stack)
+                if (attach.nodeType == AttachNode.NodeType.Stack)
                 {
-                    if (Attach.id.ToLowerInvariant() == "strut")
+                    if (attach.id.ToLowerInvariant() == "strut")
                         continue;
 
-                    Vector3d relPos = Attach.position;// +Attach.offset;
+                    Vector3d relPos = attach.position;// +Attach.offset;
 
                     if (part.Modules.Contains("FARCargoBayModule"))
                     {
@@ -512,25 +512,52 @@ namespace ferram4
                     }
 
                     Vector3d origToNode = transform.localToWorldMatrix.MultiplyVector(relPos);
-                    double attachSize = FARMathUtil.Clamp(Attach.size, 0.5, double.PositiveInfinity);
+                    double attachSize = FARMathUtil.Clamp(attach.size, 0.5, double.PositiveInfinity);
 
-                    if (Attach.attachedPart != null)
+                    if (attach.attachedPart != null)
                     {
-                        Vector3 location = Attach.attachedPart.transform.position;
-                        FARBasicDragModel d = Attach.attachedPart.GetComponent<FARBasicDragModel>();
+                        Vector3 location = attach.attachedPart.transform.position;
+                        FARBasicDragModel d = attach.attachedPart.GetComponent<FARBasicDragModel>();
                         if (d != null)
-                            location += Attach.attachedPart.transform.localToWorldMatrix.MultiplyVector(d.CenterOfDrag);
+                            location += attach.attachedPart.transform.localToWorldMatrix.MultiplyVector(d.CenterOfDrag);
 
                         //Debug.Log(Attach.attachedPart.partInfo.title + " " + location + " " + Attach.attachedPart.transform.position + " " + (origToNode + part.transform.position));
 
                         if (AttachedPartCoDIsFurtherThanAttachLocation(location, origToNode))
                             continue;
                         if (AttachedPartIsNotClipping(location, PartBounds))
-                            continue;
+                        {
+                            if (d != null)
+                            {
+                                location = this.part.transform.localToWorldMatrix.MultiplyVector(this.CenterOfDrag);
+                                location += this.part.transform.position;
+                                if (d.AttachedPartIsNotClipping(location, d.PartBounds))
+                                    continue;
+                            }
+                            else
+                                continue;
+                        }
+                        //this is a bit of a hack to make intakes function slightly better, since very thin ones seem to have issues.
+                        ModuleResourceIntake intake = attach.attachedPart.GetComponent<ModuleResourceIntake>();
+                        if(intake != null)
+                        {
+                            Transform intakeTrans = attach.attachedPart.FindModelTransform(intake.intakeTransformName);
+                            if ((object)intakeTrans != null)
+                            {
+                                Vector3 intakeForwardVec = (intakeTrans.forward);
+                                //Vector3 attachOrientation = this.part.transform.localToWorldMatrix.MultiplyVector(attach.orientation);
+
+                                int intakeOrientSign = Math.Sign(Vector3.Dot((Vector3)origToNode, intakeForwardVec));
+                                //int attachLocSign = Math.Sign(Vector3.Dot(attachOrientation, (Vector3)origToNode));
+                                //int intakeOrientationSign = Math.Sign(Vector3.Dot(intakeForwardVec, (Vector3)origToNode));
+                                if (intakeOrientSign > 0)
+                                    continue;
+                            }
+                        }
                     }
 
 
-                    if (UnattachedPartRightAgainstNode(origToNode, attachSize, Attach.attachedPart))
+                    if (UnattachedPartRightAgainstNode(origToNode, attachSize, attach.attachedPart))
                         continue;
 
                     attachNodeData newAttachNodeData = new attachNodeData();

@@ -936,9 +936,9 @@ namespace ferram4
 
                         double axialPressureDrag = PressureDragDueToTaperingConic(data.finenessRatio, data.taperRatio, data.crossSectionalArea, data.area);
 
-                        TempCurve1.Add(-1, (float)axialPressureDrag, 0, 0);
-                        TempCurve1.Add(0, (float)Math.Max(Cn2, intakeCd), 0, 0);
-                        TempCurve1.Add(1, (float)axialPressureDrag, 0, 0);
+                        TempCurve1.Add(-1, (float)Math.Max(axialPressureDrag, intakeCd), 0, 0);
+                        TempCurve1.Add(0, (float)Cn2, 0, 0);
+                        TempCurve1.Add(1, (float)Math.Max(axialPressureDrag, intakeCd), 0, 0);
 
 
                         TempCurve2.Add((float)cosCutoffAngle, 0, (float)Cn1, 0);
@@ -967,10 +967,9 @@ namespace ferram4
 
                         double axialPressureDrag = PressureDragDueToTaperingConic(data.finenessRatio, 1 / data.taperRatio, data.crossSectionalArea, data.area);
 
-                        TempCurve1.Add(-1, (float)axialPressureDrag, 0, 0);
-                        TempCurve1.Add(0, (float)Math.Max(Cn2, intakeCd), 0, 0);
-                        TempCurve1.Add(1, (float)axialPressureDrag, 0, 0);
-
+                        TempCurve1.Add(-1, (float)Math.Max(axialPressureDrag, intakeCd), 0, 0);
+                        TempCurve1.Add(0, (float)Cn2, 0, 0);
+                        TempCurve1.Add(1, (float)Math.Max(axialPressureDrag, intakeCd), 0, 0);
 
                         TempCurve2.Add(-1, 0, (float)-Cn1, (float)-Cn1);
                         TempCurve2.Add(-0.8660f, (float)((-Math.Cos((Math.PI *0.5 - Math.Acos(0.8660)) *0.5) * Math.Sin(2 * (Math.PI *0.5 - Math.Acos(0.8660))) * Cn1)), 0, 0);
