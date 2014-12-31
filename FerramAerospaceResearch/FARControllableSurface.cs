@@ -393,8 +393,8 @@ namespace ferram4
                     //Vector3 tmpVec = vessel.ReferenceTransform.up * Vector3.Dot(vessel.ReferenceTransform.up, vel) + vessel.ReferenceTransform.forward * Vector3.Dot(vessel.ReferenceTransform.forward, vel);   //velocity vector projected onto a plane that divides the airplane into left and right halves
 					//double AoA = Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.forward);
                     double AoA = base.CalculateAoA(vel.normalized);      //using base.CalculateAoA gets the deflection using WingAeroModel's code, which does not account for deflection; this gives us the AoA that the surface _would_ be at if it hadn't deflected at all.
-                    AoA = FARMathUtil.deg2rad * AoA;
-					if (double.IsNaN(AoA))
+                    AoA = FARMathUtil.rad2deg * AoA;
+                    if (double.IsNaN(AoA))
 						AoA = 0;
 					AoAdesiredControl += AoA * pitchaxisDueToAoA;
 				}
@@ -524,7 +524,7 @@ namespace ferram4
                 {
                     Vector3 tmpVec = EditorLogic.RootPart.transform.up * Vector3.Dot(EditorLogic.RootPart.transform.up, velocityVec) + EditorLogic.RootPart.transform.forward * Vector3.Dot(EditorLogic.RootPart.transform.forward, velocityVec);   //velocity vector projected onto a plane that divides the airplane into left and right halves
                     double AoA = base.CalculateAoA(tmpVec.normalized);      //using base.CalculateAoA gets the deflection using WingAeroModel's code, which does not account for deflection; this gives us the AoA that the surface _would_ be at if it hadn't deflected at all.
-                    AoA = FARMathUtil.deg2rad * AoA;
+                    AoA = FARMathUtil.rad2deg * AoA;
                     if (double.IsNaN(AoA))
                         AoA = 0;
                     AoAdesiredControl += AoA * pitchaxisDueToAoA;
