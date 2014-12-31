@@ -392,11 +392,11 @@ namespace ferram4
                     Vector3d vel = this.GetVelocity();
                     //Vector3 tmpVec = vessel.ReferenceTransform.up * Vector3.Dot(vessel.ReferenceTransform.up, vel) + vessel.ReferenceTransform.forward * Vector3.Dot(vessel.ReferenceTransform.forward, vel);   //velocity vector projected onto a plane that divides the airplane into left and right halves
 					//double AoA = Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.forward);
-                    double AoA = base.CalculateAoA(vel.normalized);
-					AoA = FARMathUtil.rad2deg * Math.Asin(AoA);
+                    double AoA = base.CalculateAoA(vel.normalized);      //using base.CalculateAoA gets the deflection using WingAeroModel's code, which does not account for deflection; this gives us the AoA that the surface _would_ be at if it hadn't deflected at all.
+                    AoA = FARMathUtil.deg2rad * AoA;
 					if (double.IsNaN(AoA))
 						AoA = 0;
-					AoAdesiredControl += AoA * pitchaxisDueToAoA * 0.01;
+					AoAdesiredControl += AoA * pitchaxisDueToAoA;
 				}
 
                 AoAdesiredControl *= AoAsign;
@@ -523,11 +523,11 @@ namespace ferram4
                 if (pitchaxisDueToAoA != 0.0)
                 {
                     Vector3 tmpVec = EditorLogic.RootPart.transform.up * Vector3.Dot(EditorLogic.RootPart.transform.up, velocityVec) + EditorLogic.RootPart.transform.forward * Vector3.Dot(EditorLogic.RootPart.transform.forward, velocityVec);   //velocity vector projected onto a plane that divides the airplane into left and right halves
-                    double AoA = Vector3.Dot(tmpVec.normalized, EditorLogic.RootPart.transform.forward);
-                    AoA = FARMathUtil.rad2deg * Math.Asin(AoA);
+                    double AoA = base.CalculateAoA(tmpVec.normalized);      //using base.CalculateAoA gets the deflection using WingAeroModel's code, which does not account for deflection; this gives us the AoA that the surface _would_ be at if it hadn't deflected at all.
+                    AoA = FARMathUtil.deg2rad * AoA;
                     if (double.IsNaN(AoA))
                         AoA = 0;
-                    AoAdesiredControl += PitchLocation * AoA * pitchaxisDueToAoA * 0.01;
+                    AoAdesiredControl += AoA * pitchaxisDueToAoA;
                 }
 
                 AoAdesiredControl *= AoAsign;
