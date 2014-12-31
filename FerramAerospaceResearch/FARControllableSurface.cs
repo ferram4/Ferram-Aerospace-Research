@@ -396,7 +396,7 @@ namespace ferram4
                     AoA = FARMathUtil.rad2deg * AoA;
                     if (double.IsNaN(AoA))
 						AoA = 0;
-					AoAdesiredControl += AoA * pitchaxisDueToAoA;
+					AoAdesiredControl += AoA * pitchaxisDueToAoA * 0.01;
 				}
 
                 AoAdesiredControl *= AoAsign;
@@ -527,7 +527,7 @@ namespace ferram4
                     AoA = FARMathUtil.rad2deg * AoA;
                     if (double.IsNaN(AoA))
                         AoA = 0;
-                    AoAdesiredControl += AoA * pitchaxisDueToAoA;
+                    AoAdesiredControl += AoA * pitchaxisDueToAoA * 0.01;
                 }
 
                 AoAdesiredControl *= AoAsign;
