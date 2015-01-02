@@ -99,7 +99,7 @@ namespace ferram4
                 MeshFilter mf = t.GetComponent<MeshFilter>();
                 if ((object)mf == null)
                     continue;
-                Mesh m = mf.mesh;
+                Mesh m = mf.sharedMesh;
 
                 if ((object)m == null)
                     continue;
