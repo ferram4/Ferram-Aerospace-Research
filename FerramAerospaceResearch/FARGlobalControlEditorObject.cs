@@ -55,7 +55,6 @@ namespace ferram4
         private IButton FAREditorButtonBlizzy = null;
         private ApplicationLauncherButton FAREditorButtonStock = null;
         private bool buttonsNeedInitializing = true;
-        private Part lastRootPart = null;
         private List<Part> editorShip;
 
 

@@ -502,10 +502,7 @@ namespace ferram4
                     {
                         FARCargoBayModule bay = (FARCargoBayModule)part.Modules["FARCargoBayModule"];
 
-                        Vector3d maxBounds = bay.maxBounds;
-                        Vector3d minBounds = bay.minBounds;
-
-                        if (relPos.x < maxBounds.x && relPos.y < maxBounds.y && relPos.z < maxBounds.z && relPos.x > minBounds.x && relPos.y > minBounds.y && relPos.z > minBounds.z)
+                        if (bay.bayBounds.Contains(relPos))
                         {
                             continue;
                         }

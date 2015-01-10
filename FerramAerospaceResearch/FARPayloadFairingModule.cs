@@ -54,8 +54,6 @@ namespace ferram4
 
 
         private List<Part> FARShieldedParts = new List<Part>();
-        private List<Vector3> minBounds = new List<Vector3>();
-        private List<Vector3> maxBounds = new List<Vector3>();
 
         public override void Start()
         {
@@ -69,16 +67,12 @@ namespace ferram4
         {
             base.OnEditorAttach();
 
-            minBounds.Clear();
-            maxBounds.Clear();
             FindShieldedParts();
         }
 
         [KSPEvent(name = "FairingShapeChanged", active = true, guiActive = false, guiActiveUnfocused = false)]
         public void FairingShapeChanged()
         {
-            minBounds.Clear();
-            maxBounds.Clear();
             this.PartColliders = part.GetPartColliders();
             FindShieldedParts();
             var d = part.GetComponent<FARBasicDragModel>();
@@ -87,43 +81,22 @@ namespace ferram4
 
 
 
-        private void CalculatePartBounds(Part p)
+        /*private void CalculatePartBounds(Part p)
         {
-            Vector3 minBoundVec, maxBoundVec;
-            minBoundVec = maxBoundVec = Vector3.zero;
-            Transform[] transformList = FARGeoUtil.PartModelTransformArray(p);
-            for (int i = 0; i < transformList.Length; i++)
+            FARPartModule m = p.GetComponent<FARPartModule>();
+            if(m == null)
+                return;
+            if (p == this.part)
+                fairingBounds.AddRange(m.PartBounds);
+            else
             {
-                Transform t = transformList[i];
-
-                MeshFilter mf = t.GetComponent<MeshFilter>();
-                if ((object)mf == null)
-                    continue;
-                Mesh m = mf.sharedMesh;
-
-                if ((object)m == null)
-                    continue;
-
-                var matrix = part.transform.worldToLocalMatrix * t.localToWorldMatrix;
-
-                for (int j = 0; j < m.vertices.Length; j++)
+                for(int i = 0; i < m.PartBounds.Length; i++)
                 {
-                    Vector3 v = matrix.MultiplyPoint3x4(m.vertices[j]);
-
-                    maxBoundVec.x = Mathf.Max(maxBoundVec.x, v.x);
-                    minBoundVec.x = Mathf.Min(minBoundVec.x, v.x);
-                    maxBoundVec.y = Mathf.Max(maxBoundVec.y, v.y);
-                    minBoundVec.y = Mathf.Min(minBoundVec.y, v.y);
-                    maxBoundVec.z = Mathf.Max(maxBoundVec.z, v.z);
-                    minBoundVec.z = Mathf.Min(minBoundVec.z, v.z);
+                    Bounds bounds = m.PartBounds[i];
+                    bounds.
+                    
                 }
-                minBoundVec.x *= 1.05f;
-                maxBoundVec.x *= 1.05f;
-                minBoundVec.z *= 1.05f;
-                maxBoundVec.z *= 1.05f;
             }
-            minBounds.Add(minBoundVec);
-            maxBounds.Add(maxBoundVec);
         }
 
 
@@ -143,7 +116,7 @@ namespace ferram4
             }
             else
                 CalculatePartBounds(part);
-        }
+        }*/
 
         private void ClearShieldedParts()
         {
@@ -170,10 +143,6 @@ namespace ferram4
             /*if (HighLogic.LoadedSceneIsEditor/* && FARAeroUtil.EditorAboutToAttach(false) &&
                 !FARAeroUtil.CurEditorParts.Contains(part))
                 return;*/
-            if (minBounds.Count == 0)
-            {
-                CalculateFairingBounds();
-            }
 
             ClearShieldedParts();
             UpdateShipPartsList();
@@ -212,18 +181,16 @@ namespace ferram4
                 }
 
                 relPos = this.part.transform.worldToLocalMatrix.MultiplyVector(relPos);
-                for (int j = 0; j < minBounds.Count; j++)
+                for (int j = 0; j < PartBounds.Length; j++)
                 {
-                    Vector3 minBoundVec, maxBoundVec;
-                    minBoundVec = minBounds[j];
-                    maxBoundVec = maxBounds[j];
+                    Bounds bounds = PartBounds[j];
 
-                    Vector3 fairingCenter = maxBoundVec + minBoundVec;
+                    Vector3 fairingCenter = bounds.center;
                     fairingCenter *= 0.5f;
                     fairingCenter = this.part.transform.localToWorldMatrix.MultiplyVector(fairingCenter);
                     fairingCenter += this.part.transform.position;
 
-                    if (relPos.x < maxBoundVec.x && relPos.y < maxBoundVec.y && relPos.z < maxBoundVec.z && relPos.x > minBoundVec.x && relPos.y > minBoundVec.y && relPos.z > minBoundVec.z)
+                    if (bounds.Contains(relPos))
                     {
                         
                         Vector3 vecFromPToPFCenter;

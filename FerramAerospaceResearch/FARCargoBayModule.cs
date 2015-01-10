@@ -50,11 +50,7 @@ namespace ferram4
 
 
         private List<Part> FARShieldedParts = new List<Part>();
-        
-
-        public Vector3 minBounds = new Vector3();
-
-        public Vector3 maxBounds = new Vector3();
+        public Bounds bayBounds;
 
         private bool bayOpen = true;
 
@@ -93,7 +89,6 @@ namespace ferram4
         {
             base.OnEditorAttach();
 
-            minBounds = maxBounds = Vector3.zero;
             ClearShieldedParts();
         }
 
@@ -120,7 +115,7 @@ namespace ferram4
 
         private bool RaycastingFunction(Vector3 direction)
         {
-            if (minBounds == Vector3.zero)
+            if (bayBounds.center == Vector3.zero)
                 CalculateBayBounds();
 
             Ray ray = new Ray();
@@ -131,7 +126,7 @@ namespace ferram4
             bool hitMyself = false;
 
             // Make sure the raycast sphere fits into the bay
-            Vector3 size = maxBounds - minBounds;
+            Vector3 size = bayBounds.size;
             float radius = Mathf.Min(1f, Mathf.Min(size.x, size.y, size.z) * 0.15f);
 
             RaycastHit[] hits = Physics.SphereCastAll(ray, radius, 100, FARAeroUtil.RaycastMask);
@@ -214,7 +209,9 @@ namespace ferram4
 
         private void CalculateBayBounds()
         {
-            Transform[] transformList = FARGeoUtil.PartModelTransformArray(part);
+            for (int i = 0; i < PartBounds.Length; i++)
+                bayBounds.Encapsulate(PartBounds[i]);
+            /*Transform[] transformList = FARGeoUtil.PartModelTransformArray(part);
             for (int i = 0; i < transformList.Length; i++)
             {
                 Transform t = transformList[i];
@@ -240,16 +237,17 @@ namespace ferram4
                     maxBounds.z = Mathf.Max(maxBounds.z, v.z);
                     minBounds.z = Mathf.Min(minBounds.z, v.z);
                 }
-            }
-            minBounds.x *= 0.98f;
-            maxBounds.x *= 0.98f;
-            minBounds.z *= 0.98f;
-            maxBounds.z *= 0.98f;
+            }*/
+            Vector3 expansionAmount = bayBounds.size;
+            expansionAmount.x *= -0.02f;
+            expansionAmount.z *= -0.02f;
+            expansionAmount.y = 0;
+            bayBounds.Expand(expansionAmount);
         }
 
         private void FindShieldedParts()
         {
-            if (minBounds == new Vector3())
+            if (bayBounds.center == Vector3.zero)
             {
                 CalculateBayBounds();
             }
@@ -257,9 +255,12 @@ namespace ferram4
             bayOpen = false;
             UpdateShipPartsList();
 
-            double y_margin = Math.Max(0.12, 0.03 * (maxBounds.y-minBounds.y));
+            float y_margin = (float)Math.Max(0.12, 0.03 * (bayBounds.size.y));
 
             Collider[] colliders = this.PartColliders;
+
+            Bounds boundsWithMargin = bayBounds;
+            boundsWithMargin.Expand(new Vector3(0, y_margin, 0));
 
             for (int i = 0; i < VesselPartList.Count; i++)
             {
@@ -293,9 +294,9 @@ namespace ferram4
                 }
 
                 relPos = this.part.transform.worldToLocalMatrix.MultiplyVector(relPos);
-                if (relPos.x < maxBounds.x && relPos.y < maxBounds.y+y_margin && relPos.z < maxBounds.z && relPos.x > minBounds.x && relPos.y > minBounds.y-y_margin && relPos.z > minBounds.z)
+                if (boundsWithMargin.Contains(relPos))
                 {
-                    if (relPos.y > maxBounds.y || relPos.y < minBounds.y)
+                    if (relPos.y > bayBounds.max.y || relPos.y < bayBounds.min.y)
                     {
                         // Enforce strict y bounds for parent and stack children
                         if (p == this.part.parent ||
