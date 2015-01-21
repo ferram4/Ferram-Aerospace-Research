@@ -12,11 +12,15 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
     {
         public void GetCrossSectionalAreaCurves(Part p, out CrossSectionCurve xArea, out CrossSectionCurve yArea, out CrossSectionCurve zArea)
         {
-            xArea = new CrossSectionCurve();
-            yArea = new CrossSectionCurve();
-            zArea = new CrossSectionCurve();
-
             List<Line> meshLines = GenerateLinesFromPart(p);
+
+            xArea = GenerateCrossSection(meshLines, 10);
+
+            TransformLines(ref meshLines, Matrix4x4.TRS(Vector3.zero, Quaternion.FromToRotation(Vector3.up, Vector3.forward), Vector3.zero));
+            yArea = GenerateCrossSection(meshLines, 10);
+
+            TransformLines(ref meshLines, Matrix4x4.TRS(Vector3.zero, Quaternion.FromToRotation(Vector3.forward, Vector3.right), Vector3.zero));
+            zArea = GenerateCrossSection(meshLines, 10);
         }
 
         private CrossSectionCurve GenerateCrossSection(List<Line> meshLines, int numCrossSections)
@@ -87,6 +91,12 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
             }
 
             return eventQueue.InOrderTraversal();
+        }
+
+        private void TransformLines(ref List<Line> meshLines, Matrix4x4 transformationMatrix)
+        {
+            for (int i = 0; i < meshLines.Count; i++)
+                meshLines[i].TransformLine(transformationMatrix);
         }
 
         //This will provide a list of lines that make up the part's geometry, oriented so that they are in part-oriented space
