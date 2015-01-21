@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using KSP;
+using FerramAerospaceResearch.FARCollections;
 using ferram4;
 
 namespace FerramAerospaceResearch.FARPartGeoUtil
@@ -16,6 +17,76 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
             zArea = new CrossSectionCurve();
 
             List<Line> meshLines = GenerateLinesFromPart(p);
+        }
+
+        private CrossSectionCurve GenerateCrossSection(List<Line> meshLines, int numCrossSections)
+        {
+            CrossSectionCurve curve = new CrossSectionCurve();
+
+            List<CrossSectionEvent> eventQueue = GenerateEventQueue(meshLines, numCrossSections);
+            HashSet<Line> currentLines = new HashSet<Line>();
+
+            for (int i = 0; i < eventQueue.Count; i++)
+            {
+                CrossSectionEvent currentEvent = eventQueue[i];
+                if(currentEvent.crossSectionCut)
+                {
+                    //Calc cross section from current lines using convex hull algorithm
+                }
+                else
+                {
+                    Line currentLine = currentEvent.line;
+                    if (!currentLines.Remove(currentLine))
+                        currentLines.Add(currentLine);
+                }
+            }
+
+
+            return curve;
+        }
+
+        private List<CrossSectionEvent> GenerateEventQueue(List<Line> meshLines, int numCrossSections)
+        {
+            float upperBound = float.NegativeInfinity, lowerBound = float.PositiveInfinity;
+            LLRedBlackTree<CrossSectionEvent> eventQueue = new LLRedBlackTree<CrossSectionEvent>();
+
+            for (int i = 0; i < meshLines.Count; i++)
+            {
+                Line line = meshLines[i];
+                CrossSectionEvent point1Event = new CrossSectionEvent();
+                CrossSectionEvent point2Event = new CrossSectionEvent();
+
+                point1Event.line = line;
+                point1Event.point = line.point1.y;
+                point1Event.crossSectionCut = false;
+
+                eventQueue.Insert(point1Event);
+
+                point2Event.line = line;
+                point2Event.point = line.point2.y;
+                point2Event.crossSectionCut = false;
+
+                eventQueue.Insert(point2Event);
+
+                upperBound = Math.Max(upperBound, line.point1.y);
+                upperBound = Math.Max(upperBound, line.point2.y);
+
+                lowerBound = Math.Min(lowerBound, line.point1.y);
+                lowerBound = Math.Min(lowerBound, line.point2.y);
+            }
+
+            float stepSize = (upperBound - lowerBound) / (float)numCrossSections;
+
+            for (int i = 0; i < numCrossSections; i++)
+            {
+                CrossSectionEvent crossSectionCut = new CrossSectionEvent();
+                crossSectionCut.point = stepSize * i + lowerBound;
+                crossSectionCut.crossSectionCut = true;
+
+                eventQueue.Insert(crossSectionCut);
+            }
+
+            return eventQueue.InOrderTraversal();
         }
 
         //This will provide a list of lines that make up the part's geometry, oriented so that they are in part-oriented space

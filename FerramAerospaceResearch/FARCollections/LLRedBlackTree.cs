@@ -162,11 +162,12 @@ namespace FerramAerospaceResearch.FARCollections
 
             int cmp = _comparer.Compare(data, node.data);
 
-            if (cmp == 0)
-                node.data = data;
-            else if (cmp < 0)
+            //if (cmp == 0)
+            //    node.data = data;
+            //else
+            if (cmp < 0)
                 node.left = Insert(data, node.left, node);
-            else if (cmp > 0)
+            else if (cmp >= 0)
                 node.right = Insert(data, node.right, node);
 
             if (isRed(node.right) && !isRed(node.left))

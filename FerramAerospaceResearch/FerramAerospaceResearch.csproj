@@ -86,6 +86,7 @@
     <Compile Include="FARMatrix.cs" />
     <Compile Include="FARPartClassification.cs" />
     <Compile Include="FARPartExtensions.cs" />
+    <Compile Include="FARPartGeoUtil\CrossSectionEvent.cs" />
     <Compile Include="FARPartGeoUtil\Line.cs" />
     <Compile Include="FARPartGeoUtil\CrossSection.cs" />
     <Compile Include="FARPartModule.cs" />
