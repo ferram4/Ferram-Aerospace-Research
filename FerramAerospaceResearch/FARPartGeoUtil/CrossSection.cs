@@ -59,5 +59,47 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
         {
             return this.station.CompareTo(other.station);
         }
+
+        public ConfigNode Save()
+        {
+            ConfigNode sectionNode = new ConfigNode("CROSS_SECTION");
+            sectionNode.AddValue("station", this.station);
+            sectionNode.AddValue("area", this.area);
+            sectionNode.AddValue("centroid", this.centroid);
+            sectionNode.AddValue("radius", this.radius);
+
+            return sectionNode;
+        }
+
+        public void Load(ConfigNode sectionNode)
+        {
+            if (sectionNode.HasValue("station"))
+            {
+                if (!double.TryParse(sectionNode.GetValue("station"), out this.station))
+                    this.station = 0;
+            }
+            if (sectionNode.HasValue("area"))
+            {
+                if (!double.TryParse(sectionNode.GetValue("area"), out this.area))
+                    this.area = 0;
+            }
+            if (sectionNode.HasValue("radius"))
+            {
+                if (!double.TryParse(sectionNode.GetValue("radius"), out this.radius))
+                    this.radius = 0;
+            }
+            if (sectionNode.HasValue("centroid"))
+            {
+                string s = sectionNode.GetValue("centroid");
+                string[] split = s.Split(new char[] { ',', ' ', ';', ':' });
+
+                if (!double.TryParse(split[0], out this.centroid.x))
+                    this.centroid.x = 0;
+
+                if (!double.TryParse(split[1], out this.centroid.y))
+                    this.centroid.y = 0;
+
+            }
+        }
     }
 }

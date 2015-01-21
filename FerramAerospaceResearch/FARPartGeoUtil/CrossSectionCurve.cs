@@ -75,5 +75,27 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
 
             return section;
         }
+
+        public ConfigNode Save(string curveName)
+        {
+            ConfigNode node = new ConfigNode(curveName);
+            List<CrossSection> crossSections = this.crossSections.InOrderTraversal();
+            for(int i = 0; i < crossSections.Count; i++)
+            {
+                node.AddNode(crossSections[i].Save());
+            }
+            return node;
+        }
+
+        public void Load(ConfigNode node)
+        {
+            ConfigNode[] crossSections = node.GetNodes("CROSS_SECTION");
+            for(int i = 0; i < crossSections.Length; i++)
+            {
+                CrossSection section = new CrossSection();
+                section.Load(crossSections[i]);
+                this.AddCrossSection(section);
+            }
+        }
     }
 }

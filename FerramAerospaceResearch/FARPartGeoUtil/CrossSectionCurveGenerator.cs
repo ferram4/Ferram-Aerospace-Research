@@ -44,22 +44,22 @@ using ferram4;
 
 namespace FerramAerospaceResearch.FARPartGeoUtil
 {
-    class CrossSectionCurveGenerator
+    static class CrossSectionCurveGenerator
     {
-        public void GetCrossSectionalAreaCurves(Part p, out CrossSectionCurve xArea, out CrossSectionCurve yArea, out CrossSectionCurve zArea)
+        public static void GetCrossSectionalAreaCurves(Part p, out CrossSectionCurve xArea, out CrossSectionCurve yArea, out CrossSectionCurve zArea)
         {
             List<Line> meshLines = GenerateLinesFromPart(p);
 
-            xArea = GenerateCrossSection(meshLines, 10);
+            yArea = GenerateCrossSection(meshLines, 10);
 
             TransformLines(ref meshLines, Matrix4x4.TRS(Vector3.zero, Quaternion.FromToRotation(Vector3.up, Vector3.forward), Vector3.one));
-            yArea = GenerateCrossSection(meshLines, 10);
+            xArea = GenerateCrossSection(meshLines, 10);
 
             TransformLines(ref meshLines, Matrix4x4.TRS(Vector3.zero, Quaternion.FromToRotation(Vector3.forward, Vector3.right), Vector3.one));
             zArea = GenerateCrossSection(meshLines, 10);
         }
 
-        private CrossSectionCurve GenerateCrossSection(List<Line> meshLines, int numCrossSections)
+        private static CrossSectionCurve GenerateCrossSection(List<Line> meshLines, int numCrossSections)
         {
             CrossSectionCurve curve = new CrossSectionCurve();
 
@@ -82,11 +82,10 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
                 }
             }
 
-
             return curve;
         }
 
-        private CrossSection GenerateCrossSectionFromLines(HashSet<Line> currentLines, float section)
+        private static CrossSection GenerateCrossSectionFromLines(HashSet<Line> currentLines, float section)
         {
             List<Vector3d> points = new List<Vector3d>();
             foreach(Line line in currentLines)
@@ -96,7 +95,7 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
             return new CrossSection(ref poly, section);
         }
 
-        private List<CrossSectionEvent> GenerateEventQueue(List<Line> meshLines, int numCrossSections)
+        private static List<CrossSectionEvent> GenerateEventQueue(List<Line> meshLines, int numCrossSections)
         {
             float upperBound = float.NegativeInfinity, lowerBound = float.PositiveInfinity;
             LLRedBlackTree<CrossSectionEvent> eventQueue = new LLRedBlackTree<CrossSectionEvent>();
@@ -140,14 +139,14 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
             return eventQueue.InOrderTraversal();
         }
 
-        private void TransformLines(ref List<Line> meshLines, Matrix4x4 transformationMatrix)
+        private static void TransformLines(ref List<Line> meshLines, Matrix4x4 transformationMatrix)
         {
             for (int i = 0; i < meshLines.Count; i++)
                 meshLines[i].TransformLine(transformationMatrix);
         }
 
         //This will provide a list of lines that make up the part's geometry, oriented so that they are in part-oriented space
-        private List<Line> GenerateLinesFromPart(Part p)
+        private static List<Line> GenerateLinesFromPart(Part p)
         {
             Transform partTransform = p.transform;
             Bounds colliderBounds, meshBounds;
@@ -194,7 +193,7 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
             return GenerateLinesFromVertsAndTris(vertexList, triangleIndices);
         }
 
-        private List<Line> GenerateLinesFromVertsAndTris(List<Vector3> verts, List<int> triIndices)
+        private static List<Line> GenerateLinesFromVertsAndTris(List<Vector3> verts, List<int> triIndices)
         {
             HashSet<Line> lines = new HashSet<Line>();
 
@@ -221,7 +220,7 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
             return lines.ToList();
         }
 
-        private bool UseMeshBounds(Bounds colliderBounds, Bounds meshBounds, float relTolerance)
+        private static bool UseMeshBounds(Bounds colliderBounds, Bounds meshBounds, float relTolerance)
         {
             Vector3 absTolerance = (meshBounds.max - meshBounds.min) * relTolerance;
 
@@ -236,7 +235,7 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
             return false;
         }
 
-        private List<Vector3> GetVertexList(Mesh[] meshes, Transform[] meshTransforms, Transform partTransform)
+        private static List<Vector3> GetVertexList(Mesh[] meshes, Transform[] meshTransforms, Transform partTransform)
         {
             List<Vector3> vertices = new List<Vector3>();
 
@@ -254,7 +253,7 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
             return vertices;
         }
 
-        private List<int> GetTriangleVerts(Mesh[] meshes)
+        private static List<int> GetTriangleVerts(Mesh[] meshes)
         {
             List<int> triIndices = new List<int>();
             int offset = 0;
