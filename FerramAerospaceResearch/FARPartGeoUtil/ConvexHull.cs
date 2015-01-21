@@ -87,7 +87,8 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
                 u = CorrectHullMistakes(u, verts[verts.Count - (1 + i)]);
             }
             verts = l;
-            verts.AddRange(u.GetRange(1, u.Count - 2));
+            if(u.Count > 1)
+                verts.AddRange(u.GetRange(1, Math.Max(u.Count - 2,1)));
             return verts;
         }
 

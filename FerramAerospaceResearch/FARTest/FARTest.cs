@@ -29,6 +29,14 @@ namespace FerramAerospaceResearch.FARTest
         {
             CrossSectionCurve xCurve, yCurve, zCurve;
             CrossSectionCurveGenerator.GetCrossSectionalAreaCurves(p, out xCurve, out yCurve, out zCurve);
+
+            ConfigNode node = new ConfigNode("Cross Section Dump");
+            node.AddNode(xCurve.Save("xCurve"));
+            node.AddNode(yCurve.Save("yCurve"));
+            node.AddNode(zCurve.Save("zCurve"));
+
+            string savePath = KSPUtil.ApplicationRootPath.Replace("\\", "/") + "GameData/FerramAerospaceResearch/CrossSectionTest.cfg";
+            node.Save(savePath);
         }
     }
 }

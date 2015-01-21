@@ -242,6 +242,9 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
             for (int i = 0; i < meshes.Length; i++)
             {
                 Mesh m = meshes[i];
+                if (m == null)
+                    continue;
+
                 Matrix4x4 matrix = partTransform.worldToLocalMatrix * meshTransforms[i].localToWorldMatrix;
 
                 for(int j = 0; j < m.vertices.Length; j++)
@@ -259,6 +262,9 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
             int offset = 0;
             for (int i = 0; i < meshes.Length; i++)
             {
+                if (meshes[i] == null)
+                    continue;
+
                 int[] tri = meshes[i].triangles;
                 for(int j = 0; j < tri.Length; j++)
                 {
