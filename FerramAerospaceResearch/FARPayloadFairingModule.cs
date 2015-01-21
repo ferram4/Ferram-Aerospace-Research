@@ -112,7 +112,7 @@ namespace ferram4
                 for (int i = 0; i < part.symmetryCounterparts.Count; i++)
                 {
                     Part p = part.symmetryCounterparts[i];
-                    if (p.GetComponent<FARPayloadFairingModule>() != null)
+                    if (p != null && p.GetComponent<FARPayloadFairingModule>() != null)
                     {
                         CalculatePartBounds(p);
                     }
