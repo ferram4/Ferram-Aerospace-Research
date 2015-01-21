@@ -94,6 +94,14 @@ namespace ferram4
 
         }
 
+        public static double Lerp(double x1, double x2, double y1, double y2, double x)
+        {
+            double y = (y2 - y1) / (x2 - x1);
+            y *= (x - x1);
+            y += y1;
+            return y;
+        }
+
         public static string FormatTime(double time)
         {
             int iTime = (int)time % 3600;
