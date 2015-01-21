@@ -37,27 +37,53 @@ Copyright 2014, Michael Ferrara, aka Ferram4
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using KSP;
 
 namespace FerramAerospaceResearch.FARPartGeoUtil
 {
-    struct CrossSection : IComparable<CrossSection>
+    class Polygon
     {
-        public Vector2d centroid;
+        List<Vector3d> points;
         public double area;
-        public double station;
-        public double radius;
+        public Vector3d centroid;
 
-        public CrossSection(ref Polygon poly, double station)
+        public Polygon(List<Vector3d> pointsForConvexHull)
         {
-            this.centroid = new Vector2d(poly.centroid.x, poly.centroid.z);
-            this.area = poly.area;
-            this.station = station;
-            this.radius = Math.Sqrt(area / Math.PI);
+            ConvexHull hull = new ConvexHull();
+            points = hull.GrahamsScanVerts(pointsForConvexHull);
+
+            area = CalculateArea();
+            centroid = CalculateCentroid();
         }
 
-        public int CompareTo(CrossSection other)
+        private double CalculateArea()
         {
-            return this.station.CompareTo(other.station);
+            double area = 0;
+            for(int i = 0; i < points.Count; i++)
+            {
+                Vector3d pt1, pt2;
+                pt1 = points[i];
+
+                if (i + 1 == points.Count)
+                    pt2 = points[0];
+                else
+                    pt2 = points[i + 1];
+
+                area += pt1.x * pt2.z;
+                area -= pt2.x * pt1.z;
+            }
+            area *= 0.5;
+            return area;
+        }
+
+        private Vector3d CalculateCentroid()
+        {
+            Vector3d centroid = new Vector3d();
+            for (int i = 0; i < points.Count; i++)
+                centroid += points[i];
+
+            centroid /= points.Count;
+            return centroid;
         }
     }
 }

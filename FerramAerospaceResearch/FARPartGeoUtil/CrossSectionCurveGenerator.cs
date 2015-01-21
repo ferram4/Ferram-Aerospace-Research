@@ -72,6 +72,7 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
                 if(currentEvent.crossSectionCut)
                 {
                     //Calc cross section from current lines using convex hull algorithm
+                    curve.AddCrossSection(GenerateCrossSectionFromLines(currentLines, currentEvent.point));
                 }
                 else
                 {
@@ -83,6 +84,16 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
 
 
             return curve;
+        }
+
+        private CrossSection GenerateCrossSectionFromLines(HashSet<Line> currentLines, float section)
+        {
+            List<Vector3d> points = new List<Vector3d>();
+            foreach(Line line in currentLines)
+                points.Add((Vector3d)line.GetPoint(section));
+
+            Polygon poly = new Polygon(points);
+            return new CrossSection(ref poly, section);
         }
 
         private List<CrossSectionEvent> GenerateEventQueue(List<Line> meshLines, int numCrossSections)
