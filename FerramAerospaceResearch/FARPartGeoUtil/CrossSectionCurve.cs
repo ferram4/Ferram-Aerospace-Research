@@ -7,14 +7,14 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
 {
     class CrossSectionCurve
     {
-        LLRedBlackTree<PartCrossSection> crossSections;
+        LLRedBlackTree<CrossSection> crossSections;
 
         public CrossSectionCurve()
         {
-            crossSections = new LLRedBlackTree<PartCrossSection>();
+            crossSections = new LLRedBlackTree<CrossSection>();
         }
 
-        public void AddCrossSection(PartCrossSection section)
+        public void AddCrossSection(CrossSection section)
         {
             crossSections.Insert(section);
         }
@@ -24,12 +24,12 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
             crossSections.Clear();
         }
 
-        public PartCrossSection GetCrossSectionAtStation(double station)
+        public CrossSection GetCrossSectionAtStation(double station)
         {
-            PartCrossSection section = new PartCrossSection();
+            CrossSection section = new CrossSection();
             section.station = station;
 
-            PartCrossSection lowerSection, upperSection;
+            CrossSection lowerSection, upperSection;
             crossSections.FindNearestData(section, out lowerSection, out upperSection);
 
             section.radius = FARMathUtil.Lerp(lowerSection.station, upperSection.station, lowerSection.radius, upperSection.radius, station);

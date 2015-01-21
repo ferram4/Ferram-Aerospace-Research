@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using UnityEngine;
 using KSP;
 using ferram4;
@@ -9,13 +9,19 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
 {
     class CrossSectionCurveGenerator
     {
-        public void GetCrossSectionalAreaCurves(Part p, out FloatCurve xArea, out FloatCurve yArea, out FloatCurve zArea)
+        public void GetCrossSectionalAreaCurves(Part p, out CrossSectionCurve xArea, out CrossSectionCurve yArea, out CrossSectionCurve zArea)
+        {
+            xArea = new CrossSectionCurve();
+            yArea = new CrossSectionCurve();
+            zArea = new CrossSectionCurve();
+
+            List<Line> meshLines = GenerateLinesFromPart(p);
+        }
+
+        //This will provide a list of lines that make up the part's geometry, oriented so that they are in part-oriented space
+        private List<Line> GenerateLinesFromPart(Part p)
         {
             Transform partTransform = p.transform;
-            xArea = new FloatCurve();
-            yArea = new FloatCurve();
-            zArea = new FloatCurve();
-
             Bounds colliderBounds, meshBounds;
 
             colliderBounds = PartGeometryUtil.MergeBounds(p.GetColliderBounds(), partTransform);
@@ -23,12 +29,15 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
 
             List<Vector3> vertexList;
             List<int> triangleIndices;
-            if(UseMeshBounds(colliderBounds, meshBounds, 0.05f))
+
+            //If the mesh shape is much larger than the colliders, then unfortunately, we have to use the raw mesh
+            //Otherwise, use the collider because it has fewer verts and tris to work with
+            if (UseMeshBounds(colliderBounds, meshBounds, 0.05f))
             {
                 Transform[] meshTransforms = FARGeoUtil.PartModelTransformArray(p);
                 Mesh[] meshes = new Mesh[meshTransforms.Length];
 
-                for(int i = 0; i < meshTransforms.Length; i++)
+                for (int i = 0; i < meshTransforms.Length; i++)
                 {
                     MeshFilter mf = meshTransforms[i].GetComponent<MeshFilter>();
                     if (mf == null)
@@ -53,6 +62,35 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
                 vertexList = GetVertexList(meshes, meshTransforms, partTransform);
                 triangleIndices = GetTriangleVerts(meshes);
             }
+
+            return GenerateLinesFromVertsAndTris(vertexList, triangleIndices);
+        }
+
+        private List<Line> GenerateLinesFromVertsAndTris(List<Vector3> verts, List<int> triIndices)
+        {
+            HashSet<Line> lines = new HashSet<Line>();
+
+            for (int i = 0; i < triIndices.Count; i += 3)
+            {
+                Vector3 vert1, vert2, vert3;
+                vert1 = verts[triIndices[i]];
+                vert2 = verts[triIndices[i + 1]];
+                vert3 = verts[triIndices[i + 2]];
+
+                Line line1, line2, line3;
+                line1 = new Line(vert1, vert2);
+                line2 = new Line(vert2, vert3);
+                line3 = new Line(vert3, vert1);
+
+                if (!lines.Contains(line1))
+                    lines.Add(line1);
+                if (!lines.Contains(line2))
+                    lines.Add(line2);
+                if (!lines.Contains(line3))
+                    lines.Add(line3);
+            }
+
+            return lines.ToList();
         }
 
         private bool UseMeshBounds(Bounds colliderBounds, Bounds meshBounds, float relTolerance)
@@ -91,8 +129,16 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
         private List<int> GetTriangleVerts(Mesh[] meshes)
         {
             List<int> triIndices = new List<int>();
+            int offset = 0;
             for (int i = 0; i < meshes.Length; i++)
-                triIndices.AddRange(meshes[i].triangles);
+            {
+                int[] tri = meshes[i].triangles;
+                for(int j = 0; j < tri.Length; j++)
+                {
+                    triIndices.Add(tri[i] + offset);
+                }
+                offset += meshes[i].vertexCount;
+            }
 
             return triIndices;
         }
