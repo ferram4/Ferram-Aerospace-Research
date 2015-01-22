@@ -92,5 +92,10 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
 
             return false;
         }
+
+        public override int GetHashCode()
+        {
+            return point1.GetHashCode() + point2.GetHashCode() + (point1 + point2).GetHashCode();
+        }
     }
 }

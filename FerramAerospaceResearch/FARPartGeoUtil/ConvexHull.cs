@@ -54,7 +54,7 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
         //Calculates whether the turn is right, left, or not at all for a path going from vert1 to vert2 to vert3
         private TURN TurnDirection(Vector3d vert1, Vector3d vert2, Vector3d vert3)
         {
-            double tmp = (vert2[0] - vert1[0]) * (vert3[1] - vert1[1]) - (vert3[0] - vert1[0]) * (vert2[1] - vert1[1]);
+            double tmp = (vert2[0] - vert1[0]) * (vert3[2] - vert1[2]) - (vert3[0] - vert1[0]) * (vert2[2] - vert1[2]);
             if (tmp > 0)
                 return TURN.LEFT;
             if (tmp < 0)
@@ -75,10 +75,10 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
             ////The above was necessary due to Sort()'s failures when the comparer used > / < rather than CompareTo
             //Let's not take any chances with this, MergeSort hasn't had any issues
             //verts.Sort(new Vector3dXComparer());
-            string s = "";
-            for (int i = 0; i < verts.Count; i++)
-                s += verts[i] + "\n\r";
-            Debug.Log(s);
+            //string s = "";
+            //for (int i = 0; i < verts.Count; i++)
+            //    s += verts[i] + "\n\r";
+            //Debug.Log(s);
             List<Vector3d> l = new List<Vector3d>();
             List<Vector3d> u = new List<Vector3d>();
             for (int i = 0; i < verts.Count; i++)
