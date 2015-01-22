@@ -195,7 +195,7 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
 
         private static List<Line> GenerateLinesFromVertsAndTris(List<Vector3> verts, List<int> triIndices)
         {
-            HashSet<Line> lines = new HashSet<Line>();
+            List<Line> lines = new List<Line>();
 
             for (int i = 0; i < triIndices.Count; i += 3)
             {
@@ -210,13 +210,23 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
                 line3 = new Line(vert3, vert1);
 
                 if (!lines.Contains(line1))
+                {
                     lines.Add(line1);
+                    Debug.Log("Added line1");
+                }
                 if (!lines.Contains(line2))
+                {
                     lines.Add(line2);
+                    Debug.Log("Added line2");
+                }
                 if (!lines.Contains(line3))
+                {
                     lines.Add(line3);
+                    Debug.Log("Added line3");
+                }
+                Debug.Log(i + " tri1 " + triIndices[i] + " tri2 " + triIndices[i+1] + " tri3 " + triIndices[i+2] + "\n\rvert1 " + vert1 + " vert2 " + vert2 + " vert3 " + vert3);
             }
-
+            Debug.Log(lines.Count + " lines, from " + verts.Count + " verts and " + triIndices.Count / 3 + " tris");
             return lines.ToList();
         }
 
@@ -262,15 +272,20 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
             int offset = 0;
             for (int i = 0; i < meshes.Length; i++)
             {
-                if (meshes[i] == null)
+                Mesh m = meshes[i];
+                if (m == null)
                     continue;
 
-                int[] tri = meshes[i].triangles;
+                int[] tri = m.triangles;
+
                 for(int j = 0; j < tri.Length; j++)
                 {
-                    triIndices.Add(tri[i] + offset);
+                    int index = tri[j];
+                    index += offset;
+                    triIndices.Add(index);
                 }
-                offset += meshes[i].vertexCount;
+
+                offset += m.vertices.Length;
             }
 
             return triIndices;

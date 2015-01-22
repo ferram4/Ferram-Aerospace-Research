@@ -86,15 +86,11 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
 
         public bool Equals(Line other)
         {
-            if (other.point1 == this.point1 && other.point2 == this.point2)
+            if (other.point1.x == this.point1.x && other.point1.y == this.point1.y && other.point1.z == this.point1.z
+                && other.point2.x == this.point2.x && other.point2.y == this.point2.y && other.point2.z == this.point2.z)
                 return true;
 
             return false;
-        }
-
-        public override int GetHashCode()
-        {
-            return point1.GetHashCode() * point2.GetHashCode();
         }
     }
 }
