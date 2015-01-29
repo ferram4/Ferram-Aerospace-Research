@@ -46,6 +46,8 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
         List<Vector3d> points;
         public double area;
         public Vector3d centroid;
+        public double xLength;
+        public double zLength;
 
         public Polygon(List<Vector3d> pointsForConvexHull)
         {
@@ -54,6 +56,26 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
 
             area = CalculateArea();
             centroid = CalculateCentroid();
+            CalculateMaxLengths();
+        }
+
+        private void CalculateMaxLengths()
+        {
+            double xMax = double.NegativeInfinity, xMin = double.PositiveInfinity;
+            double zMax = double.NegativeInfinity, zMin = double.PositiveInfinity;
+            for(int i = 0; i < points.Count; i++)
+            {
+                Vector3d pt = points[i];
+
+                xMax = Math.Max(xMax, pt.x);
+                xMin = Math.Min(xMin, pt.x);
+
+                zMax = Math.Max(zMax, pt.z);
+                zMin = Math.Min(zMin, pt.z);
+            }
+
+            xLength = xMax - xMin;
+            zLength = zMax - zMin;
         }
 
         private double CalculateArea()

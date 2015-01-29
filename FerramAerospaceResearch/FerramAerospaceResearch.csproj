@@ -71,6 +71,7 @@
     <Compile Include="FARCargoBayModule.cs" />
     <Compile Include="FARCenterQuery.cs" />
     <Compile Include="FARControllableSurface.cs" />
+    <Compile Include="FARModule\FARGeometryModule.cs" />
     <Compile Include="FARPartGeoUtil\ConvexHull.cs" />
     <Compile Include="FARPartGeoUtil\CrossSectionCurve.cs" />
     <Compile Include="FARPartGeoUtil\CrossSectionCurveGenerator.cs" />
@@ -90,6 +91,7 @@
     <Compile Include="FARPartGeoUtil\CrossSectionEvent.cs" />
     <Compile Include="FARPartGeoUtil\Line.cs" />
     <Compile Include="FARPartGeoUtil\CrossSection.cs" />
+    <Compile Include="FARPartGeoUtil\VoxelSection.cs" />
     <Compile Include="FARPartGeoUtil\Polygon.cs" />
     <Compile Include="FARPartModule.cs" />
     <Compile Include="FARPayloadFairingModule.cs" />

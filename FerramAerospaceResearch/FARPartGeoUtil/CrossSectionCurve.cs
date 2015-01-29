@@ -43,21 +43,53 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
 {
     class CrossSectionCurve
     {
-        LLRedBlackTree<CrossSection> crossSections;
+        LLRedBlackTree<CrossSection> crossSectionsTree;
+        private double maxStation, minStation;
+
+        public double MaxStation { get { return maxStation; } }
+        public double MinStation { get { return minStation; } }
+
+        private List<CrossSection> crossSectionList = null;
+        public List<CrossSection> CrossSections
+        {
+            get
+            {
+                if (crossSectionList == null)
+                    crossSectionList = crossSectionsTree.InOrderTraversal();
+
+                return crossSectionList;
+            }
+        }
 
         public CrossSectionCurve()
         {
-            crossSections = new LLRedBlackTree<CrossSection>();
+            crossSectionsTree = new LLRedBlackTree<CrossSection>();
+        }
+
+        public CrossSectionCurve(CrossSectionCurve curveToCopy)
+        {
+            crossSectionsTree = new LLRedBlackTree<CrossSection>();
+            List<CrossSection> sections = curveToCopy.crossSectionsTree.InOrderTraversal();
+            for (int i = 0; i < sections.Count; i++)
+                crossSectionsTree.Insert(sections[i]);
         }
 
         public void AddCrossSection(CrossSection section)
         {
-            crossSections.Insert(section);
+            crossSectionsTree.Insert(section);
+
+            if (section.station > maxStation)
+                maxStation = section.station;
+            else if (section.station < minStation)
+                minStation = section.station;
+
+            crossSectionList = null;
         }
 
         public void Clear()
         {
-            crossSections.Clear();
+            crossSectionsTree.Clear();
+            crossSectionList = null;
         }
 
         public CrossSection GetCrossSectionAtStation(double station)
@@ -66,12 +98,13 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
             section.station = station;
 
             CrossSection lowerSection, upperSection;
-            crossSections.FindNearestData(section, out lowerSection, out upperSection);
+            crossSectionsTree.FindNearestData(section, out lowerSection, out upperSection);
 
-            section.radius = FARMathUtil.Lerp(lowerSection.station, upperSection.station, lowerSection.radius, upperSection.radius, station);
-            section.area = section.radius * section.radius * Math.PI;
             section.centroid.x = FARMathUtil.Lerp(lowerSection.station, upperSection.station, lowerSection.centroid.x, upperSection.centroid.x, station);
             section.centroid.y = FARMathUtil.Lerp(lowerSection.station, upperSection.station, lowerSection.centroid.y, upperSection.centroid.y, station);
+            section.lengths.x = FARMathUtil.Lerp(lowerSection.station, upperSection.station, lowerSection.lengths.x, upperSection.lengths.x, station);
+            section.lengths.y = FARMathUtil.Lerp(lowerSection.station, upperSection.station, lowerSection.lengths.y, upperSection.lengths.y, station);
+            section.areaFraction = FARMathUtil.Lerp(lowerSection.station, upperSection.station, lowerSection.areaFraction, upperSection.areaFraction, station);
 
             return section;
         }
@@ -79,7 +112,7 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
         public ConfigNode Save(string curveName)
         {
             ConfigNode node = new ConfigNode(curveName);
-            List<CrossSection> crossSections = this.crossSections.InOrderTraversal();
+            List<CrossSection> crossSections = this.crossSectionsTree.InOrderTraversal();
             for(int i = 0; i < crossSections.Count; i++)
             {
                 node.AddNode(crossSections[i].Save());

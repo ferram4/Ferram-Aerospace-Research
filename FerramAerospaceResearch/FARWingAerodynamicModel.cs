@@ -718,11 +718,12 @@ namespace ferram4
 
 
             double Cd0 = CdCompressibilityZeroLiftIncrement(MachNumber, cosSweepAngle, TanSweep, beta_TanSweep, beta) + 2 * skinFrictionCoefficient;
+            double CdMax = CdMaxFlatPlate(MachNumber, beta);
             e = FARAeroUtil.CalculateOswaldsEfficiency(effective_AR, cosSweepAngle, Cd0);
             piARe = effective_AR * e * Math.PI;
 
-//            Debug.Log("Part: " + part.partInfo.title + " AoA: " + AoA);
-
+            double CosAoA = Math.Cos(AoA);
+            //            Debug.Log("Part: " + part.partInfo.title + " AoA: " + AoA);
             if (MachNumber <= 0.6)
             {
                 double Cn = liftslope;
@@ -749,8 +750,7 @@ namespace ferram4
                     normalForce = GetSupersonicPressureDifference(MachNumber, AoA);
                 else
                     normalForce = GetSupersonicPressureDifferenceNoSpline(MachNumber, AoA);
-                double CosAoA = Math.Cos(AoA);
-                double SinAoA = Math.Sin(AoA);
+//                double SinAoA = Math.Sin(AoA);
                 //Cl = coefMult * (normalForce * CosAoA * Math.Sign(AoA) * sonicLEFactor - axialForce * SinAoA);
                 //Cd = coefMult * (Math.Abs(normalForce * SinAoA) * sonicLEFactor + axialForce * CosAoA);
 
@@ -790,7 +790,6 @@ namespace ferram4
                     normalForce = GetSupersonicPressureDifference(M, AoA);
                 else
                     normalForce = GetSupersonicPressureDifferenceNoSpline(M, AoA);
-                double CosAoA = Math.Cos(AoA);
 
                 Cl += coefMult * normalForce * CosAoA * Math.Sign(AoA) * supersonicLENormalForceFactor * subScale;
 
@@ -817,6 +816,7 @@ namespace ferram4
 
             Cl -= Cl * stall * 0.769;
             Cd += Cd * stall * 3;
+            Cd = Math.Max(Cd, CdMax * CosAoA);
 
 
             AerodynamicCenter = AerodynamicCenter + ACShiftVec;
@@ -1162,6 +1162,25 @@ namespace ferram4
 
 
         #region Compressibility
+
+        /// <summary>
+        /// Calculates Cd at 90 degrees AoA so that the numbers are done correctly
+        /// </summary>
+        private double CdMaxFlatPlate(double M, double beta)
+        {
+            if (M < 0.5)
+                return 2;
+            if (M > 1.2)
+                return 0.4 / (beta * beta) + 1.75;
+            if(M < 1)
+            {
+                double result = M - 0.5;
+                result *= result;
+                return result * 2 + 2;
+            }
+            return 3.39 - 0.609091 * M;
+
+        }
 
         /// <summary>
         /// This modifies the Cd to account for compressibility effects due to increasing Mach number

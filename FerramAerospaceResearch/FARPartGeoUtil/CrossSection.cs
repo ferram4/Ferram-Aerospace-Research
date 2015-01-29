@@ -43,16 +43,16 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
     struct CrossSection : IComparable<CrossSection>
     {
         public Vector2d centroid;
-        public double area;
+        public Vector2d lengths;
+        public double areaFraction;
         public double station;
-        public double radius;
 
         public CrossSection(ref Polygon poly, double station)
         {
             this.centroid = new Vector2d(poly.centroid.x, poly.centroid.z);
-            this.area = poly.area;
+            this.lengths = new Vector2d(poly.xLength, poly.zLength);
+            this.areaFraction = poly.area / lengths.sqrMagnitude;
             this.station = station;
-            this.radius = Math.Sqrt(area / Math.PI);
         }
 
         public int CompareTo(CrossSection other)
@@ -64,9 +64,9 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
         {
             ConfigNode sectionNode = new ConfigNode("CROSS_SECTION");
             sectionNode.AddValue("station", this.station);
-            sectionNode.AddValue("area", this.area);
-            sectionNode.AddValue("centroid", this.centroid);
-            sectionNode.AddValue("radius", this.radius);
+            sectionNode.AddValue("centroid", this.centroid.x + " " + this.centroid.y);
+            sectionNode.AddValue("lengths", this.lengths.x + " " + this.lengths.y);
+            sectionNode.AddValue("areaFraction", this.areaFraction);
 
             return sectionNode;
         }
@@ -78,19 +78,26 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
                 if (!double.TryParse(sectionNode.GetValue("station"), out this.station))
                     this.station = 0;
             }
-            if (sectionNode.HasValue("area"))
+            if (sectionNode.HasValue("areaFraction"))
             {
-                if (!double.TryParse(sectionNode.GetValue("area"), out this.area))
-                    this.area = 0;
-            }
-            if (sectionNode.HasValue("radius"))
-            {
-                if (!double.TryParse(sectionNode.GetValue("radius"), out this.radius))
-                    this.radius = 0;
+                if (!double.TryParse(sectionNode.GetValue("areaFraction"), out this.areaFraction))
+                    this.areaFraction = 0;
             }
             if (sectionNode.HasValue("centroid"))
             {
                 string s = sectionNode.GetValue("centroid");
+                string[] split = s.Split(new char[] { ',', ' ', ';', ':' });
+
+                if (!double.TryParse(split[0], out this.centroid.x))
+                    this.centroid.x = 0;
+
+                if (!double.TryParse(split[1], out this.centroid.y))
+                    this.centroid.y = 0;
+
+            }
+            if (sectionNode.HasValue("lengths"))
+            {
+                string s = sectionNode.GetValue("lengths");
                 string[] split = s.Split(new char[] { ',', ' ', ';', ':' });
 
                 if (!double.TryParse(split[0], out this.centroid.x))

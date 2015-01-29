@@ -50,13 +50,13 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
         {
             List<Line> meshLines = GenerateLinesFromPart(p);
 
-            yArea = GenerateCrossSection(meshLines, 10);
+            yArea = GenerateCrossSection(meshLines, 45);
 
             TransformLines(ref meshLines, Matrix4x4.TRS(Vector3.zero, Quaternion.FromToRotation(Vector3.up, Vector3.forward), Vector3.one));
-            xArea = GenerateCrossSection(meshLines, 10);
+            xArea = GenerateCrossSection(meshLines, 45);
 
             TransformLines(ref meshLines, Matrix4x4.TRS(Vector3.zero, Quaternion.FromToRotation(Vector3.forward, Vector3.right), Vector3.one));
-            zArea = GenerateCrossSection(meshLines, 10);
+            zArea = GenerateCrossSection(meshLines, 45);
         }
 
         private static CrossSectionCurve GenerateCrossSection(List<Line> meshLines, int numCrossSections)
@@ -125,12 +125,15 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
                 lowerBound = Math.Min(lowerBound, line.point2.y);
             }
 
-            float stepSize = (upperBound - lowerBound) / (float)numCrossSections;
+            upperBound -= float.Epsilon * 16;
+            lowerBound += float.Epsilon * 16;
+
+            float stepSize = (upperBound - lowerBound) / ((float)numCrossSections - 1);
 
             for (int i = 0; i < numCrossSections; i++)
             {
                 CrossSectionEvent crossSectionCut = new CrossSectionEvent();
-                crossSectionCut.point = stepSize * i + lowerBound;
+                crossSectionCut.point = stepSize * (float)i + lowerBound;
                 crossSectionCut.crossSectionCut = true;
 
                 eventQueue.Insert(crossSectionCut);
@@ -159,8 +162,8 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
 
             //If the mesh shape is much larger than the colliders, then unfortunately, we have to use the raw mesh
             //Otherwise, use the collider because it has fewer verts and tris to work with
-            if (UseMeshBounds(colliderBounds, meshBounds, 0.05f))
-            {
+            //if (UseMeshBounds(colliderBounds, meshBounds, 0.05f))
+            //{
                 Transform[] meshTransforms = FARGeoUtil.PartModelTransformArray(p);
                 Mesh[] meshes = new Mesh[meshTransforms.Length];
 
@@ -173,7 +176,7 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
                 }
                 vertexList = GetVertexList(meshes, meshTransforms, partTransform);
                 triangleIndices = GetTriangleVerts(meshes);
-            }
+            /*}
             else
             {
                 MeshCollider[] meshColliders = p.GetComponents<MeshCollider>();
@@ -188,7 +191,7 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
                 }
                 vertexList = GetVertexList(meshes, meshTransforms, partTransform);
                 triangleIndices = GetTriangleVerts(meshes);
-            }
+            }*/
 
             return GenerateLinesFromVertsAndTris(vertexList, triangleIndices);
         }
