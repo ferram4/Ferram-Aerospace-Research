@@ -14,9 +14,19 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
 
         int xLength, yLength, zLength;
 
-        public VoxelSection(float size)
+        public VoxelSection(float size, int xLength, int yLength, int zLength)
         {
             this.size = size;
+            this.xLength = xLength;
+            this.yLength = yLength;
+            this.zLength = zLength;
+        }
+
+        public void RebuildScaling(float size, Vector3 lowerCorner, Vector3 upperCorner)
+        {
+            this.size = size;
+            this.lowerCorner = lowerCorner;
+            this.upperCorner = upperCorner;
         }
 
         public void RebuildVoxel(List<FARGeometryModule> geoModules, Matrix4x4 vesselTransform)

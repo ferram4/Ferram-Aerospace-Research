@@ -91,6 +91,8 @@
     <Compile Include="FARPartGeoUtil\CrossSectionEvent.cs" />
     <Compile Include="FARPartGeoUtil\Line.cs" />
     <Compile Include="FARPartGeoUtil\CrossSection.cs" />
+    <Compile Include="FARPartGeoUtil\PartGeometryExtensions.cs" />
+    <Compile Include="FARPartGeoUtil\VesselVoxel.cs" />
     <Compile Include="FARPartGeoUtil\VoxelSection.cs" />
     <Compile Include="FARPartGeoUtil\Polygon.cs" />
     <Compile Include="FARPartModule.cs" />
