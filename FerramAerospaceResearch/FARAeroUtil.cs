@@ -1022,7 +1022,7 @@ namespace ferram4
 
         private static double GetIntakeDragEstimate(ModuleResourceIntake intake, double refArea)
         {
-            double dragArea = 0.3819719 * 158.859927382939 * intake.area;       //this is based on a Cd of 0.3819719 for a ref area of 158.859927382939 per unit intake.area
+            double dragArea = 0.035 * 158.859927382939 * intake.area;       //this is based on a Cd of 0.035 for a ref area of 158.859927382939 per unit intake.area
             return dragArea / refArea;
         }
 
