@@ -42,7 +42,7 @@ using KSP;
 using FerramAerospaceResearch.FARCollections;
 using ferram4;
 
-namespace FerramAerospaceResearch.FARPartGeoUtil
+namespace FerramAerospaceResearch.FARPartGeometry
 {
     static class CrossSectionCurveGenerator
     {

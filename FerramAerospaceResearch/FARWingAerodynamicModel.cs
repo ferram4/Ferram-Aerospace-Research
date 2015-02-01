@@ -812,12 +812,14 @@ namespace ferram4
 
             //AC shift due to stall
             if (stall > 0)
-                ACShiftVec -= 0.75 / criticalCl * MAC * Math.Abs(Cl) * stall * ParallelInPlane;
+                ACShiftVec -= 0.75 / criticalCl * MAC * Math.Abs(Cl) * stall * ParallelInPlane * CosAoA;
 
             Cl -= Cl * stall * 0.769;
             Cd += Cd * stall * 3;
-            double SinAoA = Math.Sqrt(FARMathUtil.Clamp(1 - CosAoA * CosAoA, 0, 1));
-            Cd = Math.Max(Cd, CdMax * SinAoA);
+            //double SinAoA = Math.Sqrt(FARMathUtil.Clamp(1 - CosAoA * CosAoA, 0, 1));
+            double tmp = (1 - CosAoA);
+            tmp *= tmp;
+            Cd = Math.Max(Cd, CdMax * tmp);
 
 
             AerodynamicCenter = AerodynamicCenter + ACShiftVec;

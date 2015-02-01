@@ -4,15 +4,14 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace FerramAerospaceResearch.FARPartGeoUtil
+namespace FerramAerospaceResearch.FARPartGeometry
 {
     public static class PartGeometryExtensions
     {
-        public static Bounds GetPartOverallMeshBoundsInBasis(this Part part, Transform basis, int excessiveVerts = 2500)
+        public static Bounds GetPartOverallMeshBoundsInBasis(this Part part, Matrix4x4 worldToBasisMatrix, int excessiveVerts = 2500)
         {
             Transform[] transforms = part.FindModelComponents<Transform>();
             Bounds bounds = new Bounds();
-            Matrix4x4 partMatrix = basis.worldToLocalMatrix;
             for (int i = 0; i < transforms.Length; i++)
             {
                 Transform t = transforms[i];
@@ -24,7 +23,7 @@ namespace FerramAerospaceResearch.FARPartGeoUtil
 
                 if (m == null)
                     continue;
-                Matrix4x4 matrix = partMatrix * t.localToWorldMatrix;
+                Matrix4x4 matrix = worldToBasisMatrix * t.localToWorldMatrix;
 
                 if (m.vertices.Length < excessiveVerts)
                     for (int j = 0; j < m.vertices.Length; j++)

@@ -39,7 +39,7 @@ using System.Collections.Generic;
 using FerramAerospaceResearch.FARCollections;
 using ferram4;
 
-namespace FerramAerospaceResearch.FARPartGeoUtil
+namespace FerramAerospaceResearch.FARPartGeometry
 {
     class CrossSectionCurve
     {

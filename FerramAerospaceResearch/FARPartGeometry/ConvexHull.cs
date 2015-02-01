@@ -39,7 +39,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using KSP;
 
-namespace FerramAerospaceResearch.FARPartGeoUtil
+namespace FerramAerospaceResearch.FARPartGeometry
 {
     //Returns a list of verts defining a convex polygon created by using Graham's Scan on a set of points
     class ConvexHull

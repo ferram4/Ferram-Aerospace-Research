@@ -38,7 +38,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace FerramAerospaceResearch.FARPartGeoUtil
+namespace FerramAerospaceResearch.FARPartGeometry
 {
     struct CrossSection : IComparable<CrossSection>
     {

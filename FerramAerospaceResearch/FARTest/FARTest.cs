@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using KSP;
-using FerramAerospaceResearch.FARPartGeoUtil;
+using FerramAerospaceResearch.FARPartGeometry;
 
 namespace FerramAerospaceResearch.FARTest
 {
