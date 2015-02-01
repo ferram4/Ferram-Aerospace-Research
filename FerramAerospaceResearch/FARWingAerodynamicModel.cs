@@ -817,9 +817,7 @@ namespace ferram4
             Cl -= Cl * stall * 0.769;
             Cd += Cd * stall * 3;
             //double SinAoA = Math.Sqrt(FARMathUtil.Clamp(1 - CosAoA * CosAoA, 0, 1));
-            double tmp = (1 - CosAoA);
-            tmp *= tmp;
-            Cd = Math.Max(Cd, CdMax * tmp);
+            Cd = Math.Max(Cd, CdMax * (1 - CosAoA * CosAoA));
 
 
             AerodynamicCenter = AerodynamicCenter + ACShiftVec;
