@@ -37,38 +37,40 @@ Copyright 2014, Michael Ferrara, aka Ferram4
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using KSP;
+using FerramAerospaceResearch.FARPartGeometry;
 
-namespace FerramAerospaceResearch.FARPartGeometry
+namespace FerramAerospaceResearch.FARTest
 {
-    class VoxelSection
+    [KSPAddon(KSPAddon.Startup.EditorAny, false)]
+    class FAREditorVoxel : MonoBehaviour
     {
-        private Part[, ,] voxelPoints = null;
-        public HashSet<Part> includedParts = new HashSet<Part>();
-
-        float size;
-
-        int xLength, yLength, zLength;
-
-        public VoxelSection(float size, int xLength, int yLength, int zLength)
+        Rect windowPos;
+        void OnGUI()
         {
-            this.size = size;
-            this.xLength = xLength;
-            this.yLength = yLength;
-            this.zLength = zLength;
-            voxelPoints = new Part[xLength, yLength, zLength];
+            windowPos = GUILayout.Window(this.GetHashCode(), windowPos, TestGUI, "FARTest");
         }
 
-        //Sets point and ensures that includedParts includes p
-        public void SetVoxelPoint(int i, int j, int k, Part p)
+        void TestGUI(int id)
         {
-            voxelPoints[i, j, k] = p;
-            if (!includedParts.Contains(p))
-                includedParts.Add(p);
+            if(EditorLogic.RootPart)
+            {
+                if(GUILayout.Button("Voxelize Vessel"))
+                    CreateVoxel(EditorLogic.SortedShipList);
+            }
         }
 
-        public Part GetVoxelPoint(int i, int j, int k)
+        void CreateVoxel(List<Part> partList)
         {
-            return voxelPoints[i, j, k];
+            VehicleVoxel voxel = new VehicleVoxel(partList, 25000);
+            float[] crossSectionArea = voxel.CrossSectionalArea(Vector3.up);
+
+            ConfigNode node = new ConfigNode("Cross Section Dump");
+            for (int i = 0; i < crossSectionArea.Length; i++)
+                node.AddValue(i.ToString(), crossSectionArea[i].ToString());
+
+            string savePath = KSPUtil.ApplicationRootPath.Replace("\\", "/") + "GameData/FerramAerospaceResearch/CrossSectionTest.cfg";
+            node.Save(savePath);
         }
     }
 }

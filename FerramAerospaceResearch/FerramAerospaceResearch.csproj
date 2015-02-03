@@ -92,14 +92,15 @@
     <Compile Include="FARPartGeometry\Line.cs" />
     <Compile Include="FARPartGeometry\CrossSection.cs" />
     <Compile Include="FARPartGeometry\PartGeometryExtensions.cs" />
-    <Compile Include="FARPartGeometry\VesselVoxel.cs" />
+    <Compile Include="FARPartGeometry\VehicleVoxel.cs" />
     <Compile Include="FARPartGeometry\VoxelSection.cs" />
     <Compile Include="FARPartGeometry\Polygon.cs" />
     <Compile Include="FARPartModule.cs" />
     <Compile Include="FARPayloadFairingModule.cs" />
     <Compile Include="FARPM.cs" />
     <Compile Include="FARRungeKutta.cs" />
-    <Compile Include="FARTest\FARTest.cs" />
+    <Compile Include="FARTest\FAREditorVoxel.cs" />
+    <Compile Include="FARTest\FAREditorCrossSection.cs" />
     <Compile Include="FARWind.cs" />
     <Compile Include="FARWingAerodynamicModel.cs" />
     <Compile Include="FARWingInteraction.cs" />
