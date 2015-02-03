@@ -38,6 +38,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using UnityEngine;
 
 namespace FerramAerospaceResearch.FARPartGeometry
@@ -47,6 +48,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
         float elementSize;
         VoxelSection[, ,] voxelSections;
         int xLength, yLength, zLength;
+        int itemsQueued = 0;
+        object _locker = new object();
         Vector3 lowerRightCorner;
 
         public VehicleVoxel(List<Part> partList, int elementCount)
@@ -86,9 +89,17 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 GeometryPartModule m = geoModules[i];
                 for (int j = 0; j < m.geometryMeshes.Count; j++)
-                    UpdateFromMesh(m.part, m.geometryMeshes[j], m.meshToVesselMatrixList[j]);
+                {
+                    WorkData data = new WorkData(m.part, m.geometryMeshes[j], m.meshToVesselMatrixList[j]);
+                    //UpdateFromMesh(data);
+                    ThreadPool.QueueUserWorkItem(UpdateFromMesh, data);
+                    itemsQueued++;
+                }
             }
-
+            while (itemsQueued > 0)
+            {
+                Thread.Sleep(50);
+            }
             //SolidifyVoxel();
         }
 
@@ -104,12 +115,16 @@ namespace FerramAerospaceResearch.FARPartGeometry
             iSec = i / 8;
             jSec = j / 8;
             kSec = k / 8;
+            VoxelSection section;
 
-            VoxelSection section = voxelSections[iSec, jSec, kSec];
-            if (section == null)
+            lock (voxelSections)
             {
-                section = new VoxelSection(elementSize, 8, 8, 8, lowerRightCorner + new Vector3(iSec, jSec, kSec) * elementSize * 8);
-                voxelSections[iSec, jSec, kSec] = section;
+                section = voxelSections[iSec, jSec, kSec];
+                if (section == null)
+                {
+                    section = new VoxelSection(elementSize, 8, 8, 8, lowerRightCorner + new Vector3(iSec, jSec, kSec) * elementSize * 8);
+                    voxelSections[iSec, jSec, kSec] = section;
+                }
             }
 
             //Debug.Log(i.ToString() + ", " + j.ToString() + ", " + k.ToString() + ", " + part.partInfo.title);
@@ -125,15 +140,24 @@ namespace FerramAerospaceResearch.FARPartGeometry
             jSec = j / 8;
             kSec = k / 8;
 
-            VoxelSection section = voxelSections[iSec, jSec, kSec];
+            VoxelSection section;
+            lock (voxelSections)
+            {
+                section = voxelSections[iSec, jSec, kSec];
+            }
             if (section == null)
                 return null;
 
             return section.GetVoxelPoint(i % 8, j % 8, k % 8);
         }
 
-        private void UpdateFromMesh(Part part, Mesh mesh, Matrix4x4 transform)
+        private void UpdateFromMesh(object stuff)
         {
+            WorkData data = (WorkData)stuff;
+            Part part = data.part;
+            Mesh mesh = data.mesh;
+            Matrix4x4 transform = data.transform;
+
             Vector3[] vertsVoxelSpace = new Vector3[mesh.vertices.Length];
             Bounds meshBounds = new Bounds();
             for (int i = 0; i < vertsVoxelSpace.Length; i++)
@@ -168,6 +192,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 CalculateVoxelShellForTriangle(ref vert1, ref vert2, ref vert3,
                      ref triBounds, ref rc, ref part);
             }
+
+            lock (_locker)
+            {
+                itemsQueued -= 1;
+            }
+
         }
 
         private void CalculateVoxelShellFromTinyMesh(ref Bounds meshBounds, ref Part part)
@@ -464,6 +494,20 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 VoxelShell,
                 ActiveInterior,
                 InactiveInterior
+            }
+        }
+
+        private class WorkData
+        {
+            public Part part;
+            public Mesh mesh;
+            public Matrix4x4 transform;
+
+            public WorkData(Part part, Mesh mesh, Matrix4x4 transform)
+            {
+                this.part = part;
+                this.mesh = mesh;
+                this.transform = transform;
             }
         }
     }

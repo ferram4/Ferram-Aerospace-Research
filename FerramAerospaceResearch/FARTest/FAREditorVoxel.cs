@@ -37,6 +37,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Diagnostics;
 using UnityEngine;
 using KSP;
 using FerramAerospaceResearch.FARPartGeometry;
@@ -48,6 +49,8 @@ namespace FerramAerospaceResearch.FARTest
     {
         Rect windowPos;
         VehicleVoxel voxel;
+        string voxelCount = "25000";
+        string timeToGenerate = "";
         void OnGUI()
         {
             windowPos = GUILayout.Window(this.GetHashCode(), windowPos, TestGUI, "FARTest");
@@ -57,6 +60,7 @@ namespace FerramAerospaceResearch.FARTest
         {
             if(EditorLogic.RootPart)
             {
+                voxelCount = GUILayout.TextField(voxelCount);
                 if (GUILayout.Button("Voxelize Vessel"))
                 {
                     if (voxel != null)
@@ -70,18 +74,28 @@ namespace FerramAerospaceResearch.FARTest
                 }
                 if (voxel != null)
                 {
+                    GUILayout.Label(timeToGenerate);
                     if (GUILayout.Button("Dump Voxel Data"))
                         DumpVoxelData();
                     if (GUILayout.Button("Visualize Voxel"))
                         voxel.VisualizeVoxel(EditorLogic.RootPart.transform.position);
                 }
             }
+            GUI.DragWindow();
         }
 
         void CreateVoxel(object partList)
         {
-            VehicleVoxel newvoxel = new VehicleVoxel((List<Part>)partList, 25000);
-            voxel = newvoxel;
+            Stopwatch watch = new Stopwatch();
+            watch.Start();
+            int count;
+            if(int.TryParse(voxelCount, out count))
+            {
+                VehicleVoxel newvoxel = new VehicleVoxel((List<Part>)partList, count);
+                voxel = newvoxel;
+            }
+            watch.Stop();
+            timeToGenerate = watch.ElapsedMilliseconds.ToString() + " ms";
         }
 
         void DumpVoxelData()

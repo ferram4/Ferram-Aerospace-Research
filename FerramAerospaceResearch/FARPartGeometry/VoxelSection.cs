@@ -63,14 +63,22 @@ namespace FerramAerospaceResearch.FARPartGeometry
         //Sets point and ensures that includedParts includes p
         public void SetVoxelPoint(int i, int j, int k, Part p)
         {
-            voxelPoints[i, j, k] = p;
-            if (!includedParts.Contains(p))
-                includedParts.Add(p);
+            lock (voxelPoints)
+            {
+                voxelPoints[i, j, k] = p;
+                if (!includedParts.Contains(p))
+                    includedParts.Add(p);
+            }
         }
 
         public Part GetVoxelPoint(int i, int j, int k)
         {
-            return voxelPoints[i, j, k];
+            Part p;
+            lock (voxelPoints)
+            {
+                p = voxelPoints[i, j, k];
+            }
+            return p;
         }
 
         public void VisualizeVoxels(Vector3 vesselOffset)
