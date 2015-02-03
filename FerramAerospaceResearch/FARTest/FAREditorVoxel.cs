@@ -46,6 +46,7 @@ namespace FerramAerospaceResearch.FARTest
     class FAREditorVoxel : MonoBehaviour
     {
         Rect windowPos;
+        VehicleVoxel voxel;
         void OnGUI()
         {
             windowPos = GUILayout.Window(this.GetHashCode(), windowPos, TestGUI, "FARTest");
@@ -57,12 +58,15 @@ namespace FerramAerospaceResearch.FARTest
             {
                 if(GUILayout.Button("Voxelize Vessel"))
                     CreateVoxel(EditorLogic.SortedShipList);
+                if (GUILayout.Button("Visualize Voxel") && voxel != null)
+                    voxel.VisualizeVoxel(EditorLogic.RootPart.transform.position);
             }
         }
 
         void CreateVoxel(List<Part> partList)
         {
-            VehicleVoxel voxel = new VehicleVoxel(partList, 250000);
+            voxel = null;
+            voxel = new VehicleVoxel(partList, 25000);
             float[] crossSectionArea = voxel.CrossSectionalArea(Vector3.up);
 
             ConfigNode node = new ConfigNode("Cross Section Dump");

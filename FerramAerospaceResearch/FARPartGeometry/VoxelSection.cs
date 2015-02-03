@@ -43,19 +43,21 @@ namespace FerramAerospaceResearch.FARPartGeometry
     class VoxelSection
     {
         private Part[, ,] voxelPoints = null;
+        private DebugVisualVoxel[, ,] visualVoxels = null;
         public HashSet<Part> includedParts = new HashSet<Part>();
 
         float size;
-
+        Vector3 lowerCorner;
         int xLength, yLength, zLength;
 
-        public VoxelSection(float size, int xLength, int yLength, int zLength)
+        public VoxelSection(float size, int xLength, int yLength, int zLength, Vector3 lowerCorner)
         {
             this.size = size;
             this.xLength = xLength;
             this.yLength = yLength;
             this.zLength = zLength;
             voxelPoints = new Part[xLength, yLength, zLength];
+            this.lowerCorner = lowerCorner;
         }
 
         //Sets point and ensures that includedParts includes p
@@ -69,6 +71,42 @@ namespace FerramAerospaceResearch.FARPartGeometry
         public Part GetVoxelPoint(int i, int j, int k)
         {
             return voxelPoints[i, j, k];
+        }
+
+        public void VisualizeVoxels(Vector3 vesselOffset)
+        {
+            ClearVisualVoxels();
+            visualVoxels = new DebugVisualVoxel[xLength, yLength, zLength];
+            for(int i = 0; i < xLength; i++)
+                for(int j = 0; j < yLength; j++)
+                    for(int k = 0; k < zLength; k++)
+                    {
+                        DebugVisualVoxel vx;
+                        if(voxelPoints[i,j,k] != null)
+                        {
+                            vx = new DebugVisualVoxel(lowerCorner + new Vector3(i, j, k) * size + vesselOffset, size * 0.5f);
+                            visualVoxels[i, j, k] = vx;
+                        }
+                    }
+        }
+
+        private void ClearVisualVoxels()
+        {
+            if (visualVoxels != null)
+                for (int i = 0; i < xLength; i++)
+                    for (int j = 0; j < yLength; j++)
+                        for (int k = 0; k < zLength; k++)
+                        {
+                            DebugVisualVoxel vx = visualVoxels[i, j, k];
+                            if (vx != null)
+                                GameObject.Destroy(vx.gameObject);
+                            vx = null;
+                        }
+        }
+
+        ~VoxelSection()
+        {
+            ClearVisualVoxels();
         }
     }
 }

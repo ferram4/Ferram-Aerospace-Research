@@ -74,9 +74,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
             yLength = (int)Math.Ceiling(vesselBounds.size.y * tmp);
             zLength = (int)Math.Ceiling(vesselBounds.size.z * tmp);
 
-            //Debug.Log(elementSize);
-            //Debug.Log(xLength + " " + yLength + " " + zLength);
-            //Debug.Log(vesselBounds);
+            Debug.Log(elementSize);
+            Debug.Log(xLength + " " + yLength + " " + zLength);
+            Debug.Log(vesselBounds);
 
             lowerRightCorner = vesselBounds.min;
 
@@ -89,7 +89,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     UpdateFromMesh(m.part, m.geometryMeshes[j], m.meshToVesselMatrixList[j]);
             }
 
-            SolidifyVoxel();
+            //SolidifyVoxel();
         }
 
         private void SetVoxelSection(int i, int j, int k, Part part)
@@ -103,7 +103,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             VoxelSection section = voxelSections[iSec, jSec, kSec];
             if (section == null)
             {
-                section = new VoxelSection(elementSize, 8, 8, 8);
+                section = new VoxelSection(elementSize, 8, 8, 8, lowerRightCorner + new Vector3(iSec, jSec, kSec) * elementSize * 8);
                 voxelSections[iSec, jSec, kSec] = section;
             }
 
@@ -145,7 +145,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
 
             float rc = (float)Math.Sqrt(3) * 0.5f * elementSize;
-            float rcSqr = rc * rc;
 
             for (int a = 0; a < mesh.triangles.Length; a += 3)
             {
@@ -162,7 +161,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 triBounds.Encapsulate(vert3);
 
                 CalculateVoxelShellForTriangle(ref vert1, ref vert2, ref vert3,
-                     ref triBounds, ref rc, ref rcSqr, ref part);
+                     ref triBounds, ref rc, ref part);
             }
         }
 
@@ -171,13 +170,17 @@ namespace FerramAerospaceResearch.FARPartGeometry
             int lowerI, lowerJ, lowerK;
             int upperI, upperJ, upperK;
 
-            lowerI = (int)Math.Floor(meshBounds.min.x);
-            lowerJ = (int)Math.Floor(meshBounds.min.y);
-            lowerK = (int)Math.Floor(meshBounds.min.z);
+            Vector3 min, max;
+            min = meshBounds.min - lowerRightCorner;
+            max = meshBounds.max - lowerRightCorner;
 
-            upperI = (int)Math.Ceiling(meshBounds.max.x);
-            upperJ = (int)Math.Ceiling(meshBounds.max.y);
-            upperK = (int)Math.Ceiling(meshBounds.max.z);
+            lowerI = (int)Math.Floor(min.x);
+            lowerJ = (int)Math.Floor(min.y);
+            lowerK = (int)Math.Floor(min.z);
+
+            upperI = (int)Math.Ceiling(max.x);
+            upperJ = (int)Math.Ceiling(max.y);
+            upperK = (int)Math.Ceiling(max.z);
 
             lowerI = Math.Max(lowerI, 0);
             lowerJ = Math.Max(lowerJ, 0);
@@ -196,15 +199,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
         }
 
         private void CalculateVoxelShellForTriangle(ref Vector3 vert1, ref Vector3 vert2, ref Vector3 vert3,
-            ref Bounds triBounds, ref float rc, ref float rcSqr, ref Part part)
+            ref Bounds triBounds, ref float rc, ref Part part)
         {
             Vector4 plane = CalculateEquationOfPlane(ref vert1, ref vert2, ref vert3);
 
             //thickness for calculating a 26 neighborhood around the plane
             float t26 = ThicknessForVoxel(ref plane);
 
-            Vector3 lowerBound = (triBounds.min - new Vector3(rc, rc, rc)) / elementSize;
-            Vector3 upperBound = (triBounds.max + new Vector3(rc, rc, rc)) / elementSize;
+            Vector3 lowerBound = (triBounds.min - lowerRightCorner - new Vector3(rc, rc, rc)) / elementSize;
+            Vector3 upperBound = (triBounds.max - lowerRightCorner + new Vector3(rc, rc, rc)) / elementSize;
 
             int lowerI, lowerJ, lowerK;
             int upperI, upperJ, upperK;
@@ -237,33 +240,33 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             continue;
                         }
 
-                        if (CheckAndSetForVert(ref pt, ref rcSqr, ref vert1))
+                        if (CheckAndSetForVert(ref pt, ref rc, ref vert1))
                         {
                             SetVoxelSection(i, j, k, part);
                             continue;
                         }
-                        if (CheckAndSetForVert(ref pt, ref rcSqr, ref vert2))
+                        if (CheckAndSetForVert(ref pt, ref rc, ref vert2))
                         {
                             SetVoxelSection(i, j, k, part);
                             continue;
                         }
-                        if (CheckAndSetForVert(ref pt, ref rcSqr, ref vert3))
+                        if (CheckAndSetForVert(ref pt, ref rc, ref vert3))
                         { 
                             SetVoxelSection(i, j, k, part);
                             continue;
                         }
 
-                        if (CheckAndSetForEdge(ref pt, ref rcSqr, ref vert1, ref vert2))
+                        if (CheckAndSetForEdge(ref pt, ref rc, ref vert1, ref vert2))
                         {
                             SetVoxelSection(i, j, k, part);
                             continue;
                         }
-                        if (CheckAndSetForEdge(ref pt, ref rcSqr, ref vert2, ref vert3))
+                        if (CheckAndSetForEdge(ref pt, ref rc, ref vert2, ref vert3))
                         {
                             SetVoxelSection(i, j, k, part);
                             continue;
                         }
-                        if (CheckAndSetForEdge(ref pt, ref rcSqr, ref vert3, ref vert1))
+                        if (CheckAndSetForEdge(ref pt, ref rc, ref vert3, ref vert1))
                         {
                             SetVoxelSection(i, j, k, part);
                             continue;
@@ -298,17 +301,17 @@ namespace FerramAerospaceResearch.FARPartGeometry
             return result <= t;
         }
 
-        private bool CheckAndSetForVert(ref Vector3 pt, ref float rcSqr, ref Vector3 vert)
+        private bool CheckAndSetForVert(ref Vector3 pt, ref float rc, ref Vector3 vert)
         {
-            return (pt - vert).sqrMagnitude > rcSqr;
+            return (pt - vert).magnitude <= rc;
         }
 
-        private bool CheckAndSetForEdge(ref Vector3 pt, ref float rcSqr, ref Vector3 vert1, ref Vector3 vert2)
+        private bool CheckAndSetForEdge(ref Vector3 pt, ref float rc, ref Vector3 vert1, ref Vector3 vert2)
         {
             Vector3 edge = vert2 - vert1;
-            float result = Vector3.Exclude(edge, pt - vert1).sqrMagnitude;
+            float result = Vector3.Exclude(edge, pt - vert1).magnitude;
 
-            return result <= rcSqr;
+            return result <= rc;
         }
 
         public float[] CrossSectionalArea(Vector3 orientation)
@@ -328,6 +331,20 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 crossSections[j] = area;
             }
             return crossSections;
+        }
+
+        public void VisualizeVoxel(Vector3 vesselOffset)
+        {
+            for(int i = 0; i < xLength; i++)
+                for(int j = 0; j < yLength; j++)
+                    for(int k = 0; k < zLength; k++)
+                    {
+                        VoxelSection section = voxelSections[i, j, k];
+                        if(section != null)
+                        {
+                            section.VisualizeVoxels(vesselOffset);
+                        }
+                    }
         }
 
         private void SolidifyVoxel()
