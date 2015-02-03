@@ -62,7 +62,7 @@ namespace FerramAerospaceResearch.FARTest
 
         void CreateVoxel(List<Part> partList)
         {
-            VehicleVoxel voxel = new VehicleVoxel(partList, 25000);
+            VehicleVoxel voxel = new VehicleVoxel(partList, 250000);
             float[] crossSectionArea = voxel.CrossSectionalArea(Vector3.up);
 
             ConfigNode node = new ConfigNode("Cross Section Dump");

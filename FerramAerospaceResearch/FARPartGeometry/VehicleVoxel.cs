@@ -70,9 +70,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             float tmp = 0.125f / elementSize;
 
-            xLength = (int)Math.Ceiling(vesselBounds.size.x * tmp) + 1;
-            yLength = (int)Math.Ceiling(vesselBounds.size.y * tmp) + 1;
-            zLength = (int)Math.Ceiling(vesselBounds.size.z * tmp) + 1;
+            xLength = (int)Math.Ceiling(vesselBounds.size.x * tmp);
+            yLength = (int)Math.Ceiling(vesselBounds.size.y * tmp);
+            zLength = (int)Math.Ceiling(vesselBounds.size.z * tmp);
 
             //Debug.Log(elementSize);
             //Debug.Log(xLength + " " + yLength + " " + zLength);
@@ -102,9 +102,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             VoxelSection section = voxelSections[iSec, jSec, kSec];
             if (section == null)
+            {
                 section = new VoxelSection(elementSize, 8, 8, 8);
+                voxelSections[iSec, jSec, kSec] = section;
+            }
 
-            Debug.Log(i.ToString() + ", " + j.ToString() + ", " + k.ToString() + ", " + part.partInfo.title);
+            //Debug.Log(i.ToString() + ", " + j.ToString() + ", " + k.ToString() + ", " + part.partInfo.title);
 
             section.SetVoxelPoint(i % 8, j % 8, k % 8, part);
         }
@@ -121,9 +124,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (section == null)
                 return null;
 
-            Part p = section.GetVoxelPoint(i % 8, j % 8, k % 8);
-            Debug.Log(p.partInfo.title);
-            return p;
+            return section.GetVoxelPoint(i % 8, j % 8, k % 8);
         }
 
         private void UpdateFromMesh(Part part, Mesh mesh, Matrix4x4 transform)
