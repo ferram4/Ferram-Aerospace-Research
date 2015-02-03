@@ -36,6 +36,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using KSP;
 using FerramAerospaceResearch.FARPartGeometry;
@@ -56,17 +57,35 @@ namespace FerramAerospaceResearch.FARTest
         {
             if(EditorLogic.RootPart)
             {
-                if(GUILayout.Button("Voxelize Vessel"))
-                    CreateVoxel(EditorLogic.SortedShipList);
-                if (GUILayout.Button("Visualize Voxel") && voxel != null)
-                    voxel.VisualizeVoxel(EditorLogic.RootPart.transform.position);
+                if (GUILayout.Button("Voxelize Vessel"))
+                {
+                    if (voxel != null)
+                    {
+                        voxel.ClearVisualVoxels();
+                        voxel = null;
+                    }
+
+                    Thread thread = new Thread(CreateVoxel);
+                    thread.Start(EditorLogic.SortedShipList);
+                }
+                if (voxel != null)
+                {
+                    if (GUILayout.Button("Dump Voxel Data"))
+                        DumpVoxelData();
+                    if (GUILayout.Button("Visualize Voxel"))
+                        voxel.VisualizeVoxel(EditorLogic.RootPart.transform.position);
+                }
             }
         }
 
-        void CreateVoxel(List<Part> partList)
+        void CreateVoxel(object partList)
         {
-            voxel = null;
-            voxel = new VehicleVoxel(partList, 25000);
+            VehicleVoxel newvoxel = new VehicleVoxel((List<Part>)partList, 25000);
+            voxel = newvoxel;
+        }
+
+        void DumpVoxelData()
+        {
             float[] crossSectionArea = voxel.CrossSectionalArea(Vector3.up);
 
             ConfigNode node = new ConfigNode("Cross Section Dump");

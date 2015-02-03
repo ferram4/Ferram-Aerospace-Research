@@ -55,11 +55,18 @@ namespace FerramAerospaceResearch.FARPartGeometry
             partTransform = part.transform;
             partRigidBody = part.Rigidbody;
             meshTransforms = PartModelTransformList(this.part);
-            geometryMeshes = CreateMeshListFromTransforms(meshTransforms);
+            geometryMeshes = CreateMeshListFromTransforms(ref meshTransforms);
             if (this.vessel)
                 UpdateTransformMatrixList(vessel.vesselTransform.worldToLocalMatrix);
             else
                 UpdateTransformMatrixList(EditorLogic.RootPart.transform.worldToLocalMatrix);
+
+            part.OnEditorAttach += EditorAttach;
+        }
+
+        public void EditorAttach()
+        {
+            UpdateTransformMatrixList(EditorLogic.RootPart.transform.worldToLocalMatrix);
         }
 
         public void UpdateTransformMatrixList(Matrix4x4 worldToVesselMatrix)
@@ -70,9 +77,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
         }
 
-        private static List<Mesh> CreateMeshListFromTransforms(List<Transform> meshTransforms)
+        private static List<Mesh> CreateMeshListFromTransforms(ref List<Transform> meshTransforms)
         {
             List<Mesh> meshList = new List<Mesh>();
+            List<Transform> validTransformList = new List<Transform>();
             foreach (Transform t in meshTransforms)
             {
                 MeshFilter mf = t.GetComponent<MeshFilter>();
@@ -86,7 +94,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 Debug.Log(m.name + " " + t.name);
 
                 meshList.Add(m);
+                validTransformList.Add(t);
             }
+            meshTransforms = validTransformList;
             return meshList;
         }
 

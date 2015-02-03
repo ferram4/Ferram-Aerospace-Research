@@ -90,7 +90,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     }
         }
 
-        private void ClearVisualVoxels()
+        public void ClearVisualVoxels()
         {
             if (visualVoxels != null)
                 for (int i = 0; i < xLength; i++)

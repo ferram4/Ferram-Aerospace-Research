@@ -92,6 +92,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
             //SolidifyVoxel();
         }
 
+        ~VehicleVoxel()
+        {
+            ClearVisualVoxels();
+        }
+
         private void SetVoxelSection(int i, int j, int k, Part part)
         {
             int iSec, jSec, kSec;
@@ -171,8 +176,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
             int upperI, upperJ, upperK;
 
             Vector3 min, max;
-            min = meshBounds.min - lowerRightCorner;
-            max = meshBounds.max - lowerRightCorner;
+            min = (meshBounds.min - lowerRightCorner) / elementSize;
+            max = (meshBounds.max - lowerRightCorner) / elementSize;
 
             lowerI = (int)Math.Floor(min.x);
             lowerJ = (int)Math.Floor(min.y);
@@ -234,11 +239,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
                         Vector3 pt = lowerRightCorner + new Vector3(i, j, k) * elementSize;
 
-                        if (CheckAndSetForPlane(ref pt, ref t26, ref plane))
+                        /*if (CheckAndSetForPlane(ref pt, ref t26, ref plane))
                         {
                             SetVoxelSection(i, j, k, part);
                             continue;
-                        }
+                        }*/
 
                         if (CheckAndSetForVert(ref pt, ref rc, ref vert1))
                         {
@@ -279,7 +284,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Vector3 p1p2 = pt2 - pt1;
             Vector3 p1p3 = pt3 - pt1;
 
-            Vector4 result = Vector3.Cross(p1p2, p1p3).normalized;
+            Vector3 tmp = Vector3.Cross(p1p2, p1p3).normalized;
+
+            Vector4 result = new Vector4(tmp.x, tmp.y, tmp.z);
 
             result.w = -(pt1.x * result.x + pt1.y * result.y + pt1.z * result.z);
 
@@ -290,7 +297,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             float tmp = 1 / (float)Math.Sqrt(3);
 
-            return Vector3.Dot(new Vector3(Math.Abs(plane.x), Math.Abs(plane.y), Math.Abs(plane.z)), new Vector3(tmp, tmp, tmp)) * elementSize * 0.5f * tmp;
+            return Vector3.Dot(new Vector3(plane.x, plane.y, plane.z), new Vector3(Math.Sign(plane.x) * tmp, Math.Sign(plane.y) * tmp, Math.Sign(plane.z) * tmp)) * elementSize * 0.5f * (float)Math.Sqrt(3);
         }
 
         private bool CheckAndSetForPlane(ref Vector3 pt, ref float t, ref Vector4 plane)
@@ -331,6 +338,20 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 crossSections[j] = area;
             }
             return crossSections;
+        }
+
+        public void ClearVisualVoxels()
+        {
+            for (int i = 0; i < xLength; i++)
+                for (int j = 0; j < yLength; j++)
+                    for (int k = 0; k < zLength; k++)
+                    {
+                        VoxelSection section = voxelSections[i, j, k];
+                        if (section != null)
+                        {
+                            section.ClearVisualVoxels();
+                        }
+                    }
         }
 
         public void VisualizeVoxel(Vector3 vesselOffset)
