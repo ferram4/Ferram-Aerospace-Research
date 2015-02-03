@@ -52,7 +52,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         object _locker = new object();
         Vector3 lowerRightCorner;
 
-        public VehicleVoxel(List<Part> partList, int elementCount)
+        public VehicleVoxel(List<Part> partList, int elementCount, bool multiThreaded)
         {
             Bounds vesselBounds = new Bounds();
             List<GeometryPartModule> geoModules = new List<GeometryPartModule>();
@@ -91,8 +91,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 for (int j = 0; j < m.geometryMeshes.Count; j++)
                 {
                     WorkData data = new WorkData(m.part, m.geometryMeshes[j], m.meshToVesselMatrixList[j]);
-                    //UpdateFromMesh(data);
-                    ThreadPool.QueueUserWorkItem(UpdateFromMesh, data);
+                    if(multiThreaded)
+                        ThreadPool.QueueUserWorkItem(UpdateFromMesh, data);
+                    else
+                        UpdateFromMesh(data);
                     itemsQueued++;
                 }
             }

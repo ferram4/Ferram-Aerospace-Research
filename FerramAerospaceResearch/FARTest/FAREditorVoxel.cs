@@ -51,6 +51,7 @@ namespace FerramAerospaceResearch.FARTest
         VehicleVoxel voxel;
         string voxelCount = "25000";
         string timeToGenerate = "";
+        bool multiThreaded = true;
         void OnGUI()
         {
             windowPos = GUILayout.Window(this.GetHashCode(), windowPos, TestGUI, "FARTest");
@@ -61,6 +62,7 @@ namespace FerramAerospaceResearch.FARTest
             if(EditorLogic.RootPart)
             {
                 voxelCount = GUILayout.TextField(voxelCount);
+                multiThreaded = GUILayout.Toggle(multiThreaded, "Multithread Voxelization");
                 if (GUILayout.Button("Voxelize Vessel"))
                 {
                     if (voxel != null)
@@ -91,7 +93,7 @@ namespace FerramAerospaceResearch.FARTest
             int count;
             if(int.TryParse(voxelCount, out count))
             {
-                VehicleVoxel newvoxel = new VehicleVoxel((List<Part>)partList, count);
+                VehicleVoxel newvoxel = new VehicleVoxel((List<Part>)partList, count, multiThreaded);
                 voxel = newvoxel;
             }
             watch.Stop();
