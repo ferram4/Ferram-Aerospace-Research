@@ -83,7 +83,16 @@ namespace FerramAerospaceResearch.FARPartGeometry
             List<Transform> validTransformList = new List<Transform>();
             foreach (Transform t in meshTransforms)
             {
-                MeshFilter mf = t.GetComponent<MeshFilter>();
+                MeshCollider mc = t.GetComponent<MeshCollider>();
+
+                if (mc == null)
+                    continue;
+
+                Mesh m = mc.sharedMesh;
+
+                if (m == null)
+                    continue;
+                /*MeshFilter mf = t.GetComponent<MeshFilter>();
                 if (mf == null)
                     continue;
                 Mesh m = mf.sharedMesh;
@@ -91,7 +100,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 if (m == null || t.GetComponent<MeshCollider>() == null)
                     continue;
 
-                Debug.Log(m.name + " " + t.name);
+                Debug.Log(m.name + " " + t.name);*/
 
                 meshList.Add(m);
                 validTransformList.Add(t);
