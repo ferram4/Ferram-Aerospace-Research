@@ -255,13 +255,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             Vector4 indexPlane = TransformPlaneToIndices(plane);
 
-
             if (x > y && x > z)
-                VoxelShellTrianglePerpX(ref indexPlane, ref vert1, ref vert2, ref vert3, ref part);
+                VoxelShellTrianglePerpX(ref indexPlane, ref vert1, ref vert2, ref vert3, ref rc, ref part);
             else if(y > x && y > z)
-                VoxelShellTrianglePerpY(ref indexPlane, ref vert1, ref vert2, ref vert3, ref part);
+                VoxelShellTrianglePerpY(ref indexPlane, ref vert1, ref vert2, ref vert3, ref rc, ref part);
             else
-                VoxelShellTrianglePerpZ(ref indexPlane, ref vert1, ref vert2, ref vert3, ref part);
+                VoxelShellTrianglePerpZ(ref indexPlane, ref vert1, ref vert2, ref vert3, ref rc, ref part);
 
             #region OldCode
             /*//thickness for calculating a 26 neighborhood around the plane
@@ -336,15 +335,47 @@ namespace FerramAerospaceResearch.FARPartGeometry
             #endregion
         }
 
-        private void VoxelShellTrianglePerpX(ref Vector4 indexPlane, ref Vector3 vert1, ref Vector3 vert2, ref Vector3 vert3, ref Part part)
+        private void VoxelShellTrianglePerpX(ref Vector4 indexPlane, ref Vector3 vert1, ref Vector3 vert2, ref Vector3 vert3, ref float rc, ref Part part)
         {
             Vector2 vert1Proj, vert2Proj, vert3Proj;
             vert1Proj = new Vector2(vert1.y - lowerRightCorner.y, vert1.z - lowerRightCorner.z) * invElementSize;
             vert2Proj = new Vector2(vert2.y - lowerRightCorner.y, vert2.z - lowerRightCorner.z) * invElementSize;
             vert3Proj = new Vector2(vert3.y - lowerRightCorner.y, vert3.z - lowerRightCorner.z) * invElementSize;
 
-            Vector2 centroid = vert1Proj + vert2Proj + vert3Proj;
-            centroid *= 0.333333333333333333333f;
+            #region EdgeOffset
+
+            Vector2 sideExt12, sideExt23, sideExt31;
+            float tmp;
+
+            sideExt12 = vert2Proj - vert1Proj;
+            tmp = sideExt12.x;
+            sideExt12.x = -sideExt12.y;
+            sideExt12.y = tmp;
+            sideExt12.Normalize();
+
+            sideExt12 *= -Math.Sign(Vector2.Dot(sideExt12, vert3Proj - vert1Proj));
+
+            sideExt23 = vert3Proj - vert2Proj;
+            tmp = sideExt23.x;
+            sideExt23.x = -sideExt23.y;
+            sideExt23.y = tmp;
+            sideExt23.Normalize();
+
+            sideExt23 *= -Math.Sign(Vector2.Dot(sideExt23, vert1Proj - vert2Proj));
+
+            sideExt31 = vert1Proj - vert3Proj;
+            tmp = sideExt23.x;
+            sideExt31.x = -sideExt31.y;
+            sideExt31.y = tmp;
+            sideExt31.Normalize();
+
+            sideExt31 *= -Math.Sign(Vector2.Dot(sideExt31, vert2Proj - vert3Proj));
+
+            vert1Proj += (sideExt12 + sideExt31) * rc;
+            vert2Proj += (sideExt23 + sideExt12) * rc;
+            vert3Proj += (sideExt31 + sideExt23) * rc;
+            
+            #endregion
 
             Vector2 p1p2, p1p3;
             p1p2 = vert2Proj - vert1Proj;
@@ -357,84 +388,80 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             float invDenom = 1 / (dot12_12 * dot13_13 - dot12_13 * dot12_13);
 
-            int startJ, startK;
-            startJ = (int)Math.Round(centroid.x);
-            startK = (int)Math.Round(centroid.y);
+            int lowJ, highJ, lowK, highK;
+            lowJ = (int)Math.Min(vert1Proj.x, Math.Min(vert2Proj.x, vert3Proj.x));
+            highJ = (int)Math.Ceiling(Math.Max(vert1Proj.x, Math.Max(vert2Proj.x, vert3Proj.x)));
+            lowK = (int)Math.Min(vert1Proj.y, Math.Min(vert2Proj.y, vert3Proj.y));
+            highK = (int)Math.Ceiling(Math.Max(vert1Proj.y, Math.Max(vert2Proj.y, vert3Proj.y)));
 
-            int lowerJ = startJ, upperJ = startJ;
-            int j = startJ, k = startK;
 
-            bool incrementJ = true;
-            bool incrementK = true;
-            while(true)
-            {
-                Vector2 p1TestPt = new Vector2(j, k) - vert1Proj;
-                float dot12_test, dot13_test;
-                dot12_test = Vector2.Dot(p1p2, p1TestPt);
-                dot13_test = Vector2.Dot(p1p3, p1TestPt);
+            lowJ = Math.Max(lowJ, 0);
+            lowK = Math.Max(lowK, 0);
+            highJ = Math.Min(highJ, yLength * 8 - 1);
+            highK = Math.Min(highK, zLength * 8 - 1);
 
-                float u, v;
-                u = (dot13_13 * dot12_test - dot12_13 * dot13_test) * invDenom;
-                v = (dot12_12 * dot13_test - dot12_13 * dot12_test) * invDenom;
-
-                if(u >= 0 && v>= 0 && u + v < 1)
+            for (int j = lowJ; j <= highJ; j++)
+                for (int k = lowK; k <= highK; k++)
                 {
-                    int i = (int)Math.Round(-(indexPlane.y * j + indexPlane.z * k + indexPlane.w) / indexPlane.x);
-                    SetVoxelSection(i, j, k, part);
-                    if (incrementJ)
+                    Vector2 p1TestPt = new Vector2(j, k) - vert1Proj;
+                    float dot12_test, dot13_test;
+                    dot12_test = Vector2.Dot(p1p2, p1TestPt);
+                    dot13_test = Vector2.Dot(p1p3, p1TestPt);
+
+                    float u, v;
+                    u = (dot13_13 * dot12_test - dot12_13 * dot13_test) * invDenom;
+                    v = (dot12_12 * dot13_test - dot12_13 * dot12_test) * invDenom;
+
+                    if (u >= 0 && v >= 0 && u + v < 1)
                     {
-                        j++;
-                        upperJ = j;
-                    }
-                    else
-                    {
-                        j--;
-                        lowerJ = j;
+                        int i = (int)Math.Round(-(indexPlane.y * j + indexPlane.z * k + indexPlane.w) / indexPlane.x);
+                        SetVoxelSection(i, j, k, part);
                     }
                 }
-                else if(incrementJ)
-                {
-                    incrementJ = false;
-                    j = startJ;
-                }
-                else
-                {
-                    incrementJ = true;
-                    startJ = (lowerJ + upperJ) / 2;
-                    if (lowerJ == upperJ)
-                    {
-                        if (incrementK)
-                        {
-                            incrementK = false;
-                            k = startK;
-                            lowerJ = startJ;
-                            upperJ = startJ;
-                            continue;
-                        }
-                        else
-                            break;
-                    }
-                    lowerJ = startJ;
-                    upperJ = startJ;
-                   
-                    if (incrementK)
-                        k++;                    
-                    else
-                        k--;
-                }
-            }
         }
 
-        private void VoxelShellTrianglePerpY(ref Vector4 indexPlane, ref Vector3 vert1, ref Vector3 vert2, ref Vector3 vert3, ref Part part)
+        private void VoxelShellTrianglePerpY(ref Vector4 indexPlane, ref Vector3 vert1, ref Vector3 vert2, ref Vector3 vert3, ref float rc, ref Part part)
         {
             Vector2 vert1Proj, vert2Proj, vert3Proj;
             vert1Proj = new Vector2(vert1.x - lowerRightCorner.x, vert1.z - lowerRightCorner.z) * invElementSize;
             vert2Proj = new Vector2(vert2.x - lowerRightCorner.x, vert2.z - lowerRightCorner.z) * invElementSize;
             vert3Proj = new Vector2(vert3.x - lowerRightCorner.x, vert3.z - lowerRightCorner.z) * invElementSize;
 
-            Vector2 centroid = vert1Proj + vert2Proj + vert3Proj;
-            centroid *= 0.333333333333333333333f;
+            #region EdgeOffset
 
+            Vector2 sideExt12, sideExt23, sideExt31;
+            float tmp;
+
+            sideExt12 = vert2Proj - vert1Proj;
+            tmp = sideExt12.x;
+            sideExt12.x = -sideExt12.y;
+            sideExt12.y = tmp;
+            sideExt12.Normalize();
+
+            sideExt12 *= -Math.Sign(Vector2.Dot(sideExt12, vert3Proj - vert1Proj));
+
+            sideExt23 = vert3Proj - vert2Proj;
+            tmp = sideExt23.x;
+            sideExt23.x = -sideExt23.y;
+            sideExt23.y = tmp;
+            sideExt23.Normalize();
+
+            sideExt23 *= -Math.Sign(Vector2.Dot(sideExt23, vert1Proj - vert2Proj));
+
+            sideExt31 = vert1Proj - vert3Proj;
+            tmp = sideExt23.x;
+            sideExt31.x = -sideExt31.y;
+            sideExt31.y = tmp;
+            sideExt31.Normalize();
+
+            sideExt31 *= -Math.Sign(Vector2.Dot(sideExt31, vert2Proj - vert3Proj));
+
+            vert1Proj += (sideExt12 + sideExt31) * rc;
+            vert2Proj += (sideExt23 + sideExt12) * rc;
+            vert3Proj += (sideExt31 + sideExt23) * rc;
+            
+            #endregion
+            
             Vector2 p1p2, p1p3;
             p1p2 = vert2Proj - vert1Proj;
             p1p3 = vert3Proj - vert1Proj;
@@ -446,11 +473,38 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             float invDenom = 1 / (dot12_12 * dot13_13 - dot12_13 * dot12_13);
 
-            int startI, startK;
-            startI = (int)Math.Round(centroid.x);
-            startK = (int)Math.Round(centroid.y);
+            int lowI, highI, lowK, highK;
+            lowI = (int)Math.Min(vert1Proj.x, Math.Min(vert2Proj.x, vert3Proj.x));
+            highI = (int)Math.Ceiling(Math.Max(vert1Proj.x, Math.Max(vert2Proj.x, vert3Proj.x)));
+            lowK = (int)Math.Min(vert1Proj.y, Math.Min(vert2Proj.y, vert3Proj.y));
+            highK = (int)Math.Ceiling(Math.Max(vert1Proj.y, Math.Max(vert2Proj.y, vert3Proj.y)));
 
-            int lowerI = startI, upperI = startI;
+
+            lowI = Math.Max(lowI, 0);
+            lowK = Math.Max(lowK, 0);
+            highI = Math.Min(highI, xLength * 8 - 1);
+            highK = Math.Min(highK, zLength * 8 - 1);
+
+            for (int i = lowI; i <= highI; i++)
+                for (int k = lowK; k <= highK; k++)
+                {
+                    Vector2 p1TestPt = new Vector2(i, k) - vert1Proj;
+                    float dot12_test, dot13_test;
+                    dot12_test = Vector2.Dot(p1p2, p1TestPt);
+                    dot13_test = Vector2.Dot(p1p3, p1TestPt);
+
+                    float u, v;
+                    u = (dot13_13 * dot12_test - dot12_13 * dot13_test) * invDenom;
+                    v = (dot12_12 * dot13_test - dot12_13 * dot12_test) * invDenom;
+
+                    if (u >= 0 && v >= 0 && u + v < 1)
+                    {
+                        int j = (int)Math.Round(-(indexPlane.x * i + indexPlane.z * k + indexPlane.w) / indexPlane.y);
+                        SetVoxelSection(i, j, k, part);
+                    }
+                }
+            #region Theoretically more efficient code, but requires bugfixing
+            /*int lowerI = startI, upperI = startI;
             int i = startI, k = startK;
 
             bool incrementI = true;
@@ -511,18 +565,51 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     else
                         k--;
                 }
-            }
+            }*/
+            #endregion
         }
 
-        private void VoxelShellTrianglePerpZ(ref Vector4 indexPlane, ref Vector3 vert1, ref Vector3 vert2, ref Vector3 vert3, ref Part part)
+        private void VoxelShellTrianglePerpZ(ref Vector4 indexPlane, ref Vector3 vert1, ref Vector3 vert2, ref Vector3 vert3, ref float rc, ref Part part)
         {
             Vector2 vert1Proj, vert2Proj, vert3Proj;
             vert1Proj = new Vector2(vert1.x - lowerRightCorner.x, vert1.y - lowerRightCorner.y) * invElementSize;
             vert2Proj = new Vector2(vert2.x - lowerRightCorner.x, vert2.y - lowerRightCorner.y) * invElementSize;
             vert3Proj = new Vector2(vert3.x - lowerRightCorner.x, vert3.y - lowerRightCorner.y) * invElementSize;
 
-            Vector2 centroid = vert1Proj + vert2Proj + vert3Proj;
-            centroid *= 0.333333333333333333333f;
+            #region EdgeOffset
+
+            Vector2 sideExt12, sideExt23, sideExt31;
+            float tmp;
+
+            sideExt12 = vert2Proj - vert1Proj;
+            tmp = sideExt12.x;
+            sideExt12.x = -sideExt12.y;
+            sideExt12.y = tmp;
+            sideExt12.Normalize();
+
+            sideExt12 *= -Math.Sign(Vector2.Dot(sideExt12, vert3Proj - vert1Proj));
+
+            sideExt23 = vert3Proj - vert2Proj;
+            tmp = sideExt23.x;
+            sideExt23.x = -sideExt23.y;
+            sideExt23.y = tmp;
+            sideExt23.Normalize();
+
+            sideExt23 *= -Math.Sign(Vector2.Dot(sideExt23, vert1Proj - vert2Proj));
+
+            sideExt31 = vert1Proj - vert3Proj;
+            tmp = sideExt23.x;
+            sideExt31.x = -sideExt31.y;
+            sideExt31.y = tmp;
+            sideExt31.Normalize();
+
+            sideExt31 *= -Math.Sign(Vector2.Dot(sideExt31, vert2Proj - vert3Proj));
+
+            vert1Proj += (sideExt12 + sideExt31) * rc;
+            vert2Proj += (sideExt23 + sideExt12) * rc;
+            vert3Proj += (sideExt31 + sideExt23) * rc;
+            
+            #endregion
 
             Vector2 p1p2, p1p3;
             p1p2 = vert2Proj - vert1Proj;
@@ -535,72 +622,36 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             float invDenom = 1 / (dot12_12 * dot13_13 - dot12_13 * dot12_13);
 
-            int startI, startJ;
-            startI = (int)Math.Round(centroid.x);
-            startJ = (int)Math.Round(centroid.y);
+            int lowI, highI, lowJ, highJ;
+            lowI = (int)Math.Min(vert1Proj.x, Math.Min(vert2Proj.x, vert3Proj.x));
+            highI = (int)Math.Ceiling(Math.Max(vert1Proj.x, Math.Max(vert2Proj.x, vert3Proj.x)));
+            lowJ = (int)Math.Min(vert1Proj.y, Math.Min(vert2Proj.y, vert3Proj.y));
+            highJ = (int)Math.Ceiling(Math.Max(vert1Proj.y, Math.Max(vert2Proj.y, vert3Proj.y)));
 
-            int lowerI = startI, upperI = startI;
-            int i = startI, j = startJ;
 
-            bool incrementI = true;
-            bool incrementJ = true;
-            while (true)
-            {
-                Vector2 p1TestPt = new Vector2(i, j) - vert1Proj;
-                float dot12_test, dot13_test;
-                dot12_test = Vector2.Dot(p1p2, p1TestPt);
-                dot13_test = Vector2.Dot(p1p3, p1TestPt);
+            lowI = Math.Max(lowI, 0);
+            lowJ = Math.Max(lowJ, 0);
+            highI = Math.Min(highI, xLength * 8 - 1);
+            highJ = Math.Min(highJ, yLength * 8 - 1);
 
-                float u, v;
-                u = (dot13_13 * dot12_test - dot12_13 * dot13_test) * invDenom;
-                v = (dot12_12 * dot13_test - dot12_13 * dot12_test) * invDenom;
-
-                if (u >= 0 && v >= 0 && u + v < 1)
+            for (int i = lowI; i <= highI; i++)
+                for (int j = lowJ; j <= highJ; j++)
                 {
-                    int k = (int)Math.Round(-(indexPlane.x * i + indexPlane.y * j + indexPlane.w) / indexPlane.z);
-                    SetVoxelSection(i, j, k, part);
-                    if (incrementI)
+                    Vector2 p1TestPt = new Vector2(i, j) - vert1Proj;
+                    float dot12_test, dot13_test;
+                    dot12_test = Vector2.Dot(p1p2, p1TestPt);
+                    dot13_test = Vector2.Dot(p1p3, p1TestPt);
+
+                    float u, v;
+                    u = (dot13_13 * dot12_test - dot12_13 * dot13_test) * invDenom;
+                    v = (dot12_12 * dot13_test - dot12_13 * dot12_test) * invDenom;
+
+                    if (u >= 0 && v >= 0 && u + v < 1)
                     {
-                        i++;
-                        upperI = i;
-                    }
-                    else
-                    {
-                        i--;
-                        lowerI = i;
+                        int k = (int)Math.Round(-(indexPlane.x * i + indexPlane.y * j + indexPlane.w) / indexPlane.z);
+                        SetVoxelSection(i, j, k, part);
                     }
                 }
-                else if (incrementI)
-                {
-                    incrementI = false;
-                    i = startI;
-                }
-                else
-                {
-                    incrementI = true;
-                    startI = (lowerI + upperI) / 2;
-                    if (lowerI == upperI)
-                    {
-                        if (incrementJ)
-                        {
-                            incrementJ = false;
-                            j = startJ;
-                            lowerI = startI;
-                            upperI = startI;
-                            continue;
-                        }
-                        else
-                            break;
-                    }
-                    lowerI = startI;
-                    upperI = startI;
-
-                    if (incrementJ)
-                        j++;
-                    else
-                        j--;
-                }
-            }
         }
 
         /*private void VoxelShellTrianglePerpX(ref Vector4 plane, ref Vector3 vert1, ref Vector3 vert2, ref Vector3 vert3, ref Part part)
