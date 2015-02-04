@@ -46,6 +46,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
     public class VehicleVoxel
     {
         float elementSize;
+        float invElementSize;
         VoxelSection[, ,] voxelSections;
         int xLength, yLength, zLength;
         int itemsQueued = 0;
@@ -70,8 +71,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
             float voxelVolume = vesselBounds.size.x * vesselBounds.size.y * vesselBounds.size.z;
             float elementVol = voxelVolume / (float)elementCount;
             elementSize = (float)Math.Pow(elementVol, 1f / 3f);
+            invElementSize = 1 / elementSize;
 
-            float tmp = 0.125f / elementSize;
+            float tmp = 0.125f * invElementSize;
 
             xLength = (int)Math.Ceiling(vesselBounds.size.x * tmp);
             yLength = (int)Math.Ceiling(vesselBounds.size.y * tmp);
@@ -155,51 +157,57 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         private void UpdateFromMesh(object stuff)
         {
-            WorkData data = (WorkData)stuff;
-            Part part = data.part;
-            Mesh mesh = data.mesh;
-            Matrix4x4 transform = data.transform;
-
-            Vector3[] vertsVoxelSpace = new Vector3[mesh.vertices.Length];
-            Bounds meshBounds = new Bounds();
-            for (int i = 0; i < vertsVoxelSpace.Length; i++)
+            try
             {
-                Vector3 vert = transform.MultiplyPoint(mesh.vertices[i]);
-                meshBounds.Encapsulate(vert);
-                vertsVoxelSpace[i] = vert;
-            }
+                WorkData data = (WorkData)stuff;
+                Part part = data.part;
+                Mesh mesh = data.mesh;
+                Matrix4x4 transform = data.transform;
 
-            if (meshBounds.size.x < elementSize && meshBounds.size.y < elementSize && meshBounds.size.z < elementSize)
+                Vector3[] vertsVoxelSpace = new Vector3[mesh.vertices.Length];
+                Bounds meshBounds = new Bounds();
+                for (int i = 0; i < vertsVoxelSpace.Length; i++)
+                {
+                    Vector3 vert = transform.MultiplyPoint(mesh.vertices[i]);
+                    meshBounds.Encapsulate(vert);
+                    vertsVoxelSpace[i] = vert;
+                }
+
+                if (meshBounds.size.x < elementSize && meshBounds.size.y < elementSize && meshBounds.size.z < elementSize)
+                {
+                    CalculateVoxelShellFromTinyMesh(ref meshBounds, ref part);
+                    return;
+                }
+
+                float rc = (float)Math.Sqrt(3) * 0.5f * elementSize;
+
+                for (int a = 0; a < mesh.triangles.Length; a += 3)
+                {
+                    Vector3 vert1, vert2, vert3;
+
+                    vert1 = vertsVoxelSpace[mesh.triangles[a]];
+                    vert2 = vertsVoxelSpace[mesh.triangles[a + 1]];
+                    vert3 = vertsVoxelSpace[mesh.triangles[a + 2]];
+
+                    Bounds triBounds = new Bounds();
+
+                    triBounds.Encapsulate(vert1);
+                    triBounds.Encapsulate(vert2);
+                    triBounds.Encapsulate(vert3);
+
+                    CalculateVoxelShellForTriangle(ref vert1, ref vert2, ref vert3,
+                         ref triBounds, ref rc, ref part);
+                }
+
+                lock (_locker)
+                {
+                    itemsQueued -= 1;
+                }
+            }
+            catch(Exception e)
             {
-                CalculateVoxelShellFromTinyMesh(ref meshBounds, ref part);
-                return;
+                Debug.LogException(e);
             }
-
-            float rc = (float)Math.Sqrt(3) * 0.5f * elementSize;
-
-            for (int a = 0; a < mesh.triangles.Length; a += 3)
-            {
-                Vector3 vert1, vert2, vert3;
-
-                vert1 = vertsVoxelSpace[mesh.triangles[a]];
-                vert2 = vertsVoxelSpace[mesh.triangles[a + 1]];
-                vert3 = vertsVoxelSpace[mesh.triangles[a + 2]];
-
-                Bounds triBounds = new Bounds();
-
-                triBounds.Encapsulate(vert1);
-                triBounds.Encapsulate(vert2);
-                triBounds.Encapsulate(vert3);
-
-                CalculateVoxelShellForTriangle(ref vert1, ref vert2, ref vert3,
-                     ref triBounds, ref rc, ref part);
-            }
-
-            lock (_locker)
-            {
-                itemsQueued -= 1;
-            }
-
         }
 
         private void CalculateVoxelShellFromTinyMesh(ref Bounds meshBounds, ref Part part)
@@ -208,8 +216,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
             int upperI, upperJ, upperK;
 
             Vector3 min, max;
-            min = (meshBounds.min - lowerRightCorner) / elementSize;
-            max = (meshBounds.max - lowerRightCorner) / elementSize;
+            min = (meshBounds.min - lowerRightCorner) * invElementSize;
+            max = (meshBounds.max - lowerRightCorner) * invElementSize;
 
             lowerI = (int)Math.Floor(min.x);
             lowerJ = (int)Math.Floor(min.y);
@@ -240,7 +248,23 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             Vector4 plane = CalculateEquationOfPlane(ref vert1, ref vert2, ref vert3);
 
-            //thickness for calculating a 26 neighborhood around the plane
+            float x, y, z;
+            x = Math.Abs(plane.x);
+            y = Math.Abs(plane.y);
+            z = Math.Abs(plane.z);
+
+            Vector4 indexPlane = TransformPlaneToIndices(plane);
+
+
+            if (x > y && x > z)
+                VoxelShellTrianglePerpX(ref indexPlane, ref vert1, ref vert2, ref vert3, ref part);
+            else if(y > x && y > z)
+                VoxelShellTrianglePerpY(ref indexPlane, ref vert1, ref vert2, ref vert3, ref part);
+            else
+                VoxelShellTrianglePerpZ(ref indexPlane, ref vert1, ref vert2, ref vert3, ref part);
+
+            #region OldCode
+            /*//thickness for calculating a 26 neighborhood around the plane
             float t26 = ThicknessForVoxel(ref plane);
 
             Vector3 lowerBound = (triBounds.min - lowerRightCorner - new Vector3(rc, rc, rc)) / elementSize;
@@ -275,7 +299,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         {
                             SetVoxelSection(i, j, k, part);
                             continue;
-                        }*/
+                        }
 
                         if (CheckAndSetForVert(ref pt, ref rc, ref vert1))
                         {
@@ -308,8 +332,419 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             SetVoxelSection(i, j, k, part);
                             continue;
                         }
-                    }
+                    }*/
+            #endregion
         }
+
+        private void VoxelShellTrianglePerpX(ref Vector4 indexPlane, ref Vector3 vert1, ref Vector3 vert2, ref Vector3 vert3, ref Part part)
+        {
+            Vector2 vert1Proj, vert2Proj, vert3Proj;
+            vert1Proj = new Vector2(vert1.y - lowerRightCorner.y, vert1.z - lowerRightCorner.z) * invElementSize;
+            vert2Proj = new Vector2(vert2.y - lowerRightCorner.y, vert2.z - lowerRightCorner.z) * invElementSize;
+            vert3Proj = new Vector2(vert3.y - lowerRightCorner.y, vert3.z - lowerRightCorner.z) * invElementSize;
+
+            Vector2 centroid = vert1Proj + vert2Proj + vert3Proj;
+            centroid *= 0.333333333333333333333f;
+
+            Vector2 p1p2, p1p3;
+            p1p2 = vert2Proj - vert1Proj;
+            p1p3 = vert3Proj - vert1Proj;
+
+            float dot12_12, dot12_13, dot13_13;
+            dot12_12 = Vector2.Dot(p1p2, p1p2);
+            dot12_13 = Vector2.Dot(p1p2, p1p3);
+            dot13_13 = Vector2.Dot(p1p3, p1p3);
+
+            float invDenom = 1 / (dot12_12 * dot13_13 - dot12_13 * dot12_13);
+
+            int startJ, startK;
+            startJ = (int)Math.Round(centroid.x);
+            startK = (int)Math.Round(centroid.y);
+
+            int lowerJ = startJ, upperJ = startJ;
+            int j = startJ, k = startK;
+
+            bool incrementJ = true;
+            bool incrementK = true;
+            while(true)
+            {
+                Vector2 p1TestPt = new Vector2(j, k) - vert1Proj;
+                float dot12_test, dot13_test;
+                dot12_test = Vector2.Dot(p1p2, p1TestPt);
+                dot13_test = Vector2.Dot(p1p3, p1TestPt);
+
+                float u, v;
+                u = (dot13_13 * dot12_test - dot12_13 * dot13_test) * invDenom;
+                v = (dot12_12 * dot13_test - dot12_13 * dot12_test) * invDenom;
+
+                if(u >= 0 && v>= 0 && u + v < 1)
+                {
+                    int i = (int)Math.Round(-(indexPlane.y * j + indexPlane.z * k + indexPlane.w) / indexPlane.x);
+                    SetVoxelSection(i, j, k, part);
+                    if (incrementJ)
+                    {
+                        j++;
+                        upperJ = j;
+                    }
+                    else
+                    {
+                        j--;
+                        lowerJ = j;
+                    }
+                }
+                else if(incrementJ)
+                {
+                    incrementJ = false;
+                    j = startJ;
+                }
+                else
+                {
+                    incrementJ = true;
+                    startJ = (lowerJ + upperJ) / 2;
+                    if (lowerJ == upperJ)
+                    {
+                        if (incrementK)
+                        {
+                            incrementK = false;
+                            k = startK;
+                            lowerJ = startJ;
+                            upperJ = startJ;
+                            continue;
+                        }
+                        else
+                            break;
+                    }
+                    lowerJ = startJ;
+                    upperJ = startJ;
+                   
+                    if (incrementK)
+                        k++;                    
+                    else
+                        k--;
+                }
+            }
+        }
+
+        private void VoxelShellTrianglePerpY(ref Vector4 indexPlane, ref Vector3 vert1, ref Vector3 vert2, ref Vector3 vert3, ref Part part)
+        {
+            Vector2 vert1Proj, vert2Proj, vert3Proj;
+            vert1Proj = new Vector2(vert1.x - lowerRightCorner.x, vert1.z - lowerRightCorner.z) * invElementSize;
+            vert2Proj = new Vector2(vert2.x - lowerRightCorner.x, vert2.z - lowerRightCorner.z) * invElementSize;
+            vert3Proj = new Vector2(vert3.x - lowerRightCorner.x, vert3.z - lowerRightCorner.z) * invElementSize;
+
+            Vector2 centroid = vert1Proj + vert2Proj + vert3Proj;
+            centroid *= 0.333333333333333333333f;
+
+            Vector2 p1p2, p1p3;
+            p1p2 = vert2Proj - vert1Proj;
+            p1p3 = vert3Proj - vert1Proj;
+
+            float dot12_12, dot12_13, dot13_13;
+            dot12_12 = Vector2.Dot(p1p2, p1p2);
+            dot12_13 = Vector2.Dot(p1p2, p1p3);
+            dot13_13 = Vector2.Dot(p1p3, p1p3);
+
+            float invDenom = 1 / (dot12_12 * dot13_13 - dot12_13 * dot12_13);
+
+            int startI, startK;
+            startI = (int)Math.Round(centroid.x);
+            startK = (int)Math.Round(centroid.y);
+
+            int lowerI = startI, upperI = startI;
+            int i = startI, k = startK;
+
+            bool incrementI = true;
+            bool incrementK = true;
+            while (true)
+            {
+                Vector2 p1TestPt = new Vector2(i, k) - vert1Proj;
+                float dot12_test, dot13_test;
+                dot12_test = Vector2.Dot(p1p2, p1TestPt);
+                dot13_test = Vector2.Dot(p1p3, p1TestPt);
+
+                float u, v;
+                u = (dot13_13 * dot12_test - dot12_13 * dot13_test) * invDenom;
+                v = (dot12_12 * dot13_test - dot12_13 * dot12_test) * invDenom;
+
+                if (u >= 0 && v >= 0 && u + v < 1)
+                {
+                    int j = (int)Math.Round(-(indexPlane.x * i + indexPlane.z * k + indexPlane.w) / indexPlane.y);
+                    SetVoxelSection(i, j, k, part);
+                    if (incrementI)
+                    {
+                        i++;
+                        upperI = i;
+                    }
+                    else
+                    {
+                        i--;
+                        lowerI = i;
+                    }
+                }
+                else if (incrementI)
+                {
+                    incrementI = false;
+                    i = startI;
+                }
+                else
+                {
+                    incrementI = true;
+                    startI = (lowerI + upperI) / 2;
+                    if (lowerI == upperI)
+                    {
+                        if (incrementK)
+                        {
+                            incrementK = false;
+                            k = startK;
+                            lowerI = startI;
+                            upperI = startI;
+                            continue;
+                        }
+                        else
+                            break;
+                    }
+                    lowerI = startI;
+                    upperI = startI;
+
+                    if (incrementK)
+                        k++;
+                    else
+                        k--;
+                }
+            }
+        }
+
+        private void VoxelShellTrianglePerpZ(ref Vector4 indexPlane, ref Vector3 vert1, ref Vector3 vert2, ref Vector3 vert3, ref Part part)
+        {
+            Vector2 vert1Proj, vert2Proj, vert3Proj;
+            vert1Proj = new Vector2(vert1.x - lowerRightCorner.x, vert1.y - lowerRightCorner.y) * invElementSize;
+            vert2Proj = new Vector2(vert2.x - lowerRightCorner.x, vert2.y - lowerRightCorner.y) * invElementSize;
+            vert3Proj = new Vector2(vert3.x - lowerRightCorner.x, vert3.y - lowerRightCorner.y) * invElementSize;
+
+            Vector2 centroid = vert1Proj + vert2Proj + vert3Proj;
+            centroid *= 0.333333333333333333333f;
+
+            Vector2 p1p2, p1p3;
+            p1p2 = vert2Proj - vert1Proj;
+            p1p3 = vert3Proj - vert1Proj;
+
+            float dot12_12, dot12_13, dot13_13;
+            dot12_12 = Vector2.Dot(p1p2, p1p2);
+            dot12_13 = Vector2.Dot(p1p2, p1p3);
+            dot13_13 = Vector2.Dot(p1p3, p1p3);
+
+            float invDenom = 1 / (dot12_12 * dot13_13 - dot12_13 * dot12_13);
+
+            int startI, startJ;
+            startI = (int)Math.Round(centroid.x);
+            startJ = (int)Math.Round(centroid.y);
+
+            int lowerI = startI, upperI = startI;
+            int i = startI, j = startJ;
+
+            bool incrementI = true;
+            bool incrementJ = true;
+            while (true)
+            {
+                Vector2 p1TestPt = new Vector2(i, j) - vert1Proj;
+                float dot12_test, dot13_test;
+                dot12_test = Vector2.Dot(p1p2, p1TestPt);
+                dot13_test = Vector2.Dot(p1p3, p1TestPt);
+
+                float u, v;
+                u = (dot13_13 * dot12_test - dot12_13 * dot13_test) * invDenom;
+                v = (dot12_12 * dot13_test - dot12_13 * dot12_test) * invDenom;
+
+                if (u >= 0 && v >= 0 && u + v < 1)
+                {
+                    int k = (int)Math.Round(-(indexPlane.x * i + indexPlane.y * j + indexPlane.w) / indexPlane.z);
+                    SetVoxelSection(i, j, k, part);
+                    if (incrementI)
+                    {
+                        i++;
+                        upperI = i;
+                    }
+                    else
+                    {
+                        i--;
+                        lowerI = i;
+                    }
+                }
+                else if (incrementI)
+                {
+                    incrementI = false;
+                    i = startI;
+                }
+                else
+                {
+                    incrementI = true;
+                    startI = (lowerI + upperI) / 2;
+                    if (lowerI == upperI)
+                    {
+                        if (incrementJ)
+                        {
+                            incrementJ = false;
+                            j = startJ;
+                            lowerI = startI;
+                            upperI = startI;
+                            continue;
+                        }
+                        else
+                            break;
+                    }
+                    lowerI = startI;
+                    upperI = startI;
+
+                    if (incrementJ)
+                        j++;
+                    else
+                        j--;
+                }
+            }
+        }
+
+        /*private void VoxelShellTrianglePerpX(ref Vector4 plane, ref Vector3 vert1, ref Vector3 vert2, ref Vector3 vert3, ref Part part)
+        {
+            float v1j, v2j, v3j, v1k, v2k, v3k;
+
+            float tmp = 1 / elementSize;
+
+            v1j = (vert1.y - lowerRightCorner.y) * tmp;
+            v2j = (vert2.y - lowerRightCorner.y) * tmp;
+            v3j = (vert3.y - lowerRightCorner.y) * tmp;
+
+            v1k = (vert1.z - lowerRightCorner.z) * tmp;
+            v2k = (vert2.z - lowerRightCorner.z) * tmp;
+            v3k = (vert3.z - lowerRightCorner.z) * tmp;
+
+            int max = yLength * 8 - 1;
+
+            v1j = Mathf.Clamp(v1j, 0, max);
+            v2j = Mathf.Clamp(v2j, 0, max);
+            v3j = Mathf.Clamp(v3j, 0, max);
+
+            max = zLength * 8 - 1;
+
+            v1k = Mathf.Clamp(v1k, 0, max);
+            v2k = Mathf.Clamp(v2k, 0, max);
+            v3k = Mathf.Clamp(v3k, 0, max);
+
+            float lowJ, midJ, highJ;      //the y indices for each tri vert, ordered by y vals
+            float lowK, midK, highK;      //the z indices for each tri vert, ordered by y vals to match above
+
+            #region sorting indices
+            if (v1j < v2j && v1j < v3j)
+            {
+                lowJ = v1j;
+                lowK = v1k;
+                if (v2j < v3j)
+                {
+                    midJ = v2j;
+                    midK = v2k;
+                    highJ = v3j;
+                    highK = v3k;
+                }
+                else
+                {
+                    midJ = v3j;
+                    midK = v3k;
+                    highJ = v2j;
+                    highK = v2k;
+                }
+            }
+            if (v2j < v1j && v2j < v3j)
+            {
+                lowJ = v2j;
+                lowK = v2k;
+                if (v1j < v3j)
+                {
+                    midJ = v1j;
+                    midK = v1k;
+                    highJ = v3j;
+                    highK = v3k;
+                }
+                else
+                {
+                    midJ = v3j;
+                    midK = v3k;
+                    highJ = v1j;
+                    highK = v1k;
+                }
+            }
+            else
+            {
+                lowJ = v3j;
+                lowK = v3k;
+                if (v1j < v2j)
+                {
+                    midJ = v1j;
+                    midK = v1k;
+                    highJ = v2j;
+                    highK = v2k;
+                }
+                else
+                {
+                    midJ = v2j;
+                    midK = v2k;
+                    highJ = v1j;
+                    highK = v1k;
+                }
+            }
+            #endregion
+
+            int kInc = 1;
+            if (midK < highK)
+                kInc = -1;
+
+            for (int j = (int)lowJ; j < midJ; j++)
+            {
+                int lowEnd, highEnd;
+                lowEnd = (int)Math.Round((highK - lowK) / (highJ - lowJ) + lowK);
+                lowEnd = Mathf.Clamp(lowEnd, 0, zLength * 8 - 1);
+                highEnd = (int)Math.Round((midK - lowK) / (midJ - lowJ) + lowK);
+                highEnd = Mathf.Clamp(highEnd, 0, zLength * 8 - 1);
+
+                for (int k = lowEnd; k < highEnd; k += kInc)
+                {
+                    float indexTmp = -(j * elementSize + lowerRightCorner.y) * plane.y
+                        + (k * elementSize + lowerRightCorner.z) * plane.z
+                        + plane.w;
+
+                    indexTmp -= lowerRightCorner.x * plane.x;
+                    indexTmp /= elementSize;
+                    int i = (int)Math.Round(indexTmp);
+
+                    if (i < 0 || i > xLength * 8 - 1)
+                        continue; 
+                    
+                    SetVoxelSection(i, j, k, part);
+                }
+            }
+            for (int j = (int)midJ; j <= highJ; j++)
+            {
+                int lowEnd, highEnd;
+                lowEnd = (int)Math.Round((highK - lowK) / (highJ - lowJ) + lowK);
+                lowEnd = Mathf.Clamp(lowEnd, 0, zLength * 8 - 1);
+                highEnd = (int)Math.Round((highK - midK) / (highJ - midJ) + midK);
+                highEnd = Mathf.Clamp(highEnd, 0, zLength * 8 - 1);
+
+                for (int k = lowEnd; k < highEnd; k += kInc)
+                {
+                    float indexTmp = -(j * elementSize + lowerRightCorner.y) * plane.y
+                        + (k * elementSize + lowerRightCorner.z) * plane.z
+                        + plane.w;
+
+                    indexTmp -= lowerRightCorner.x * plane.x;
+                    indexTmp /= elementSize;
+                    int i = (int)Math.Round(indexTmp);
+
+                    if (i < 0 || i > xLength * 8 - 1)
+                        continue; 
+                    
+                    SetVoxelSection(i, j, k, part);
+                }
+            }
+        }*/
 
         private Vector4 CalculateEquationOfPlane(ref Vector3 pt1, ref Vector3 pt2, ref Vector3 pt3)
         {
@@ -323,6 +758,17 @@ namespace FerramAerospaceResearch.FARPartGeometry
             result.w = -(pt1.x * result.x + pt1.y * result.y + pt1.z * result.z);
 
             return result;
+        }
+
+        private Vector4 TransformPlaneToIndices(Vector4 plane)
+        {
+            Vector4 newPlane = new Vector4();
+            newPlane.x = plane.x * elementSize;
+            newPlane.y = plane.y * elementSize;
+            newPlane.z = plane.z * elementSize;
+            newPlane.w = plane.w + plane.x * lowerRightCorner.x + plane.y * lowerRightCorner.y + plane.z * lowerRightCorner.z;
+
+            return newPlane;
         }
 
         private float ThicknessForVoxel(ref Vector4 plane)
