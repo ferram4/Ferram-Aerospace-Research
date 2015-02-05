@@ -64,12 +64,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 if (m.vertices.Length < excessiveVerts)
                     for (int j = 0; j < m.vertices.Length; j++)
                     {
-                        bounds.Encapsulate(matrix.MultiplyPoint(m.vertices[j]));
+                        bounds.Encapsulate(matrix.MultiplyPoint3x4(m.vertices[j]));
                     }
                 else
                 {
-                    bounds.Encapsulate(matrix.MultiplyPoint(m.bounds.min));
-                    bounds.Encapsulate(matrix.MultiplyPoint(m.bounds.max));
+                    bounds.Encapsulate(matrix.MultiplyPoint3x4(m.bounds.min));
+                    bounds.Encapsulate(matrix.MultiplyPoint3x4(m.bounds.max));
                 }
             }
             return bounds;
@@ -97,11 +97,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 if (m.vertices.Length < excessiveVerts)
                     for (int j = 0; j < m.vertices.Length; j++)
                     {
-                        newBounds.Encapsulate(matrix.MultiplyPoint(m.vertices[j]));
+                        newBounds.Encapsulate(matrix.MultiplyPoint3x4(m.vertices[j]));
                     }
                 else
                 {
-                    newBounds.SetMinMax(matrix.MultiplyPoint(m.bounds.min), matrix.MultiplyPoint(m.bounds.max));
+                    newBounds.SetMinMax(matrix.MultiplyPoint3x4(m.bounds.min), matrix.MultiplyPoint3x4(m.bounds.max));
                 }
 
                 bounds[i] = newBounds;
@@ -131,11 +131,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 if (m.vertices.Length < excessiveVerts)
                     for (int j = 0; j < m.vertices.Length; j++)
                     {
-                        newBounds.Encapsulate(matrix.MultiplyPoint(m.vertices[j]));
+                        newBounds.Encapsulate(matrix.MultiplyPoint3x4(m.vertices[j]));
                     }
                 else
                 {
-                    newBounds.SetMinMax(matrix.MultiplyPoint(m.bounds.min), matrix.MultiplyPoint(m.bounds.max));
+                    newBounds.SetMinMax(matrix.MultiplyPoint3x4(m.bounds.min), matrix.MultiplyPoint3x4(m.bounds.max));
                 }
 
                 bounds[i] = newBounds;
