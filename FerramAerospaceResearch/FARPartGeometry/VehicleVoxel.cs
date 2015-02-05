@@ -824,12 +824,55 @@ namespace FerramAerospaceResearch.FARPartGeometry
             SweepPlanePoint[,] sweepPlane = new SweepPlanePoint[xLength * 8, zLength * 8];
             List<SweepPlanePoint> activePts = new List<SweepPlanePoint>();
             List<SweepPlanePoint> inactiveInteriorPts = new List<SweepPlanePoint>();
-            SweepPlanePoint[] neighboringSweepPlanePts = new SweepPlanePoint[4];
+            Thread[] threads = new Thread[4];
 
+            int midI, highI;
+            int midK, highK;
+
+            highI = xLength * 8;
+            midI = highI / 2;
+
+            highK = zLength * 8;
+            midK = highK / 2;
+
+            lock (_locker)
+                itemsQueued = 1;  //This primes the system; it will only be set back to 0 when a solidify completes
+
+            threads[0] = new Thread(SolidifySection);
+            threads[0].Start(new SolidifyData(sweepPlane, activePts, inactiveInteriorPts, 0, midI, 0, midK, 0));
+            threads[1] = new Thread(SolidifySection);
+            threads[1].Start(new SolidifyData(sweepPlane, activePts, inactiveInteriorPts, 0, midI, midK, highK, 1));
+            threads[2] = new Thread(SolidifySection);
+            threads[2].Start(new SolidifyData(sweepPlane, activePts, inactiveInteriorPts, midI, highI, 0, midK, 2));
+            threads[3] = new Thread(SolidifySection);
+            threads[3].Start(new SolidifyData(sweepPlane, activePts, inactiveInteriorPts, midI, highI, midK, highK, 3));
+            //SolidifySection(ref sweepPlane, 0, xLength * 8, 0, zLength * 8);
+
+            while (itemsQueued > 0)
+                Thread.Sleep(15);
+
+            //Cleanup
+            sweepPlane = null;
+            activePts = null;
+            inactiveInteriorPts = null;
+        }
+        private void SolidifySection(object data)
+        {
+            SolidifyData solidData = (SolidifyData)data;
+            SolidifySection(ref solidData.sweepPlane, ref solidData.activePts, ref solidData.inactiveInteriorPts, solidData.lowI, solidData.highI, solidData.lowK, solidData.highK, solidData.threadInd);
+        }
+
+        private void SolidifySection(ref SweepPlanePoint[,] sweepPlane, ref List<SweepPlanePoint> activePts, ref List<SweepPlanePoint> inactiveInteriorPts, int lowI, int highI, int lowK, int highK, int threadInd)
+        {
+            int threadNum = threadInd + 1;
+            SweepPlanePoint[] neighboringSweepPlanePts = new SweepPlanePoint[4];
             for (int j = 0; j < yLength * 8; j++)      //Iterate from front of vehicle to back
             {
-                for (int i = 0; i < xLength * 8; i++)    //Iterate across the cross-section plane to add voxel shell and mark active interior points
-                    for (int k = 0; k < zLength * 8; k++)
+                lock (_locker)
+                    itemsQueued++;
+
+                for (int i = lowI; i < highI; i++)    //Iterate across the cross-section plane to add voxel shell and mark active interior points
+                    for (int k = lowK; k < highK; k++)
                     {
                         Part p = GetPartAtVoxelPos(i, j, k);
                         SweepPlanePoint pt = sweepPlane[i, k];
@@ -847,85 +890,183 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                 if (pt.mark == SweepPlanePoint.MarkingType.VoxelShell)  //label it as active so that it can be determined once all the points have been checked
                                 {
                                     pt.mark = SweepPlanePoint.MarkingType.Active;
-                                    activePts.Add(pt);      //And add it to the list of active interior pts
+                                    lock(activePts)
+                                        activePts.Add(pt);      //And add it to the list of active interior pts
                                 }
                             }
                             else
                             {       //Make sure the point is labeled as a voxel shell if there is already a part there
                                 pt.mark = SweepPlanePoint.MarkingType.VoxelShell;
-                                inactiveInteriorPts.Remove(pt);
-                                activePts.Remove(pt);
+                                lock (inactiveInteriorPts)
+                                    inactiveInteriorPts.Remove(pt);
+                                lock (activePts)
+                                    activePts.Remove(pt);
                             }
                         }
                     }
+                lock (_locker)
+                    itemsQueued--;
 
-                for(int i = 0; i < activePts.Count; i++)    //Then, iterate through all active points for this section
+                while (itemsQueued > 1)
+                    Thread.Sleep(5);
+
+                #region multithreadedActivePts
+                /*while (activePts.Count > 0)
                 {
-                    SweepPlanePoint activeInteriorPt = activePts[i];    //Get active interior pt
+                    lock (_locker)
+                        itemsQueued++;
 
-                    if (activeInteriorPt.i + 1 < xLength * 8)           //And all of its 4-neighbors
-                        neighboringSweepPlanePts[0] = sweepPlane[activeInteriorPt.i + 1, activeInteriorPt.k];
-                    else
-                        neighboringSweepPlanePts[0] = null;
+                    List<SweepPlanePoint> myActivePts = new List<SweepPlanePoint>(activePts.GetRange(threadInd / 4 * activePts.Count, activePts.Count / 4));
 
-                    if (activeInteriorPt.i - 1 >= 0)
-                        neighboringSweepPlanePts[1] = sweepPlane[activeInteriorPt.i - 1, activeInteriorPt.k];
-                    else
-                        neighboringSweepPlanePts[1] = null;
+                    lock (_locker)
+                        itemsQueued--;
 
-                    if (activeInteriorPt.k + 1 < zLength * 8)
-                        neighboringSweepPlanePts[2] = sweepPlane[activeInteriorPt.i, activeInteriorPt.k + 1];
-                    else
-                        neighboringSweepPlanePts[2] = null;
+                    while (itemsQueued > 1) ;
 
-                    if (activeInteriorPt.k - 1 >= 0)
-                        neighboringSweepPlanePts[3] = sweepPlane[activeInteriorPt.i, activeInteriorPt.k - 1];
-                    else
-                        neighboringSweepPlanePts[3] = null;
+                    lock (activePts)
+                        activePts.Clear();
 
-                    bool remove = false;
-                    for (int m = 0; m < neighboringSweepPlanePts.Length; m++)       //Check if the active point is surrounded by 4 neighbors
-                        if (neighboringSweepPlanePts[m] == null)                    //If any of them are null, this active point is larger than the current cross-section
-                        {                                                           //In that case, it should be set to be removed
-                            remove = true;
-                            break;
-                        }
-                    if(remove)              //If it is set to be removed...
+                    lock (_locker)
+                        itemsQueued++;
+                    
+
+                    for (int i = 0; i < myActivePts.Count; i++)    //Then, iterate through all active points for this section
                     {
-                        for (int m = 0; m < neighboringSweepPlanePts.Length; m++)   //Go through all the neighboring points
+                        SweepPlanePoint activeInteriorPt;    //Get active interior pt
+                        bool remove = false;
+                        //Check if the active point is surrounded by 4 neighbors
+                        //If any of them are null, this active point is larger than the current cross-section
+                        //In that case, it should be set to be removed
+                        lock (sweepPlane)
                         {
-                            SweepPlanePoint neighbor = neighboringSweepPlanePts[m];
-                            if (neighbor != null && neighbor.mark == SweepPlanePoint.MarkingType.InactiveInterior)    //For the ones that exist, and are inactive interior...
+                            activeInteriorPt = myActivePts[i];
+                            Monitor.Enter(activeInteriorPt);
+                            Debug.Log("Enter center");
+                            if (activeInteriorPt.i + 1 < xLength * 8)           //And all of its 4-neighbors
                             {
-                                neighbor.mark = SweepPlanePoint.MarkingType.Active;         //...mark them active
-                                inactiveInteriorPts.Remove(neighbor);                       //remove them from inactiveInterior
-                                activePts.Add(neighbor);                                    //And add them to the end of activePts
+                                SweepPlanePoint pt = sweepPlane[activeInteriorPt.i + 1, activeInteriorPt.k];
+                                neighboringSweepPlanePts[0] = pt;
+                                if (pt != null)
+                                    Monitor.Enter(pt);
+                                else
+                                    remove = true;
+                            }
+                            else
+                            {
+                                neighboringSweepPlanePts[0] = null;
+                                remove = true;
+                            }
+
+                            if (activeInteriorPt.i - 1 >= 0)
+                            {
+                                SweepPlanePoint pt = sweepPlane[activeInteriorPt.i - 1, activeInteriorPt.k];
+                                neighboringSweepPlanePts[1] = pt;
+                                if (pt != null)
+                                    Monitor.Enter(pt);
+                                else
+                                    remove = true;
+                            }
+                            else
+                            {
+                                neighboringSweepPlanePts[1] = null;
+                                remove = true;
+                            }
+
+                            if (activeInteriorPt.k + 1 < zLength * 8)
+                            {
+                                SweepPlanePoint pt = sweepPlane[activeInteriorPt.i, activeInteriorPt.k + 1];
+                                neighboringSweepPlanePts[2] = pt;
+                                if (pt != null)
+                                    Monitor.Enter(pt);
+                                else
+                                    remove = true;
+                            }
+                            else
+                            {
+                                neighboringSweepPlanePts[2] = null;
+                                remove = true;
+                            }
+
+                            if (activeInteriorPt.k - 1 >= 0)
+                            {
+                                SweepPlanePoint pt = sweepPlane[activeInteriorPt.i, activeInteriorPt.k - 1];
+                                neighboringSweepPlanePts[3] = pt;
+                                if (pt != null)
+                                    Monitor.Enter(pt);
+                                else
+                                    remove = true;
+                            }
+                            else
+                            {
+                                neighboringSweepPlanePts[3] = null;
+                                remove = true;
                             }
                         }
-                        sweepPlane[activeInteriorPt.i, activeInteriorPt.k] = null;          //Then, set this point to null in the sweepPlane
-                        SetVoxelSection(activeInteriorPt.i, j, activeInteriorPt.k, null);   //Set the point on the voxel to null
-                        activePts[i] = null;                                                //And clear it out for this guy
+                        try
+                        {
+                            if (remove)              //If it is set to be removed...
+                            {
+                                for (int m = 0; m < neighboringSweepPlanePts.Length; m++)   //Go through all the neighboring points
+                                {
+                                    SweepPlanePoint neighbor = neighboringSweepPlanePts[m];
+                                    if (neighbor != null && neighbor.mark == SweepPlanePoint.MarkingType.InactiveInterior)    //For the ones that exist, and are inactive interior...
+                                    {
+                                        neighbor.mark = SweepPlanePoint.MarkingType.Active;         //...mark them active
+                                        lock (inactiveInteriorPts)
+                                            inactiveInteriorPts.Remove(neighbor);                       //remove them from inactiveInterior
+                                        lock(activePts)
+                                            activePts.Add(neighbor);                                    //And add them to the end of activePts
+                                    }
+                                }
+                                lock (sweepPlane)
+                                    sweepPlane[activeInteriorPt.i, activeInteriorPt.k] = null;          //Then, set this point to null in the sweepPlane
+                                SetVoxelSection(activeInteriorPt.i, j, activeInteriorPt.k, null);   //Set the point on the voxel to null
+                                myActivePts[i] = null;                                                //And clear it out for this guy
+                            }
+                            else
+                            {           //If it's surrounded by other points, it's inactive; add it to that list
+                                activeInteriorPt.mark = SweepPlanePoint.MarkingType.InactiveInterior;
+                                lock (inactiveInteriorPts)
+                                    inactiveInteriorPts.Add(activeInteriorPt);
+                            }
+                        }
+                        finally
+                        {
+                            for (int m = 0; m < neighboringSweepPlanePts.Length; m++)
+                                if (neighboringSweepPlanePts[m] != null)
+                                {
+                                    Monitor.Exit(neighboringSweepPlanePts[m]);
+                                }
+                            Monitor.Exit(activeInteriorPt);
+                            activeInteriorPt = null;
+                        }
                     }
-                    else
-                    {           //If it's surrounded by other points, it's inactive; add it to that list
-                        activeInteriorPt.mark = SweepPlanePoint.MarkingType.InactiveInterior;
-                        inactiveInteriorPts.Add(activeInteriorPt);
-                    }
-                }
-                Debug.Log(activePts.Count + " " + inactiveInteriorPts.Count);
-                activePts.Clear();      //Clear activePts every iteration
+                    lock (_locker)
+                        itemsQueued--;
 
-                for(int i = 0; i < inactiveInteriorPts.Count; i++)      //Any remaining inactive interior pts are guaranteed to be on the inside of the vehicle
+                    while (itemsQueued > 1) ;
+
+                }*/
+#endregion
+
+                lock (_locker)
+                    itemsQueued++;
+
+                for (int i = inactiveInteriorPts.Count * threadInd / 4; i < inactiveInteriorPts.Count * threadNum / 4; i++)      //Any remaining inactive interior pts are guaranteed to be on the inside of the vehicle
                 {
                     SweepPlanePoint inactivePt = inactiveInteriorPts[i];        //Get each
                     SetVoxelSection(inactivePt.i, j, inactivePt.k, inactivePt.part);    //And update the voxel accordingly
                 }
-            }
 
-            //Cleanup
-            sweepPlane = null;
-            activePts = null;
-            inactiveInteriorPts = null;
+                lock (_locker)
+                    itemsQueued--;
+
+                while (itemsQueued > 1)
+                    Thread.Sleep(5);
+            }
+            lock (_locker)
+                itemsQueued = 0;
+
             neighboringSweepPlanePts = null;
         }
 
@@ -948,6 +1089,27 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 VoxelShell,
                 Active,
                 InactiveInterior
+            }
+        }
+
+        private class SolidifyData
+        {
+            public SweepPlanePoint[,] sweepPlane;
+            public List<SweepPlanePoint> activePts;
+            public List<SweepPlanePoint> inactiveInteriorPts;
+            public int lowI, highI, lowK, highK;
+            public int threadInd;
+
+            public SolidifyData(SweepPlanePoint[,] sweepPlane, List<SweepPlanePoint> activePts, List<SweepPlanePoint> inactiveInteriorPts, int lowI, int highI, int lowK, int highK, int threadInd)
+            {
+                this.sweepPlane = sweepPlane;
+                this.activePts = activePts;
+                this.inactiveInteriorPts = inactiveInteriorPts;
+                this.lowI = lowI;
+                this.lowK = lowK;
+                this.highI = highI;
+                this.highK = highK;
+                this.threadInd = threadInd;
             }
         }
 
