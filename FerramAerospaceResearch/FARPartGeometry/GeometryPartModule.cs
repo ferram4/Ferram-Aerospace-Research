@@ -85,28 +85,123 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 MeshCollider mc = t.GetComponent<MeshCollider>();
 
-                if (mc == null)
-                    continue;
+                if (mc != null)
+                {
+                    Mesh m = mc.sharedMesh;
 
-                Mesh m = mc.sharedMesh;
+                    if (m == null)
+                        continue;
 
-                if (m == null)
-                    continue;
-                /*MeshFilter mf = t.GetComponent<MeshFilter>();
-                if (mf == null)
-                    continue;
-                Mesh m = mf.sharedMesh;
-
-                if (m == null || t.GetComponent<MeshCollider>() == null)
-                    continue;
-
-                Debug.Log(m.name + " " + t.name);*/
-
-                meshList.Add(m);
-                validTransformList.Add(t);
+                    meshList.Add(m);
+                    validTransformList.Add(t);
+                }
+                else
+                {
+                    BoxCollider bc = t.GetComponent<BoxCollider>();
+                    if (bc == null)
+                        continue;
+                    meshList.Add(CreateBoxMeshFromBoxCollider(bc.size, bc.center));
+                    validTransformList.Add(t);
+                }
             }
+            
             meshTransforms = validTransformList;
             return meshList;
+        }
+
+        private static Mesh CreateBoxMeshFromBoxCollider(Vector3 size, Vector3 center)
+        {
+            List<Vector3> Points = new List<Vector3>();
+            List<Vector3> Verts = new List<Vector3>();
+            List<Vector2> UVs = new List<Vector2>();
+            List<int> Tris = new List<int>();
+
+            Vector3 extents = size * 0.5f;
+
+            Points.Add(new Vector3(center.x - extents.x, center.y + extents.y, center.z - extents.z));
+            Points.Add(new Vector3(center.x + extents.x, center.y + extents.y, center.z - extents.z));
+            Points.Add(new Vector3(center.x + extents.x, center.y - extents.y, center.z - extents.z));
+            Points.Add(new Vector3(center.x - extents.x, center.y - extents.y, center.z - extents.z));
+            Points.Add(new Vector3(center.x + extents.x, center.y + extents.y, center.z + extents.z));
+            Points.Add(new Vector3(center.x - extents.x, center.y + extents.y, center.z + extents.z));
+            Points.Add(new Vector3(center.x - extents.x, center.y - extents.y, center.z + extents.z));
+            Points.Add(new Vector3(center.x + extents.x, center.y - extents.y, center.z + extents.z));          
+
+            Mesh mesh = new Mesh();
+            // Front plane
+            Verts.Add(Points[0]); Verts.Add(Points[1]); Verts.Add(Points[2]); Verts.Add(Points[3]);
+            // Back plane
+            Verts.Add(Points[4]); Verts.Add(Points[5]); Verts.Add(Points[6]); Verts.Add(Points[7]);
+            // Left plane
+            Verts.Add(Points[5]); Verts.Add(Points[0]); Verts.Add(Points[3]); Verts.Add(Points[6]);
+            // Right plane
+            Verts.Add(Points[1]); Verts.Add(Points[4]); Verts.Add(Points[7]); Verts.Add(Points[2]);
+            // Top plane
+            Verts.Add(Points[5]); Verts.Add(Points[4]); Verts.Add(Points[1]); Verts.Add(Points[0]);
+            // Bottom plane
+            Verts.Add(Points[3]); Verts.Add(Points[2]); Verts.Add(Points[7]); Verts.Add(Points[6]);
+            // Front Plane
+            Tris.Add(0); Tris.Add(1); Tris.Add(2);
+            Tris.Add(2); Tris.Add(3); Tris.Add(0);
+            // Back Plane
+            Tris.Add(4); Tris.Add(5); Tris.Add(6);
+            Tris.Add(6); Tris.Add(7); Tris.Add(4);
+            // Left Plane
+            Tris.Add(8); Tris.Add(9); Tris.Add(10);
+            Tris.Add(10); Tris.Add(11); Tris.Add(8);
+            // Right Plane
+            Tris.Add(12); Tris.Add(13); Tris.Add(14);
+            Tris.Add(14); Tris.Add(15); Tris.Add(12);
+            // Top Plane
+            Tris.Add(16); Tris.Add(17); Tris.Add(18);
+            Tris.Add(18); Tris.Add(19); Tris.Add(16);
+            // Bottom Plane
+            Tris.Add(20); Tris.Add(21); Tris.Add(22);
+            Tris.Add(22); Tris.Add(23); Tris.Add(20);
+            UVs.Add(new Vector2(0, 1));
+            UVs.Add(new Vector2(1, 1));
+            UVs.Add(new Vector2(1, 0));
+            UVs.Add(new Vector2(0, 0));
+            // Back Plane
+            UVs.Add(new Vector2(0, 1));
+            UVs.Add(new Vector2(1, 1));
+            UVs.Add(new Vector2(1, 0));
+            UVs.Add(new Vector2(0, 0));
+            // Left Plane
+            UVs.Add(new Vector2(0, 1));
+            UVs.Add(new Vector2(1, 1));
+            UVs.Add(new Vector2(1, 0));
+            UVs.Add(new Vector2(0, 0));
+            // Right Plane
+            UVs.Add(new Vector2(0, 1));
+            UVs.Add(new Vector2(1, 1));
+            UVs.Add(new Vector2(1, 0));
+            UVs.Add(new Vector2(0, 0));
+            // Top Plane
+            UVs.Add(new Vector2(0, 1));
+            UVs.Add(new Vector2(1, 1));
+            UVs.Add(new Vector2(1, 0));
+            UVs.Add(new Vector2(0, 0));
+            // Bottom Plane
+            UVs.Add(new Vector2(0, 1));
+            UVs.Add(new Vector2(1, 1));
+            UVs.Add(new Vector2(1, 0));
+            UVs.Add(new Vector2(0, 0));
+            mesh.vertices = Verts.ToArray();
+            mesh.triangles = Tris.ToArray();
+            mesh.uv = UVs.ToArray();
+
+            Points = null;
+            Verts = null;
+            Tris = null;
+            UVs = null;
+
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+
+            mesh.Optimize();
+
+            return mesh;
         }
 
         private static List<Transform> PartModelTransformList(Part p)
