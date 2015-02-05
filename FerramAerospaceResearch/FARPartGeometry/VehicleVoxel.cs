@@ -112,7 +112,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             try
             {
 
-                //SolidifyVoxel();
+                SolidifyVoxel();
             }
             catch (Exception e)
             {
@@ -853,6 +853,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             else
                             {       //Make sure the point is labeled as a voxel shell if there is already a part there
                                 pt.mark = SweepPlanePoint.MarkingType.VoxelShell;
+                                inactiveInteriorPts.Remove(pt);
+                                activePts.Remove(pt);
                             }
                         }
                     }
