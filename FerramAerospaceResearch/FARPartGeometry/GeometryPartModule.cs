@@ -46,21 +46,33 @@ namespace FerramAerospaceResearch.FARPartGeometry
         public Transform partTransform;
         public Rigidbody partRigidBody;
 
-        public List<Mesh> geometryMeshes;
-        private List<Transform> meshTransforms;
-        public List<Matrix4x4> meshToVesselMatrixList = new List<Matrix4x4>();
         public Bounds overallMeshBounds;
+
+        public List<GeometryMesh> meshDataList;
 
         void Start()
         {
             partTransform = part.transform;
             partRigidBody = part.Rigidbody;
-            meshTransforms = PartModelTransformList(this.part);
-            geometryMeshes = CreateMeshListFromTransforms(ref meshTransforms);
+            List<Transform> meshTransforms = PartModelTransformList(this.part);
+            List<Mesh> geometryMeshes = CreateMeshListFromTransforms(ref meshTransforms);
+
+            meshDataList = new List<GeometryMesh>();
+
+            Matrix4x4 worldToVesselMatrix = Matrix4x4.identity;
             if (this.vessel)
-                UpdateTransformMatrixList(vessel.vesselTransform.worldToLocalMatrix);
+                worldToVesselMatrix = vessel.vesselTransform.worldToLocalMatrix;
             else
-                UpdateTransformMatrixList(EditorLogic.RootPart.transform.worldToLocalMatrix);
+                worldToVesselMatrix = EditorLogic.RootPart.transform.worldToLocalMatrix;
+
+            for (int i = 0; i < meshTransforms.Count; i++) 
+            {
+                Mesh m = geometryMeshes[i];
+                GeometryMesh geoMesh = new GeometryMesh(m.vertices, m.triangles, m.bounds, meshTransforms[i], worldToVesselMatrix);
+                meshDataList.Add(geoMesh);
+            }
+
+            overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
 
             part.OnEditorAttach += EditorAttach;
         }
@@ -68,14 +80,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
         public void EditorAttach()
         {
             UpdateTransformMatrixList(EditorLogic.RootPart.transform.worldToLocalMatrix);
+            overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(EditorLogic.RootPart.transform.worldToLocalMatrix);
         }
 
         public void UpdateTransformMatrixList(Matrix4x4 worldToVesselMatrix)
         {
-            meshToVesselMatrixList.Clear();
-            for (int i = 0; i < meshTransforms.Count; i++)
-                meshToVesselMatrixList.Add(worldToVesselMatrix * meshTransforms[i].localToWorldMatrix);
-            overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
+            for (int i = 0; i < meshDataList.Count; i++)
+                meshDataList[i].TransformBasis(worldToVesselMatrix);
         }
 
         private List<Mesh> CreateMeshListFromTransforms(ref List<Transform> meshTransforms)
@@ -86,8 +97,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Bounds rendererBounds = this.part.GetPartOverallMeshBoundsInBasis(part.transform.worldToLocalMatrix);
             Bounds colliderBounds = this.part.GetPartColliderBoundsInBasis(part.transform.worldToLocalMatrix);
 
-            if (rendererBounds.size.x * rendererBounds.size.y * rendererBounds.size.z < colliderBounds.size.x * colliderBounds.size.y * colliderBounds.size.z * 2.5f &&
-                (rendererBounds.center - colliderBounds.center).sqrMagnitude < 1f)
+            if (rendererBounds.size.x * rendererBounds.size.z < colliderBounds.size.x * colliderBounds.size.z * 1.6f && rendererBounds.size.y < colliderBounds.size.y * 1.2f && (rendererBounds.center - colliderBounds.center).magnitude < 0.3f)
             {
                 foreach (Transform t in meshTransforms)
                 {
@@ -186,7 +196,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Points.Add(new Vector3(center.x + extents.x, center.y + extents.y, center.z + extents.z));
             Points.Add(new Vector3(center.x - extents.x, center.y + extents.y, center.z + extents.z));
             Points.Add(new Vector3(center.x - extents.x, center.y - extents.y, center.z + extents.z));
-            Points.Add(new Vector3(center.x + extents.x, center.y - extents.y, center.z + extents.z));          
+            Points.Add(new Vector3(center.x + extents.x, center.y - extents.y, center.z + extents.z));
 
             Mesh mesh = new Mesh();
             // Front plane

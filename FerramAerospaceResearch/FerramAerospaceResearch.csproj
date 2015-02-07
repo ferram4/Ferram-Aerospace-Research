@@ -72,6 +72,7 @@
     <Compile Include="FARCenterQuery.cs" />
     <Compile Include="FARControllableSurface.cs" />
     <Compile Include="FARPartGeometry\DebugVisualVoxel.cs" />
+    <Compile Include="FARPartGeometry\GeometryMesh.cs" />
     <Compile Include="FARPartGeometry\GeometryPartModule.cs" />
     <Compile Include="FARPartGeometry\ConvexHull.cs" />
     <Compile Include="FARPartGeometry\CrossSectionCurve.cs" />

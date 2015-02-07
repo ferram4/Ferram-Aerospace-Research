@@ -57,7 +57,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         Vector3 lowerRightCorner;
         const float rc = 0.5f;
 
-        public VehicleVoxel(List<Part> partList, int elementCount, bool multiThreaded)
+        public VehicleVoxel(List<Part> partList, int elementCount, bool multiThreaded, bool solidify)
         {
             Vector3 min = new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity);
             Vector3 max = new Vector3(float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity);
@@ -119,15 +119,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
             for(int i = 0; i < geoModules.Count; i++)
             {
                 GeometryPartModule m = geoModules[i];
-                for (int j = 0; j < m.geometryMeshes.Count; j++)
+                for (int j = 0; j < m.meshDataList.Count; j++)
                 {
                     if (multiThreaded)
                     {
-                        WorkData data = new WorkData(m.part, m.geometryMeshes[j], m.meshToVesselMatrixList[j]);
+                        WorkData data = new WorkData(m.part, m.meshDataList[j]);
                         ThreadPool.QueueUserWorkItem(UpdateFromMesh, data);
                     }
                     else
-                        UpdateFromMesh(m.geometryMeshes[j], m.part, m.meshToVesselMatrixList[j]);
+                        UpdateFromMesh(m.meshDataList[j], m.part);
                     itemsQueued++;
                 }
             }
@@ -138,16 +138,17 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     Monitor.Wait(_locker);
                 
             Thread.CurrentThread.Priority = currentPrio;
-            try
-            {
-                //SolidifyVoxelMultithread();
-                SolidifyVoxel();
+            if(solidify)
+                try
+                {
+                    //SolidifyVoxelMultithread();
+                    SolidifyVoxel();
 
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
 
         }
 
@@ -229,22 +230,19 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 WorkData data = (WorkData)stuff;
                 Part part = data.part;
-                Mesh mesh = data.mesh;
-                Matrix4x4 transform = data.transform;
-                UpdateFromMesh(mesh, part, transform);
+                GeometryMesh mesh = data.mesh;
+                UpdateFromMesh(mesh, part);
             }
             catch (Exception e)
             {
                 Debug.LogException(e);
             }
         }
-        private unsafe void UpdateFromMesh(Mesh mesh, Part part, Matrix4x4 transform)
+        private unsafe void UpdateFromMesh(GeometryMesh mesh, Part part)
         {
-            Bounds meshBounds = mesh.bounds;//new Bounds();
-
-            if (meshBounds.size.x < elementSize * 2 && meshBounds.size.y < elementSize * 2 && meshBounds.size.z < elementSize * 2)
+            if (mesh.bounds.size.x < elementSize * 2 && mesh.bounds.size.y < elementSize * 2 && mesh.bounds.size.z < elementSize * 2)
             {
-                CalculateVoxelShellFromTinyMesh(meshBounds, part);
+                CalculateVoxelShellFromTinyMesh(mesh.bounds.min, mesh.bounds.max, part);
                 lock (_locker)
                 {
                     itemsQueued--;
@@ -253,21 +251,19 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 return;
             }
 
-            Vector3[] vertsVoxelSpace = new Vector3[mesh.vertices.Length];
+            /*Vector3[] vertsVoxelSpace = new Vector3[vertices.Length];
             for (int i = 0; i < vertsVoxelSpace.Length; i++)
             {
-                Vector3 vert = transform.MultiplyPoint3x4(mesh.vertices[i]);
-                vertsVoxelSpace[i] = vert;
-            }
+                vertsVoxelSpace[i] = transform.MultiplyPoint3x4(mesh.vertices[i]);
+            }*/
 
             for (int a = 0; a < mesh.triangles.Length; a += 3)
             {
                 Vector3 vert1, vert2, vert3;
 
-                vert1 = vertsVoxelSpace[mesh.triangles[a]];
-                vert2 = vertsVoxelSpace[mesh.triangles[a + 1]];
-                vert3 = vertsVoxelSpace[mesh.triangles[a + 2]];
-
+                vert1 = mesh.vertices[mesh.triangles[a]];
+                vert2 = mesh.vertices[mesh.triangles[a + 1]];
+                vert3 = mesh.vertices[mesh.triangles[a + 2]];
 
                 CalculateVoxelShellForTriangle(vert1, vert2, vert3, part);
             }
@@ -279,14 +275,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
         }
 
-        private void CalculateVoxelShellFromTinyMesh(Bounds meshBounds, Part part)
+        private void CalculateVoxelShellFromTinyMesh(Vector3 minMesh, Vector3 maxMesh, Part part)
         {
             int lowerI, lowerJ, lowerK;
             int upperI, upperJ, upperK;
 
             Vector3 min, max;
-            min = (meshBounds.min - lowerRightCorner) * invElementSize;
-            max = (meshBounds.max - lowerRightCorner) * invElementSize;
+            min = (minMesh - lowerRightCorner) * invElementSize;
+            max = (maxMesh - lowerRightCorner) * invElementSize;
 
             lowerI = (int)Math.Floor(min.x);
             lowerJ = (int)Math.Floor(min.y);
@@ -314,14 +310,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         private void CalculateVoxelShellForTriangle(Vector3 vert1, Vector3 vert2, Vector3 vert3, Part part)
         {
-            Vector4 plane = CalculateEquationOfPlane(vert1, vert2, vert3);
+            //Vector4 plane = CalculateEquationOfPlane(vert1, vert2, vert3);
+            Vector4 indexPlane = CalculateEquationOfPlaneInIndices(vert1, vert2, vert3);
 
             float x, y, z;
-            x = Math.Abs(plane.x);
-            y = Math.Abs(plane.y);
-            z = Math.Abs(plane.z);
+            x = Math.Abs(indexPlane.x);
+            y = Math.Abs(indexPlane.y);
+            z = Math.Abs(indexPlane.z);
 
-            Vector4 indexPlane = TransformPlaneToIndices(plane);
+            //Vector4 indexPlane = TransformPlaneToIndices(plane);
 
             if (x > y && x > z)
                 VoxelShellTrianglePerpX(indexPlane, vert1, vert2, vert3, part);
@@ -618,6 +615,24 @@ namespace FerramAerospaceResearch.FARPartGeometry
             return Math.Abs(testVec.x * perpVector.x + testVec.y * perpVector.y);
             //return Math.Abs(Vector2.Dot(testVec, perpVector));
         }
+
+        private Vector4 CalculateEquationOfPlaneInIndices(Vector3 pt1, Vector3 pt2, Vector3 pt3)
+        {
+            Vector3 p1p2 = pt2 - pt1;
+            Vector3 p1p3 = pt3 - pt1;
+
+            Vector3 tmp = Vector3.Cross(p1p2, p1p3);//.normalized;
+
+            Vector4 result = new Vector4(tmp.x, tmp.y, tmp.z);
+
+            result.w = result.x * (lowerRightCorner.x - pt1.x) + result.y * (lowerRightCorner.y - pt1.y) + result.z * (lowerRightCorner.z - pt1.z);
+            result.x = result.x * elementSize;
+            result.y = result.y * elementSize;
+            result.z = result.z * elementSize;
+
+            return result;
+        }
+
 
         private Vector4 CalculateEquationOfPlane(Vector3 pt1, Vector3 pt2, Vector3 pt3)
         {
@@ -1116,14 +1131,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
         private class WorkData
         {
             public Part part;
-            public Mesh mesh;
-            public Matrix4x4 transform;
+            public GeometryMesh mesh;
+            //public Mesh mesh;
+            //public Matrix4x4 transform;
 
-            public WorkData(Part part, Mesh mesh, Matrix4x4 transform)
+            public WorkData(Part part, GeometryMesh mesh)
             {
                 this.part = part;
                 this.mesh = mesh;
-                this.transform = transform;
+                //this.transform = transform;
             }
         }
     }

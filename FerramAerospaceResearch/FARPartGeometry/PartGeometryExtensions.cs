@@ -59,7 +59,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                 if (m == null)
                     continue;
+
+
                 Matrix4x4 matrix = worldToBasisMatrix * t.localToWorldMatrix;
+
 
                 /*if (m.vertices.Length < excessiveVerts)
                     for (int j = 0; j < m.vertices.Length; j++)
