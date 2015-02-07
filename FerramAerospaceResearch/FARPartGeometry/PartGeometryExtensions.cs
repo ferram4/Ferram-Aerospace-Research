@@ -74,6 +74,41 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
             return bounds;
         }
+
+        public static Bounds GetPartColliderBoundsInBasis(this Part part, Matrix4x4 worldToBasisMatrix, int excessiveVerts = 2500)
+        {
+            Transform[] transforms = part.FindModelComponents<Transform>();
+            Bounds bounds = new Bounds();
+            for (int i = 0; i < transforms.Length; i++)
+            {
+                Transform t = transforms[i];
+
+                MeshCollider mc = t.GetComponent<MeshCollider>();
+                Mesh m;
+                Matrix4x4 matrix = worldToBasisMatrix * t.localToWorldMatrix;
+
+                if (mc == null)
+                {
+                    BoxCollider bc = t.GetComponent<BoxCollider>();
+                    if (bc != null)
+                    {
+                        bounds.Encapsulate(matrix.MultiplyPoint3x4(bc.bounds.min));
+                        bounds.Encapsulate(matrix.MultiplyPoint3x4(bc.bounds.max));
+                    }
+                    continue;
+                }
+                else
+                    m = mc.sharedMesh;
+
+                if (m == null)
+                    continue;
+
+                bounds.Encapsulate(matrix.MultiplyPoint3x4(m.bounds.min));
+                bounds.Encapsulate(matrix.MultiplyPoint3x4(m.bounds.max));
+                
+            }
+            return bounds;
+        }
         
         public static Bounds[] GetPartMeshBoundsInPartSpace(this Part part, int excessiveVerts = 2500)
         {

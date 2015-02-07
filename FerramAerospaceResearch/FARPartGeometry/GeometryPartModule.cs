@@ -83,47 +83,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
             List<Mesh> meshList = new List<Mesh>();
             List<Transform> validTransformList = new List<Transform>();
 
-            Bounds rendererBounds = new Bounds();
-            Bounds colliderBounds = new Bounds();
+            Bounds rendererBounds = this.part.GetPartOverallMeshBoundsInBasis(part.transform.worldToLocalMatrix);
+            Bounds colliderBounds = this.part.GetPartColliderBoundsInBasis(part.transform.worldToLocalMatrix);
 
-            Bounds[] boundsList = part.GetRendererBounds();
-            for (int i = 0; i < boundsList.Length; i++)
-            {
-                rendererBounds.Encapsulate(boundsList[i]);
-            }
-            boundsList = part.GetColliderBounds();
-            for (int i = 0; i < boundsList.Length; i++)
-            {
-                colliderBounds.Encapsulate(boundsList[i]);
-            }
-
-            if (rendererBounds.size.x * rendererBounds.size.y * rendererBounds.size.z > colliderBounds.size.x * colliderBounds.size.y * colliderBounds.size.z * 1.5f ||
-                (rendererBounds.center - colliderBounds.center).sqrMagnitude > 1f)
-            {
-                foreach (Transform t in meshTransforms)
-                {
-                    MeshCollider mc = t.GetComponent<MeshCollider>();
-
-                    if (mc != null)
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        MeshFilter mf = t.GetComponent<MeshFilter>();
-                        if (mf == null)
-                            continue;
-                        Mesh m = mf.sharedMesh;
-
-                        if (m == null)
-                            continue;
-
-                        meshList.Add(m);
-                        validTransformList.Add(t);
-                    }
-                }
-            }
-            else
+            if (rendererBounds.size.x * rendererBounds.size.y * rendererBounds.size.z < colliderBounds.size.x * colliderBounds.size.y * colliderBounds.size.z * 2.5f &&
+                (rendererBounds.center - colliderBounds.center).sqrMagnitude < 1f)
             {
                 foreach (Transform t in meshTransforms)
                 {
@@ -146,6 +110,34 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             continue;
 
                         meshList.Add(CreateBoxMeshFromBoxCollider(bc.size, bc.center));
+                        validTransformList.Add(t);
+                    }
+                }
+            }
+            else
+            {
+                foreach (Transform t in meshTransforms)
+                {
+                    MeshCollider mc = t.GetComponent<MeshCollider>();
+
+                    if (mc != null)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        MeshFilter mf = t.GetComponent<MeshFilter>();
+                        if (mf == null)
+                            continue;
+                        Mesh m = mf.sharedMesh;
+
+                        if (m == null)
+                            continue;
+
+                        if (m.triangles.Length / m.bounds.size.sqrMagnitude > 250)
+                            continue;
+
+                        meshList.Add(m);
                         validTransformList.Add(t);
                     }
                 }
