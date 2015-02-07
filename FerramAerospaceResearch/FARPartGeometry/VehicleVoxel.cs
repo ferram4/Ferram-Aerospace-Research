@@ -109,8 +109,17 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     Monitor.Wait(_locker);
                 
             Thread.CurrentThread.Priority = currentPrio;
+            try
+            {
 
-            SolidifyVoxel();
+                SolidifyVoxel();
+
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+
         }
 
         ~VehicleVoxel()
@@ -132,7 +141,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 section = voxelSections[iSec, jSec, kSec];
                 if (section == null)
                 {
-                    section = new VoxelSection(elementSize, 8, 8, 8, lowerRightCorner + new Vector3(iSec, jSec, kSec) * elementSize * 8);
+                    section = new VoxelSection(elementSize, lowerRightCorner + new Vector3(iSec, jSec, kSec) * elementSize * 8);
                     voxelSections[iSec, jSec, kSec] = section;
                 }
             }
@@ -140,6 +149,22 @@ namespace FerramAerospaceResearch.FARPartGeometry
             //Debug.Log(i.ToString() + ", " + j.ToString() + ", " + k.ToString() + ", " + part.partInfo.title);
 
             section.SetVoxelPoint(i % 8, j % 8, k % 8, part);
+        }
+
+        private VoxelSection GetVoxelSection(int i, int j, int k)
+        {
+            int iSec, jSec, kSec;
+            //Find the voxel section that this point points to
+            iSec = i / 8;
+            jSec = j / 8;
+            kSec = k / 8;
+
+            VoxelSection section;
+            lock (voxelSections)
+            {
+                section = voxelSections[iSec, jSec, kSec];
+            }
+            return section;
         }
 
         private Part GetPartAtVoxelPos(int i, int j, int k)
@@ -161,28 +186,44 @@ namespace FerramAerospaceResearch.FARPartGeometry
             return section.GetVoxelPoint(i % 8, j % 8, k % 8);
         }
 
+        private Part GetPartAtVoxelPos(int i, int j, int k, ref VoxelSection section)
+        {
+            return section.GetVoxelPoint(i % 8, j % 8, k % 8);
+        }
         private void UpdateFromMesh(object stuff)
         {
-            WorkData data = (WorkData)stuff;
-            Part part = data.part;
-            Mesh mesh = data.mesh;
-            Matrix4x4 transform = data.transform;
-            UpdateFromMesh(mesh, part, transform);
+            try
+            {
+                WorkData data = (WorkData)stuff;
+                Part part = data.part;
+                Mesh mesh = data.mesh;
+                Matrix4x4 transform = data.transform;
+                UpdateFromMesh(mesh, part, transform);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
         }
         private void UpdateFromMesh(Mesh mesh, Part part, Matrix4x4 transform)
         {
             Vector3[] vertsVoxelSpace = new Vector3[mesh.vertices.Length];
-            Bounds meshBounds = new Bounds();
+            Bounds meshBounds = mesh.bounds;//new Bounds();
             for (int i = 0; i < vertsVoxelSpace.Length; i++)
             {
                 Vector3 vert = transform.MultiplyPoint3x4(mesh.vertices[i]);
-                meshBounds.Encapsulate(vert);
+                //meshBounds.Encapsulate(vert);
                 vertsVoxelSpace[i] = vert;
             }
 
             if (meshBounds.size.x < elementSize && meshBounds.size.y < elementSize && meshBounds.size.z < elementSize)
             {
                 CalculateVoxelShellFromTinyMesh(ref meshBounds, ref part);
+                lock (_locker)
+                {
+                    itemsQueued--;
+                    Monitor.Pulse(_locker);
+                } 
                 return;
             }
 
@@ -257,78 +298,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 VoxelShellTrianglePerpY(ref indexPlane, ref vert1, ref vert2, ref vert3, ref rc, ref part);
             else
                 VoxelShellTrianglePerpZ(ref indexPlane, ref vert1, ref vert2, ref vert3, ref rc, ref part);
-
-            #region OldCode
-            /*//thickness for calculating a 26 neighborhood around the plane
-            float t26 = ThicknessForVoxel(ref plane);
-
-            Vector3 lowerBound = (triBounds.min - lowerRightCorner - new Vector3(rc, rc, rc)) / elementSize;
-            Vector3 upperBound = (triBounds.max - lowerRightCorner + new Vector3(rc, rc, rc)) / elementSize;
-
-            int lowerI, lowerJ, lowerK;
-            int upperI, upperJ, upperK;
-
-            lowerI = (int)Math.Floor(lowerBound.x);
-            lowerJ = (int)Math.Floor(lowerBound.y);
-            lowerK = (int)Math.Floor(lowerBound.z);
-
-            upperI = (int)Math.Ceiling(upperBound.x);
-            upperJ = (int)Math.Ceiling(upperBound.y);
-            upperK = (int)Math.Ceiling(upperBound.z);
-
-            lowerI = Math.Max(lowerI, 0);
-            lowerJ = Math.Max(lowerJ, 0);
-            lowerK = Math.Max(lowerK, 0);
-
-            upperI = Math.Min(upperI, xLength * 8 - 1);
-            upperJ = Math.Min(upperJ, yLength * 8 - 1);
-            upperK = Math.Min(upperK, zLength * 8 - 1);
-
-            for (int i = lowerI; i <= upperI; i++)
-                for (int j = lowerJ; j <= upperJ; j++)
-                    for (int k = lowerK; k <= upperK; k++)
-                    {
-                        Vector3 pt = lowerRightCorner + new Vector3(i, j, k) * elementSize;
-
-                        /*if (CheckAndSetForPlane(ref pt, ref t26, ref plane))
-                        {
-                            SetVoxelSection(i, j, k, part);
-                            continue;
-                        }
-
-                        if (CheckAndSetForVert(ref pt, ref rc, ref vert1))
-                        {
-                            SetVoxelSection(i, j, k, part);
-                            continue;
-                        }
-                        if (CheckAndSetForVert(ref pt, ref rc, ref vert2))
-                        {
-                            SetVoxelSection(i, j, k, part);
-                            continue;
-                        }
-                        if (CheckAndSetForVert(ref pt, ref rc, ref vert3))
-                        { 
-                            SetVoxelSection(i, j, k, part);
-                            continue;
-                        }
-
-                        if (CheckAndSetForEdge(ref pt, ref rc, ref vert1, ref vert2))
-                        {
-                            SetVoxelSection(i, j, k, part);
-                            continue;
-                        }
-                        if (CheckAndSetForEdge(ref pt, ref rc, ref vert2, ref vert3))
-                        {
-                            SetVoxelSection(i, j, k, part);
-                            continue;
-                        }
-                        if (CheckAndSetForEdge(ref pt, ref rc, ref vert3, ref vert1))
-                        {
-                            SetVoxelSection(i, j, k, part);
-                            continue;
-                        }
-                    }*/
-            #endregion
         }
 
         private void VoxelShellTrianglePerpX(ref Vector4 indexPlane, ref Vector3 vert1, ref Vector3 vert2, ref Vector3 vert3, ref float rc, ref Part part)
@@ -337,41 +306,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             vert1Proj = new Vector2(vert1.y - lowerRightCorner.y, vert1.z - lowerRightCorner.z) * invElementSize;
             vert2Proj = new Vector2(vert2.y - lowerRightCorner.y, vert2.z - lowerRightCorner.z) * invElementSize;
             vert3Proj = new Vector2(vert3.y - lowerRightCorner.y, vert3.z - lowerRightCorner.z) * invElementSize;
-
-            #region EdgeOffset
-            /*
-            Vector2 sideExt12, sideExt23, sideExt31;
-            float tmp;
-
-            sideExt12 = vert2Proj - vert1Proj;
-            tmp = sideExt12.x;
-            sideExt12.x = -sideExt12.y;
-            sideExt12.y = tmp;
-            sideExt12.Normalize();
-
-            sideExt12 *= -Math.Sign(Vector2.Dot(sideExt12, vert3Proj - vert1Proj));
-
-            sideExt23 = vert3Proj - vert2Proj;
-            tmp = sideExt23.x;
-            sideExt23.x = -sideExt23.y;
-            sideExt23.y = tmp;
-            sideExt23.Normalize();
-
-            sideExt23 *= -Math.Sign(Vector2.Dot(sideExt23, vert1Proj - vert2Proj));
-
-            sideExt31 = vert1Proj - vert3Proj;
-            tmp = sideExt23.x;
-            sideExt31.x = -sideExt31.y;
-            sideExt31.y = tmp;
-            sideExt31.Normalize();
-
-            sideExt31 *= -Math.Sign(Vector2.Dot(sideExt31, vert2Proj - vert3Proj));
-
-            vert1Proj += (sideExt12 + sideExt31) * rc * TriVertexShiftFactor(Vector2.Dot(sideExt12, sideExt31));
-            vert2Proj += (sideExt23 + sideExt12) * rc * TriVertexShiftFactor(Vector2.Dot(sideExt12, sideExt23));
-            vert3Proj += (sideExt31 + sideExt23) * rc * TriVertexShiftFactor(Vector2.Dot(sideExt23, sideExt31));
-            */
-            #endregion
 
             Vector2 p1p2, p1p3;
             p1p2 = vert2Proj - vert1Proj;
@@ -396,6 +330,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
             highJ = Math.Min(highJ, yLength * 8 - 1);
             highK = Math.Min(highK, zLength * 8 - 1);
 
+            float invPlaneX = 1 / indexPlane.x;
+
             for (int j = lowJ; j <= highJ; j++)
                 for (int k = lowK; k <= highK; k++)
                 {
@@ -411,19 +347,18 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                     if (u >= 0 && v >= 0 && u + v <= 1)
                     {
-                        int i = (int)Math.Round(-(indexPlane.y * j + indexPlane.z * k + indexPlane.w) / indexPlane.x);
+                        int i = (int)Math.Round(-(indexPlane.y * j + indexPlane.z * k + indexPlane.w) * invPlaneX);
                         if (i < 0 || i >= xLength * 8)
                             continue;
 
                         SetVoxelSection(i, j, k, part);
                         continue;
                     }
-
                     Vector2 p2TestPt = pt - vert2Proj;
                     Vector2 p3TestPt = pt - vert3Proj;
                     if (p1TestPt.magnitude < rc || p2TestPt.magnitude < rc || p3TestPt.magnitude < rc)
                     {
-                        int i = (int)Math.Round(-(indexPlane.y * j + indexPlane.z * k + indexPlane.w) / indexPlane.x);
+                        int i = (int)Math.Round(-(indexPlane.y * j + indexPlane.z * k + indexPlane.w) * invPlaneX);
                         if (i < 0 || i >= xLength * 8)
                             continue;
 
@@ -431,11 +366,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         continue;
                     }
 
-                    if ((u >= 0 && u <= 1 && Vector3.Exclude(p1p2, p1TestPt).magnitude < rc) ||
-                        (v >= 0 && v <= 1 && Vector3.Exclude(p1p3, p1TestPt).magnitude < rc) ||
-                        (u >= 0 && v >= 0 && Vector3.Exclude(vert3Proj - vert2Proj, p2TestPt).magnitude < rc))
+                    if ((u >= 0 && u <= 1 && DistancePerp(p1p2, p1TestPt) < rc) ||
+                        (v >= 0 && v <= 1 && DistancePerp(p1p3, p1TestPt) < rc) ||
+                        (u >= 0 && v >= 0 && DistancePerp(vert3Proj - vert2Proj, p2TestPt) < rc))
                     {
-                        int i = (int)Math.Round(-(indexPlane.y * j + indexPlane.z * k + indexPlane.w) / indexPlane.x);
+                        int i = (int)Math.Round(-(indexPlane.y * j + indexPlane.z * k + indexPlane.w) * invPlaneX);
                         if (i < 0 || i >= xLength * 8)
                             continue;
 
@@ -452,43 +387,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             vert2Proj = new Vector2(vert2.x - lowerRightCorner.x, vert2.z - lowerRightCorner.z) * invElementSize;
             vert3Proj = new Vector2(vert3.x - lowerRightCorner.x, vert3.z - lowerRightCorner.z) * invElementSize;
 
-            #region EdgeOffset
-            /*
-            Vector2 sideExt12, sideExt23, sideExt31;
-            float tmp;
-
-            sideExt12 = vert2Proj - vert1Proj;
-            tmp = sideExt12.x;
-            sideExt12.x = -sideExt12.y;
-            sideExt12.y = tmp;
-            sideExt12.Normalize();
-
-            if (Vector2.Dot(sideExt12, vert3Proj - vert1Proj) > 0)
-                sideExt12 = -sideExt12;
-
-            sideExt23 = vert3Proj - vert2Proj;
-            tmp = sideExt23.x;
-            sideExt23.x = -sideExt23.y;
-            sideExt23.y = tmp;
-            sideExt23.Normalize();
-
-            if (Vector2.Dot(sideExt23, vert1Proj - vert2Proj) > 0)
-                sideExt23 = -sideExt23;
-
-            sideExt31 = vert1Proj - vert3Proj;
-            tmp = sideExt23.x;
-            sideExt31.x = -sideExt31.y;
-            sideExt31.y = tmp;
-            sideExt31.Normalize();
-
-            if (Vector2.Dot(sideExt31, vert2Proj - vert3Proj) > 0)
-                sideExt31 = -sideExt31;
-
-            vert1Proj += (sideExt12 + sideExt31) * rc * TriVertexShiftFactor(Vector2.Dot(sideExt12, sideExt31));
-            vert2Proj += (sideExt23 + sideExt12) * rc * TriVertexShiftFactor(Vector2.Dot(sideExt12, sideExt23));
-            vert3Proj += (sideExt31 + sideExt23) * rc * TriVertexShiftFactor(Vector2.Dot(sideExt23, sideExt31));
-            */
-            #endregion
             
             Vector2 p1p2, p1p3;
             p1p2 = vert2Proj - vert1Proj;
@@ -513,6 +411,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
             highI = Math.Min(highI, xLength * 8 - 1);
             highK = Math.Min(highK, zLength * 8 - 1);
 
+            float invPlaneY = 1 / indexPlane.y;
+            
             for (int i = lowI; i <= highI; i++)
                 for (int k = lowK; k <= highK; k++)
                 {
@@ -528,7 +428,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                     if (u >= 0 && v >= 0 && u + v <= 1)
                     {
-                        int j = (int)Math.Round(-(indexPlane.x * i + indexPlane.z * k + indexPlane.w) / indexPlane.y);
+                        int j = (int)Math.Round(-(indexPlane.x * i + indexPlane.z * k + indexPlane.w) * invPlaneY);
                         if (j < 0 || j >= yLength * 8)
                             continue;
                         SetVoxelSection(i, j, k, part);
@@ -538,87 +438,23 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     Vector2 p3TestPt = pt - vert3Proj;
                     if (p1TestPt.magnitude < rc || p2TestPt.magnitude < rc || p3TestPt.magnitude < rc)
                     {
-                        int j = (int)Math.Round(-(indexPlane.x * i + indexPlane.z * k + indexPlane.w) / indexPlane.y);
+                        int j = (int)Math.Round(-(indexPlane.x * i + indexPlane.z * k + indexPlane.w) * invPlaneY);
                         if (j < 0 || j >= yLength * 8)
                             continue;
                         SetVoxelSection(i, j, k, part);
                         continue;
                     }
 
-                    if ((u >= 0 && u <= 1 && Vector3.Exclude(p1p2, p1TestPt).magnitude < rc) ||
-                        (v >= 0 && v <= 1 && Vector3.Exclude(p1p3, p1TestPt).magnitude < rc) ||
-                        (u >= 0 && v >= 0 && Vector3.Exclude(vert3Proj - vert2Proj, p2TestPt).magnitude < rc))
+                    if ((u >= 0 && u <= 1 && DistancePerp(p1p2, p1TestPt) < rc) ||
+                        (v >= 0 && v <= 1 && DistancePerp(p1p3, p1TestPt) < rc) ||
+                        (u >= 0 && v >= 0 && DistancePerp(vert3Proj - vert2Proj, p2TestPt) < rc))
                     {
-                        int j = (int)Math.Round(-(indexPlane.x * i + indexPlane.z * k + indexPlane.w) / indexPlane.y);
+                        int j = (int)Math.Round(-(indexPlane.x * i + indexPlane.z * k + indexPlane.w) * invPlaneY);
                         if (j < 0 || j >= yLength * 8)
                             continue;
                         SetVoxelSection(i, j, k, part);
                     }
                 }
-            #region Theoretically more efficient code, but requires bugfixing
-            /*int lowerI = startI, upperI = startI;
-            int i = startI, k = startK;
-
-            bool incrementI = true;
-            bool incrementK = true;
-            while (true)
-            {
-                Vector2 p1TestPt = new Vector2(i, k) - vert1Proj;
-                float dot12_test, dot13_test;
-                dot12_test = Vector2.Dot(p1p2, p1TestPt);
-                dot13_test = Vector2.Dot(p1p3, p1TestPt);
-
-                float u, v;
-                u = (dot13_13 * dot12_test - dot12_13 * dot13_test) * invDenom;
-                v = (dot12_12 * dot13_test - dot12_13 * dot12_test) * invDenom;
-
-                if (u >= 0 && v >= 0 && u + v < 1)
-                {
-                    int j = (int)Math.Round(-(indexPlane.x * i + indexPlane.z * k + indexPlane.w) / indexPlane.y);
-                    SetVoxelSection(i, j, k, part);
-                    if (incrementI)
-                    {
-                        i++;
-                        upperI = i;
-                    }
-                    else
-                    {
-                        i--;
-                        lowerI = i;
-                    }
-                }
-                else if (incrementI)
-                {
-                    incrementI = false;
-                    i = startI;
-                }
-                else
-                {
-                    incrementI = true;
-                    startI = (lowerI + upperI) / 2;
-                    if (lowerI == upperI)
-                    {
-                        if (incrementK)
-                        {
-                            incrementK = false;
-                            k = startK;
-                            lowerI = startI;
-                            upperI = startI;
-                            continue;
-                        }
-                        else
-                            break;
-                    }
-                    lowerI = startI;
-                    upperI = startI;
-
-                    if (incrementK)
-                        k++;
-                    else
-                        k--;
-                }
-            }*/
-            #endregion
         }
 
         private void VoxelShellTrianglePerpZ(ref Vector4 indexPlane, ref Vector3 vert1, ref Vector3 vert2, ref Vector3 vert3, ref float rc, ref Part part)
@@ -627,41 +463,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             vert1Proj = new Vector2(vert1.x - lowerRightCorner.x, vert1.y - lowerRightCorner.y) * invElementSize;
             vert2Proj = new Vector2(vert2.x - lowerRightCorner.x, vert2.y - lowerRightCorner.y) * invElementSize;
             vert3Proj = new Vector2(vert3.x - lowerRightCorner.x, vert3.y - lowerRightCorner.y) * invElementSize;
-
-            #region EdgeOffset
-            /*
-            Vector2 sideExt12, sideExt23, sideExt31;
-            float tmp;
-
-            sideExt12 = vert2Proj - vert1Proj;
-            tmp = sideExt12.x;
-            sideExt12.x = -sideExt12.y;
-            sideExt12.y = tmp;
-            sideExt12.Normalize();
-
-            sideExt12 *= -Math.Sign(Vector2.Dot(sideExt12, vert3Proj - vert1Proj));
-
-            sideExt23 = vert3Proj - vert2Proj;
-            tmp = sideExt23.x;
-            sideExt23.x = -sideExt23.y;
-            sideExt23.y = tmp;
-            sideExt23.Normalize();
-
-            sideExt23 *= -Math.Sign(Vector2.Dot(sideExt23, vert1Proj - vert2Proj));
-
-            sideExt31 = vert1Proj - vert3Proj;
-            tmp = sideExt23.x;
-            sideExt31.x = -sideExt31.y;
-            sideExt31.y = tmp;
-            sideExt31.Normalize();
-
-            sideExt31 *= -Math.Sign(Vector2.Dot(sideExt31, vert2Proj - vert3Proj));
-
-            vert1Proj += (sideExt12 + sideExt31) * rc * TriVertexShiftFactor(Vector2.Dot(sideExt12, sideExt31));
-            vert2Proj += (sideExt23 + sideExt12) * rc * TriVertexShiftFactor(Vector2.Dot(sideExt12, sideExt23));
-            vert3Proj += (sideExt31 + sideExt23) * rc * TriVertexShiftFactor(Vector2.Dot(sideExt23, sideExt31));
-            */
-            #endregion
 
             Vector2 p1p2, p1p3;
             p1p2 = vert2Proj - vert1Proj;
@@ -686,6 +487,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
             highI = Math.Min(highI, xLength * 8 - 1);
             highJ = Math.Min(highJ, yLength * 8 - 1);
 
+            float invPlaneZ = 1 / indexPlane.z;
+
             for (int i = lowI; i <= highI; i++)
                 for (int j = lowJ; j <= highJ; j++)
                 {
@@ -701,7 +504,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                     if (u >= 0 && v >= 0 && u + v <= 1)
                     {
-                        int k = (int)Math.Round(-(indexPlane.x * i + indexPlane.y * j + indexPlane.w) / indexPlane.z);
+                        int k = (int)Math.Round(-(indexPlane.x * i + indexPlane.y * j + indexPlane.w) * invPlaneZ);
                         if (k < 0 || k >= zLength * 8)
                             continue;
 
@@ -712,7 +515,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     Vector2 p3TestPt = pt - vert3Proj;
                     if (p1TestPt.magnitude < rc || p2TestPt.magnitude < rc || p3TestPt.magnitude < rc)
                     {
-                        int k = (int)Math.Round(-(indexPlane.x * i + indexPlane.y * j + indexPlane.w) / indexPlane.z);
+                        int k = (int)Math.Round(-(indexPlane.x * i + indexPlane.y * j + indexPlane.w) * invPlaneZ);
                         if (k < 0 || k >= zLength * 8)
                             continue;
 
@@ -720,17 +523,27 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         continue;
                     }
 
-                    if ((u >= 0 && u <= 1 && Vector3.Exclude(p1p2, p1TestPt).magnitude < rc) ||
-                        (v >= 0 && v <= 1 && Vector3.Exclude(p1p3, p1TestPt).magnitude < rc) ||
-                        (u >= 0 && v >= 0 && Vector3.Exclude(vert3Proj - vert2Proj, p2TestPt).magnitude < rc))
+                    if ((u >= 0 && u <= 1 && DistancePerp(p1p2, p1TestPt) < rc) ||
+                        (v >= 0 && v <= 1 && DistancePerp(p1p3, p1TestPt) < rc) ||
+                        (u >= 0 && v >= 0 && DistancePerp(vert3Proj - vert2Proj, p2TestPt) < rc))
                     {
-                        int k = (int)Math.Round(-(indexPlane.x * i + indexPlane.y * j + indexPlane.w) / indexPlane.z);
+                        int k = (int)Math.Round(-(indexPlane.x * i + indexPlane.y * j + indexPlane.w) * invPlaneZ);
                         if (k < 0 || k >= zLength * 8)
                             continue;
 
                         SetVoxelSection(i, j, k, part);
                     }
                 }
+        }
+
+        private float DistancePerp(Vector2 testVec, Vector2 perpVector)
+        {
+            float tmp = perpVector.x;
+            perpVector.x = perpVector.y;
+            perpVector.y = -tmp;
+            perpVector.Normalize();
+
+            return Math.Abs(Vector2.Dot(testVec, perpVector));
         }
 
         private Vector4 CalculateEquationOfPlane(ref Vector3 pt1, ref Vector3 pt2, ref Vector3 pt3)
@@ -756,14 +569,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             newPlane.w = plane.w + plane.x * lowerRightCorner.x + plane.y * lowerRightCorner.y + plane.z * lowerRightCorner.z;
 
             return newPlane;
-        }
-
-        private float TriVertexShiftFactor(float dotProdVector)
-        {
-            float result = (float)(Math.Cos(0.5 * Math.Acos(dotProdVector)));
-            result *= result;
-            result = 0.5f / result;
-            return result;
         }
 
         public float[] CrossSectionalArea(Vector3 orientation)
@@ -825,6 +630,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
                         Part p = GetPartAtVoxelPos(i, j, k);
                         SweepPlanePoint pt = sweepPlane[i, k];
+
                         if (pt == null && p != null) //If there is a section of voxel there, but no pt, add a new voxel shell pt to the sweep plane
                         {
                             pt = new SweepPlanePoint(p, i, k);
@@ -844,6 +650,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             else
                             { //Make sure the point is labeled as a voxel shell if there is already a part there
                                 pt.mark = SweepPlanePoint.MarkingType.VoxelShell;
+                                pt.part = p;
                                 inactiveInteriorPts.Remove(pt);
                                 activePts.Remove(pt);
                             }
@@ -897,7 +704,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         inactiveInteriorPts.Add(activeInteriorPt);
                     }
                 }
-                Debug.Log(activePts.Count + " " + inactiveInteriorPts.Count);
+                //Debug.Log(activePts.Count + " " + inactiveInteriorPts.Count);
                 activePts.Clear(); //Clear activePts every iteration
                 for (int i = 0; i < inactiveInteriorPts.Count; i++) //Any remaining inactive interior pts are guaranteed to be on the inside of the vehicle
                 {

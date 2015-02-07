@@ -61,16 +61,16 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     continue;
                 Matrix4x4 matrix = worldToBasisMatrix * t.localToWorldMatrix;
 
-                if (m.vertices.Length < excessiveVerts)
+                /*if (m.vertices.Length < excessiveVerts)
                     for (int j = 0; j < m.vertices.Length; j++)
                     {
                         bounds.Encapsulate(matrix.MultiplyPoint3x4(m.vertices[j]));
-                    }
-                else
-                {
+                    }*/
+                //else
+                //{
                     bounds.Encapsulate(matrix.MultiplyPoint3x4(m.bounds.min));
                     bounds.Encapsulate(matrix.MultiplyPoint3x4(m.bounds.max));
-                }
+                //}
             }
             return bounds;
         }

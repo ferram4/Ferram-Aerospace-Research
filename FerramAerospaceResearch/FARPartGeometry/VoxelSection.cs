@@ -42,46 +42,55 @@ namespace FerramAerospaceResearch.FARPartGeometry
 {
     class VoxelSection
     {
-        private Part[, ,] voxelPoints = null;
+        //private Part[, ,] voxelPoints = null;
+        private byte[,] voxelPoints = null;
         private DebugVisualVoxel[, ,] visualVoxels = null;
         public HashSet<Part> includedParts = new HashSet<Part>();
+        private Part firstPart = null;
 
         float size;
         Vector3 lowerCorner;
-        int xLength, yLength, zLength;
+        byte xLength, yLength, zLength;
 
-        public VoxelSection(float size, int xLength, int yLength, int zLength, Vector3 lowerCorner)
+        public VoxelSection(float size, Vector3 lowerCorner)
         {
             this.size = size;
-            this.xLength = xLength;
-            this.yLength = yLength;
-            this.zLength = zLength;
-            voxelPoints = new Part[xLength, yLength, zLength];
+            this.xLength = 8;
+            this.yLength = 8;
+            this.zLength = 8;
+            //voxelPoints = new Part[xLength, yLength, zLength];
+            voxelPoints = new byte[xLength, yLength];
             this.lowerCorner = lowerCorner;
         }
 
         //Sets point and ensures that includedParts includes p
-        public void SetVoxelPoint(int i, int j, int k, Part p)
+        public unsafe void SetVoxelPoint(int i, int j, int k, Part p)
         {
             lock (voxelPoints)
             {
-                voxelPoints[i, j, k] = p;
+                //voxelPoints[i, j, k] = p;
+                voxelPoints[i, j] |= (byte)(1 << k);
                 if (!includedParts.Contains(p))
                     includedParts.Add(p);
+                if (firstPart == null)
+                    firstPart = p;
             }
         }
 
-        public Part GetVoxelPoint(int i, int j, int k)
+        public unsafe Part GetVoxelPoint(int i, int j, int k)
         {
-            Part p;
+            Part p = null;
             lock (voxelPoints)
             {
-                p = voxelPoints[i, j, k];
+                //p = voxelPoints[i, j, k];
+                byte tmp = voxelPoints[i, j];
+                if ((tmp & (1 << k)) != 0)
+                    p = firstPart;
             }
             return p;
         }
 
-        public void VisualizeVoxels(Vector3 vesselOffset)
+        public unsafe void VisualizeVoxels(Vector3 vesselOffset)
         {
             ClearVisualVoxels();
             visualVoxels = new DebugVisualVoxel[xLength, yLength, zLength];
@@ -90,7 +99,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     for(int k = 0; k < zLength; k++)
                     {
                         DebugVisualVoxel vx;
-                        if(voxelPoints[i,j,k] != null)
+                        //if(voxelPoints[i,j,k] != null)
+                        byte tmp = voxelPoints[i, j];
+                        if ((tmp & (1 << k)) != 0)
                         {
                             vx = new DebugVisualVoxel(lowerCorner + new Vector3(i, j, k) * size + vesselOffset, size * 0.5f);
                             visualVoxels[i, j, k] = vx;

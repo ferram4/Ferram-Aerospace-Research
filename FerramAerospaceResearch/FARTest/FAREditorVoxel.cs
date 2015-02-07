@@ -52,6 +52,7 @@ namespace FerramAerospaceResearch.FARTest
         string voxelCount = "25000";
         string timeToGenerate = "";
         bool multiThreaded = true;
+        bool visualize = false;
         void OnGUI()
         {
             windowPos = GUILayout.Window(this.GetHashCode(), windowPos, TestGUI, "FARTest");
@@ -67,7 +68,8 @@ namespace FerramAerospaceResearch.FARTest
                 {
                     if (voxel != null)
                     {
-                        voxel.ClearVisualVoxels();
+                        if(visualize)
+                            voxel.ClearVisualVoxels();
                         voxel = null;
                     }
 
@@ -79,8 +81,20 @@ namespace FerramAerospaceResearch.FARTest
                     GUILayout.Label(timeToGenerate);
                     if (GUILayout.Button("Dump Voxel Data"))
                         DumpVoxelData();
-                    if (GUILayout.Button("Visualize Voxel"))
-                        voxel.VisualizeVoxel(EditorLogic.RootPart.transform.position);
+                    if(visualize)
+                    {
+                        if (GUILayout.Button("Clear Visualization"))
+                        {
+                            voxel.ClearVisualVoxels();
+                            visualize = false;
+                        }
+                    }
+                    else
+                        if (GUILayout.Button("Visualize Voxel"))
+                        {
+                            voxel.VisualizeVoxel(EditorLogic.RootPart.transform.position);
+                            visualize = true;
+                        }
                 }
             }
             GUI.DragWindow();

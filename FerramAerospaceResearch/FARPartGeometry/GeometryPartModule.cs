@@ -37,6 +37,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using KSP;
 
 namespace FerramAerospaceResearch.FARPartGeometry
 {
@@ -77,34 +78,78 @@ namespace FerramAerospaceResearch.FARPartGeometry
             overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
         }
 
-        private static List<Mesh> CreateMeshListFromTransforms(ref List<Transform> meshTransforms)
+        private List<Mesh> CreateMeshListFromTransforms(ref List<Transform> meshTransforms)
         {
             List<Mesh> meshList = new List<Mesh>();
             List<Transform> validTransformList = new List<Transform>();
-            foreach (Transform t in meshTransforms)
+
+            Bounds rendererBounds = new Bounds();
+            Bounds colliderBounds = new Bounds();
+
+            Bounds[] boundsList = part.GetRendererBounds();
+            for (int i = 0; i < boundsList.Length; i++)
             {
-                MeshCollider mc = t.GetComponent<MeshCollider>();
+                rendererBounds.Encapsulate(boundsList[i]);
+            }
+            boundsList = part.GetColliderBounds();
+            for (int i = 0; i < boundsList.Length; i++)
+            {
+                colliderBounds.Encapsulate(boundsList[i]);
+            }
 
-                if (mc != null)
+            if (rendererBounds.size.x * rendererBounds.size.y * rendererBounds.size.z > colliderBounds.size.x * colliderBounds.size.y * colliderBounds.size.z * 1.5f ||
+                (rendererBounds.center - colliderBounds.center).sqrMagnitude > 1f)
+            {
+                foreach (Transform t in meshTransforms)
                 {
-                    Mesh m = mc.sharedMesh;
+                    MeshCollider mc = t.GetComponent<MeshCollider>();
 
-                    if (m == null)
+                    if (mc != null)
+                    {
                         continue;
+                    }
+                    else
+                    {
+                        MeshFilter mf = t.GetComponent<MeshFilter>();
+                        if (mf == null)
+                            continue;
+                        Mesh m = mf.sharedMesh;
 
-                    meshList.Add(m);
-                    validTransformList.Add(t);
-                }
-                else
-                {
-                    BoxCollider bc = t.GetComponent<BoxCollider>();
-                    if (bc == null)
-                        continue;
-                    meshList.Add(CreateBoxMeshFromBoxCollider(bc.size, bc.center));
-                    validTransformList.Add(t);
+                        if (m == null)
+                            continue;
+
+                        meshList.Add(m);
+                        validTransformList.Add(t);
+                    }
                 }
             }
-            
+            else
+            {
+                foreach (Transform t in meshTransforms)
+                {
+                    MeshCollider mc = t.GetComponent<MeshCollider>();
+
+                    if (mc != null)
+                    {
+                        Mesh m = mc.sharedMesh;
+
+                        if (m == null)
+                            continue;
+
+                        meshList.Add(m);
+                        validTransformList.Add(t);
+                    }
+                    else
+                    {
+                        BoxCollider bc = t.GetComponent<BoxCollider>();
+                        if (bc == null)
+                            continue;
+
+                        meshList.Add(CreateBoxMeshFromBoxCollider(bc.size, bc.center));
+                        validTransformList.Add(t);
+                    }
+                }
+            }
             meshTransforms = validTransformList;
             return meshList;
         }
