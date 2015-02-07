@@ -40,7 +40,7 @@ using UnityEngine;
 
 namespace FerramAerospaceResearch.FARPartGeometry
 {
-    class VoxelSection
+    unsafe class VoxelSection
     {
         //private Part[, ,] voxelPoints = null;
         private byte[,] voxelPoints = null;
@@ -64,7 +64,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         }
 
         //Sets point and ensures that includedParts includes p
-        public unsafe void SetVoxelPoint(int i, int j, int k, Part p)
+        public void SetVoxelPoint(int i, int j, int k, Part p)
         {
             lock (voxelPoints)
             {
@@ -77,20 +77,19 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
         }
 
-        public unsafe Part GetVoxelPoint(int i, int j, int k)
+        public Part GetVoxelPoint(int i, int j, int k)
         {
             Part p = null;
             lock (voxelPoints)
             {
                 //p = voxelPoints[i, j, k];
-                byte tmp = voxelPoints[i, j];
-                if ((tmp & (1 << k)) != 0)
+                if ((voxelPoints[i, j] & (1 << k)) != 0)
                     p = firstPart;
             }
             return p;
         }
 
-        public unsafe void VisualizeVoxels(Vector3 vesselOffset)
+        public void VisualizeVoxels(Vector3 vesselOffset)
         {
             ClearVisualVoxels();
             visualVoxels = new DebugVisualVoxel[xLength, yLength, zLength];
@@ -100,8 +99,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
                         DebugVisualVoxel vx;
                         //if(voxelPoints[i,j,k] != null)
-                        byte tmp = voxelPoints[i, j];
-                        if ((tmp & (1 << k)) != 0)
+                        if ((voxelPoints[i, j] & (1 << k)) != 0)
                         {
                             vx = new DebugVisualVoxel(lowerCorner + new Vector3(i, j, k) * size + vesselOffset, size * 0.5f);
                             visualVoxels[i, j, k] = vx;

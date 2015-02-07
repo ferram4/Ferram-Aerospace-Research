@@ -142,6 +142,30 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     }
                 }
             }
+
+            if (part.Modules.Contains("ModuleJettison"))
+            {
+                ModuleJettison[] jettisons = part.GetComponents<ModuleJettison>();
+                foreach (ModuleJettison j in jettisons)
+                {
+                    if (j.isJettisoned || j.jettisonTransform == null)
+                        continue;
+
+                    Transform t = j.jettisonTransform;
+                    MeshFilter mf = t.GetComponent<MeshFilter>();
+
+                    if (mf == null)
+                        continue;
+                    Mesh m = mf.sharedMesh;
+
+                    if (m == null)
+                        continue;
+
+                    meshList.Add(m);
+                    validTransformList.Add(t);
+                }
+            }
+
             meshTransforms = validTransformList;
             return meshList;
         }
@@ -248,18 +272,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             List<Transform> propellersToIgnore = IgnoreModelTransformList(p);
 
             returnList.AddRange(p.FindModelComponents<Transform>());
-
-            if (p.Modules.Contains("ModuleJettison"))
-            {
-                ModuleJettison[] jettisons = p.GetComponents<ModuleJettison>();
-                foreach (ModuleJettison j in jettisons)
-                {
-                    if (j.isJettisoned || j.jettisonTransform == null)
-                        continue;
-
-                    returnList.Add(j.jettisonTransform);
-                }
-            }
 
             foreach (Transform t in propellersToIgnore)
                 returnList.Remove(t);
