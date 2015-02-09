@@ -121,11 +121,16 @@ namespace FerramAerospaceResearch.FARTest
 
         void DumpVoxelData()
         {
+            Stopwatch watch = new Stopwatch();
+            watch.Start();
             float[] crossSectionArea = voxel.CrossSectionalArea(Vector3.up);
+            watch.Stop();
 
             ConfigNode node = new ConfigNode("Cross Section Dump");
             for (int i = 0; i < crossSectionArea.Length; i++)
                 node.AddValue(i.ToString(), crossSectionArea[i].ToString());
+
+            node.AddValue("time", watch.ElapsedMilliseconds.ToString() + " ms");
 
             string savePath = KSPUtil.ApplicationRootPath.Replace("\\", "/") + "GameData/FerramAerospaceResearch/CrossSectionTest.cfg";
             node.Save(savePath);

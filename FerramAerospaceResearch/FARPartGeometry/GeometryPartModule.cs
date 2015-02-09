@@ -184,7 +184,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             List<Vector3> Points = new List<Vector3>();
             List<Vector3> Verts = new List<Vector3>();
-            List<Vector2> UVs = new List<Vector2>();
             List<int> Tris = new List<int>();
 
             Vector3 extents = size * 0.5f;
@@ -229,45 +228,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
             // Bottom Plane
             Tris.Add(20); Tris.Add(21); Tris.Add(22);
             Tris.Add(22); Tris.Add(23); Tris.Add(20);
-            UVs.Add(new Vector2(0, 1));
-            UVs.Add(new Vector2(1, 1));
-            UVs.Add(new Vector2(1, 0));
-            UVs.Add(new Vector2(0, 0));
-            // Back Plane
-            UVs.Add(new Vector2(0, 1));
-            UVs.Add(new Vector2(1, 1));
-            UVs.Add(new Vector2(1, 0));
-            UVs.Add(new Vector2(0, 0));
-            // Left Plane
-            UVs.Add(new Vector2(0, 1));
-            UVs.Add(new Vector2(1, 1));
-            UVs.Add(new Vector2(1, 0));
-            UVs.Add(new Vector2(0, 0));
-            // Right Plane
-            UVs.Add(new Vector2(0, 1));
-            UVs.Add(new Vector2(1, 1));
-            UVs.Add(new Vector2(1, 0));
-            UVs.Add(new Vector2(0, 0));
-            // Top Plane
-            UVs.Add(new Vector2(0, 1));
-            UVs.Add(new Vector2(1, 1));
-            UVs.Add(new Vector2(1, 0));
-            UVs.Add(new Vector2(0, 0));
-            // Bottom Plane
-            UVs.Add(new Vector2(0, 1));
-            UVs.Add(new Vector2(1, 1));
-            UVs.Add(new Vector2(1, 0));
-            UVs.Add(new Vector2(0, 0));
+
             mesh.vertices = Verts.ToArray();
             mesh.triangles = Tris.ToArray();
-            mesh.uv = UVs.ToArray();
 
             Points = null;
             Verts = null;
             Tris = null;
-            UVs = null;
 
-            mesh.RecalculateNormals();
             mesh.RecalculateBounds();
 
             mesh.Optimize();

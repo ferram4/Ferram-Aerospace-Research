@@ -162,9 +162,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
             int iSec, jSec, kSec;
             //Find the voxel section that this point points to
 
-            iSec = i / 8;
-            jSec = j / 8;
-            kSec = k / 8;
+            iSec = i >> 3;
+            jSec = j >> 3;
+            kSec = k >> 3;
 
             VoxelSection section;
 
@@ -173,23 +173,23 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 section = voxelSections[iSec, jSec, kSec];
                 if (section == null)
                 {
-                    section = new VoxelSection(elementSize, lowerRightCorner + new Vector3(iSec, jSec, kSec) * elementSize * 8);
+                    section = new VoxelSection(elementSize, lowerRightCorner + new Vector3(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
                     voxelSections[iSec, jSec, kSec] = section;
                 }
             }
 
             //Debug.Log(i.ToString() + ", " + j.ToString() + ", " + k.ToString() + ", " + part.partInfo.title);
 
-            section.SetVoxelPoint(i % 8, j % 8, k % 8, part);
+            section.SetVoxelPointGlobalIndex(i, j, k, part);
         }
 
         private unsafe VoxelSection GetVoxelSection(int i, int j, int k)
         {
             int iSec, jSec, kSec;
             //Find the voxel section that this point points to
-            iSec = i / 8;
-            jSec = j / 8;
-            kSec = k / 8;
+            iSec = i >> 3;
+            jSec = j >> 3;
+            kSec = k >> 3;
 
             VoxelSection section;
             lock (voxelSections)
@@ -204,9 +204,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
             int iSec, jSec, kSec;
             //Find the voxel section that this point points to
 
-            iSec = i / 8;
-            jSec = j / 8;
-            kSec = k / 8;
+            iSec = i >> 3;
+            jSec = j >> 3;
+            kSec = k >> 3;
 
             VoxelSection section;
             lock (voxelSections)
@@ -216,12 +216,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (section == null)
                 return null;
 
-            return section.GetVoxelPoint(i % 8, j % 8, k % 8);
+            return section.GetVoxelPointGlobalIndex(i, j, k);
         }
 
         private unsafe Part GetPartAtVoxelPos(int i, int j, int k, ref VoxelSection section)
         {
-            return section.GetVoxelPoint(i % 8, j % 8, k % 8);
+            return section.GetVoxelPointGlobalIndex(i, j, k);
         }
 
         private void UpdateFromMesh(object stuff)
@@ -626,9 +626,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Vector4 result = new Vector4(tmp.x, tmp.y, tmp.z);
 
             result.w = result.x * (lowerRightCorner.x - pt1.x) + result.y * (lowerRightCorner.y - pt1.y) + result.z * (lowerRightCorner.z - pt1.z);
-            result.x = result.x * elementSize;
-            result.y = result.y * elementSize;
-            result.z = result.z * elementSize;
+            result.w *= invElementSize;
+            //result.x = result.x;// *elementSize;
+            //result.y = result.y;// *elementSize;
+            //result.z = result.z;// *elementSize;
 
             return result;
         }
@@ -659,21 +660,21 @@ namespace FerramAerospaceResearch.FARPartGeometry
             return newPlane;
         }
 
-        public float[] CrossSectionalArea(Vector3 orientation)
+        public unsafe float[] CrossSectionalArea(Vector3 orientation)
         {
-            float[] crossSections = new float[yLength * 8];
+            float[] crossSections = new float[yCellLength];
             float areaPerElement = elementSize * elementSize;
             for (int j = 0; j < yCellLength; j++)
             {
-                float area = 0;
+                int areaCount = 0;
                 for (int i = 0; i < xCellLength; i++)
                     for (int k = 0; k < zCellLength; k++)
                     {
                         if (GetPartAtVoxelPos(i, j, k) != null)
-                            area += areaPerElement;
+                            areaCount++;
                     }
-                Debug.Log(area);
-                crossSections[j] = area;
+                //Debug.Log(area);
+                crossSections[j] = areaCount * areaPerElement;
             }
             return crossSections;
         }

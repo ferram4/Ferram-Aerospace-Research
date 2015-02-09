@@ -50,21 +50,51 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         float size;
         Vector3 lowerCorner;
+        int iOffset, jOffset, kOffset;
         byte xLength, yLength, zLength;
 
-        public VoxelSection(float size, Vector3 lowerCorner)
+        public VoxelSection(float size, Vector3 lowerCorner, int iOffset, int jOffset, int kOffset)
         {
             this.size = size;
             this.xLength = 8;
             this.yLength = 8;
             this.zLength = 8;
+            this.iOffset = iOffset;
+            this.jOffset = jOffset;
+            this.kOffset = kOffset;
             //voxelPoints = new Part[xLength, yLength, zLength];
             voxelPoints = new byte[xLength, yLength];
             this.lowerCorner = lowerCorner;
         }
 
         //Sets point and ensures that includedParts includes p
-        public void SetVoxelPoint(int i, int j, int k, Part p)
+        public unsafe void SetVoxelPointGlobalIndex(int i, int j, int k, Part p)
+        {
+            lock (voxelPoints)
+            {
+                //voxelPoints[i, j, k] = p;
+                voxelPoints[i - iOffset, j - jOffset] |= (byte)(1 << (k - kOffset));
+                if (!includedParts.Contains(p))
+                    includedParts.Add(p);
+                if (firstPart == null)
+                    firstPart = p;
+            }
+        }
+
+        public unsafe Part GetVoxelPointGlobalIndex(int i, int j, int k)
+        {
+            Part p = null;
+            lock (voxelPoints)
+            {
+                //p = voxelPoints[i, j, k];
+                if ((voxelPoints[i - iOffset, j - jOffset] & (1 << (k - kOffset))) != 0)
+                    p = firstPart;
+            }
+            return p;
+        }
+        
+        //Sets point and ensures that includedParts includes p
+        public unsafe void SetVoxelPointLocalIndex(int i, int j, int k, Part p)
         {
             lock (voxelPoints)
             {
@@ -77,7 +107,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
         }
 
-        public Part GetVoxelPoint(int i, int j, int k)
+        public unsafe Part GetVoxelPointLocalIndex(int i, int j, int k)
         {
             Part p = null;
             lock (voxelPoints)
