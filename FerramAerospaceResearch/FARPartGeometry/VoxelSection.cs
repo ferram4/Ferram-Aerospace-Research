@@ -84,12 +84,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
         public unsafe Part GetVoxelPointGlobalIndex(int i, int j, int k)
         {
             Part p = null;
-            lock (voxelPoints)
-            {
+            //lock (voxelPoints)      //Locks are not needed because reading and writing are not done in different threads simultaneously
+            //{
                 //p = voxelPoints[i, j, k];
                 if ((voxelPoints[i - iOffset, j - jOffset] & (1 << (k - kOffset))) != 0)
                     p = firstPart;
-            }
+            //}
             return p;
         }
         

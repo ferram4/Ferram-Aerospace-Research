@@ -209,10 +209,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             kSec = k >> 3;
 
             VoxelSection section;
-            lock (voxelSections)
-            {
+            //lock (voxelSections)      //No locks are needed because reading and writing are not done in different threads simultaneously
+            //{
                 section = voxelSections[iSec, jSec, kSec];
-            }
+            //}
             if (section == null)
                 return null;
 
