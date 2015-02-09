@@ -640,7 +640,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             perpVector.Normalize();
 
             return Math.Abs(testVec.x * perpVector.x + testVec.y * perpVector.y);
-            //return Math.Abs(Vector2.Dot(testVec, perpVector));
         }
 
         private Vector4 CalculateEquationOfPlaneInIndices(Vector3 pt1, Vector3 pt2, Vector3 pt3)
@@ -648,15 +647,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Vector3 p1p2 = pt2 - pt1;
             Vector3 p1p3 = pt3 - pt1;
 
-            Vector3 tmp = Vector3.Cross(p1p2, p1p3);//.normalized;
+            Vector3 tmp = Vector3.Cross(p1p2, p1p3);
 
             Vector4 result = new Vector4(tmp.x, tmp.y, tmp.z);
 
             result.w = result.x * (lowerRightCorner.x - pt1.x) + result.y * (lowerRightCorner.y - pt1.y) + result.z * (lowerRightCorner.z - pt1.z);
             result.w *= invElementSize;
-            //result.x = result.x;// *elementSize;
-            //result.y = result.y;// *elementSize;
-            //result.z = result.z;// *elementSize;
 
             return result;
         }
@@ -667,7 +663,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Vector3 p1p2 = pt2 - pt1;
             Vector3 p1p3 = pt3 - pt1;
 
-            Vector3 tmp = Vector3.Cross(p1p2, p1p3);//.normalized;
+            Vector3 tmp = Vector3.Cross(p1p2, p1p3);
 
             Vector4 result = new Vector4(tmp.x, tmp.y, tmp.z);
 
@@ -700,7 +696,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         if (GetPartAtVoxelPos(i, j, k) != null)
                             areaCount++;
                     }
-                //Debug.Log(area);
                 crossSections[j] = areaCount * areaPerElement;
             }
             return crossSections;
@@ -733,181 +728,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         }
                     }
         }
-
-        /*private void MultithreadSolidifyVoxel()
-        {
-            int threadCount = 4;
-
-            SweepPlanePoint[,] sweepPlane = new SweepPlanePoint[xCellLength, zCellLength];
-            List<SweepPlanePoint> activePts = new List<SweepPlanePoint>();
-            HashSet<SweepPlanePoint>[] inactiveInteriorPtsHashes = new HashSet<SweepPlanePoint>[threadCount];
-
-            for(int i = 0; i < inactiveInteriorPtsHashes.Length; i++)
-                inactiveInteriorPtsHashes[i] = new HashSet<SweepPlanePoint>();
-
-            ThreadBarrier barrier = new ThreadBarrier(4);
-
-            ThreadPool.QueueUserWorkItem(MultithreadSolidifyVoxelWorker, new SolidifyData(sweepPlane, activePts, inactiveInteriorPtsHashes, 0, xCellLength / 2, 0, zCellLength / 2, 0, barrier));
-            ThreadPool.QueueUserWorkItem(MultithreadSolidifyVoxelWorker, new SolidifyData(sweepPlane, activePts, inactiveInteriorPtsHashes, xCellLength / 2, xCellLength, 0, zCellLength / 2, 1, barrier));
-            ThreadPool.QueueUserWorkItem(MultithreadSolidifyVoxelWorker, new SolidifyData(sweepPlane, activePts, inactiveInteriorPtsHashes, 0, xCellLength / 2, zCellLength / 2, zCellLength, 2, barrier));
-            ThreadPool.QueueUserWorkItem(MultithreadSolidifyVoxelWorker, new SolidifyData(sweepPlane, activePts, inactiveInteriorPtsHashes, xCellLength / 2, xCellLength, zCellLength / 2, zCellLength, 3, barrier));
-
-            lock (_locker)
-                while (!solidDone)
-                    Monitor.Wait(_locker);
-
-            sweepPlane = null;
-            activePts = null;
-            inactiveInteriorPtsHashes = null;
-        }
-
-        private void MultithreadSolidifyVoxelWorker(object data)
-        {
-            SolidifyData castData = (SolidifyData)data;
-            try
-            {
-                MultithreadSolidifyVoxelWorker(castData.sweepPlane, castData.activePts, castData.inactiveInteriorPtsHashes
-                    , castData.lowI, castData.highI, castData.lowK, castData.highK, castData.threadInd, castData.barrier);
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
-        }
-
-
-        private unsafe void MultithreadSolidifyVoxelWorker(SweepPlanePoint[,] sweepPlane, List<SweepPlanePoint> activePts, HashSet<SweepPlanePoint>[] inactiveInteriorPtsHashes,
-            int lowI, int highI, int lowK, int highK, int threadInd, ThreadBarrier barrier)
-        {
-            HashSet<SweepPlanePoint> inactiveInteriorPts = inactiveInteriorPtsHashes[threadInd];
-            SweepPlanePoint[] neighboringSweepPlanePts = new SweepPlanePoint[4];
-
-            for (int j = 0; j < yCellLength; j++) //Iterate from front of vehicle to back
-            {
-                for (int i = lowI; i < highI; i++) //Iterate across the cross-section plane to add voxel shell and mark active interior points
-                    for (int k = lowK; k < highK; k++)
-                    {
-                        SweepPlanePoint pt;
-                        pt = sweepPlane[i, k];      //locks unnecessary due to reading and writing to different indices in different threads
-                        Part p = GetPartAtVoxelPos(i, j, k);
-
-                        if (pt == null && p != null) //If there is a section of voxel there, but no pt, add a new voxel shell pt to the sweep plane
-                        {
-                            sweepPlane[i, k] = new SweepPlanePoint(p, i, k);      //locks unnecessary due to reading and writing to different indices in different threads
-                            continue;
-                        }
-                        else if (pt != null)
-                        {
-                            if (p == null) //If there is a pt there, but no part listed, this is an interior pt or a the cross-section is shrinking
-                            {
-                                if (pt.mark == SweepPlanePoint.MarkingType.VoxelShell) //label it as active so that it can be determined once all the points have been checked
-                                {
-                                    pt.mark = SweepPlanePoint.MarkingType.Active;
-                                    lock(activePts)         //lock needed due to common activePts list
-                                        activePts.Add(pt); //And add it to the list of active interior pts
-                                }
-                            }
-                            else
-                            { //Make sure the point is labeled as a voxel shell if there is already a part there
-                                pt.mark = SweepPlanePoint.MarkingType.VoxelShell;
-                                pt.part = p;
-                                inactiveInteriorPts.Remove(pt);
-                            }
-                        }
-                    }
-
-                barrier.SignalAndWait();
-
-                if (threadInd == 0)     //Go singlethreaded for this complicated operation; it isn't the meat of the expense, so this is alright
-                {
-                    for (int i = 0; i < activePts.Count; i++) //Then, iterate through all active points for this section
-                    {
-                        SweepPlanePoint activeInteriorPt = activePts[i]; //Get active interior pt
-                        if (activeInteriorPt.i + 1 < xCellLength) //And all of its 4-neighbors
-                            neighboringSweepPlanePts[0] = sweepPlane[activeInteriorPt.i + 1, activeInteriorPt.k];
-                        else
-                            neighboringSweepPlanePts[0] = null;
-                        if (activeInteriorPt.i - 1 > 0)
-                            neighboringSweepPlanePts[1] = sweepPlane[activeInteriorPt.i - 1, activeInteriorPt.k];
-                        else
-                            neighboringSweepPlanePts[1] = null;
-                        if (activeInteriorPt.k + 1 < zCellLength)
-                            neighboringSweepPlanePts[2] = sweepPlane[activeInteriorPt.i, activeInteriorPt.k + 1];
-                        else
-                            neighboringSweepPlanePts[2] = null;
-                        if (activeInteriorPt.k - 1 > 0)
-                            neighboringSweepPlanePts[3] = sweepPlane[activeInteriorPt.i, activeInteriorPt.k - 1];
-                        else
-                            neighboringSweepPlanePts[3] = null;
-
-                        bool remove = false;
-                        foreach (SweepPlanePoint neighbor in neighboringSweepPlanePts)//Check if the active point is surrounded by 4 neighbors
-                            if (neighbor == null || neighbor.mark == SweepPlanePoint.MarkingType.Clear) //If any of them are null or marked clear, this active point is larger than the current cross-section
-                            {                                                                       //In that case, it should be set to be removed
-                                remove = true;
-                                break;
-                            }
-                        if (remove) //If it is set to be removed...
-                        {
-                            foreach (SweepPlanePoint neighbor in neighboringSweepPlanePts)// (int m = 0; m < neighboringSweepPlanePts.Length; m++) //Go through all the neighboring points
-                            {
-                                //SweepPlanePoint neighbor = neighboringSweepPlanePts[m];
-                                if (neighbor != null && neighbor.mark == SweepPlanePoint.MarkingType.InactiveInterior) //For the ones that exist, and are inactive interior...
-                                {
-                                    neighbor.mark = SweepPlanePoint.MarkingType.Active; //...mark them active
-
-                                    foreach (HashSet<SweepPlanePoint> inactiveHash in inactiveInteriorPtsHashes)    //Go through all the possible inactive hashes
-                                        if (inactiveHash.Remove(neighbor))          // try to remove them from inactiveInterior
-                                            break;                                  //And end when you do
-
-                                    activePts.Add(neighbor); //Then, add them to the end of activePts
-                                }
-                            }
-                            sweepPlane[activeInteriorPt.i, activeInteriorPt.k].mark = SweepPlanePoint.MarkingType.Clear; //Then, set this point to be marked clear in the sweepPlane
-                            //SetVoxelSection(activeInteriorPt.i, j, activeInteriorPt.k, null); //Set the point on the voxel to null
-                            //activePts[i] = null; //And clear it out for this guy
-                        }
-                        else
-                        { //If it's surrounded by other points, it's inactive; add it to that list
-                            activeInteriorPt.mark = SweepPlanePoint.MarkingType.InactiveInterior;
-                            if(activeInteriorPt.i >= xCellLength / 2)
-                            {
-                                if (activeInteriorPt.k >= zCellLength / 2)      //Upper right quadrant is thread 3
-                                    inactiveInteriorPtsHashes[3].Add(activeInteriorPt);
-                                else                                            //Lower right quadrant is thread 1
-                                    inactiveInteriorPtsHashes[1].Add(activeInteriorPt); 
-                            }
-                            else
-                            {
-                                if (activeInteriorPt.k >= zCellLength / 2)      //Upper left quadrant is thread 2
-                                    inactiveInteriorPtsHashes[2].Add(activeInteriorPt);
-                                else                                            //Lower left quadrant is thread 0 (this thread)
-                                    inactiveInteriorPtsHashes[0].Add(activeInteriorPt); 
-                            }
-                            //inactiveInteriorPts.Add(activeInteriorPt);
-                        }
-                    }
-                    activePts.Clear(); //Clear activePts every iteration
-                }
-
-                barrier.SignalAndWait();
-
-                foreach (SweepPlanePoint inactivePt in inactiveInteriorPts) //Any remaining inactive interior pts are guaranteed to be on the inside of the vehicle
-                {
-                    SetVoxelSectionNoLock(inactivePt.i, j, inactivePt.k, inactivePt.part); //Get each and update the voxel accordingly
-                }
-
-                barrier.SignalAndWait();
-            }
-            //Cleanup
-            inactiveInteriorPts = null;
-            neighboringSweepPlanePts = null;
-
-            //If we're here, everyone has finished; set conditions to end this stuff
-            solidDone = true;
-            lock (_locker)
-                Monitor.PulseAll(_locker);
-        }*/
 
         private unsafe void SolidifyVoxel(object uncastData)
         {
@@ -1077,31 +897,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 this.increasingJ = increasingJ;
             }
         }
-
-        /*private class SolidifyData
-        {
-            public SweepPlanePoint[,] sweepPlane;
-            public List<SweepPlanePoint> activePts;
-            public HashSet<SweepPlanePoint>[] inactiveInteriorPtsHashes;
-            public int lowI, highI, lowK, highK;
-            public int threadInd;
-            public ThreadBarrier barrier;
-
-            public SolidifyData(SweepPlanePoint[,] sweepPlane, List<SweepPlanePoint> activePts, HashSet<SweepPlanePoint>[] inactiveInteriorPtsHashes
-                , int lowI, int highI, int lowK, int highK, int threadInd, ThreadBarrier barrier)
-            {
-                this.sweepPlane = sweepPlane;
-                this.activePts = activePts;
-                this.inactiveInteriorPtsHashes = inactiveInteriorPtsHashes;
-                this.lowI = lowI;
-                this.lowK = lowK;
-                this.highI = highI;
-                this.highK = highK;
-                this.threadInd = threadInd;
-                this.barrier = barrier;
-            }
-        }*/
-
         private class VoxelShellParams
         {
             public Part part;
