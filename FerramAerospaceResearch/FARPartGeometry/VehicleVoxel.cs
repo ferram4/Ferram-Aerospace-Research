@@ -53,8 +53,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
         int xLength, yLength, zLength;
         int xCellLength, yCellLength, zCellLength;
         int threadsQueued = 0;
-        int threadsStarted = 0;
-        bool synced = false;
         bool solidDone = false;
         object _locker = new object();
 
@@ -145,8 +143,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if(solidify)
                 try
                 {
-                    SolidifyVoxel();
-                    //MultithreadSolidifyVoxel();
+                    //SolidifyVoxel();
+                    MultithreadSolidifyVoxel();
                 }
                 catch (Exception e)
                 {
