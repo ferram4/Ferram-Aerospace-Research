@@ -103,6 +103,7 @@
     <Compile Include="FARRungeKutta.cs" />
     <Compile Include="FARTest\FAREditorVoxel.cs" />
     <Compile Include="FARTest\FAREditorCrossSection.cs" />
+    <Compile Include="FARThreading\ThreadBarrier.cs" />
     <Compile Include="FARWind.cs" />
     <Compile Include="FARWingAerodynamicModel.cs" />
     <Compile Include="FARWingInteraction.cs" />

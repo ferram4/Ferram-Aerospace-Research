@@ -67,6 +67,18 @@ namespace FerramAerospaceResearch.FARPartGeometry
             this.lowerCorner = lowerCorner;
         }
 
+        //Use when certian that locking is unnecessary
+        public unsafe void SetVoxelPointGlobalIndexNoLock(int i, int j, int k, Part p)
+        {
+
+            //voxelPoints[i, j, k] = p;
+            voxelPoints[i - iOffset, j - jOffset] |= (byte)(1 << (k - kOffset));
+            if (!includedParts.Contains(p))
+                includedParts.Add(p);
+            if (firstPart == null)
+                firstPart = p;
+            
+        }
         //Sets point and ensures that includedParts includes p
         public unsafe void SetVoxelPointGlobalIndex(int i, int j, int k, Part p)
         {
