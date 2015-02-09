@@ -144,9 +144,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         if (m == null)
                             continue;
 
-                        if (m.triangles.Length / m.bounds.size.sqrMagnitude > 250)
-                            continue;
-
                         meshList.Add(m);
                         validTransformList.Add(t);
                     }
