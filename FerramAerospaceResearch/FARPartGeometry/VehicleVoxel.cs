@@ -57,7 +57,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         object _locker = new object();
 
         Vector3 lowerRightCorner;
-        const float rc = 0.5f;
+        const float RC = 0.5f;
 
         public VehicleVoxel(List<Part> partList, int elementCount, bool multiThreaded, bool solidify)
         {
@@ -143,8 +143,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if(solidify)
                 try
                 {
-                    //SolidifyVoxel();
-                    MultithreadSolidifyVoxel();
+                    SolidifyVoxel();
+                    //MultithreadSolidifyVoxel();
                 }
                 catch (Exception e)
                 {
@@ -422,7 +422,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     }
                     Vector2 p2TestPt = pt - vert2Proj;
                     Vector2 p3TestPt = pt - vert3Proj;
-                    if (p1TestPt.magnitude < rc || p2TestPt.magnitude < rc || p3TestPt.magnitude < rc)
+                    if (p1TestPt.magnitude < RC || p2TestPt.magnitude < RC || p3TestPt.magnitude < RC)
                     {
                         int i = (int)Math.Round(-(indexPlane.y * j + indexPlane.z * k + indexPlane.w) / indexPlane.x);
                         if (i < 0 || i >= xCellLength)
@@ -432,9 +432,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         continue;
                     }
 
-                    if ((u >= 0 && u <= 1 && DistancePerp(p1p2, p1TestPt) < rc) ||
-                        (v >= 0 && v <= 1 && DistancePerp(p1p3, p1TestPt) < rc) ||
-                        (u >= 0 && v >= 0 && DistancePerp(vert3Proj - vert2Proj, p2TestPt) < rc))
+                    if ((u >= 0 && u <= 1 && DistancePerp(p1p2, p1TestPt) < RC) ||
+                        (v >= 0 && v <= 1 && DistancePerp(p1p3, p1TestPt) < RC) ||
+                        (u >= 0 && v >= 0 && DistancePerp(vert3Proj - vert2Proj, p2TestPt) < RC))
                     {
                         int i = (int)Math.Round(-(indexPlane.y * j + indexPlane.z * k + indexPlane.w) / indexPlane.x);
                         if (i < 0 || i >= xCellLength)
@@ -516,7 +516,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     }
                     Vector2 p2TestPt = pt - vert2Proj;
                     Vector2 p3TestPt = pt - vert3Proj;
-                    if (p1TestPt.magnitude < rc || p2TestPt.magnitude < rc || p3TestPt.magnitude < rc)
+                    if (p1TestPt.magnitude < RC || p2TestPt.magnitude < RC || p3TestPt.magnitude < RC)
                     {
                         int j = (int)Math.Round(-(indexPlane.x * i + indexPlane.z * k + indexPlane.w) / indexPlane.y);
                         if (j < 0 || j >= yCellLength)
@@ -525,9 +525,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         continue;
                     }
 
-                    if ((u >= 0 && u <= 1 && DistancePerp(p1p2, p1TestPt) < rc) ||
-                        (v >= 0 && v <= 1 && DistancePerp(p1p3, p1TestPt) < rc) ||
-                        (u >= 0 && v >= 0 && DistancePerp(vert3Proj - vert2Proj, p2TestPt) < rc))
+                    if ((u >= 0 && u <= 1 && DistancePerp(p1p2, p1TestPt) < RC) ||
+                        (v >= 0 && v <= 1 && DistancePerp(p1p3, p1TestPt) < RC) ||
+                        (u >= 0 && v >= 0 && DistancePerp(vert3Proj - vert2Proj, p2TestPt) < RC))
                     {
                         int j = (int)Math.Round(-(indexPlane.x * i + indexPlane.z * k + indexPlane.w) / indexPlane.y);
                         if (j < 0 || j >= yCellLength)
@@ -607,7 +607,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     }
                     Vector2 p2TestPt = pt - vert2Proj;
                     Vector2 p3TestPt = pt - vert3Proj;
-                    if (p1TestPt.magnitude < rc || p2TestPt.magnitude < rc || p3TestPt.magnitude < rc)
+                    if (p1TestPt.magnitude < RC || p2TestPt.magnitude < RC || p3TestPt.magnitude < RC)
                     {
                         int k = (int)Math.Round(-(indexPlane.x * i + indexPlane.y * j + indexPlane.w) / indexPlane.z);
                         if (k < 0 || k >= zCellLength)
@@ -617,9 +617,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         continue;
                     }
 
-                    if ((u >= 0 && u <= 1 && DistancePerp(p1p2, p1TestPt) < rc) ||
-                        (v >= 0 && v <= 1 && DistancePerp(p1p3, p1TestPt) < rc) ||
-                        (u >= 0 && v >= 0 && DistancePerp(vert3Proj - vert2Proj, p2TestPt) < rc))
+                    if ((u >= 0 && u <= 1 && DistancePerp(p1p2, p1TestPt) < RC) ||
+                        (v >= 0 && v <= 1 && DistancePerp(p1p3, p1TestPt) < RC) ||
+                        (u >= 0 && v >= 0 && DistancePerp(vert3Proj - vert2Proj, p2TestPt) < RC))
                     {
                         int k = (int)Math.Round(-(indexPlane.x * i + indexPlane.y * j + indexPlane.w) / indexPlane.z);
                         if (k < 0 || k >= zCellLength)
