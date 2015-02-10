@@ -61,7 +61,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             Matrix4x4 worldToVesselMatrix = Matrix4x4.identity;
             if (this.vessel)
-                worldToVesselMatrix = vessel.vesselTransform.worldToLocalMatrix;
+                worldToVesselMatrix = vessel.ReferenceTransform.worldToLocalMatrix;
             else
                 worldToVesselMatrix = EditorLogic.RootPart.transform.worldToLocalMatrix;
 

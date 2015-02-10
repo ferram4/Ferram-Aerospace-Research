@@ -63,6 +63,8 @@
   <ItemGroup>
     <Compile Include="CompatibilityChecker.cs" />
     <Compile Include="FARAction.cs" />
+    <Compile Include="FARAeroComponents\FARAeroPartModule.cs" />
+    <Compile Include="FARAeroComponents\FARVesselAero.cs" />
     <Compile Include="FARAeroStress.cs" />
     <Compile Include="FARAeroUtil.cs" />
     <Compile Include="FARAPI.cs" />
@@ -89,6 +91,7 @@
     <Compile Include="FARPartExtensions.cs" />
     <Compile Include="FARPartGeometry\PartGeometryExtensions.cs" />
     <Compile Include="FARPartGeometry\VehicleVoxel.cs" />
+    <Compile Include="FARPartGeometry\VoxelCrossSection.cs" />
     <Compile Include="FARPartGeometry\VoxelSection.cs" />
     <Compile Include="FARPartModule.cs" />
     <Compile Include="FARPayloadFairingModule.cs" />
@@ -99,6 +102,7 @@
     <Compile Include="FARWind.cs" />
     <Compile Include="FARWingAerodynamicModel.cs" />
     <Compile Include="FARWingInteraction.cs" />
+    <Compile Include="FARKSPAddonFlightScene.cs" />
     <Compile Include="InstallChecker.cs" />
     <Compile Include="FARCollections\LLRedBlackTree.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

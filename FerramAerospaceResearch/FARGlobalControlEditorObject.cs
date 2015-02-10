@@ -45,7 +45,7 @@ using KSP.IO;
 
 namespace ferram4
 {
-    [KSPAddon(KSPAddon.Startup.EditorAny, false)]
+    //[KSPAddon(KSPAddon.Startup.EditorAny, false)]
     public class FARGlobalControlEditorObject : UnityEngine.MonoBehaviour
     {
         private int count = 0;

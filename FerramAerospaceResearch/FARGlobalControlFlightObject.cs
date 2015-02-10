@@ -46,7 +46,7 @@ using KSP.IO;
 
 namespace ferram4
 {
-    [KSPAddon(KSPAddon.Startup.Flight, false)]
+    //[KSPAddon(KSPAddon.Startup.Flight, false)]
     public class FARGlobalControlFlightObject : UnityEngine.MonoBehaviour
     {
         private IButton FARFlightButtonBlizzy = null;

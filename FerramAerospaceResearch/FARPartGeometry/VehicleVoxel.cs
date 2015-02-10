@@ -40,7 +40,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using UnityEngine;
-using FerramAerospaceResearch.FARThreading;
 
 namespace FerramAerospaceResearch.FARPartGeometry
 {
@@ -53,7 +52,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
         int xLength, yLength, zLength;
         int xCellLength, yCellLength, zCellLength;
         int threadsQueued = 0;
-        bool solidDone = false;
         object _locker = new object();
 
         Vector3 lowerRightCorner;
@@ -89,6 +87,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Vector3 size = max - min;
 
             float voxelVolume = size.x * size.y * size.z;
+
+            if (float.IsInfinity(voxelVolume))
+                return;
+
             float elementVol = voxelVolume / (float)elementCount;
             elementSize = (float)Math.Pow(elementVol, 1f / 3f);
             invElementSize = 1 / elementSize;
@@ -158,6 +160,58 @@ namespace FerramAerospaceResearch.FARPartGeometry
         ~VehicleVoxel()
         {
             ClearVisualVoxels();
+        }
+
+        public unsafe float[] CrossSectionalArea(Vector3 orientation)
+        {
+            float[] crossSections = new float[yCellLength];
+            float areaPerElement = elementSize * elementSize;
+            for (int j = 0; j < yCellLength; j++)
+            {
+                int areaCount = 0;
+                for (int i = 0; i < xCellLength; i++)
+                    for (int k = 0; k < zCellLength; k++)
+                    {
+                        if (GetPartAtVoxelPos(i, j, k) != null)
+                            areaCount++;
+                    }
+                crossSections[j] = areaCount * areaPerElement;
+            }
+            return crossSections;
+        }
+
+        public void CrossSectionData(ref List<VoxelCrossSection> crossSections, Vector3 orientationVector)
+        {
+            float wInc;
+            Vector4 plane = CalculateEquationOfPlaneAtEdge(orientationVector, out wInc);
+        }
+
+        public void ClearVisualVoxels()
+        {
+            for (int i = 0; i < xLength; i++)
+                for (int j = 0; j < yLength; j++)
+                    for (int k = 0; k < zLength; k++)
+                    {
+                        VoxelSection section = voxelSections[i, j, k];
+                        if (section != null)
+                        {
+                            section.ClearVisualVoxels();
+                        }
+                    }
+        }
+
+        public void VisualizeVoxel(Vector3 vesselOffset)
+        {
+            for (int i = 0; i < xLength; i++)
+                for (int j = 0; j < yLength; j++)
+                    for (int k = 0; k < zLength; k++)
+                    {
+                        VoxelSection section = voxelSections[i, j, k];
+                        if (section != null)
+                        {
+                            section.VisualizeVoxels(vesselOffset);
+                        }
+                    }
         }
 
         //Use when guaranteed that you will not attempt to write to the same section simultaneously
@@ -642,6 +696,22 @@ namespace FerramAerospaceResearch.FARPartGeometry
             return Math.Abs(testVec.x * perpVector.x + testVec.y * perpVector.y);
         }
 
+        private Vector4 CalculateEquationOfPlaneAtEdge(Vector3 normalVector, out float wInc)
+        {
+            Vector4 result = new Vector4(normalVector.x, normalVector.y, normalVector.z);
+
+            if(result.x > 0)
+                result.w -= result.x * xCellLength;
+            if (result.y > 0)
+                result.w -= result.y * yCellLength;
+            if (result.z > 0)
+                result.w -= result.z * zCellLength;
+
+            wInc = 1 / (result.x + result.y + result.z);
+
+            return result;
+        }
+
         private Vector4 CalculateEquationOfPlaneInIndices(Vector3 pt1, Vector3 pt2, Vector3 pt3)
         {
             Vector3 p1p2 = pt2 - pt1;
@@ -681,52 +751,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             newPlane.w = plane.w + plane.x * lowerRightCorner.x + plane.y * lowerRightCorner.y + plane.z * lowerRightCorner.z;
 
             return newPlane;
-        }
-
-        public unsafe float[] CrossSectionalArea(Vector3 orientation)
-        {
-            float[] crossSections = new float[yCellLength];
-            float areaPerElement = elementSize * elementSize;
-            for (int j = 0; j < yCellLength; j++)
-            {
-                int areaCount = 0;
-                for (int i = 0; i < xCellLength; i++)
-                    for (int k = 0; k < zCellLength; k++)
-                    {
-                        if (GetPartAtVoxelPos(i, j, k) != null)
-                            areaCount++;
-                    }
-                crossSections[j] = areaCount * areaPerElement;
-            }
-            return crossSections;
-        }
-
-        public void ClearVisualVoxels()
-        {
-            for (int i = 0; i < xLength; i++)
-                for (int j = 0; j < yLength; j++)
-                    for (int k = 0; k < zLength; k++)
-                    {
-                        VoxelSection section = voxelSections[i, j, k];
-                        if (section != null)
-                        {
-                            section.ClearVisualVoxels();
-                        }
-                    }
-        }
-
-        public void VisualizeVoxel(Vector3 vesselOffset)
-        {
-            for(int i = 0; i < xLength; i++)
-                for(int j = 0; j < yLength; j++)
-                    for(int k = 0; k < zLength; k++)
-                    {
-                        VoxelSection section = voxelSections[i, j, k];
-                        if(section != null)
-                        {
-                            section.VisualizeVoxels(vesselOffset);
-                        }
-                    }
         }
 
         private unsafe void SolidifyVoxel(object uncastData)
@@ -781,26 +805,29 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     SweepPlanePoint pt = sweepPlane[i, k];
                     Part p = GetPartAtVoxelPos(i, j, k);
 
-                    if (pt == null && p != null) //If there is a section of voxel there, but no pt, add a new voxel shell pt to the sweep plane
+                    if (pt == null) //If there is a section of voxel there, but no pt, add a new voxel shell pt to the sweep plane
                     {
-                        sweepPlane[i, k] = new SweepPlanePoint(p, i, k);
-                        continue;
+                        if (p != null)
+                        {
+                            sweepPlane[i, k] = new SweepPlanePoint(p, i, k);
+                            continue;
+                        }
                     }
-                    else if (pt != null)
+                    else 
                     {
                         if (p == null) //If there is a pt there, but no part listed, this is an interior pt or a the cross-section is shrinking
                         {
                             if (pt.mark == SweepPlanePoint.MarkingType.VoxelShell) //label it as active so that it can be determined once all the points have been checked
                             {
-                                pt.mark = SweepPlanePoint.MarkingType.Active;
                                 activePts.Add(pt); //And add it to the list of active interior pts
+                                pt.mark = SweepPlanePoint.MarkingType.Active;
                             }
                         }
                         else
                         { //Make sure the point is labeled as a voxel shell if there is already a part there
+                            inactiveInteriorPts.Remove(pt);
                             pt.mark = SweepPlanePoint.MarkingType.VoxelShell;
                             pt.part = p;
-                            inactiveInteriorPts.Remove(pt);
                         }
                     }
                 }
@@ -838,8 +865,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         //SweepPlanePoint neighbor = neighboringSweepPlanePts[m];
                         if (neighbor != null && neighbor.mark == SweepPlanePoint.MarkingType.InactiveInterior) //For the ones that exist, and are inactive interior...
                         {
-                            neighbor.mark = SweepPlanePoint.MarkingType.Active; //...mark them active
                             inactiveInteriorPts.Remove(neighbor); //remove them from inactiveInterior
+                            neighbor.mark = SweepPlanePoint.MarkingType.Active; //...mark them active
                             activePts.Add(neighbor); //And add them to the end of activePts
                         }
                     }
