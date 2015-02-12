@@ -1011,7 +1011,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
                         if (p == null) //If there is a pt there, but no part listed, this is an interior pt or a the cross-section is shrinking
                         {
-                            if (pt.mark == SweepPlanePoint.MarkingType.VoxelShell) //label it as active so that it can be determined once all the points have been checked
+                            if (pt.mark == SweepPlanePoint.MarkingType.VoxelShell) //label it as active so that it can be determined if it is interior or not once all the points have been updated
                             {
                                 activePts.Add(pt); //And add it to the list of active interior pts
                                 pt.mark = SweepPlanePoint.MarkingType.Active;
@@ -1046,15 +1046,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     neighboringSweepPlanePts[3] = null;
 
                 bool remove = false;
-                foreach (SweepPlanePoint neighbor in neighboringSweepPlanePts)//Check if the active point is surrounded by 4 neighbors
-                    if (neighbor == null || neighbor.mark == SweepPlanePoint.MarkingType.Clear) //If any of them are null or marked clear, this active point is larger than the current cross-section
+                foreach (SweepPlanePoint neighbor in neighboringSweepPlanePts)//Check if the active point is surrounded by all 4 neighbors
+                    if (neighbor == null || neighbor.mark == SweepPlanePoint.MarkingType.Clear) //If any of them are null or marked clear, this active point is not an interior point
                     {                                                                       //In that case, it should be set to be removed
                         remove = true;
                         break;
                     }
                 if (remove) //If it is set to be removed...
                 {
-                    foreach (SweepPlanePoint neighbor in neighboringSweepPlanePts)// (int m = 0; m < neighboringSweepPlanePts.Length; m++) //Go through all the neighboring points
+                    foreach (SweepPlanePoint neighbor in neighboringSweepPlanePts) //Go through all the neighboring points
                     {
                         //SweepPlanePoint neighbor = neighboringSweepPlanePts[m];
                         if (neighbor != null && neighbor.mark == SweepPlanePoint.MarkingType.InactiveInterior) //For the ones that exist, and are inactive interior...
@@ -1065,8 +1065,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         }
                     }
                     sweepPlane[activeInteriorPt.i, activeInteriorPt.k].mark = SweepPlanePoint.MarkingType.Clear; //Then, set this point to be marked clear in the sweepPlane
-                    //SetVoxelSection(activeInteriorPt.i, j, activeInteriorPt.k, null); //Set the point on the voxel to null
-                    //activePts[i] = null; //And clear it out for this guy
                 }
                 else
                 { //If it's surrounded by other points, it's inactive; add it to that list
