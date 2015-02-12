@@ -93,6 +93,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
         }
 
+        public unsafe bool VoxelPointExistsGlobalIndex(int i, int j, int k)
+        {
+            return (voxelPoints[i - iOffset, j - jOffset] & (1 << (k - kOffset))) != 0;
+
+        }
+
         public unsafe Part GetVoxelPointGlobalIndex(int i, int j, int k)
         {
             Part p = null;

@@ -57,6 +57,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
         Vector3 lowerRightCorner;
         const float RC = 0.5f;
 
+        public int MaxArrayLength
+        {
+            get { return yCellLength + xCellLength + zCellLength; }
+        }
+
         public VehicleVoxel(List<Part> partList, int elementCount, bool multiThreaded, bool solidify)
         {
             Vector3 min = new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity);
@@ -105,9 +110,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
             yCellLength = yLength * 8;
             zCellLength = zLength * 8;
 
-            Debug.Log(elementSize);
-            Debug.Log(xLength + " " + yLength + " " + zLength);
-            Debug.Log(size);
+            //Debug.Log(elementSize);
+            //Debug.Log(xLength + " " + yLength + " " + zLength);
+            //Debug.Log(size);
 
             Vector3 extents = new Vector3(); //this will be the distance from the center to the edges of the voxel object
             extents.x = xLength * 4 * elementSize;
@@ -120,10 +125,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             voxelSections = new VoxelSection[xLength, yLength, zLength];
 
+            threadsQueued = 0;
             for(int i = 0; i < geoModules.Count; i++)
             {
                 GeometryPartModule m = geoModules[i];
-                threadsQueued = m.meshDataList.Count;
+                lock (_locker)
+                    threadsQueued += m.meshDataList.Count;
                 for (int j = 0; j < m.meshDataList.Count; j++)
                 {
                     if (multiThreaded)
@@ -180,10 +187,187 @@ namespace FerramAerospaceResearch.FARPartGeometry
             return crossSections;
         }
 
-        public void CrossSectionData(ref List<VoxelCrossSection> crossSections, Vector3 orientationVector)
+        public void CrossSectionData(VoxelCrossSection[] crossSections, Vector3 orientationVector, out int frontIndex, out int backIndex)
         {
             float wInc;
-            Vector4 plane = CalculateEquationOfPlaneAtEdge(orientationVector, out wInc);
+            Vector4 plane = CalculateEquationOfSweepPlane(orientationVector, out wInc);
+
+            float x, y, z;
+            x = Math.Abs(plane.x);
+            y = Math.Abs(plane.y);
+            z = Math.Abs(plane.z);
+
+            float elementArea = elementSize * elementSize;  //Needs to be adjusted to handle angle
+
+            bool frontIndexFound = false;
+            frontIndex = 0;
+            backIndex = crossSections.Length - 1;
+
+            //Check y first, since it is most likely to be the flow direction
+            if(y >= z && y >= x)
+            {
+                int sectionCount = yCellLength + (int)Math.Ceiling(xCellLength * x / y) + (int)Math.Ceiling(zCellLength * z / y);
+                elementArea *= (float)Math.Sqrt((x + y + z) / y);       //account for different angles effects on voxel cube's projected area
+
+                float invYPlane = 1 / plane.y;
+
+                for (int m = 0; m < sectionCount; m++)
+                {
+                    VoxelCrossSection section;
+                    int areaCount = 0;
+                    Vector3 centroid = Vector3.zero;
+
+                    section = crossSections[m];
+
+
+
+                    for (int i = 0; i < xCellLength; i++)
+                        for (int k = 0; k < zCellLength; k++)
+                        {
+                            int j = (int)Math.Round(-(plane.x * i + plane.z * k + plane.w) * invYPlane);
+                            if (j < 0 || j >= yCellLength)
+                                continue;
+
+                            VoxelSection chunk = GetVoxelSection(i, j, k);
+                            if (chunk == null)
+                                continue;
+
+                            if (chunk.VoxelPointExistsGlobalIndex(i, j, k))
+                            {
+                                areaCount++;
+                                centroid.x += i;
+                                centroid.y += j;
+                                centroid.z += k;
+                            }
+                        }
+
+                    if (areaCount > 0)
+                    {
+                        if (frontIndexFound)
+                            backIndex = m;
+                        else
+                        {
+                            frontIndexFound = true;
+                            frontIndex = m;
+                        }
+                        centroid /= (float)areaCount;
+                    }
+                    section.centroid = centroid;
+                    section.area = areaCount * elementArea;
+
+                    crossSections[m] = section;
+
+                    plane.w += wInc;
+                }
+            }
+            else if (x > y && x > z)
+            {
+                int sectionCount = xCellLength + (int)Math.Ceiling(yCellLength * y / x) + (int)Math.Ceiling(zCellLength * z / x);
+                elementArea *= (float)Math.Sqrt((x + y + z) / x);       //account for different angles effects on voxel cube's projected area
+
+                float invXPlane = 1 / plane.x;
+
+                for (int m = 0; m < sectionCount; m++)
+                {
+                    VoxelCrossSection section;
+                    int areaCount = 0;
+                    Vector3 centroid = Vector3.zero;
+
+                    section = crossSections[m];
+
+                    for (int j = 0; j < yCellLength; j++)
+                        for (int k = 0; k < zCellLength; k++)
+                        {
+                            int i = (int)Math.Round(-(plane.y * j + plane.z * k + plane.w) * invXPlane);
+                            if (i < 0 || i >= xCellLength)
+                                continue;
+
+                            VoxelSection chunk = GetVoxelSection(i, j, k);
+                            if (chunk == null)
+                                continue;
+
+                            if (chunk.VoxelPointExistsGlobalIndex(i, j, k))
+                            {
+                                areaCount++;
+                                centroid.x += i;
+                                centroid.y += j;
+                                centroid.z += k;
+                            }
+                        }
+
+                    if (areaCount > 0)
+                    {
+                        if (frontIndexFound)
+                            backIndex = m;
+                        else
+                        {
+                            frontIndexFound = true;
+                            frontIndex = m;
+                        }
+                        centroid /= (float)areaCount;
+                    }
+                    section.centroid = centroid;
+                    section.area = areaCount * elementArea;
+                    
+                    crossSections[m] = section;
+
+                    plane.w += wInc;
+                }
+            }
+            else
+            {
+                int sectionCount = zCellLength + (int)Math.Ceiling(xCellLength * x / z) + (int)Math.Ceiling(yCellLength * y / z);
+                elementArea *= (float)Math.Sqrt((x + y + z) / z);       //account for different angles effects on voxel cube's projected area
+
+                float invZPlane = 1 / plane.z;
+
+                for (int m = 0; m < sectionCount; m++)
+                {
+                    VoxelCrossSection section;
+                    int areaCount = 0;
+                    Vector3 centroid = Vector3.zero;
+
+                    section = crossSections[m];
+
+                    for (int j = 0; j < yCellLength; j++)
+                        for (int i = 0; i < xCellLength; i++)
+                        {
+                            int k = (int)Math.Round(-(plane.y * j + plane.x * i + plane.w) * invZPlane);
+                            if (k < 0 || k >= zCellLength)
+                                continue;
+
+                            VoxelSection chunk = GetVoxelSection(i, j, k);
+                            if (chunk == null)
+                                continue;
+
+                            if (chunk.VoxelPointExistsGlobalIndex(i, j, k))
+                            {
+                                areaCount++;
+                                centroid.x += i;
+                                centroid.y += j;
+                                centroid.z += k;
+                            }
+                        }
+
+                    if (areaCount > 0)
+                    {
+                        if (frontIndexFound)
+                            backIndex = m;
+                        else
+                        {
+                            frontIndexFound = true;
+                            frontIndex = m;
+                        }
+                        centroid /= (float)areaCount;
+                    }
+                    section.centroid = centroid;
+                    section.area = areaCount * elementArea;
+                    
+                    crossSections[m] = section;
+
+                    plane.w += wInc;
+                }
+            }
         }
 
         public void ClearVisualVoxels()
@@ -273,10 +457,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             kSec = k >> 3;
 
             VoxelSection section;
-            lock (voxelSections)
-            {
+            //lock (voxelSections)
+            //{
                 section = voxelSections[iSec, jSec, kSec];
-            }
+            //}
             return section;
         }
 
@@ -696,7 +880,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             return Math.Abs(testVec.x * perpVector.x + testVec.y * perpVector.y);
         }
 
-        private Vector4 CalculateEquationOfPlaneAtEdge(Vector3 normalVector, out float wInc)
+        private Vector4 CalculateEquationOfSweepPlane(Vector3 normalVector, out float wInc)
         {
             Vector4 result = new Vector4(normalVector.x, normalVector.y, normalVector.z);
 
@@ -707,7 +891,17 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (result.z > 0)
                 result.w -= result.z * zCellLength;
 
-            wInc = 1 / (result.x + result.y + result.z);
+            float x, y, z;
+            x = Math.Abs(result.x);
+            y = Math.Abs(result.y);
+            z = Math.Abs(result.z);
+
+            if (y >= x && y >= z)
+                wInc = result.y;
+            else if (x > y && x > z)
+                wInc = result.x;
+            else
+                wInc = result.z;
 
             return result;
         }

@@ -54,60 +54,82 @@ namespace FerramAerospaceResearch.FARTest
         bool multiThreaded = true;
         bool solidify = true;
         bool visualize = false;
+
+        Stopwatch watch = new Stopwatch();
+
+        string x = "0", y = "1", z = "0";
+        bool toggleCrossSectionStuff = false;
+
         void OnGUI()
         {
-            windowPos = GUILayout.Window(this.GetHashCode(), windowPos, TestGUI, "FARTest");
+            if (EditorLogic.RootPart)
+            {
+                windowPos = GUILayout.Window(this.GetHashCode(), windowPos, TestGUI, "FARTest");
+            }
         }
 
         void TestGUI(int id)
         {
-            if(EditorLogic.RootPart)
-            {
-                voxelCount = GUILayout.TextField(voxelCount);
-                multiThreaded = GUILayout.Toggle(multiThreaded, "Multithread Voxelization");
-                solidify = GUILayout.Toggle(solidify, "Toggle Solidification");
-                if (GUILayout.Button("Voxelize Vessel"))
-                {
-                    if (voxel != null)
-                    {
-                        if (visualize)
-                        {
-                            voxel.ClearVisualVoxels();
-                            visualize = false;
-                        }
-                        voxel = null;
-                    }
 
-                    Thread thread = new Thread(CreateVoxel);
-                    thread.Start(EditorLogic.SortedShipList);
-                }
+            voxelCount = GUILayout.TextField(voxelCount);
+            multiThreaded = GUILayout.Toggle(multiThreaded, "Multithread Voxelization");
+            solidify = GUILayout.Toggle(solidify, "Toggle Solidification");
+            if (GUILayout.Button("Voxelize Vessel"))
+            {
                 if (voxel != null)
                 {
-                    GUILayout.Label(timeToGenerate);
-                    if (GUILayout.Button("Dump Voxel Data"))
-                        DumpVoxelData();
-                    if(visualize)
+                    if (visualize)
                     {
-                        if (GUILayout.Button("Clear Visualization"))
-                        {
-                            voxel.ClearVisualVoxels();
-                            visualize = false;
-                        }
+                        voxel.ClearVisualVoxels();
+                        visualize = false;
                     }
-                    else
-                        if (GUILayout.Button("Visualize Voxel"))
-                        {
-                            voxel.VisualizeVoxel(EditorLogic.RootPart.transform.position);
-                            visualize = true;
-                        }
+                    voxel = null;
                 }
+                ThreadPool.QueueUserWorkItem(CreateVoxel, EditorLogic.SortedShipList);
             }
+            if (voxel != null)
+            {
+                GUILayout.Label(timeToGenerate);
+                if (GUILayout.Button("CrossSection Calc"))
+                {
+                    toggleCrossSectionStuff = !toggleCrossSectionStuff;
+                    GUILayout.Height(0);
+                }
+                if (toggleCrossSectionStuff)
+                {
+                    GUILayout.Label("Velocity components");
+                    GUILayout.BeginHorizontal();
+                    x = GUILayout.TextField(x);
+                    y = GUILayout.TextField(y);
+                    z = GUILayout.TextField(z);
+                    GUILayout.EndHorizontal();
+
+                    if (GUILayout.Button("Calculate!"))
+                        DumpVoxelData();
+                }
+                if (visualize)
+                {
+                    if (GUILayout.Button("Clear Visualization"))
+                    {
+                        voxel.ClearVisualVoxels();
+                        visualize = false;
+                    }
+                }
+                else
+                    if (GUILayout.Button("Visualize Voxel"))
+                    {
+                        voxel.VisualizeVoxel(EditorLogic.RootPart.transform.position);
+                        visualize = true;
+                    }
+            }
+
             GUI.DragWindow();
         }
 
         void CreateVoxel(object partList)
         {
-            Stopwatch watch = new Stopwatch();
+            voxel = null;
+            watch.Reset();
             watch.Start();
             int count;
             if(int.TryParse(voxelCount, out count))
@@ -121,16 +143,33 @@ namespace FerramAerospaceResearch.FARTest
 
         void DumpVoxelData()
         {
-            Stopwatch watch = new Stopwatch();
+            VoxelCrossSection[] crossSections = new VoxelCrossSection[voxel.MaxArrayLength];
+            Vector3 vel = new Vector3(float.Parse(x), float.Parse(y), float.Parse(z));
+
+            watch.Reset();
             watch.Start();
-            float[] crossSectionArea = voxel.CrossSectionalArea(Vector3.up);
+            int frontIndex, backIndex;
+            voxel.CrossSectionData(crossSections, vel, out frontIndex, out backIndex);
+            watch.Stop();
+
+            string initialCost = watch.ElapsedMilliseconds.ToString();
+
+            watch.Reset();
+
+            watch.Start();
+            for(int i = 0; i < 50; i++)
+                voxel.CrossSectionData(crossSections, vel, out frontIndex, out backIndex);
             watch.Stop();
 
             ConfigNode node = new ConfigNode("Cross Section Dump");
-            for (int i = 0; i < crossSectionArea.Length; i++)
-                node.AddValue(i.ToString(), crossSectionArea[i].ToString());
+            for (int i = 0; i < crossSections.Length; i++)
+                node.AddValue(i.ToString(), crossSections[i].area.ToString());
 
-            node.AddValue("time", watch.ElapsedMilliseconds.ToString() + " ms");
+            node.AddValue("frontIndex", frontIndex);
+            node.AddValue("backIndex", backIndex);
+
+            node.AddValue("initial time", initialCost + " ms");
+            node.AddValue("repeated time avg", (float)watch.ElapsedMilliseconds / 50f + " ms");
 
             string savePath = KSPUtil.ApplicationRootPath.Replace("\\", "/") + "GameData/FerramAerospaceResearch/CrossSectionTest.cfg";
             node.Save(savePath);

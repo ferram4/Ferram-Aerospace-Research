@@ -6,10 +6,12 @@ using UnityEngine;
 
 namespace FerramAerospaceResearch.FARPartGeometry
 {
-    public class VoxelCrossSection
+    public struct VoxelCrossSection
     {
-        float area;
-        Vector3 centroid;
-        List<Part> partsRepresented;
+        public float area;
+        public Vector3 centroid;
+        public float a;
+        public float b;
+        //public Dictionary<Part, int> partsRepresented = new Dictionary<Part, int>();
     }
 }
