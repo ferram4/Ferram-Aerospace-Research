@@ -189,6 +189,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public void CrossSectionData(VoxelCrossSection[] crossSections, Vector3 orientationVector, out int frontIndex, out int backIndex)
         {
+            //TODO: Look into setting better limits for iterating over sweep plane to improve off-axis performance
+            
             float wInc;
             Vector4 plane = CalculateEquationOfSweepPlane(orientationVector, out wInc);
 
@@ -197,7 +199,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             y = Math.Abs(plane.y);
             z = Math.Abs(plane.z);
 
-            float elementArea = elementSize * elementSize;  //Needs to be adjusted to handle angle
+            float elementArea = elementSize * elementSize;
 
             bool frontIndexFound = false;
             frontIndex = 0;
@@ -213,13 +215,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                 for (int m = 0; m < sectionCount; m++)
                 {
-                    VoxelCrossSection section;
                     int areaCount = 0;
                     Vector3 centroid = Vector3.zero;
-
-                    section = crossSections[m];
-
-
 
                     for (int i = 0; i < xCellLength; i++)
                         for (int k = 0; k < zCellLength; k++)
@@ -228,11 +225,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             if (j < 0 || j >= yCellLength)
                                 continue;
 
-                            VoxelSection chunk = GetVoxelSection(i, j, k);
-                            if (chunk == null)
-                                continue;
-
-                            if (chunk.VoxelPointExistsGlobalIndex(i, j, k))
+                            if (VoxelPointExistsAtPos(i, j, k))
                             {
                                 areaCount++;
                                 centroid.x += i;
@@ -252,10 +245,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         }
                         centroid /= (float)areaCount;
                     }
-                    section.centroid = centroid;
-                    section.area = areaCount * elementArea;
-
-                    crossSections[m] = section;
+                    crossSections[m].centroid = centroid * elementSize + lowerRightCorner;
+                    crossSections[m].area = areaCount * elementArea;
 
                     plane.w += wInc;
                 }
@@ -269,11 +260,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                 for (int m = 0; m < sectionCount; m++)
                 {
-                    VoxelCrossSection section;
                     int areaCount = 0;
                     Vector3 centroid = Vector3.zero;
-
-                    section = crossSections[m];
 
                     for (int j = 0; j < yCellLength; j++)
                         for (int k = 0; k < zCellLength; k++)
@@ -282,11 +270,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             if (i < 0 || i >= xCellLength)
                                 continue;
 
-                            VoxelSection chunk = GetVoxelSection(i, j, k);
-                            if (chunk == null)
-                                continue;
-
-                            if (chunk.VoxelPointExistsGlobalIndex(i, j, k))
+                            if (VoxelPointExistsAtPos(i, j, k))
                             {
                                 areaCount++;
                                 centroid.x += i;
@@ -306,11 +290,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         }
                         centroid /= (float)areaCount;
                     }
-                    section.centroid = centroid;
-                    section.area = areaCount * elementArea;
+                    crossSections[m].centroid = centroid * elementSize + lowerRightCorner;
+                    crossSections[m].area = areaCount * elementArea;
                     
-                    crossSections[m] = section;
-
                     plane.w += wInc;
                 }
             }
@@ -323,11 +305,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                 for (int m = 0; m < sectionCount; m++)
                 {
-                    VoxelCrossSection section;
                     int areaCount = 0;
                     Vector3 centroid = Vector3.zero;
-
-                    section = crossSections[m];
 
                     for (int j = 0; j < yCellLength; j++)
                         for (int i = 0; i < xCellLength; i++)
@@ -336,11 +315,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             if (k < 0 || k >= zCellLength)
                                 continue;
 
-                            VoxelSection chunk = GetVoxelSection(i, j, k);
-                            if (chunk == null)
-                                continue;
-
-                            if (chunk.VoxelPointExistsGlobalIndex(i, j, k))
+                            if (VoxelPointExistsAtPos(i, j, k))
                             {
                                 areaCount++;
                                 centroid.x += i;
@@ -360,11 +335,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         }
                         centroid /= (float)areaCount;
                     }
-                    section.centroid = centroid;
-                    section.area = areaCount * elementArea;
+                    crossSections[m].centroid = centroid * elementSize + lowerRightCorner;
+                    crossSections[m].area = areaCount * elementArea;
                     
-                    crossSections[m] = section;
-
                     plane.w += wInc;
                 }
             }
@@ -462,6 +435,26 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 section = voxelSections[iSec, jSec, kSec];
             //}
             return section;
+        }
+
+        private unsafe bool VoxelPointExistsAtPos(int i, int j, int k)
+        {
+            int iSec, jSec, kSec;
+            //Find the voxel section that this point points to
+
+            iSec = i >> 3;
+            jSec = j >> 3;
+            kSec = k >> 3;
+
+            VoxelSection section;
+            //lock (voxelSections)      //No locks are needed because reading and writing are not done in different threads simultaneously
+            //{
+            section = voxelSections[iSec, jSec, kSec];
+            //}
+            if (section == null)
+                return false;
+
+            return section.VoxelPointExistsGlobalIndex(i, j, k);
         }
 
         private unsafe Part GetPartAtVoxelPos(int i, int j, int k)

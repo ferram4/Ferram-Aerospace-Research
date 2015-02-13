@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using UnityEngine;
 using FerramAerospaceResearch.FARPartGeometry;
@@ -15,6 +13,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
         int _voxelCount;
 
         VehicleVoxel _voxel = null;
+        VoxelCrossSection[] _vehicleCrossSection = null;
+        int frameCountToUpdate = 0;
+
+        Thread _runtimeThread;
+        bool _threadDone = false;
 
         public void Start()
         {
@@ -26,7 +29,24 @@ namespace FerramAerospaceResearch.FARAeroComponents
         public void FixedUpdate()
         {
             if (_voxel != null)
-                _voxel.CrossSectionalArea(Vector3.zero);
+                if (frameCountToUpdate <= 0)
+                {
+                    lock (_vessel)
+                    {
+                        frameCountToUpdate = 2;
+                        Monitor.Pulse(_vessel);
+                    }
+                }
+                else
+                    frameCountToUpdate--;
+            
+        }
+
+        public void OnDestroy()
+        {
+            _threadDone = true;
+            lock (_vessel)
+                Monitor.Pulse(_vessel);
         }
 
         public void VesselUpdate()
@@ -54,7 +74,26 @@ namespace FerramAerospaceResearch.FARAeroComponents
             VehicleVoxel newvoxel = new VehicleVoxel(_vessel.parts, _voxelCount, true, true);
 
             lock (_vessel)
+            {
                 _voxel = newvoxel;
+                _vehicleCrossSection = new VoxelCrossSection[_voxel.MaxArrayLength];
+            }
+
+            if(_runtimeThread == null)
+                _runtimeThread = new Thread(UpdateCrossSectionData);
+        }
+
+        private void UpdateCrossSectionData()
+        {
+            while (!_threadDone)
+            {
+                int front, back;
+                lock (_vessel)
+                {
+                    _voxel.CrossSectionData(_vehicleCrossSection, _vessel.transform.TransformDirection(_vessel.srf_velocity), out front, out back);
+                    Monitor.Wait(_vessel);
+                }
+            }
         }
     }
 }
