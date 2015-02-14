@@ -21,7 +21,7 @@ namespace FerramAerospaceResearch
         private void VesselCreate(Vessel v)
         {
             if(v != null)
-                if (v.GetComponent<FARVesselAero>() == null)
+                if (v.gameObject.GetComponent<FARVesselAero>() == null)
                 {
                     FARVesselAero vAero = v.gameObject.AddComponent<FARVesselAero>();
                 }
@@ -29,7 +29,7 @@ namespace FerramAerospaceResearch
         //This should be a static on FARVesselAero, but KSP doesn't like that
         private void VesselUpdate(Vessel v)
         {
-            FARVesselAero _vAero = v.GetComponent<FARVesselAero>();
+            FARVesselAero _vAero = v.gameObject.GetComponent<FARVesselAero>();
             if (_vAero != null)
                 _vAero.VesselUpdate();
         }

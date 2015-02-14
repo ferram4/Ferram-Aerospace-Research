@@ -10,5 +10,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
     //Used to apply forces to vessel based on data from FARVesselAero
     public class FARAeroPartModule : PartModule
     {
+        
     }
 }

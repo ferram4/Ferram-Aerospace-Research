@@ -10,8 +10,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
     {
         public float area;
         public Vector3 centroid;
-        public float a;
-        public float b;
+        public float area_deriv1;   //first derivative of area
+        public float area_deriv2;   //second derivative of area
         //public Dictionary<Part, int> partsRepresented = new Dictionary<Part, int>();
     }
 }

@@ -75,6 +75,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
 
             part.OnEditorAttach += EditorAttach;
+            this.enabled = false;
         }
 
         public void EditorAttach()

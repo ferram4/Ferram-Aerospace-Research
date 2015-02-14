@@ -187,7 +187,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             return crossSections;
         }
 
-        public void CrossSectionData(VoxelCrossSection[] crossSections, Vector3 orientationVector, out int frontIndex, out int backIndex)
+        public void CrossSectionData(VoxelCrossSection[] crossSections, Vector3 orientationVector, out int frontIndex, out int backIndex, out float sectionThickness)
         {
             //TODO: Look into setting better limits for iterating over sweep plane to improve off-axis performance
             
@@ -204,6 +204,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
             bool frontIndexFound = false;
             frontIndex = 0;
             backIndex = crossSections.Length - 1;
+
+            sectionThickness = wInc * elementSize;
 
             //Check y first, since it is most likely to be the flow direction
             if(y >= z && y >= x)
@@ -339,6 +341,27 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     crossSections[m].area = areaCount * elementArea;
                     
                     plane.w += wInc;
+                }
+            }
+
+            float invStep = 1 / sectionThickness;
+
+            for (int i = frontIndex; i <= backIndex; i++)
+            {
+                if (i == 0)
+                {
+                    crossSections[i].area_deriv1 = (crossSections[i + 1].area - crossSections[i].area) * invStep;
+                    crossSections[i].area_deriv2 = (crossSections[i + 1].area - 2 * crossSections[i].area) * invStep * invStep;
+                }
+                else if (i == crossSections.Length - 1)
+                {
+                    crossSections[i].area_deriv1 = (crossSections[i].area - crossSections[i - 1].area) * invStep;
+                    crossSections[i].area_deriv2 = (-2 * crossSections[i].area + crossSections[i - 1].area) * invStep * invStep;
+                }
+                else
+                {
+                    crossSections[i].area_deriv1 = (crossSections[i + 1].area - crossSections[i - 1].area) * 0.5f * invStep;
+                    crossSections[i].area_deriv2 = (crossSections[i + 1].area + crossSections[i - 1].area - 2 * crossSections[i].area) * invStep * invStep;
                 }
             }
         }

@@ -104,7 +104,7 @@ namespace FerramAerospaceResearch.FARTest
                     z = GUILayout.TextField(z);
                     GUILayout.EndHorizontal();
 
-                    if (GUILayout.Button("Calculate!"))
+                    if (GUILayout.Button("Dump Voxel Data"))
                         DumpVoxelData();
                 }
                 if (visualize)
@@ -149,7 +149,8 @@ namespace FerramAerospaceResearch.FARTest
             watch.Reset();
             watch.Start();
             int frontIndex, backIndex;
-            voxel.CrossSectionData(crossSections, vel, out frontIndex, out backIndex);
+            float sectionThickness;
+            voxel.CrossSectionData(crossSections, vel, out frontIndex, out backIndex, out sectionThickness);
             watch.Stop();
 
             string initialCost = watch.ElapsedMilliseconds.ToString();
@@ -158,7 +159,7 @@ namespace FerramAerospaceResearch.FARTest
 
             watch.Start();
             for(int i = 0; i < 50; i++)
-                voxel.CrossSectionData(crossSections, vel, out frontIndex, out backIndex);
+                voxel.CrossSectionData(crossSections, vel, out frontIndex, out backIndex, out sectionThickness);
             watch.Stop();
 
             ConfigNode node = new ConfigNode("Cross Section Dump");
@@ -167,6 +168,7 @@ namespace FerramAerospaceResearch.FARTest
 
             node.AddValue("frontIndex", frontIndex);
             node.AddValue("backIndex", backIndex);
+            node.AddValue("sectionThickness", sectionThickness);
 
             node.AddValue("initial time", initialCost + " ms");
             node.AddValue("repeated time avg", (float)watch.ElapsedMilliseconds / 50f + " ms");
