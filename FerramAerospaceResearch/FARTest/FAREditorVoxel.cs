@@ -164,7 +164,7 @@ namespace FerramAerospaceResearch.FARTest
 
             ConfigNode node = new ConfigNode("Cross Section Dump");
             for (int i = 0; i < crossSections.Length; i++)
-                node.AddValue(i.ToString(), crossSections[i].area.ToString() + " " + crossSections[i].centroid.ToString());
+                node.AddValue(i.ToString(), crossSections[i].area.ToString() + " " + crossSections[i].area_deriv1 + " " + crossSections[i].area_deriv2);
 
             node.AddValue("frontIndex", frontIndex);
             node.AddValue("backIndex", backIndex);

@@ -205,7 +205,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             frontIndex = 0;
             backIndex = crossSections.Length - 1;
 
-            sectionThickness = wInc * elementSize;
+            sectionThickness = elementSize;
 
             //Check y first, since it is most likely to be the flow direction
             if(y >= z && y >= x)
@@ -348,15 +348,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             for (int i = frontIndex; i <= backIndex; i++)
             {
-                if (i == 0)
+                if (i == frontIndex)
                 {
                     crossSections[i].area_deriv1 = (crossSections[i + 1].area - crossSections[i].area) * invStep;
-                    crossSections[i].area_deriv2 = (crossSections[i + 1].area - 2 * crossSections[i].area) * invStep * invStep;
+                    crossSections[i].area_deriv2 = (crossSections[i + 1].area - crossSections[i].area) * invStep * invStep;
                 }
-                else if (i == crossSections.Length - 1)
+                else if (i == backIndex)
                 {
                     crossSections[i].area_deriv1 = (crossSections[i].area - crossSections[i - 1].area) * invStep;
-                    crossSections[i].area_deriv2 = (-2 * crossSections[i].area + crossSections[i - 1].area) * invStep * invStep;
+                    crossSections[i].area_deriv2 = (crossSections[i].area + crossSections[i - 1].area) * invStep * invStep;
                 }
                 else
                 {
@@ -913,11 +913,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
             z = Math.Abs(result.z);
 
             if (y >= x && y >= z)
-                wInc = result.y;
+                wInc = y;
             else if (x > y && x > z)
-                wInc = result.x;
+                wInc = x;
             else
-                wInc = result.z;
+                wInc = z;
 
             return result;
         }
