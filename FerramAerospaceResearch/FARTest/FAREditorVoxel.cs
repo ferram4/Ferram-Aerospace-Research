@@ -149,8 +149,8 @@ namespace FerramAerospaceResearch.FARTest
             watch.Reset();
             watch.Start();
             int frontIndex, backIndex;
-            float sectionThickness;
-            voxel.CrossSectionData(crossSections, vel, out frontIndex, out backIndex, out sectionThickness);
+            float sectionThickness, maxCrossSectionArea;
+            voxel.CrossSectionData(crossSections, vel, out frontIndex, out backIndex, out sectionThickness, out maxCrossSectionArea);
             watch.Stop();
 
             string initialCost = watch.ElapsedMilliseconds.ToString();
@@ -159,16 +159,17 @@ namespace FerramAerospaceResearch.FARTest
 
             watch.Start();
             for(int i = 0; i < 50; i++)
-                voxel.CrossSectionData(crossSections, vel, out frontIndex, out backIndex, out sectionThickness);
+                voxel.CrossSectionData(crossSections, vel, out frontIndex, out backIndex, out sectionThickness, out maxCrossSectionArea);
             watch.Stop();
 
             ConfigNode node = new ConfigNode("Cross Section Dump");
             for (int i = 0; i < crossSections.Length; i++)
-                node.AddValue(i.ToString(), crossSections[i].area.ToString() + " " + crossSections[i].area_deriv1 + " " + crossSections[i].area_deriv2);
+                node.AddValue(i.ToString(), crossSections[i].area.ToString() + " " + crossSections[i].deltaAreaDeriv1 + " " + crossSections[i].areaDeriv2ToNextSection);
 
             node.AddValue("frontIndex", frontIndex);
             node.AddValue("backIndex", backIndex);
             node.AddValue("sectionThickness", sectionThickness);
+            node.AddValue("maxCrossSectionArea", maxCrossSectionArea);
 
             node.AddValue("initial time", initialCost + " ms");
             node.AddValue("repeated time avg", (float)watch.ElapsedMilliseconds / 50f + " ms");

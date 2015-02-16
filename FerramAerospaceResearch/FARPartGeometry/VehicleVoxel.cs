@@ -187,7 +187,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             return crossSections;
         }
 
-        public void CrossSectionData(VoxelCrossSection[] crossSections, Vector3 orientationVector, out int frontIndex, out int backIndex, out float sectionThickness)
+        public void CrossSectionData(VoxelCrossSection[] crossSections, Vector3 orientationVector, out int frontIndex, out int backIndex, out float sectionThickness, out float maxCrossSectionArea)
         {
             //TODO: Look into setting better limits for iterating over sweep plane to improve off-axis performance
             
@@ -211,7 +211,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if(y >= z && y >= x)
             {
                 int sectionCount = yCellLength + (int)Math.Ceiling(xCellLength * x / y) + (int)Math.Ceiling(zCellLength * z / y);
-                elementArea *= (float)Math.Sqrt((x + y + z) / y);       //account for different angles effects on voxel cube's projected area
+                float angleSizeIncreaseFactor = (float)Math.Sqrt((x + y + z) / y);
+                elementArea *= angleSizeIncreaseFactor;       //account for different angles effects on voxel cube's projected area
+                sectionThickness *= angleSizeIncreaseFactor;
 
                 float invYPlane = 1 / plane.y;
 
@@ -256,7 +258,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
             else if (x > y && x > z)
             {
                 int sectionCount = xCellLength + (int)Math.Ceiling(yCellLength * y / x) + (int)Math.Ceiling(zCellLength * z / x);
-                elementArea *= (float)Math.Sqrt((x + y + z) / x);       //account for different angles effects on voxel cube's projected area
+                float angleSizeIncreaseFactor = (float)Math.Sqrt((x + y + z) / x);
+                elementArea *= angleSizeIncreaseFactor;       //account for different angles effects on voxel cube's projected area
+                sectionThickness *= angleSizeIncreaseFactor;
 
                 float invXPlane = 1 / plane.x;
 
@@ -301,7 +305,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
             else
             {
                 int sectionCount = zCellLength + (int)Math.Ceiling(xCellLength * x / z) + (int)Math.Ceiling(yCellLength * y / z);
-                elementArea *= (float)Math.Sqrt((x + y + z) / z);       //account for different angles effects on voxel cube's projected area
+                float angleSizeIncreaseFactor = (float)Math.Sqrt((x + y + z) / z);       //account for different angles effects on voxel cube's projected area
+                elementArea *= angleSizeIncreaseFactor;       //account for different angles effects on voxel cube's projected area
+                sectionThickness *= angleSizeIncreaseFactor;
 
                 float invZPlane = 1 / plane.z;
 
@@ -345,24 +351,28 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
 
             float invStep = 1 / sectionThickness;
+            maxCrossSectionArea = 0;
 
             for (int i = frontIndex; i <= backIndex; i++)
             {
                 if (i == frontIndex)
                 {
-                    crossSections[i].area_deriv1 = (crossSections[i + 1].area - crossSections[i].area) * invStep;
-                    crossSections[i].area_deriv2 = (crossSections[i + 1].area - crossSections[i].area) * invStep * invStep;
+                    crossSections[i].deltaAreaDeriv1 = 2 * ((float)Math.Sqrt(crossSections[i + 1].area * crossSections[i].area) - crossSections[i].area) * invStep;                   
+                    crossSections[i].areaDeriv2ToNextSection = 2 * (crossSections[i + 1].area + crossSections[i].area - 2 * (float)Math.Sqrt(crossSections[i + 1].area * crossSections[i].area)) * invStep * invStep;
                 }
                 else if (i == backIndex)
                 {
-                    crossSections[i].area_deriv1 = (crossSections[i].area - crossSections[i - 1].area) * invStep;
-                    crossSections[i].area_deriv2 = (crossSections[i].area + crossSections[i - 1].area) * invStep * invStep;
+                    crossSections[i].deltaAreaDeriv1 = -2 * (crossSections[i].area - (float)Math.Sqrt(crossSections[i].area * crossSections[i - 1].area)) * invStep;
+                    crossSections[i].areaDeriv2ToNextSection = 0;
                 }
                 else
                 {
-                    crossSections[i].area_deriv1 = (crossSections[i + 1].area - crossSections[i - 1].area) * 0.5f * invStep;
-                    crossSections[i].area_deriv2 = (crossSections[i + 1].area + crossSections[i - 1].area - 2 * crossSections[i].area) * invStep * invStep;
+                    crossSections[i].deltaAreaDeriv1 = 2 * ((float)Math.Sqrt(crossSections[i + 1].area * crossSections[i].area) - crossSections[i].area) * invStep;
+                    crossSections[i].deltaAreaDeriv1 -= 2 * (crossSections[i].area - (float)Math.Sqrt(crossSections[i].area * crossSections[i - 1].area)) * invStep;
+                    crossSections[i].areaDeriv2ToNextSection = 2 * (crossSections[i + 1].area + crossSections[i].area - 2 * (float)Math.Sqrt(crossSections[i + 1].area * crossSections[i].area)) * invStep * invStep;
                 }
+                if (crossSections[i].area > maxCrossSectionArea)
+                    maxCrossSectionArea = crossSections[i].area;
             }
         }
 

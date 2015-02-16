@@ -36,7 +36,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     newDragPerDynPres = 0;
                 }
                 if(!float.IsNaN(dragPerDynPres))
-                    part.Rigidbody.AddForce(velNorm * dynPres * dragPerDynPres * part.mass);
+                    part.Rigidbody.AddForce(-velNorm * dynPres * dragPerDynPres * part.mass);
             }
         }
 

@@ -118,21 +118,23 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 while (!_threadDone)
                 {
                     int front, back;
-                    float sectionThickness;
+                    float sectionThickness, maxCrossSectionArea;
 
                     lock (_vessel)
                     {
                         Vector3 velocity = _vessel.transform.worldToLocalMatrix.MultiplyVector(_vessel.srf_velocity);
                         if (velocity.x != 0 || velocity.y != 0 || velocity.z != 0)
                         {
-                            _voxel.CrossSectionData(_vehicleCrossSection, velocity, out front, out back, out sectionThickness);
+                            _voxel.CrossSectionData(_vehicleCrossSection, velocity, out front, out back, out sectionThickness, out maxCrossSectionArea);
 
 
                             float dragCoefficient = 0;
                             float lastLj = 0;
                             //float vehicleLength = sectionThickness * Math.Abs(front - back);
                             float nonZeroCrossSectionLj = (float)Math.Log(sectionThickness) - 1;
-                            float nonZeroCrossSectionEnd = 0;
+                            //float nonZeroCrossSectionEnd = 0;
+
+                            float invMaxRadFactor = 1f / (float)Math.Sqrt(maxCrossSectionArea / (float)Math.PI);
 
                             for (int j = 0; j <= Math.Abs(front - back); j++)
                             {
@@ -140,33 +142,31 @@ namespace FerramAerospaceResearch.FARAeroComponents
                                 float tmp = (float)Math.Log(thisLj);
 
                                 thisLj *= tmp;
-                                nonZeroCrossSectionEnd += _vehicleCrossSection[Math.Abs(front - back) - j].area_deriv2 * tmp;
 
                                 float crossSectionEffect = 0;
                                 for (int i = j; i <= Math.Abs(front - back); i++)
                                 {
-                                    crossSectionEffect += _vehicleCrossSection[i + front].area_deriv2 * _vehicleCrossSection[i - j + front].area_deriv2;
+                                    float area1, area2;
+                                    area1 = Math.Min(_vehicleCrossSection[i + front].areaDeriv2ToNextSection, _vehicleCrossSection[i + front].area);
+                                    area2 = Math.Min(_vehicleCrossSection[i - j + front].areaDeriv2ToNextSection, _vehicleCrossSection[i - j + front].area);
+                                    crossSectionEffect += area1 * area2;
                                 }
 
-                                dragCoefficient += (thisLj - lastLj + nonZeroCrossSectionLj) * crossSectionEffect;
+                                dragCoefficient -= (thisLj - lastLj + nonZeroCrossSectionLj) * crossSectionEffect * sectionThickness * sectionThickness;
+                                float deltaAreaDeriv = Math.Min(_vehicleCrossSection[j + front].areaDeriv2ToNextSection, _vehicleCrossSection[j + front].area);
+                                deltaAreaDeriv *= deltaAreaDeriv;
+
+                                deltaAreaDeriv *= (float)Math.Log(4f / (1f * 2f * (float)Math.Sqrt(_vehicleCrossSection[j + front].area / Math.PI) * invMaxRadFactor));
+
+                                dragCoefficient += 0.5f * deltaAreaDeriv;
 
                                 lastLj = thisLj;
                             }
-                            //TODO: Add full effect of non-zero cross-section at vehicle end
-
-                            float endFirstAreaDeriv = _vehicleCrossSection[Math.Abs(front - back)].area_deriv1;
-
-                            nonZeroCrossSectionEnd *= endFirstAreaDeriv;
-                            nonZeroCrossSectionEnd += endFirstAreaDeriv * endFirstAreaDeriv * 0.5f * (float)Math.Log(2 / (1.4 * Math.Sqrt(_vehicleCrossSection[Math.Abs(front - back)].area)));
-
-                            dragCoefficient *= sectionThickness * sectionThickness;
-                            dragCoefficient += nonZeroCrossSectionEnd;
                             dragCoefficient /= (float)Math.PI;
 
                             if (aeroModules.Count > 0)
                             {
                                 dragCoefficient /= tmpFactor;
-                                Debug.Log(dragCoefficient);
 
                                 foreach (FARAeroPartModule m in aeroModules)
                                 {
