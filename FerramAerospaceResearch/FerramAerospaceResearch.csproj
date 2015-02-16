@@ -92,7 +92,7 @@
     <Compile Include="FARPartGeometry\PartGeometryExtensions.cs" />
     <Compile Include="FARPartGeometry\VehicleVoxel.cs" />
     <Compile Include="FARPartGeometry\VoxelCrossSection.cs" />
-    <Compile Include="FARPartGeometry\VoxelSection.cs" />
+    <Compile Include="FARPartGeometry\VoxelChunk.cs" />
     <Compile Include="FARPartModule.cs" />
     <Compile Include="FARPayloadFairingModule.cs" />
     <Compile Include="FARPM.cs" />

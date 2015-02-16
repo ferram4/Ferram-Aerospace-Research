@@ -36,8 +36,6 @@ Copyright 2014, Michael Ferrara, aka Ferram4
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using UnityEngine;
 
@@ -48,7 +46,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         float elementSize;
         float invElementSize;
 
-        VoxelSection[, ,] voxelSections;
+        VoxelChunk[, ,] voxelChunks;
         int xLength, yLength, zLength;
         int xCellLength, yCellLength, zCellLength;
         int threadsQueued = 0;
@@ -123,7 +121,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             lowerRightCorner = center - extents;    //This places the center of the voxel at the center of the vehicle to achieve maximum symmetry
 
-            voxelSections = new VoxelSection[xLength, yLength, zLength];
+            voxelChunks = new VoxelChunk[xLength, yLength, zLength];
 
             threadsQueued = 0;
             for(int i = 0; i < geoModules.Count; i++)
@@ -222,21 +220,122 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     int areaCount = 0;
                     Vector3 centroid = Vector3.zero;
 
-                    for (int i = 0; i < xCellLength; i++)
-                        for (int k = 0; k < zCellLength; k++)
+                    HashSet<Part> set = crossSections[m].includedParts;
+                    set.Clear();
+
+                    for (int iOverall = 0; iOverall < xCellLength; iOverall+=8)     //Overall ones iterate over the actual voxel indices (to make use of the equation of the plane) but are used to get chunk indices
+                        for (int kOverall = 0; kOverall < zCellLength; kOverall+=8)
                         {
+                            int jSect1, jSect2, jSect3;
+
+                            if (Math.Sign(plane.x) * Math.Sign(plane.z) > 0)        //Determine high and low points on this quad of the plane
+                            {
+                                jSect1 = (int)Math.Round(-(plane.x * iOverall + plane.z * kOverall + plane.w) * invYPlane);             //End points of the plane
+                                jSect3 = (int)Math.Round(-(plane.x * (iOverall + 7) + plane.z * (kOverall + 7) + plane.w) * invYPlane);
+                            }
+                            else
+                            {
+                                jSect1 = (int)Math.Round(-(plane.x * (iOverall + 7) + plane.z * kOverall + plane.w) * invYPlane);
+                                jSect3 = (int)Math.Round(-(plane.x * iOverall + plane.z * (kOverall + 7) + plane.w) * invYPlane);
+                            }
+                            jSect2 = (int)Math.Round(-(plane.x * (iOverall + 3) + plane.z * (kOverall + 3) + plane.w) * invYPlane);     //Central point
+
+                            jSect1 = jSect1 >> 3;
+                            jSect2 = jSect2 >> 3;
+                            jSect3 = jSect3 >> 3;
+
+                            if(jSect1 == jSect3)        //If chunk indices are identical, only get that one and it's very simple; only need to check 1 and 3, because if any are different, it must be those
+                            {
+                                if (jSect1 < 0 || jSect1 >= yLength)
+                                    continue;
+
+                                VoxelChunk sect = voxelChunks[iOverall >> 3, jSect1, kOverall >> 3];
+
+                                if(sect == null)
+                                    continue;
+
+                                set.UnionWith(sect.includedParts);
+
+                                for(int i = iOverall; i < iOverall + 8; i++)            //Finally, iterate over the chunk
+                                    for (int k = kOverall; k < kOverall + 8; k++)
+                                    {
+                                        int j = (int)Math.Round(-(plane.x * i + plane.z * k + plane.w) * invYPlane);
+
+                                        if (j < 0 || j >= yCellLength)
+                                            continue;
+
+                                        if (sect.VoxelPointExistsGlobalIndex(i, j, k))
+                                        {
+                                            areaCount++;
+                                            centroid.x += i;
+                                            centroid.y += j;
+                                            centroid.z += k;
+                                        }
+                                    }
+                            }
+                            else                       //Two or three different indices requires separate handling
+                            {
+                                VoxelChunk sect1 = null, sect2 = null, sect3 = null;
+
+                                if (!(jSect1 < 0 || jSect1 >= yLength))
+                                {
+                                    sect1 = voxelChunks[iOverall >> 3, jSect1, kOverall >> 3];
+                                    if (sect1 != null)
+                                        set.UnionWith(sect1.includedParts);
+                                }
+                                if (!(jSect2 < 0 || jSect2 >= yLength))
+                                {
+                                    sect2 = voxelChunks[iOverall >> 3, jSect2, kOverall >> 3];
+                                    if (sect2 != null)
+                                        set.UnionWith(sect2.includedParts);
+                                }
+                                if (!(jSect3 < 0 || jSect3 >= yLength))
+                                {
+                                    sect3 = voxelChunks[iOverall >> 3, jSect3, kOverall >> 3];
+                                    if (sect3 != null)
+                                        set.UnionWith(sect3.includedParts);
+                                }
+
+                                if (sect1 == null && sect2 == null && sect3 == null)
+                                    continue;
+
+                                for (int i = iOverall; i < iOverall + 8; i++)
+                                    for (int k = kOverall; k < kOverall + 8; k++)
+                                    {
+                                        int j = (int)Math.Round(-(plane.x * i + plane.z * k + plane.w) * invYPlane);
+
+                                        if (j < 0 || j >= yCellLength)
+                                            continue;
+
+                                        if (j >> 3 == jSect1 && sect1 != null && sect1.VoxelPointExistsGlobalIndex(i, j, k)
+                                            || j >> 3 == jSect2 && sect2 != null && sect2.VoxelPointExistsGlobalIndex(i, j, k)
+                                            || j >> 3 == jSect3 && sect3 != null && sect3.VoxelPointExistsGlobalIndex(i, j, k))
+                                        {
+                                            areaCount++;
+                                            centroid.x += i;
+                                            centroid.y += j;
+                                            centroid.z += k;
+                                        }
+                                    }
+                            }
+                        }
+                        /*{
                             int j = (int)Math.Round(-(plane.x * i + plane.z * k + plane.w) * invYPlane);
                             if (j < 0 || j >= yCellLength)
                                 continue;
 
-                            if (VoxelPointExistsAtPos(i, j, k))
+                            VoxelChunk sect = GetVoxelChunk(i, j, k);
+                            if (sect == null)
+                                continue;
+
+                            if (sect.VoxelPointExistsGlobalIndex(i, j, k))//(VoxelPointExistsAtPos(i, j, k))
                             {
                                 areaCount++;
                                 centroid.x += i;
                                 centroid.y += j;
                                 centroid.z += k;
                             }
-                        }
+                        }*/
 
                     if (areaCount > 0)
                     {
@@ -269,8 +368,106 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     int areaCount = 0;
                     Vector3 centroid = Vector3.zero;
 
-                    for (int j = 0; j < yCellLength; j++)
-                        for (int k = 0; k < zCellLength; k++)
+                    HashSet<Part> set = crossSections[m].includedParts;
+                    set.Clear();
+
+                    for (int jOverall = 0; jOverall < yCellLength; jOverall += 8)
+                        for (int kOverall = 0; kOverall < zCellLength; kOverall += 8)
+                        {
+                            int iSect1, iSect2, iSect3;
+
+                            if (Math.Sign(plane.y) * Math.Sign(plane.z) > 0)
+                            {
+                                iSect1 = (int)Math.Round(-(plane.y * jOverall + plane.z * kOverall + plane.w) * invXPlane);
+                                iSect3 = (int)Math.Round(-(plane.y * (jOverall + 7) + plane.z * (kOverall + 7) + plane.w) * invXPlane);
+                            }
+                            else
+                            {
+                                iSect1 = (int)Math.Round(-(plane.y * (jOverall + 7) + plane.z * kOverall + plane.w) * invXPlane);
+                                iSect3 = (int)Math.Round(-(plane.y * jOverall + plane.z * (kOverall + 7) + plane.w) * invXPlane);
+                            }
+                            iSect2 = (int)Math.Round(-(plane.y * (jOverall + 3) + plane.z * (kOverall + 3) + plane.w) * invXPlane);
+
+                            iSect1 = iSect1 >> 3;
+                            iSect2 = iSect2 >> 3;
+                            iSect3 = iSect3 >> 3;
+
+                            if (iSect1 == iSect3)
+                            {
+                                if (iSect1 < 0 || iSect1 >= xLength)
+                                    continue;
+
+                                VoxelChunk sect = voxelChunks[iSect1, jOverall >> 3, kOverall >> 3];
+
+                                if (sect == null)
+                                    continue;
+
+                                set.UnionWith(sect.includedParts);
+
+                                for (int j = jOverall; j < jOverall + 8; j++)
+                                    for (int k = kOverall; k < kOverall + 8; k++)
+                                    {
+                                        int i = (int)Math.Round(-(plane.y * j + plane.z * k + plane.w) * invXPlane);
+
+                                        if (i < 0 || i >= xCellLength)
+                                            continue;
+
+                                        if (sect.VoxelPointExistsGlobalIndex(i, j, k))
+                                        {
+                                            areaCount++;
+                                            centroid.x += i;
+                                            centroid.y += j;
+                                            centroid.z += k;
+                                        }
+                                    }
+                            }
+                            else
+                            {
+                                VoxelChunk sect1 = null, sect2 = null, sect3 = null;
+
+                                if (!(iSect1 < 0 || iSect1 >= xLength))
+                                {
+                                    sect1 = voxelChunks[iSect1, jOverall >> 3, kOverall >> 3];
+                                    if (sect1 != null)
+                                        set.UnionWith(sect1.includedParts);
+                                }
+                                if (!(iSect2 < 0 || iSect2 >= xLength))
+                                {
+                                    sect2 = voxelChunks[iSect2, jOverall >> 3, kOverall >> 3];
+                                    if (sect2 != null)
+                                        set.UnionWith(sect2.includedParts);
+                                }
+
+                                if (!(iSect3 < 0 || iSect3 >= xLength))
+                                {
+                                    sect3 = voxelChunks[iSect3, jOverall >> 3, kOverall >> 3];
+                                    if (sect3 != null)
+                                        set.UnionWith(sect3.includedParts);
+                                }
+
+                                if (sect1 == null && sect3 == null && sect3 == null)
+                                    continue;
+
+                                for (int j = jOverall; j < jOverall + 8; j++)
+                                    for (int k = kOverall; k < kOverall + 8; k++)
+                                    {
+                                        int i = (int)Math.Round(-(plane.y * j + plane.z * k + plane.w) * invXPlane);
+
+                                        if (i < 0 || i >= xCellLength)
+                                            continue;
+
+                                        if (i >> 3 == iSect1 && sect1 != null && sect1.VoxelPointExistsGlobalIndex(i, j, k)
+                                            || i >> 3 == iSect2 && sect2 != null && sect2.VoxelPointExistsGlobalIndex(i, j, k)
+                                            || i >> 3 == iSect3 && sect3 != null && sect3.VoxelPointExistsGlobalIndex(i, j, k))
+                                        {
+                                            areaCount++;
+                                            centroid.x += i;
+                                            centroid.y += j;
+                                            centroid.z += k;
+                                        }
+                                    }
+                            }
+                        }/*
                         {
                             int i = (int)Math.Round(-(plane.y * j + plane.z * k + plane.w) * invXPlane);
                             if (i < 0 || i >= xCellLength)
@@ -283,7 +480,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                 centroid.y += j;
                                 centroid.z += k;
                             }
-                        }
+                        }*/
 
                     if (areaCount > 0)
                     {
@@ -316,9 +513,106 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     int areaCount = 0;
                     Vector3 centroid = Vector3.zero;
 
-                    for (int j = 0; j < yCellLength; j++)
-                        for (int i = 0; i < xCellLength; i++)
+                    HashSet<Part> set = crossSections[m].includedParts;
+                    set.Clear();
+
+                    for (int iOverall = 0; iOverall < xCellLength; iOverall += 8)     //Overall ones iterate over the actual voxel indices (to make use of the equation of the plane) but are used to get chunk indices
+                        for (int jOverall = 0; jOverall < yCellLength; jOverall += 8)
                         {
+                            int kSect1, kSect2, kSect3;
+
+                            if (Math.Sign(plane.x) * Math.Sign(plane.y) > 0)        //Determine high and low points on this quad of the plane
+                            {
+                                kSect1 = (int)Math.Round(-(plane.x * iOverall + plane.y * jOverall + plane.w) * invZPlane);
+                                kSect3 = (int)Math.Round(-(plane.x * (iOverall + 7) + plane.y * (jOverall + 7) + plane.w) * invZPlane);
+                            }
+                            else
+                            {
+                                kSect1 = (int)Math.Round(-(plane.x * (iOverall + 7) + plane.y * jOverall + plane.w) * invZPlane);
+                                kSect3 = (int)Math.Round(-(plane.x * iOverall + plane.y * (jOverall + 7) + plane.w) * invZPlane);
+                            }
+                            kSect2 = (int)Math.Round(-(plane.x * (iOverall + 3) + plane.y * (jOverall + 3) + plane.w) * invZPlane);
+
+                            kSect1 = kSect1 >> 3;
+                            kSect2 = kSect2 >> 3;
+                            kSect3 = kSect3 >> 3;
+
+                            if (kSect1 == kSect3)        //If chunk indices are identical, only get that one and it's very simple
+                            {
+                                if (kSect1 < 0 || kSect1 >= zLength)
+                                    continue;
+
+                                VoxelChunk sect = voxelChunks[iOverall >> 3, jOverall >> 3, kSect1];
+
+                                if (sect == null)
+                                    continue;
+
+                                set.UnionWith(sect.includedParts);
+
+                                for (int i = iOverall; i < iOverall + 8; i++)            //Finally, iterate over the chunk
+                                    for (int j = jOverall; j < jOverall + 8; j++)
+                                    {
+                                        int k = (int)Math.Round(-(plane.x * i + plane.y * j + plane.w) * invZPlane);
+
+                                        if (k < 0 || k >= zCellLength)
+                                            continue;
+
+                                        if (sect.VoxelPointExistsGlobalIndex(i, j, k))
+                                        {
+                                            areaCount++;
+                                            centroid.x += i;
+                                            centroid.y += j;
+                                            centroid.z += k;
+                                        }
+                                    }
+                            }
+                            else
+                            {
+                                VoxelChunk sect1 = null, sect2 = null, sect3 = null;
+
+                                if (!(kSect1 < 0 || kSect1 >= zLength))         //If indices are different, this section of the plane crosses two chunks
+                                {
+                                    sect1 = voxelChunks[iOverall >> 3, jOverall >> 3, kSect1];
+                                    if (sect1 != null)
+                                        set.UnionWith(sect1.includedParts);
+                                }
+                                if (!(kSect2 < 0 || kSect2 >= zLength))
+                                {
+                                    sect2 = voxelChunks[iOverall >> 3, jOverall >> 3, kSect2];
+                                    if (sect2 != null)
+                                        set.UnionWith(sect2.includedParts);
+                                } 
+                                if (!(kSect3 < 0 || kSect3 >= zLength))
+                                {
+                                    sect3 = voxelChunks[iOverall >> 3, jOverall >> 3, kSect3];
+                                    if (sect3 != null)
+                                        set.UnionWith(sect3.includedParts);
+                                }
+
+                                if (sect1 == null && sect2 == null && sect3 == null)
+                                    continue;
+
+                                for (int i = iOverall; i < iOverall + 8; i++)
+                                    for (int j = jOverall; j < jOverall + 8; j++)
+                                    {
+                                        int k = (int)Math.Round(-(plane.x * i + plane.y * j + plane.w) * invZPlane);
+
+                                        if (k < 0 || k >= zCellLength)
+                                            continue;
+
+                                        if (k >> 3 == kSect1 && sect1 != null && sect1.VoxelPointExistsGlobalIndex(i, j, k)
+                                            || k >> 3 == kSect2 && sect2 != null && sect2.VoxelPointExistsGlobalIndex(i, j, k)
+                                            || k >> 3 == kSect3 && sect3 != null && sect3.VoxelPointExistsGlobalIndex(i, j, k))
+                                        {
+                                            areaCount++;
+                                            centroid.x += i;
+                                            centroid.y += j;
+                                            centroid.z += k;
+                                        }
+                                    }
+                            }
+                        }
+                        /*{
                             int k = (int)Math.Round(-(plane.y * j + plane.x * i + plane.w) * invZPlane);
                             if (k < 0 || k >= zCellLength)
                                 continue;
@@ -330,7 +624,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                 centroid.y += j;
                                 centroid.z += k;
                             }
-                        }
+                        }*/
 
                     if (areaCount > 0)
                     {
@@ -382,7 +676,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 for (int j = 0; j < yLength; j++)
                     for (int k = 0; k < zLength; k++)
                     {
-                        VoxelSection section = voxelSections[i, j, k];
+                        VoxelChunk section = voxelChunks[i, j, k];
                         if (section != null)
                         {
                             section.ClearVisualVoxels();
@@ -396,7 +690,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 for (int j = 0; j < yLength; j++)
                     for (int k = 0; k < zLength; k++)
                     {
-                        VoxelSection section = voxelSections[i, j, k];
+                        VoxelChunk section = voxelChunks[i, j, k];
                         if (section != null)
                         {
                             section.VisualizeVoxels(vesselOffset);
@@ -414,13 +708,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
             jSec = j >> 3;
             kSec = k >> 3;
 
-            VoxelSection section;
+            VoxelChunk section;
 
-            section = voxelSections[iSec, jSec, kSec];
+            section = voxelChunks[iSec, jSec, kSec];
             if (section == null)
             {
-                section = new VoxelSection(elementSize, lowerRightCorner + new Vector3(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
-                voxelSections[iSec, jSec, kSec] = section;
+                section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
+                voxelChunks[iSec, jSec, kSec] = section;
             }
            
             //Debug.Log(i.ToString() + ", " + j.ToString() + ", " + k.ToString() + ", " + part.partInfo.title);
@@ -437,15 +731,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
             jSec = j >> 3;
             kSec = k >> 3;
 
-            VoxelSection section;
+            VoxelChunk section;
 
-            lock (voxelSections)
+            lock (voxelChunks)
             {
-                section = voxelSections[iSec, jSec, kSec];
+                section = voxelChunks[iSec, jSec, kSec];
                 if (section == null)
                 {
-                    section = new VoxelSection(elementSize, lowerRightCorner + new Vector3(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
-                    voxelSections[iSec, jSec, kSec] = section;
+                    section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
+                    voxelChunks[iSec, jSec, kSec] = section;
                 }
             }
 
@@ -454,7 +748,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             section.SetVoxelPointGlobalIndex(i, j, k, part);
         }
 
-        private unsafe VoxelSection GetVoxelSection(int i, int j, int k)
+        private unsafe VoxelChunk GetVoxelChunk(int i, int j, int k)
         {
             int iSec, jSec, kSec;
             //Find the voxel section that this point points to
@@ -462,10 +756,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             jSec = j >> 3;
             kSec = k >> 3;
 
-            VoxelSection section;
+            VoxelChunk section;
             //lock (voxelSections)
             //{
-                section = voxelSections[iSec, jSec, kSec];
+                section = voxelChunks[iSec, jSec, kSec];
             //}
             return section;
         }
@@ -479,10 +773,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             jSec = j >> 3;
             kSec = k >> 3;
 
-            VoxelSection section;
+            VoxelChunk section;
             //lock (voxelSections)      //No locks are needed because reading and writing are not done in different threads simultaneously
             //{
-            section = voxelSections[iSec, jSec, kSec];
+            section = voxelChunks[iSec, jSec, kSec];
             //}
             if (section == null)
                 return false;
@@ -499,10 +793,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             jSec = j >> 3;
             kSec = k >> 3;
 
-            VoxelSection section;
+            VoxelChunk section;
             //lock (voxelSections)      //No locks are needed because reading and writing are not done in different threads simultaneously
             //{
-                section = voxelSections[iSec, jSec, kSec];
+                section = voxelChunks[iSec, jSec, kSec];
             //}
             if (section == null)
                 return null;
@@ -510,7 +804,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             return section.GetVoxelPointGlobalIndex(i, j, k);
         }
 
-        private unsafe Part GetPartAtVoxelPos(int i, int j, int k, ref VoxelSection section)
+        private unsafe Part GetPartAtVoxelPos(int i, int j, int k, ref VoxelChunk section)
         {
             return section.GetVoxelPointGlobalIndex(i, j, k);
         }

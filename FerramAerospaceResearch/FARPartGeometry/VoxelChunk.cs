@@ -40,7 +40,7 @@ using UnityEngine;
 
 namespace FerramAerospaceResearch.FARPartGeometry
 {
-    unsafe class VoxelSection
+    unsafe class VoxelChunk
     {
         //private Part[, ,] voxelPoints = null;
         private byte[,] voxelPoints = null;
@@ -53,7 +53,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         int iOffset, jOffset, kOffset;
         byte xLength, yLength, zLength;
 
-        public VoxelSection(float size, Vector3 lowerCorner, int iOffset, int jOffset, int kOffset)
+        public VoxelChunk(float size, Vector3 lowerCorner, int iOffset, int jOffset, int kOffset)
         {
             this.size = size;
             this.xLength = 8;
@@ -169,7 +169,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         }
         }
 
-        ~VoxelSection()
+        ~VoxelChunk()
         {
             ClearVisualVoxels();
         }

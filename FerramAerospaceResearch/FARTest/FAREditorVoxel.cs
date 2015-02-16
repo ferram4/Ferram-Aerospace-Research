@@ -144,6 +144,9 @@ namespace FerramAerospaceResearch.FARTest
         void DumpVoxelData()
         {
             VoxelCrossSection[] crossSections = new VoxelCrossSection[voxel.MaxArrayLength];
+            for (int i = 0; i < crossSections.Length; i++)
+                crossSections[i].includedParts = new HashSet<Part>();
+
             Vector3 vel = new Vector3(float.Parse(x), float.Parse(y), float.Parse(z));
 
             watch.Reset();

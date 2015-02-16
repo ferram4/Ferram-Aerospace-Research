@@ -102,6 +102,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 _voxel = newvoxel;
                 _vehicleCrossSection = new VoxelCrossSection[_voxel.MaxArrayLength];
+                for(int i = 0; i < _vehicleCrossSection.Length; i++)
+                    _vehicleCrossSection[i].includedParts = new HashSet<Part>();
+
             }
 
             if (_runtimeThread == null)

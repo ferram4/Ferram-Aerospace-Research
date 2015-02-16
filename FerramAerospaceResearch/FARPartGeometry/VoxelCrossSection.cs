@@ -12,6 +12,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
         public Vector3 centroid;
         public float deltaAreaDeriv1;   //finite change in first derivative of area at this section, where areaDeriv2 is discontinuous
         public float areaDeriv2ToNextSection;   //second derivative of area, which is constant between sections; this is the value between this and the next section
-        //public Dictionary<Part, int> partsRepresented = new Dictionary<Part, int>();
+        public HashSet<Part> includedParts;
     }
 }
