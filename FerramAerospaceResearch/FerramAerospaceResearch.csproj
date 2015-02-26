@@ -103,6 +103,7 @@
     <Compile Include="FARWingAerodynamicModel.cs" />
     <Compile Include="FARWingInteraction.cs" />
     <Compile Include="FARKSPAddonFlightScene.cs" />
+    <Compile Include="ICSILog.cs" />
     <Compile Include="InstallChecker.cs" />
     <Compile Include="FARCollections\LLRedBlackTree.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

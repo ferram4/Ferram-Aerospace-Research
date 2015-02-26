@@ -884,10 +884,10 @@ namespace ferram4
             if (angle1 >= 0)
                 p1 = ShockWaveCalculationNoSpline(angle1, M, out M1, maxSinBeta, minSinBeta);
             else
-                p1 = PMExpansionCalculationNoSpline(Math.Abs(angle1), M, out M1, maxSinBeta, minSinBeta);
+                p1 = PMExpansionCalculationNoSpline(Math.Abs(angle1), M, out M1);
 
             //Region 2 is the upper surface behind the max thickness
-            double p2 = PMExpansionCalculationNoSpline(2 * halfAngle, M1, maxSinBeta, minSinBeta) * p1;
+            double p2 = PMExpansionCalculationNoSpline(2 * halfAngle, M1) * p1;
 
             double angle3 = halfAngle + AbsAoA;                  //Region 3 is the lower surface ahead of the max thickness
             double M3;
@@ -895,7 +895,7 @@ namespace ferram4
             p3 = ShockWaveCalculationNoSpline(angle3, M, out M3, maxSinBeta, minSinBeta);
 
             //Region 4 is the lower surface behind the max thickness
-            double p4 = PMExpansionCalculationNoSpline(2 * halfAngle, M3, maxSinBeta, minSinBeta) * p3;
+            double p4 = PMExpansionCalculationNoSpline(2 * halfAngle, M3) * p3;
 
 
             pRatio = (p3 + p4) - (p1 + p2);
@@ -928,7 +928,7 @@ namespace ferram4
         }
 
         //Calculates pressure ratio due to turning a supersonic flow through a Prandtl-Meyer Expansion
-        private double PMExpansionCalculationNoSpline(double angle, double inM, out double outM, double maxBeta, double minBeta)
+        private double PMExpansionCalculationNoSpline(double angle, double inM, out double outM)
         {
             inM = FARMathUtil.Clamp(inM, 1, double.PositiveInfinity);
             double nu1 = FARAeroUtil.PrandtlMeyerMach.Evaluate((float)inM);
@@ -949,7 +949,7 @@ namespace ferram4
         }
 
         //Calculates pressure ratio due to turning a supersonic flow through a Prandtl-Meyer Expansion
-        private double PMExpansionCalculationNoSpline(double angle, double inM, double maxBeta, double minBeta)
+        private double PMExpansionCalculationNoSpline(double angle, double inM)
         {
             inM = FARMathUtil.Clamp(inM, 1, double.PositiveInfinity);
             double nu1 = FARAeroUtil.PrandtlMeyerMach.Evaluate((float)inM);
@@ -987,10 +987,10 @@ namespace ferram4
             if (angle1 >= 0)
                 p1 = ShockWaveCalculation(angle1, M, out M1, maxSinBeta, minSinBeta);
             else
-                p1 = PMExpansionCalculation(Math.Abs(angle1), M, out M1, maxSinBeta, minSinBeta);
+                p1 = PMExpansionCalculation(Math.Abs(angle1), M, out M1);
 
             //Region 2 is the upper surface behind the max thickness
-            double p2 = PMExpansionCalculation(2 * halfAngle, M1, maxSinBeta, minSinBeta) * p1;
+            double p2 = PMExpansionCalculation(2 * halfAngle, M1) * p1;
 
             double angle3 = halfAngle + AbsAoA;                  //Region 3 is the lower surface ahead of the max thickness
             double M3;
@@ -998,7 +998,7 @@ namespace ferram4
             p3 = ShockWaveCalculation(angle3, M, out M3, maxSinBeta, minSinBeta);
 
             //Region 4 is the lower surface behind the max thickness
-            double p4 = PMExpansionCalculation(2 * halfAngle, M3, maxSinBeta, minSinBeta) * p3;
+            double p4 = PMExpansionCalculation(2 * halfAngle, M3) * p3;
 
             pRatio = (p3 + p4) - (p1 + p2);
 
@@ -1031,7 +1031,7 @@ namespace ferram4
         }
 
         //Calculates pressure ratio due to turning a supersonic flow through a Prandtl-Meyer Expansion
-        private double PMExpansionCalculation(double angle, double inM, out double outM, double maxBeta, double minBeta)
+        private double PMExpansionCalculation(double angle, double inM, out double outM)
         {
             inM = FARMathUtil.Clamp(inM, 1, double.PositiveInfinity);
             double nu1 = FARAeroUtil.PrandtlMeyerMach.Evaluate((float)inM);
@@ -1050,7 +1050,7 @@ namespace ferram4
         }
 
         //Calculates pressure ratio due to turning a supersonic flow through a Prandtl-Meyer Expansion
-        private double PMExpansionCalculation(double angle, double inM, double maxBeta, double minBeta)
+        private double PMExpansionCalculation(double angle, double inM)
         {
             inM = FARMathUtil.Clamp(inM, 1, double.PositiveInfinity);
             double nu1 = FARAeroUtil.PrandtlMeyerMach.Evaluate((float)inM);

@@ -45,54 +45,9 @@ namespace ferram4
 {
     public unsafe static class FARMathUtil
     {
-        private static FloatCurve fastSin = null;
-        public static double deg2rad = Math.PI / 180;
-        public static double rad2deg = 180 / Math.PI;
+        public const double rad2deg = 180d / Math.PI;
+        public const double deg2rad = Math.PI / 180d;
 
-        public static float FastSin(float angle)
-        {
-            float input = angle;
-            if (fastSin == null)
-            {
-                MonoBehaviour.print("Fast Sine Curve Initialized");
-                fastSin = new FloatCurve();
-                for (int i = 0; i <= 36; i++)
-                {
-                    float time = Mathf.PI * i / 72;
-                    float value = Mathf.Sin(time);
-                    float deriv = Mathf.Cos(time);
-                    fastSin.Add(time, value, deriv, deriv);
-                }
-            }
-            while (input <= 0)
-                input += 2 * Mathf.PI;
-            while (input > 2 * Mathf.PI)
-                input -= 2 * Mathf.PI;
-
-            if (input < Mathf.PI * 0.5f)
-                return fastSin.Evaluate(input);
-            else if (input < Mathf.PI)
-                return fastSin.Evaluate(Mathf.PI - input);
-            else if (input < 1.5f * Mathf.PI)
-                return -fastSin.Evaluate(input - Mathf.PI);
-            else
-                return -fastSin.Evaluate(2 * Mathf.PI - input);
-        }
-
-        public static float FastCos(float angle)
-        {
-            return FastSin(angle + Mathf.PI * 0.5f);
-        }
-
-        public static float FastTan(float angle)
-        {
-            float input = angle;
-
-            float tan = FastSin(input) / FastCos(input);
-
-            return tan;
-
-        }
 
         public static double Lerp(double x1, double x2, double y1, double y2, double x)
         {

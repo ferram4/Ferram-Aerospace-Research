@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using FerramAerospaceResearch.FARAeroComponents;
+using ferram4;
 
 namespace FerramAerospaceResearch
 {
@@ -12,6 +13,10 @@ namespace FerramAerospaceResearch
     {
         private void Start()
         {
+            FARAeroStress.LoadStressTemplates();
+            FARPartClassification.LoadClassificationTemplates();
+            FARAeroUtil.LoadAeroDataFromConfig();
+
             GameEvents.onVesselGoOffRails.Add(VesselCreate);
             GameEvents.onVesselChange.Add(VesselCreate);
             GameEvents.onVesselCreate.Add(VesselCreate);
