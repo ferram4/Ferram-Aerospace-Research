@@ -21,8 +21,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
         bool _threadDone = false;
 
         Dictionary<Part, FARAeroPartModule> aeroModules = new Dictionary<Part, FARAeroPartModule>();
-        float tmpFactor = 0;
         float machNumber = 0;
+
+        bool updateModules = false;
 
         private void Start()
         {
@@ -40,10 +41,20 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 frameCountToUpdate--;
             else
             {
-                frameCountToUpdate = 2;
+                frameCountToUpdate = 1;
                 lock (_vessel)
                 {
                     Monitor.Pulse(_vessel);
+                }
+            }
+
+            if(updateModules)
+            {
+                updateModules = false;
+                foreach (KeyValuePair<Part, FARAeroPartModule> pair in aeroModules)
+                {
+                    FARAeroPartModule m = pair.Value;
+                    m.updateForces = true;
                 }
             }
         }
@@ -74,14 +85,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
             lock (_vessel)
             {
                 aeroModules.Clear();
-                tmpFactor = 0;
                 foreach (Part p in _vessel.Parts)
                 {
                     FARAeroPartModule m = p.GetComponent<FARAeroPartModule>();
                     if (m != null)
                     {
                         aeroModules.Add(p, m);
-                        tmpFactor += p.mass;
                     }
                 }
             }
@@ -122,6 +131,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 lock (_vessel)
                 {
+                    Monitor.Wait(_vessel);
                     try
                     {
                         VesselAeroDataUpdate();
@@ -130,7 +140,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     {
                         Debug.LogException(e);
                     }
-                    Monitor.Wait(_vessel);
+                    updateModules = true;
                 }
             }
         }
@@ -148,7 +158,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 Vector3 velNorm = velocity.normalized;
 
-                float dragCoefficient = 0;
                 float lastLj = 0;
                 //float vehicleLength = sectionThickness * Math.Abs(front - back);
                 //float nonZeroCrossSectionEnd = 0;
@@ -176,7 +185,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     VoxelCrossSection currentSection = _vehicleCrossSection[j + front];
                     VoxelCrossSection prevSection;
-                    if (j + front <= 0)
+                    if (j == 0)
                         prevSection = _vehicleCrossSection[j + front];
                     else
                         prevSection = _vehicleCrossSection[j - 1 + front];
@@ -187,13 +196,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     Vector3 nominalLiftDivQ = Vector3.zero;            //lift at the current AoA
                     float pertLiftDivQ = 0;             //lift from AoA perturbations
 
-                    float baseRadius = (float)Math.Sqrt(prevSection.area / Math.PI) - (float)Math.Sqrt(currentSection.area / Math.PI);
+                    float baseRadius = (float)Math.Sqrt(currentSection.removedArea / Math.PI) - (float)Math.Sqrt(currentSection.area / Math.PI);
 
-                    float angle;
-                    if (j == 0)
-                        angle = GetAoAFromCenterLineAndVel(velNorm, currentSection.centroid, currentSection.centroid, out nominalLiftDivQ);     //get the AoA and the nominal lift vector from that
-                    else
-                        angle = GetAoAFromCenterLineAndVel(velNorm, prevSection.centroid, currentSection.centroid, out nominalLiftDivQ);
+                    float cosAngle;
+                    cosAngle = GetCosAoAFromCenterLineAndVel(velNorm, prevSection.centroid, currentSection.centroid, out nominalLiftDivQ);
 
 
                     //Zero-lift drag calcs
@@ -209,25 +215,54 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         nominalDragDivQ += SupersonicSlenderBodyDrag(j, front, back, sectionThickness, ref lastLj) * tmp;
                     }
 
-                    //Lift calcs
-                    float pertLiftTmp;
-                    float nomLiftTmp;
+                    //Slender Body Lift calcs (Mach number independent)
+                    float nomLiftSlend, pertLiftSlend;
+                    nomLiftSlend = SlenderBodyLift(cosAngle, Math.Min(currentSection.area - prevSection.area, maxCrossSectionArea * 0.1f), out pertLiftSlend);
+                    pertLiftDivQ += pertLiftSlend;
 
-                    nomLiftTmp = SlenderBodyLift(angle, Math.Min(currentSection.area - prevSection.area, maxCrossSectionArea * 0.1f), out pertLiftTmp);
-                    pertLiftDivQ += pertLiftTmp;
+                    nominalLiftDivQ *= (nomLiftSlend);
 
-                    nominalLiftDivQ *= (nomLiftTmp);
+                    pertDragDivQ = pertLiftDivQ * (float)Math.Sqrt(Mathf.Clamp01(1 / (cosAngle * cosAngle) - 1));
 
-                    pertDragDivQ = pertLiftDivQ * angle;
+                    //Newtonian Impact Calculations
+                    float nomDragNewt, pertDragNewt, nomLiftNewt, pertLiftNewt;
 
-                    nominalDragDivQ += NewtonianImpactDrag(currentSection.area, currentSection.additionalUnshadowedArea, sectionThickness, machNumber);
+                    Vector3 unshadowedLiftVec;
+                    float unshadowedAoA = GetCosAoAFromCenterLineAndVel(velNorm, prevSection.additonalUnshadowedCentroid, currentSection.additonalUnshadowedCentroid, out unshadowedLiftVec);
 
-                    dragCoefficient += nominalDragDivQ;
+                    NewtonianImpactDrag(out nomDragNewt, out nomLiftNewt, out pertDragNewt, out pertLiftNewt, currentSection.area, currentSection.additionalUnshadowedArea, sectionThickness, machNumber, unshadowedAoA);
+
+                    unshadowedLiftVec = nomLiftNewt * unshadowedLiftVec;
+
+                    float nomDragSep = 0, pertDragSep = 0, nomLiftSep = 0, pertLiftSep = 0;
+
+                    Vector3 sepLiftVec;
+                    float sepAoA = GetCosAoAFromCenterLineAndVel(velNorm, prevSection.removedCentroid, currentSection.removedCentroid, out sepLiftVec);
+
+                    SeparatedFlowDrag(out nomDragSep, out nomLiftSep, out pertDragSep, out pertLiftSep, currentSection.area, currentSection.removedArea, sectionThickness, machNumber, sepAoA);
+
+                    sepLiftVec = nomLiftSep * sepLiftVec;
+
+                    float denom = (nominalDragDivQ + nomLiftSlend + nomDragNewt + nomLiftNewt + nomDragSep + nomLiftSep);
+                    Vector3 forceCenter = currentSection.centroid;
+                    if (denom != 0)
+                    {
+                        forceCenter *= (nominalDragDivQ + nomLiftSlend);
+                        forceCenter += (nomDragNewt + nomLiftNewt) * currentSection.additonalUnshadowedCentroid + (nomDragSep + nomLiftSep) * currentSection.removedCentroid;
+                        forceCenter /= denom;
+                    }
+
+                    nominalDragDivQ += nomDragNewt + nomLiftSep;
+
+                    nominalLiftDivQ += unshadowedLiftVec + sepLiftVec;
+                    pertDragDivQ += pertDragNewt + pertDragSep;
+                    pertLiftDivQ += pertLiftNewt + pertLiftSep;
+
 
                     float frac = 0;
                     foreach (Part p in currentSection.includedParts)
                     {
-                        frac += p.mass; //this is terrible, but it makes things more stable for now; does not change the total force, just distributes it differently.
+                        frac++; //make sure to distribute forces properly
                     }
                     frac = 1 / frac;
                     nominalDragDivQ *= frac;
@@ -241,23 +276,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         FARAeroPartModule m;
                         if (aeroModules.TryGetValue(p, out m))
                         {
-                            m.IncrementNewDragPerDynPres(nominalDragDivQ * p.mass);
-                            m.IncrementPerturbationDragPerDynPres(pertDragDivQ * p.mass);
-
-                            m.IncrementNominalLiftPerDynPres(nominalLiftDivQ * p.mass, velNorm);
-                            m.IncrementPerturbationLiftPerDynPres(pertLiftDivQ * p.mass);
-                            m.updateForces = true;
+                            m.IncrementAeroForces(velNorm, forceCenter, nominalDragDivQ, nominalLiftDivQ, pertDragDivQ, pertLiftDivQ);
                         }
                     }
                 }
-                dragCoefficient /= maxCrossSectionArea;
-                foreach (KeyValuePair<Part, FARAeroPartModule> pair in aeroModules)
-                {
-                    FARAeroPartModule m = pair.Value;
-                    m.dragCoeff = dragCoefficient;
-                    m.UpdateRefVector(velNorm);
-                }
-
             }
         }
 
@@ -285,9 +307,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
         private float SubsonicViscousDrag(int j, int front, float maxCrossSectionArea, float invMaxRadFactor, float baseRadius, ref float viscousDrag, float viscousDragFactor, ref VoxelCrossSection currentSection)
         {
             float sectionViscDrag = viscousDragFactor * 2f * (float)Math.Sqrt(Math.PI * currentSection.area);   //increase in viscous drag due to viscosity
-            viscousDrag += sectionViscDrag / maxCrossSectionArea;     //keep track of viscous drag for base drag purposes
+            /*viscousDrag += sectionViscDrag / maxCrossSectionArea;     //keep track of viscous drag for base drag purposes
 
-            if (j > 0 && _vehicleCrossSection[j - 1 + front].area > currentSection.area)
+            if (j > 0 && baseRadius > 0)
             {
                 float baseDrag = baseRadius * invMaxRadFactor;     //based on ratio of base diameter to max diameter
 
@@ -296,55 +318,113 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 baseDrag /= (float)Math.Sqrt(viscousDrag);
 
                 sectionViscDrag += baseDrag * maxCrossSectionArea;     //and bring it up to the same level as all the others
-            }
+            }*/
 
             return sectionViscDrag;
         }
 
-        private float SlenderBodyLift(float angle, float areaChange, out float pertLiftperQ)
+        private float SlenderBodyLift(float cosAngle, float areaChange, out float pertLiftperQ)
         {
-            float nomPotentialLift = (float)Math.Sin(2 * angle);
-            pertLiftperQ = 2 * (float)Math.Sqrt(Mathf.Clamp01(1 - nomPotentialLift * nomPotentialLift));
-            pertLiftperQ *= areaChange;
-
+            float nomPotentialLift = 2f * (float)Math.Sqrt(Mathf.Clamp01(1 - cosAngle * cosAngle)) * cosAngle;     //convert cosAngle into sin(2 angle) using cos^2 + sin^2 = 1 to get sin and sin(2x) = 2 sin(x) cos(x)
             nomPotentialLift *= areaChange;
+
+            pertLiftperQ = 2f * cosAngle;
+            pertLiftperQ *= areaChange;
 
             return nomPotentialLift;
         }
 
-        private float GetAoAFromCenterLineAndVel(Vector3 velVector, Vector3 forwardCentroid, Vector3 rearwardCentroid, out Vector3 resultingLiftVec)
+        private float GetCosAoAFromCenterLineAndVel(Vector3 velVector, Vector3 forwardCentroid, Vector3 rearwardCentroid, out Vector3 resultingLiftVec)
         {
             Vector3 centroidChange = forwardCentroid - rearwardCentroid;
             centroidChange.Normalize();
-            float angle = Vector3.Dot(velVector, centroidChange);   //get cos(angle)
-            angle = (float)Math.Acos(Mathf.Clamp01(angle));       //angle
+            float cosAngle = Vector3.Dot(velVector, centroidChange);   //get cos(angle)
 
             resultingLiftVec = Vector3.Exclude(velVector, centroidChange);
             resultingLiftVec.Normalize();
 
-            return angle;
+            return cosAngle;
         }
 
-        private float NewtonianImpactDrag(float overallArea, float exposedArea, float sectionThickness, float machNumber)
+        private void NewtonianImpactDrag(out float nomDragDivQ, out float nomLiftDivQ, out float pertDragDivQ, out float pertLiftDivQ,
+            float overallArea, float exposedArea, float sectionThickness, float machNumber, float cosAngle)
         {
             float cPmax = 1.86f;     //max pressure coefficient, TODO: make function of machNumber
 
             if (machNumber < 0.8f)
-                return 0;
+            {
+                nomDragDivQ = 0;
+                nomLiftDivQ = 0;
+                pertDragDivQ = 0;
+                pertLiftDivQ = 0;
+                return;
+            }
             else if (machNumber < 4f)
                 cPmax *= (0.3125f * machNumber - 0.25f);
 
+            cPmax *= exposedArea;
+
+            float areaFactor = CalculateAreaFactor(overallArea, exposedArea, sectionThickness);
+
+            nomDragDivQ = (float)Math.Sqrt(areaFactor);
+            nomDragDivQ *= nomDragDivQ * nomDragDivQ;
+            nomDragDivQ *= cPmax;
+
+            float sin2Angle = 1 - cosAngle * cosAngle;
+
+            nomLiftDivQ = (areaFactor * (float)Math.PI + 0.666666666666666667f) * cPmax;
+
+            pertLiftDivQ = nomLiftDivQ * 2f * cosAngle * (float)Math.Sqrt(Mathf.Clamp01(sin2Angle));
+
+            nomLiftDivQ *= sin2Angle;
+
+            pertDragDivQ = nomLiftDivQ * 2f;
+        }
+
+        private void SeparatedFlowDrag(out float nomDragDivQ, out float nomLiftDivQ, out float pertDragDivQ, out float pertLiftDivQ,
+            float overallArea, float removedArea, float sectionThickness, float machNumber, float cosAngle)
+        {
+            float cD = 0.3f;     //max rearward drag coefficient, TODO: make function of machNumber
+
+            if (machNumber <= 0f)
+            {
+                nomDragDivQ = 0;
+                nomLiftDivQ = 0;
+                pertDragDivQ = 0;
+                pertLiftDivQ = 0;
+                return;
+            }
+
+            if (machNumber > 1f)
+                cD /= machNumber * machNumber;
+
+            cD *= removedArea;
+
+            float areaFactor = CalculateAreaFactor(overallArea, removedArea, sectionThickness);
+
+            nomDragDivQ = (float)Math.Sqrt(areaFactor);
+            nomDragDivQ *= nomDragDivQ * nomDragDivQ;
+            nomDragDivQ *= cD;
+
+            float sin2Angle = 1 - cosAngle * cosAngle;
+
+            nomLiftDivQ = (areaFactor * (float)Math.PI + 0.666666666666666667f) * cD;
+
+            pertLiftDivQ = nomLiftDivQ * 2f * cosAngle * (float)Math.Sqrt(Mathf.Clamp01(sin2Angle));
+
+            nomLiftDivQ *= sin2Angle;
+
+            pertDragDivQ = nomLiftDivQ * 2f;
+        }
+
+        private float CalculateAreaFactor(float overallArea, float exposedArea, float sectionThickness)
+        {
             float areaFactor = overallArea * exposedArea;
             areaFactor = (float)Math.Sqrt(areaFactor) * 2;
             areaFactor -= exposedArea;
             areaFactor /= (float)Math.PI;
-
-            float dragDivQ = areaFactor / (areaFactor + sectionThickness * sectionThickness);
-            dragDivQ = (float)Math.Sqrt(dragDivQ);
-            dragDivQ *= dragDivQ * dragDivQ;
-            dragDivQ *= exposedArea * cPmax;
-
-            return dragDivQ;
+            areaFactor /= (areaFactor + sectionThickness * sectionThickness);
+            return Math.Max(areaFactor, 0f);
         }
     }
 }
