@@ -64,13 +64,13 @@ namespace FerramAerospaceResearch.FARTest
         {
             if (EditorLogic.RootPart)
             {
-                windowPos = GUILayout.Window(this.GetHashCode(), windowPos, TestGUI, "FARTest");
+                windowPos = GUILayout.Window(this.GetHashCode(), windowPos, TestGUI, "FARVoxelTest");
             }
         }
 
         void TestGUI(int id)
         {
-
+            GUILayout.Label("Unnecessary for standard use");
             voxelCount = GUILayout.TextField(voxelCount);
             multiThreaded = GUILayout.Toggle(multiThreaded, "Multithread Voxelization");
             solidify = GUILayout.Toggle(solidify, "Toggle Solidification");
