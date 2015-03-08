@@ -187,7 +187,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             return crossSections;
         }
 
-        public void CrossSectionData(VoxelCrossSection[] crossSections, Vector3 orientationVector, out int frontIndex, out int backIndex, out float sectionThickness, out float maxCrossSectionArea)
+        public unsafe void CrossSectionData(VoxelCrossSection[] crossSections, Vector3 orientationVector, out int frontIndex, out int backIndex, out float sectionThickness, out float maxCrossSectionArea)
         {
             //TODO: Look into setting better limits for iterating over sweep plane to improve off-axis performance
             
@@ -207,10 +207,16 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             sectionThickness = elementSize;
 
+            //Code has multiple optimizations to take advantage of the limited rnage of values that are included.  They are listed below
+            //(int)Math.Ceiling(x) -> (int)(x + 1)      for x > 0
+            //(int)Math.Round(x) -> (int)(x + 0.5f)     for x > 0
+            //(int)Math.Floor(x) -> (int)(x)            for x > 0
+
             //Check y first, since it is most likely to be the flow direction
             if(y >= z && y >= x)
             {
-                int sectionCount = yCellLength + (int)Math.Ceiling(xCellLength * x / y) + (int)Math.Ceiling(zCellLength * z / y);
+                int sectionCount = yCellLength + (int)(xCellLength * x / y + 1) + (int)(zCellLength * z / y + 1);
+                sectionCount = Math.Min(sectionCount, crossSections.Length);
                 float angleSizeIncreaseFactor = (float)Math.Sqrt((x + y + z) / y);
                 elementArea *= angleSizeIncreaseFactor;       //account for different angles effects on voxel cube's projected area
 
@@ -223,7 +229,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 yNorm = plane.y * invMag;
                 zNorm = plane.z * invMag;
 
-                bool[,] sectionRepresentation = new bool[(int)Math.Ceiling(xCellLength * Math.Abs(yNorm) + yCellLength * Math.Abs(xNorm)), (int)Math.Ceiling(zCellLength * Math.Abs(yNorm) + yCellLength * Math.Abs(zNorm))];
+                float yAbsNorm = Math.Abs(yNorm);
+
+                int xSectArrayLength = (int)(xCellLength * yAbsNorm + yCellLength * Math.Abs(xNorm) + 1);
+                //Stack allocation of array allows removal of garbage collection issues
+                bool* sectionArray = stackalloc bool[xSectArrayLength * (int)(zCellLength * yAbsNorm + yCellLength * Math.Abs(zNorm) + 1)];
+
+                //bool[,] sectionRepresentation = new bool[(int)Math.Ceiling(xCellLength * Math.Abs(yNorm) + yCellLength * Math.Abs(xNorm)), (int)Math.Ceiling(zCellLength * Math.Abs(yNorm) + yCellLength * Math.Abs(zNorm))];
 
                 float invYPlane = 1 / plane.y;
 
@@ -245,21 +257,31 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                             if (Math.Sign(plane.x) * Math.Sign(plane.z) > 0)        //Determine high and low points on this quad of the plane
                             {
-                                jSect1 = (int)Math.Round(-(plane.x * iOverall + plane.z * kOverall + plane.w) * invYPlane);             //End points of the plane
-                                jSect3 = (int)Math.Round(-(plane.x * (iOverall + 7) + plane.z * (kOverall + 7) + plane.w) * invYPlane);
+                                jSect1 = (int)(-(plane.x * iOverall + plane.z * kOverall + plane.w) * invYPlane + 0.5f);             //End points of the plane
+                                jSect3 = (int)(-(plane.x * (iOverall + 7) + plane.z * (kOverall + 7) + plane.w) * invYPlane + 0.5f);
                             }
                             else
                             {
-                                jSect1 = (int)Math.Round(-(plane.x * (iOverall + 7) + plane.z * kOverall + plane.w) * invYPlane);
-                                jSect3 = (int)Math.Round(-(plane.x * iOverall + plane.z * (kOverall + 7) + plane.w) * invYPlane);
+                                jSect1 = (int)(-(plane.x * (iOverall + 7) + plane.z * kOverall + plane.w) * invYPlane + 0.5f);
+                                jSect3 = (int)(-(plane.x * iOverall + plane.z * (kOverall + 7) + plane.w) * invYPlane + 0.5f);
                             }
-                            jSect2 = (int)Math.Round(-(plane.x * (iOverall + 3) + plane.z * (kOverall + 3) + plane.w) * invYPlane);     //Central point
+                            jSect2 = (int)(-(plane.x * (iOverall + 3) + plane.z * (kOverall + 3) + plane.w) * invYPlane + 0.5f);     //Central point
+
+                            int jMin = Math.Min(jSect1, jSect3);
+                            int jMax = Math.Max(jSect1, jSect3);
 
                             jSect1 = jSect1 >> 3;
                             jSect2 = jSect2 >> 3;
                             jSect3 = jSect3 >> 3;
 
-                            if(jSect1 == jSect3)        //If chunk indices are identical, only get that one and it's very simple; only need to check 1 and 3, because if any are different, it must be those
+                            bool invalidPoint = jSect1 < 0 || jSect1 >= yLength;
+                            invalidPoint &= jSect2 < 0 || jSect2 >= yLength;
+                            invalidPoint &= jSect3 < 0 || jSect3 >= yLength;
+
+                            if (invalidPoint)
+                                continue;
+
+                            if (jSect1 == jSect3)        //If chunk indices are identical, only get that one and it's very simple; only need to check 1 and 3, because if any are different, it must be those
                             {
                                 if (jSect1 < 0 || jSect1 >= yLength)
                                     continue;
@@ -271,12 +293,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                                 set.UnionWith(sect.includedParts);
 
-                                for(int i = iOverall; i < iOverall + 8; i++)            //Finally, iterate over the chunk
+                                for (int i = iOverall; i < iOverall + 8; i++)            //Finally, iterate over the chunk
+                                {
+                                    float tmp = plane.x * i + plane.w;
                                     for (int k = kOverall; k < kOverall + 8; k++)
                                     {
-                                        int j = (int)Math.Round(-(plane.x * i + plane.z * k + plane.w) * invYPlane);
+                                        int j = (int)(-(plane.z * k + tmp) * invYPlane + 0.5f);
 
-                                        if (j < 0 || j >= yCellLength)
+                                        if (j < jMin || j > jMax)
                                             continue;
 
                                         if (sect.VoxelPointExistsGlobalIndex(i, j, k))
@@ -298,47 +322,53 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                             else
                                                 planeK_f = zNorm * j;
 
-                                            planeI_f += Math.Abs(yNorm) * i;
-                                            planeK_f += Math.Abs(yNorm) * k;
+                                            planeI_f += yAbsNorm * i;
+                                            planeK_f += yAbsNorm * k;
 
 
                                             int planeI, planeK;
-                                            planeI = (int)Math.Round(planeI_f);
-                                            planeK = (int)Math.Round(planeK_f);
+                                            planeI = (int)(planeI_f + 0.5f);
+                                            planeK = (int)(planeK_f + 0.5f);
 
                                             planeI = Math.Max(planeI, 0);
                                             planeK = Math.Max(planeK, 0);
-                                            
-                                            if (!sectionRepresentation[planeI, planeK])
+
+                                            bool* location = sectionArray + planeI + xSectArrayLength * planeK;
+
+                                            if (!*location)
                                             {
                                                 unshadowedAreaCount++;
                                                 unshadowedCentroid.x += i;
                                                 unshadowedCentroid.y += j;
                                                 unshadowedCentroid.z += k;
-                                                sectionRepresentation[planeI, planeK] = true;
+                                                *location = true;
                                             }
                                         }
                                     }
+                                }
                             }
                             else                       //Two or three different indices requires separate handling
                             {
                                 VoxelChunk sect1 = null, sect2 = null, sect3 = null;
 
+                                int iSect = iOverall >> 3;
+                                int kSect = kOverall >> 3;
+
                                 if (!(jSect1 < 0 || jSect1 >= yLength))
                                 {
-                                    sect1 = voxelChunks[iOverall >> 3, jSect1, kOverall >> 3];
+                                    sect1 = voxelChunks[iSect, jSect1, kSect];
                                     if (sect1 != null)
                                         set.UnionWith(sect1.includedParts);
                                 }
                                 if (!(jSect2 < 0 || jSect2 >= yLength))
                                 {
-                                    sect2 = voxelChunks[iOverall >> 3, jSect2, kOverall >> 3];
+                                    sect2 = voxelChunks[iSect, jSect2, kSect];
                                     if (sect2 != null)
                                         set.UnionWith(sect2.includedParts);
                                 }
                                 if (!(jSect3 < 0 || jSect3 >= yLength))
                                 {
-                                    sect3 = voxelChunks[iOverall >> 3, jSect3, kOverall >> 3];
+                                    sect3 = voxelChunks[iSect, jSect3, kSect];
                                     if (sect3 != null)
                                         set.UnionWith(sect3.includedParts);
                                 }
@@ -347,11 +377,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                     continue;
 
                                 for (int i = iOverall; i < iOverall + 8; i++)
+                                {
+                                    float tmp = plane.x * i + plane.w;
                                     for (int k = kOverall; k < kOverall + 8; k++)
                                     {
-                                        int j = (int)Math.Round(-(plane.x * i + plane.z * k + plane.w) * invYPlane);
+                                        int j = (int)(-(plane.z * k + tmp) * invYPlane + 0.5f);
 
-                                        if (j < 0 || j >= yCellLength)
+                                        if (j < jMin || j > jMax)
                                             continue;
 
                                         if (j >> 3 == jSect1 && sect1 != null && sect1.VoxelPointExistsGlobalIndex(i, j, k)
@@ -365,37 +397,48 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                                             float planeI_f, planeK_f;
 
-                                            if(xNorm < 0)
+                                            if (xNorm < 0)
                                                 planeI_f = xNorm * (j - yCellLength);
                                             else
                                                 planeI_f = xNorm * j;
 
-                                            if(zNorm < 0)
+                                            if (zNorm < 0)
                                                 planeK_f = zNorm * (j - yCellLength);
                                             else
                                                 planeK_f = zNorm * j;
 
 
-                                            planeI_f += Math.Abs(yNorm) * i;
-                                            planeK_f += Math.Abs(yNorm) * k;
+                                            planeI_f += yAbsNorm * i;
+                                            planeK_f += yAbsNorm * k;
 
                                             int planeI, planeK;
-                                            planeI = (int)Math.Round(planeI_f);
-                                            planeK = (int)Math.Round(planeK_f);
+                                            planeI = (int)(planeI_f + 0.5f);
+                                            planeK = (int)(planeK_f + 0.5f);
 
                                             planeI = Math.Max(planeI, 0);
                                             planeK = Math.Max(planeK, 0);
 
-                                            if (!sectionRepresentation[planeI, planeK])
+                                            /*if (!sectionRepresentation[planeI, planeK])
                                             {
                                                 unshadowedAreaCount++;
                                                 unshadowedCentroid.x += i;
                                                 unshadowedCentroid.y += j;
                                                 unshadowedCentroid.z += k;
                                                 sectionRepresentation[planeI, planeK] = true;
+                                            }*/
+                                            bool* location = sectionArray + planeI + xSectArrayLength * planeK;
+
+                                            if (!*location)
+                                            {
+                                                unshadowedAreaCount++;
+                                                unshadowedCentroid.x += i;
+                                                unshadowedCentroid.y += j;
+                                                unshadowedCentroid.z += k;
+                                                *location = true;
                                             }
                                         }
                                     }
+                                }
                             }
                         }
                     if (areaCount > 0)
@@ -424,7 +467,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
             else if (x > y && x > z)
             {
-                int sectionCount = xCellLength + (int)Math.Ceiling(yCellLength * y / x) + (int)Math.Ceiling(zCellLength * z / x);
+                int sectionCount = xCellLength + (int)(yCellLength * y / x + 1) + (int)(zCellLength * z / x + 1);
+                sectionCount = Math.Min(sectionCount, crossSections.Length);
                 float angleSizeIncreaseFactor = (float)Math.Sqrt((x + y + z) / x);
                 elementArea *= angleSizeIncreaseFactor;       //account for different angles effects on voxel cube's projected area
 
@@ -437,7 +481,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 yNorm = plane.y * invMag;
                 zNorm = plane.z * invMag;
 
-                bool[,] sectionRepresentation = new bool[(int)Math.Ceiling(xCellLength * Math.Abs(yNorm) + yCellLength * Math.Abs(xNorm)), (int)Math.Ceiling(zCellLength * Math.Abs(xNorm) + xCellLength * Math.Abs(zNorm))];
+                float xAbsNorm = Math.Abs(xNorm);
+
+                int ySectArrayLength = (int)(xCellLength * Math.Abs(yNorm) + yCellLength * xAbsNorm + 1);
+                //Stack allocation of array allows removal of garbage collection issues
+                bool* sectionArray = stackalloc bool[ySectArrayLength * (int)(zCellLength * xAbsNorm + xCellLength * Math.Abs(zNorm) + 1)];
+
+                //bool[,] sectionRepresentation = new bool[(int)Math.Ceiling(xCellLength * Math.Abs(yNorm) + yCellLength * Math.Abs(xNorm)), (int)Math.Ceiling(zCellLength * Math.Abs(xNorm) + xCellLength * Math.Abs(zNorm))];
 
                 float invXPlane = 1 / plane.x;
 
@@ -459,20 +509,30 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                             if (Math.Sign(plane.y) * Math.Sign(plane.z) > 0)
                             {
-                                iSect1 = (int)Math.Round(-(plane.y * jOverall + plane.z * kOverall + plane.w) * invXPlane);
-                                iSect3 = (int)Math.Round(-(plane.y * (jOverall + 7) + plane.z * (kOverall + 7) + plane.w) * invXPlane);
+                                iSect1 = (int)(-(plane.y * jOverall + plane.z * kOverall + plane.w) * invXPlane + 0.5f);
+                                iSect3 = (int)(-(plane.y * (jOverall + 7) + plane.z * (kOverall + 7) + plane.w) * invXPlane + 0.5f);
                             }
                             else
                             {
-                                iSect1 = (int)Math.Round(-(plane.y * (jOverall + 7) + plane.z * kOverall + plane.w) * invXPlane);
-                                iSect3 = (int)Math.Round(-(plane.y * jOverall + plane.z * (kOverall + 7) + plane.w) * invXPlane);
+                                iSect1 = (int)(-(plane.y * (jOverall + 7) + plane.z * kOverall + plane.w) * invXPlane + 0.5f);
+                                iSect3 = (int)(-(plane.y * jOverall + plane.z * (kOverall + 7) + plane.w) * invXPlane + 0.5f);
                             }
-                            iSect2 = (int)Math.Round(-(plane.y * (jOverall + 3) + plane.z * (kOverall + 3) + plane.w) * invXPlane);
+                            iSect2 = (int)(-(plane.y * (jOverall + 3) + plane.z * (kOverall + 3) + plane.w) * invXPlane + 0.5f);
 
+                            int iMin = Math.Min(iSect1, iSect3);
+                            int iMax = Math.Max(iSect1, iSect3);
+                            
                             iSect1 = iSect1 >> 3;
                             iSect2 = iSect2 >> 3;
                             iSect3 = iSect3 >> 3;
 
+                            bool invalidPoint = iSect1 < 0 || iSect1 >= xLength;
+                            invalidPoint &= iSect2 < 0 || iSect2 >= xLength;
+                            invalidPoint &= iSect3 < 0 || iSect3 >= xLength;
+
+                            if (invalidPoint)
+                                continue;
+                            
                             if (iSect1 == iSect3)
                             {
                                 if (iSect1 < 0 || iSect1 >= xLength)
@@ -486,11 +546,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                 set.UnionWith(sect.includedParts);
 
                                 for (int j = jOverall; j < jOverall + 8; j++)
+                                {
+                                    float tmp = plane.y * j + plane.w;
                                     for (int k = kOverall; k < kOverall + 8; k++)
                                     {
-                                        int i = (int)Math.Round(-(plane.y * j + plane.z * k + plane.w) * invXPlane);
+                                        int i = (int)(-(plane.z * k + tmp) * invXPlane + 0.5f);
 
-                                        if (i < 0 || i >= xCellLength)
+                                        if (i < iMin || i > iMax)
                                             continue;
 
                                         if (sect.VoxelPointExistsGlobalIndex(i, j, k))
@@ -513,47 +575,53 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                                 planeK_f = zNorm * i;
 
 
-                                            planeJ_f += Math.Abs(xNorm) * j;
-                                            planeK_f += Math.Abs(xNorm) * k;
+                                            planeJ_f += xAbsNorm * j;
+                                            planeK_f += xAbsNorm * k;
 
                                             int planeJ, planeK;
-                                            planeJ = (int)Math.Round(planeJ_f);
-                                            planeK = (int)Math.Round(planeK_f);
+                                            planeJ = (int)(planeJ_f + 0.5f);
+                                            planeK = (int)(planeK_f + 0.5f);
 
                                             planeJ = Math.Max(planeJ, 0);
                                             planeK = Math.Max(planeK, 0);
 
-                                            if (!sectionRepresentation[planeJ, planeK])
+                                            bool* location = sectionArray + planeJ + ySectArrayLength * planeK;
+
+                                            if (!*location)
                                             {
                                                 unshadowedAreaCount++;
                                                 unshadowedCentroid.x += i;
                                                 unshadowedCentroid.y += j;
                                                 unshadowedCentroid.z += k;
-                                                sectionRepresentation[planeJ, planeK] = true;
+                                                *location = true;
                                             }
                                         }
                                     }
+                                }
                             }
                             else
                             {
                                 VoxelChunk sect1 = null, sect2 = null, sect3 = null;
 
+                                int jSect = jOverall >> 3;
+                                int kSect = kOverall >> 3;
+
                                 if (!(iSect1 < 0 || iSect1 >= xLength))
                                 {
-                                    sect1 = voxelChunks[iSect1, jOverall >> 3, kOverall >> 3];
+                                    sect1 = voxelChunks[iSect1, jSect, kSect];
                                     if (sect1 != null)
                                         set.UnionWith(sect1.includedParts);
                                 }
                                 if (!(iSect2 < 0 || iSect2 >= xLength))
                                 {
-                                    sect2 = voxelChunks[iSect2, jOverall >> 3, kOverall >> 3];
+                                    sect2 = voxelChunks[iSect2, jSect, kSect];
                                     if (sect2 != null)
                                         set.UnionWith(sect2.includedParts);
                                 }
 
                                 if (!(iSect3 < 0 || iSect3 >= xLength))
                                 {
-                                    sect3 = voxelChunks[iSect3, jOverall >> 3, kOverall >> 3];
+                                    sect3 = voxelChunks[iSect3, jSect, kSect];
                                     if (sect3 != null)
                                         set.UnionWith(sect3.includedParts);
                                 }
@@ -562,11 +630,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                     continue;
 
                                 for (int j = jOverall; j < jOverall + 8; j++)
+                                {
+                                    float tmp = plane.y * j + plane.w;
                                     for (int k = kOverall; k < kOverall + 8; k++)
                                     {
-                                        int i = (int)Math.Round(-(plane.y * j + plane.z * k + plane.w) * invXPlane);
+                                        int i = (int)(-(plane.z * k + tmp) * invXPlane + 0.5f);
 
-                                        if (i < 0 || i >= xCellLength)
+                                        if (i < iMin || i > iMax)
                                             continue;
 
                                         if (i >> 3 == iSect1 && sect1 != null && sect1.VoxelPointExistsGlobalIndex(i, j, k)
@@ -591,26 +661,29 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                                 planeK_f = zNorm * i;
 
 
-                                            planeJ_f += Math.Abs(xNorm) * j;
-                                            planeK_f += Math.Abs(xNorm) * k;
+                                            planeJ_f += xAbsNorm * j;
+                                            planeK_f += xAbsNorm * k;
 
                                             int planeJ, planeK;
-                                            planeJ = (int)Math.Round(planeJ_f);
-                                            planeK = (int)Math.Round(planeK_f);
+                                            planeJ = (int)(planeJ_f + 0.5f);
+                                            planeK = (int)(planeK_f + 0.5f);
 
                                             planeJ = Math.Max(planeJ, 0);
                                             planeK = Math.Max(planeK, 0);
 
-                                            if (!sectionRepresentation[planeJ, planeK])
+                                            bool* location = sectionArray + planeJ + ySectArrayLength * planeK;
+
+                                            if (!*location)
                                             {
                                                 unshadowedAreaCount++;
                                                 unshadowedCentroid.x += i;
                                                 unshadowedCentroid.y += j;
                                                 unshadowedCentroid.z += k;
-                                                sectionRepresentation[planeJ, planeK] = true;
+                                                *location = true;
                                             }
                                         }
                                     }
+                                }
                             }
                         }
                     if (areaCount > 0)
@@ -639,7 +712,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
             else
             {
-                int sectionCount = zCellLength + (int)Math.Ceiling(xCellLength * x / z) + (int)Math.Ceiling(yCellLength * y / z);
+                int sectionCount = zCellLength + (int)(xCellLength * x / z + 1) + (int)(yCellLength * y / z + 1);
+                sectionCount = Math.Min(sectionCount, crossSections.Length);
                 float angleSizeIncreaseFactor = (float)Math.Sqrt((x + y + z) / z);       //account for different angles effects on voxel cube's projected area
                 elementArea *= angleSizeIncreaseFactor;       //account for different angles effects on voxel cube's projected area
 
@@ -652,7 +726,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 yNorm = plane.y * invMag;
                 zNorm = plane.z * invMag;
 
-                bool[,] sectionRepresentation = new bool[(int)Math.Ceiling(xCellLength * Math.Abs(zNorm) + zCellLength * Math.Abs(xNorm)), (int)Math.Ceiling(yCellLength * Math.Abs(zNorm) + zCellLength * Math.Abs(yNorm))];
+                float zAbsNorm = Math.Abs(zNorm);
+
+                int xSectArrayLength = (int)(xCellLength * zAbsNorm + zCellLength * Math.Abs(xNorm) + 1);
+                //Stack allocation of array allows removal of garbage collection issues
+                bool* sectionArray = stackalloc bool[xSectArrayLength * (int)(yCellLength * zAbsNorm + zCellLength * Math.Abs(yNorm) + 1)];
+
+                //bool[,] sectionRepresentation = new bool[(int)Math.Ceiling(xCellLength * Math.Abs(zNorm) + zCellLength * Math.Abs(xNorm)), (int)Math.Ceiling(yCellLength * Math.Abs(zNorm) + zCellLength * Math.Abs(yNorm))];
                 
                 float invZPlane = 1 / plane.z;
 
@@ -674,19 +754,30 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                             if (Math.Sign(plane.x) * Math.Sign(plane.y) > 0)        //Determine high and low points on this quad of the plane
                             {
-                                kSect1 = (int)Math.Round(-(plane.x * iOverall + plane.y * jOverall + plane.w) * invZPlane);
-                                kSect3 = (int)Math.Round(-(plane.x * (iOverall + 7) + plane.y * (jOverall + 7) + plane.w) * invZPlane);
+                                kSect1 = (int)(-(plane.x * iOverall + plane.y * jOverall + plane.w) * invZPlane + 0.5f);
+                                kSect3 = (int)(-(plane.x * (iOverall + 7) + plane.y * (jOverall + 7) + plane.w) * invZPlane + 0.5f);
                             }
                             else
                             {
-                                kSect1 = (int)Math.Round(-(plane.x * (iOverall + 7) + plane.y * jOverall + plane.w) * invZPlane);
-                                kSect3 = (int)Math.Round(-(plane.x * iOverall + plane.y * (jOverall + 7) + plane.w) * invZPlane);
+                                kSect1 = (int)(-(plane.x * (iOverall + 7) + plane.y * jOverall + plane.w) * invZPlane + 0.5f);
+                                kSect3 = (int)(-(plane.x * iOverall + plane.y * (jOverall + 7) + plane.w) * invZPlane + 0.5f);
                             }
-                            kSect2 = (int)Math.Round(-(plane.x * (iOverall + 3) + plane.y * (jOverall + 3) + plane.w) * invZPlane);
+                            kSect2 = (int)(-(plane.x * (iOverall + 3) + plane.y * (jOverall + 3) + plane.w) * invZPlane + 0.5f);
+
+                            int kMin = Math.Min(kSect1, kSect3);
+                            int kMax = Math.Max(kSect1, kSect3);
 
                             kSect1 = kSect1 >> 3;
                             kSect2 = kSect2 >> 3;
                             kSect3 = kSect3 >> 3;
+
+                            bool invalidPoint = kSect1 < 0 || kSect1 >= zLength;
+                            invalidPoint &= kSect2 < 0 || kSect2 >= zLength;
+                            invalidPoint &= kSect3 < 0 || kSect3 >= zLength;
+
+                            if (invalidPoint)
+                                continue;
+
 
                             if (kSect1 == kSect3)        //If chunk indices are identical, only get that one and it's very simple
                             {
@@ -701,11 +792,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                 set.UnionWith(sect.includedParts);
 
                                 for (int i = iOverall; i < iOverall + 8; i++)            //Finally, iterate over the chunk
+                                {
+                                    float tmp = plane.x * i + plane.w;
                                     for (int j = jOverall; j < jOverall + 8; j++)
                                     {
-                                        int k = (int)Math.Round(-(plane.x * i + plane.y * j + plane.w) * invZPlane);
+                                        int k = (int)(-(plane.y * j + tmp) * invZPlane + 0.5f);
 
-                                        if (k < 0 || k >= zCellLength)
+
+                                        if (k < kMin || k > kMax)
                                             continue;
 
                                         if (sect.VoxelPointExistsGlobalIndex(i, j, k))
@@ -717,57 +811,63 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                                             float planeI_f, planeJ_f;
 
-                                            if (yNorm < 0)
+                                            if (xNorm < 0)
                                                 planeI_f = xNorm * (k - zCellLength);
                                             else
                                                 planeI_f = xNorm * k;
 
-                                            if (zNorm < 0)
+                                            if (yNorm < 0)
                                                 planeJ_f = yNorm * (k - zCellLength);
                                             else
                                                 planeJ_f = yNorm * k;
 
 
-                                            planeI_f += Math.Abs(zNorm) * i;
-                                            planeJ_f += Math.Abs(zNorm) * j;
+                                            planeI_f += zAbsNorm * i;
+                                            planeJ_f += zAbsNorm * j;
 
                                             int planeI, planeJ;
-                                            planeI = (int)Math.Round(planeI_f);
-                                            planeJ = (int)Math.Round(planeJ_f);
+                                            planeI = (int)(planeI_f + 0.5f);
+                                            planeJ = (int)(planeJ_f + 0.5f);
 
                                             planeI = Math.Max(planeI, 0);
                                             planeJ = Math.Max(planeJ, 0);
 
-                                            if (!sectionRepresentation[planeI, planeJ])
+                                            bool* location = sectionArray + planeI + xSectArrayLength * planeJ;
+
+                                            if (!*location)
                                             {
                                                 unshadowedAreaCount++;
                                                 unshadowedCentroid.x += i;
                                                 unshadowedCentroid.y += j;
                                                 unshadowedCentroid.z += k;
-                                                sectionRepresentation[planeI, planeJ] = true;
+                                                *location = true;
                                             }
                                         }
                                     }
+                                }
                             }
                             else
                             {
                                 VoxelChunk sect1 = null, sect2 = null, sect3 = null;
 
+                                int iSect = iOverall >> 3;
+                                int jSect = jOverall >> 3;
+
                                 if (!(kSect1 < 0 || kSect1 >= zLength))         //If indices are different, this section of the plane crosses two chunks
                                 {
-                                    sect1 = voxelChunks[iOverall >> 3, jOverall >> 3, kSect1];
+                                    sect1 = voxelChunks[iSect, jSect, kSect1];
                                     if (sect1 != null)
                                         set.UnionWith(sect1.includedParts);
                                 }
                                 if (!(kSect2 < 0 || kSect2 >= zLength))
                                 {
-                                    sect2 = voxelChunks[iOverall >> 3, jOverall >> 3, kSect2];
+                                    sect2 = voxelChunks[iSect, jSect, kSect2];
                                     if (sect2 != null)
                                         set.UnionWith(sect2.includedParts);
                                 } 
                                 if (!(kSect3 < 0 || kSect3 >= zLength))
                                 {
-                                    sect3 = voxelChunks[iOverall >> 3, jOverall >> 3, kSect3];
+                                    sect3 = voxelChunks[iSect, jSect, kSect3];
                                     if (sect3 != null)
                                         set.UnionWith(sect3.includedParts);
                                 }
@@ -776,11 +876,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                     continue;
 
                                 for (int i = iOverall; i < iOverall + 8; i++)
+                                {
+                                    float tmp = plane.x * i + plane.w;
                                     for (int j = jOverall; j < jOverall + 8; j++)
                                     {
-                                        int k = (int)Math.Round(-(plane.x * i + plane.y * j + plane.w) * invZPlane);
+                                        int k = (int)(-(plane.y * j + tmp) * invZPlane + 0.5f);
 
-                                        if (k < 0 || k >= zCellLength)
+                                        if (k < kMin || k > kMax)
                                             continue;
 
                                         if (k >> 3 == kSect1 && sect1 != null && sect1.VoxelPointExistsGlobalIndex(i, j, k)
@@ -794,37 +896,41 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                                             float planeI_f, planeJ_f;
 
-                                            if (yNorm < 0)
+                                            if (xNorm < 0)
                                                 planeI_f = xNorm * (k - zCellLength);
                                             else
                                                 planeI_f = xNorm * k;
 
-                                            if (zNorm < 0)
+                                            if (yNorm < 0)
                                                 planeJ_f = yNorm * (k - zCellLength);
                                             else
                                                 planeJ_f = yNorm * k;
 
 
-                                            planeI_f += Math.Abs(zNorm) * i;
-                                            planeJ_f += Math.Abs(zNorm) * j;
+                                            planeI_f += zAbsNorm * i;
+                                            planeJ_f += zAbsNorm * j;
 
                                             int planeI, planeJ;
-                                            planeI = (int)Math.Round(planeI_f);
-                                            planeJ = (int)Math.Round(planeJ_f);
+                                            planeI = (int)(planeI_f + 0.5f);
+                                            planeJ = (int)(planeJ_f + 0.5f);
 
                                             planeI = Math.Max(planeI, 0);
                                             planeJ = Math.Max(planeJ, 0);
 
-                                            if (!sectionRepresentation[planeI, planeJ])
+                                            bool* location = sectionArray + planeI + xSectArrayLength * planeJ;
+
+                                            if (!*location)
                                             {
                                                 unshadowedAreaCount++;
                                                 unshadowedCentroid.x += i;
                                                 unshadowedCentroid.y += j;
                                                 unshadowedCentroid.z += k;
-                                                sectionRepresentation[planeI, planeJ] = true;
+                                                *location = true;
                                             }
+
                                         }
                                     }
+                                }
                             }
                         }
 
