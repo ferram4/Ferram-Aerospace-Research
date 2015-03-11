@@ -35,24 +35,23 @@ Copyright 2014, Michael Ferrara, aka Ferram4
  */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
+using KSP;
 
-namespace FerramAerospaceResearch.FARPartGeometry
+namespace FerramAerospaceResearch
 {
-    public struct VoxelCrossSection
+    [KSPAddon(KSPAddon.Startup.Instantly, true)]
+    class FARKSPAddonEntryPoint : MonoBehaviour
     {
-        public double area;
-        public Vector3d centroid;
-        public double areaDeriv2ToNextSection;   //second derivative of area, which is constant between sections; this is the value between this and the next section
-        public List<Part> includedParts;
+        void Awake()
+        {
+            if (FARKSPAddonFlightScene.fetch != null)
+                return;
 
-        public double additionalUnshadowedArea;        //area added to this crosssection that has no area ahead of it
-        public Vector3d additonalUnshadowedCentroid;     //centroid of unshadowedArea
+            GameObject o = new GameObject();
+            o.AddComponent<FARKSPAddonFlightScene>();
 
-        public double removedArea;               //area removed from this particular crosssection, compared to the one in front of it
-        public Vector3d removedCentroid;          //centroid of removedArea
+            GameObject.DontDestroyOnLoad(o);
+        }
     }
 }

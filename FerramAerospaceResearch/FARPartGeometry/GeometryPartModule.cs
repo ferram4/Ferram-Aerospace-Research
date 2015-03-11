@@ -52,6 +52,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         void Start()
         {
+            RebuildAllMeshData();
+            //part.OnEditorAttach += EditorAttach;
+        }
+
+        private void RebuildAllMeshData()
+        {
             partTransform = part.transform;
             partRigidBody = part.Rigidbody;
             List<Transform> meshTransforms = PartModelTransformList(this.part);
@@ -59,13 +65,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             meshDataList = new List<GeometryMesh>();
 
-            Matrix4x4 worldToVesselMatrix = Matrix4x4.identity;
-            if (this.vessel)
+            Matrix4x4 worldToVesselMatrix;
+            if (HighLogic.LoadedSceneIsFlight)
                 worldToVesselMatrix = vessel.ReferenceTransform.worldToLocalMatrix;
             else
                 worldToVesselMatrix = EditorLogic.RootPart.transform.worldToLocalMatrix;
 
-            for (int i = 0; i < meshTransforms.Count; i++) 
+            for (int i = 0; i < meshTransforms.Count; i++)
             {
                 Mesh m = geometryMeshes[i];
                 GeometryMesh geoMesh = new GeometryMesh(m.vertices, m.triangles, m.bounds, meshTransforms[i], worldToVesselMatrix);
@@ -73,16 +79,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
 
             overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
-
-            part.OnEditorAttach += EditorAttach;
-            this.enabled = false;
         }
 
-        public void EditorAttach()
+        /*public void EditorAttach()
         {
             UpdateTransformMatrixList(EditorLogic.RootPart.transform.worldToLocalMatrix);
             overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(EditorLogic.RootPart.transform.worldToLocalMatrix);
-        }
+        }*/
 
         public void UpdateTransformMatrixList(Matrix4x4 worldToVesselMatrix)
         {
@@ -98,6 +101,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Bounds rendererBounds = this.part.GetPartOverallMeshBoundsInBasis(part.transform.worldToLocalMatrix);
             Bounds colliderBounds = this.part.GetPartColliderBoundsInBasis(part.transform.worldToLocalMatrix);
 
+            bool cantUseColliders = true;
             if (rendererBounds.size.x * rendererBounds.size.z < colliderBounds.size.x * colliderBounds.size.z * 1.6f && rendererBounds.size.y < colliderBounds.size.y * 1.2f && (rendererBounds.center - colliderBounds.center).magnitude < 0.3f)
             {
                 foreach (Transform t in meshTransforms)
@@ -113,6 +117,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         meshList.Add(m);
                         validTransformList.Add(t);
+                        cantUseColliders = false;
                     }
                     else
                     {
@@ -122,10 +127,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         meshList.Add(CreateBoxMeshFromBoxCollider(bc.size, bc.center));
                         validTransformList.Add(t);
+                        cantUseColliders = false;
                     }
                 }
             }
-            else
+
+            if (cantUseColliders)
             {
                 foreach (Transform t in meshTransforms)
                 {
@@ -156,7 +163,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 ModuleJettison[] jettisons = part.GetComponents<ModuleJettison>();
                 foreach (ModuleJettison j in jettisons)
                 {
-                    if (j.isJettisoned || j.jettisonTransform == null)
+                    if (j.isJettisoned || j.jettisonTransform == null || j.checkBottomNode)
                         continue;
 
                     Transform t = j.jettisonTransform;

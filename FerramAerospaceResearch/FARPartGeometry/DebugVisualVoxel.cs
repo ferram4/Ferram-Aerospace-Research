@@ -53,9 +53,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
         float size;
         public GameObject gameObject;
 
-        public DebugVisualVoxel(Vector3 pos, float elementSize)
+        public DebugVisualVoxel(Vector3 pos, double elementSize)
         {
-            size = elementSize;
+            size = (float)elementSize;
             size *= 0.5f;
             gameObject = new GameObject();
             gameObject.transform.position = pos;

@@ -61,7 +61,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
             this.triangles = triangles;
             this.meshTransform = meshTransform;
 
-            bounds = new Bounds(thisToVesselMatrix.MultiplyPoint3x4(meshBounds.center), thisToVesselMatrix.MultiplyVector(meshBounds.size));
+            Vector3 size = thisToVesselMatrix.MultiplyVector(meshBounds.size);
+            size.x = Math.Abs(size.x);
+            size.y = Math.Abs(size.y);
+            size.z = Math.Abs(size.z);
+
+            bounds = new Bounds(thisToVesselMatrix.MultiplyPoint3x4(meshBounds.center), size);
         }
 
         public void TransformBasis(Matrix4x4 newThisToVesselMatrix)
@@ -71,7 +76,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             tempMatrix = thisToVesselMatrix * tempMatrix;
 
-            bounds = new Bounds(thisToVesselMatrix.MultiplyPoint3x4(bounds.center), thisToVesselMatrix.MultiplyVector(bounds.size));
+            Vector3 size = thisToVesselMatrix.MultiplyVector(bounds.size);
+            size.x = Math.Abs(size.x);
+            size.y = Math.Abs(size.y);
+            size.z = Math.Abs(size.z);
+
+            bounds = new Bounds(thisToVesselMatrix.MultiplyPoint3x4(bounds.center), size);
 
             for (int i = 0; i < vertices.Length; i++)
                 vertices[i] = tempMatrix.MultiplyPoint3x4(vertices[i]);

@@ -85,7 +85,7 @@ namespace FerramAerospaceResearch.FARTest
                     }
                     voxel = null;
                 }
-                ThreadPool.QueueUserWorkItem(CreateVoxel, EditorLogic.SortedShipList);
+                ThreadPool.QueueUserWorkItem(CreateVoxel, PartsList());
             }
             if (voxel != null)
             {
@@ -126,6 +126,17 @@ namespace FerramAerospaceResearch.FARTest
             GUI.DragWindow();
         }
 
+        List<Part> PartsList()
+        {
+            List<Part> list = new List<Part>();
+            list.Add(EditorLogic.RootPart);
+
+            for (int i = 0; i < list.Count; i++)
+                list.AddRange(list[i].children);
+
+            return list;
+        }
+
         void CreateVoxel(object partList)
         {
             voxel = null;
@@ -145,14 +156,14 @@ namespace FerramAerospaceResearch.FARTest
         {
             VoxelCrossSection[] crossSections = new VoxelCrossSection[voxel.MaxArrayLength];
             for (int i = 0; i < crossSections.Length; i++)
-                crossSections[i].includedParts = new HashSet<Part>();
+                crossSections[i].includedParts = new List<Part>();
 
             Vector3 vel = new Vector3(float.Parse(x), float.Parse(y), float.Parse(z));
 
             watch.Reset();
             watch.Start();
             int frontIndex, backIndex;
-            float sectionThickness, maxCrossSectionArea;
+            double sectionThickness, maxCrossSectionArea;
             voxel.CrossSectionData(crossSections, vel, out frontIndex, out backIndex, out sectionThickness, out maxCrossSectionArea);
             watch.Stop();
 

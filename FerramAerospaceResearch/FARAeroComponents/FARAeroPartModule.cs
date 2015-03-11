@@ -46,8 +46,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
     //Used to apply forces to vessel based on data from FARVesselAero
     public class FARAeroPartModule : PartModule
     {
-        float dragPerDynPres = 0;
-        float newDragPerDynPres = 0;
+        double dragPerDynPres = 0;
+        double newDragPerDynPres = 0;
 
         //float pertDelDragPerDynPres;   //change in drag per AoA from reference orientation
         //float newPertDelDragPerDynPres;
@@ -66,15 +66,15 @@ namespace FerramAerospaceResearch.FARAeroComponents
         //float pertDelMomentPerDynPres;      //moment created due to change in AoA
         //float newPertDelMomentPerDynPres;
 
-        float momentDampingPerDynPres;    //moment magnitude created by angular velocity changes
-        float newMomentDampingPerDynPres;
+        double momentDampingPerDynPres;    //moment magnitude created by angular velocity changes
+        double newMomentDampingPerDynPres;
 
         //Vector3 referenceVelVector;           //The velocity vector (normalized) for liftForces; used to control addition of pertDelLift
         //Vector3 newReferenceVelVector;
 
-        Vector3 localForceCenterPosition;
-        Vector3 newLocalForceCenterPosition;
-        float forceCenterScaling = 0;
+        Vector3d localForceCenterPosition;
+        Vector3d newLocalForceCenterPosition;
+        double forceCenterScaling = 0;
 
         public Matrix4x4 vesselToLocalTransform;
 
@@ -87,7 +87,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             part.minimum_drag = 0;
             part.angularDrag = 0;
             if (vessel)
-                vesselToLocalTransform = part.transform.worldToLocalMatrix * vessel.ReferenceTransform.localToWorldMatrix;
+                vesselToLocalTransform = (part.transform.worldToLocalMatrix * vessel.ReferenceTransform.localToWorldMatrix);
         }
 
 
@@ -95,40 +95,40 @@ namespace FerramAerospaceResearch.FARAeroComponents
         {
             if (FlightGlobals.ready && part && part.Rigidbody)
             {
-                if(vessel.atmDensity <= 0)
+                if (vessel.atmDensity <= 0)
                 {
                     dragPerDynPres = 0;
                     //pertDelDragPerDynPres = 0;
-                    liftForcePerDynPres = Vector3.zero;
+                    liftForcePerDynPres = Vector3d.zero;
                     //pertDelLiftPerDynPres = 0;
-                    momentPerDynPres = Vector3.zero;
+                    momentPerDynPres = Vector3d.zero;
                     //pertDelMomentPerDynPres = 0;
                     momentDampingPerDynPres = 0;
                     //referenceVelVector = Vector3.zero;
-                    localForceCenterPosition = Vector3.zero;
+                    localForceCenterPosition = Vector3d.zero;
 
                     newDragPerDynPres = 0;
                     //newPertDelDragPerDynPres = 0;
-                    newLiftForcePerDynPres = Vector3.zero;
+                    newLiftForcePerDynPres = Vector3d.zero;
                     //newPertDelLiftPerDynPres = 0;
-                    newMomentPerDynPres = Vector3.zero;
+                    newMomentPerDynPres = Vector3d.zero;
                     //newPertDelMomentPerDynPres = 0;
                     newMomentDampingPerDynPres = 0;
                     //newReferenceVelVector = Vector3.zero;
-                    newLocalForceCenterPosition = Vector3.zero;
+                    newLocalForceCenterPosition = Vector3d.zero;
 
                     return;
                 }
 
                 lock (this)
                 {
-                    Vector3 velocity = part.Rigidbody.velocity + Krakensbane.GetFrameVelocityV3f();
+                    Vector3d velocity = part.Rigidbody.velocity + Krakensbane.GetFrameVelocity();
 
                     if (velocity.x == 0 && velocity.y == 0 && velocity.z == 0)
                         return;
 
-                    Vector3 worldVelNorm = velocity.normalized;
-                    float dynPres = velocity.sqrMagnitude * 0.0005f * (float)vessel.atmDensity;     //In kPa
+                    Vector3d worldVelNorm = velocity.normalized;
+                    double dynPres = velocity.sqrMagnitude * 0.0005 * vessel.atmDensity;     //In kPa
 
                     if (dynPres == 0)
                         return;
@@ -140,12 +140,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         UpdateForces();
                     }
 
-                    Vector3 force = Vector3.zero;
-                    Vector3 pertLiftDir = Vector3.zero;
-                    Vector3 nomLift = Vector3.Cross(worldVelNorm, part.transform.localToWorldMatrix.MultiplyVector(liftForcePerDynPres));
+                    Vector3d force = Vector3d.zero;
+                    Vector3d pertLiftDir = Vector3d.zero;
+                    Vector3d nomLift = Vector3d.Cross(worldVelNorm, part.transform.localToWorldMatrix.MultiplyVector(liftForcePerDynPres));
 
                     force += nomLift;
-                    
+
                     //pertLiftDir = Vector3.Exclude(worldVelNorm, part.transform.localToWorldMatrix.MultiplyVector(referenceVelVector)).normalized;      //A vector of only the difference between the nominal velocity and the current velocity
                     //float angleOfAttack = (float)Math.Acos(Mathf.Clamp01(Vector3.Dot(worldVelNorm, part.transform.localToWorldMatrix.MultiplyVector(referenceVelVector))));
                     //angleOfAttack *= Math.Sign(Vector3.Dot(nomLift, pertLiftDir));
@@ -158,12 +158,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                     part.Rigidbody.AddForce(force);//, part.transform.localToWorldMatrix.MultiplyVector(localForceCenterPosition) + part.transform.position);
 
-                    Vector3 torque = part.transform.localToWorldMatrix.MultiplyVector(momentPerDynPres);
+                    Vector3d torque = part.transform.localToWorldMatrix.MultiplyVector(momentPerDynPres);
                     //torque += Vector3.Cross(pertLiftDir, worldVelNorm) * Math.Abs(angleOfAttack) * pertDelMomentPerDynPres;
                     if (dynPres > 5)
-                        torque -= momentDampingPerDynPres * part.Rigidbody.angularVelocity;// / velocity.magnitude;
+                        torque -= (float)momentDampingPerDynPres * part.Rigidbody.angularVelocity;// / velocity.magnitude;
 
-                    torque *= velocity.magnitude * (float)vessel.atmDensity * 0.0005f;
+                    torque *= velocity.magnitude * vessel.atmDensity * 0.0005f;
                     //torque *= dynPres;
                     part.Rigidbody.AddTorque(torque);
                 }
@@ -211,10 +211,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public void IncrementAeroForces(Vector3 velNormVector, Vector3 vesselForceCenter, float dragPerDynPres, Vector3 liftVecPerDynPres, Vector3 momentPerDynPres, float momentDampingPerDynPres)//float pertDragPerDynPres, float pertLiftPerDynPres, float pertMomentPerDynPres, float momentDampingPerDynPres)
         {
-            Vector3 localCenter = PartLocalForceCenter(vesselForceCenter);
-            Vector3 localNomLift = PartLocalForceVector(liftVecPerDynPres);
-            Vector3 localVelNorm = PartLocalForceVector(velNormVector);
-            Vector3 localMoment = PartLocalForceVector(momentPerDynPres);
+            Vector3 localCenter = vesselToLocalTransform.MultiplyPoint3x4(vesselForceCenter);
+            Vector3 localNomLift = vesselToLocalTransform.MultiplyVector(liftVecPerDynPres);
+            Vector3 localVelNorm = vesselToLocalTransform.MultiplyVector(velNormVector);
+            Vector3 localMoment = vesselToLocalTransform.MultiplyVector(momentPerDynPres);
 
             localCenter -= part.CoMOffset;
 
@@ -288,14 +288,5 @@ namespace FerramAerospaceResearch.FARAeroComponents
             newMomentDampingPerDynPres += momentDampingPerDynPres;
         }
 
-        private Vector3 PartLocalForceCenter(Vector3 vesselLocalForceCenter)
-        {
-            return vesselToLocalTransform.MultiplyPoint3x4(vesselLocalForceCenter);
-        }
-
-        private Vector3 PartLocalForceVector(Vector3 vesselLocalForceVector)
-        {
-            return vesselToLocalTransform.MultiplyVector(vesselLocalForceVector);
-        }
     }
 }
