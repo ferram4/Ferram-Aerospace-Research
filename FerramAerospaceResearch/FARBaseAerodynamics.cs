@@ -66,6 +66,10 @@ namespace ferram4
         //[KSPField(isPersistant = false, guiActive = true)]
         public double S;
 
+        [KSPField(isPersistant = false, guiActive = false, guiName = "S")]
+        public float displayS;
+
+
         [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
         public bool isShielded = false;
 
@@ -101,7 +105,7 @@ namespace ferram4
 
             if (!(this is FARControlSys))
             {
-                Fields["Cl"].guiActive = Fields["Cd"].guiActive = Fields["Cm"].guiActive = FARDebugValues.displayCoefficients;
+                Fields["displayS"].guiActive = Fields["Cl"].guiActive = Fields["Cd"].guiActive = Fields["Cm"].guiActive = FARDebugValues.displayCoefficients;
             }
         }
 
@@ -149,6 +153,7 @@ namespace ferram4
                     this.part.SetHighlight(false, true);
                     resetTinting = false;
                 }
+                displayS = (float)S;
             }
         }
 
