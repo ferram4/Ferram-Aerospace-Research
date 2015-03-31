@@ -191,7 +191,7 @@ namespace ferram4
             AttachNodeCdAdjust();                                     //In case the node properties somehow update with the node; also to deal with changes in part reference area
         }
 
-        public void UpdatePropertiesWithAnimation()
+        private void UpdatePropertiesWithAnimation()
         {
             if (anim)
             {
