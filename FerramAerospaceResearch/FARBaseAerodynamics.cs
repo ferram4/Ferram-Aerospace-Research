@@ -63,11 +63,11 @@ namespace ferram4
         //Reset tinting for this part and its children
         private bool resetTinting;
 
-        //[KSPField(isPersistant = false, guiActive = true)]
+        [KSPField(isPersistant = false, guiActive = false)]
         public double S;
 
-        [KSPField(isPersistant = false, guiActive = false, guiName = "S")]
-        public float displayS;
+        //[KSPField(isPersistant = false, guiActive = false, guiName = "S")]
+        //public float displayS;
 
 
         [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
@@ -105,7 +105,7 @@ namespace ferram4
 
             if (!(this is FARControlSys))
             {
-                Fields["displayS"].guiActive = Fields["Cl"].guiActive = Fields["Cd"].guiActive = Fields["Cm"].guiActive = FARDebugValues.displayCoefficients;
+                Fields["S"].guiActive = Fields["Cl"].guiActive = Fields["Cd"].guiActive = Fields["Cm"].guiActive = FARDebugValues.displayCoefficients;
             }
         }
 
@@ -153,7 +153,6 @@ namespace ferram4
                     this.part.SetHighlight(false, true);
                     resetTinting = false;
                 }
-                displayS = (float)S;
             }
         }
 
