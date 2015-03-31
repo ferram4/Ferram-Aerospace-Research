@@ -648,12 +648,14 @@ namespace ferram4
             Matrix4x4 base_matrix = WorldToPartUpMatrix(p);
 
             Transform[] ModelTransforms = PartModelTransformArray(p);
+            Dictionary<Part, Transform[]> partModelTransforms = new Dictionary<Part, Transform[]>();
 
             if (p.parent != null && p.GetComponent<FARPayloadFairingModule>() != null)
             {
                 foreach (Part q in p.symmetryCounterparts)
-                    if (q != p)
+                    if (q != p && q != null)
                     {
+                        partModelTransforms.Add(q, PartModelTransformArray(q));
                         //centerOfSymCounterparts += q.transform.position;
                         symmetryCounterpartNum++;
                     }
@@ -661,10 +663,10 @@ namespace ferram4
                 //centerOfSymCounterparts /= symmetryCounterpartNum;
 
                 foreach (Part q in p.symmetryCounterparts)
-                    if (q != p)
+                    if (q != p && q != null)
                     {
                         //Vector3 offset = q.transform.position - centerOfSymCounterparts;
-                        PartMaxBoundaries(q, Vector3.zero, WorldToPartUpMatrix(q), ModelTransforms);
+                        PartMaxBoundaries(q, Vector3.zero, base_matrix, partModelTransforms[q]);
                     }
             }
             PartMaxBoundaries(p, Vector3.zero, base_matrix, ModelTransforms);
@@ -682,10 +684,10 @@ namespace ferram4
             if (p.parent != null && p.GetComponent<FARPayloadFairingModule>() != null)
             {
                 foreach (Part q in p.symmetryCounterparts)
-                    if (q != p)
+                    if (q != p && q != null)
                     {
                         //Vector3 offset = q.transform.position - centerOfSymCounterparts;
-                        PartTaperBoundaries(q, toleranceForTaper, Vector3.zero, WorldToPartUpMatrix(q), ModelTransforms);
+                        PartTaperBoundaries(q, toleranceForTaper, Vector3.zero, base_matrix, partModelTransforms[q]);
                     }
             }
             PartTaperBoundaries(p, toleranceForTaper, Vector3.zero, base_matrix, ModelTransforms);
