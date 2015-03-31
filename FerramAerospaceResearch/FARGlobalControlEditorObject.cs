@@ -232,6 +232,8 @@ namespace ferram4
         {
             bool returnValue = false;
 
+            List<FARBasicDragModel> modulesToFullyUpdate = new List<FARBasicDragModel>();
+
             for (int i = 0; i < editorShip.Count; i++)
             {
                 Part p = editorShip[i];
@@ -324,6 +326,8 @@ namespace ferram4
                         updatedModules = true;
                     }
                 }
+                if (updatedModules)
+                    modulesToFullyUpdate.Add((p.Modules["FARBasicDragModel"]) as FARBasicDragModel);
 
                 returnValue |= updatedModules;
 
@@ -339,7 +343,13 @@ namespace ferram4
                 FARBasicDragModel d = p.GetComponent<FARBasicDragModel>();
                 if(d != null)
                 {
-                    d.UpdatePropertiesWithShapeChange();
+                    bool doFull = false;
+                    if (modulesToFullyUpdate.Contains(d))
+                    {
+                        modulesToFullyUpdate.Remove(d);
+                        doFull = true;
+                    }
+                    d.UpdatePropertiesWithShapeChange(doFull);
                 }
             }
             return returnValue;

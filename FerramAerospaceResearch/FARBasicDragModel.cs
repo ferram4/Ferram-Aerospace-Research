@@ -185,10 +185,11 @@ namespace ferram4
             bluntBodyMomentParameter = -2 * sinThetaMax * radiusCurvatureRatio / (3 * refAreaOfSphericalCap);
         }
 
-        public void UpdatePropertiesWithShapeChange()
+        public void UpdatePropertiesWithShapeChange(bool fullUpdate = true)
         {
-            FARAeroUtil.SetBasicDragModuleProperties(this.part);      //By doing this, we update the properties of this object
-            AttachNodeCdAdjust();                                     //In case the node properties somehow update with the node; also to deal with changes in part reference area
+            if(fullUpdate)
+                FARAeroUtil.SetBasicDragModuleProperties(this.part);    //By doing this, we update the properties of this object
+            AttachNodeCdAdjust();                                       //In case the node properties somehow update with the node; also to deal with changes in part reference area
         }
 
         private void UpdatePropertiesWithAnimation()
