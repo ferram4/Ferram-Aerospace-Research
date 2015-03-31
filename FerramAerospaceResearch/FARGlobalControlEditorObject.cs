@@ -339,7 +339,7 @@ namespace ferram4
                 FARBasicDragModel d = p.GetComponent<FARBasicDragModel>();
                 if(d != null)
                 {
-                    d.UpdatePropertiesWithShapeChange();
+                    d.UpdatePropertiesWithAnimation();
                 }
             }
             return returnValue;
