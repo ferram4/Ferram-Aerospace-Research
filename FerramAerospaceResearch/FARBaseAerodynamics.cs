@@ -63,8 +63,12 @@ namespace ferram4
         //Reset tinting for this part and its children
         private bool resetTinting;
 
-        //[KSPField(isPersistant = false, guiActive = true)]
+        [KSPField(isPersistant = false, guiActive = false)]
         public double S;
+
+        //[KSPField(isPersistant = false, guiActive = false, guiName = "S")]
+        //public float displayS;
+
 
         [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
         public bool isShielded = false;
@@ -101,7 +105,7 @@ namespace ferram4
 
             if (!(this is FARControlSys))
             {
-                Fields["Cl"].guiActive = Fields["Cd"].guiActive = Fields["Cm"].guiActive = FARDebugValues.displayCoefficients;
+                Fields["S"].guiActive = Fields["Cl"].guiActive = Fields["Cd"].guiActive = Fields["Cm"].guiActive = FARDebugValues.displayCoefficients;
             }
         }
 

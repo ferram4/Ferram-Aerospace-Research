@@ -141,6 +141,8 @@ namespace ferram4
 
         private void FindPartsWithoutFARModel(Vessel v)
         {
+            List<FARBasicDragModel> modulesToFullyUpdate = new List<FARBasicDragModel>();
+
             for (int i = 0; i < v.Parts.Count; i++)
             {
                 Part p = v.Parts[i];
@@ -238,6 +240,8 @@ namespace ferram4
                         updatedModules = true;
                     }
                 }
+                if (updatedModules)
+                    modulesToFullyUpdate.Add((p.Modules["FARBasicDragModel"]) as FARBasicDragModel);
 
                 //returnValue |= updatedModules;
 
@@ -251,7 +255,13 @@ namespace ferram4
                 FARBasicDragModel d = p.GetComponent<FARBasicDragModel>();
                 if(d != null)
                 {
-                    d.UpdatePropertiesWithShapeChange();
+                    bool doFull = false;
+                    if (modulesToFullyUpdate.Contains(d))
+                    {
+                        modulesToFullyUpdate.Remove(d);
+                        doFull = true;
+                    }
+                    d.UpdatePropertiesWithShapeChange(doFull);
                 }
             }
             UpdateFARPartModules(v);
