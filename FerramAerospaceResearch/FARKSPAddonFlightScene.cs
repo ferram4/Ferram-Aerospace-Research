@@ -65,6 +65,7 @@ namespace FerramAerospaceResearch
 
             GameEvents.onVesselGoOffRails.Add(VesselCreate);
             GameEvents.onVesselChange.Add(VesselCreate);
+            GameEvents.onVesselLoaded.Add(VesselCreate);
             GameEvents.onVesselCreate.Add(VesselCreate);
             GameEvents.onVesselWasModified.Add(VesselUpdate);
             GameEvents.onVesselDestroy.Add(VesselRemoveFromActive);
@@ -76,10 +77,13 @@ namespace FerramAerospaceResearch
                 {
                     Vessel v = pair.Key;
                     FARVesselAero aero = pair.Value;
-                    aero.waitingForUpdate = true;
-                    lock (aero)
+                    if (aero.ready)
                     {
-                        Monitor.Pulse(aero);
+                        aero.waitingForUpdate = true;
+                        lock (aero)
+                        {
+                            Monitor.Pulse(aero);
+                        }
                     }
                 }
         }
@@ -88,12 +92,16 @@ namespace FerramAerospaceResearch
         {
             if (v != null)
             {
-                if (v.gameObject.GetComponent<FARVesselAero>() == null)
+                FARVesselAero vAero = v.gameObject.GetComponent<FARVesselAero>();
+                if (vAero == null)
                 {
-                    FARVesselAero vAero = v.gameObject.AddComponent<FARVesselAero>();
-                    if (!loadedVessels.ContainsKey(v))
-                        loadedVessels.Add(v, vAero);
+                    vAero = v.gameObject.AddComponent<FARVesselAero>();
                 }
+                if (!loadedVessels.ContainsKey(v))
+                    loadedVessels.Add(v, vAero);
+                else
+                    loadedVessels[v] = vAero;
+                vAero.VesselUpdate();
             }
         }
         //This should be a static on FARVesselAero, but KSP doesn't like that
@@ -118,6 +126,7 @@ namespace FerramAerospaceResearch
         {
             GameEvents.onVesselGoOffRails.Remove(VesselCreate);
             GameEvents.onVesselChange.Remove(VesselCreate);
+            GameEvents.onVesselLoaded.Remove(VesselCreate);
             GameEvents.onVesselCreate.Remove(VesselCreate);
             GameEvents.onVesselWasModified.Remove(VesselUpdate);
             GameEvents.onVesselDestroy.Remove(VesselRemoveFromActive);

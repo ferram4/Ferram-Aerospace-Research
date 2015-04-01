@@ -122,13 +122,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 lock (this)
                 {
-                    Vector3d velocity = part.Rigidbody.velocity + Krakensbane.GetFrameVelocity();
+                    Vector3 velocity = part.Rigidbody.velocity + Krakensbane.GetFrameVelocityV3f();
 
                     if (velocity.x == 0 && velocity.y == 0 && velocity.z == 0)
                         return;
 
                     Vector3d worldVelNorm = velocity.normalized;
-                    double dynPres = velocity.sqrMagnitude * 0.0005 * vessel.atmDensity;     //In kPa
+                    float dynPres = velocity.sqrMagnitude * 0.0005f * (float)vessel.atmDensity;     //In kPa
 
                     if (dynPres == 0)
                         return;
@@ -140,9 +140,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         UpdateForces();
                     }
 
-                    Vector3d force = Vector3d.zero;
-                    Vector3d pertLiftDir = Vector3d.zero;
-                    Vector3d nomLift = Vector3d.Cross(worldVelNorm, part.transform.localToWorldMatrix.MultiplyVector(liftForcePerDynPres));
+                    Vector3 force = Vector3.zero;
+                    Vector3 pertLiftDir = Vector3.zero;
+                    Vector3 nomLift = Vector3.Cross(worldVelNorm, part.transform.localToWorldMatrix.MultiplyVector(liftForcePerDynPres));
 
                     force += nomLift;
 
@@ -158,12 +158,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                     part.Rigidbody.AddForce(force);//, part.transform.localToWorldMatrix.MultiplyVector(localForceCenterPosition) + part.transform.position);
 
-                    Vector3d torque = part.transform.localToWorldMatrix.MultiplyVector(momentPerDynPres);
+                    Vector3 torque = part.transform.localToWorldMatrix.MultiplyVector(momentPerDynPres) * dynPres;
                     //torque += Vector3.Cross(pertLiftDir, worldVelNorm) * Math.Abs(angleOfAttack) * pertDelMomentPerDynPres;
                     if (dynPres > 5)
-                        torque -= (float)momentDampingPerDynPres * part.Rigidbody.angularVelocity;// / velocity.magnitude;
+                        torque -= (float)momentDampingPerDynPres * part.Rigidbody.angularVelocity * velocity.magnitude * (float)vessel.atmDensity * 0.0005f;// / velocity.magnitude;
 
-                    torque *= velocity.magnitude * vessel.atmDensity * 0.0005f;
                     //torque *= dynPres;
                     part.Rigidbody.AddTorque(torque);
                 }
@@ -216,7 +215,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             Vector3 localVelNorm = vesselToLocalTransform.MultiplyVector(velNormVector);
             Vector3 localMoment = vesselToLocalTransform.MultiplyVector(momentPerDynPres);
 
-            localCenter -= part.CoMOffset;
+            //localCenter -= part.CoMOffset;
 
             float localCenterMag = localCenter.magnitude;
 
@@ -224,7 +223,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             //IncrementPerturbationDragPerDynPres(pertDragPerDynPres, localVelNorm, localCenter, localCenterMag);
             IncrementNominalLiftPerDynPres(localNomLift, localVelNorm, localCenter);
             //IncrementPerturbationLiftPerDynPres(pertLiftPerDynPres, localCenterMag, localVelNorm, localCenter);
-            IncrementMomentPerDynPres(localMoment);
+            IncrementMomentPerDynPres(localMoment, localVelNorm, localCenter);
             //IncrementPertMomentPerDynPres(pertMomentPerDynPres);
             IncrementMomentDampingPerDynPres(momentDampingPerDynPres);
 
@@ -273,9 +272,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
             newMomentDampingPerDynPres += Vector3.Dot(localForceCenter, velNormVector) * localForceCenterMag * pertLiftInc;
         }*/
 
-        private void IncrementMomentPerDynPres(Vector3 momentPerDynPres)
+        private void IncrementMomentPerDynPres(Vector3 momentPerDynPres, Vector3 velNormVector, Vector3 localForceCenter)
         {
             newMomentPerDynPres += momentPerDynPres;
+            Vector3 liftInc = Vector3.Cross(localForceCenter, momentPerDynPres);
+            newLiftForcePerDynPres += Vector3.Cross(liftInc, velNormVector);
         }
 
         /*private void IncrementPertMomentPerDynPres(float pertMomentPerDynPres)

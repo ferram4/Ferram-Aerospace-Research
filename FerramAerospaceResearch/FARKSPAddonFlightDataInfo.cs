@@ -12,7 +12,8 @@ namespace FerramAerospaceResearch
             FARAeroStress.LoadStressTemplates();
             FARPartClassification.LoadClassificationTemplates();
             FARAeroUtil.LoadAeroDataFromConfig();
-            GameObject.Destroy(this.gameObject);
+            FARDebugOptions.LoadConfigs();
+            //GameObject.Destroy(this.gameObject);
         }
     }
 }

@@ -1017,14 +1017,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 else if (i == backIndex)
                 {
                     crossSections[i].areaDeriv2ToNextSection = 0;
-                    crossSections[i - 1].removedArea = crossSections[i - 1].area + crossSections[i].additionalUnshadowedArea - crossSections[i].area;
-                    if (crossSections[i - 1].removedArea > 0)
+                    crossSections[i].removedArea = crossSections[i - 1].area + crossSections[i].additionalUnshadowedArea - crossSections[i].area;
+                    if (crossSections[i].removedArea > 0)
                     {
-                        crossSections[i - 1].removedCentroid = (crossSections[i - 1].centroid * crossSections[i - 1].area + crossSections[i].additonalUnshadowedCentroid * crossSections[i].additionalUnshadowedArea
-                            - crossSections[i].centroid * crossSections[i].area) / crossSections[i - 1].removedArea;
+                        crossSections[i].removedCentroid = (crossSections[i - 1].centroid * crossSections[i - 1].area + crossSections[i].additonalUnshadowedCentroid * crossSections[i].additionalUnshadowedArea
+                            - crossSections[i].centroid * crossSections[i].area) / crossSections[i].removedArea;
                     }
                     else
-                        crossSections[i - 1].removedArea = 0;
+                        crossSections[i].removedArea = 0;
                 }
                 else
                 {
@@ -1032,20 +1032,20 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     double nextArea = crossSections[i + 1].area;
                     crossSections[i].areaDeriv2ToNextSection = 2 * (nextArea + curArea - 2 * Math.Sqrt(nextArea * curArea)) * invStep * invStep;
                     crossSections[i].removedArea = crossSections[i - 1].area + crossSections[i].additionalUnshadowedArea - curArea;
-                    if (crossSections[i - 1].removedArea > 0)
+                    if (crossSections[i].removedArea > 0)
                     {
-                        crossSections[i - 1].removedCentroid = (crossSections[i - 1].centroid * crossSections[i - 1].area + crossSections[i].additonalUnshadowedCentroid * crossSections[i].additionalUnshadowedArea
-                            - crossSections[i].centroid * crossSections[i].area) / crossSections[i - 1].removedArea;
+                        crossSections[i].removedCentroid = (crossSections[i - 1].centroid * crossSections[i - 1].area + crossSections[i].additonalUnshadowedCentroid * crossSections[i].additionalUnshadowedArea
+                            - crossSections[i].centroid * crossSections[i].area) / crossSections[i].removedArea;
                     }
                     else
                         crossSections[i - 1].removedArea = 0;
                 }
                 if(i > frontIndex)
                 {
-                    if (crossSections[i - 1].removedArea <= 0)
-                        crossSections[i - 1].removedCentroid = crossSections[i].removedCentroid;
-                    if (crossSections[i - 1].additionalUnshadowedArea <= 0)
-                        crossSections[i - 1].additonalUnshadowedCentroid = crossSections[i].additonalUnshadowedCentroid;
+                    if (crossSections[i].removedArea <= 0)
+                        crossSections[i].removedCentroid = crossSections[i].removedCentroid;
+                    if (crossSections[i].additionalUnshadowedArea <= 0)
+                        crossSections[i].additonalUnshadowedCentroid = crossSections[i].additonalUnshadowedCentroid;
                 }
                 if (crossSections[i].area > maxCrossSectionArea)
                     maxCrossSectionArea = crossSections[i].area;
