@@ -71,8 +71,6 @@
     <Compile Include="FARCargoBayModule.cs" />
     <Compile Include="FARCenterQuery.cs" />
     <Compile Include="FARControllableSurface.cs" />
-    <Compile Include="FARPartGeoUtil\CrossSectionCurve.cs" />
-    <Compile Include="FARPartGeoUtil\CrossSectionCurveGenerator.cs" />
     <Compile Include="FARDebugOptions.cs" />
     <Compile Include="FAREditorAeroSim.cs" />
     <Compile Include="FAREditorGUI.cs" />
@@ -86,7 +84,6 @@
     <Compile Include="FARMatrix.cs" />
     <Compile Include="FARPartClassification.cs" />
     <Compile Include="FARPartExtensions.cs" />
-    <Compile Include="FARPartGeoUtil\PartCrossSection.cs" />
     <Compile Include="FARPartModule.cs" />
     <Compile Include="FARPayloadFairingModule.cs" />
     <Compile Include="FARPM.cs" />
@@ -95,7 +92,6 @@
     <Compile Include="FARWingAerodynamicModel.cs" />
     <Compile Include="FARWingInteraction.cs" />
     <Compile Include="InstallChecker.cs" />
-    <Compile Include="FARCollections\LLRedBlackTree.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ToolbarWrapper.cs" />
   </ItemGroup>
