@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.14.6
+Ferram Aerospace Research v0.14.7
 =========================
 
 Aerodynamics model for Kerbal Space Program
@@ -149,6 +149,17 @@ For both of these, set MaxDrag and MinDrag to 0
 
 CHANGELOG
 =======================================================
+
+0.14.7V------------------------------------  
+Features:
+Raised stalled-wing drag up to proper maximum levels  
+Adjusted intake drag to be lower  
+Improved method of dealing with very high vertex count parts for geometry purposes  
+Upgraded to MM 2.5.13
+
+Bugfixes:
+Fixed an issue preventing loading custom-defined FARBasicDragModels
+
 
 0.14.6V------------------------------------  
 Features:  
