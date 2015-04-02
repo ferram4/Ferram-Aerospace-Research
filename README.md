@@ -151,13 +151,13 @@ CHANGELOG
 =======================================================
 
 0.14.7V------------------------------------  
-Features:
+Features:  
 Raised stalled-wing drag up to proper maximum levels  
 Adjusted intake drag to be lower  
 Improved method of dealing with very high vertex count parts for geometry purposes  
 Upgraded to MM 2.5.13
 
-Bugfixes:
+Bugfixes:  
 Fixed an issue preventing loading custom-defined FARBasicDragModels
 
 
