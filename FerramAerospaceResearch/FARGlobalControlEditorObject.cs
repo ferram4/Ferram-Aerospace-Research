@@ -343,13 +343,13 @@ namespace ferram4
                 FARBasicDragModel d = p.GetComponent<FARBasicDragModel>();
                 if(d != null)
                 {
-                    bool doFull = false;
                     if (modulesToFullyUpdate.Contains(d))
                     {
                         modulesToFullyUpdate.Remove(d);
-                        doFull = true;
+                        d.AttachNodeCdAdjust();
                     }
-                    d.UpdatePropertiesWithShapeChange(doFull);
+                    else
+                        d.UpdatePropertiesWithShapeChange();
                 }
             }
             return returnValue;

@@ -460,7 +460,7 @@ namespace ferram4
                 return Vector3d.zero;
         }
 
-        private void AttachNodeCdAdjust()
+        public void AttachNodeCdAdjust()
         {
 
             if (part.Modules.Contains("FARPayloadFairingModule"))       //This doesn't apply blunt drag drag to fairing parts if one of their "exempt" attach nodes is used, indicating attached fairings
