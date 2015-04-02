@@ -155,7 +155,8 @@ Features:
 Raised stalled-wing drag up to proper maximum levels  
 Adjusted intake drag to be lower  
 Improved method of dealing with very high vertex count parts for geometry purposes  
-Upgraded to MM 2.5.13
+Upgraded to MM 2.5.13  
+Included FAR Colibri, a VTOL by Tetryds as an example craft  
 
 Bugfixes:  
 Fixed an issue preventing loading custom-defined FARBasicDragModels
