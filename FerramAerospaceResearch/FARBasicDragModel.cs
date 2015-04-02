@@ -185,11 +185,10 @@ namespace ferram4
             bluntBodyMomentParameter = -2 * sinThetaMax * radiusCurvatureRatio / (3 * refAreaOfSphericalCap);
         }
 
-        public void UpdatePropertiesWithShapeChange(bool fullUpdate = true)
+        public void UpdatePropertiesWithShapeChange()
         {
-            if(fullUpdate)
-                FARAeroUtil.SetBasicDragModuleProperties(this.part);    //By doing this, we update the properties of this object
-            AttachNodeCdAdjust();                                       //In case the node properties somehow update with the node; also to deal with changes in part reference area
+            FARAeroUtil.SetBasicDragModuleProperties(this.part);    //By doing this, we update the properties of this object
+            AttachNodeCdAdjust();                                   //In case the node properties somehow update with the node; also to deal with changes in part reference area
         }
 
         private void UpdatePropertiesWithAnimation()
@@ -460,7 +459,7 @@ namespace ferram4
                 return Vector3d.zero;
         }
 
-        private void AttachNodeCdAdjust()
+        public void AttachNodeCdAdjust()
         {
 
             if (part.Modules.Contains("FARPayloadFairingModule"))       //This doesn't apply blunt drag drag to fairing parts if one of their "exempt" attach nodes is used, indicating attached fairings

@@ -259,9 +259,10 @@ namespace ferram4
                     if (modulesToFullyUpdate.Contains(d))
                     {
                         modulesToFullyUpdate.Remove(d);
-                        doFull = true;
+                        d.AttachNodeCdAdjust();
                     }
-                    d.UpdatePropertiesWithShapeChange(doFull);
+                    else
+                        d.UpdatePropertiesWithShapeChange();
                 }
             }
             UpdateFARPartModules(v);
