@@ -37,6 +37,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Linq;
 using UnityEngine;
 using FerramAerospaceResearch.FARPartGeometry;
 using ferram4;
@@ -52,50 +53,71 @@ namespace FerramAerospaceResearch.FARAeroComponents
         VehicleVoxel _voxel = null;
         VoxelCrossSection[] _vehicleCrossSection = null;
 
-        Thread _runtimeThread = null;
-        bool _threadDone = false;
-        bool updateModules = true;
-        internal bool waitingForUpdate = false;
         internal bool ready = false;
 
-        Dictionary<Part, FARAeroPartModule> aeroModules = new Dictionary<Part, FARAeroPartModule>();
-        double machNumber = 0;
+        double length = 0;
+        List<FARAeroPartModule> _currentAeroModules;
+        List<FARAeroPartModule> _newAeroModules;
+
+        List<FARAeroSection> _currentAeroSections;
+        List<FARAeroSection> _newAeroSections;
 
         private void Start()
         {
             _vessel = gameObject.GetComponent<Vessel>();
-            //VesselUpdate();
+            VesselUpdate();
             this.enabled = true;
+            for(int i = 0; i < _vessel.Parts.Count; i++)
+            {
+                Part p = _vessel.Parts[i];
+                p.maximum_drag = 0;
+                p.minimum_drag = 0;
+                p.angularDrag = 0;
+            }
         }
 
         private void FixedUpdate()
         {
-            if (FlightGlobals.ready && _runtimeThread != null)
+            if (ready)
             {
-                machNumber = FARAeroUtil.GetMachNumber(_vessel.mainBody, _vessel.altitude, _vessel.srfSpeed);
-                if (waitingForUpdate)
+                _currentAeroSections = _newAeroSections;
+                _newAeroSections = null;
+
+                _currentAeroModules = _newAeroModules;
+                _newAeroModules = null;
+                ready = false;
+            } 
+            
+            if (FlightGlobals.ready && _currentAeroSections != null)
+            {
+                float atmDensity = (float)_vessel.atmDensity;
+
+                if (atmDensity <= 0)
+                    return;
+
+                float machNumber = (float)FARAeroUtil.GetMachNumber(_vessel.mainBody, _vessel.altitude, _vessel.srfSpeed);
+                float skinFrictionDragCoefficient = (float)FARAeroUtil.SkinFrictionDrag(_vessel.atmDensity, length, _vessel.srfSpeed, machNumber, FlightGlobals.getExternalTemperature((float)_vessel.altitude, _vessel.mainBody) + 273.15f);
+
+                Vector3 frameVel = Krakensbane.GetFrameVelocityV3f();
+
+                for (int i = 0; i < _currentAeroModules.Count; i++)
                 {
-                    while (!updateModules) ;
-                    foreach (KeyValuePair<Part, FARAeroPartModule> pair in aeroModules)
-                    {
-                        if (pair.Value)
-                        {
-
-                            pair.Value.updateForces = updateModules;
-                            pair.Value.AeroForceUpdate();
-                        }
-                    }
-                    updateModules = false;
-                    waitingForUpdate = false;
+                    FARAeroPartModule m = _currentAeroModules[i];
+                    if (m != null)
+                        m.UpdateVelocity(frameVel);
                 }
-            }
-        }
+                
+                for (int i = 0; i < _currentAeroSections.Count; i++)
+                    _currentAeroSections[i].CalculateAeroForces(atmDensity, machNumber, skinFrictionDragCoefficient);
 
-        private void OnDestroy()
-        {
-            _threadDone = true;
-            lock (_vessel)
-                Monitor.Pulse(_vessel);
+                for (int i = 0; i < _currentAeroModules.Count; i++)
+                {
+                    FARAeroPartModule m = _currentAeroModules[i];
+                    if (m != null)
+                        m.ApplyForces();
+                }
+
+            }
         }
 
         public void VesselUpdate()
@@ -108,24 +130,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
             ThreadPool.QueueUserWorkItem(CreateVoxel);
 
             Debug.Log("Updating vessel voxel for " + _vessel.vesselName);
-
-            GetNewAeroModules();
-        }
-
-        private void GetNewAeroModules()
-        {
-            lock (_vessel)
-            {
-                aeroModules.Clear();
-                foreach (Part p in _vessel.Parts)
-                {
-                    FARAeroPartModule m = p.GetComponent<FARAeroPartModule>();
-                    if (m != null)
-                    {
-                        aeroModules.Add(p, m);
-                    }
-                }
-            }
         }
 
         //TODO: have this grab from a config file
@@ -139,41 +143,23 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         private void CreateVoxel(object nullObj)
         {
-            VehicleVoxel newvoxel = new VehicleVoxel(_vessel.parts, _voxelCount, true, true);
-
-            lock (this)
+            try
             {
+                VehicleVoxel newvoxel = new VehicleVoxel(_vessel.parts, _voxelCount, true, true);
+
                 _vehicleCrossSection = new VoxelCrossSection[newvoxel.MaxArrayLength];
                 for (int i = 0; i < _vehicleCrossSection.Length; i++)
                     _vehicleCrossSection[i].includedParts = new List<Part>();
 
                 _voxel = newvoxel;
-            }
 
-            if (_runtimeThread == null)
-            {
-                _runtimeThread = new Thread(UpdateVesselAeroThreadLoop);
-                _runtimeThread.Start();
-            }
-            ready = true;
-        }
 
-        private void UpdateVesselAeroThreadLoop()
-        {
-            while (!_threadDone)
+                CalculateVesselAeroProperties();
+                ready = true;
+            }
+            catch(Exception e)
             {
-                lock (this)
-                {
-                    Monitor.Wait(this);
-                    try
-                    {
-                        VesselAeroDataUpdate();
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogException(e);
-                    }
-                }
+                Debug.LogException(e);
             }
         }
 
@@ -200,54 +186,126 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             double transonicWaveDragFactor = -sectionThickness * sectionThickness / (2 * Math.PI);
 
+            length = sectionThickness * numSections;
+
+            _newAeroSections = new List<FARAeroSection>();
+            HashSet<FARAeroPartModule> tmpAeroModules = new HashSet<FARAeroPartModule>();
+
             for (int i = 0; i <= numSections; i++)  //index in the cross sections
             {
                 int index = i + front;      //index along the actual body
 
-                double prevArea, curArea;
+                double prevArea, curArea, nextArea;
                
-
-                FloatCurve xForcePressureAoA0 = new FloatCurve();
-                FloatCurve xForcePressureAoA180 = new FloatCurve();
-
-                xForcePressureAoA0.Add((float)criticalMachNumber, 0f, 0f, 0f);
-                xForcePressureAoA180.Add((float)criticalMachNumber, 0f, 0f, 0f);
-
-                VoxelCrossSection thisSection = _vehicleCrossSection[index];
-
-                float sonicWaveDrag = (float)CalculateTransonicWaveDrag(i, index, numSections, front, sectionThickness * sectionThickness);
-
-                xForcePressureAoA0.Add(1f, sonicWaveDrag, 0f, 0f);
-                xForcePressureAoA180.Add(1f, sonicWaveDrag, 0f, 0f);
-
                 curArea = _vehicleCrossSection[index].area;
                 if (i == 0)
                     prevArea = 0;
                 else
                     prevArea = _vehicleCrossSection[index - 1].area;
+                if (i == numSections)
+                    nextArea = 0;
+                else
+                    nextArea = _vehicleCrossSection[index + 1].area;
 
-                float hypersonicDrag;
-                if(curArea > prevArea)
+                FloatCurve xForcePressureAoA0 = new FloatCurve();
+                FloatCurve xForcePressureAoA180 = new FloatCurve();
+
+                FloatCurve xForceSkinFriction = new FloatCurve();
+
+                //Potential and Viscous lift calcs
+                float areaChange = (float)(curArea - prevArea);
+                float areaChangeMax = (float)Math.Min(curArea, prevArea) * 0.15f;
+
+                float sonicBaseDrag = 0.21f;
+
+                sonicBaseDrag *= areaChange;    //area base drag acts over
+
+                if (areaChange > areaChangeMax)
+                    areaChange = areaChangeMax;
+                else if (areaChange < -areaChangeMax)
+                    areaChange = -areaChangeMax;
+                else
+                    sonicBaseDrag *= Math.Abs(areaChange / areaChangeMax);      //some scaling for small changes in cross-section
+
+                float viscCrossflowDrag = (float)(Math.Sqrt(curArea / Math.PI) * sectionThickness * 2.4d);
+
+                double surfaceArea = 2d * Math.Sqrt(curArea * Math.PI); //section circumference
+                surfaceArea *= sectionThickness;    //section surface area for viscous effects
+
+                xForceSkinFriction.Add(0f, (float)(surfaceArea * viscousDragFactor), 0, 0);   //subsonic incomp visc drag
+                xForceSkinFriction.Add(1f, (float)(surfaceArea * viscousDragFactor), 0, 0);   //transonic visc drag
+                xForceSkinFriction.Add(2f, (float)surfaceArea, 0, 0);                     //above Mach 1.4, visc is purely surface drag, no pressure-related components simulated
+
+                float sonicWaveDrag = (float)CalculateTransonicWaveDrag(i, index, numSections, front, sectionThickness * sectionThickness);
+                float hypersonicDragForward = (float)CalculateHypersonicDrag(prevArea, curArea, sectionThickness);
+                float hypersonicDragBackward = (float)CalculateHypersonicDrag(nextArea, curArea, sectionThickness);
+
+                if (hypersonicDragForward > 0)
+                    hypersonicDragForward = 0;
+                if (hypersonicDragBackward > 0)
+                    hypersonicDragBackward = 0;
+
+                xForcePressureAoA0.Add(25f, hypersonicDragForward, 0f, 0f);
+                xForcePressureAoA180.Add(25f, -hypersonicDragBackward, 0f, 0f);
+
+                if (sonicBaseDrag > 0)      //occurs with increase in area; force applied at 180 AoA
                 {
-                    hypersonicDrag = (float)CalculateHypersonicDrag(prevArea, curArea, sectionThickness);
-                    xForcePressureAoA0.Add(5f, 0f, 0f, 0f);
-                    xForcePressureAoA180.Add(5f, sonicWaveDrag, 0f, 0f);
+                    xForcePressureAoA0.Add((float)criticalMachNumber, hypersonicDragForward * 0.4f, 0f, 0f);    //hypersonic drag used as a proxy for effects due to flow separation
+                    xForcePressureAoA180.Add((float)criticalMachNumber, (sonicBaseDrag * 0.1f - hypersonicDragBackward * 0.4f), 0f, 0f);
+
+                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.6f, 0f, 0f);     //positive is force forward; negative is force backward
+                    xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.6f + sonicBaseDrag, 0f, 0f);
                 }
-                else if (curArea < prevArea)
+                else if (sonicBaseDrag < 0)
                 {
-                    hypersonicDrag = (float)CalculateHypersonicDrag(curArea, prevArea, sectionThickness);
-                    xForcePressureAoA0.Add(5f, sonicWaveDrag, 0f, 0f);
-                    xForcePressureAoA180.Add(5f, 0f, 0f, 0f);
+                    xForcePressureAoA0.Add((float)criticalMachNumber, (sonicBaseDrag * 0.1f + hypersonicDragForward * 0.4f), 0f, 0f);
+                    xForcePressureAoA180.Add((float)criticalMachNumber, -hypersonicDragBackward * 0.4f, 0f, 0f);
+
+                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.6f + sonicBaseDrag, 0f, 0f);     //positive is force forward; negative is force backward
+                    xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.6f, 0f, 0f);
                 }
                 else
                 {
-                    xForcePressureAoA0.Add(5f, 0f, 0f, 0f);
-                    xForcePressureAoA180.Add(5f, 0f, 0f, 0f);
+                    xForcePressureAoA0.Add((float)criticalMachNumber, hypersonicDragForward * 0.4f, 0f, 0f);
+                    xForcePressureAoA180.Add((float)criticalMachNumber, -hypersonicDragBackward * 0.4f, 0f, 0f);
+
+                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.6f, 0f, 0f);     //positive is force forward; negative is force backward
+                    xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.6f, 0f, 0f);
                 }
 
-                float areaChange = (float)(curArea - prevArea);
-                float viscCrossflowDrag = (float)(Math.Sqrt(curArea / Math.PI) * sectionThickness * 2.4d);
+                Vector3 xRefVector;
+                if (index == front || index == back)
+                    xRefVector = Vector3.up;
+                else
+                    xRefVector = (Vector3)(_vehicleCrossSection[index - 1].centroid - _vehicleCrossSection[index + 1].centroid).normalized;
+
+                Vector3 nRefVector = Vector3.forward;
+
+                Vector3 centroid = _vessel.transform.localToWorldMatrix.MultiplyPoint3x4(_vehicleCrossSection[index].centroid);
+                xRefVector = _vessel.transform.localToWorldMatrix.MultiplyVector(xRefVector);
+                nRefVector = _vessel.transform.localToWorldMatrix.MultiplyVector(nRefVector);
+
+                List<Part> includedParts = _vehicleCrossSection[index].includedParts;
+                List<FARAeroPartModule> includedModules = new List<FARAeroPartModule>();
+                List<float> weighting = new List<float>();
+
+                for (int j = 0; j < includedParts.Count;j++)
+                {
+                    FARAeroPartModule m = includedParts[j].GetComponent<FARAeroPartModule>();
+                    if (m != null)
+                        includedModules.Add(m);
+                }
+                for (int j = 0; j < includedModules.Count; j++)
+                {
+                    weighting.Add(1 / (float)includedModules.Count);
+                }
+                FARAeroSection section = new FARAeroSection(xForcePressureAoA0, xForcePressureAoA180, xForceSkinFriction, areaChange, viscCrossflowDrag,
+                    centroid, xRefVector, nRefVector, includedModules, weighting);
+
+                _newAeroSections.Add(section);
+                tmpAeroModules.UnionWith(includedModules);
             }
+            _newAeroModules = tmpAeroModules.ToList();
         }
 
         private double CalculateHypersonicDrag(double lowArea, double highArea, double sectionThickness)
@@ -256,8 +314,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             drag = drag / (drag + sectionThickness * sectionThickness * Math.PI);
             drag *= drag * drag;
             drag = Math.Sqrt(drag);
-            drag *= (lowArea - highArea);
-            return drag;
+            drag *= (lowArea - highArea) * 2;
+            return drag;        //force is negative 
         }
 
         private double CalculateTransonicWaveDrag(int i, int index, int numSections, int front, double sectionThicknessSq)
@@ -266,7 +324,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             double drag = 0;
             int limDoubleDrag = Math.Min(i, numSections - i);
 
-            for (int j = 0; j <= numSections; j++)      //section of influence from ahead and behind
+            for (int j = 0; j <= limDoubleDrag; j++)      //section of influence from ahead and behind
             {
                 double thisLj = (j + 0.5) * Math.Log(j + 0.5);
                 double tmp = thisLj;
@@ -317,8 +375,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
         {
             if (finenessRatio > 10)
                 return 0.975;
-            if (finenessRatio < 2)
-                return 0.5;
+            if (finenessRatio < 1.5)
+                return 0.335;
             if(finenessRatio > 4)
             {
                 if (finenessRatio > 6)
@@ -327,225 +385,244 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 return 0.025 * finenessRatio + 0.8;
             }
             else if( finenessRatio < 3)
-                return 0.07 * finenessRatio + 0.62;
+                return 0.33 * finenessRatio - 0.16;
 
-            return 0.33 * finenessRatio - 0.16;
+            return 0.07 * finenessRatio + 0.62;
         }
 
-        private void VesselAeroDataUpdate()
-        {
-            //Vector3 angVelDiff = _vessel.angularVelocity - lastVesselAngVel;
-            //Quaternion angVelRot = Quaternion.AngleAxis(-(_vessel.angularVelocity.magnitude * TimeWarp.fixedDeltaTime) * Mathf.Rad2Deg * 1.4f, _vessel.angularVelocity);
-            Vector3d velocity = _vessel.ReferenceTransform.worldToLocalMatrix.MultiplyVector(_vessel.srf_velocity);
-            //lastVesselAngVel = _vessel.angularVelocity;
-            if ((velocity.x != 0 || velocity.y != 0 || velocity.z != 0) && _vessel.atmDensity > 0)
-            {
-                int front, back;
-                double sectionThickness, maxCrossSectionArea;
+        /*private void UpdateVesselAeroThreadLoop()
+       {
+           while (!_threadDone)
+           {
+               lock (this)
+               {
+                   Monitor.Wait(this);
+                   try
+                   {
+                       VesselAeroDataUpdate();
+                   }
+                   catch (Exception e)
+                   {
+                       Debug.LogException(e);
+                   }
+               }
+           }
+       }*/
+        /*private void VesselAeroDataUpdate()
+         {
+             //Vector3 angVelDiff = _vessel.angularVelocity - lastVesselAngVel;
+             //Quaternion angVelRot = Quaternion.AngleAxis(-(_vessel.angularVelocity.magnitude * TimeWarp.fixedDeltaTime) * Mathf.Rad2Deg * 1.4f, _vessel.angularVelocity);
+             Vector3d velocity = _vessel.ReferenceTransform.worldToLocalMatrix.MultiplyVector(_vessel.srf_velocity);
+             //lastVesselAngVel = _vessel.angularVelocity;
+             if ((velocity.x != 0 || velocity.y != 0 || velocity.z != 0) && _vessel.atmDensity > 0)
+             {
+                 int front, back;
+                 double sectionThickness, maxCrossSectionArea;
 
-                _voxel.CrossSectionData(_vehicleCrossSection, velocity, out front, out back, out sectionThickness, out maxCrossSectionArea);
+                 _voxel.CrossSectionData(_vehicleCrossSection, velocity, out front, out back, out sectionThickness, out maxCrossSectionArea);
 
-                Vector3d velNorm = velocity.normalized;
+                 Vector3d velNorm = velocity.normalized;
 
-                double lastLj = 0;
-                //float vehicleLength = sectionThickness * Math.Abs(front - back);
-                //float nonZeroCrossSectionEnd = 0;
+                 double lastLj = 0;
+                 //float vehicleLength = sectionThickness * Math.Abs(front - back);
+                 //float nonZeroCrossSectionEnd = 0;
 
-                double skinFrictionDragCoefficient = FARAeroUtil.SkinFrictionDrag(_vessel.atmDensity, sectionThickness * (back - front), _vessel.srfSpeed, machNumber, FlightGlobals.getExternalTemperature((float)_vessel.altitude, _vessel.mainBody) + 273.15f);
-                double invMaxRadFactor = 1f / Math.Sqrt(maxCrossSectionArea / Math.PI);
+                 double skinFrictionDragCoefficient = FARAeroUtil.SkinFrictionDrag(_vessel.atmDensity, sectionThickness * (back - front), _vessel.srfSpeed, machNumber, FlightGlobals.getExternalTemperature((float)_vessel.altitude, _vessel.mainBody) + 273.15f);
+                 double invMaxRadFactor = 1f / Math.Sqrt(maxCrossSectionArea / Math.PI);
 
-                double finenessRatio = sectionThickness * (back - front) * 0.5 * invMaxRadFactor;       //vehicle length / max diameter, as calculated from sect thickness * num sections / (2 * max radius) 
+                 double finenessRatio = sectionThickness * (back - front) * 0.5 * invMaxRadFactor;       //vehicle length / max diameter, as calculated from sect thickness * num sections / (2 * max radius) 
 
-                //double viscousDrag = 0;          //used in calculating base drag at any point
+                 //double viscousDrag = 0;          //used in calculating base drag at any point
 
-                //skin friction and pressure drag for a body, taken from 1978 USAF Stability And Control DATCOM, Section 4.2.3.1, Paragraph A
-                double viscousDragFactor = 0;
-                if (machNumber < 1.2)
-                    viscousDragFactor = 60 / (finenessRatio * finenessRatio * finenessRatio) + 0.0025 * finenessRatio;     //pressure drag for a subsonic / transonic body
-                if (machNumber > 1)
-                    viscousDragFactor *= (machNumber - 1d) * 5d;          //ensures that this value is only skin friction at Mach > 1.2
+                 //skin friction and pressure drag for a body, taken from 1978 USAF Stability And Control DATCOM, Section 4.2.3.1, Paragraph A
+                 double viscousDragFactor = 0;
+                 if (machNumber < 1.2)
+                     viscousDragFactor = 60 / (finenessRatio * finenessRatio * finenessRatio) + 0.0025 * finenessRatio;     //pressure drag for a subsonic / transonic body
+                 if (machNumber > 1)
+                     viscousDragFactor *= (machNumber - 1d) * 5d;          //ensures that this value is only skin friction at Mach > 1.2
 
-                viscousDragFactor++;
-                viscousDragFactor *= skinFrictionDragCoefficient;       //all of which is affected by skin friction drag
+                 viscousDragFactor++;
+                 viscousDragFactor *= skinFrictionDragCoefficient;       //all of which is affected by skin friction drag
 
-                viscousDragFactor *= sectionThickness;  //increase per section thickness
+                 viscousDragFactor *= sectionThickness;  //increase per section thickness
 
-                double sectsSinceExposed = 1, sectsSinceRemoved = 1;
+                 double sectsSinceExposed = 1, sectsSinceRemoved = 1;
 
-                for (int j = 0; j <= back - front; j++)
-                {
-                    VoxelCrossSection currentSection = _vehicleCrossSection[j + front];
-                    VoxelCrossSection prevSection;
-                    if (j == 0)
-                        prevSection = _vehicleCrossSection[j + front];
-                    else
-                        prevSection = _vehicleCrossSection[j - 1 + front];
+                 for (int j = 0; j <= back - front; j++)
+                 {
+                     VoxelCrossSection currentSection = _vehicleCrossSection[j + front];
+                     VoxelCrossSection prevSection;
+                     if (j == 0)
+                         prevSection = _vehicleCrossSection[j + front];
+                     else
+                         prevSection = _vehicleCrossSection[j - 1 + front];
 
 
-                    double nominalDragDivQ = 0d;         //drag, divided by dynamic pressure; will be fed into aeromodules
-                    Vector3d nominalLiftDivQ = Vector3d.zero;            //lift at the current AoA
+                     double nominalDragDivQ = 0d;         //drag, divided by dynamic pressure; will be fed into aeromodules
+                     Vector3d nominalLiftDivQ = Vector3d.zero;            //lift at the current AoA
 
-                    double cosAngle;
-                    Vector3d liftVecDir;
-                    cosAngle = GetCosAoAFromCenterLineAndVel(velNorm, prevSection.centroid, currentSection.centroid, out liftVecDir);
+                     double cosAngle;
+                     Vector3d liftVecDir;
+                     cosAngle = GetCosAoAFromCenterLineAndVel(velNorm, prevSection.centroid, currentSection.centroid, out liftVecDir);
 
-                    //Zero-lift drag calcs
-                    //Viscous drag calcs for a body, taken from 1978 USAF Stability And Control DATCOM, Section 4.2.3.1, Paragraph A
-                    nominalDragDivQ += SubsonicViscousDrag(currentSection.area, viscousDragFactor);
-                        //SubsonicViscousDrag(j, front, maxCrossSectionArea, invMaxRadFactor, ref viscousDrag, viscousDragFactor, ref currentSection);
+                     //Zero-lift drag calcs
+                     //Viscous drag calcs for a body, taken from 1978 USAF Stability And Control DATCOM, Section 4.2.3.1, Paragraph A
+                     nominalDragDivQ += SubsonicViscousDrag(currentSection.area, viscousDragFactor);
+                         //SubsonicViscousDrag(j, front, maxCrossSectionArea, invMaxRadFactor, ref viscousDrag, viscousDragFactor, ref currentSection);
 
-                    double slenderBodyFactor = 1d;
-                    if (finenessRatio < 4)
-                        slenderBodyFactor *= finenessRatio * 0.25;
+                     double slenderBodyFactor = 1d;
+                     if (finenessRatio < 4)
+                         slenderBodyFactor *= finenessRatio * 0.25;
 
-                    //Supersonic Slender Body theory drag, Mach ~0.8 - ~3.5, based on method of NACA TN 4258
-                    if (machNumber > 1.2)
-                    {
-                        double tmp = 1d;
-                        if (machNumber > 3.5)
-                            tmp = 1.6 - 0.2 * machNumber;
+                     //Supersonic Slender Body theory drag, Mach ~0.8 - ~3.5, based on method of NACA TN 4258
+                     if (machNumber > 1.2)
+                     {
+                         double tmp = 1d;
+                         if (machNumber > 3.5)
+                             tmp = 1.6 - 0.2 * machNumber;
 
-                        tmp *= slenderBodyFactor;
-                        if(machNumber < 8)
-                            nominalDragDivQ += SupersonicSlenderBodyDrag(j, front, back, sectionThickness, ref lastLj) * tmp;
+                         tmp *= slenderBodyFactor;
+                         if(machNumber < 8)
+                             nominalDragDivQ += SupersonicSlenderBodyDrag(j, front, back, sectionThickness, ref lastLj) * tmp;
                            
-                    }
-                    else if (machNumber > 0.8)
-                    {
-                        double tmp = 2.5 * machNumber - 2d;
-                        tmp *= slenderBodyFactor;
-                        nominalDragDivQ += SupersonicSlenderBodyDrag(j, front, back, sectionThickness, ref lastLj) * tmp;
-                    }
+                     }
+                     else if (machNumber > 0.8)
+                     {
+                         double tmp = 2.5 * machNumber - 2d;
+                         tmp *= slenderBodyFactor;
+                         nominalDragDivQ += SupersonicSlenderBodyDrag(j, front, back, sectionThickness, ref lastLj) * tmp;
+                     }
 
-                    Vector3d momentDivQ;     //used for additional moments that can't be handled by lift and drag alone
+                     Vector3d momentDivQ;     //used for additional moments that can't be handled by lift and drag alone
 
-                    //Slender Body Lift calcs (Mach number independent)
-                    double nomLiftSlend = 0d;
+                     //Slender Body Lift calcs (Mach number independent)
+                     double nomLiftSlend = 0d;
 
-                    if (machNumber < 8)
-                    {
-                        nomLiftSlend = currentSection.area - prevSection.area;  //calculate area diff, which is the source of slender body potential lift
-                        if (nomLiftSlend > currentSection.area * 0.25)
-                            nomLiftSlend = currentSection.area * 0.25;      //assume that maximum area change should only be 25% of current area for increasing
-                        if (nomLiftSlend < -currentSection.area * 0.1)
-                            nomLiftSlend = -currentSection.area * 0.1;      //assume that maximum area change should only be 10% of cur area for decreasing
-                        nomLiftSlend = SlenderBodyLift(cosAngle, nomLiftSlend);
-                        if(machNumber > 3)
-                        {
-                            nomLiftSlend *= 1.6 - 0.2 * machNumber;     //account for reduction at hypersonic velocities
-                        }
-                    }
+                     if (machNumber < 8)
+                     {
+                         nomLiftSlend = currentSection.area - prevSection.area;  //calculate area diff, which is the source of slender body potential lift
+                         if (nomLiftSlend > currentSection.area * 0.25)
+                             nomLiftSlend = currentSection.area * 0.25;      //assume that maximum area change should only be 25% of current area for increasing
+                         if (nomLiftSlend < -currentSection.area * 0.1)
+                             nomLiftSlend = -currentSection.area * 0.1;      //assume that maximum area change should only be 10% of cur area for decreasing
+                         nomLiftSlend = SlenderBodyLift(cosAngle, nomLiftSlend);
+                         if(machNumber > 3)
+                         {
+                             nomLiftSlend *= 1.6 - 0.2 * machNumber;     //account for reduction at hypersonic velocities
+                         }
+                     }
 
-                    nominalLiftDivQ = nomLiftSlend * liftVecDir;
+                     nominalLiftDivQ = nomLiftSlend * liftVecDir;
 
-                    //pertDragDivQ = pertLiftDivQ * (float)Math.Sqrt(Mathf.Clamp01(1 / (cosAngle * cosAngle) - 1));
+                     //pertDragDivQ = pertLiftDivQ * (float)Math.Sqrt(Mathf.Clamp01(1 / (cosAngle * cosAngle) - 1));
 
-                    //Newtonian Impact Calculations
-                    double nomDragNewt = 0, nomLiftNewt = 0, pertMomentNewt = 0, pertMomentDampNewt = 0;
+                     //Newtonian Impact Calculations
+                     double nomDragNewt = 0, nomLiftNewt = 0, pertMomentNewt = 0, pertMomentDampNewt = 0;
 
-                    Vector3d unshadowedLiftVec;// = currentSection.centroid - currentSection.additonalUnshadowedCentroid;
-                    //double unshadowedAoA = GetCosAoAFromCenterLineAndVel(velNorm, prevSection.additonalUnshadowedCentroid, currentSection.additonalUnshadowedCentroid, out unshadowedLiftVec);
+                     Vector3d unshadowedLiftVec;// = currentSection.centroid - currentSection.additonalUnshadowedCentroid;
+                     //double unshadowedAoA = GetCosAoAFromCenterLineAndVel(velNorm, prevSection.additonalUnshadowedCentroid, currentSection.additonalUnshadowedCentroid, out unshadowedLiftVec);
 
-                    //NewtonianImpactDrag(out nomDragNewt, out nomLiftNewt, out pertMomentNewt, out pertMomentDampNewt, currentSection.area, currentSection.additionalUnshadowedArea, sectionThickness * sectsSinceExposed, machNumber, unshadowedLiftVec.sqrMagnitude * Math.PI / currentSection.area);
-                    NewtonianImpactDrag2(out nomDragNewt, out nomLiftNewt, out pertMomentNewt, out pertMomentDampNewt, currentSection.area, prevSection.area, sectionThickness, machNumber, cosAngle);
-                    if (currentSection.additionalUnshadowedArea > 0)
-                        sectsSinceExposed = 1;
-                    else
-                        sectsSinceExposed++;
+                     //NewtonianImpactDrag(out nomDragNewt, out nomLiftNewt, out pertMomentNewt, out pertMomentDampNewt, currentSection.area, currentSection.additionalUnshadowedArea, sectionThickness * sectsSinceExposed, machNumber, unshadowedLiftVec.sqrMagnitude * Math.PI / currentSection.area);
+                     NewtonianImpactDrag2(out nomDragNewt, out nomLiftNewt, out pertMomentNewt, out pertMomentDampNewt, currentSection.area, prevSection.area, sectionThickness, machNumber, cosAngle);
+                     if (currentSection.additionalUnshadowedArea > 0)
+                         sectsSinceExposed = 1;
+                     else
+                         sectsSinceExposed++;
 
-                    unshadowedLiftVec = nomLiftNewt * liftVecDir;
-                    momentDivQ = Vector3d.Cross(velNorm, liftVecDir) * pertMomentNewt;
+                     unshadowedLiftVec = nomLiftNewt * liftVecDir;
+                     momentDivQ = Vector3d.Cross(velNorm, liftVecDir) * pertMomentNewt;
                     
-                    //Separated flow rearward side calculations
-                    double nomDragSep = 0d, nomLiftSep = 0d;
+                     //Separated flow rearward side calculations
+                     double nomDragSep = 0d, nomLiftSep = 0d;
 
-                    Vector3d sepLiftVec;
-                    SeparatedFlowDrag(out nomDragSep, out nomLiftSep, currentSection.area, currentSection.removedArea, sectionThickness * sectsSinceRemoved, machNumber, cosAngle);
+                     Vector3d sepLiftVec;
+                     SeparatedFlowDrag(out nomDragSep, out nomLiftSep, currentSection.area, currentSection.removedArea, sectionThickness * sectsSinceRemoved, machNumber, cosAngle);
 
-                    if (currentSection.removedArea > 0)
-                        sectsSinceRemoved = 1;
-                    else
-                        sectsSinceRemoved++;
+                     if (currentSection.removedArea > 0)
+                         sectsSinceRemoved = 1;
+                     else
+                         sectsSinceRemoved++;
 
-                    sepLiftVec = nomLiftSep * liftVecDir;
+                     sepLiftVec = nomLiftSep * liftVecDir;
 
                     
-                    Vector3d forceCenter = currentSection.centroid;
-                    double denom = (nominalDragDivQ + nomLiftSlend + nomDragNewt + nomLiftNewt + nomDragSep + nomLiftSep);
-                    if (denom != 0)
-                    {
-                        forceCenter *= (nominalDragDivQ + nomLiftSlend);
-                        forceCenter += (nomDragNewt + nomLiftNewt) * currentSection.additonalUnshadowedCentroid + (nomDragSep + nomLiftSep) * currentSection.removedCentroid;
-                        forceCenter /= denom;
-                    }
+                     Vector3d forceCenter = currentSection.centroid;
+                     double denom = (nominalDragDivQ + nomLiftSlend + nomDragNewt + nomLiftNewt + nomDragSep + nomLiftSep);
+                     if (denom != 0)
+                     {
+                         forceCenter *= (nominalDragDivQ + nomLiftSlend);
+                         forceCenter += (nomDragNewt + nomLiftNewt) * currentSection.additonalUnshadowedCentroid + (nomDragSep + nomLiftSep) * currentSection.removedCentroid;
+                         forceCenter /= denom;
+                     }
 
-                    nominalDragDivQ += nomDragNewt + nomDragSep;
+                     nominalDragDivQ += nomDragNewt + nomDragSep;
 
-                    nominalLiftDivQ += unshadowedLiftVec + sepLiftVec;
+                     nominalLiftDivQ += unshadowedLiftVec + sepLiftVec;
 
-                    double frac = 1d / (double)currentSection.includedParts.Count;
+                     double frac = 1d / (double)currentSection.includedParts.Count;
 
-                    nominalDragDivQ *= frac;
-                    nominalLiftDivQ *= frac;
-                    momentDivQ *= frac;
-                    pertMomentDampNewt *= frac;
+                     nominalDragDivQ *= frac;
+                     nominalLiftDivQ *= frac;
+                     momentDivQ *= frac;
+                     pertMomentDampNewt *= frac;
 
 
-                    for (int i = 0; i < currentSection.includedParts.Count; i++)
-                    {
-                        Part p = currentSection.includedParts[i];
-                        FARAeroPartModule m;
-                        if (aeroModules.TryGetValue(p, out m))
-                        {
-                            m.IncrementAeroForces(velNorm, forceCenter, (float)nominalDragDivQ, nominalLiftDivQ, momentDivQ, (float)pertMomentDampNewt);
-                        }
-                    }
-                }
-            }
-            updateModules = true;
-        }
+                     for (int i = 0; i < currentSection.includedParts.Count; i++)
+                     {
+                         Part p = currentSection.includedParts[i];
+                         FARAeroPartModule m;
+                         if (aeroModules.TryGetValue(p, out m))
+                         {
+                             m.IncrementAeroForces(velNorm, forceCenter, (float)nominalDragDivQ, nominalLiftDivQ, momentDivQ, (float)pertMomentDampNewt);
+                         }
+                     }
+                 }
+             }
+             updateModules = true;
+         }
 
-        private double SupersonicSlenderBodyDrag(int j, int front, int back, double sectionThickness, ref double lastLj)
-        {
-            double thisLj = j + 0.5;
-            double tmp = Math.Log(thisLj);
+         private double SupersonicSlenderBodyDrag(int j, int front, int back, double sectionThickness, ref double lastLj)
+         {
+             double thisLj = j + 0.5;
+             double tmp = Math.Log(thisLj);
 
-            thisLj *= tmp;
+             thisLj *= tmp;
 
-            double crossSectionEffect = 0d;
-            for (int i = j + front; i <= back; i++)
-            {
-                double area1, area2;
-                area1 = Math.Min(_vehicleCrossSection[i].areaDeriv2ToNextSection, _vehicleCrossSection[i].area * sectionThickness * sectionThickness);
-                area2 = Math.Min(_vehicleCrossSection[i - j].areaDeriv2ToNextSection, _vehicleCrossSection[i - j].area * sectionThickness * sectionThickness);
-                crossSectionEffect += area1 * area2;
-            }
-            double dragDivQ = (thisLj - lastLj) * crossSectionEffect * sectionThickness * sectionThickness / Math.PI;
-            lastLj = thisLj;
+             double crossSectionEffect = 0d;
+             for (int i = j + front; i <= back; i++)
+             {
+                 double area1, area2;
+                 area1 = Math.Min(_vehicleCrossSection[i].areaDeriv2ToNextSection, _vehicleCrossSection[i].area * sectionThickness * sectionThickness);
+                 area2 = Math.Min(_vehicleCrossSection[i - j].areaDeriv2ToNextSection, _vehicleCrossSection[i - j].area * sectionThickness * sectionThickness);
+                 crossSectionEffect += area1 * area2;
+             }
+             double dragDivQ = (thisLj - lastLj) * crossSectionEffect * sectionThickness * sectionThickness / Math.PI;
+             lastLj = thisLj;
 
-            return dragDivQ;
-        }
+             return dragDivQ;
+         }
 
-        private double SubsonicViscousDrag(double curSectArea, double viscousDragFactor)//int j, int front, double maxCrossSectionArea, double invMaxRadFactor, ref double viscousDrag, double viscousDragFactor, ref VoxelCrossSection currentSection)
-        {
-            double tmp = curSectArea * Math.PI;
-            if (tmp <= 0)
-                return 0;
+         private double SubsonicViscousDrag(double curSectArea, double viscousDragFactor)//int j, int front, double maxCrossSectionArea, double invMaxRadFactor, ref double viscousDrag, double viscousDragFactor, ref VoxelCrossSection currentSection)
+         {
+             double tmp = curSectArea * Math.PI;
+             if (tmp <= 0)
+                 return 0;
 
-            double sectionViscDrag = viscousDragFactor * 2d * Math.Sqrt(tmp);   //increase in viscous drag due to viscosity
+             double sectionViscDrag = viscousDragFactor * 2d * Math.Sqrt(tmp);   //increase in viscous drag due to viscosity
 
-            /*viscousDrag += sectionViscDrag / maxCrossSectionArea;     //keep track of viscous drag for base drag purposes
+             /*viscousDrag += sectionViscDrag / maxCrossSectionArea;     //keep track of viscous drag for base drag purposes
 
-            if (j > 0 && baseRadius > 0)
-            {
-                float baseDrag = baseRadius * invMaxRadFactor;     //based on ratio of base diameter to max diameter
+             if (j > 0 && baseRadius > 0)
+             {
+                 float baseDrag = baseRadius * invMaxRadFactor;     //based on ratio of base diameter to max diameter
 
-                baseDrag *= baseDrag * baseDrag;    //Similarly based on 1978 USAF Stability And Control DATCOM, Section 4.2.3.1, Paragraph A
-                baseDrag *= 0.029f;
-                baseDrag /= (float)Math.Sqrt(viscousDrag);
+                 baseDrag *= baseDrag * baseDrag;    //Similarly based on 1978 USAF Stability And Control DATCOM, Section 4.2.3.1, Paragraph A
+                 baseDrag *= 0.029f;
+                 baseDrag /= (float)Math.Sqrt(viscousDrag);
 
-                sectionViscDrag += baseDrag * maxCrossSectionArea;     //and bring it up to the same level as all the others
-            }*/
+                 sectionViscDrag += baseDrag * maxCrossSectionArea;     //and bring it up to the same level as all the others
+             }*/
+        /*
 
             return sectionViscDrag;
         }
@@ -670,6 +747,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             float tmpDist = (float)Math.Sqrt(exposedArea / Math.PI);
             nomMomentDivQ = -cPmax* tmpDist;
             pertMomentDampNewt = -nomMomentDivQ * tmpDist;*/
+        /*
 
             double sin2SurfAngle = CalculateAreaFactor(overallArea, exposedArea, sectionThickness);
             double cos2SurfAngle = 1d - sin2SurfAngle;
@@ -737,6 +815,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
         {
             double value = x * ((-0.0471455 * x - 0.0238978) * x + 0.51399) - 0.00291724;
             return value;
-        }
+        }*/
     }
 }

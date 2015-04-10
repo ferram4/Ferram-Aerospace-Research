@@ -43,52 +43,29 @@ using ferram4;
 
 namespace FerramAerospaceResearch
 {
-    //[KSPAddon(KSPAddon.Startup.Flight, false)]
+    [KSPAddon(KSPAddon.Startup.Flight, false)]
     public class FARKSPAddonFlightScene : MonoBehaviour
     {
-        private static FARKSPAddonFlightScene instance = null;
-        public static FARKSPAddonFlightScene fetch
-        {
-            get { return instance; }
-        }
-
-        Dictionary<Vessel, FARVesselAero> loadedVessels = new Dictionary<Vessel, FARVesselAero>();
 
         private void Awake()
         {
+            FARAeroStress.LoadStressTemplates();
+            FARPartClassification.LoadClassificationTemplates();
+            FARAeroUtil.LoadAeroDataFromConfig();
+            FARDebugOptions.LoadConfigs();
             this.enabled = true;
         }
 
         private void Start()
         {
-            instance = this;
-
-            GameEvents.onVesselGoOffRails.Add(VesselCreate);
-            GameEvents.onVesselChange.Add(VesselCreate);
-            GameEvents.onVesselLoaded.Add(VesselCreate);
-            GameEvents.onVesselCreate.Add(VesselCreate);
+            GameEvents.onVesselGoOffRails.Add(VesselUpdate);
+            GameEvents.onVesselChange.Add(VesselUpdate);
+            GameEvents.onVesselLoaded.Add(VesselUpdate);
+            GameEvents.onVesselCreate.Add(VesselUpdate);
             GameEvents.onVesselWasModified.Add(VesselUpdate);
-            GameEvents.onVesselDestroy.Add(VesselRemoveFromActive);
-        }
-        private void FixedUpdate()
-        {
-            if(HighLogic.LoadedSceneIsFlight && FlightGlobals.ready)
-                foreach(KeyValuePair<Vessel, FARVesselAero> pair in loadedVessels)
-                {
-                    Vessel v = pair.Key;
-                    FARVesselAero aero = pair.Value;
-                    if (aero.ready)
-                    {
-                        aero.waitingForUpdate = true;
-                        lock (aero)
-                        {
-                            Monitor.Pulse(aero);
-                        }
-                    }
-                }
         }
 
-        private void VesselCreate(Vessel v)
+        private void VesselUpdate(Vessel v)
         {
             if (v != null)
             {
@@ -97,39 +74,17 @@ namespace FerramAerospaceResearch
                 {
                     vAero = v.gameObject.AddComponent<FARVesselAero>();
                 }
-                if (!loadedVessels.ContainsKey(v))
-                    loadedVessels.Add(v, vAero);
-                else
-                    loadedVessels[v] = vAero;
                 vAero.VesselUpdate();
             }
-        }
-        //This should be a static on FARVesselAero, but KSP doesn't like that
-        private void VesselUpdate(Vessel v)
-        {
-            if (v != null)
-            {
-                FARVesselAero _vAero;
-                if(loadedVessels.TryGetValue(v, out _vAero))
-                    if (_vAero != null)
-                        _vAero.VesselUpdate();
-            }
-        }
-
-        private void VesselRemoveFromActive(Vessel v)
-        {
-            if(v != null)
-                loadedVessels.Remove(v);
         }
 
         private void OnDestroy()
         {
-            GameEvents.onVesselGoOffRails.Remove(VesselCreate);
-            GameEvents.onVesselChange.Remove(VesselCreate);
-            GameEvents.onVesselLoaded.Remove(VesselCreate);
-            GameEvents.onVesselCreate.Remove(VesselCreate);
+            GameEvents.onVesselGoOffRails.Remove(VesselUpdate);
+            GameEvents.onVesselChange.Remove(VesselUpdate);
+            GameEvents.onVesselLoaded.Remove(VesselUpdate);
+            GameEvents.onVesselCreate.Remove(VesselUpdate);
             GameEvents.onVesselWasModified.Remove(VesselUpdate);
-            GameEvents.onVesselDestroy.Remove(VesselRemoveFromActive);
         }
     }
 }

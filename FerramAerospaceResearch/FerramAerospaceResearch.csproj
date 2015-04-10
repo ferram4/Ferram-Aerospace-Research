@@ -66,6 +66,7 @@
     <Compile Include="CompatibilityChecker.cs" />
     <Compile Include="FARAction.cs" />
     <Compile Include="FARAeroComponents\FARAeroPartModule.cs" />
+    <Compile Include="FARAeroComponents\FARAeroSection.cs" />
     <Compile Include="FARAeroComponents\FARVesselAero.cs" />
     <Compile Include="FARAeroStress.cs" />
     <Compile Include="FARAeroUtil.cs" />
@@ -75,7 +76,6 @@
     <Compile Include="FARCargoBayModule.cs" />
     <Compile Include="FARCenterQuery.cs" />
     <Compile Include="FARControllableSurface.cs" />
-    <Compile Include="FARKSPAddonEntryPoint.cs" />
     <Compile Include="FARKSPAddonFlightDataInfo.cs" />
     <Compile Include="FARPartGeometry\DebugVisualVoxel.cs" />
     <Compile Include="FARPartGeometry\GeometryMesh.cs" />
