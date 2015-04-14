@@ -191,6 +191,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             sectionThickness = elementSize;
 
+            Matrix4x4 sectionNormalToVesselCoords = Matrix4x4.TRS(Vector3.zero, Quaternion.FromToRotation(new Vector3(0, 0, 1), orientationVector), Vector3.one);
+            Matrix4x4 vesselToSectionNormal = sectionNormalToVesselCoords.inverse;
+
             //Code has multiple optimizations to take advantage of the limited rnage of values that are included.  They are listed below
             //(int)Math.Ceiling(x) -> (int)(x + 1)      for x > 0
             //(int)Math.Round(x) -> (int)(x + 0.5f)     for x > 0
@@ -218,7 +221,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 int xSectArrayLength = (int)(xCellLength * yAbsNorm + yCellLength * Math.Abs(xNorm) + 1);
                 //Stack allocation of array allows removal of garbage collection issues
 
-                bool* sectionArray = stackalloc bool[xSectArrayLength * (int)(zCellLength * yAbsNorm + yCellLength * Math.Abs(zNorm) + 1)];
+                //bool* sectionArray = stackalloc bool[xSectArrayLength * (int)(zCellLength * yAbsNorm + yCellLength * Math.Abs(zNorm) + 1)];
 
                 //bool[,] sectionRepresentation = new bool[(int)Math.Ceiling(xCellLength * Math.Abs(yNorm) + yCellLength * Math.Abs(xNorm)), (int)Math.Ceiling(zCellLength * Math.Abs(yNorm) + yCellLength * Math.Abs(zNorm))];
 
@@ -239,10 +242,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     int centx, centy, centz;
                     centx = centy = centz = 0;
 
-                    int unshadowedAreaCount = 0;
+                    //int unshadowedAreaCount = 0;
                     //Vector3d unshadowedCentroid = Vector3d.zero;
-                    int unshadowedCentx, unshadowedCenty, unshadowedCentz;
-                    unshadowedCentx = unshadowedCenty = unshadowedCentz = 0;
+                    //int unshadowedCentx, unshadowedCenty, unshadowedCentz;
+                    //unshadowedCentx = unshadowedCenty = unshadowedCentz = 0;
+
+                    double i_xx = 0, i_xy = 0, i_yy = 0;
 
                     List<Part> parts = crossSections[m].includedParts;
                     parts.Clear();
@@ -310,7 +315,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                             centy += j;
                                             centz += k;
 
-                                            double planeI_f, planeK_f;
+                                            Vector3 location = vesselToSectionNormal.MultiplyVector(new Vector3(i, j, k));
+                                            i_xx += location.x * location.x;
+                                            i_xy += location.x * location.y;
+                                            i_yy += location.y * location.y;
+
+                                            /*double planeI_f, planeK_f;
 
                                             if (xNorm < 0)
                                                 planeI_f = xNorm * (j - yCellLength);
@@ -342,7 +352,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                                 unshadowedCenty += j;
                                                 unshadowedCentz += k;
                                                 *location = true;
-                                            }
+                                            }*/
                                         }
                                     }
                                 }
@@ -407,7 +417,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                             centy += j;
                                             centz += k;
 
-                                            double planeI_f, planeK_f;
+                                            Vector3 location = vesselToSectionNormal.MultiplyVector(new Vector3(i, j, k));
+                                            i_xx += location.x * location.x;
+                                            i_xy += location.x * location.y;
+                                            i_yy += location.y * location.y;
+                                            
+                                            /*double planeI_f, planeK_f;
 
                                             if (xNorm < 0)
                                                 planeI_f = xNorm * (j - yCellLength);
@@ -439,14 +454,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                                 unshadowedCenty += j;
                                                 unshadowedCentz += k;
                                                 *location = true;
-                                            }
+                                            }*/
                                         }
                                     }
                                 }
                             }
                         }
                     Vector3d centroid = new Vector3d(centx, centy, centz);
-                    Vector3d unshadowedCentroid = new Vector3d(unshadowedCentx, unshadowedCenty, unshadowedCentz);
+                    //Vector3d unshadowedCentroid = new Vector3d(unshadowedCentx, unshadowedCenty, unshadowedCentz);
                     if (areaCount > 0)
                     {
                         if (frontIndexFound)
@@ -457,16 +472,48 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             frontIndex = m;
                         }
                         centroid /= areaCount;
-                        if (unshadowedAreaCount != 0)
+                        /*if (unshadowedAreaCount != 0)
                             unshadowedCentroid /= unshadowedAreaCount;
                         else
-                            unshadowedCentroid = centroid;
+                            unshadowedCentroid = centroid;*/
                     }
+                    Vector3 localCentroid = vesselToSectionNormal.MultiplyVector(centroid);
+                    i_xx -= areaCount * localCentroid.x * localCentroid.x;
+                    i_xy -= areaCount * localCentroid.x * localCentroid.y;
+                    i_yy -= areaCount * localCentroid.y * localCentroid.y;
+
+                    double tanPrinAngle = TanPrincipalAxisAngle(i_xx, i_yy, i_xy);
+                    Vector3 axis1 = new Vector3(1, 0, 0), axis2 = new Vector3(0, 0, 1);
+                    double flatnessRatio = 1;
+
+                    if (tanPrinAngle != 0)
+                    {
+                        axis1 = new Vector3(1, 0, (float)tanPrinAngle);
+                        axis1.Normalize();
+                        axis2 = new Vector3(axis1.z, 0, -axis1.x);
+
+                        flatnessRatio = i_xy * axis2.z / axis2.x + i_xx;
+                        flatnessRatio = (i_xy * tanPrinAngle + i_xx) / flatnessRatio;
+                        flatnessRatio = Math.Sqrt(Math.Sqrt(flatnessRatio));
+                    }
+
+                    Vector3 principalAxis;
+                    if (flatnessRatio > 1)
+                        principalAxis = axis1;
+                    else
+                    {
+                        flatnessRatio = 1 / flatnessRatio;
+                        principalAxis = axis2;
+                    }
+                    principalAxis = sectionNormalToVesselCoords.MultiplyVector(principalAxis);
+
                     crossSections[m].centroid = centroid * elementSize + lowerRightCorner;
-                    crossSections[m].additonalUnshadowedCentroid = unshadowedCentroid * elementSize + lowerRightCorner;
+                    //crossSections[m].additonalUnshadowedCentroid = unshadowedCentroid * elementSize + lowerRightCorner;
 
                     crossSections[m].area = areaCount * elementArea;
-                    crossSections[m].additionalUnshadowedArea = unshadowedAreaCount * elementArea;
+                    crossSections[m].flatnessRatio = flatnessRatio;
+                    crossSections[m].flatNormalVector = principalAxis;
+                    //crossSections[m].additionalUnshadowedArea = unshadowedAreaCount * elementArea;
 
                     plane.w += wInc;
                 }
@@ -491,7 +538,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                 int ySectArrayLength = (int)(xCellLength * Math.Abs(yNorm) + yCellLength * xAbsNorm + 1);
                 //Stack allocation of array allows removal of garbage collection issues
-                bool* sectionArray = stackalloc bool[ySectArrayLength * (int)(zCellLength * xAbsNorm + xCellLength * Math.Abs(zNorm) + 1)];
+                //bool* sectionArray = stackalloc bool[ySectArrayLength * (int)(zCellLength * xAbsNorm + xCellLength * Math.Abs(zNorm) + 1)];
 
                 //bool[,] sectionRepresentation = new bool[(int)Math.Ceiling(xCellLength * Math.Abs(yNorm) + yCellLength * Math.Abs(xNorm)), (int)Math.Ceiling(zCellLength * Math.Abs(xNorm) + xCellLength * Math.Abs(zNorm))];
 
@@ -510,10 +557,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     int centx, centy, centz;
                     centx = centy = centz = 0;
 
-                    int unshadowedAreaCount = 0;
+                    //int unshadowedAreaCount = 0;
                     //Vector3d unshadowedCentroid = Vector3d.zero;
-                    int unshadowedCentx, unshadowedCenty, unshadowedCentz;
-                    unshadowedCentx = unshadowedCenty = unshadowedCentz = 0;
+                    //int unshadowedCentx, unshadowedCenty, unshadowedCentz;
+                    //unshadowedCentx = unshadowedCenty = unshadowedCentz = 0;
 
                     List<Part> parts = crossSections[m].includedParts;
                     parts.Clear();
@@ -579,7 +626,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                             centy += j;
                                             centz += k;
 
-                                            double planeJ_f, planeK_f;
+                                            /*double planeJ_f, planeK_f;
 
                                             if (yNorm < 0)
                                                 planeJ_f = yNorm * (i - xCellLength);
@@ -608,7 +655,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                                 unshadowedCenty += j;
                                                 unshadowedCentz += k;
                                                 *location = true;
-                                            }
+                                            }*/
                                         }
                                     }
                                 }
@@ -674,7 +721,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                             centy += j;
                                             centz += k;
 
-                                            double planeJ_f, planeK_f;
+                                            /*double planeJ_f, planeK_f;
 
                                             if (yNorm < 0)
                                                 planeJ_f = yNorm * (i - xCellLength);
@@ -703,14 +750,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                                 unshadowedCenty += j;
                                                 unshadowedCentz += k;
                                                 *location = true;
-                                            }
+                                            }*/
                                         }
                                     }
                                 }
                             }
                         }
                     Vector3d centroid = new Vector3d(centx, centy, centz);
-                    Vector3d unshadowedCentroid = new Vector3d(unshadowedCentx, unshadowedCenty, unshadowedCentz);
+                    //Vector3d unshadowedCentroid = new Vector3d(unshadowedCentx, unshadowedCenty, unshadowedCentz);
                     if (areaCount > 0)
                     {
                         if (frontIndexFound)
@@ -721,16 +768,16 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             frontIndex = m;
                         }
                         centroid /= areaCount;
-                        if (unshadowedAreaCount != 0)
+                        /*if (unshadowedAreaCount != 0)
                             unshadowedCentroid /= unshadowedAreaCount;
                         else
-                            unshadowedCentroid = centroid;
+                            unshadowedCentroid = centroid;*/
                     }
                     crossSections[m].centroid = centroid * elementSize + lowerRightCorner;
-                    crossSections[m].additonalUnshadowedCentroid = unshadowedCentroid * elementSize + lowerRightCorner;
+                    //crossSections[m].additonalUnshadowedCentroid = unshadowedCentroid * elementSize + lowerRightCorner;
 
                     crossSections[m].area = areaCount * elementArea;
-                    crossSections[m].additionalUnshadowedArea = unshadowedAreaCount * elementArea;
+                    //crossSections[m].additionalUnshadowedArea = unshadowedAreaCount * elementArea;
 
                     plane.w += wInc;
                 }
@@ -755,7 +802,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                 int xSectArrayLength = (int)(xCellLength * zAbsNorm + zCellLength * Math.Abs(xNorm) + 1);
                 //Stack allocation of array allows removal of garbage collection issues
-                bool* sectionArray = stackalloc bool[xSectArrayLength * (int)(yCellLength * zAbsNorm + zCellLength * Math.Abs(yNorm) + 1)];
+                //bool* sectionArray = stackalloc bool[xSectArrayLength * (int)(yCellLength * zAbsNorm + zCellLength * Math.Abs(yNorm) + 1)];
 
                 //bool[,] sectionRepresentation = new bool[(int)Math.Ceiling(xCellLength * Math.Abs(zNorm) + zCellLength * Math.Abs(xNorm)), (int)Math.Ceiling(yCellLength * Math.Abs(zNorm) + zCellLength * Math.Abs(yNorm))];
                 
@@ -774,10 +821,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     int centx, centy, centz;
                     centx = centy = centz = 0;
 
-                    int unshadowedAreaCount = 0;
+                    //int unshadowedAreaCount = 0;
                     //Vector3d unshadowedCentroid = Vector3d.zero;
-                    int unshadowedCentx, unshadowedCenty, unshadowedCentz;
-                    unshadowedCentx = unshadowedCenty = unshadowedCentz = 0;
+                    //int unshadowedCentx, unshadowedCenty, unshadowedCentz;
+                    //unshadowedCentx = unshadowedCenty = unshadowedCentz = 0;
                     
                     List<Part> parts = crossSections[m].includedParts;
                     parts.Clear();
@@ -843,7 +890,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                             centy += j;
                                             centz += k;
 
-                                            double planeI_f, planeJ_f;
+                                            /*double planeI_f, planeJ_f;
 
                                             if (xNorm < 0)
                                                 planeI_f = xNorm * (k - zCellLength);
@@ -872,7 +919,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                                 unshadowedCenty += j;
                                                 unshadowedCentz += k;
                                                 *location = true;
-                                            }
+                                            }*/
                                         }
                                     }
                                 }
@@ -937,7 +984,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                             centy += j;
                                             centz += k;
 
-                                            double planeI_f, planeJ_f;
+                                            /*double planeI_f, planeJ_f;
 
                                             if (xNorm < 0)
                                                 planeI_f = xNorm * (k - zCellLength);
@@ -966,7 +1013,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                                 unshadowedCenty += j;
                                                 unshadowedCentz += k;
                                                 *location = true;
-                                            }
+                                            }*/
 
                                         }
                                     }
@@ -975,7 +1022,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         }
 
                     Vector3d centroid = new Vector3d(centx, centy, centz);
-                    Vector3d unshadowedCentroid = new Vector3d(unshadowedCentx, unshadowedCenty, unshadowedCentz);
+                    //Vector3d unshadowedCentroid = new Vector3d(unshadowedCentx, unshadowedCenty, unshadowedCentz);
                     if (areaCount > 0)
                     {
                         if (frontIndexFound)
@@ -986,16 +1033,16 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             frontIndex = m;
                         }
                         centroid /= areaCount;
-                        if (unshadowedAreaCount != 0)
+                        /*if (unshadowedAreaCount != 0)
                             unshadowedCentroid /= unshadowedAreaCount;
                         else
-                            unshadowedCentroid = centroid;
+                            unshadowedCentroid = centroid;*/
                     }
                     crossSections[m].centroid = centroid * elementSize + lowerRightCorner;
-                    crossSections[m].additonalUnshadowedCentroid = unshadowedCentroid * elementSize + lowerRightCorner;
+                    //crossSections[m].additonalUnshadowedCentroid = unshadowedCentroid * elementSize + lowerRightCorner;
 
                     crossSections[m].area = areaCount * elementArea;
-                    crossSections[m].additionalUnshadowedArea = unshadowedAreaCount * elementArea;
+                    //crossSections[m].additionalUnshadowedArea = unshadowedAreaCount * elementArea;
 
                     plane.w += wInc;
                 }
@@ -1011,45 +1058,63 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     double curArea = crossSections[i].area;
                     double nextArea = crossSections[i + 1].area;
                     crossSections[i].areaDeriv2ToNextSection = 2 * (nextArea + curArea - 2 * Math.Sqrt(nextArea * curArea)) * invStep * invStep;
-                    crossSections[i].removedArea = 0;
-                    crossSections[i].removedCentroid = crossSections[i].centroid;
+                    //crossSections[i].removedArea = 0;
+                    //crossSections[i].removedCentroid = crossSections[i].centroid;
                 }
                 else if (i == backIndex)
                 {
                     crossSections[i].areaDeriv2ToNextSection = 0;
-                    crossSections[i].removedArea = crossSections[i - 1].area + crossSections[i].additionalUnshadowedArea - crossSections[i].area;
-                    if (crossSections[i].removedArea > 0)
+                    //crossSections[i].removedArea = crossSections[i - 1].area + crossSections[i].additionalUnshadowedArea - crossSections[i].area;
+                    /*if (crossSections[i].removedArea > 0)
                     {
                         crossSections[i].removedCentroid = (crossSections[i - 1].centroid * crossSections[i - 1].area + crossSections[i].additonalUnshadowedCentroid * crossSections[i].additionalUnshadowedArea
                             - crossSections[i].centroid * crossSections[i].area) / crossSections[i].removedArea;
                     }
                     else
-                        crossSections[i].removedArea = 0;
+                        crossSections[i].removedArea = 0;*/
                 }
                 else
                 {
                     double curArea = crossSections[i].area;
                     double nextArea = crossSections[i + 1].area;
                     crossSections[i].areaDeriv2ToNextSection = 2 * (nextArea + curArea - 2 * Math.Sqrt(nextArea * curArea)) * invStep * invStep;
-                    crossSections[i].removedArea = crossSections[i - 1].area + crossSections[i].additionalUnshadowedArea - curArea;
+                    /*crossSections[i].removedArea = crossSections[i - 1].area + crossSections[i].additionalUnshadowedArea - curArea;
                     if (crossSections[i].removedArea > 0)
                     {
                         crossSections[i].removedCentroid = (crossSections[i - 1].centroid * crossSections[i - 1].area + crossSections[i].additonalUnshadowedCentroid * crossSections[i].additionalUnshadowedArea
                             - crossSections[i].centroid * crossSections[i].area) / crossSections[i].removedArea;
                     }
                     else
-                        crossSections[i - 1].removedArea = 0;
+                        crossSections[i - 1].removedArea = 0;*/
                 }
-                if(i > frontIndex)
+                /*if(i > frontIndex)
                 {
                     if (crossSections[i].removedArea <= 0)
                         crossSections[i].removedCentroid = crossSections[i].removedCentroid;
                     if (crossSections[i].additionalUnshadowedArea <= 0)
                         crossSections[i].additonalUnshadowedCentroid = crossSections[i].additonalUnshadowedCentroid;
-                }
+                }*/
                 if (crossSections[i].area > maxCrossSectionArea)
                     maxCrossSectionArea = crossSections[i].area;
             }
+        }
+
+        private double TanPrincipalAxisAngle(double Ixx, double Iyy, double Ixy)
+        {
+            if (Ixx == Iyy)
+                return 0;
+
+            double tan2Angle = 2d * Ixy / (Ixx - Iyy);
+            double tanAngle = 1 + tan2Angle * tan2Angle;
+            tanAngle = Math.Sqrt(tanAngle);
+            tanAngle++;
+            tanAngle = tan2Angle / tanAngle;
+
+            return tanAngle;
+            //Vector3d principalAxis = new Vector3d(1, tanAngle, 0);
+            //principalAxis.Normalize();
+
+            //return principalAxis;
         }
 
         public void ClearVisualVoxels()

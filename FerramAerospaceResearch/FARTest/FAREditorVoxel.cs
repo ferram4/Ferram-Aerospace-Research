@@ -180,8 +180,9 @@ namespace FerramAerospaceResearch.FARTest
             for (int i = 0; i < crossSections.Length; i++)
                 node.AddValue(i.ToString(), crossSections[i].area.ToString() + " -- " + crossSections[i].areaDeriv2ToNextSection
                     + " -- (" + crossSections[i].centroid.x + "," + crossSections[i].centroid.y + "," + crossSections[i].centroid.z + ") ---------- "
-                    + crossSections[i].additionalUnshadowedArea
-                    + " -- (" + crossSections[i].additonalUnshadowedCentroid.x + "," + crossSections[i].additonalUnshadowedCentroid.y + "," + crossSections[i].additonalUnshadowedCentroid.z + ") ");
+                    +crossSections[i].flatnessRatio + ", " + crossSections[i].flatNormalVector);
+                    //+ crossSections[i].additionalUnshadowedArea
+                    //+ " -- (" + crossSections[i].additonalUnshadowedCentroid.x + "," + crossSections[i].additonalUnshadowedCentroid.y + "," + crossSections[i].additonalUnshadowedCentroid.z + ") ");
 
             node.AddValue("frontIndex", frontIndex);
             node.AddValue("backIndex", backIndex);

@@ -329,24 +329,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     Transform.AddRange(p.FindModelComponents<Transform>(transformString));
                 }
             }
-            if (p.Modules.Contains("RealChuteModule"))
-            {
-                module = p.Modules["RealChuteModule"];
-                transformString = (string)module.GetType().GetField("parachuteName").GetValue(module);
-                if (transformString != "")
-                {
-                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
-                }
-                transformString = (string)module.GetType().GetField("secParachuteName").GetValue(module);
-                if (transformString != "")
-                {
-                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
-                }
-            }
             foreach (Transform t in p.FindModelComponents<Transform>())
             {
                 if (Transform.Contains(t))
                     continue;
+                if (!t.gameObject.activeSelf)
+                {
+                    Transform.Add(t);
+                    continue;
+                }
 
                 string tag = t.tag.ToLowerInvariant();
                 if (tag == "ladder" || tag == "airlock")
