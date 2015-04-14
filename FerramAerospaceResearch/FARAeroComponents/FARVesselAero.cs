@@ -279,7 +279,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 else
                     xRefVector = (Vector3)(_vehicleCrossSection[index - 1].centroid - _vehicleCrossSection[index + 1].centroid).normalized;
 
-                Vector3 nRefVector = Vector3.forward;
+                Vector3 nRefVector = _vehicleCrossSection[index].flatNormalVector;
+                float flatnessRatio = (float)_vehicleCrossSection[index].flatnessRatio;
 
                 Vector3 centroid = _vessel.transform.localToWorldMatrix.MultiplyPoint3x4(_vehicleCrossSection[index].centroid);
                 xRefVector = _vessel.transform.localToWorldMatrix.MultiplyVector(xRefVector);
@@ -299,7 +300,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     weighting.Add(1 / (float)includedModules.Count);
                 }
-                FARAeroSection section = new FARAeroSection(xForcePressureAoA0, xForcePressureAoA180, xForceSkinFriction, areaChange, viscCrossflowDrag,
+                FARAeroSection section = new FARAeroSection(xForcePressureAoA0, xForcePressureAoA180, xForceSkinFriction, areaChange, viscCrossflowDrag, flatnessRatio,
                     centroid, xRefVector, nRefVector, includedModules, weighting);
 
                 _newAeroSections.Add(section);

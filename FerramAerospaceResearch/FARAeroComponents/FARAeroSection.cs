@@ -13,6 +13,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
         FloatCurve xForceSkinFriction;
         float areaChange;
         float viscCrossflowDrag;
+        float flatnessRatio;
+        float invFlatnessRatio;
 
         List<PartData> partsIncluded;
 
@@ -25,7 +27,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             public float dragFactor;    //sum of these should add up to 1
         }
 
-        public FARAeroSection(FloatCurve xForcePressureAoA0, FloatCurve xForcePressureAoA180, FloatCurve xForceSkinFriction, float areaChange, float viscCrossflowDrag,
+        public FARAeroSection(FloatCurve xForcePressureAoA0, FloatCurve xForcePressureAoA180, FloatCurve xForceSkinFriction, float areaChange, float viscCrossflowDrag, float flatnessRatio,
             Vector3 centroidWorldSpace, Vector3 xRefVectorWorldSpace, Vector3 nRefVectorWorldSpace, List<FARAeroPartModule> moduleList, List<float> dragFactor)
         {
             this.xForcePressureAoA0 = xForcePressureAoA0;       //copy references to floatcurves over
@@ -34,6 +36,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             this.areaChange = areaChange;                   //copy lifting body info over
             this.viscCrossflowDrag = viscCrossflowDrag;
+            this.flatnessRatio = flatnessRatio;
+            invFlatnessRatio = 1 / flatnessRatio;
 
             partsIncluded = new List<PartData>();
             for(int i = 0; i < moduleList.Count; i++)
@@ -63,7 +67,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 Vector3 velLocal = aeroModule.partLocalVel;
 
                 Vector3 velLocalNorm = velLocal.normalized;
-                Vector3 localLiftVec = Vector3.Exclude(data.xRefVectorPartSpace, -velLocalNorm).normalized;
+                Vector3 localNormalVec = Vector3.Exclude(data.xRefVectorPartSpace, -velLocalNorm).normalized;
 
                 double cosAoA = Vector3.Dot(data.xRefVectorPartSpace, velLocalNorm);
                 double cosSqrAoA = cosAoA * cosAoA;
@@ -81,13 +85,20 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 nForce += viscCrossflowDrag * sinSqrAoA;            //viscous crossflow normal force
 
+                double normalForceFactor = Math.Abs(Vector3.Dot(localNormalVec, data.nRefVectorPartSpace));
+                normalForceFactor *= normalForceFactor;
+
+                normalForceFactor = invFlatnessRatio * (1 - normalForceFactor) + flatnessRatio * normalForceFactor;     //accounts for changes in relative flatness of shape
+
+                nForce *= normalForceFactor;
+
                 double xForce = -skinFrictionForce * Math.Sign(cosAoA) * cosSqrAoA;
                 if (cosAoA > 0)
                     xForce += cosSqrAoA * xForcePressureAoA0.Evaluate(machNumber);
                 else
                     xForce += cosSqrAoA * xForcePressureAoA180.Evaluate(machNumber);
 
-                Vector3 forceVector = (float)xForce * data.xRefVectorPartSpace + (float)nForce * localLiftVec;
+                Vector3 forceVector = (float)xForce * data.xRefVectorPartSpace + (float)nForce * localNormalVec;
                 forceVector *= 0.0005f * atmDensity * velLocal.sqrMagnitude;        //dyn pres and N -> kN conversion
                 forceVector *= data.dragFactor;
 
