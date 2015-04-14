@@ -41,7 +41,7 @@ using KSP;
 
 namespace FerramAerospaceResearch.FARPartGeometry
 {
-    public class GeometryPartModule : PartModule
+    public class GeometryPartModule : PartModule, TweakScale.IRescalable<GeometryPartModule>
     {
         public Transform partTransform;
         public Rigidbody partRigidBody;
@@ -345,6 +345,17 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
 
             return Transform;
+        }
+
+        public void OnRescale(TweakScale.ScalingFactor factor)
+        {
+            Matrix4x4 transformMatrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(factor.relative.linear, factor.relative.linear, factor.relative.linear));
+            if (HighLogic.LoadedSceneIsFlight)
+                transformMatrix = vessel.ReferenceTransform.worldToLocalMatrix * transformMatrix;
+            else
+                transformMatrix = EditorLogic.RootPart.transform.worldToLocalMatrix * transformMatrix;
+
+            UpdateTransformMatrixList(transformMatrix);
         }
     }
 }
