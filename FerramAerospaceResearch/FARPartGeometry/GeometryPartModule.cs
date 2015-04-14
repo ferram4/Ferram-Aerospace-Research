@@ -50,10 +50,22 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public List<GeometryMesh> meshDataList;
 
+        public List<Animation> animations;
+
+        private bool _isAnimating = false;
+        private int _sendUpdateTick = 0;
+
         void Start()
         {
             RebuildAllMeshData();
+            GetAnimations();
             part.OnEditorAttach += EditorAttach;
+        }
+
+        void FixedUpdate()
+        {
+            if (animations != null && animations.Count > 0)
+                CheckAnimations();
         }
 
         private void RebuildAllMeshData()
@@ -79,6 +91,52 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
 
             overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
+        }
+
+        private void GetAnimations()
+        {
+            animations = part.FindModelAnimators().ToList();
+        }
+
+        private void CheckAnimations()
+        {
+            if (_sendUpdateTick > 30)
+            {
+                _sendUpdateTick = 0;
+                for (int i = 0; i < animations.Count; i++)
+                {
+                    Animation anim = animations[i];
+
+                    if (anim.isPlaying && !_isAnimating)     //if the animation is playing, send the event
+                    {
+                        _isAnimating = true;
+                        UpdateShapeWithAnims(); //event to update voxel, with rate limiter for computer's sanity and error reduction
+                        break;
+                    }
+                    else if (_isAnimating && !anim.isPlaying)       //if the anim is not playing, but it was, also send the event to be sure that we closed
+                    {
+                        _isAnimating = false;
+                        UpdateShapeWithAnims(); //event to update voxel, with rate limiter for computer's sanity and error reduction
+                        break;
+                    }
+                }
+            }
+            else
+                ++_sendUpdateTick;
+        }
+
+        private void UpdateShapeWithAnims()
+        {
+            Matrix4x4 transformMatrix;
+            if (HighLogic.LoadedSceneIsFlight)
+                transformMatrix = vessel.ReferenceTransform.worldToLocalMatrix;
+            else
+                transformMatrix = EditorLogic.RootPart.transform.worldToLocalMatrix;
+
+            UpdateTransformMatrixList(transformMatrix);
+
+            if(HighLogic.LoadedSceneIsFlight)
+                vessel.SendMessage("AnimationVoxelUpdate");
         }
 
         public void EditorAttach()
@@ -163,7 +221,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 ModuleJettison[] jettisons = part.GetComponents<ModuleJettison>();
                 foreach (ModuleJettison j in jettisons)
                 {
-                    if (j.isJettisoned || j.jettisonTransform == null || j.checkBottomNode)
+                    if (j.isJettisoned || j.jettisonTransform == null || !j.jettisonTransform.gameObject.activeSelf)
                         continue;
 
                     Transform t = j.jettisonTransform;
@@ -352,7 +410,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (meshDataList == null)
                 return;
 
-            Matrix4x4 transformMatrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(factor.relative.linear, factor.relative.linear, factor.relative.linear));
+            Rescale(factor.relative.linear);
+        }
+
+        public void Rescale(float relativeRescaleFactor)
+        {
+            Matrix4x4 transformMatrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(relativeRescaleFactor, relativeRescaleFactor, relativeRescaleFactor));
             if (HighLogic.LoadedSceneIsFlight)
                 transformMatrix = vessel.ReferenceTransform.worldToLocalMatrix * transformMatrix;
             else

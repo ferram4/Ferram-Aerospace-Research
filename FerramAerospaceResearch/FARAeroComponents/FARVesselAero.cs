@@ -62,6 +62,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
         List<FARAeroSection> _currentAeroSections;
         List<FARAeroSection> _newAeroSections;
 
+        int _updateRateLimiter = 0;
+        bool _updateQueued = false;
+
         private void Start()
         {
             _vessel = gameObject.GetComponent<Vessel>();
@@ -116,14 +119,35 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if (m != null)
                         m.ApplyForces();
                 }
-
             }
+            if (_updateRateLimiter < 20)
+            {
+                _updateRateLimiter++;
+            }
+            else if (_updateQueued)
+                VesselUpdate();
+        }
+
+        public void AnimationVoxelUpdate()
+        {
+            Debug.Log("AnimUpdate");
+            VesselUpdate();
         }
 
         public void VesselUpdate()
         {
             if(_vessel == null)
                 _vessel = gameObject.GetComponent<Vessel>();
+            if (_updateRateLimiter < 20)
+            {
+                _updateQueued = true;
+                return;
+            }
+            else
+            {
+                _updateRateLimiter = 0;
+                _updateQueued = false;
+            }
             _vType = _vessel.vesselType;
             _voxelCount = VoxelCountFromType();
 
@@ -227,6 +251,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 else
                     sonicBaseDrag *= Math.Abs(areaChange / areaChangeMax);      //some scaling for small changes in cross-section
 
+                double flatnessRatio = _vehicleCrossSection[index].flatnessRatio;
+                if (flatnessRatio >= 1)
+                    sonicBaseDrag /= (float)flatnessRatio;
+                else
+                    sonicBaseDrag *= (float)flatnessRatio;
+
                 float viscCrossflowDrag = (float)(Math.Sqrt(curArea / Math.PI) * sectionThickness * 2.4d);
 
                 double surfaceArea = 2d * Math.Sqrt(curArea * Math.PI); //section circumference
@@ -280,7 +310,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     xRefVector = (Vector3)(_vehicleCrossSection[index - 1].centroid - _vehicleCrossSection[index + 1].centroid).normalized;
 
                 Vector3 nRefVector = _vehicleCrossSection[index].flatNormalVector;
-                float flatnessRatio = (float)_vehicleCrossSection[index].flatnessRatio;
 
                 Vector3 centroid = _vessel.transform.localToWorldMatrix.MultiplyPoint3x4(_vehicleCrossSection[index].centroid);
                 xRefVector = _vessel.transform.localToWorldMatrix.MultiplyVector(xRefVector);
@@ -300,7 +329,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     weighting.Add(1 / (float)includedModules.Count);
                 }
-                FARAeroSection section = new FARAeroSection(xForcePressureAoA0, xForcePressureAoA180, xForceSkinFriction, areaChange, viscCrossflowDrag, flatnessRatio,
+                FARAeroSection section = new FARAeroSection(xForcePressureAoA0, xForcePressureAoA180, xForceSkinFriction, areaChange, viscCrossflowDrag, (float)flatnessRatio,
                     centroid, xRefVector, nRefVector, includedModules, weighting);
 
                 _newAeroSections.Add(section);
