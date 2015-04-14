@@ -74,14 +74,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Matrix4x4 tempMatrix = thisToVesselMatrix.inverse;
             thisToVesselMatrix = newThisToVesselMatrix * meshTransform.localToWorldMatrix;
 
-            tempMatrix = thisToVesselMatrix * tempMatrix;
+            tempMatrix = thisToVesselMatrix *  tempMatrix;
 
-            Vector3 size = thisToVesselMatrix.MultiplyVector(bounds.size);
+            Vector3 size = tempMatrix.MultiplyVector(bounds.size);
             size.x = Math.Abs(size.x);
             size.y = Math.Abs(size.y);
             size.z = Math.Abs(size.z);
 
-            bounds = new Bounds(thisToVesselMatrix.MultiplyPoint3x4(bounds.center), size);
+            bounds = new Bounds(tempMatrix.MultiplyPoint3x4(bounds.center), size);
 
             for (int i = 0; i < vertices.Length; i++)
                 vertices[i] = tempMatrix.MultiplyPoint3x4(vertices[i]);

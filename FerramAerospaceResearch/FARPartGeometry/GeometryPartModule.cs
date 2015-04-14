@@ -53,7 +53,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         void Start()
         {
             RebuildAllMeshData();
-            //part.OnEditorAttach += EditorAttach;
+            part.OnEditorAttach += EditorAttach;
         }
 
         private void RebuildAllMeshData()
@@ -81,11 +81,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
             overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
         }
 
-        /*public void EditorAttach()
+        public void EditorAttach()
         {
             UpdateTransformMatrixList(EditorLogic.RootPart.transform.worldToLocalMatrix);
             overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(EditorLogic.RootPart.transform.worldToLocalMatrix);
-        }*/
+        }
 
         public void UpdateTransformMatrixList(Matrix4x4 worldToVesselMatrix)
         {
