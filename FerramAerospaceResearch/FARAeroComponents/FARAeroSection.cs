@@ -81,14 +81,14 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (nForce < 0)     //potential flow is not significant over the rear face of things
                     nForce = 0;
                 if (machNumber > 3)
-                    nForce *= 2 - machNumber / 3;
+                    nForce *= 2d - machNumber / 3d;
 
                 nForce += viscCrossflowDrag * sinSqrAoA;            //viscous crossflow normal force
 
                 double normalForceFactor = Math.Abs(Vector3.Dot(localNormalVec, data.nRefVectorPartSpace));
                 normalForceFactor *= normalForceFactor;
 
-                normalForceFactor = invFlatnessRatio * (1 - normalForceFactor) + flatnessRatio * normalForceFactor;     //accounts for changes in relative flatness of shape
+                normalForceFactor = invFlatnessRatio * (1d - normalForceFactor) + flatnessRatio * normalForceFactor;     //accounts for changes in relative flatness of shape
 
                 nForce *= normalForceFactor;
 

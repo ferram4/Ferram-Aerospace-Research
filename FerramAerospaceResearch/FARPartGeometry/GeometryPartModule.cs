@@ -349,6 +349,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public void OnRescale(TweakScale.ScalingFactor factor)
         {
+            if (meshDataList == null)
+                return;
+
             Matrix4x4 transformMatrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(factor.relative.linear, factor.relative.linear, factor.relative.linear));
             if (HighLogic.LoadedSceneIsFlight)
                 transformMatrix = vessel.ReferenceTransform.worldToLocalMatrix * transformMatrix;

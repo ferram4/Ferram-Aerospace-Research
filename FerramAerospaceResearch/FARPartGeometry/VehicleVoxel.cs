@@ -536,6 +536,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                 double xAbsNorm = Math.Abs(xNorm);
 
+                double i_xx = 0, i_xy = 0, i_yy = 0;
+
                 int ySectArrayLength = (int)(xCellLength * Math.Abs(yNorm) + yCellLength * xAbsNorm + 1);
                 //Stack allocation of array allows removal of garbage collection issues
                 //bool* sectionArray = stackalloc bool[ySectArrayLength * (int)(zCellLength * xAbsNorm + xCellLength * Math.Abs(zNorm) + 1)];
@@ -626,6 +628,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                             centy += j;
                                             centz += k;
 
+                                            Vector3 location = vesselToSectionNormal.MultiplyVector(new Vector3(i, j, k));
+                                            i_xx += location.x * location.x;
+                                            i_xy += location.x * location.y;
+                                            i_yy += location.y * location.y;
+                                            
                                             /*double planeJ_f, planeK_f;
 
                                             if (yNorm < 0)
@@ -721,6 +728,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                             centy += j;
                                             centz += k;
 
+                                            Vector3 location = vesselToSectionNormal.MultiplyVector(new Vector3(i, j, k));
+                                            i_xx += location.x * location.x;
+                                            i_xy += location.x * location.y;
+                                            i_yy += location.y * location.y;
+                                            
                                             /*double planeJ_f, planeK_f;
 
                                             if (yNorm < 0)
@@ -773,10 +785,42 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         else
                             unshadowedCentroid = centroid;*/
                     }
+                    Vector3 localCentroid = vesselToSectionNormal.MultiplyVector(centroid);
+                    i_xx -= areaCount * localCentroid.x * localCentroid.x;
+                    i_xy -= areaCount * localCentroid.x * localCentroid.y;
+                    i_yy -= areaCount * localCentroid.y * localCentroid.y;
+
+                    double tanPrinAngle = TanPrincipalAxisAngle(i_xx, i_yy, i_xy);
+                    Vector3 axis1 = new Vector3(1, 0, 0), axis2 = new Vector3(0, 0, 1);
+                    double flatnessRatio = 1;
+
+                    if (tanPrinAngle != 0)
+                    {
+                        axis1 = new Vector3(1, 0, (float)tanPrinAngle);
+                        axis1.Normalize();
+                        axis2 = new Vector3(axis1.z, 0, -axis1.x);
+
+                        flatnessRatio = i_xy * axis2.z / axis2.x + i_xx;
+                        flatnessRatio = (i_xy * tanPrinAngle + i_xx) / flatnessRatio;
+                        flatnessRatio = Math.Sqrt(Math.Sqrt(flatnessRatio));
+                    }
+
+                    Vector3 principalAxis;
+                    if (flatnessRatio > 1)
+                        principalAxis = axis1;
+                    else
+                    {
+                        flatnessRatio = 1 / flatnessRatio;
+                        principalAxis = axis2;
+                    }
+                    principalAxis = sectionNormalToVesselCoords.MultiplyVector(principalAxis);
+
                     crossSections[m].centroid = centroid * elementSize + lowerRightCorner;
                     //crossSections[m].additonalUnshadowedCentroid = unshadowedCentroid * elementSize + lowerRightCorner;
 
                     crossSections[m].area = areaCount * elementArea;
+                    crossSections[m].flatnessRatio = flatnessRatio;
+                    crossSections[m].flatNormalVector = principalAxis;
                     //crossSections[m].additionalUnshadowedArea = unshadowedAreaCount * elementArea;
 
                     plane.w += wInc;
@@ -799,6 +843,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 zNorm = plane.z * invMag;
 
                 double zAbsNorm = Math.Abs(zNorm);
+
+                double i_xx = 0, i_xy = 0, i_yy = 0;
 
                 int xSectArrayLength = (int)(xCellLength * zAbsNorm + zCellLength * Math.Abs(xNorm) + 1);
                 //Stack allocation of array allows removal of garbage collection issues
@@ -890,6 +936,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                             centy += j;
                                             centz += k;
 
+                                            Vector3 location = vesselToSectionNormal.MultiplyVector(new Vector3(i, j, k));
+                                            i_xx += location.x * location.x;
+                                            i_xy += location.x * location.y;
+                                            i_yy += location.y * location.y;
+                                            
                                             /*double planeI_f, planeJ_f;
 
                                             if (xNorm < 0)
@@ -984,6 +1035,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                             centy += j;
                                             centz += k;
 
+                                            Vector3 location = vesselToSectionNormal.MultiplyVector(new Vector3(i, j, k));
+                                            i_xx += location.x * location.x;
+                                            i_xy += location.x * location.y;
+                                            i_yy += location.y * location.y;
+                                            
                                             /*double planeI_f, planeJ_f;
 
                                             if (xNorm < 0)
@@ -1038,10 +1094,42 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         else
                             unshadowedCentroid = centroid;*/
                     }
+                    Vector3 localCentroid = vesselToSectionNormal.MultiplyVector(centroid);
+                    i_xx -= areaCount * localCentroid.x * localCentroid.x;
+                    i_xy -= areaCount * localCentroid.x * localCentroid.y;
+                    i_yy -= areaCount * localCentroid.y * localCentroid.y;
+
+                    double tanPrinAngle = TanPrincipalAxisAngle(i_xx, i_yy, i_xy);
+                    Vector3 axis1 = new Vector3(1, 0, 0), axis2 = new Vector3(0, 0, 1);
+                    double flatnessRatio = 1;
+
+                    if (tanPrinAngle != 0)
+                    {
+                        axis1 = new Vector3(1, 0, (float)tanPrinAngle);
+                        axis1.Normalize();
+                        axis2 = new Vector3(axis1.z, 0, -axis1.x);
+
+                        flatnessRatio = i_xy * axis2.z / axis2.x + i_xx;
+                        flatnessRatio = (i_xy * tanPrinAngle + i_xx) / flatnessRatio;
+                        flatnessRatio = Math.Sqrt(Math.Sqrt(flatnessRatio));
+                    }
+
+                    Vector3 principalAxis;
+                    if (flatnessRatio > 1)
+                        principalAxis = axis1;
+                    else
+                    {
+                        flatnessRatio = 1 / flatnessRatio;
+                        principalAxis = axis2;
+                    }
+                    principalAxis = sectionNormalToVesselCoords.MultiplyVector(principalAxis);
+
                     crossSections[m].centroid = centroid * elementSize + lowerRightCorner;
                     //crossSections[m].additonalUnshadowedCentroid = unshadowedCentroid * elementSize + lowerRightCorner;
 
                     crossSections[m].area = areaCount * elementArea;
+                    crossSections[m].flatnessRatio = flatnessRatio;
+                    crossSections[m].flatNormalVector = principalAxis;
                     //crossSections[m].additionalUnshadowedArea = unshadowedAreaCount * elementArea;
 
                     plane.w += wInc;
