@@ -15,6 +15,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
         float viscCrossflowDrag;
         float flatnessRatio;
         float invFlatnessRatio;
+        float hypersonicMomentForward;
+        float hypersonicMomentBackward;
 
         List<PartData> partsIncluded;
 
@@ -27,7 +29,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             public float dragFactor;    //sum of these should add up to 1
         }
 
-        public FARAeroSection(FloatCurve xForcePressureAoA0, FloatCurve xForcePressureAoA180, FloatCurve xForceSkinFriction, float areaChange, float viscCrossflowDrag, float flatnessRatio,
+        public FARAeroSection(FloatCurve xForcePressureAoA0, FloatCurve xForcePressureAoA180, FloatCurve xForceSkinFriction, 
+            float areaChange, float viscCrossflowDrag, float flatnessRatio, float hypersonicMomentForward, float hypersonicMomentBackward,
             Vector3 centroidWorldSpace, Vector3 xRefVectorWorldSpace, Vector3 nRefVectorWorldSpace, List<FARAeroPartModule> moduleList, List<float> dragFactor)
         {
             this.xForcePressureAoA0 = xForcePressureAoA0;       //copy references to floatcurves over
@@ -38,6 +41,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             this.viscCrossflowDrag = viscCrossflowDrag;
             this.flatnessRatio = flatnessRatio;
             invFlatnessRatio = 1 / flatnessRatio;
+            this.hypersonicMomentForward = hypersonicMomentForward;
+            this.hypersonicMomentBackward = hypersonicMomentBackward;
 
             partsIncluded = new List<PartData>();
             for(int i = 0; i < moduleList.Count; i++)
@@ -56,6 +61,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
         {
 
             double skinFrictionForce = skinFrictionDrag * xForceSkinFriction.Evaluate(machNumber);      //this will be the same for each part, so why recalc it multiple times?
+            float xForceAoA0 = xForcePressureAoA0.Evaluate(machNumber);
+            float xForceAoA180 = xForcePressureAoA180.Evaluate(machNumber);
 
             for(int i = 0; i < partsIncluded.Count; i++)
             {
@@ -64,16 +71,22 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (aeroModule == null)
                     continue;
 
+                Vector3 xRefVector = data.xRefVectorPartSpace;
+                Vector3 nRefVector = data.nRefVectorPartSpace;
+
                 Vector3 velLocal = aeroModule.partLocalVel;
+                Vector3 angVelLocal = aeroModule.partLocalAngVel;
 
-                Vector3 velLocalNorm = velLocal.normalized;
-                Vector3 localNormalVec = Vector3.Exclude(data.xRefVectorPartSpace, -velLocalNorm).normalized;
+                Vector3 velLocalNorm = aeroModule.partLocalNorm;
+                Vector3 localNormalForceVec = Vector3.Exclude(xRefVector, -velLocalNorm).normalized;
 
-                double cosAoA = Vector3.Dot(data.xRefVectorPartSpace, velLocalNorm);
+                double cosAoA = Vector3.Dot(xRefVector, velLocalNorm);
                 double cosSqrAoA = cosAoA * cosAoA;
-                double sinSqrAoA = 1 - cosSqrAoA;
-                double sin2AoA = 2 * Math.Sqrt(Math.Max(1 - cosSqrAoA, 0)) * Math.Abs(cosAoA);
+                double sinSqrAoA = Math.Max(1 - cosSqrAoA, 0);
+                double sinAoA = Math.Sqrt(sinSqrAoA);
+                double sin2AoA = 2 * sinAoA * Math.Abs(cosAoA);
                 double cosHalfAoA = Math.Sqrt(0.5 + 0.5 * Math.Abs(cosAoA));
+
 
                 double nForce = 0;
                 if(machNumber < 6)
@@ -81,28 +94,63 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (nForce < 0)     //potential flow is not significant over the rear face of things
                     nForce = 0;
                 if (machNumber > 3)
-                    nForce *= 2d - machNumber / 3d;
+                    nForce *= 2d - machNumber * 0.3333333333333333d;
 
                 nForce += viscCrossflowDrag * sinSqrAoA;            //viscous crossflow normal force
 
-                double normalForceFactor = Math.Abs(Vector3.Dot(localNormalVec, data.nRefVectorPartSpace));
+                float normalForceFactor = Math.Abs(Vector3.Dot(localNormalForceVec, nRefVector));
                 normalForceFactor *= normalForceFactor;
 
-                normalForceFactor = invFlatnessRatio * (1d - normalForceFactor) + flatnessRatio * normalForceFactor;     //accounts for changes in relative flatness of shape
+                normalForceFactor = invFlatnessRatio * (1 - normalForceFactor) + flatnessRatio * normalForceFactor;     //accounts for changes in relative flatness of shape
 
                 nForce *= normalForceFactor;
 
                 double xForce = -skinFrictionForce * Math.Sign(cosAoA) * cosSqrAoA;
+                float moment = (float)(cosAoA * sinAoA);
+                float dampingMoment = 0.05f * moment;
+
                 if (cosAoA > 0)
-                    xForce += cosSqrAoA * xForcePressureAoA0.Evaluate(machNumber);
+                {
+                    xForce += cosSqrAoA * xForceAoA0;
+                    moment *= -hypersonicMomentForward;
+                    dampingMoment *= -hypersonicMomentForward;
+                }
                 else
-                    xForce += cosSqrAoA * xForcePressureAoA180.Evaluate(machNumber);
+                {
+                    xForce += cosSqrAoA * xForceAoA180;
+                    moment *= hypersonicMomentBackward;
+                    dampingMoment *= hypersonicMomentBackward;
+                }
+                moment /= normalForceFactor;
+                dampingMoment = Math.Abs(dampingMoment);
 
-                Vector3 forceVector = (float)xForce * data.xRefVectorPartSpace + (float)nForce * localNormalVec;
-                forceVector *= 0.0005f * atmDensity * velLocal.sqrMagnitude;        //dyn pres and N -> kN conversion
-                forceVector *= data.dragFactor;
+                if(double.IsNaN(xForce))
+                {
+                    Debug.Log("xForce is NaN");
+                    xForce = 0;
+                }
+                if (double.IsNaN(nForce))
+                {
+                    Debug.Log("nForce is NaN");
+                    nForce = 0;
+                }
+                if(double.IsNaN(moment))
+                {
+                    Debug.Log("moment is NaN");
+                    moment = 0;
+                    dampingMoment = 0;
+                }
 
-                aeroModule.AddLocalForce(forceVector, data.centroidPartSpace);
+                Vector3 forceVector = (float)xForce * xRefVector + (float)nForce * localNormalForceVec;
+                Vector3 torqueVector = Vector3.Cross(xRefVector, localNormalForceVec) * moment;
+                torqueVector -= dampingMoment * angVelLocal;
+
+                float dynPresAndScaling = 0.0005f * atmDensity * velLocal.sqrMagnitude * data.dragFactor;        //dyn pres and N -> kN conversion
+
+                forceVector *= dynPresAndScaling;
+                torqueVector *= dynPresAndScaling;
+
+                aeroModule.AddLocalForceAndTorque(forceVector, torqueVector, data.centroidPartSpace);
             }
         }
     }

@@ -62,8 +62,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
         List<FARAeroSection> _currentAeroSections;
         List<FARAeroSection> _newAeroSections;
 
-        int _updateRateLimiter = 0;
-        bool _updateQueued = false;
+        int _updateRateLimiter = 20;
+        bool _updateQueued = true;
 
         private void Start()
         {
@@ -107,7 +107,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     FARAeroPartModule m = _currentAeroModules[i];
                     if (m != null)
-                        m.UpdateVelocity(frameVel);
+                        m.UpdateVelocityAndAngVelocity(frameVel);
                 }
                 
                 for (int i = 0; i < _currentAeroSections.Count; i++)
@@ -119,18 +119,18 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if (m != null)
                         m.ApplyForces();
                 }
+
+                if (_updateRateLimiter < 20)
+                {
+                    _updateRateLimiter++;
+                }
+                else if (_updateQueued)
+                    VesselUpdate();
             }
-            if (_updateRateLimiter < 20)
-            {
-                _updateRateLimiter++;
-            }
-            else if (_updateQueued)
-                VesselUpdate();
         }
 
         public void AnimationVoxelUpdate()
         {
-            Debug.Log("AnimUpdate");
             VesselUpdate();
         }
 
@@ -138,12 +138,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
         {
             if(_vessel == null)
                 _vessel = gameObject.GetComponent<Vessel>();
-            if (_updateRateLimiter < 20)
+
+            if (_updateRateLimiter < 20)        //this has been updated recently in the past; queue an update and return
             {
                 _updateQueued = true;
                 return;
             }
-            else
+            else                                //last update was far enough in the past to run; reset rate limit counter and clear the queued flag
             {
                 _updateRateLimiter = 0;
                 _updateQueued = false;
@@ -259,14 +260,18 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 float viscCrossflowDrag = (float)(Math.Sqrt(curArea / Math.PI) * sectionThickness * 2.4d);
 
-                double surfaceArea = 2d * Math.Sqrt(curArea * Math.PI); //section circumference
+                double surfaceArea = curArea * Math.PI;
+                if(surfaceArea < 0)
+                    surfaceArea = 0;
+                surfaceArea = 2d * Math.Sqrt(surfaceArea); //section circumference
                 surfaceArea *= sectionThickness;    //section surface area for viscous effects
 
                 xForceSkinFriction.Add(0f, (float)(surfaceArea * viscousDragFactor), 0, 0);   //subsonic incomp visc drag
                 xForceSkinFriction.Add(1f, (float)(surfaceArea * viscousDragFactor), 0, 0);   //transonic visc drag
                 xForceSkinFriction.Add(2f, (float)surfaceArea, 0, 0);                     //above Mach 1.4, visc is purely surface drag, no pressure-related components simulated
 
-                float sonicWaveDrag = (float)CalculateTransonicWaveDrag(i, index, numSections, front, sectionThickness * sectionThickness);
+                float sonicWaveDrag = (float)CalculateTransonicWaveDrag(i, index, numSections, front, sectionThickness, Math.Min(maxCrossSectionArea * 0.1, curArea * 0.25));
+                sonicWaveDrag *= 0.8f;     //this is just to account for the higher drag being felt due to the inherent blockiness of the model being used
                 float hypersonicDragForward = (float)CalculateHypersonicDrag(prevArea, curArea, sectionThickness);
                 float hypersonicDragBackward = (float)CalculateHypersonicDrag(nextArea, curArea, sectionThickness);
 
@@ -274,6 +279,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     hypersonicDragForward = 0;
                 if (hypersonicDragBackward > 0)
                     hypersonicDragBackward = 0;
+
+                float hypersonicMomentForward = (float)CalculateHypersonicMoment(prevArea, curArea, sectionThickness);
+                float hypersonicMomentBackward = (float)CalculateHypersonicMoment(nextArea, curArea, sectionThickness);
 
                 xForcePressureAoA0.Add(25f, hypersonicDragForward, 0f, 0f);
                 xForcePressureAoA180.Add(25f, -hypersonicDragBackward, 0f, 0f);
@@ -283,24 +291,24 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     xForcePressureAoA0.Add((float)criticalMachNumber, hypersonicDragForward * 0.4f, 0f, 0f);    //hypersonic drag used as a proxy for effects due to flow separation
                     xForcePressureAoA180.Add((float)criticalMachNumber, (sonicBaseDrag * 0.1f - hypersonicDragBackward * 0.4f), 0f, 0f);
 
-                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.6f, 0f, 0f);     //positive is force forward; negative is force backward
-                    xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.6f + sonicBaseDrag, 0f, 0f);
+                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.2f, 0f, 0f);     //positive is force forward; negative is force backward
+                    xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.2f + sonicBaseDrag, 0f, 0f);
                 }
                 else if (sonicBaseDrag < 0)
                 {
                     xForcePressureAoA0.Add((float)criticalMachNumber, (sonicBaseDrag * 0.1f + hypersonicDragForward * 0.4f), 0f, 0f);
                     xForcePressureAoA180.Add((float)criticalMachNumber, -hypersonicDragBackward * 0.4f, 0f, 0f);
 
-                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.6f + sonicBaseDrag, 0f, 0f);     //positive is force forward; negative is force backward
-                    xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.6f, 0f, 0f);
+                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.2f + sonicBaseDrag, 0f, 0f);     //positive is force forward; negative is force backward
+                    xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.2f, 0f, 0f);
                 }
                 else
                 {
                     xForcePressureAoA0.Add((float)criticalMachNumber, hypersonicDragForward * 0.4f, 0f, 0f);
                     xForcePressureAoA180.Add((float)criticalMachNumber, -hypersonicDragBackward * 0.4f, 0f, 0f);
 
-                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.6f, 0f, 0f);     //positive is force forward; negative is force backward
-                    xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.6f, 0f, 0f);
+                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.2f, 0f, 0f);     //positive is force forward; negative is force backward
+                    xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.2f, 0f, 0f);
                 }
 
                 Vector3 xRefVector;
@@ -329,7 +337,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     weighting.Add(1 / (float)includedModules.Count);
                 }
-                FARAeroSection section = new FARAeroSection(xForcePressureAoA0, xForcePressureAoA180, xForceSkinFriction, areaChange, viscCrossflowDrag, (float)flatnessRatio,
+                FARAeroSection section = new FARAeroSection(xForcePressureAoA0, xForcePressureAoA180, xForceSkinFriction, areaChange, viscCrossflowDrag
+                    , (float)flatnessRatio, hypersonicMomentForward, hypersonicMomentBackward, 
                     centroid, xRefVector, nRefVector, includedModules, weighting);
 
                 _newAeroSections.Add(section);
@@ -338,31 +347,51 @@ namespace FerramAerospaceResearch.FARAeroComponents
             _newAeroModules = tmpAeroModules.ToList();
         }
 
+        private double CalculateHypersonicMoment(double lowArea, double highArea, double sectionThickness)
+        {
+            double moment = highArea + lowArea - 2 * Math.Sqrt(highArea * lowArea);
+            moment = moment / (moment + sectionThickness * sectionThickness * Math.PI);     //calculate sin^2
+            if (moment < 0)
+                return 0;
+            moment = moment * Math.Sqrt(Math.Max(1 - moment, 0));
+            moment *= Math.Sqrt(Math.Max(highArea * Math.PI, 0)) + Math.Sqrt(Math.Max(lowArea * Math.PI, 0)) * 2;     //account for radius and factor of 4pi
+            moment *= (highArea - lowArea) * 2;     //account for area to act over and Cp max = 2
+            return -moment;
+        }
+
         private double CalculateHypersonicDrag(double lowArea, double highArea, double sectionThickness)
         {
             double drag = highArea + lowArea - 2 * Math.Sqrt(highArea * lowArea);
-            drag = drag / (drag + sectionThickness * sectionThickness * Math.PI);
+            drag = drag / (drag + sectionThickness * sectionThickness * Math.PI);       //calculate sin^2
             drag *= drag * drag;
+            if (drag < 0)
+                return 0;
             drag = Math.Sqrt(drag);
             drag *= (lowArea - highArea) * 2;
             return drag;        //force is negative 
         }
 
-        private double CalculateTransonicWaveDrag(int i, int index, int numSections, int front, double sectionThicknessSq)
+        private double CalculateTransonicWaveDrag(int i, int index, int numSections, int front, double sectionThickness, double cutoff)
         {
-            double lastLj = 0;
+            double currentSectAreaCrossSection = Math.Min(_vehicleCrossSection[index].areaDeriv2ToNextSection, cutoff);
+
+            if (currentSectAreaCrossSection == 0)       //quick escape for 0 cross-section section drag
+                return 0;
+            
+            double lj2ndTerm = 0;
             double drag = 0;
             int limDoubleDrag = Math.Min(i, numSections - i);
+            double sectionThicknessSq = sectionThickness * sectionThickness;
 
             for (int j = 0; j <= limDoubleDrag; j++)      //section of influence from ahead and behind
             {
                 double thisLj = (j + 0.5) * Math.Log(j + 0.5);
                 double tmp = thisLj;
-                thisLj -= lastLj;
-                lastLj = tmp;
+                thisLj -= lj2ndTerm;
+                lj2ndTerm = tmp;
 
-                tmp = Math.Min(_vehicleCrossSection[index + j].areaDeriv2ToNextSection, _vehicleCrossSection[index + j].area * sectionThicknessSq);
-                tmp += Math.Min(_vehicleCrossSection[index - j].areaDeriv2ToNextSection, _vehicleCrossSection[index - j].area * sectionThicknessSq);
+                tmp = Math.Min(_vehicleCrossSection[index + j].areaDeriv2ToNextSection, cutoff);
+                tmp += Math.Min(_vehicleCrossSection[index - j].areaDeriv2ToNextSection, cutoff);
 
                 drag += tmp * thisLj;
             }
@@ -372,24 +401,24 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     double thisLj = (j - i + 0.5) * Math.Log(j - i + 0.5);
                     double tmp = thisLj;
-                    thisLj -= lastLj;
-                    lastLj = tmp;
+                    thisLj -= lj2ndTerm;
+                    lj2ndTerm = tmp;
 
-                    tmp = Math.Min(_vehicleCrossSection[j + front].areaDeriv2ToNextSection, _vehicleCrossSection[j + front].area * sectionThicknessSq);
+                    tmp = Math.Min(_vehicleCrossSection[j + front].areaDeriv2ToNextSection, cutoff);
 
                     drag += tmp * thisLj;
                 }
             }
             else if (i > numSections - i)
             {
-                for (int j = 0; j < numSections - 2 * i - 1; j++)
+                for (int j = numSections - 2 * i - 2; j >= 0; j--)
                 {
                     double thisLj = (i - j + 0.5) * Math.Log(i - j + 0.5);
                     double tmp = thisLj;
-                    thisLj -= lastLj;
-                    lastLj = tmp;
+                    thisLj -= lj2ndTerm;
+                    lj2ndTerm = tmp;
 
-                    tmp = Math.Min(_vehicleCrossSection[j + front].areaDeriv2ToNextSection, _vehicleCrossSection[j + front].area * sectionThicknessSq);
+                    tmp = Math.Min(_vehicleCrossSection[j + front].areaDeriv2ToNextSection, cutoff);
 
                     drag += tmp * thisLj;
                 }
@@ -397,7 +426,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             drag *= sectionThicknessSq;
             drag /= 2 * Math.PI;
-            drag *= Math.Min(_vehicleCrossSection[index].areaDeriv2ToNextSection, _vehicleCrossSection[index].area * sectionThicknessSq);
+            drag *= currentSectAreaCrossSection;
             return -drag;
         }
 

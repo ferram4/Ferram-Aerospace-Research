@@ -221,7 +221,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 ModuleJettison[] jettisons = part.GetComponents<ModuleJettison>();
                 foreach (ModuleJettison j in jettisons)
                 {
-                    if (j.isJettisoned || j.jettisonTransform == null || !j.jettisonTransform.gameObject.activeSelf)
+                    if (j.isJettisoned || j.jettisonTransform == null || j.checkBottomNode)
                         continue;
 
                     Transform t = j.jettisonTransform;

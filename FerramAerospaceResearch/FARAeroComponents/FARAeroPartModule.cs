@@ -47,6 +47,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
     public class FARAeroPartModule : PartModule
     {
         public Vector3 partLocalVel;
+        public Vector3 partLocalAngVel;
+        public Vector3 partLocalNorm;
         Vector3 partLocalForce;
         Vector3 partLocalTorque;
 
@@ -80,10 +82,27 @@ namespace FerramAerospaceResearch.FARAeroComponents
             this.partLocalTorque += Vector3.Cross(partLocalLocation - part.CoMOffset, partLocalForce);
         }
 
-        public void UpdateVelocity(Vector3 frameVel)
+        public void AddLocalForceAndTorque(Vector3 partLocalForce, Vector3 partLocalTorque, Vector3 partLocalLocation)
+        {
+            Vector3 localRadVector = partLocalLocation - part.CoMOffset;
+            this.partLocalForce += partLocalForce;
+            this.partLocalTorque += Vector3.Cross(localRadVector, partLocalForce);
+
+            this.partLocalTorque += partLocalTorque;
+            //this.partLocalForce += Vector3.Cross(partLocalTorque, localRadVector) / localRadVector.sqrMagnitude;
+        }
+
+        public void UpdateVelocityAndAngVelocity(Vector3 frameVel)
         {
             partLocalVel = part.Rigidbody.velocity + frameVel;
             partLocalVel = part.transform.worldToLocalMatrix.MultiplyVector(partLocalVel);
+
+            partLocalNorm = partLocalVel.normalized;
+
+            partLocalAngVel = part.Rigidbody.angularVelocity;
+            partLocalAngVel = part.transform.worldToLocalMatrix.MultiplyVector(partLocalAngVel);
         }
+
+    
     }
 }

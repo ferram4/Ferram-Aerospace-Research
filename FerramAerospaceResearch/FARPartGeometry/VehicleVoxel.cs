@@ -496,6 +496,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         flatnessRatio = (i_xy * tanPrinAngle + i_xx) / flatnessRatio;
                         flatnessRatio = Math.Sqrt(Math.Sqrt(flatnessRatio));
                     }
+                    if (double.IsNaN(flatnessRatio))
+                        flatnessRatio = 1;
 
                     Vector3 principalAxis;
                     if (flatnessRatio > 1)
@@ -505,6 +507,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         flatnessRatio = 1 / flatnessRatio;
                         principalAxis = axis2;
                     }
+                    if (flatnessRatio > 10)
+                        flatnessRatio = 10;
+
                     principalAxis = sectionNormalToVesselCoords.MultiplyVector(principalAxis);
 
                     crossSections[m].centroid = centroid * elementSize + lowerRightCorner;
@@ -804,6 +809,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         flatnessRatio = (i_xy * tanPrinAngle + i_xx) / flatnessRatio;
                         flatnessRatio = Math.Sqrt(Math.Sqrt(flatnessRatio));
                     }
+                    if (double.IsNaN(flatnessRatio))
+                        flatnessRatio = 1;
 
                     Vector3 principalAxis;
                     if (flatnessRatio > 1)
@@ -813,6 +820,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         flatnessRatio = 1 / flatnessRatio;
                         principalAxis = axis2;
                     }
+                    if (flatnessRatio > 10)
+                        flatnessRatio = 10;
+
                     principalAxis = sectionNormalToVesselCoords.MultiplyVector(principalAxis);
 
                     crossSections[m].centroid = centroid * elementSize + lowerRightCorner;
@@ -1113,6 +1123,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         flatnessRatio = (i_xy * tanPrinAngle + i_xx) / flatnessRatio;
                         flatnessRatio = Math.Sqrt(Math.Sqrt(flatnessRatio));
                     }
+                    if (double.IsNaN(flatnessRatio))
+                        flatnessRatio = 1;
 
                     Vector3 principalAxis;
                     if (flatnessRatio > 1)
@@ -1122,6 +1134,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         flatnessRatio = 1 / flatnessRatio;
                         principalAxis = axis2;
                     }
+                    if (flatnessRatio > 10)
+                        flatnessRatio = 10;
+                    
                     principalAxis = sectionNormalToVesselCoords.MultiplyVector(principalAxis);
 
                     crossSections[m].centroid = centroid * elementSize + lowerRightCorner;
