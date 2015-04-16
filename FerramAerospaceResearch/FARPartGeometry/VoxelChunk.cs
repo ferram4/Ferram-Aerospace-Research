@@ -46,7 +46,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
         //private Part[, ,] voxelPoints = null;
         //private byte[,] voxelPoints = null;
         //private BitArray voxelPoints = null;
-        private bool[] voxelPoints = null;
+        //private bool[] voxelPoints = null;
+        private Part[] voxelPoints = null;
         private DebugVisualVoxel[, ,] visualVoxels = null;
         public HashSet<Part> includedParts = new HashSet<Part>();
         private Part firstPart = null;
@@ -65,7 +66,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             this.kOffset = kOffset;*/
             //voxelPoints = new Part[xLength, yLength, zLength];
             //voxelPoints = new BitArray(512);
-            voxelPoints = new bool[512];
+            voxelPoints = new Part[512];
             this.lowerCorner = lowerCorner;
         }
 
@@ -76,7 +77,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             //voxelPoints[i, j, k] = p;
             //voxelPoints.Set(i + 8 * j + 64 * k - offset, true);
-            voxelPoints[i + 8 * j + 64 * k - offset] =  true;
+            voxelPoints[i + 8 * j + 64 * k - offset] =  p;
             //voxelPoints[i - iOffset, j - jOffset] |= (byte)(1 << (k - kOffset));
             if (!includedParts.Contains(p))
                 includedParts.Add(p);
@@ -91,7 +92,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 //voxelPoints[i, j, k] = p;
                 //voxelPoints.Set(i + 8 * j + 64 * k - offset, true);
-                voxelPoints[i + 8 * j + 64 * k - offset] = true;
+                voxelPoints[i + 8 * j + 64 * k - offset] = p;
                 //voxelPoints[i - iOffset, j - jOffset] |= (byte)(1 << (k - kOffset));
                 if (!includedParts.Contains(p))
                     includedParts.Add(p);
@@ -136,8 +137,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 //p = voxelPoints[i, j, k];
                 //if ((voxelPoints[i - iOffset, j - jOffset] & (1 << (k - kOffset))) != 0)
                 //    p = firstPart;
-            if (voxelPoints[i + 8 * j + 64 * k - offset])
-                p = firstPart;
+            p = voxelPoints[i + 8 * j + 64 * k - offset];
             //}
             return p;
         }
@@ -149,7 +149,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 //voxelPoints[i, j, k] = p;
                 //voxelPoints[i, j] |= (byte)(1 << k);
-                voxelPoints[i + 8 * j + 64 * k] = true;
+                voxelPoints[i + 8 * j + 64 * k] = p;
                 if (!includedParts.Contains(p))
                     includedParts.Add(p);
                 if (firstPart == null)
@@ -163,8 +163,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             lock (voxelPoints)
             {
                 //p = voxelPoints[i, j, k];
-                if (voxelPoints[i + 8 * j + 64 * k])
-                    p = firstPart;
+                p = voxelPoints[i + 8 * j + 64 * k];
             }
             return p;
         }

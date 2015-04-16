@@ -150,6 +150,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 _updateQueued = false;
             }
             _vType = _vessel.vesselType;
+
             _voxelCount = VoxelCountFromType();
 
             ThreadPool.QueueUserWorkItem(CreateVoxel);
@@ -350,6 +351,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 tmpAeroModules.UnionWith(includedModules);
             }
             _newAeroModules = tmpAeroModules.ToList();
+            _voxel = null;
         }
 
         private double CalculateHypersonicMoment(double lowArea, double highArea, double sectionThickness)
