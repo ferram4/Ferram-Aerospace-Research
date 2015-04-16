@@ -49,9 +49,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 PartData data = new PartData();
                 data.aeroModule = moduleList[i];
-                data.centroidPartSpace = data.aeroModule.transform.worldToLocalMatrix.MultiplyPoint3x4(centroidWorldSpace);
-                data.xRefVectorPartSpace = data.aeroModule.transform.worldToLocalMatrix.MultiplyVector(xRefVectorWorldSpace);
-                data.nRefVectorPartSpace = data.aeroModule.transform.worldToLocalMatrix.MultiplyVector(nRefVectorWorldSpace);
+                Matrix4x4 transformMatrix = data.aeroModule.transform.worldToLocalMatrix;
+                data.centroidPartSpace = transformMatrix.MultiplyPoint3x4(centroidWorldSpace);
+                data.xRefVectorPartSpace = transformMatrix.MultiplyVector(xRefVectorWorldSpace);
+                data.nRefVectorPartSpace = transformMatrix.MultiplyVector(nRefVectorWorldSpace);
                 data.dragFactor = dragFactor[i];
                 partsIncluded.Add(data);
             }
@@ -78,7 +79,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 Vector3 angVelLocal = aeroModule.partLocalAngVel;
 
-                velLocal += Vector3.Cross(data.centroidPartSpace, angVelLocal);
+                //velLocal += Vector3.Cross(angVelLocal, data.centroidPartSpace);       //some transform issue here, needs investigation
                 Vector3 velLocalNorm = velLocal.normalized;
 
                 Vector3 localNormalForceVec = Vector3.Exclude(xRefVector, -velLocalNorm).normalized;
