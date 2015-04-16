@@ -296,24 +296,24 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     xForcePressureAoA0.Add((float)criticalMachNumber, hypersonicDragForward * 0.4f, 0f, 0f);    //hypersonic drag used as a proxy for effects due to flow separation
                     xForcePressureAoA180.Add((float)criticalMachNumber, (sonicBaseDrag * 0.1f - hypersonicDragBackward * 0.4f), 0f, 0f);
 
-                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.2f, 0f, 0f);     //positive is force forward; negative is force backward
-                    xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.2f + sonicBaseDrag, 0f, 0f);
+                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.35f, 0f, 0f);     //positive is force forward; negative is force backward
+                    xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.35f + sonicBaseDrag, 0f, 0f);
                 }
                 else if (sonicBaseDrag < 0)
                 {
                     xForcePressureAoA0.Add((float)criticalMachNumber, (sonicBaseDrag * 0.1f + hypersonicDragForward * 0.4f), 0f, 0f);
                     xForcePressureAoA180.Add((float)criticalMachNumber, -hypersonicDragBackward * 0.4f, 0f, 0f);
 
-                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.2f + sonicBaseDrag, 0f, 0f);     //positive is force forward; negative is force backward
-                    xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.2f, 0f, 0f);
+                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.35f + sonicBaseDrag, 0f, 0f);     //positive is force forward; negative is force backward
+                    xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.35f, 0f, 0f);
                 }
                 else
                 {
                     xForcePressureAoA0.Add((float)criticalMachNumber, hypersonicDragForward * 0.4f, 0f, 0f);
                     xForcePressureAoA180.Add((float)criticalMachNumber, -hypersonicDragBackward * 0.4f, 0f, 0f);
 
-                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.2f, 0f, 0f);     //positive is force forward; negative is force backward
-                    xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.2f, 0f, 0f);
+                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.35f, 0f, 0f);     //positive is force forward; negative is force backward
+                    xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.35f, 0f, 0f);
                 }
 
                 Vector3 xRefVector;
