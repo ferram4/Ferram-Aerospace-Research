@@ -75,9 +75,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 Vector3 nRefVector = data.nRefVectorPartSpace;
 
                 Vector3 velLocal = aeroModule.partLocalVel;
+
                 Vector3 angVelLocal = aeroModule.partLocalAngVel;
 
-                Vector3 velLocalNorm = aeroModule.partLocalNorm;
+                velLocal += Vector3.Cross(data.centroidPartSpace, angVelLocal);
+                Vector3 velLocalNorm = velLocal.normalized;
+
                 Vector3 localNormalForceVec = Vector3.Exclude(xRefVector, -velLocalNorm).normalized;
 
                 double cosAoA = Vector3.Dot(xRefVector, velLocalNorm);

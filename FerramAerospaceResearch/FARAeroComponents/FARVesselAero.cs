@@ -283,6 +283,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 float hypersonicMomentForward = (float)CalculateHypersonicMoment(prevArea, curArea, sectionThickness);
                 float hypersonicMomentBackward = (float)CalculateHypersonicMoment(nextArea, curArea, sectionThickness);
 
+                if (hypersonicMomentForward > 0)
+                    hypersonicMomentForward = 0;
+                if (hypersonicMomentBackward > 0)
+                    hypersonicMomentBackward = 0;
+
                 xForcePressureAoA0.Add(25f, hypersonicDragForward, 0f, 0f);
                 xForcePressureAoA180.Add(25f, -hypersonicDragBackward, 0f, 0f);
 
