@@ -47,7 +47,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
         public double area;
         public Vector3d centroid;
         public double areaDeriv2ToNextSection;   //second derivative of area, which is constant between sections; this is the value between this and the next section
-        public List<Part> includedParts;
 
         public double flatnessRatio;            //ratio of the longest distance to shortest distance of the cross-section.  Used in calculating body lift and drag
         public Vector3d flatNormalVector;       //unit vector indicating the direction perpendicular to the longest distance on the cross-section
@@ -57,5 +56,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         //public double removedArea;               //area removed from this particular crosssection, compared to the one in front of it
         //public Vector3d removedCentroid;          //centroid of removedArea
+
+        public Dictionary<Part, SideAreaValues> partSideAreaValues;
+
+        public class SideAreaValues
+        {
+            public double xP, xN, yP, yN, zP, zN;
+            public double count;
+        }
     }
 }

@@ -43,14 +43,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
 {
     unsafe class VoxelChunk
     {
-        //private Part[, ,] voxelPoints = null;
-        //private byte[,] voxelPoints = null;
-        //private BitArray voxelPoints = null;
-        //private bool[] voxelPoints = null;
         private Part[] voxelPoints = null;
         private DebugVisualVoxel[, ,] visualVoxels = null;
-        public HashSet<Part> includedParts = new HashSet<Part>();
-        private Part firstPart = null;
 
         double size;
         Vector3d lowerCorner;
@@ -61,11 +55,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             this.size = size;
             offset = iOffset + 8 * jOffset + 64 * kOffset;
-            /*this.iOffset = iOffset;
-            this.jOffset = jOffset;
-            this.kOffset = kOffset;*/
-            //voxelPoints = new Part[xLength, yLength, zLength];
-            //voxelPoints = new BitArray(512);
             voxelPoints = new Part[512];
             this.lowerCorner = lowerCorner;
         }
@@ -74,97 +63,51 @@ namespace FerramAerospaceResearch.FARPartGeometry
         //Use when certian that locking is unnecessary
         public unsafe void SetVoxelPointGlobalIndexNoLock(int i, int j, int k, Part p)
         {
-
-            //voxelPoints[i, j, k] = p;
-            //voxelPoints.Set(i + 8 * j + 64 * k - offset, true);
-            voxelPoints[i + 8 * j + 64 * k - offset] =  p;
-            //voxelPoints[i - iOffset, j - jOffset] |= (byte)(1 << (k - kOffset));
-            if (!includedParts.Contains(p))
-                includedParts.Add(p);
-            if (firstPart == null)
-                firstPart = p;
-            
+            voxelPoints[i + 8 * j + 64 * k - offset] =  p;          
         }
         //Sets point and ensures that includedParts includes p
         public unsafe void SetVoxelPointGlobalIndex(int i, int j, int k, Part p)
         {
             lock (voxelPoints)
             {
-                //voxelPoints[i, j, k] = p;
-                //voxelPoints.Set(i + 8 * j + 64 * k - offset, true);
                 voxelPoints[i + 8 * j + 64 * k - offset] = p;
-                //voxelPoints[i - iOffset, j - jOffset] |= (byte)(1 << (k - kOffset));
-                if (!includedParts.Contains(p))
-                    includedParts.Add(p);
-                if (firstPart == null)
-                    firstPart = p;
             }
         }
 
         public unsafe bool VoxelPointExistsLocalIndex(int zeroBaseIndex)
         {
-            //return (voxelPoints[i - iOffset, j - jOffset] & (1 << (k - kOffset))) != 0;
-            //return voxelPoints.Get(i + 8 * j + 64 * k - offset);
             return voxelPoints[zeroBaseIndex];
         }
 
         public unsafe bool VoxelPointExistsLocalIndex(int i, int j, int k)
         {
-            //return (voxelPoints[i - iOffset, j - jOffset] & (1 << (k - kOffset))) != 0;
-            //return voxelPoints.Get(i + 8 * j + 64 * k);
             return voxelPoints[i + 8 * j + 64 * k];
         }
 
         public unsafe bool VoxelPointExistsGlobalIndex(int zeroBaseIndex)
         {
-            //return (voxelPoints[i - iOffset, j - jOffset] & (1 << (k - kOffset))) != 0;
-            //return voxelPoints.Get(i + 8 * j + 64 * k - offset);
             return voxelPoints[zeroBaseIndex - offset];
         }
         
         public unsafe bool VoxelPointExistsGlobalIndex(int i, int j, int k)
         {
-            //return (voxelPoints[i - iOffset, j - jOffset] & (1 << (k - kOffset))) != 0;
-            //return voxelPoints.Get(i + 8 * j + 64 * k - offset);
             return voxelPoints[i + 8 * j + 64 * k - offset];
         }
 
-        public unsafe Part GetVoxelPointGlobalIndex(int i, int j, int k)
+
+        public unsafe Part GetVoxelPartGlobalIndex(int zeroBaseIndex)
         {
             Part p = null;
-            //lock (voxelPoints)      //Locks are not needed because reading and writing are not done in different threads simultaneously
-            //{
-                //p = voxelPoints[i, j, k];
-                //if ((voxelPoints[i - iOffset, j - jOffset] & (1 << (k - kOffset))) != 0)
-                //    p = firstPart;
-            p = voxelPoints[i + 8 * j + 64 * k - offset];
-            //}
+            p = voxelPoints[zeroBaseIndex - offset];
             return p;
         }
         
-        //Sets point and ensures that includedParts includes p
-        public unsafe void SetVoxelPointLocalIndex(int i, int j, int k, Part p)
-        {
-            lock (voxelPoints)
-            {
-                //voxelPoints[i, j, k] = p;
-                //voxelPoints[i, j] |= (byte)(1 << k);
-                voxelPoints[i + 8 * j + 64 * k] = p;
-                if (!includedParts.Contains(p))
-                    includedParts.Add(p);
-                if (firstPart == null)
-                    firstPart = p;
-            }
-        }
-
-        public unsafe Part GetVoxelPointLocalIndex(int i, int j, int k)
+        public unsafe Part GetVoxelPartGlobalIndex(int i, int j, int k)
         {
             Part p = null;
-            lock (voxelPoints)
-            {
-                //p = voxelPoints[i, j, k];
-                p = voxelPoints[i + 8 * j + 64 * k];
-            }
+
+            p = voxelPoints[i + 8 * j + 64 * k - offset];
+
             return p;
         }
 
@@ -204,5 +147,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             ClearVisualVoxels();
         }
+
     }
 }

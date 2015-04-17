@@ -104,7 +104,5 @@ namespace FerramAerospaceResearch.FARAeroComponents
             partLocalAngVel = rb.angularVelocity;
             partLocalAngVel = matrix.MultiplyVector(partLocalAngVel);
         }
-
-    
     }
 }

@@ -173,12 +173,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 VehicleVoxel newvoxel = new VehicleVoxel(_vessel.parts, _voxelCount, true, true);
 
-                _vehicleCrossSection = new VoxelCrossSection[newvoxel.MaxArrayLength];
-                for (int i = 0; i < _vehicleCrossSection.Length; i++)
-                    _vehicleCrossSection[i].includedParts = new List<Part>();
+                _vehicleCrossSection = newvoxel.EmptyCrossSectionArray;
 
                 _voxel = newvoxel;
-
 
                 CalculateVesselAeroProperties();
                 ready = true;
@@ -329,19 +326,24 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 xRefVector = _vessel.transform.localToWorldMatrix.MultiplyVector(xRefVector);
                 nRefVector = _vessel.transform.localToWorldMatrix.MultiplyVector(nRefVector);
 
-                List<Part> includedParts = _vehicleCrossSection[index].includedParts;
+                Dictionary<Part, VoxelCrossSection.SideAreaValues> includedPartsAndAreas = _vehicleCrossSection[index].partSideAreaValues;
                 List<FARAeroPartModule> includedModules = new List<FARAeroPartModule>();
                 List<float> weighting = new List<float>();
 
-                for (int j = 0; j < includedParts.Count;j++)
+                float weightingFactor = 0;
+
+                foreach(KeyValuePair<Part, VoxelCrossSection.SideAreaValues> pair in includedPartsAndAreas)
                 {
-                    FARAeroPartModule m = includedParts[j].GetComponent<FARAeroPartModule>();
+                    FARAeroPartModule m = pair.Key.GetComponent<FARAeroPartModule>();
                     if (m != null)
                         includedModules.Add(m);
+                    weightingFactor += (float)pair.Value.count;
+                    weighting.Add((float)pair.Value.count);
                 }
+                weightingFactor = 1 / weightingFactor;
                 for (int j = 0; j < includedModules.Count; j++)
                 {
-                    weighting.Add(1 / (float)includedModules.Count);
+                    weighting[j] *= weightingFactor;
                 }
                 FARAeroSection section = new FARAeroSection(xForcePressureAoA0, xForcePressureAoA180, xForceSkinFriction, areaChange, viscCrossflowDrag
                     , (float)flatnessRatio, hypersonicMomentForward, hypersonicMomentBackward, 
