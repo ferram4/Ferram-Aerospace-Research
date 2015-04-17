@@ -1014,32 +1014,32 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
             if (i + 1 >= xCellLength || (object)GetPartAtVoxelPos(i + 1, j, k) == null)
             {
-                areas.xP++;
+                areas.iP += elementSize * elementSize;
                 partGetsForces = true;
             }
             if (i - 1 < 0 || (object)GetPartAtVoxelPos(i - 1, j, k) == null)
             {
-                areas.xN++;
+                areas.iN += elementSize * elementSize;
                 partGetsForces = true;
             }
             if (j + 1 >= yCellLength || (object)GetPartAtVoxelPos(i, j + 1, k) == null)
             {
-                areas.yP++;
+                areas.jP += elementSize * elementSize;
                 partGetsForces = true;
             }
             if (j - 1 < 0 || (object)GetPartAtVoxelPos(i, j - 1, k) == null)
             {
-                areas.yN++;
+                areas.jN += elementSize * elementSize;
                 partGetsForces = true;
             }
             if (k + 1 >= zCellLength || (object)GetPartAtVoxelPos(i, j, k + 1) == null)
             {
-                areas.zP++;
+                areas.kP += elementSize * elementSize;
                 partGetsForces = true;
             }
             if (k - 1 < 0 || (object)GetPartAtVoxelPos(i, j, k - 1) == null)
             {
-                areas.zN++;
+                areas.kN += elementSize * elementSize;
                 partGetsForces = true;
             }
             if (partGetsForces)

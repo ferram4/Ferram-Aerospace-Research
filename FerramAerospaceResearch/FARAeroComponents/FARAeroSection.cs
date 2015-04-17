@@ -27,11 +27,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
             public Vector3 xRefVectorPartSpace;
             public Vector3 nRefVectorPartSpace;
             public float dragFactor;    //sum of these should add up to 1
+            public float iP, iN, jP, jN, kP, kN;    //part local x, y, and z areas for heating
         }
 
         public FARAeroSection(FloatCurve xForcePressureAoA0, FloatCurve xForcePressureAoA180, FloatCurve xForceSkinFriction, 
             float areaChange, float viscCrossflowDrag, float flatnessRatio, float hypersonicMomentForward, float hypersonicMomentBackward,
-            Vector3 centroidWorldSpace, Vector3 xRefVectorWorldSpace, Vector3 nRefVectorWorldSpace, List<FARAeroPartModule> moduleList, List<float> dragFactor)
+            Vector3 centroidWorldSpace, Vector3 xRefVectorWorldSpace, Vector3 nRefVectorWorldSpace, List<FARAeroPartModule> moduleList,
+            Dictionary<Part, FARPartGeometry.VoxelCrossSection.SideAreaValues> sideAreaValues, List<float> dragFactor)
         {
             this.xForcePressureAoA0 = xForcePressureAoA0;       //copy references to floatcurves over
             this.xForcePressureAoA180 = xForcePressureAoA180;
@@ -54,6 +56,46 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 data.xRefVectorPartSpace = transformMatrix.MultiplyVector(xRefVectorWorldSpace);
                 data.nRefVectorPartSpace = transformMatrix.MultiplyVector(nRefVectorWorldSpace);
                 data.dragFactor = dragFactor[i];
+
+                FARPartGeometry.VoxelCrossSection.SideAreaValues values = sideAreaValues[data.aeroModule.part];
+                Vector3 posAreas = new Vector3((float)values.iP, (float)values.jP, (float)values.kP);
+                Vector3 negAreas = new Vector3((float)values.iN, (float)values.jN, (float)values.kN);
+
+                posAreas = transformMatrix.MultiplyVector(posAreas);
+                negAreas = transformMatrix.MultiplyVector(negAreas);
+
+                if (posAreas.x >= 0)
+                {
+                    data.iP = posAreas.x;
+                    data.iN = negAreas.x;
+                }
+                else
+                {
+                    data.iP = Math.Abs(negAreas.x);
+                    data.iN = Math.Abs(posAreas.x);
+                }
+
+                if (posAreas.y >= 0)
+                {
+                    data.jP = posAreas.y;
+                    data.jN = negAreas.y;
+                }
+                else
+                {
+                    data.jP = Math.Abs(negAreas.y);
+                    data.jN = Math.Abs(posAreas.y);
+                }
+
+                if (posAreas.z >= 0)
+                {
+                    data.kP = posAreas.z;
+                    data.kN = negAreas.z;
+                }
+                else
+                {
+                    data.kP = Math.Abs(negAreas.z);
+                    data.kN = Math.Abs(posAreas.z);
+                }
                 partsIncluded.Add(data);
             }
         }

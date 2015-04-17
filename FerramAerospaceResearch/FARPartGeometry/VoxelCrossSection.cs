@@ -61,7 +61,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public class SideAreaValues
         {
-            public double xP, xN, yP, yN, zP, zN;
+            public double iP, iN, jP, jN, kP, kN;
             public double count;
         }
     }

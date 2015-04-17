@@ -49,6 +49,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
         public Vector3 partLocalVel;
         public Vector3 partLocalAngVel;
 
+        public Vector3 worldSpaceAeroForce;
+
         Vector3 partLocalForce;
         Vector3 partLocalTorque;
 
@@ -70,7 +72,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
             Matrix4x4 matrix = part.transform.localToWorldMatrix;
             Rigidbody rb = part.Rigidbody;
 
-            rb.AddForce(matrix.MultiplyVector(partLocalForce));
+            worldSpaceAeroForce = matrix.MultiplyVector(partLocalForce);
+
+            rb.AddForce(worldSpaceAeroForce);
             rb.AddTorque(matrix.MultiplyVector(partLocalTorque));
 
             partLocalForce = Vector3.zero;
