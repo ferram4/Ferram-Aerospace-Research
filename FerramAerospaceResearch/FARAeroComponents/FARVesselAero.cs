@@ -100,7 +100,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     return;
 
                 float machNumber = (float)FARAeroUtil.GetMachNumber(_vessel.mainBody, _vessel.altitude, _vessel.srfSpeed);
-                float skinFrictionDragCoefficient = (float)FARAeroUtil.SkinFrictionDrag(_vessel.atmDensity, length, _vessel.srfSpeed, machNumber, FlightGlobals.getExternalTemperature((float)_vessel.altitude, _vessel.mainBody) + 273.15f);
+                float reynoldsNumber = (float)FARAeroUtil.CalculateReynoldsNumber(_vessel.atmDensity, length, _vessel.srfSpeed, machNumber, FlightGlobals.getExternalTemperature((float)_vessel.altitude, _vessel.mainBody) + 273.15f);
+                float skinFrictionDragCoefficient = (float)FARAeroUtil.SkinFrictionDrag(reynoldsNumber, machNumber);
 
                 Vector3 frameVel = Krakensbane.GetFrameVelocityV3f();
 
@@ -112,7 +113,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
                 
                 for (int i = 0; i < _currentAeroSections.Count; i++)
-                    _currentAeroSections[i].CalculateAeroForces(atmDensity, machNumber, skinFrictionDragCoefficient);
+                    _currentAeroSections[i].CalculateAeroForces(atmDensity, machNumber, reynoldsNumber / (float)length, skinFrictionDragCoefficient);
 
                 for (int i = 0; i < _currentAeroModules.Count; i++)
                 {
@@ -259,7 +260,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 else
                     sonicBaseDrag *= (float)flatnessRatio;
 
-                float viscCrossflowDrag = (float)(Math.Sqrt(curArea / Math.PI) * sectionThickness * 2.4d);
+                float viscCrossflowDrag = (float)(Math.Sqrt(curArea / Math.PI) * sectionThickness * 2d);
 
                 double surfaceArea = curArea * Math.PI;
                 if(surfaceArea < 0)
@@ -324,7 +325,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     xRefVector = (Vector3)(_vehicleCrossSection[index - 1].centroid - _vehicleCrossSection[index + 1].centroid).normalized;
                     Vector3 offMainAxisVec = Vector3.Exclude(vesselMainAxis, xRefVector);
-                    float tanAoA = offMainAxisVec.magnitude / (float)sectionThickness;
+                    float tanAoA = offMainAxisVec.magnitude / (2f * (float)sectionThickness);
                     if (tanAoA > 0.17632698070846497347109038686862f)
                     {
                         offMainAxisVec.Normalize();

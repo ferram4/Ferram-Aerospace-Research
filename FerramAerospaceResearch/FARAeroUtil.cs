@@ -1332,8 +1332,7 @@ namespace ferram4
             return tempRatio;
         }
 
-
-        public static double SkinFrictionDrag(double density, double lengthScale, double vel, double machNumber, double temp)
+        public static double CalculateReynoldsNumber(double density, double lengthScale, double vel, double machNumber, double temp)
         {
             if (lengthScale == 0)
                 return 0;
@@ -1341,6 +1340,15 @@ namespace ferram4
             double refTemp = temp * ReferenceTemperatureRatio(machNumber, 0.843);
             double visc = CalculateCurrentViscosity(refTemp);
             double Re = lengthScale * density * vel / visc;
+            return Re;
+        }
+
+        public static double SkinFrictionDrag(double density, double lengthScale, double vel, double machNumber, double temp)
+        {
+            if (lengthScale == 0)
+                return 0;
+
+            double Re = CalculateReynoldsNumber(density, lengthScale, vel, machNumber, temp);
 
             if (Re < TRANSITION_REYNOLDS_NUMBER)
             {
@@ -1360,6 +1368,31 @@ namespace ferram4
             double laminarCf = 1.328 / Math.Sqrt(TRANSITION_REYNOLDS_NUMBER);
             double turbulentCfInLaminar = 0.074 / Math.Pow(TRANSITION_REYNOLDS_NUMBER, 0.2);
             double turbulentCf = 0.074 / Math.Pow(Re, 0.2);
+
+            return turbulentCf - transitionFraction * (turbulentCfInLaminar - laminarCf);
+        }
+
+        public static double SkinFrictionDrag(double reynoldsNumber, double machNumber)
+        {
+
+            if (reynoldsNumber < TRANSITION_REYNOLDS_NUMBER)
+            {
+                double invSqrtRe = 1 / Math.Sqrt(reynoldsNumber);
+                double lamCf = 1.328 * invSqrtRe;
+
+                double rarefiedGasVal = machNumber / reynoldsNumber;
+                if (rarefiedGasVal > 0.01)
+                {
+                    return lamCf + (0.25 - lamCf) * (rarefiedGasVal - 0.01) / (0.99 + rarefiedGasVal);
+                }
+                return lamCf;
+            }
+
+            double transitionFraction = TRANSITION_REYNOLDS_NUMBER / reynoldsNumber;
+
+            double laminarCf = 1.328 / Math.Sqrt(TRANSITION_REYNOLDS_NUMBER);
+            double turbulentCfInLaminar = 0.074 / Math.Pow(TRANSITION_REYNOLDS_NUMBER, 0.2);
+            double turbulentCf = 0.074 / Math.Pow(reynoldsNumber, 0.2);
 
             return turbulentCf - transitionFraction * (turbulentCfInLaminar - laminarCf);
         }

@@ -8,6 +8,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
 {
     class FARAeroSection
     {
+        static FloatCurve crossFlowDragMach;
+        static FloatCurve crossFlowDragReynolds;
+
         FloatCurve xForcePressureAoA0;
         FloatCurve xForcePressureAoA180;
         FloatCurve xForceSkinFriction;
@@ -121,9 +124,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
                 partsIncluded.Add(data);
             }
+
+            if (crossFlowDragMach == null)
+                GenerateCrossFlowDragCurve();
         }
 
-        public void CalculateAeroForces(float atmDensity, float machNumber, float skinFrictionDrag)
+        public void CalculateAeroForces(float atmDensity, float machNumber, float reynoldsPerUnitLength, float skinFrictionDrag)
         {
 
             double skinFrictionForce = skinFrictionDrag * xForceSkinFriction.Evaluate(machNumber);      //this will be the same for each part, so why recalc it multiple times?
@@ -165,12 +171,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (machNumber > 3)
                     nForce *= 2d - machNumber * 0.3333333333333333d;
 
-                nForce += viscCrossflowDrag * sinSqrAoA;            //viscous crossflow normal force
-
                 float normalForceFactor = Math.Abs(Vector3.Dot(localNormalForceVec, nRefVector));
                 normalForceFactor *= normalForceFactor;
 
                 normalForceFactor = invFlatnessRatio * (1 - normalForceFactor) + flatnessRatio * normalForceFactor;     //accounts for changes in relative flatness of shape
+
+                
+                float crossFlowMach, crossFlowReynolds;
+                crossFlowMach = machNumber * (float)sinAoA;
+                crossFlowReynolds = reynoldsPerUnitLength * viscCrossflowDrag * normalForceFactor * (float)sinAoA;
+
+                nForce += viscCrossflowDrag * sinSqrAoA * CalculateCrossFlowDrag(crossFlowMach, crossFlowReynolds);            //viscous crossflow normal force
 
                 nForce *= normalForceFactor;
 
@@ -221,6 +232,43 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 aeroModule.AddLocalForceAndTorque(forceVector, torqueVector, data.centroidPartSpace);
             }
+        }
+
+        private void GenerateCrossFlowDragCurve()
+        {
+            crossFlowDragMach = new FloatCurve();
+            crossFlowDragMach.Add(0, 1.2f, 0, 0);
+            crossFlowDragMach.Add(0.4f, 1.2f, 0, 0);
+            crossFlowDragMach.Add(0.7f, 1.5f, 0, 0);
+            crossFlowDragMach.Add(0.85f, 1.41f, 0, 0);
+            crossFlowDragMach.Add(0.95f, 2.1f, 0, 0);
+            crossFlowDragMach.Add(1f, 2f, -2f, -2f);
+            crossFlowDragMach.Add(25f, 1.2f, 0, 0);
+
+            crossFlowDragReynolds = new FloatCurve();
+            crossFlowDragReynolds.Add(10000, 1f, 0, 0);
+            crossFlowDragReynolds.Add(100000, 1.0083333333333333333333333333333f, 0, 0);
+            crossFlowDragReynolds.Add(180000, 1.0083333333333333333333333333333f, 0, 0);
+            crossFlowDragReynolds.Add(250000, 0.66666666666666666666666666666667f, -0.00001f, -0.00001f);
+            crossFlowDragReynolds.Add(300000, 0.25f, -0.00001f, -0.00001f);
+            crossFlowDragReynolds.Add(500000, 0.20833333333333333333333333333333f, 0, 0);
+            crossFlowDragReynolds.Add(1000000, 0.33333333333333333333333333333333f, 0.0000002f, 0.0000002f);
+            crossFlowDragReynolds.Add(10000000, 0.58333333333333333333333333333333f, 0, 0);
+        }
+
+        private float CalculateCrossFlowDrag(float crossFlowMach, float crossFlowReynolds)
+        {
+            if (crossFlowMach > 0.5f)
+                return crossFlowDragMach.Evaluate(crossFlowMach);
+            float reynoldsInfluenceFactor = 1;
+            if (crossFlowMach > 0.4f)
+                reynoldsInfluenceFactor -= (crossFlowMach - 0.4f) * 10;
+
+            float crossFlowDrag = crossFlowDragMach.Evaluate(crossFlowMach);
+            crossFlowDrag *= crossFlowDragReynolds.Evaluate(crossFlowReynolds);
+            crossFlowDrag *= reynoldsInfluenceFactor;
+
+            return crossFlowDrag;
         }
     }
 }
