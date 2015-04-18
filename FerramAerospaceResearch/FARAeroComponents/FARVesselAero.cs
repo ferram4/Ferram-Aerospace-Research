@@ -321,7 +321,18 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (index == front || index == back)
                     xRefVector = vesselMainAxis;
                 else
+                {
                     xRefVector = (Vector3)(_vehicleCrossSection[index - 1].centroid - _vehicleCrossSection[index + 1].centroid).normalized;
+                    Vector3 offMainAxisVec = Vector3.Exclude(vesselMainAxis, xRefVector);
+                    float tanAoA = offMainAxisVec.magnitude / (float)sectionThickness;
+                    if (tanAoA > 0.17632698070846497347109038686862f)
+                    {
+                        offMainAxisVec.Normalize();
+                        offMainAxisVec *= 0.17632698070846497347109038686862f;
+                        xRefVector = vesselMainAxis + offMainAxisVec;
+                        xRefVector.Normalize();
+                    }
+                }
 
                 Vector3 nRefVector = _vehicleCrossSection[index].flatNormalVector;
 
@@ -479,7 +490,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
             float dotProd;
 
             dotProd = Math.Abs(Vector3.Dot(axis, _vessel.transform.up));
-
             if (dotProd >= 0.99)        //if axis and _vessel.up are nearly aligned, just use _vessel.up
                 return Vector3.up;
 

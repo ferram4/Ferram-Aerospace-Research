@@ -113,9 +113,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             double tmp = 0.125 * invElementSize;
 
-            xLength = (int)Math.Ceiling(size.x * tmp);
-            yLength = (int)Math.Ceiling(size.y * tmp);
-            zLength = (int)Math.Ceiling(size.z * tmp);
+            xLength = (int)Math.Ceiling(size.x * tmp) + 1;
+            yLength = (int)Math.Ceiling(size.y * tmp) + 1;
+            zLength = (int)Math.Ceiling(size.z * tmp) + 1;
 
             xCellLength = xLength * 8;
             yCellLength = yLength * 8;

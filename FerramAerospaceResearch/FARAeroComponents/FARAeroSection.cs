@@ -30,7 +30,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             public float iP, iN, jP, jN, kP, kN;    //part local x, y, and z areas for heating
         }
 
-        public FARAeroSection(FloatCurve xForcePressureAoA0, FloatCurve xForcePressureAoA180, FloatCurve xForceSkinFriction, 
+        public FARAeroSection(FloatCurve xForcePressureAoA0, FloatCurve xForcePressureAoA180, FloatCurve xForceSkinFriction,
             float areaChange, float viscCrossflowDrag, float flatnessRatio, float hypersonicMomentForward, float hypersonicMomentBackward,
             Vector3 centroidWorldSpace, Vector3 xRefVectorWorldSpace, Vector3 nRefVectorWorldSpace, List<FARAeroPartModule> moduleList,
             Dictionary<Part, FARPartGeometry.VoxelCrossSection.SideAreaValues> sideAreaValues, List<float> dragFactor)
@@ -47,12 +47,35 @@ namespace FerramAerospaceResearch.FARAeroComponents
             this.hypersonicMomentBackward = hypersonicMomentBackward;
 
             partsIncluded = new List<PartData>();
-            for(int i = 0; i < moduleList.Count; i++)
+
+            Vector3 centroidLocationAlongxRef = Vector3.Project(centroidWorldSpace, xRefVectorWorldSpace);
+            Vector3 centroidSansxRef = Vector3.Exclude(xRefVectorWorldSpace, centroidWorldSpace);
+
+            Vector3 worldSpaceAvgPos = Vector3.zero;
+            float totalDragFactor = 0;
+            for (int i = 0; i < moduleList.Count; i++)
+            {
+                Part p = moduleList[i].part;
+                worldSpaceAvgPos += p.transform.position * dragFactor[i];
+                totalDragFactor += dragFactor[i];
+            }
+
+            worldSpaceAvgPos /= totalDragFactor;
+
+            worldSpaceAvgPos = Vector3.Exclude(xRefVectorWorldSpace, worldSpaceAvgPos);
+
+            Vector3 avgPosDiffFromCentroid = centroidSansxRef - worldSpaceAvgPos;
+
+            for (int i = 0; i < moduleList.Count; i++)
             {
                 PartData data = new PartData();
                 data.aeroModule = moduleList[i];
-                Matrix4x4 transformMatrix = data.aeroModule.transform.worldToLocalMatrix;
-                data.centroidPartSpace = transformMatrix.MultiplyPoint3x4(centroidWorldSpace);
+                Transform transform = data.aeroModule.part.transform;
+                Matrix4x4 transformMatrix = transform.worldToLocalMatrix;
+
+                Vector3 forceCenterWorldSpace = centroidLocationAlongxRef + Vector3.Exclude(xRefVectorWorldSpace, transform.position) + avgPosDiffFromCentroid;
+
+                data.centroidPartSpace = transformMatrix.MultiplyPoint3x4(forceCenterWorldSpace);
                 data.xRefVectorPartSpace = transformMatrix.MultiplyVector(xRefVectorWorldSpace);
                 data.nRefVectorPartSpace = transformMatrix.MultiplyVector(nRefVectorWorldSpace);
                 data.dragFactor = dragFactor[i];
