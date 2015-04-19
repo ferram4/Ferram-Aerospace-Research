@@ -1389,9 +1389,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         continue;
                     }
 
-                    if ((u >= 0 && u <= 1 && DistancePerp(p1p2, p1TestPt) <= RC) ||
-                        (v >= 0 && v <= 1 && DistancePerp(p1p3, p1TestPt) <= RC) ||
-                        (u >= 0 && v >= 0 && DistancePerp(vert3Proj - vert2Proj, p2TestPt) <= RC))
+                    if (IsWithinDistanceFromSide(p1p2, p1TestPt) ||
+                        IsWithinDistanceFromSide(p1p3, p1TestPt) ||
+                        IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt))
                     {
                         int i = (int)Math.Round(-(indexPlane.y * j + indexPlane.z * k + indexPlane.w) / indexPlane.x);
                         if (i < 0 || i >= xCellLength)
@@ -1482,9 +1482,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         continue;
                     }
 
-                    if ((u >= 0 && u <= 1 && DistancePerp(p1p2, p1TestPt) <= RC) ||
-                        (v >= 0 && v <= 1 && DistancePerp(p1p3, p1TestPt) <= RC) ||
-                        (u >= 0 && v >= 0 && DistancePerp(vert3Proj - vert2Proj, p2TestPt) <= RC))
+                    if (IsWithinDistanceFromSide(p1p2, p1TestPt) ||
+                        IsWithinDistanceFromSide(p1p3, p1TestPt) ||
+                        IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt))
                     {
                         int j = (int)Math.Round(-(indexPlane.x * i + indexPlane.z * k + indexPlane.w) / indexPlane.y);
                         if (j < 0 || j >= yCellLength)
@@ -1574,9 +1574,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         continue;
                     }
 
-                    if ((u >= 0 && u <= 1 && DistancePerp(p1p2, p1TestPt) <= RC) ||
-                        (v >= 0 && v <= 1 && DistancePerp(p1p3, p1TestPt) <= RC) ||
-                        (u >= 0 && v >= 0 && DistancePerp(vert3Proj - vert2Proj, p2TestPt) <= RC))
+                    if (IsWithinDistanceFromSide(p1p2, p1TestPt)||
+                        IsWithinDistanceFromSide(p1p3, p1TestPt)||
+                        IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt))
                     {
                         int k = (int)Math.Round(-(indexPlane.x * i + indexPlane.y * j + indexPlane.w) / indexPlane.z);
                         if (k < 0 || k >= zCellLength)
@@ -1587,14 +1587,24 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
         }
 
-        private double DistancePerp(Vector2d perpVector, Vector2d testVec)
+        private bool IsWithinDistanceFromSide(Vector2d sideVector, Vector2d testVec)
         {
-            double tmp = perpVector.x;
-            perpVector.x = perpVector.y;
-            perpVector.y = -tmp;
+            Vector2d perpVector = new Vector2d(sideVector.y, -sideVector.x);        //vector perpendicular to the sideVector
             perpVector.Normalize();
 
-            return Math.Abs(testVec.x * perpVector.x + testVec.y * perpVector.y);
+            double dist =  testVec.x * perpVector.x + testVec.y * perpVector.y;   //length perp from this
+
+            if(Math.Abs(dist) > RC)
+                return false;
+
+            testVec -= perpVector * dist;   //this projects testVec onto sideVector
+
+            double sideDot = testVec.x * sideVector.x + testVec.y * sideVector.y;
+
+            if (sideDot >= 0 && sideDot <= sideVector.sqrMagnitude)
+                return true;
+
+            return false;
         }
 
         private Vector4d CalculateEquationOfSweepPlane(Vector3d normalVector, out double wInc)

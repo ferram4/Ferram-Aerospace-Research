@@ -238,7 +238,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         {
             crossFlowDragMachCurve = new FloatCurve();
             crossFlowDragMachCurve.Add(0, 1.2f, 0, 0);
-            crossFlowDragMachCurve.Add(0.4f, 1.2f, 0, 0);
+            crossFlowDragMachCurve.Add(0.3f, 1.2f, 0, 0);
             crossFlowDragMachCurve.Add(0.7f, 1.5f, 0, 0);
             crossFlowDragMachCurve.Add(0.85f, 1.41f, 0, 0);
             crossFlowDragMachCurve.Add(0.95f, 2.1f, 0, 0);
