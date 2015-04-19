@@ -57,6 +57,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         double length = 0;
         Vector3 vesselMainAxis;
+        Matrix4x4 vesselToWorldMatrix;
+        Matrix4x4 vesselToLocalMatrix;
         List<FARAeroPartModule> _currentAeroModules;
         List<FARAeroPartModule> _newAeroModules;
 
@@ -155,6 +157,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             _voxelCount = VoxelCountFromType();
 
+            vesselToLocalMatrix = _vessel.transform.worldToLocalMatrix;
+            vesselToWorldMatrix = _vessel.transform.localToWorldMatrix;
+
             vesselMainAxis = CalculateVesselMainAxis();
 
             ThreadPool.QueueUserWorkItem(CreateVoxel);
@@ -175,6 +180,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         {
             try
             {
+                UpdateGeometryPartModules();
                 VehicleVoxel newvoxel = new VehicleVoxel(_vessel.parts, _voxelCount, true, true);
 
                 _vehicleCrossSection = newvoxel.EmptyCrossSectionArray;
@@ -187,6 +193,20 @@ namespace FerramAerospaceResearch.FARAeroComponents
             catch(Exception e)
             {
                 Debug.LogException(e);
+            }
+        }
+
+        private void UpdateGeometryPartModules()
+        {
+            List<Part> vesselPartsList = _vessel.Parts;
+            for(int i = 0; i < vesselPartsList.Count; i++)
+            {
+                Part p = vesselPartsList[i];
+                if ((object)p == null)
+                    continue;
+                GeometryPartModule geoModule = p.GetComponent<GeometryPartModule>();
+                if ((object)geoModule != null)
+                    geoModule.UpdateTransformMatrixList(vesselToLocalMatrix);
             }
         }
 
@@ -334,12 +354,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         xRefVector.Normalize();
                     }
                 }
+                
+                Vector3 nRefVector = Matrix4x4.TRS(Vector3.zero, Quaternion.FromToRotation(vesselMainAxis, xRefVector), Vector3.one).MultiplyVector(_vehicleCrossSection[index].flatNormalVector);
 
-                Vector3 nRefVector = _vehicleCrossSection[index].flatNormalVector;
-
-                Vector3 centroid = _vessel.transform.localToWorldMatrix.MultiplyPoint3x4(_vehicleCrossSection[index].centroid);
-                xRefVector = _vessel.transform.localToWorldMatrix.MultiplyVector(xRefVector);
-                nRefVector = _vessel.transform.localToWorldMatrix.MultiplyVector(nRefVector);
+                Vector3 centroid = vesselToWorldMatrix.MultiplyPoint3x4(_vehicleCrossSection[index].centroid);
+                xRefVector = vesselToWorldMatrix.MultiplyVector(xRefVector);
+                nRefVector = vesselToWorldMatrix.MultiplyVector(nRefVector);
 
                 Dictionary<Part, VoxelCrossSection.SideAreaValues> includedPartsAndAreas = _vehicleCrossSection[index].partSideAreaValues;
                 List<FARAeroPartModule> includedModules = new List<FARAeroPartModule>();
@@ -506,7 +526,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             //Otherwise, now we need to use axis, since it's obviously not close to anything else
 
-            axis = _vessel.transform.worldToLocalMatrix.MultiplyVector(axis);
+            axis = vesselToLocalMatrix.MultiplyVector(axis);
 
             return axis;
         }

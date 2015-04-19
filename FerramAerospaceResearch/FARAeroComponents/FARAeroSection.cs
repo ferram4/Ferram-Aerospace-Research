@@ -8,8 +8,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 {
     class FARAeroSection
     {
-        static FloatCurve crossFlowDragMach;
-        static FloatCurve crossFlowDragReynolds;
+        static FloatCurve crossFlowDragMachCurve;
+        static FloatCurve crossFlowDragReynoldsCurve;
 
         FloatCurve xForcePressureAoA0;
         FloatCurve xForcePressureAoA180;
@@ -125,7 +125,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 partsIncluded.Add(data);
             }
 
-            if (crossFlowDragMach == null)
+            if (crossFlowDragMachCurve == null)
                 GenerateCrossFlowDragCurve();
         }
 
@@ -236,37 +236,40 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         private void GenerateCrossFlowDragCurve()
         {
-            crossFlowDragMach = new FloatCurve();
-            crossFlowDragMach.Add(0, 1.2f, 0, 0);
-            crossFlowDragMach.Add(0.4f, 1.2f, 0, 0);
-            crossFlowDragMach.Add(0.7f, 1.5f, 0, 0);
-            crossFlowDragMach.Add(0.85f, 1.41f, 0, 0);
-            crossFlowDragMach.Add(0.95f, 2.1f, 0, 0);
-            crossFlowDragMach.Add(1f, 2f, -2f, -2f);
-            crossFlowDragMach.Add(25f, 1.2f, 0, 0);
+            crossFlowDragMachCurve = new FloatCurve();
+            crossFlowDragMachCurve.Add(0, 1.2f, 0, 0);
+            crossFlowDragMachCurve.Add(0.4f, 1.2f, 0, 0);
+            crossFlowDragMachCurve.Add(0.7f, 1.5f, 0, 0);
+            crossFlowDragMachCurve.Add(0.85f, 1.41f, 0, 0);
+            crossFlowDragMachCurve.Add(0.95f, 2.1f, 0, 0);
+            crossFlowDragMachCurve.Add(1f, 2f, -2f, -2f);
+            crossFlowDragMachCurve.Add(1.3f, 1.6f, -0.5f, -0.5f);
+            crossFlowDragMachCurve.Add(2f, 1.4f, -0.1f, -0.1f);
+            crossFlowDragMachCurve.Add(5f, 1.25f, -0.02f, -0.02f);
+            crossFlowDragMachCurve.Add(10f, 1.2f, 0, 0);
 
-            crossFlowDragReynolds = new FloatCurve();
-            crossFlowDragReynolds.Add(10000, 1f, 0, 0);
-            crossFlowDragReynolds.Add(100000, 1.0083333333333333333333333333333f, 0, 0);
-            crossFlowDragReynolds.Add(180000, 1.0083333333333333333333333333333f, 0, 0);
-            crossFlowDragReynolds.Add(250000, 0.66666666666666666666666666666667f, -0.00001f, -0.00001f);
-            crossFlowDragReynolds.Add(300000, 0.25f, -0.00001f, -0.00001f);
-            crossFlowDragReynolds.Add(500000, 0.20833333333333333333333333333333f, 0, 0);
-            crossFlowDragReynolds.Add(1000000, 0.33333333333333333333333333333333f, 0.0000002f, 0.0000002f);
-            crossFlowDragReynolds.Add(10000000, 0.58333333333333333333333333333333f, 0, 0);
+            crossFlowDragReynoldsCurve = new FloatCurve();
+            crossFlowDragReynoldsCurve.Add(10000, 1f, 0, 0);
+            crossFlowDragReynoldsCurve.Add(100000, 1.0083333333333333333333333333333f, 0, 0);
+            crossFlowDragReynoldsCurve.Add(180000, 1.0083333333333333333333333333333f, 0, 0);
+            crossFlowDragReynoldsCurve.Add(250000, 0.66666666666666666666666666666667f);
+            crossFlowDragReynoldsCurve.Add(300000, 0.25f, -5E-07f, -5E-07f);
+            crossFlowDragReynoldsCurve.Add(500000, 0.20833333333333333333333333333333f, 0, 0);
+            crossFlowDragReynoldsCurve.Add(1000000, 0.33333333333333333333333333333333f, 7E-8f, 7E-8f);
+            crossFlowDragReynoldsCurve.Add(10000000, 0.58333333333333333333333333333333f, 0, 0);
         }
 
         private float CalculateCrossFlowDrag(float crossFlowMach, float crossFlowReynolds)
         {
             if (crossFlowMach > 0.5f)
-                return crossFlowDragMach.Evaluate(crossFlowMach);
+                return crossFlowDragMachCurve.Evaluate(crossFlowMach);
             float reynoldsInfluenceFactor = 1;
             if (crossFlowMach > 0.4f)
                 reynoldsInfluenceFactor -= (crossFlowMach - 0.4f) * 10;
 
-            float crossFlowDrag = crossFlowDragMach.Evaluate(crossFlowMach);
-            crossFlowDrag *= crossFlowDragReynolds.Evaluate(crossFlowReynolds);
-            crossFlowDrag *= reynoldsInfluenceFactor;
+            float crossFlowDrag = crossFlowDragReynoldsCurve.Evaluate(crossFlowReynolds);
+            crossFlowDrag = (crossFlowDrag - 1) * reynoldsInfluenceFactor + 1;
+            crossFlowDrag *= crossFlowDragMachCurve.Evaluate(crossFlowMach);
 
             return crossFlowDrag;
         }

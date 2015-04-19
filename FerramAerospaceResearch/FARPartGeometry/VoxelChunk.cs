@@ -121,7 +121,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
                         DebugVisualVoxel vx;
                         //if(voxelPoints[i,j,k] != null)
-                        if (voxelPoints[i + 8 * j + 64 * k])
+                        if ((object)voxelPoints[i + 8 * j + 64 * k] != null)
                         {
                             vx = new DebugVisualVoxel(lowerCorner + new Vector3d(i, j, k) * size + vesselOffset, size * 0.5f);
                             visualVoxels[i, j, k] = vx;

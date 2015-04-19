@@ -83,7 +83,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 Part p = partList[i];
                 GeometryPartModule m = p.GetComponent<GeometryPartModule>();
-                if (m != null)
+                if ((object)m != null)
                 {
                     Vector3d minBounds = m.overallMeshBounds.min;
                     Vector3d maxBounds = m.overallMeshBounds.max;
