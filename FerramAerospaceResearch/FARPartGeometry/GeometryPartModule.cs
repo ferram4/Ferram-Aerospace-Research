@@ -59,7 +59,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             RebuildAllMeshData();
             GetAnimations();
-            part.OnEditorAttach += EditorAttach;
+            GameEvents.onEditorPartEvent.Add(UpdateGeometryEvent);
+        }
+
+        void OnDestroy()
+        {
+            GameEvents.onEditorPartEvent.Remove(UpdateGeometryEvent);
         }
 
         void FixedUpdate()
@@ -91,6 +96,18 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
 
             overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
+        }
+
+        private void UpdateGeometryEvent(ConstructionEventType type, Part pEvent)
+        {
+            if (pEvent = this.part)
+                if (type == ConstructionEventType.PartRotated ||
+                type == ConstructionEventType.PartOffset ||
+                type == ConstructionEventType.PartAttached ||
+                type == ConstructionEventType.PartRootSelected)
+                {
+                    EditorUpdate();
+                }
         }
 
         private void GetAnimations()
@@ -139,7 +156,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 vessel.SendMessage("AnimationVoxelUpdate");
         }
 
-        public void EditorAttach()
+        public void EditorUpdate()
         {
             UpdateTransformMatrixList(EditorLogic.RootPart.transform.worldToLocalMatrix);
             overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(EditorLogic.RootPart.transform.worldToLocalMatrix);
