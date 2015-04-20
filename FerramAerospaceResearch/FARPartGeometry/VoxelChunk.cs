@@ -111,7 +111,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             return p;
         }
 
-        public void VisualizeVoxels(Vector3 vesselOffset)
+        public void VisualizeVoxels(Matrix4x4 vesselLocalToWorldMatrix)
         {
             ClearVisualVoxels();
             visualVoxels = new DebugVisualVoxel[8, 8, 8];
@@ -123,7 +123,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         //if(voxelPoints[i,j,k] != null)
                         if ((object)voxelPoints[i + 8 * j + 64 * k] != null)
                         {
-                            vx = new DebugVisualVoxel(lowerCorner + new Vector3d(i, j, k) * size + vesselOffset, size * 0.5f);
+                            vx = new DebugVisualVoxel(vesselLocalToWorldMatrix.MultiplyPoint3x4(lowerCorner + new Vector3d(i, j, k) * size), size * 0.5f);
                             visualVoxels[i, j, k] = vx;
                         }
                     }

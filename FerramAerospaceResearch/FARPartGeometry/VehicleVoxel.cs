@@ -1081,7 +1081,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     }
         }
 
-        public void VisualizeVoxel(Vector3 vesselOffset)
+        public void VisualizeVoxel(Matrix4x4 vesselLocalToWorldMatrix)
         {
             for (int i = 0; i < xLength; i++)
                 for (int j = 0; j < yLength; j++)
@@ -1090,7 +1090,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         VoxelChunk section = voxelChunks[i, j, k];
                         if (section != null)
                         {
-                            section.VisualizeVoxels(vesselOffset);
+                            section.VisualizeVoxels(vesselLocalToWorldMatrix);
                         }
                     }
         }

@@ -118,7 +118,7 @@ namespace FerramAerospaceResearch.FARTest
                 else
                     if (GUILayout.Button("Visualize Voxel"))
                     {
-                        voxel.VisualizeVoxel(EditorLogic.RootPart.transform.position);
+                        voxel.VisualizeVoxel(EditorLogic.RootPart.transform.localToWorldMatrix);
                         visualize = true;
                     }
             }
