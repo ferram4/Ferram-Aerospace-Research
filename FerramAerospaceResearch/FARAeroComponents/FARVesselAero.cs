@@ -292,7 +292,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 xForceSkinFriction.Add(1f, (float)(surfaceArea * viscousDragFactor), 0, 0);   //transonic visc drag
                 xForceSkinFriction.Add(2f, (float)surfaceArea, 0, 0);                     //above Mach 1.4, visc is purely surface drag, no pressure-related components simulated
 
-                float sonicWaveDrag = (float)CalculateTransonicWaveDrag(i, index, numSections, front, sectionThickness, Math.Min(maxCrossSectionArea * 0.1, curArea * 0.25));
+                float sonicWaveDrag = (float)CalculateTransonicWaveDrag(i, index, numSections, front, sectionThickness, Math.Min(maxCrossSectionArea * 1.5, curArea * 4));//Math.Min(maxCrossSectionArea * 0.1, curArea * 0.25));
                 sonicWaveDrag *= 0.8f;     //this is just to account for the higher drag being felt due to the inherent blockiness of the model being used
                 float hypersonicDragForward = (float)CalculateHypersonicDrag(prevArea, curArea, sectionThickness);
                 float hypersonicDragBackward = (float)CalculateHypersonicDrag(nextArea, curArea, sectionThickness);

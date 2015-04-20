@@ -49,7 +49,7 @@ namespace FerramAerospaceResearch.FARTest
     {
         Rect windowPos;
         VehicleVoxel voxel;
-        string voxelCount = "25000";
+        string voxelCount = "125000";
         string timeToGenerate = "";
         bool multiThreaded = true;
         bool solidify = true;

@@ -147,6 +147,5 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             ClearVisualVoxels();
         }
-
     }
 }

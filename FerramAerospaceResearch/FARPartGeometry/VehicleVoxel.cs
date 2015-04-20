@@ -976,27 +976,41 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
             }
 
-            double invStep = 1 / sectionThickness;
+            double denom = sectionThickness;
+            denom *= denom;
+            denom *= Math.PI;
+            denom = 1 / denom;
             maxCrossSectionArea = 0;
 
             for (int i = frontIndex; i <= backIndex; i++)
             {
+                double prevArea, curArea, nextArea, areaSecondDeriv;
+
                 if (i == frontIndex)
                 {
-                    double curArea = crossSections[i].area;
-                    double nextArea = crossSections[i + 1].area;
-                    crossSections[i].areaDeriv2ToNextSection = 2 * (nextArea + curArea - 2 * Math.Sqrt(nextArea * curArea)) * invStep * invStep;
+                    prevArea = 0;
+                    curArea = crossSections[i].area;
+                    nextArea = crossSections[i + 1].area;
                 }
                 else if (i == backIndex)
                 {
-                    crossSections[i].areaDeriv2ToNextSection = 0;
+                    prevArea = crossSections[i - 1].area;
+                    curArea = crossSections[i].area;
+                    nextArea = 0;
                 }
                 else
                 {
-                    double curArea = crossSections[i].area;
-                    double nextArea = crossSections[i + 1].area;
-                    crossSections[i].areaDeriv2ToNextSection = 2 * (nextArea + curArea - 2 * Math.Sqrt(nextArea * curArea)) * invStep * invStep;
+                    prevArea = crossSections[i - 1].area;
+                    curArea = crossSections[i].area;
+                    nextArea = crossSections[i + 1].area;
                 }
+
+                areaSecondDeriv = nextArea + 2 * curArea + prevArea;
+                areaSecondDeriv -= 2 * Math.Sqrt(nextArea * curArea);
+                areaSecondDeriv -= 2 * Math.Sqrt(prevArea * curArea);
+                areaSecondDeriv *= denom;
+
+                crossSections[i].areaDeriv2ToNextSection = areaSecondDeriv;
 
                 if (crossSections[i].area > maxCrossSectionArea)
                     maxCrossSectionArea = crossSections[i].area;
