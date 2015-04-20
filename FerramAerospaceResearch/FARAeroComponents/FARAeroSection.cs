@@ -140,7 +140,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 PartData data = partsIncluded[i];
                 FARAeroPartModule aeroModule = data.aeroModule;
-                if (aeroModule == null)
+                if ((object)aeroModule == null)
                     continue;
 
                 Vector3 xRefVector = data.xRefVectorPartSpace;

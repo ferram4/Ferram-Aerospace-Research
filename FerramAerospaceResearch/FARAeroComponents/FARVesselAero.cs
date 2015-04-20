@@ -53,9 +53,26 @@ namespace FerramAerospaceResearch.FARAeroComponents
         VehicleVoxel _voxel = null;
         VoxelCrossSection[] _vehicleCrossSection = null;
 
-        internal bool ready = false;
+        bool ready = false;
 
         double length = 0;
+        double maxCrossSectionArea = 0;
+        public double MaxCrossSectionArea
+        {
+            get { return maxCrossSectionArea; }
+        }
+
+        double machNumber;
+        public double MachNumber
+        {
+            get { return machNumber; }
+        }
+        double reynoldsNumber;
+        public double ReynoldsNumber
+        {
+            get { return reynoldsNumber; }
+        }
+
         Vector3 vesselMainAxis;
         Matrix4x4 vesselToWorldMatrix;
         Matrix4x4 vesselToLocalMatrix;
@@ -92,6 +109,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 _currentAeroModules = _newAeroModules;
                 _newAeroModules = null;
                 ready = false;
+
+                _vessel.SendMessage("UpdateAeroModules", _currentAeroModules);
             } 
             
             if (FlightGlobals.ready && _currentAeroSections != null)
@@ -101,8 +120,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (atmDensity <= 0)
                     return;
 
-                float machNumber = (float)FARAeroUtil.GetMachNumber(_vessel.mainBody, _vessel.altitude, _vessel.srfSpeed);
-                float reynoldsNumber = (float)FARAeroUtil.CalculateReynoldsNumber(_vessel.atmDensity, length, _vessel.srfSpeed, machNumber, FlightGlobals.getExternalTemperature((float)_vessel.altitude, _vessel.mainBody) + 273.15f);
+                machNumber = FARAeroUtil.GetMachNumber(_vessel.mainBody, _vessel.altitude, _vessel.srfSpeed);
+                reynoldsNumber = FARAeroUtil.CalculateReynoldsNumber(_vessel.atmDensity, length, _vessel.srfSpeed, machNumber, FlightGlobals.getExternalTemperature((float)_vessel.altitude, _vessel.mainBody) + 273.15f);
                 float skinFrictionDragCoefficient = (float)FARAeroUtil.SkinFrictionDrag(reynoldsNumber, machNumber);
 
                 Vector3 frameVel = Krakensbane.GetFrameVelocityV3f();
@@ -110,17 +129,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 for (int i = 0; i < _currentAeroModules.Count; i++)
                 {
                     FARAeroPartModule m = _currentAeroModules[i];
-                    if (m != null)
+                    if ((object)m != null)
                         m.UpdateVelocityAndAngVelocity(frameVel);
                 }
                 
                 for (int i = 0; i < _currentAeroSections.Count; i++)
-                    _currentAeroSections[i].CalculateAeroForces(atmDensity, machNumber, reynoldsNumber / (float)length, skinFrictionDragCoefficient);
+                    _currentAeroSections[i].CalculateAeroForces(atmDensity, (float)machNumber, (float)(reynoldsNumber / length), skinFrictionDragCoefficient);
 
                 for (int i = 0; i < _currentAeroModules.Count; i++)
                 {
                     FARAeroPartModule m = _currentAeroModules[i];
-                    if (m != null)
+                    if ((object)m != null)
                         m.ApplyForces();
                 }
 
@@ -215,7 +234,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         private void CalculateVesselAeroProperties()
         {
             int front, back, numSections;
-            double sectionThickness, maxCrossSectionArea;
+            double sectionThickness;
 
             _voxel.CrossSectionData(_vehicleCrossSection, vesselMainAxis, out front, out back, out sectionThickness, out maxCrossSectionArea);
 
@@ -294,8 +313,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 xForceSkinFriction.Add(1f, (float)(surfaceArea * viscousDragFactor), 0, 0);   //transonic visc drag
                 xForceSkinFriction.Add(2f, (float)surfaceArea, 0, 0);                     //above Mach 1.4, visc is purely surface drag, no pressure-related components simulated
 
-                float sonicWaveDrag = (float)CalculateTransonicWaveDrag(i, index, numSections, front, sectionThickness, double.PositiveInfinity);//Math.Min(maxCrossSectionArea * 3, curArea * 16));//Math.Min(maxCrossSectionArea * 0.1, curArea * 0.25));
-                sonicWaveDrag *= 0.8f;     //this is just to account for the higher drag being felt due to the inherent blockiness of the model being used
+                float sonicWaveDrag = (float)CalculateTransonicWaveDrag(i, index, numSections, front, sectionThickness, Math.Min(maxCrossSectionArea * 2, curArea * 16));//Math.Min(maxCrossSectionArea * 0.1, curArea * 0.25));
+                sonicWaveDrag *= 0.25f;     //this is just to account for the higher drag being felt due to the inherent blockiness of the model being used and noise introduced by the limited control over shape and through voxelization
                 float hypersonicDragForward = (float)CalculateHypersonicDrag(prevArea, curArea, sectionThickness);
                 float hypersonicDragBackward = (float)CalculateHypersonicDrag(nextArea, curArea, sectionThickness);
 
@@ -320,16 +339,16 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     xForcePressureAoA0.Add((float)criticalMachNumber, hypersonicDragForward * 0.4f, 0f, 0f);    //hypersonic drag used as a proxy for effects due to flow separation
                     xForcePressureAoA180.Add((float)criticalMachNumber, (sonicBaseDrag * 0.1f - hypersonicDragBackward * 0.4f), 0f, 0f);
 
-                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.35f, 0f, 0f);     //positive is force forward; negative is force backward
-                    xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.35f + sonicBaseDrag, 0f, 0f);
+                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.1f, 0f, 0f);     //positive is force forward; negative is force backward
+                    xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.1f + sonicBaseDrag, 0f, 0f);
                 }
                 else if (sonicBaseDrag < 0)
                 {
                     xForcePressureAoA0.Add((float)criticalMachNumber, (sonicBaseDrag * 0.1f + hypersonicDragForward * 0.4f), 0f, 0f);
                     xForcePressureAoA180.Add((float)criticalMachNumber, -hypersonicDragBackward * 0.4f, 0f, 0f);
 
-                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.35f + sonicBaseDrag, 0f, 0f);     //positive is force forward; negative is force backward
-                    xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.35f, 0f, 0f);
+                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.1f + sonicBaseDrag, 0f, 0f);     //positive is force forward; negative is force backward
+                    xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.1f, 0f, 0f);
                 }
                 else
                 {

@@ -39,6 +39,7 @@ using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 using FerramAerospaceResearch.FARAeroComponents;
+using FerramAerospaceResearch.FARGUI;
 using ferram4;
 
 namespace FerramAerospaceResearch
@@ -75,6 +76,12 @@ namespace FerramAerospaceResearch
                     vAero = v.gameObject.AddComponent<FARVesselAero>();
                 }
                 vAero.VesselUpdate();
+
+                FlightGUI vGUI = v.gameObject.GetComponent<FlightGUI>();
+                if (vGUI == null)
+                {
+                    vGUI = v.gameObject.AddComponent<FlightGUI>();
+                }
             }
         }
 
