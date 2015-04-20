@@ -187,7 +187,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         public unsafe void CrossSectionData(VoxelCrossSection[] crossSections, Vector3 orientationVector, out int frontIndex, out int backIndex, out double sectionThickness, out double maxCrossSectionArea)
         {
             //TODO: Look into setting better limits for iterating over sweep plane to improve off-axis performance
-            
+
             double wInc;
             Vector4d plane = CalculateEquationOfSweepPlane(orientationVector, out wInc);
 
@@ -213,7 +213,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             //(int)Math.Floor(x) -> (int)(x)            for x > 0
 
             //Check y first, since it is most likely to be the flow direction
-            if(y >= z && y >= x)
+            if (y >= z && y >= x)
             {
                 int sectionCount = yCellLength + (int)(xCellLength * x / y + 1) + (int)(zCellLength * z / y + 1);
                 sectionCount = Math.Min(sectionCount, crossSections.Length);
@@ -264,8 +264,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     Dictionary<Part, VoxelCrossSection.SideAreaValues> partSideAreas = crossSections[m].partSideAreaValues;
                     partSideAreas.Clear();
 
-                    for (int iOverall = 0; iOverall < xCellLength; iOverall+=8)     //Overall ones iterate over the actual voxel indices (to make use of the equation of the plane) but are used to get chunk indices
-                        for (int kOverall = 0; kOverall < zCellLength; kOverall+=8)
+                    for (int iOverall = 0; iOverall < xCellLength; iOverall += 8)     //Overall ones iterate over the actual voxel indices (to make use of the equation of the plane) but are used to get chunk indices
+                        for (int kOverall = 0; kOverall < zCellLength; kOverall += 8)
                         {
 
                             int jSect1, jSect2, jSect3;
@@ -302,7 +302,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                     continue;
 
                                 VoxelChunk sect = voxelChunks[iOverall >> 3, jSect1, kOverall >> 3];
-                               
+
                                 if (sect == null)
                                     continue;
 
@@ -534,7 +534,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                             int iMin = Math.Min(iSect1, iSect3);
                             int iMax = Math.Max(iSect1, iSect3) + 1;
-                            
+
                             iSect1 = iMin >> 3;
                             iSect2 = iSect2 >> 3;
                             iSect3 = (iMax - 1) >> 3;
@@ -544,7 +544,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                             if (iSect3 < 0)         //if the largest sect is below the limit, they all are
                                 continue;
-                            
+
                             if (iSect1 == iSect3)
                             {
                                 if (iSect1 < 0)
@@ -744,7 +744,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 //bool* sectionArray = stackalloc bool[xSectArrayLength * (int)(yCellLength * zAbsNorm + zCellLength * Math.Abs(yNorm) + 1)];
 
                 //bool[,] sectionRepresentation = new bool[(int)Math.Ceiling(xCellLength * Math.Abs(zNorm) + zCellLength * Math.Abs(xNorm)), (int)Math.Ceiling(yCellLength * Math.Abs(zNorm) + zCellLength * Math.Abs(yNorm))];
-                
+
                 double invZPlane = 1 / plane.z;
 
                 plane.y *= invZPlane;
@@ -822,7 +822,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                             continue;
 
                                         int index = i + 8 * j + 64 * k;
-                                        
+
                                         Part p = sect.GetVoxelPartGlobalIndex(index);
 
                                         if ((object)p != null)
@@ -861,7 +861,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                     sect2 = voxelChunks[iSect, jSect, kSect2];
                                     if (sect2 != null && sect2 != sect1)
                                         validSects |= true;
-                                } 
+                                }
                                 if (!(kSect3 >= zLength))
                                 {
                                     sect3 = voxelChunks[iSect, jSect, kSect3];
@@ -961,7 +961,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     }
                     if (flatnessRatio > 10)
                         flatnessRatio = 10;
-                    
+
                     principalAxis = sectionNormalToVesselCoords.MultiplyVector(principalAxis);
 
                     crossSections[m].centroid = centroid * elementSize + lowerRightCorner;
@@ -978,13 +978,31 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             double denom = sectionThickness;
             denom *= denom;
-            denom *= Math.PI;
+            //denom *= 12;
+            //denom *= Math.PI;
             denom = 1 / denom;
             maxCrossSectionArea = 0;
 
             for (int i = frontIndex; i <= backIndex; i++)
             {
-                double prevArea, curArea, nextArea, areaSecondDeriv;
+                double areaM1, area0, areaP1;
+
+                if (i - 1 < frontIndex)
+                    areaM1 = 0;
+                else
+                    areaM1 = crossSections[i - 1].area;
+
+                area0 = crossSections[i].area;
+
+                if (i + 1 > backIndex)
+                    areaP1 = 0;
+                else
+                    areaP1 = crossSections[i + 1].area;
+
+                double areaSecondDeriv = (areaM1 + areaP1) - 2 * area0;
+                areaSecondDeriv *= denom;
+
+                /*double prevArea, curArea, nextArea, areaSecondDeriv;
 
                 if (i == frontIndex)
                 {
@@ -1008,13 +1026,62 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 areaSecondDeriv = nextArea + 2 * curArea + prevArea;
                 areaSecondDeriv -= 2 * Math.Sqrt(nextArea * curArea);
                 areaSecondDeriv -= 2 * Math.Sqrt(prevArea * curArea);
-                areaSecondDeriv *= denom;
+                areaSecondDeriv *= denom;*/
 
                 crossSections[i].areaDeriv2ToNextSection = areaSecondDeriv;
 
                 if (crossSections[i].area > maxCrossSectionArea)
                     maxCrossSectionArea = crossSections[i].area;
             }
+
+            double gaussianVal2, gaussianVal1, gaussianVal0;
+            gaussianVal2 = Math.Exp(-4 / 2);
+            gaussianVal1 = Math.Exp(-1 / 2);
+            gaussianVal0 = Math.Exp(0 / 2);
+
+            double sum = gaussianVal0 + 2 * gaussianVal1 + 2 * gaussianVal2;
+
+            gaussianVal2 /= sum;
+            gaussianVal1 /= sum;
+            gaussianVal0 /= sum;
+
+            double unSmoothedLastDeriv = 0;
+            double unSmoothedLastDeriv2 = 0;
+
+            for (int i = frontIndex; i <= backIndex; i++)       //second area derivative smoothing pass
+            {
+                double prevDeriv2, prevDeriv, curDeriv, nextDeriv, nextDeriv2;
+                prevDeriv = unSmoothedLastDeriv;
+                prevDeriv2 = unSmoothedLastDeriv2;
+
+                unSmoothedLastDeriv2 = unSmoothedLastDeriv;
+
+                curDeriv = crossSections[i].areaDeriv2ToNextSection;     //this is used to make sure we don't end up using smoothed derivs for the calculations
+                unSmoothedLastDeriv = curDeriv;
+
+                if (i <= backIndex)
+                {
+                    nextDeriv = crossSections[i + 1].areaDeriv2ToNextSection;
+                    if (i + 1 <= backIndex)
+                        nextDeriv2 = crossSections[i + 2].areaDeriv2ToNextSection;
+                    else
+                        nextDeriv2 = 0;
+                }
+                else
+                {
+                    nextDeriv = 0;
+                    nextDeriv2 = 0;
+                }
+
+                curDeriv *= gaussianVal0;
+                curDeriv += gaussianVal1 * prevDeriv;
+                curDeriv += gaussianVal1 * nextDeriv;
+                curDeriv += gaussianVal2 * prevDeriv2;
+                curDeriv += gaussianVal2 * nextDeriv2;
+
+                crossSections[i].areaDeriv2ToNextSection = curDeriv;
+            }
+
         }
 
         private unsafe void DetermineIfPartGetsForcesAndAreas(Dictionary<Part, VoxelCrossSection.SideAreaValues> partSideAreas, Part p, int i, int j, int k)

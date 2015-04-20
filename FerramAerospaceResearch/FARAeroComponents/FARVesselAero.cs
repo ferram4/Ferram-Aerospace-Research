@@ -135,6 +135,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public void AnimationVoxelUpdate()
         {
+            if (_updateRateLimiter == 20)
+                _updateRateLimiter = 18;
             VesselUpdate();
         }
 
@@ -292,7 +294,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 xForceSkinFriction.Add(1f, (float)(surfaceArea * viscousDragFactor), 0, 0);   //transonic visc drag
                 xForceSkinFriction.Add(2f, (float)surfaceArea, 0, 0);                     //above Mach 1.4, visc is purely surface drag, no pressure-related components simulated
 
-                float sonicWaveDrag = (float)CalculateTransonicWaveDrag(i, index, numSections, front, sectionThickness, Math.Min(maxCrossSectionArea * 1.5, curArea * 4));//Math.Min(maxCrossSectionArea * 0.1, curArea * 0.25));
+                float sonicWaveDrag = (float)CalculateTransonicWaveDrag(i, index, numSections, front, sectionThickness, Math.Min(maxCrossSectionArea * 3, curArea * 16));//Math.Min(maxCrossSectionArea * 0.1, curArea * 0.25));
                 sonicWaveDrag *= 0.8f;     //this is just to account for the higher drag being felt due to the inherent blockiness of the model being used
                 float hypersonicDragForward = (float)CalculateHypersonicDrag(prevArea, curArea, sectionThickness);
                 float hypersonicDragBackward = (float)CalculateHypersonicDrag(nextArea, curArea, sectionThickness);
@@ -417,7 +419,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         private double CalculateTransonicWaveDrag(int i, int index, int numSections, int front, double sectionThickness, double cutoff)
         {
-            double currentSectAreaCrossSection = Math.Min(_vehicleCrossSection[index].areaDeriv2ToNextSection, cutoff);
+            double currentSectAreaCrossSection = MathClampAbs(_vehicleCrossSection[index].areaDeriv2ToNextSection, cutoff);
 
             if (currentSectAreaCrossSection == 0)       //quick escape for 0 cross-section section drag
                 return 0;
@@ -434,8 +436,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 thisLj -= lj2ndTerm;
                 lj2ndTerm = tmp;
 
-                tmp = Math.Min(_vehicleCrossSection[index + j].areaDeriv2ToNextSection, cutoff);
-                tmp += Math.Min(_vehicleCrossSection[index - j].areaDeriv2ToNextSection, cutoff);
+                tmp = MathClampAbs(_vehicleCrossSection[index + j].areaDeriv2ToNextSection, cutoff);
+                tmp += MathClampAbs(_vehicleCrossSection[index - j].areaDeriv2ToNextSection, cutoff);
 
                 drag += tmp * thisLj;
             }
@@ -448,7 +450,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     thisLj -= lj2ndTerm;
                     lj2ndTerm = tmp;
 
-                    tmp = Math.Min(_vehicleCrossSection[j + front].areaDeriv2ToNextSection, cutoff);
+                    tmp = MathClampAbs(_vehicleCrossSection[j + front].areaDeriv2ToNextSection, cutoff);
 
                     drag += tmp * thisLj;
                 }
@@ -462,7 +464,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     thisLj -= lj2ndTerm;
                     lj2ndTerm = tmp;
 
-                    tmp = Math.Min(_vehicleCrossSection[j + front].areaDeriv2ToNextSection, cutoff);
+                    tmp = MathClampAbs(_vehicleCrossSection[j + front].areaDeriv2ToNextSection, cutoff);
 
                     drag += tmp * thisLj;
                 }
@@ -471,7 +473,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             drag *= sectionThicknessSq;
             drag /= 2 * Math.PI;
             drag *= currentSectAreaCrossSection;
-            return -drag;
+            return drag;
         }
 
         private double CalculateCriticalMachNumber(double finenessRatio)
@@ -529,6 +531,15 @@ namespace FerramAerospaceResearch.FARAeroComponents
             axis = vesselToLocalMatrix.MultiplyVector(axis);
 
             return axis;
+        }
+
+        double MathClampAbs(double value, double abs)
+        {
+            if (value < -abs)
+                return -abs;
+            if (value > abs)
+                return abs;
+            return value;
         }
     }
 }
