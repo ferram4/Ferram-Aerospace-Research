@@ -294,7 +294,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 xForceSkinFriction.Add(1f, (float)(surfaceArea * viscousDragFactor), 0, 0);   //transonic visc drag
                 xForceSkinFriction.Add(2f, (float)surfaceArea, 0, 0);                     //above Mach 1.4, visc is purely surface drag, no pressure-related components simulated
 
-                float sonicWaveDrag = (float)CalculateTransonicWaveDrag(i, index, numSections, front, sectionThickness, Math.Min(maxCrossSectionArea * 3, curArea * 16));//Math.Min(maxCrossSectionArea * 0.1, curArea * 0.25));
+                float sonicWaveDrag = (float)CalculateTransonicWaveDrag(i, index, numSections, front, sectionThickness, double.PositiveInfinity);//Math.Min(maxCrossSectionArea * 3, curArea * 16));//Math.Min(maxCrossSectionArea * 0.1, curArea * 0.25));
                 sonicWaveDrag *= 0.8f;     //this is just to account for the higher drag being felt due to the inherent blockiness of the model being used
                 float hypersonicDragForward = (float)CalculateHypersonicDrag(prevArea, curArea, sectionThickness);
                 float hypersonicDragBackward = (float)CalculateHypersonicDrag(nextArea, curArea, sectionThickness);
@@ -429,6 +429,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             int limDoubleDrag = Math.Min(i, numSections - i);
             double sectionThicknessSq = sectionThickness * sectionThickness;
 
+            double lj3rdTerm = Math.Log(sectionThickness) - 1;
+
             for (int j = 0; j <= limDoubleDrag; j++)      //section of influence from ahead and behind
             {
                 double thisLj = (j + 0.5) * Math.Log(j + 0.5);
@@ -438,6 +440,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 tmp = MathClampAbs(_vehicleCrossSection[index + j].areaDeriv2ToNextSection, cutoff);
                 tmp += MathClampAbs(_vehicleCrossSection[index - j].areaDeriv2ToNextSection, cutoff);
+
+                thisLj += lj3rdTerm;
 
                 drag += tmp * thisLj;
             }
@@ -452,6 +456,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                     tmp = MathClampAbs(_vehicleCrossSection[j + front].areaDeriv2ToNextSection, cutoff);
 
+                    thisLj += lj3rdTerm;
+
                     drag += tmp * thisLj;
                 }
             }
@@ -465,6 +471,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     lj2ndTerm = tmp;
 
                     tmp = MathClampAbs(_vehicleCrossSection[j + front].areaDeriv2ToNextSection, cutoff);
+
+                    thisLj += lj3rdTerm;
 
                     drag += tmp * thisLj;
                 }
