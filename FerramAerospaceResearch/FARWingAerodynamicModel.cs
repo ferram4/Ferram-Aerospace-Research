@@ -134,6 +134,8 @@ namespace ferram4
         public double YmaxForce = double.MaxValue;
         public double XZmaxForce = double.MaxValue;
 
+        public Vector3 worldSpaceForce;
+
         #region GetFunctions
 
         public double GetStall()
@@ -440,6 +442,8 @@ namespace ferram4
                         double AoA = CalculateAoA(velocity);
                         double failureForceScaling = FARAeroUtil.GetFailureForceScaling(vessel);
                         Vector3d force = DoCalculateForces(velocity, machNumber, AoA, failureForceScaling);
+
+                        worldSpaceForce = force;
 
                         rb.AddForceAtPosition(force, AerodynamicCenter);            //and apply force
                     }

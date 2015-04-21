@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using FerramAerospaceResearch.FARAeroComponents;
+using ferram4;
 
 namespace FerramAerospaceResearch.FARGUI
 {
@@ -11,6 +12,8 @@ namespace FerramAerospaceResearch.FARGUI
         Vessel _vessel;
         FARVesselAero _vesselAero;
         List<FARAeroPartModule> _currentAeroModules;
+
+        List<FARWingAerodynamicModel> _LEGACY_currentWingAeroModel = new List<FARWingAerodynamicModel>();
 
         Vector3 totalAeroForceVector;
 
@@ -36,6 +39,15 @@ namespace FerramAerospaceResearch.FARGUI
         void UpdateAeroModules(List<FARAeroPartModule> newAeroModules)
         {
             _currentAeroModules = newAeroModules;
+            _LEGACY_currentWingAeroModel.Clear();
+
+            for(int i = 0; i < _vessel.Parts.Count; i++)
+            {
+                Part p = _vessel.Parts[i];
+                FARWingAerodynamicModel w = p.GetComponent<FARWingAerodynamicModel>();
+                if ((object)w != null)
+                    _LEGACY_currentWingAeroModel.Add(w);
+            }
         }
 
         #region PhysicsBlock
@@ -56,6 +68,13 @@ namespace FerramAerospaceResearch.FARGUI
                     if ((object)m != null)
                         totalAeroForceVector += m.worldSpaceAeroForce;
                 }
+            }
+
+            for(int i = 0; i < _LEGACY_currentWingAeroModel.Count; i++)
+            {
+                FARWingAerodynamicModel w = _LEGACY_currentWingAeroModel[i];
+                if ((object)w != null)
+                    totalAeroForceVector += w.worldSpaceForce;
             }
         }
 
@@ -121,7 +140,7 @@ namespace FerramAerospaceResearch.FARGUI
         {
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();
-            GUILayout.Box("Mach:\n\rReynolds:\n\r\n\rLift:\n\rDrag:\n\rSideForce:\n\r\n\rCl:\n\rCd:\n\rCy:\n\rRef Area:", GUILayout.Width(75));
+            GUILayout.Box("Mach:\n\rReynolds:\n\r\n\rLift (kN):\n\rDrag (kN):\n\rSideForce (kN):\n\r\n\rCl:\n\rCd:\n\rCy:\n\rRef Area (m^2):", GUILayout.Width(75));
             GUILayout.EndVertical();
             GUILayout.BeginVertical();
             GUILayout.Box(dataString, GUILayout.Width(75));
