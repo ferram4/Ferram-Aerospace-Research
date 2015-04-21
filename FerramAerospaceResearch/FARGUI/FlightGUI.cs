@@ -114,15 +114,19 @@ namespace FerramAerospaceResearch.FARGUI
             data.AppendLine(_vesselAero.ReynoldsNumber.ToString("e2"));
             data.AppendLine();
 
-            data.AppendLine(liftForce.ToString("F3"));
-            data.AppendLine(dragForce.ToString("F3"));
-            data.AppendLine(sideForce.ToString("F3"));
+            data.Append(liftForce.ToString("F3"));
+            data.AppendLine(" kN");
+            data.Append(dragForce.ToString("F3"));
+            data.AppendLine(" kN");
+            data.Append(sideForce.ToString("F3"));
+            data.AppendLine(" kN");
             data.AppendLine();
 
             data.AppendLine(liftCoeff.ToString("F3"));
             data.AppendLine(dragCoeff.ToString("F3"));
             data.AppendLine(sideCoeff.ToString("F3"));
             data.Append(refArea.ToString("F3"));
+            data.Append(" m^2");
 
             dataString = data.ToString();
         }
@@ -140,7 +144,7 @@ namespace FerramAerospaceResearch.FARGUI
         {
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();
-            GUILayout.Box("Mach:\n\rReynolds:\n\r\n\rLift (kN):\n\rDrag (kN):\n\rSideForce (kN):\n\r\n\rCl:\n\rCd:\n\rCy:\n\rRef Area (m^2):", GUILayout.Width(75));
+            GUILayout.Box("Mach:\n\rReynolds:\n\r\n\rLift:\n\rDrag:\n\rSideForce:\n\r\n\rCl:\n\rCd:\n\rCy:\n\rRef Area:", GUILayout.Width(75));
             GUILayout.EndVertical();
             GUILayout.BeginVertical();
             GUILayout.Box(dataString, GUILayout.Width(75));
