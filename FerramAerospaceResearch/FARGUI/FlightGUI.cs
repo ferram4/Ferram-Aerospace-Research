@@ -84,7 +84,7 @@ namespace FerramAerospaceResearch.FARGUI
 
             dragForce = -Vector3d.Dot(totalAeroForceVector, velVectorNorm);     //reverse along vel normal will be drag
 
-            Vector3d remainderVector = totalAeroForceVector - velVectorNorm * dragForce;
+            Vector3d remainderVector = totalAeroForceVector + velVectorNorm * dragForce;
 
             liftForce = -Vector3d.Dot(remainderVector, _vessel.ReferenceTransform.forward);     //forward points down for the vessel, so reverse along that will be lift
             sideForce = Vector3d.Dot(remainderVector, _vessel.ReferenceTransform.right);        //and the side force

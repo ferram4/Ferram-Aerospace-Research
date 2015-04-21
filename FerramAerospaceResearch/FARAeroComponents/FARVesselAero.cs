@@ -39,7 +39,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Linq;
 using UnityEngine;
-using FerramAerospaceResearch.FARPartGeometry;
 using ferram4;
 
 namespace FerramAerospaceResearch.FARAeroComponents
@@ -49,11 +48,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
         Vessel _vessel;
         VesselType _vType;
         int _voxelCount;
-
-        VehicleVoxel _voxel = null;
-        VoxelCrossSection[] _vehicleCrossSection = null;
-
-        bool ready = false;
 
         public double Length
         {
@@ -123,8 +117,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 for (int i = 0; i < _currentAeroModules.Count; i++)
                 {
                     FARAeroPartModule m = _currentAeroModules[i];
-                    if ((object)m != null)
+                    if (m != null)
                         m.UpdateVelocityAndAngVelocity(frameVel);
+
                 }
                 
                 for (int i = 0; i < _currentAeroSections.Count; i++)
@@ -133,7 +128,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 for (int i = 0; i < _currentAeroModules.Count; i++)
                 {
                     FARAeroPartModule m = _currentAeroModules[i];
-                    if ((object)m != null)
+                    if (m != null)
                         m.ApplyForces();
                 }
 
@@ -175,7 +170,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             _voxelCount = VoxelCountFromType();
 
 
-            _vehicleAero.VoxelUpdate(_vessel.transform.worldToLocalMatrix, _vessel.transform.localToWorldMatrix, CalculateVesselMainAxis(), _voxelCount, _vessel.Parts);
+            _vehicleAero.VoxelUpdate(_vessel.transform.worldToLocalMatrix, _vessel.transform.localToWorldMatrix, _voxelCount, _vessel.Parts);
 
             Debug.Log("Updating vessel voxel for " + _vessel.vesselName);
         }
@@ -187,44 +182,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 return 20000;
             else
                 return 125000;
-        }
-
-        private Vector3 CalculateVesselMainAxis()
-        {
-            Vector3 axis = Vector3.zero;
-            List<Part> vesselPartsList = _vessel.Parts;
-            for(int i = 0; i < vesselPartsList.Count; i++)      //get axis by averaging all parts up vectors
-            {
-                Part p = vesselPartsList[i];
-                GeometryPartModule m = p.GetComponent<GeometryPartModule>();
-                if(m != null)
-                {
-                    Bounds b = m.overallMeshBounds;
-                    axis += p.transform.up * b.size.x * b.size.y * b.size.z;    //scale part influence by approximate size
-                }
-            }
-            axis.Normalize();   //normalize axis for later calcs
-            float dotProd;
-
-            dotProd = Math.Abs(Vector3.Dot(axis, _vessel.transform.up));
-            if (dotProd >= 0.99)        //if axis and _vessel.up are nearly aligned, just use _vessel.up
-                return Vector3.up;
-
-            dotProd = Math.Abs(Vector3.Dot(axis, _vessel.transform.forward));
-
-            if (dotProd >= 0.99)        //Same for forward...
-                return Vector3.forward;
-
-            dotProd = Math.Abs(Vector3.Dot(axis, _vessel.transform.right));
-
-            if (dotProd >= 0.99)        //and right...
-                return Vector3.right;
-
-            //Otherwise, now we need to use axis, since it's obviously not close to anything else
-
-            axis = _vessel.transform.worldToLocalMatrix.MultiplyVector(axis);
-
-            return axis;
         }
     }
 }

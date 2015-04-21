@@ -152,8 +152,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             UpdateTransformMatrixList(transformMatrix);
 
-            if(HighLogic.LoadedSceneIsFlight)
+            if (HighLogic.LoadedSceneIsFlight)
                 vessel.SendMessage("AnimationVoxelUpdate");
+            else if (HighLogic.LoadedSceneIsEditor)
+                FARGUI.EditorGUI.UpdateVoxel();
         }
 
         public void EditorUpdate()

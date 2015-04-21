@@ -44,7 +44,7 @@ using FerramAerospaceResearch.FARPartGeometry;
 
 namespace FerramAerospaceResearch.FARTest
 {
-    [KSPAddon(KSPAddon.Startup.EditorAny, false)]
+    //[KSPAddon(KSPAddon.Startup.EditorAny, false)]
     class FAREditorVoxel : MonoBehaviour
     {
         Rect windowPos;
@@ -176,7 +176,7 @@ namespace FerramAerospaceResearch.FARTest
 
             ConfigNode node = new ConfigNode("Cross Section Dump");
             for (int i = 0; i < crossSections.Length; i++)
-                node.AddValue(i.ToString(), crossSections[i].area.ToString() + " -- " + crossSections[i].areaDeriv2ToNextSection
+                node.AddValue(i.ToString(), crossSections[i].area.ToString() + " -- " + crossSections[i].secondAreaDeriv
                     + " -- (" + crossSections[i].centroid.x + "," + crossSections[i].centroid.y + "," + crossSections[i].centroid.z + ") ---------- "
                     +crossSections[i].flatnessRatio + ", " + crossSections[i].flatNormalVector);
                     //+ crossSections[i].additionalUnshadowedArea

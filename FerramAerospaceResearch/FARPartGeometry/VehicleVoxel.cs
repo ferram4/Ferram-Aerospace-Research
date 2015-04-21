@@ -1080,7 +1080,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 areaSecondDeriv -= 2 * Math.Sqrt(prevArea * curArea);
                 areaSecondDeriv *= denom;*/
 
-                crossSections[i].areaDeriv2ToNextSection = areaSecondDeriv;
+                crossSections[i].secondAreaDeriv = areaSecondDeriv;
 
                 if (crossSections[i].area > maxCrossSectionArea)
                     maxCrossSectionArea = crossSections[i].area;
@@ -1099,14 +1099,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                     unSmoothedLastDeriv2 = unSmoothedLastDeriv;
 
-                    curDeriv = crossSections[i].areaDeriv2ToNextSection;     //this is used to make sure we don't end up using smoothed derivs for the calculations
+                    curDeriv = crossSections[i].secondAreaDeriv;     //this is used to make sure we don't end up using smoothed derivs for the calculations
                     unSmoothedLastDeriv = curDeriv;
 
                     if (i <= backIndex)
                     {
-                        nextDeriv = crossSections[i + 1].areaDeriv2ToNextSection;
+                        nextDeriv = crossSections[i + 1].secondAreaDeriv;
                         if (i + 1 <= backIndex)
-                            nextDeriv2 = crossSections[i + 2].areaDeriv2ToNextSection;
+                            nextDeriv2 = crossSections[i + 2].secondAreaDeriv;
                         else
                             nextDeriv2 = 0;
                     }
@@ -1122,7 +1122,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     curDeriv += gaussianVal2 * prevDeriv2;
                     curDeriv += gaussianVal2 * nextDeriv2;
 
-                    crossSections[i].areaDeriv2ToNextSection = curDeriv;
+                    crossSections[i].secondAreaDeriv = curDeriv;
                 }
             }
         }

@@ -46,7 +46,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
     {
         public double area;
         public Vector3d centroid;
-        public double areaDeriv2ToNextSection;   //second derivative of area, which is constant between sections; this is the value between this and the next section
+        public double secondAreaDeriv;   //second derivative of area, used in calculating slender body wave drag
 
         public double flatnessRatio;            //ratio of the longest distance to shortest distance of the cross-section.  Used in calculating body lift and drag
         public Vector3d flatNormalVector;       //unit vector indicating the direction perpendicular to the longest distance on the cross-section

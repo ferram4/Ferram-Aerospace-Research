@@ -25,10 +25,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
             get { return maxCrossSectionArea; }
         }
 
-        bool ready = false;
+        bool calculationCompleted = false;
         public bool CalculationCompleted
         {
-            get { return ready; }
+            get { return calculationCompleted; }
         }
 
         Matrix4x4 _worldToLocalMatrix, _localToWorldMatrix;
@@ -41,9 +41,14 @@ namespace FerramAerospaceResearch.FARAeroComponents
         List<FARAeroSection> _currentAeroSections;
         List<FARAeroSection> _newAeroSections;
 
+        int validSectionCount;
+        int firstSection;
+
+        bool visualizing = false;
+
         public void GetNewAeroData(out List<FARAeroPartModule> aeroModules, out List<FARAeroSection> aeroSections)
         {
-            ready = false;
+            calculationCompleted = false;
             aeroModules = _currentAeroModules = _newAeroModules;
             _newAeroModules = null;
 
@@ -51,34 +56,88 @@ namespace FerramAerospaceResearch.FARAeroComponents
             _newAeroSections = null;
         }
 
-        public void VoxelUpdate(Matrix4x4 worldToLocalMatrix, Matrix4x4 localToWorldMatrix, Vector3 vehicleMainAxis, int voxelCount, List<Part> vehiclePartList)
+        public double[] GetCrossSectionAreas()
+        {
+            double[] areas = new double[validSectionCount];
+            return GetCrossSectionAreas(areas);
+        }
+
+        public double[] GetCrossSectionAreas(double[] areas)
+        {
+            for (int i = firstSection; i < validSectionCount + firstSection; i++)
+                areas[i - firstSection] = _vehicleCrossSection[i].area;
+
+            return areas;
+        }
+
+        public double[] GetCrossSection2ndAreaDerivs()
+        {
+            double[] areaDerivs = new double[validSectionCount];
+            return GetCrossSection2ndAreaDerivs(areaDerivs);
+        }
+
+        public double[] GetCrossSection2ndAreaDerivs(double[] areaDerivs)
+        {
+            for (int i = firstSection; i < validSectionCount + firstSection; i++)
+                areaDerivs[i - firstSection] = _vehicleCrossSection[i].secondAreaDeriv;
+
+            return areaDerivs;
+        }
+
+        private void ClearDebugVoxel()
+        {
+            _voxel.ClearVisualVoxels();
+            visualizing = false;
+        }
+
+        private void DisplayDebugVoxels(Matrix4x4 localToWorldMatrix)
+        {
+            _voxel.VisualizeVoxel(localToWorldMatrix);
+            visualizing = true;
+        }
+
+        public void DebugVisualizeVoxels(Matrix4x4 localToWorldMatrix)
+        {
+            if (visualizing)
+                ClearDebugVoxel();
+            else
+                DisplayDebugVoxels(localToWorldMatrix);
+        }
+
+        public void VoxelUpdate(Matrix4x4 worldToLocalMatrix, Matrix4x4 localToWorldMatrix, int voxelCount, List<Part> vehiclePartList)
         {
             _voxelCount = voxelCount;
 
             this._worldToLocalMatrix = worldToLocalMatrix;
             this._localToWorldMatrix = localToWorldMatrix;
             this._vehiclePartList = vehiclePartList;
-            this._vehicleMainAxis = vehicleMainAxis;
+            this._vehicleMainAxis = CalculateVehicleMainAxis();
+
+            if(_voxel != null)
+                ClearDebugVoxel();
+
+            visualizing = false;
 
             ThreadPool.QueueUserWorkItem(CreateVoxel);
-
         }
 
         private void CreateVoxel(object nullObj)
         {
             try
             {
-                if(HighLogic.LoadedSceneIsFlight)
+                lock (this)
+                {
                     UpdateGeometryPartModules();
 
-                VehicleVoxel newvoxel = new VehicleVoxel(_vehiclePartList, _voxelCount, true, true);
+                    VehicleVoxel newvoxel = new VehicleVoxel(_vehiclePartList, _voxelCount, true, true);
 
-                _vehicleCrossSection = newvoxel.EmptyCrossSectionArray;
+                    _vehicleCrossSection = newvoxel.EmptyCrossSectionArray;
 
-                _voxel = newvoxel;
+                    _voxel = newvoxel;
 
-                CalculateVesselAeroProperties();
-                ready = true;
+                    CalculateVesselAeroProperties();
+                    calculationCompleted = true;
+                }
             }
             catch (Exception e)
             {
@@ -99,6 +158,43 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
         }
 
+        private Vector3 CalculateVehicleMainAxis()
+        {
+            Vector3 axis = Vector3.zero;
+            for (int i = 0; i < _vehiclePartList.Count; i++)      //get axis by averaging all parts up vectors
+            {
+                Part p = _vehiclePartList[i];
+                GeometryPartModule m = p.GetComponent<GeometryPartModule>();
+                if (m != null)
+                {
+                    Bounds b = m.overallMeshBounds;
+                    axis += p.transform.up * b.size.x * b.size.y * b.size.z;    //scale part influence by approximate size
+                }
+            }
+            axis.Normalize();   //normalize axis for later calcs
+            float dotProd;
+
+            dotProd = Math.Abs(Vector3.Dot(axis, _localToWorldMatrix.MultiplyVector(Vector3.up)));
+            if (dotProd >= 0.99)        //if axis and _vessel.up are nearly aligned, just use _vessel.up
+                return Vector3.up;
+
+            dotProd = Math.Abs(Vector3.Dot(axis, _localToWorldMatrix.MultiplyVector(Vector3.forward)));
+
+            if (dotProd >= 0.99)        //Same for forward...
+                return Vector3.forward;
+
+            dotProd = Math.Abs(Vector3.Dot(axis, _localToWorldMatrix.MultiplyVector(Vector3.right)));
+
+            if (dotProd >= 0.99)        //and right...
+                return Vector3.right;
+
+            //Otherwise, now we need to use axis, since it's obviously not close to anything else
+
+            axis = _worldToLocalMatrix.MultiplyVector(axis);
+
+            return axis;
+        }
+
         private void CalculateVesselAeroProperties()
         {
             int front, back, numSections;
@@ -107,6 +203,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             _voxel.CrossSectionData(_vehicleCrossSection, _vehicleMainAxis, out front, out back, out sectionThickness, out maxCrossSectionArea);
 
             numSections = back - front;
+            validSectionCount = numSections;
+            firstSection = front;
             double invMaxRadFactor = 1f / Math.Sqrt(maxCrossSectionArea / Math.PI);
 
             double finenessRatio = sectionThickness * numSections * 0.5 * invMaxRadFactor;       //vehicle length / max diameter, as calculated from sect thickness * num sections / (2 * max radius) 
@@ -277,7 +375,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 tmpAeroModules.UnionWith(includedModules);
             }
             _newAeroModules = tmpAeroModules.ToList();
-            _voxel = null;
+            if(HighLogic.LoadedSceneIsFlight)
+                _voxel = null;
         }
 
         private double CalculateHypersonicMoment(double lowArea, double highArea, double sectionThickness)
@@ -306,7 +405,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         private double CalculateTransonicWaveDrag(int i, int index, int numSections, int front, double sectionThickness, double cutoff)
         {
-            double currentSectAreaCrossSection = MathClampAbs(_vehicleCrossSection[index].areaDeriv2ToNextSection, cutoff);
+            double currentSectAreaCrossSection = MathClampAbs(_vehicleCrossSection[index].secondAreaDeriv, cutoff);
 
             if (currentSectAreaCrossSection == 0)       //quick escape for 0 cross-section section drag
                 return 0;
@@ -325,8 +424,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 thisLj -= lj2ndTerm;
                 lj2ndTerm = tmp;
 
-                tmp = MathClampAbs(_vehicleCrossSection[index + j].areaDeriv2ToNextSection, cutoff);
-                tmp += MathClampAbs(_vehicleCrossSection[index - j].areaDeriv2ToNextSection, cutoff);
+                tmp = MathClampAbs(_vehicleCrossSection[index + j].secondAreaDeriv, cutoff);
+                tmp += MathClampAbs(_vehicleCrossSection[index - j].secondAreaDeriv, cutoff);
 
                 thisLj += lj3rdTerm;
 
@@ -341,7 +440,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     thisLj -= lj2ndTerm;
                     lj2ndTerm = tmp;
 
-                    tmp = MathClampAbs(_vehicleCrossSection[j + front].areaDeriv2ToNextSection, cutoff);
+                    tmp = MathClampAbs(_vehicleCrossSection[j + front].secondAreaDeriv, cutoff);
 
                     thisLj += lj3rdTerm;
 
@@ -357,7 +456,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     thisLj -= lj2ndTerm;
                     lj2ndTerm = tmp;
 
-                    tmp = MathClampAbs(_vehicleCrossSection[j + front].areaDeriv2ToNextSection, cutoff);
+                    tmp = MathClampAbs(_vehicleCrossSection[j + front].secondAreaDeriv, cutoff);
 
                     thisLj += lj3rdTerm;
 
