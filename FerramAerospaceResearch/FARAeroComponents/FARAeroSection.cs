@@ -129,7 +129,102 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 GenerateCrossFlowDragCurve();
         }
 
-        public void CalculateAeroForces(float atmDensity, float machNumber, float reynoldsPerUnitLength, float skinFrictionDrag)
+        public void EditorCalculateAeroForces(float atmDensity, float machNumber, float reynoldsPerUnitLength, float skinFrictionDrag, Vector3 vel, ferram4.FARCenterQuery center)
+        {
+            double skinFrictionForce = skinFrictionDrag * xForceSkinFriction.Evaluate(machNumber);      //this will be the same for each part, so why recalc it multiple times?
+            float xForceAoA0 = xForcePressureAoA0.Evaluate(machNumber);
+            float xForceAoA180 = xForcePressureAoA180.Evaluate(machNumber);
+
+
+            PartData data = partsIncluded[0];
+            FARAeroPartModule aeroModule = data.aeroModule;
+
+            Vector3 xRefVector = data.xRefVectorPartSpace;
+            Vector3 nRefVector = data.nRefVectorPartSpace;
+
+            Vector3 velLocal = aeroModule.transform.worldToLocalMatrix.MultiplyVector(vel);
+
+            //Vector3 angVelLocal = aeroModule.partLocalAngVel;
+
+            //velLocal += Vector3.Cross(angVelLocal, data.centroidPartSpace);       //some transform issue here, needs investigation
+            Vector3 velLocalNorm = velLocal.normalized;
+
+            Vector3 localNormalForceVec = Vector3.Exclude(xRefVector, -velLocalNorm).normalized;
+
+            double cosAoA = Vector3.Dot(xRefVector, velLocalNorm);
+            double cosSqrAoA = cosAoA * cosAoA;
+            double sinSqrAoA = Math.Max(1 - cosSqrAoA, 0);
+            double sinAoA = Math.Sqrt(sinSqrAoA);
+            double sin2AoA = 2 * sinAoA * Math.Abs(cosAoA);
+            double cosHalfAoA = Math.Sqrt(0.5 + 0.5 * Math.Abs(cosAoA));
+
+
+            double nForce = 0;
+            if (machNumber < 6)
+                nForce = cosHalfAoA * sin2AoA * areaChange * Math.Sign(cosAoA);  //potential flow normal force
+            if (nForce < 0)     //potential flow is not significant over the rear face of things
+                nForce = 0;
+            if (machNumber > 3)
+                nForce *= 2d - machNumber * 0.3333333333333333d;
+
+            float normalForceFactor = Math.Abs(Vector3.Dot(localNormalForceVec, nRefVector));
+            normalForceFactor *= normalForceFactor;
+
+            normalForceFactor = invFlatnessRatio * (1 - normalForceFactor) + flatnessRatio * normalForceFactor;     //accounts for changes in relative flatness of shape
+
+
+            float crossFlowMach, crossFlowReynolds;
+            crossFlowMach = machNumber * (float)sinAoA;
+            crossFlowReynolds = reynoldsPerUnitLength * viscCrossflowDrag * normalForceFactor * (float)sinAoA;
+
+            nForce += viscCrossflowDrag * sinSqrAoA * CalculateCrossFlowDrag(crossFlowMach, crossFlowReynolds);            //viscous crossflow normal force
+
+            nForce *= normalForceFactor;
+
+            double xForce = -skinFrictionForce * Math.Sign(cosAoA) * cosSqrAoA;
+            float moment = (float)(cosAoA * sinAoA);
+
+            if (cosAoA > 0)
+            {
+                xForce += cosSqrAoA * xForceAoA0;
+                moment *= -hypersonicMomentForward;
+            }
+            else
+            {
+                xForce += cosSqrAoA * xForceAoA180;
+                moment *= hypersonicMomentBackward;
+            }
+            moment /= normalForceFactor;
+
+            Vector3 forceVector = (float)xForce * xRefVector + (float)nForce * localNormalForceVec;
+            Vector3 torqueVector = Vector3.Cross(xRefVector, localNormalForceVec) * moment;
+
+            Matrix4x4 localToWorld = aeroModule.part.transform.localToWorldMatrix;
+
+            float dynPresAndScaling = 0.0005f * atmDensity * velLocal.sqrMagnitude;        //dyn pres and N -> kN conversion
+
+            forceVector *= dynPresAndScaling;
+            torqueVector *= dynPresAndScaling;
+
+            forceVector = localToWorld.MultiplyVector(forceVector);
+            torqueVector = localToWorld.MultiplyVector(torqueVector);
+            Vector3 centroid = Vector3.zero;
+
+            for (int i = 0; i < partsIncluded.Count; i++)
+            {
+                PartData partData = partsIncluded[i];
+                FARAeroPartModule module = partData.aeroModule;
+                if ((object)aeroModule == null)
+                    continue;
+
+                centroid += module.part.transform.localToWorldMatrix.MultiplyPoint3x4(partData.centroidPartSpace) * partData.dragFactor;
+            }
+
+            center.AddForce(centroid, forceVector);
+            //center.AddTorque(centroid, torqueVector);
+        }
+
+        public void FlightCalculateAeroForces(float atmDensity, float machNumber, float reynoldsPerUnitLength, float skinFrictionDrag)
         {
 
             double skinFrictionForce = skinFrictionDrag * xForceSkinFriction.Evaluate(machNumber);      //this will be the same for each part, so why recalc it multiple times?

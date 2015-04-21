@@ -65,6 +65,7 @@
   <ItemGroup>
     <Compile Include="CompatibilityChecker.cs" />
     <Compile Include="FARAction.cs" />
+    <Compile Include="FARAeroComponents\EditorAeroCenter.cs" />
     <Compile Include="FARAeroComponents\FARAeroPartModule.cs" />
     <Compile Include="FARAeroComponents\FARAeroSection.cs" />
     <Compile Include="FARAeroComponents\FARVesselAero.cs" />

@@ -25,13 +25,17 @@ namespace FerramAerospaceResearch.FARGUI
         static ApplicationLauncherButton editorGUIAppLauncherButton;
 
         VehicleAerodynamics _vehicleAero;
-        ferramGraph graph = new ferramGraph(400, 275);
+        EditorAeroCenter _aeroCenter;
+
+        ferramGraph _graph = new ferramGraph(400, 275);
+
 
         void Start()
         {
             instance = this;
 
             _vehicleAero = new VehicleAerodynamics();
+            _aeroCenter = new EditorAeroCenter();
             guiRect.height = 500;
             guiRect.width = 650;
             GameEvents.onEditorPartEvent.Add(UpdateGeometryEvent);
@@ -57,17 +61,28 @@ namespace FerramAerospaceResearch.FARGUI
 
         void FixedUpdate()
         {
-            if((object)EditorLogic.RootPart != null)
+            if ((object)EditorLogic.RootPart != null)
+            {
+                if (_vehicleAero.CalculationCompleted)
+                {
+                    _aeroCenter.UpdateAeroData(_vehicleAero);
+                } 
+
                 if (_updateRateLimiter < 20)
                 {
                     _updateRateLimiter++;
                 }
                 else if (_updateQueued)
                     RecalculateVoxel();
+            }
 
             OnGUIAppLauncherReady();
         }
 
+        #region CenterOfLiftCalcs
+
+        #endregion
+        #region voxel
         public static void UpdateVoxel()
         {
             if (instance._updateRateLimiter > 18)
@@ -93,7 +108,7 @@ namespace FerramAerospaceResearch.FARGUI
 
         void UpdateCrossSections()
         {
-            graph.Clear();
+            _graph.Clear();
 
             double[] areas = _vehicleAero.GetCrossSectionAreas();
             double[] secondDerivAreas = _vehicleAero.GetCrossSection2ndAreaDerivs();
@@ -117,17 +132,18 @@ namespace FerramAerospaceResearch.FARGUI
                 upperBound = Math.Max(upperBound, secondDerivAreas[i]);
             }
 
-            graph.SetBoundaries(0, 1, lowerBound, upperBound);
-            graph.SetGridScaleUsingValues(0.1, 0.5);
+            _graph.SetBoundaries(0, 1, lowerBound, upperBound);
+            _graph.SetGridScaleUsingValues(0.1, 0.5);
 
-            graph.AddLine("S", xAxis, areas, Color.green);
-            graph.AddLine("S\'\'", xAxis, secondDerivAreas, Color.yellow);
+            _graph.AddLine("S", xAxis, areas, Color.green);
+            _graph.AddLine("S\'\'", xAxis, secondDerivAreas, Color.yellow);
 
-            graph.horizontalLabel = "Body Station";
-            graph.verticalLabel = "Area, 2nd Deriv Area";
+            _graph.horizontalLabel = "Body Station";
+            _graph.verticalLabel = "Area, 2nd Deriv Area";
 
-            graph.Update();
+            _graph.Update();
         }
+        #endregion
 
         #region GUIFunctions
         void OnGUI()
@@ -180,7 +196,7 @@ namespace FerramAerospaceResearch.FARGUI
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical(GUILayout.Width(540));
 
-            graph.Display(graphBackingStyle, 0, 0);
+            _graph.Display(graphBackingStyle, 0, 0);
 
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
@@ -233,6 +249,5 @@ namespace FerramAerospaceResearch.FARGUI
 
         void DummyVoid() { }
         #endregion
-
     }
 }

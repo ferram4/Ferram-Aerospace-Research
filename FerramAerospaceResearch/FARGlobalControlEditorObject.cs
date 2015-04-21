@@ -187,7 +187,7 @@ namespace ferram4
                 return;
 
             FARAeroUtil.ResetEditorParts();
-            FARBaseAerodynamics.GlobalCoLReady = false;
+            //FARBaseAerodynamics.GlobalCoLReady = false;
 
             if (EditorLogic.fetch)
             {

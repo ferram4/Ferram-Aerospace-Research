@@ -123,7 +123,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
                 
                 for (int i = 0; i < _currentAeroSections.Count; i++)
-                    _currentAeroSections[i].CalculateAeroForces(atmDensity, (float)machNumber, (float)(reynoldsNumber / Length), skinFrictionDragCoefficient);
+                    _currentAeroSections[i].FlightCalculateAeroForces(atmDensity, (float)machNumber, (float)(reynoldsNumber / Length), skinFrictionDragCoefficient);
 
                 for (int i = 0; i < _currentAeroModules.Count; i++)
                 {

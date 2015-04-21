@@ -71,8 +71,6 @@ namespace ferram4
 
         public double rho;
 
-        public static bool GlobalCoLReady = false;
-        private static Vector3d GlobalCoL;
         private Vector3 CoLForce;
 
         // Keep track if the tinting effect is active or not
@@ -256,7 +254,7 @@ namespace ferram4
             return parts;
         }
 
-        private static void PrecomputeGlobalCenterOfLift()
+        public static void PrecomputeGlobalCenterOfLift(FARCenterQuery lift, FARCenterQuery dummy)
         {
             /* Center of lift is the location where the derivative of
                the total torque provided by aerodynamic forces relative to
@@ -275,9 +273,6 @@ namespace ferram4
                 vel_base = Vector3.up;
                 vel_fuzz = -0.02f * Vector3.forward;
             }
-
-            FARCenterQuery lift = new FARCenterQuery();
-            FARCenterQuery dummy = new FARCenterQuery();
 
             var parts = GetAllEditorModules();
 
@@ -313,20 +308,18 @@ namespace ferram4
                 ba.CoLForce -= ba.PrecomputeCenterOfLift(vel, 0, lift);
 
             // Choose the center location
-            GlobalCoL = lift.GetMinTorquePos();
-            GlobalCoLReady = true;
+            //GlobalCoL = lift.GetMinTorquePos();
+            //GlobalCoLReady = true;
         }
 
         public void OnCenterOfLiftQuery(CenterOfLiftQuery CoLMarker)
         {
             // Compute the actual center ourselves once per frame
-            if (!GlobalCoLReady && HighLogic.LoadedSceneIsEditor)
-                PrecomputeGlobalCenterOfLift();
-
             // Feed the precomputed values to the vanilla indicator
-            CoLMarker.pos = GlobalCoL;
+            CoLMarker.pos = FerramAerospaceResearch.FARAeroComponents.EditorAeroCenter.VesselRootLocalAeroCenter;      //hacking the old stuff to work with the new
+            CoLMarker.pos = EditorLogic.RootPart.transform.localToWorldMatrix.MultiplyPoint3x4(CoLMarker.pos);
             CoLMarker.dir = Vector3.zero;
-            CoLMarker.lift = CoLForce.magnitude;
+            CoLMarker.lift = 1;
         }
 
         public override void OnLoad(ConfigNode node)
