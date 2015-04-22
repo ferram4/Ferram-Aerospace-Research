@@ -119,7 +119,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     FARAeroPartModule m = _currentAeroModules[i];
                     if (m != null)
                         m.UpdateVelocityAndAngVelocity(frameVel);
-
+                    else
+                    {
+                        _currentAeroModules.RemoveAt(i);
+                        i--;
+                    }
                 }
                 
                 for (int i = 0; i < _currentAeroSections.Count; i++)
@@ -128,7 +132,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 for (int i = 0; i < _currentAeroModules.Count; i++)
                 {
                     FARAeroPartModule m = _currentAeroModules[i];
-                    if (m != null)
+                    if ((object)m != null)
                         m.ApplyForces();
                 }
 

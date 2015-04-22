@@ -14,7 +14,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         FloatCurve xForcePressureAoA0;
         FloatCurve xForcePressureAoA180;
         FloatCurve xForceSkinFriction;
-        float areaChange;
+        float potentialFlowNormalForce;
         float viscCrossflowDrag;
         float flatnessRatio;
         float invFlatnessRatio;
@@ -34,7 +34,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         }
 
         public FARAeroSection(FloatCurve xForcePressureAoA0, FloatCurve xForcePressureAoA180, FloatCurve xForceSkinFriction,
-            float areaChange, float viscCrossflowDrag, float flatnessRatio, float hypersonicMomentForward, float hypersonicMomentBackward,
+            float potentialFlowNormalForce, float viscCrossflowDrag, float flatnessRatio, float hypersonicMomentForward, float hypersonicMomentBackward,
             Vector3 centroidWorldSpace, Vector3 xRefVectorWorldSpace, Vector3 nRefVectorWorldSpace, List<FARAeroPartModule> moduleList,
             Dictionary<Part, FARPartGeometry.VoxelCrossSection.SideAreaValues> sideAreaValues, List<float> dragFactor)
         {
@@ -42,7 +42,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             this.xForcePressureAoA180 = xForcePressureAoA180;
             this.xForceSkinFriction = xForceSkinFriction;
 
-            this.areaChange = areaChange;                   //copy lifting body info over
+            this.potentialFlowNormalForce = potentialFlowNormalForce;                   //copy lifting body info over
             this.viscCrossflowDrag = viscCrossflowDrag;
             this.flatnessRatio = flatnessRatio;
             invFlatnessRatio = 1 / flatnessRatio;
@@ -161,7 +161,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             double nForce = 0;
             if (machNumber < 6)
-                nForce = cosHalfAoA * sin2AoA * areaChange * Math.Sign(cosAoA);  //potential flow normal force
+                nForce = cosHalfAoA * sin2AoA * potentialFlowNormalForce * Math.Sign(cosAoA);  //potential flow normal force
             if (nForce < 0)     //potential flow is not significant over the rear face of things
                 nForce = 0;
             if (machNumber > 3)
@@ -236,7 +236,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 PartData data = partsIncluded[i];
                 FARAeroPartModule aeroModule = data.aeroModule;
                 if ((object)aeroModule == null)
+                {
                     continue;
+                }
 
                 Vector3 xRefVector = data.xRefVectorPartSpace;
                 Vector3 nRefVector = data.nRefVectorPartSpace;
@@ -260,7 +262,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 double nForce = 0;
                 if(machNumber < 6)
-                    nForce = areaChange * Math.Sign(cosAoA) * cosHalfAoA * sin2AoA;  //potential flow normal force
+                    nForce = potentialFlowNormalForce * Math.Sign(cosAoA) * cosHalfAoA * sin2AoA;  //potential flow normal force
                 if (nForce < 0)     //potential flow is not significant over the rear face of things
                     nForce = 0;
 

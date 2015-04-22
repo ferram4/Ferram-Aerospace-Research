@@ -94,7 +94,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             this.partLocalTorque += Vector3.Cross(localRadVector, partLocalForce);
 
             this.partLocalTorque += partLocalTorque;
-            //this.partLocalForce += Vector3.Cross(partLocalTorque, localRadVector) / localRadVector.sqrMagnitude;
+            //if(localRadVector.sqrMagnitude > 0.001f)
+            //    this.partLocalForce += Vector3.Cross(partLocalTorque, localRadVector) / localRadVector.sqrMagnitude;
         }
 
         public void UpdateVelocityAndAngVelocity(Vector3 frameVel)

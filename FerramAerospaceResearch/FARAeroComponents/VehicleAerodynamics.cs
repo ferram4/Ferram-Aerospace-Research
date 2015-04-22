@@ -247,25 +247,34 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 FloatCurve xForceSkinFriction = new FloatCurve();
 
                 //Potential and Viscous lift calcs
-                float areaChange = (float)(curArea - prevArea);
-                float areaChangeMax = (float)Math.Min(curArea, prevArea) * 0.15f;
+                float potentialFlowNormalForce;
+                if(i == 0)
+                    potentialFlowNormalForce = (float)(nextArea - curArea);
+                else if(i == numSections)
+                    potentialFlowNormalForce = (float)(curArea - prevArea);
+                else
+                    potentialFlowNormalForce = (float)(nextArea - prevArea);      //calcualted from area change
+
+                float areaChangeMax = (float)Math.Min(nextArea, prevArea) * 0.1f;
 
                 float sonicBaseDrag = 0.21f;
 
-                sonicBaseDrag *= areaChange;    //area base drag acts over
+                sonicBaseDrag *= potentialFlowNormalForce;    //area base drag acts over
 
-                if (areaChange > areaChangeMax)
-                    areaChange = areaChangeMax;
-                else if (areaChange < -areaChangeMax)
-                    areaChange = -areaChangeMax;
+                if (potentialFlowNormalForce > areaChangeMax)
+                    potentialFlowNormalForce = areaChangeMax;
+                else if (potentialFlowNormalForce < -areaChangeMax)
+                    potentialFlowNormalForce = -areaChangeMax;
                 else
-                    sonicBaseDrag *= Math.Abs(areaChange / areaChangeMax);      //some scaling for small changes in cross-section
+                    sonicBaseDrag *= Math.Abs(potentialFlowNormalForce / areaChangeMax);      //some scaling for small changes in cross-section
 
                 double flatnessRatio = _vehicleCrossSection[index].flatnessRatio;
                 if (flatnessRatio >= 1)
                     sonicBaseDrag /= (float)flatnessRatio;
                 else
                     sonicBaseDrag *= (float)flatnessRatio;
+
+                sonicBaseDrag = Math.Abs(sonicBaseDrag);
 
                 float viscCrossflowDrag = (float)(Math.Sqrt(curArea / Math.PI) * sectionThickness * 2d);
 
@@ -303,17 +312,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (sonicBaseDrag > 0)      //occurs with increase in area; force applied at 180 AoA
                 {
                     xForcePressureAoA0.Add((float)criticalMachNumber, hypersonicDragForward * 0.4f, 0f, 0f);    //hypersonic drag used as a proxy for effects due to flow separation
-                    xForcePressureAoA180.Add((float)criticalMachNumber, (sonicBaseDrag * 0.1f - hypersonicDragBackward * 0.4f), 0f, 0f);
+                    xForcePressureAoA180.Add((float)criticalMachNumber, (sonicBaseDrag * 0.25f - hypersonicDragBackward * 0.4f), 0f, 0f);
 
                     xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.1f, 0f, 0f);     //positive is force forward; negative is force backward
                     xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.1f + sonicBaseDrag, 0f, 0f);
                 }
                 else if (sonicBaseDrag < 0)
                 {
-                    xForcePressureAoA0.Add((float)criticalMachNumber, (sonicBaseDrag * 0.1f + hypersonicDragForward * 0.4f), 0f, 0f);
+                    xForcePressureAoA0.Add((float)criticalMachNumber, (-sonicBaseDrag * 0.25f + hypersonicDragForward * 0.4f), 0f, 0f);
                     xForcePressureAoA180.Add((float)criticalMachNumber, -hypersonicDragBackward * 0.4f, 0f, 0f);
 
-                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.1f + sonicBaseDrag, 0f, 0f);     //positive is force forward; negative is force backward
+                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.1f - sonicBaseDrag, 0f, 0f);     //positive is force forward; negative is force backward
                     xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.1f, 0f, 0f);
                 }
                 else
@@ -367,7 +376,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     weighting[j] *= weightingFactor;
                 }
-                FARAeroSection section = new FARAeroSection(xForcePressureAoA0, xForcePressureAoA180, xForceSkinFriction, areaChange, viscCrossflowDrag
+                FARAeroSection section = new FARAeroSection(xForcePressureAoA0, xForcePressureAoA180, xForceSkinFriction, potentialFlowNormalForce, viscCrossflowDrag
                     , (float)flatnessRatio, hypersonicMomentForward, hypersonicMomentBackward,
                     centroid, xRefVector, nRefVector, includedModules, includedPartsAndAreas, weighting);
 
@@ -389,7 +398,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             r2 = Math.Sqrt(highArea / Math.PI);
 
             double moment = r2 * r2 + r1 * r1 + sectionThickness * sectionThickness * 0.5;
-            moment *= 2 * sectionThickness;
+            moment *= 4 * Math.PI * sectionThickness;
 
             double radDiffSq = (r2 - r1);
             radDiffSq *= radDiffSq;
@@ -397,7 +406,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             moment *= radDiffSq;
             moment /= sectionThickness * sectionThickness + radDiffSq;
 
-            return moment;
+            return -moment;
         }
 
         private double CalculateHypersonicDrag(double lowArea, double highArea, double sectionThickness)
