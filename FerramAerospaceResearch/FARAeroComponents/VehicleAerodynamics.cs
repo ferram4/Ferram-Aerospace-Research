@@ -306,33 +306,58 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (hypersonicMomentBackward > 0)
                     hypersonicMomentBackward = 0;
 
-                xForcePressureAoA0.Add(25f, hypersonicDragForward, 0f, 0f);
-                xForcePressureAoA180.Add(25f, -hypersonicDragBackward, 0f, 0f);
+                xForcePressureAoA0.Add(35f, hypersonicDragForward, 0f, 0f);
+                xForcePressureAoA180.Add(35f, -hypersonicDragBackward, 0f, 0f);
 
+                float sonicAoA0Drag, sonicAoA180Drag;
                 if (sonicBaseDrag > 0)      //occurs with increase in area; force applied at 180 AoA
                 {
                     xForcePressureAoA0.Add((float)criticalMachNumber, hypersonicDragForward * 0.4f, 0f, 0f);    //hypersonic drag used as a proxy for effects due to flow separation
                     xForcePressureAoA180.Add((float)criticalMachNumber, (sonicBaseDrag * 0.25f - hypersonicDragBackward * 0.4f), 0f, 0f);
 
-                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.1f, 0f, 0f);     //positive is force forward; negative is force backward
-                    xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.1f + sonicBaseDrag, 0f, 0f);
+                    sonicAoA0Drag = sonicWaveDrag + hypersonicDragForward * 0.1f;
+                    sonicAoA180Drag = -sonicWaveDrag - hypersonicDragBackward * 0.1f + sonicBaseDrag;
+                    //xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.1f, 0f, 0f);     //positive is force forward; negative is force backward
+                    //xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.1f + sonicBaseDrag, 0f, 0f);
                 }
                 else if (sonicBaseDrag < 0)
                 {
                     xForcePressureAoA0.Add((float)criticalMachNumber, (-sonicBaseDrag * 0.25f + hypersonicDragForward * 0.4f), 0f, 0f);
                     xForcePressureAoA180.Add((float)criticalMachNumber, -hypersonicDragBackward * 0.4f, 0f, 0f);
 
-                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.1f - sonicBaseDrag, 0f, 0f);     //positive is force forward; negative is force backward
-                    xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.1f, 0f, 0f);
+                    sonicAoA0Drag = sonicWaveDrag + hypersonicDragForward * 0.1f - sonicBaseDrag;
+                    sonicAoA180Drag = -sonicWaveDrag - hypersonicDragBackward * 0.1f;
+
+                    //xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.1f - sonicBaseDrag, 0f, 0f);     //positive is force forward; negative is force backward
+                    //xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.1f, 0f, 0f);
                 }
                 else
                 {
                     xForcePressureAoA0.Add((float)criticalMachNumber, hypersonicDragForward * 0.4f, 0f, 0f);
                     xForcePressureAoA180.Add((float)criticalMachNumber, -hypersonicDragBackward * 0.4f, 0f, 0f);
 
-                    xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.35f, 0f, 0f);     //positive is force forward; negative is force backward
-                    xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.35f, 0f, 0f);
+                    sonicAoA0Drag = sonicWaveDrag + hypersonicDragForward * 0.1f;
+                    sonicAoA180Drag = -sonicWaveDrag - hypersonicDragBackward * 0.1f;
+
+                    //xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.1f, 0f, 0f);     //positive is force forward; negative is force backward
+                    //xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.1f, 0f, 0f);
                 }
+
+                float diffSonicHyperAoA0 = Math.Abs(sonicAoA0Drag) - Math.Abs(hypersonicDragForward);
+                float diffSonicHyperAoA180 = Math.Abs(sonicAoA180Drag) - Math.Abs(hypersonicDragBackward);
+
+
+                xForcePressureAoA0.Add(1f, sonicAoA0Drag, 0, 0);
+                xForcePressureAoA180.Add(1f, sonicAoA180Drag, 0, 0);
+
+                xForcePressureAoA0.Add(2f, sonicAoA0Drag * 0.5773503f + (1 - 0.5773503f) * hypersonicDragForward);
+                xForcePressureAoA180.Add(2f, sonicAoA180Drag * 0.5773503f - (1 - 0.5773503f) * hypersonicDragBackward);
+
+                xForcePressureAoA0.Add(5f, sonicAoA0Drag * 0.2041242f + (1 - 0.2041242f) * hypersonicDragForward, -0.04252587f * diffSonicHyperAoA0, -0.04252587f * diffSonicHyperAoA0);
+                xForcePressureAoA180.Add(5f, sonicAoA180Drag * 0.2041242f - (1 - 0.2041242f) * hypersonicDragBackward, -0.04252587f * diffSonicHyperAoA180, -0.04252587f * diffSonicHyperAoA180);
+
+                xForcePressureAoA0.Add(10f, sonicAoA0Drag * 0.1005038f + (1 - 0.1005038f) * hypersonicDragForward, -0.0101519f * diffSonicHyperAoA0, -0.0101519f * diffSonicHyperAoA0);
+                xForcePressureAoA180.Add(10f, sonicAoA180Drag * 0.1005038f - (1 - 0.1005038f) * hypersonicDragBackward, -0.0101519f * diffSonicHyperAoA180, -0.0101519f * diffSonicHyperAoA180);
 
                 Vector3 xRefVector;
                 if (index == front || index == back)
