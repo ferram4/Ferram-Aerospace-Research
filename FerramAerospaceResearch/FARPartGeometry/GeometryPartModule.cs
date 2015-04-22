@@ -53,11 +53,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
         public List<Animation> animations;
 
         private bool _isAnimating = false;
+        private bool _ready = false;
         private int _sendUpdateTick = 0;
 
         void Start()
         {
-            RebuildAllMeshData();
+            //RebuildAllMeshData();
             GetAnimations();
             GameEvents.onEditorPartEvent.Add(UpdateGeometryEvent);
         }
@@ -69,6 +70,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         void FixedUpdate()
         {
+            if (!_ready && ((HighLogic.LoadedSceneIsFlight && FlightGlobals.ready) ||
+                HighLogic.LoadedSceneIsEditor && ApplicationLauncher.Ready))
+            {
+                RebuildAllMeshData();
+                _ready = true;
+            }
+
             if (animations != null && animations.Count > 0)
                 CheckAnimations();
         }
@@ -169,8 +177,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public void EditorUpdate()
         {
-            UpdateTransformMatrixList(EditorLogic.RootPart.transform.worldToLocalMatrix);
-            overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(EditorLogic.RootPart.transform.worldToLocalMatrix);
+            Matrix4x4 transformMatrix = EditorLogic.RootPart.transform.worldToLocalMatrix;
+            UpdateTransformMatrixList(transformMatrix);
+            overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(transformMatrix);
         }
 
         public void UpdateTransformMatrixList(Matrix4x4 worldToVesselMatrix)
