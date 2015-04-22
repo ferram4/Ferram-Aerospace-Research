@@ -83,23 +83,27 @@ namespace FerramAerospaceResearch.FARPartGeometry
             partTransform = part.transform;
             partRigidBody = part.Rigidbody;
             List<Transform> meshTransforms = PartModelTransformList(this.part);
-            List<Mesh> geometryMeshes = CreateMeshListFromTransforms(ref meshTransforms);
+            List<MeshData> geometryMeshes = CreateMeshListFromTransforms(ref meshTransforms);
 
             meshDataList = new List<GeometryMesh>();
 
             Matrix4x4 worldToVesselMatrix;
             if (HighLogic.LoadedSceneIsFlight)
+            {
                 worldToVesselMatrix = vessel.ReferenceTransform.worldToLocalMatrix;
+            }
             else
+            {
                 worldToVesselMatrix = EditorLogic.RootPart.transform.worldToLocalMatrix;
+            }
 
             for (int i = 0; i < meshTransforms.Count; i++)
             {
-                Mesh m = geometryMeshes[i];
+                MeshData m = geometryMeshes[i];
                 GeometryMesh geoMesh = new GeometryMesh(m.vertices, m.triangles, m.bounds, meshTransforms[i], worldToVesselMatrix);
                 meshDataList.Add(geoMesh);
             }
-
+            UpdateTransformMatrixList(worldToVesselMatrix);
             overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
         }
 
@@ -175,9 +179,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 meshDataList[i].TransformBasis(worldToVesselMatrix);
         }
 
-        private List<Mesh> CreateMeshListFromTransforms(ref List<Transform> meshTransforms)
+        private List<MeshData> CreateMeshListFromTransforms(ref List<Transform> meshTransforms)
         {
-            List<Mesh> meshList = new List<Mesh>();
+            List<MeshData> meshList = new List<MeshData>();
             List<Transform> validTransformList = new List<Transform>();
 
             Bounds rendererBounds = this.part.GetPartOverallMeshBoundsInBasis(part.transform.worldToLocalMatrix);
@@ -197,7 +201,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         if (m == null)
                             continue;
 
-                        meshList.Add(m);
+                        meshList.Add(new MeshData(m.vertices, m.triangles, m.bounds));
                         validTransformList.Add(t);
                         cantUseColliders = false;
                     }
@@ -234,7 +238,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         if (m == null)
                             continue;
 
-                        meshList.Add(m);
+                        meshList.Add(new MeshData(m.vertices, m.triangles, m.bounds));
                         validTransformList.Add(t);
                     }
                 }
@@ -258,7 +262,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (m == null)
                         continue;
 
-                    meshList.Add(m);
+                    meshList.Add(new MeshData(m.vertices, m.triangles, m.bounds));
                     validTransformList.Add(t);
                 }
             }
@@ -267,7 +271,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             return meshList;
         }
 
-        private static Mesh CreateBoxMeshFromBoxCollider(Vector3 size, Vector3 center)
+        private static MeshData CreateBoxMeshFromBoxCollider(Vector3 size, Vector3 center)
         {
             List<Vector3> Points = new List<Vector3>();
             List<Vector3> Verts = new List<Vector3>();
@@ -283,8 +287,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Points.Add(new Vector3(center.x - extents.x, center.y + extents.y, center.z + extents.z));
             Points.Add(new Vector3(center.x - extents.x, center.y - extents.y, center.z + extents.z));
             Points.Add(new Vector3(center.x + extents.x, center.y - extents.y, center.z + extents.z));
-
-            Mesh mesh = new Mesh();
             // Front plane
             Verts.Add(Points[0]); Verts.Add(Points[1]); Verts.Add(Points[2]); Verts.Add(Points[3]);
             // Back plane
@@ -316,16 +318,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Tris.Add(20); Tris.Add(21); Tris.Add(22);
             Tris.Add(22); Tris.Add(23); Tris.Add(20);
 
-            mesh.vertices = Verts.ToArray();
-            mesh.triangles = Tris.ToArray();
-
-            Points = null;
-            Verts = null;
-            Tris = null;
-
-            mesh.RecalculateBounds();
-
-            mesh.Optimize();
+            MeshData mesh = new MeshData(Verts.ToArray(), Tris.ToArray(), new Bounds(center, size));
 
             return mesh;
         }
@@ -446,6 +439,22 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 transformMatrix = EditorLogic.RootPart.transform.worldToLocalMatrix * transformMatrix;
 
             UpdateTransformMatrixList(transformMatrix);
+        }
+
+        class MeshData
+        {
+            public Vector3[] vertices;
+            public int[] triangles;
+            public Bounds bounds;
+
+            MeshData() { }
+
+            public MeshData(Vector3[] vertices, int[] tris, Bounds bounds)
+            {
+                this.vertices = vertices;
+                this.triangles = tris;
+                this.bounds = bounds;
+            }
         }
     }
 }
