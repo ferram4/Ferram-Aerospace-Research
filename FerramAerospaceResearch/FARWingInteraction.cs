@@ -330,7 +330,7 @@ namespace ferram4
 
                         FARWingAerodynamicModel w = p.GetComponent<FARWingAerodynamicModel>();
 
-                        if ((object)w != null)
+                        if (w != null)
                         {
                             Collider[] colliders = w.PartColliders;
 
@@ -469,7 +469,7 @@ namespace ferram4
                                 }
 
                                 FARWingAerodynamicModel hitModule = p.GetComponent<FARWingAerodynamicModel>();
-                                if ((object)hitModule != null)
+                                if (hitModule != null)
                                 {
                                     double tmp = Math.Abs(Vector3.Dot(p.transform.forward, parentWingPart.transform.forward));
                                     if (tmp > wingInteractionFactor + 0.01)

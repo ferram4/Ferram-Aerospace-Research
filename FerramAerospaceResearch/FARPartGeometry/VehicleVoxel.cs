@@ -141,7 +141,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             for (int i = 0; i < geoModules.Count; i++)
                 threadsQueued += geoModules[i].meshDataList.Count;      //Doing this out here allows us to get rid of the lock, which should reduce sync costs for many meshes
 
-            for(int i = 0; i < geoModules.Count; i++)
+            for(int i = 0; i < geoModules.Count; i++)       //Go through it backwards; this ensures that children (and so interior to cargo bay parts) are handled first
             {
                 GeometryPartModule m = geoModules[i];
                 for (int j = 0; j < m.meshDataList.Count; j++)

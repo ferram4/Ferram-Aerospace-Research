@@ -54,6 +54,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             aeroSections = _currentAeroSections = _newAeroSections;
             _newAeroSections = null;
+
+            LEGACY_UpdateWingAerodynamicModels();
+
         }
 
         public double[] GetCrossSectionAreas()
@@ -155,6 +158,29 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 GeometryPartModule geoModule = p.GetComponent<GeometryPartModule>();
                 if ((object)geoModule != null)
                     geoModule.UpdateTransformMatrixList(_worldToLocalMatrix);
+            }
+        }
+
+        private void LEGACY_UpdateWingAerodynamicModels()
+        {
+            for (int i = 0; i < _currentAeroModules.Count; i++)
+            {
+                ferram4.FARWingAerodynamicModel w = _currentAeroModules[i].part.GetComponent<ferram4.FARWingAerodynamicModel>();
+                if (w)
+                    w.NUFAR_ClearAreaExposedFactor();
+            }
+
+            for (int i = 0; i < _currentAeroSections.Count; i++)
+            {
+                FARAeroSection sect = _currentAeroSections[i];
+                sect.LEGACY_SetLiftForFARWingAerodynamicModel();
+            }
+
+            for (int i = 0; i < _currentAeroModules.Count; i++)
+            {
+                ferram4.FARWingAerodynamicModel w = _currentAeroModules[i].part.GetComponent<ferram4.FARWingAerodynamicModel>();
+                if (w)
+                    w.NUFAR_SetExposedAreaFactor();
             }
         }
 
@@ -403,7 +429,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
                 FARAeroSection section = new FARAeroSection(xForcePressureAoA0, xForcePressureAoA180, xForceSkinFriction, potentialFlowNormalForce, viscCrossflowDrag
                     , (float)flatnessRatio, hypersonicMomentForward, hypersonicMomentBackward,
-                    centroid, xRefVector, nRefVector, includedModules, includedPartsAndAreas, weighting);
+                    centroid, xRefVector, nRefVector, _localToWorldMatrix, includedModules, includedPartsAndAreas, weighting);
 
                 _newAeroSections.Add(section);
                 tmpAeroModules.UnionWith(includedModules);

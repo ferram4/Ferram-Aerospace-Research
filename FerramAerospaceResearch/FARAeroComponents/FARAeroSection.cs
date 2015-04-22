@@ -35,7 +35,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public FARAeroSection(FloatCurve xForcePressureAoA0, FloatCurve xForcePressureAoA180, FloatCurve xForceSkinFriction,
             float potentialFlowNormalForce, float viscCrossflowDrag, float flatnessRatio, float hypersonicMomentForward, float hypersonicMomentBackward,
-            Vector3 centroidWorldSpace, Vector3 xRefVectorWorldSpace, Vector3 nRefVectorWorldSpace, List<FARAeroPartModule> moduleList,
+            Vector3 centroidWorldSpace, Vector3 xRefVectorWorldSpace, Vector3 nRefVectorWorldSpace, Matrix4x4 vesselToWorldMatrix, List<FARAeroPartModule> moduleList,
             Dictionary<Part, FARPartGeometry.VoxelCrossSection.SideAreaValues> sideAreaValues, List<float> dragFactor)
         {
             this.xForcePressureAoA0 = xForcePressureAoA0;       //copy references to floatcurves over
@@ -87,46 +87,58 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 Vector3 posAreas = new Vector3((float)values.iP, (float)values.jP, (float)values.kP);
                 Vector3 negAreas = new Vector3((float)values.iN, (float)values.jN, (float)values.kN);
 
-                posAreas = transformMatrix.MultiplyVector(posAreas);
-                negAreas = transformMatrix.MultiplyVector(negAreas);
+                transformMatrix = transformMatrix * vesselToWorldMatrix;
 
-                if (posAreas.x >= 0)
-                {
-                    data.iP = posAreas.x;
-                    data.iN = negAreas.x;
-                }
-                else
-                {
-                    data.iP = Math.Abs(negAreas.x);
-                    data.iN = Math.Abs(posAreas.x);
-                }
-
-                if (posAreas.y >= 0)
-                {
-                    data.jP = posAreas.y;
-                    data.jN = negAreas.y;
-                }
-                else
-                {
-                    data.jP = Math.Abs(negAreas.y);
-                    data.jN = Math.Abs(posAreas.y);
-                }
-
-                if (posAreas.z >= 0)
-                {
-                    data.kP = posAreas.z;
-                    data.kN = negAreas.z;
-                }
-                else
-                {
-                    data.kP = Math.Abs(negAreas.z);
-                    data.kN = Math.Abs(posAreas.z);
-                }
+                IncrementAreas(ref data, (float)values.iP * Vector3.right, transformMatrix);
+                IncrementAreas(ref data, (float)values.iN * -Vector3.right, transformMatrix);
+                IncrementAreas(ref data, (float)values.jP * Vector3.up, transformMatrix);
+                IncrementAreas(ref data, (float)values.jN * -Vector3.up, transformMatrix);
+                IncrementAreas(ref data, (float)values.kP * Vector3.forward, transformMatrix);
+                IncrementAreas(ref data, (float)values.kN * -Vector3.forward, transformMatrix);
+                
                 partsIncluded.Add(data);
             }
 
             if (crossFlowDragMachCurve == null)
                 GenerateCrossFlowDragCurve();
+        }
+
+        private void IncrementAreas(ref PartData data, Vector3 vector, Matrix4x4 transformMatrix)
+        {
+            vector = transformMatrix.MultiplyVector(vector);
+
+            if (vector.x >= 0)
+                data.iP += vector.x;
+            else
+                data.iN -= vector.x;
+
+            if (vector.y >= 0)
+                data.jP += vector.y;
+            else
+                data.jN -= vector.y;
+
+            if (vector.z >= 0)
+                data.kP += vector.z;
+            else
+                data.kN -= vector.z;
+        }
+
+        public void LEGACY_SetLiftForFARWingAerodynamicModel()
+        {
+            for(int i = 0; i < partsIncluded.Count; i++)
+            {
+                PartData data = partsIncluded[i];
+                Part p = data.aeroModule.part;
+                if (p == null)
+                    continue;
+
+                ferram4.FARWingAerodynamicModel w = p.GetComponent<ferram4.FARWingAerodynamicModel>();
+                if (w == null)
+                    continue;
+
+                double minShownArea = Math.Min(data.kN, data.kP);
+                w.NUFAR_IncrementAreaExposedFactor(minShownArea);
+            }
         }
 
         public void EditorCalculateAeroForces(float atmDensity, float machNumber, float reynoldsPerUnitLength, float skinFrictionDrag, Vector3 vel, ferram4.FARCenterQuery center)

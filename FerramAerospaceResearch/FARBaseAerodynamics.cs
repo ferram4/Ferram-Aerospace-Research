@@ -67,7 +67,7 @@ namespace ferram4
         public double S;
 
         [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
-        public bool isShielded = false;
+        public bool isShielded = true;
 
         public double rho;
 

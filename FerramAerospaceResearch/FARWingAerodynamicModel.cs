@@ -136,6 +136,30 @@ namespace ferram4
 
         public Vector3 worldSpaceForce;
 
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Exposed Factor", guiFormat = "F3")]
+        private float NUFAR_areaExposedFactor = 0;
+
+        public void NUFAR_ClearAreaExposedFactor()
+        {
+            NUFAR_areaExposedFactor = 0;
+        }
+
+        public void NUFAR_IncrementAreaExposedFactor(double minExposedArea)
+        {
+            NUFAR_areaExposedFactor += (float)minExposedArea;
+        }
+
+        public void NUFAR_SetExposedAreaFactor()
+        {
+            if (NUFAR_areaExposedFactor < 0.1 * S)
+                isShielded = true;
+            else
+            {
+                NUFAR_areaExposedFactor = 1;
+                isShielded = false;
+            }
+        }
+
         #region GetFunctions
 
         public double GetStall()
@@ -513,8 +537,8 @@ namespace ferram4
 
 
             //lift and drag vectors
-            Vector3d L = liftDirection * (q * Cl * S);    //lift;
-            Vector3d D = velocity_normalized * (-q * Cd * S);                         //drag is parallel to velocity vector
+            Vector3d L = liftDirection * (q * Cl * S * NUFAR_areaExposedFactor);    //lift;
+            Vector3d D = velocity_normalized * (-q * Cd * S * NUFAR_areaExposedFactor);                         //drag is parallel to velocity vector
             currentLift = (float)(L.magnitude * 0.001);
             currentDrag = (float)(D.magnitude * 0.001);
             Vector3d force = (L + D) * 0.001;

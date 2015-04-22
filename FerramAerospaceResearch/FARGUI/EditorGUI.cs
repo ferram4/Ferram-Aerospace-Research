@@ -39,11 +39,15 @@ namespace FerramAerospaceResearch.FARGUI
             guiRect.height = 500;
             guiRect.width = 650;
             GameEvents.onEditorPartEvent.Add(UpdateGeometryEvent);
+            GameEvents.onEditorUndo.Add(UpdateGeometryEvent);
+            GameEvents.onEditorRedo.Add(UpdateGeometryEvent);
         }
 
         void OnDestroy()
         {
             GameEvents.onEditorPartEvent.Remove(UpdateGeometryEvent);
+            GameEvents.onEditorUndo.Remove(UpdateGeometryEvent);
+            GameEvents.onEditorRedo.Remove(UpdateGeometryEvent);
             EditorLogic.fetch.Unlock("FAREdLock");
         }
 
@@ -58,6 +62,11 @@ namespace FerramAerospaceResearch.FARGUI
                 UpdateVoxel();
             }
         }
+        private void UpdateGeometryEvent(ShipConstruct construct)
+        {
+            UpdateVoxel();
+        }
+
 
         void FixedUpdate()
         {

@@ -61,11 +61,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
             //RebuildAllMeshData();
             GetAnimations();
             GameEvents.onEditorPartEvent.Add(UpdateGeometryEvent);
+            GameEvents.onEditorUndo.Add(UpdateGeometryEvent);
+            GameEvents.onEditorRedo.Add(UpdateGeometryEvent);
         }
 
         void OnDestroy()
         {
             GameEvents.onEditorPartEvent.Remove(UpdateGeometryEvent);
+            GameEvents.onEditorUndo.Remove(UpdateGeometryEvent);
+            GameEvents.onEditorRedo.Remove(UpdateGeometryEvent);
         }
 
         void FixedUpdate()
@@ -125,6 +129,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 {
                     EditorUpdate();
                 }
+        }
+
+        private void UpdateGeometryEvent(ShipConstruct construct)
+        {
+             EditorUpdate();
         }
 
         private void GetAnimations()
@@ -191,12 +200,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     AnimationState state = animStates[i];
                     float prevNormTime = animStateTime[i];
 
-                    if (state.speed != 0)     //if the animation is playing, send the event
-                    {
-                        UpdateShapeWithAnims(); //event to update voxel, with rate limiter for computer's sanity and error reduction
-                        break;
-                    }
-                    else if (prevNormTime == state.time)       //if the anim is not playing, but it was, also send the event to be sure that we closed
+                    //if (state.speed != 0)     //if the animation is playing, send the event
+                    //{
+                    //    UpdateShapeWithAnims(); //event to update voxel, with rate limiter for computer's sanity and error reduction
+                    //    break;
+                    //}
+                    if (prevNormTime != state.time)       //if the anim is not playing, but it was, also send the event to be sure that we closed
                     {
                         animStateTime[i] = state.time;
                         UpdateShapeWithAnims(); //event to update voxel, with rate limiter for computer's sanity and error reduction
@@ -485,12 +494,17 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (meshDataList == null)
                 return;
 
-            Rescale(factor.relative.linear);
+            Rescale(factor.relative.linear * Vector3.one);
         }
 
-        public void Rescale(float relativeRescaleFactor)
+        public void RC_Rescale(Vector3 relativeRescaleFactor)
         {
-            Matrix4x4 transformMatrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(relativeRescaleFactor, relativeRescaleFactor, relativeRescaleFactor));
+            Rescale(relativeRescaleFactor);             //this is currently just a wrapper, in the future if Rescale changes this can change to maintain compatibility
+        }           
+
+        public void Rescale(Vector3 relativeRescaleFactor)
+        {
+            Matrix4x4 transformMatrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, relativeRescaleFactor);
             if (HighLogic.LoadedSceneIsFlight)
                 transformMatrix = vessel.ReferenceTransform.worldToLocalMatrix * transformMatrix;
             else
