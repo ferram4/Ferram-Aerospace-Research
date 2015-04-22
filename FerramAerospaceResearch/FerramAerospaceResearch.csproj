@@ -74,8 +74,12 @@
     <Compile Include="FARAeroUtil.cs" />
     <Compile Include="FARAPI.cs" />
     <Compile Include="FARBaseAerodynamics.cs" />
+    <Compile Include="FARBasicDragModel.cs" />
+    <Compile Include="FARCargoBayModule.cs" />
     <Compile Include="FARCenterQuery.cs" />
     <Compile Include="FARControllableSurface.cs" />
+    <Compile Include="FARGlobalControlEditorObject.cs" />
+    <Compile Include="FARGlobalControlFlightObject.cs" />
     <Compile Include="FARGUI\EditorGUI.cs" />
     <Compile Include="FARGUI\FlightGUI.cs" />
     <Compile Include="FARKSPAddonFlightDataInfo.cs" />
@@ -98,6 +102,7 @@
     <Compile Include="FARPartGeometry\VoxelCrossSection.cs" />
     <Compile Include="FARPartGeometry\VoxelChunk.cs" />
     <Compile Include="FARPartModule.cs" />
+    <Compile Include="FARPayloadFairingModule.cs" />
     <Compile Include="FARPM.cs" />
     <Compile Include="FARRungeKutta.cs" />
     <Compile Include="FARTest\FAREditorVoxel.cs" />

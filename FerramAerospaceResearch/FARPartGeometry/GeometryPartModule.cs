@@ -35,7 +35,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
  */
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Reflection;
 using UnityEngine;
 using KSP;
 
@@ -50,9 +50,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public List<GeometryMesh> meshDataList;
 
-        public List<Animation> animations;
+        private List<AnimationState> animStates;
+        private List<float> animStateTime;
 
-        private bool _isAnimating = false;
         private bool _ready = false;
         private int _sendUpdateTick = 0;
 
@@ -77,7 +77,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 _ready = true;
             }
 
-            if (animations != null && animations.Count > 0)
+            if (animStates != null && animStates.Count > 0)
                 CheckAnimations();
         }
 
@@ -129,7 +129,56 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         private void GetAnimations()
         {
-            animations = part.FindModelAnimators().ToList();
+            Animation[] animations = part.FindModelAnimators();
+
+            if (animations.Length == 0)
+                return;
+
+            animStates = new List<AnimationState>();
+            animStateTime = new List<float>();
+
+            foreach (PartModule m in part.Modules)
+            {
+                FieldInfo field = m.GetType().GetField("animationName");
+                if (field != null)        //This handles stock and Firespitter deployment animations
+                {
+                    string animationName = (string)field.GetValue(m);
+                    for (int i = 0; i < animations.Length; i++)
+                    {
+                        Animation anim = animations[i];
+
+                        if (anim != null)
+                        {
+                            AnimationState state = anim[animationName];
+                            if (state)
+                            {
+                                animStates.Add(state);
+                                animStateTime.Add(state.time);
+                            }
+                        }
+                    }
+                }
+
+                field = m.GetType().GetField("animName");
+                if (field != null)         //This handles Interstellar's deployment animations
+                {
+                    string animationName = (string)field.GetValue(m);
+                    for (int i = 0; i < animations.Length; i++)
+                    {
+                        Animation anim = animations[i];
+
+                        if (anim != null)
+                        {
+                            AnimationState state = anim[animationName];
+                            if (state)
+                            {
+                                animStates.Add(state);
+                                animStateTime.Add(state.time);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         private void CheckAnimations()
@@ -137,19 +186,19 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (_sendUpdateTick > 30)
             {
                 _sendUpdateTick = 0;
-                for (int i = 0; i < animations.Count; i++)
+                for (int i = 0; i < animStates.Count; i++)
                 {
-                    Animation anim = animations[i];
+                    AnimationState state = animStates[i];
+                    float prevNormTime = animStateTime[i];
 
-                    if (anim.isPlaying && !_isAnimating)     //if the animation is playing, send the event
+                    if (state.speed != 0)     //if the animation is playing, send the event
                     {
-                        _isAnimating = true;
                         UpdateShapeWithAnims(); //event to update voxel, with rate limiter for computer's sanity and error reduction
                         break;
                     }
-                    else if (_isAnimating && !anim.isPlaying)       //if the anim is not playing, but it was, also send the event to be sure that we closed
+                    else if (prevNormTime == state.time)       //if the anim is not playing, but it was, also send the event to be sure that we closed
                     {
-                        _isAnimating = false;
+                        animStateTime[i] = state.time;
                         UpdateShapeWithAnims(); //event to update voxel, with rate limiter for computer's sanity and error reduction
                         break;
                     }
