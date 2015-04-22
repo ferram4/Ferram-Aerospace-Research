@@ -381,14 +381,23 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         private double CalculateHypersonicMoment(double lowArea, double highArea, double sectionThickness)
         {
-            double moment = highArea + lowArea - 2 * Math.Sqrt(highArea * lowArea);
-            moment = moment / (moment + sectionThickness * sectionThickness * Math.PI);     //calculate sin^2
-            if (moment < 0)
+            if(lowArea >= highArea)
                 return 0;
-            moment = moment * Math.Sqrt(Math.Max(1 - moment, 0));
-            moment *= Math.Sqrt(Math.Max(highArea * Math.PI, 0)) + Math.Sqrt(Math.Max(lowArea * Math.PI, 0)) * 2;     //account for radius and factor of 4pi
-            moment *= (highArea - lowArea) * 2;     //account for area to act over and Cp max = 2
-            return -moment;
+
+            double r1, r2;
+            r1 = Math.Sqrt(lowArea / Math.PI);
+            r2 = Math.Sqrt(highArea / Math.PI);
+
+            double moment = r2 * r2 + r1 * r1 + sectionThickness * sectionThickness * 0.5;
+            moment *= 2 * sectionThickness;
+
+            double radDiffSq = (r2 - r1);
+            radDiffSq *= radDiffSq;
+
+            moment *= radDiffSq;
+            moment /= sectionThickness * sectionThickness + radDiffSq;
+
+            return moment;
         }
 
         private double CalculateHypersonicDrag(double lowArea, double highArea, double sectionThickness)

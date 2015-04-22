@@ -260,9 +260,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 double nForce = 0;
                 if(machNumber < 6)
-                    nForce = cosHalfAoA * sin2AoA * areaChange * Math.Sign(cosAoA);  //potential flow normal force
+                    nForce = areaChange * Math.Sign(cosAoA) * cosHalfAoA * sin2AoA;  //potential flow normal force
                 if (nForce < 0)     //potential flow is not significant over the rear face of things
                     nForce = 0;
+
                 if (machNumber > 3)
                     nForce *= 2d - machNumber * 0.3333333333333333d;
 
@@ -282,7 +283,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 double xForce = -skinFrictionForce * Math.Sign(cosAoA) * cosSqrAoA;
                 float moment = (float)(cosAoA * sinAoA);
-                float dampingMoment = 0.05f * moment;
+                float dampingMoment = 0.25f * moment;
 
                 if (cosAoA > 0)
                 {
@@ -298,6 +299,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
                 moment /= normalForceFactor;
                 dampingMoment = Math.Abs(dampingMoment);
+                dampingMoment += (float)Math.Abs(skinFrictionForce);
 
                 if(double.IsNaN(xForce))
                 {

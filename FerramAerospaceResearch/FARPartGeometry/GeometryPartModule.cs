@@ -73,6 +73,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 CheckAnimations();
         }
 
+        public void GeometryPartModuleRebuildMeshData()
+        {
+            RebuildAllMeshData();
+        }
+
         private void RebuildAllMeshData()
         {
             partTransform = part.transform;
