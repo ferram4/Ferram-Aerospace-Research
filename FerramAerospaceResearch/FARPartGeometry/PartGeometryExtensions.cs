@@ -180,5 +180,104 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
             return bounds;
         }
+
+        public static List<Transform> PartModelTransformList(this Part p)
+        {
+            List<Transform> returnList = new List<Transform>();
+
+            List<Transform> propellersToIgnore = IgnoreModelTransformList(p);
+
+            returnList.AddRange(p.FindModelComponents<Transform>());
+
+            foreach (Transform t in propellersToIgnore)
+                returnList.Remove(t);
+
+            return returnList;
+        }
+
+        private static List<Transform> IgnoreModelTransformList(this Part p)
+        {
+            PartModule module;
+            string transformString;
+            List<Transform> Transform = new List<Transform>();
+
+            if (p.Modules.Contains("FSplanePropellerSpinner"))
+            {
+                module = p.Modules["FSplanePropellerSpinner"];
+                transformString = (string)module.GetType().GetField("propellerName").GetValue(module);
+                if (transformString != "")
+                {
+                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
+                }
+                transformString = (string)module.GetType().GetField("rotorDiscName").GetValue(module);
+                if (transformString != "")
+                {
+                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
+                }
+
+                transformString = (string)module.GetType().GetField("blade1").GetValue(module);
+                if (transformString != "")
+                {
+                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
+                }
+
+                transformString = (string)module.GetType().GetField("blade2").GetValue(module);
+                if (transformString != "")
+                {
+                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
+                }
+
+                transformString = (string)module.GetType().GetField("blade3").GetValue(module);
+                if (transformString != "")
+                {
+                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
+                }
+
+                transformString = (string)module.GetType().GetField("blade4").GetValue(module);
+                if (transformString != "")
+                {
+                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
+                }
+                transformString = (string)module.GetType().GetField("blade5").GetValue(module);
+                if (transformString != "")
+                {
+                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
+                }
+            }
+            if (p.Modules.Contains("FScopterThrottle"))
+            {
+                module = p.Modules["FScopterThrottle"];
+                transformString = (string)module.GetType().GetField("rotorparent").GetValue(module);
+                if (transformString != "")
+                {
+                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
+                }
+            }
+            if (p.Modules.Contains("ModuleParachute"))
+            {
+                module = p.Modules["ModuleParachute"];
+                transformString = (string)module.GetType().GetField("canopyName").GetValue(module);
+                if (transformString != "")
+                {
+                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
+                }
+            }
+            foreach (Transform t in p.FindModelComponents<Transform>())
+            {
+                if (Transform.Contains(t))
+                    continue;
+                if (!t.gameObject.activeSelf)
+                {
+                    Transform.Add(t);
+                    continue;
+                }
+
+                string tag = t.tag.ToLowerInvariant();
+                if (tag == "ladder" || tag == "airlock")
+                    Transform.Add(t);
+            }
+
+            return Transform;
+        }
     }
 }

@@ -94,7 +94,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             partTransform = part.transform;
             partRigidBody = part.Rigidbody;
-            List<Transform> meshTransforms = PartModelTransformList(this.part);
+            List<Transform> meshTransforms = part.PartModelTransformList();
             List<MeshData> geometryMeshes = CreateMeshListFromTransforms(ref meshTransforms);
 
             meshDataList = new List<GeometryMesh>();
@@ -285,18 +285,18 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
             }
 
-            if (cantUseColliders)
+            if (cantUseColliders)       //in this case, voxelize _everything_
             {
                 foreach (Transform t in meshTransforms)
                 {
                     MeshCollider mc = t.GetComponent<MeshCollider>();
 
-                    if (mc != null)
-                    {
-                        continue;
-                    }
-                    else
-                    {
+                    //if (mc != null)
+                    //{
+                    //    continue;
+                    //}
+                    //else
+                    //{
                         MeshFilter mf = t.GetComponent<MeshFilter>();
                         if (mf == null)
                             continue;
@@ -307,7 +307,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         meshList.Add(new MeshData(m.vertices, m.triangles, m.bounds));
                         validTransformList.Add(t);
-                    }
+                    //}
                 }
             }
 
@@ -390,105 +390,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             return mesh;
         }
 
-        private static List<Transform> PartModelTransformList(Part p)
-        {
-            List<Transform> returnList = new List<Transform>();
-
-            List<Transform> propellersToIgnore = IgnoreModelTransformList(p);
-
-            returnList.AddRange(p.FindModelComponents<Transform>());
-
-            foreach (Transform t in propellersToIgnore)
-                returnList.Remove(t);
-
-            return returnList;
-        }
-
-        private static List<Transform> IgnoreModelTransformList(Part p)
-        {
-            PartModule module;
-            string transformString;
-            List<Transform> Transform = new List<Transform>();
-
-            if (p.Modules.Contains("FSplanePropellerSpinner"))
-            {
-                module = p.Modules["FSplanePropellerSpinner"];
-                transformString = (string)module.GetType().GetField("propellerName").GetValue(module);
-                if (transformString != "")
-                {
-                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
-                }
-                transformString = (string)module.GetType().GetField("rotorDiscName").GetValue(module);
-                if (transformString != "")
-                {
-                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
-                }
-
-                transformString = (string)module.GetType().GetField("blade1").GetValue(module);
-                if (transformString != "")
-                {
-                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
-                }
-
-                transformString = (string)module.GetType().GetField("blade2").GetValue(module);
-                if (transformString != "")
-                {
-                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
-                }
-
-                transformString = (string)module.GetType().GetField("blade3").GetValue(module);
-                if (transformString != "")
-                {
-                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
-                }
-
-                transformString = (string)module.GetType().GetField("blade4").GetValue(module);
-                if (transformString != "")
-                {
-                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
-                }
-                transformString = (string)module.GetType().GetField("blade5").GetValue(module);
-                if (transformString != "")
-                {
-                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
-                }
-            }
-            if (p.Modules.Contains("FScopterThrottle"))
-            {
-                module = p.Modules["FScopterThrottle"];
-                transformString = (string)module.GetType().GetField("rotorparent").GetValue(module);
-                if (transformString != "")
-                {
-                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
-                }
-            }
-            if (p.Modules.Contains("ModuleParachute"))
-            {
-                module = p.Modules["ModuleParachute"];
-                transformString = (string)module.GetType().GetField("canopyName").GetValue(module);
-                if (transformString != "")
-                {
-                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
-                }
-            }
-            foreach (Transform t in p.FindModelComponents<Transform>())
-            {
-                if (Transform.Contains(t))
-                    continue;
-                if (!t.gameObject.activeSelf)
-                {
-                    Transform.Add(t);
-                    continue;
-                }
-
-                string tag = t.tag.ToLowerInvariant();
-                if (tag == "ladder" || tag == "airlock")
-                    Transform.Add(t);
-            }
-
-            return Transform;
-        }
-
         public void OnRescale(TweakScale.ScalingFactor factor)
         {
             if (meshDataList == null)
@@ -513,20 +414,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             UpdateTransformMatrixList(transformMatrix);
         }
 
-        class MeshData
-        {
-            public Vector3[] vertices;
-            public int[] triangles;
-            public Bounds bounds;
 
-            MeshData() { }
-
-            public MeshData(Vector3[] vertices, int[] tris, Bounds bounds)
-            {
-                this.vertices = vertices;
-                this.triangles = tris;
-                this.bounds = bounds;
-            }
-        }
     }
 }

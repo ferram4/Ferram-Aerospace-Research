@@ -97,6 +97,7 @@
     <Compile Include="FARMatrix.cs" />
     <Compile Include="FARPartClassification.cs" />
     <Compile Include="FARPartExtensions.cs" />
+    <Compile Include="FARPartGeometry\MeshData.cs" />
     <Compile Include="FARPartGeometry\PartGeometryExtensions.cs" />
     <Compile Include="FARPartGeometry\VehicleVoxel.cs" />
     <Compile Include="FARPartGeometry\VoxelCrossSection.cs" />
