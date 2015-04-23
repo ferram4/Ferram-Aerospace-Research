@@ -75,6 +75,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         int _updateRateLimiter = 20;
         bool _updateQueued = true;
+        bool setup = false;
 
         VehicleAerodynamics _vehicleAero;
 
@@ -173,8 +174,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             _voxelCount = VoxelCountFromType();
 
+            _vehicleAero.VoxelUpdate(_vessel.transform.worldToLocalMatrix, _vessel.transform.localToWorldMatrix, _voxelCount, _vessel.Parts, !setup);
 
-            _vehicleAero.VoxelUpdate(_vessel.transform.worldToLocalMatrix, _vessel.transform.localToWorldMatrix, _voxelCount, _vessel.Parts);
+            setup = true;
 
             Debug.Log("Updating vessel voxel for " + _vessel.vesselName);
         }

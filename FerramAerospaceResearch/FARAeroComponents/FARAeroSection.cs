@@ -35,7 +35,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public FARAeroSection(FloatCurve xForcePressureAoA0, FloatCurve xForcePressureAoA180, FloatCurve xForceSkinFriction,
             float potentialFlowNormalForce, float viscCrossflowDrag, float flatnessRatio, float hypersonicMomentForward, float hypersonicMomentBackward,
-            Vector3 centroidWorldSpace, Vector3 xRefVectorWorldSpace, Vector3 nRefVectorWorldSpace, Matrix4x4 vesselToWorldMatrix, List<FARAeroPartModule> moduleList,
+            Vector3 centroidWorldSpace, Vector3 xRefVectorWorldSpace, Vector3 nRefVectorWorldSpace, Matrix4x4 vesselToWorldMatrix, Vector3 vehicleMainAxis, List<FARAeroPartModule> moduleList,
             Dictionary<Part, FARPartGeometry.VoxelCrossSection.SideAreaValues> sideAreaValues, List<float> dragFactor)
         {
             this.xForcePressureAoA0 = xForcePressureAoA0;       //copy references to floatcurves over
@@ -51,8 +51,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             partsIncluded = new List<PartData>();
 
-            Vector3 centroidLocationAlongxRef = Vector3.Project(centroidWorldSpace, xRefVectorWorldSpace);
-            Vector3 centroidSansxRef = Vector3.Exclude(xRefVectorWorldSpace, centroidWorldSpace);
+            Vector3 centroidLocationAlongxRef = Vector3.Project(centroidWorldSpace, vehicleMainAxis);
+            Vector3 centroidSansxRef = Vector3.Exclude(vehicleMainAxis, centroidWorldSpace);
 
             Vector3 worldSpaceAvgPos = Vector3.zero;
             float totalDragFactor = 0;
@@ -65,7 +65,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             worldSpaceAvgPos /= totalDragFactor;
 
-            worldSpaceAvgPos = Vector3.Exclude(xRefVectorWorldSpace, worldSpaceAvgPos);
+            worldSpaceAvgPos = Vector3.Exclude(vehicleMainAxis, worldSpaceAvgPos);
 
             Vector3 avgPosDiffFromCentroid = centroidSansxRef - worldSpaceAvgPos;
 
@@ -76,7 +76,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 Transform transform = data.aeroModule.part.transform;
                 Matrix4x4 transformMatrix = transform.worldToLocalMatrix;
 
-                Vector3 forceCenterWorldSpace = centroidLocationAlongxRef + Vector3.Exclude(xRefVectorWorldSpace, transform.position) + avgPosDiffFromCentroid;
+                Vector3 forceCenterWorldSpace = centroidLocationAlongxRef + Vector3.Exclude(vehicleMainAxis, transform.position) + avgPosDiffFromCentroid;
 
                 data.centroidPartSpace = transformMatrix.MultiplyPoint3x4(forceCenterWorldSpace);
                 data.xRefVectorPartSpace = transformMatrix.MultiplyVector(xRefVectorWorldSpace);
@@ -199,12 +199,22 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if (cosAoA > 0)
             {
                 xForce += cosSqrAoA * xForceAoA0;
-                moment *= -hypersonicMomentForward;
+                float momentFactor = -hypersonicMomentForward;
+
+                if (machNumber < 1.5)
+                    momentFactor += hypersonicMomentBackward * (1f - machNumber * 0.66666666666666666666666666666667f);
+
+                moment *= momentFactor;
             }
             else
             {
                 xForce += cosSqrAoA * xForceAoA180;
-                moment *= hypersonicMomentBackward;
+                float momentFactor = hypersonicMomentBackward;
+
+                if (machNumber < 1.5)
+                    momentFactor += -hypersonicMomentForward * (1f - machNumber * 0.66666666666666666666666666666667f);
+
+                moment *= momentFactor;
             }
             moment /= normalForceFactor;
 
@@ -302,14 +312,24 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (cosAoA > 0)
                 {
                     xForce += cosSqrAoA * xForceAoA0;
-                    moment *= -hypersonicMomentForward;
-                    dampingMoment *= -hypersonicMomentForward;
+                    float momentFactor = -hypersonicMomentForward;
+
+                    if (machNumber < 1.5)
+                        momentFactor += hypersonicMomentBackward * (1f - machNumber * 0.66666666666666666666666666666667f);
+
+                    moment *= momentFactor;
+                    dampingMoment *= momentFactor;
                 }
                 else
                 {
                     xForce += cosSqrAoA * xForceAoA180;
-                    moment *= hypersonicMomentBackward;
-                    dampingMoment *= hypersonicMomentBackward;
+                    float momentFactor = hypersonicMomentBackward;
+
+                    if (machNumber < 1.5)
+                        momentFactor += -hypersonicMomentForward * (1f - machNumber * 0.66666666666666666666666666666667f);
+
+                    moment *= momentFactor;
+                    dampingMoment *= momentFactor;
                 }
                 moment /= normalForceFactor;
                 dampingMoment = Math.Abs(dampingMoment);

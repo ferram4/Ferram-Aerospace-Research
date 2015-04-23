@@ -147,7 +147,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             visualizing = false;
 
-            ThreadPool.QueueUserWorkItem(CreateVoxel);
+            ThreadPool.QueueUserWorkItem(CreateVoxel, updateGeometryPartModules);
         }
 
         private void CreateVoxel(object updateGeometryBool)
@@ -157,7 +157,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 lock (this)
                 {
                     if((bool)updateGeometryBool)
-                    UpdateGeometryPartModules();
+                        UpdateGeometryPartModules();
 
                     VehicleVoxel newvoxel = new VehicleVoxel(_vehiclePartList, _voxelCount, true, true);
 
@@ -609,7 +609,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
                 FARAeroSection section = new FARAeroSection(xForcePressureAoA0, xForcePressureAoA180, xForceSkinFriction, potentialFlowNormalForce, viscCrossflowDrag
                     , (float)flatnessRatio, hypersonicMomentForward, hypersonicMomentBackward,
-                    centroid, xRefVector, nRefVector, _localToWorldMatrix, includedModules, includedPartsAndAreas, weighting);
+                    centroid, xRefVector, nRefVector, _localToWorldMatrix, _vehicleMainAxis, includedModules, includedPartsAndAreas, weighting);
 
                 _newAeroSections.Add(section);
                 tmpAeroModules.UnionWith(includedModules);
