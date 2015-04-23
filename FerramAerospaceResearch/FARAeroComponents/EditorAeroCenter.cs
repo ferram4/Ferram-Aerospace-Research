@@ -60,7 +60,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             for(int i = 0; i < _currentAeroSections.Count; i++)
             {
                 FARAeroSection section = _currentAeroSections[i];
-                section.EditorCalculateAeroForces(1, 0, 10000, 0.005f, vel, aeroSection);
+                section.EditorCalculateAeroForces(1, 0, 100000, 0.005f, vel, aeroSection);
             }
 
             aeroSection.force = -aeroSection.force;
@@ -71,7 +71,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             for (int i = 0; i < _currentAeroSections.Count; i++)
             {
                 FARAeroSection section = _currentAeroSections[i];
-                section.EditorCalculateAeroForces(1, 0, 10000, 0.005f, vel, aeroSection);
+                section.EditorCalculateAeroForces(1, 0, 100000, 0.005f, vel, aeroSection);
             }
 
             FARBaseAerodynamics.PrecomputeGlobalCenterOfLift(lift, dummy);
@@ -79,7 +79,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             aeroSection.AddAll(lift);
 
             aeroForce = aeroSection.force;
-            vesselRootLocalAeroCenter = aeroSection.GetMinTorquePos();
+            vesselRootLocalAeroCenter = aeroSection.GetPos();
             vesselRootLocalAeroCenter = EditorLogic.RootPart.transform.worldToLocalMatrix.MultiplyPoint3x4(vesselRootLocalAeroCenter);
         }
     }

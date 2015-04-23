@@ -233,7 +233,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
 
             center.AddForce(centroid, forceVector);
-            //center.AddTorque(centroid, torqueVector);
+            center.AddTorque(centroid, torqueVector);
         }
 
         public void FlightCalculateAeroForces(float atmDensity, float machNumber, float reynoldsPerUnitLength, float skinFrictionDrag)

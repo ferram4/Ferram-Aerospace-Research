@@ -54,48 +54,32 @@ namespace ferram4
         public Vector3d pos = Vector3d.zero;
         public double amount = 0.0;
 
-        /*//Component of ac position created by part location
+        //Component of ac position created by part location
         public Vector3d acPartPosComponent = Vector3d.zero;
 
         //Component of ac position due to interactions with location of AC on other axes
         public Vector3d acAxisInteractComponent = Vector3d.zero;
 
-        public void AddAerodynamicForcesAndMoments(Vector3d force, Vector3d moment, Vector3d pos)
+
+        /*public Vector3d GetACPosition()
         {
-            double tmp;
+            Vector3d bVec = new Vector3d();
+            bVec.x = force.y * torque.z - force.z * torque.y;
+            bVec.y = force.x * torque.z - force.z * torque.x;
+            bVec.z = force.x * torque.y - force.y * torque.x;
 
-            tmp = force.x / force.y;
-            acPartPosComponent.x = tmp * pos.y - moment.z + pos.x;
-            acAxisInteractComponent.x = moment.z - tmp;
+            double approxA01, approxA02, approxA12;         //commonly used force directions
+            approxA01 = -1 / (force.z * force.z);
+            approxA02 = -1 / (force.y * force.y);
+            approxA12 = -1 / (force.x * force.x);
 
-            tmp = force.y / force.z;
-            acPartPosComponent.y = tmp * pos.z - moment.x + pos.y;
-            acAxisInteractComponent.y = moment.x - tmp;
+            Vector3d acPos = new Vector3d();
+            acPos.x = force.x * force.x / (force.y * force.y * force.z * force.z) * bVec.x + bVec.y * approxA01 + bVec.z * approxA02;
+            acPos.y = force.y * force.y / (force.x * force.x * force.z * force.z) * bVec.y + bVec.x * approxA01 + bVec.z * approxA12;
+            acPos.x = force.z * force.z / (force.y * force.y * force.x * force.x) * bVec.z + bVec.y * approxA12 + bVec.x * approxA02;
 
-            tmp = force.z / force.x;
-            acPartPosComponent.z = tmp * pos.x - moment.y + pos.z;
-            acAxisInteractComponent.z = moment.y - tmp;
-        }
-
-        public Vector3d GetACPosition()
-        {
-            double denominator = 1 - acAxisInteractComponent.x * acAxisInteractComponent.y * acAxisInteractComponent.z;
-
-            Vector3d acPos = Vector3d.zero;
-
-            acPos.x = acPartPosComponent.x
-                + acPartPosComponent.y * acAxisInteractComponent.x
-                + acPartPosComponent.z * acAxisInteractComponent.x * acAxisInteractComponent.y;
-
-            acPos.y = acPartPosComponent.y
-                + acPartPosComponent.z * acAxisInteractComponent.y
-                + acPartPosComponent.x * acAxisInteractComponent.y * acAxisInteractComponent.z;
-
-            acPos.z = acPartPosComponent.z
-                + acPartPosComponent.x * acAxisInteractComponent.z
-                + acPartPosComponent.y * acAxisInteractComponent.z * acAxisInteractComponent.x;
-
-            acPos /= denominator;
+            acPos *= 0.5;
+            acPos += GetPos();
 
             return acPos;
         }*/
@@ -144,7 +128,7 @@ namespace ferram4
         // Compensating torque at different origin.
         public Vector3d TorqueAt(Vector3d origin)
         {
-            return torque - Vector3d.Cross(origin, force);
+            return torque - Vector3d.Cross(origin - GetPos(), force);
         }
 
         // Returns a point that requires minimal residual torque
