@@ -8,17 +8,24 @@ namespace FerramAerospaceResearch.FARGUI
     {
         LineRenderer _areaRenderer;
         LineRenderer _derivRenderer;
+        List<LineRenderer> _markingRenderers;
+
         Color _axisColor;
         Color _crossSectionColor;
         Color _derivColor;
+        double _yScaleMaxDistance;
+        double _yAxisGridScale;
+        int _numGridLines;
 
         Material _rendererMaterial;
         
-        public EditorAreaRulingOverlay(Color axisColor, Color crossSectionColor, Color derivColor)
+        public EditorAreaRulingOverlay(Color axisColor, Color crossSectionColor, Color derivColor, double yScaleMaxDistance, double yAxisGridScale)
         {
             _axisColor = axisColor;
             _crossSectionColor = crossSectionColor;
             _derivColor = derivColor;
+            _yScaleMaxDistance = yScaleMaxDistance;
+            _yAxisGridScale = yAxisGridScale;
 
             //Based on Kronal Vessel Viewer CoM axes rendering
             _rendererMaterial = new Material("Shader \"Lines/Colored Blended\" {" +
@@ -33,6 +40,9 @@ namespace FerramAerospaceResearch.FARGUI
 
             _areaRenderer = CreateNewRenderer(_crossSectionColor, 0.1f, _rendererMaterial);
             _derivRenderer = CreateNewRenderer(_derivColor, 0.1f, _rendererMaterial);
+
+            _markingRenderers = new List<LineRenderer>();
+            _markingRenderers.Add(CreateNewRenderer(_axisColor, 0.1f, _rendererMaterial));
         }
 
         ~EditorAreaRulingOverlay()
@@ -41,6 +51,10 @@ namespace FerramAerospaceResearch.FARGUI
                 GameObject.Destroy(_areaRenderer.gameObject);
             if(_derivRenderer)
                 GameObject.Destroy(_derivRenderer.gameObject);
+            for (int i = 0; i < _markingRenderers.Count; i++)
+                GameObject.Destroy(_markingRenderers[i].gameObject);
+
+            _markingRenderers = null;
         }
 
         LineRenderer CreateNewRenderer(Color color, float width, Material material)
@@ -63,21 +77,65 @@ namespace FerramAerospaceResearch.FARGUI
         {
             _areaRenderer.enabled = !_areaRenderer.enabled;
             _derivRenderer.enabled = !_derivRenderer.enabled;
+
+            for (int i = 0; i < _markingRenderers.Count; i++)
+            {
+                LineRenderer marking = _markingRenderers[i];
+                marking.enabled = !marking.enabled;
+                if (i > _numGridLines)
+                    _markingRenderers[i].enabled = false;
+            }
         }
 
         public void SetVisibility(bool visible)
         {
             _areaRenderer.enabled = visible;
             _derivRenderer.enabled = visible;
+            for (int i = 0; i < _markingRenderers.Count; i++)
+            {
+                _markingRenderers[i].enabled = visible;
+                if (i > _numGridLines)
+                    _markingRenderers[i].enabled = false;
+            }
         }
 
-        public void UpdateAeroData(Matrix4x4 voxelLocalToWorldMatrix, double[] xCoords, double[] yCoordsCrossSection, double[] yCoordsDeriv)
+        public void UpdateAeroData(Matrix4x4 voxelLocalToWorldMatrix, double[] xCoords, double[] yCoordsCrossSection, double[] yCoordsDeriv, double maxValue)
         {
-            UpdateRenderer(_areaRenderer, voxelLocalToWorldMatrix, xCoords, yCoordsCrossSection);
-            UpdateRenderer(_derivRenderer, voxelLocalToWorldMatrix, xCoords, yCoordsDeriv);
+            _numGridLines = (int)Math.Ceiling(maxValue / _yAxisGridScale);       //add one to account for the xAxis
+
+            while (_markingRenderers.Count <= _numGridLines)
+            {
+                LineRenderer newMarkingRenderer = CreateNewRenderer(_axisColor, 0.1f, _rendererMaterial);
+                newMarkingRenderer.enabled = _areaRenderer.enabled;
+                _markingRenderers.Add(newMarkingRenderer);
+            }
+
+            double gridScale = _yScaleMaxDistance / (double)_numGridLines;
+
+            double[] shortXCoords = new double[] {xCoords[0], xCoords[xCoords.Length - 1]};
+
+            for (int i = 0; i < _markingRenderers.Count; i++)
+            {
+                double height = i * gridScale;
+                UpdateRenderer(_markingRenderers[i], voxelLocalToWorldMatrix, shortXCoords, new double[] { height, height });
+                if (i > _numGridLines)
+                    _markingRenderers[i].enabled = false;
+                else
+                    _markingRenderers[i].enabled = _areaRenderer.enabled;
+            }
+
+            double scalingFactor = _yScaleMaxDistance / (_yAxisGridScale * _numGridLines);
+
+            UpdateRenderer(_areaRenderer, voxelLocalToWorldMatrix, xCoords, yCoordsCrossSection, scalingFactor);
+            UpdateRenderer(_derivRenderer, voxelLocalToWorldMatrix, xCoords, yCoordsDeriv, scalingFactor);
         }
 
         void UpdateRenderer(LineRenderer renderer, Matrix4x4 transformMatrix, double[] xCoords, double[] yCoords)
+        {
+            UpdateRenderer(renderer, transformMatrix, xCoords, yCoords, 1);
+        }
+
+        void UpdateRenderer(LineRenderer renderer, Matrix4x4 transformMatrix, double[] xCoords, double[] yCoords, double yScalingFactor)
         {
             renderer.transform.parent = EditorLogic.RootPart.transform;
             renderer.transform.localPosition = Vector3.zero;
@@ -87,7 +145,7 @@ namespace FerramAerospaceResearch.FARGUI
 
             for (int i = 0; i < xCoords.Length; i++)
             {
-                Vector3 vec = Vector3.up * (float)xCoords[i] - Vector3.forward * (float)yCoords[i];
+                Vector3 vec = Vector3.up * (float)xCoords[i] - Vector3.forward * (float)(yCoords[i] * yScalingFactor);
                 vec = transformMatrix.MultiplyVector(vec);
                 renderer.SetPosition(i, vec);
             }

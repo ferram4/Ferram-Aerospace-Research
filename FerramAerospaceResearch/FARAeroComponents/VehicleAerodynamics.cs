@@ -130,6 +130,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public void VoxelUpdate(Matrix4x4 worldToLocalMatrix, Matrix4x4 localToWorldMatrix, int voxelCount, List<Part> vehiclePartList)
         {
+            VoxelUpdate(worldToLocalMatrix, localToWorldMatrix, voxelCount, vehiclePartList, true);
+        }
+        
+        public void VoxelUpdate(Matrix4x4 worldToLocalMatrix, Matrix4x4 localToWorldMatrix, int voxelCount, List<Part> vehiclePartList, bool updateGeometryPartModules)
+        {
             _voxelCount = voxelCount;
 
             this._worldToLocalMatrix = worldToLocalMatrix;
@@ -145,12 +150,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
             ThreadPool.QueueUserWorkItem(CreateVoxel);
         }
 
-        private void CreateVoxel(object nullObj)
+        private void CreateVoxel(object updateGeometryBool)
         {
             try
             {
                 lock (this)
                 {
+                    if((bool)updateGeometryBool)
                     UpdateGeometryPartModules();
 
                     VehicleVoxel newvoxel = new VehicleVoxel(_vehiclePartList, _voxelCount, true, true);
@@ -158,6 +164,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     _vehicleCrossSection = newvoxel.EmptyCrossSectionArray;
 
                     _voxel = newvoxel;
+                    _voxelLowerRightCorner = _voxel.LocalLowerRightCorner;
 
                     CalculateVesselAeroProperties();
                     _calculationCompleted = true;
@@ -215,7 +222,16 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (m != null)
                 {
                     Bounds b = m.overallMeshBounds;
-                    axis += p.transform.up * b.size.x * b.size.y * b.size.z;    //scale part influence by approximate size
+                    Vector3 vec = p.transform.up;
+                    ModuleResourceIntake intake = p.GetComponent<ModuleResourceIntake>();
+                    if (intake)
+                    {
+                        Transform intakeTrans = p.FindModelTransform(intake.intakeTransformName);
+                        if ((object)intakeTrans != null)
+                            vec = intakeTrans.forward;
+                    }
+
+                    axis += vec * b.size.x * b.size.y * b.size.z;    //scale part influence by approximate size
                 }
             }
             axis.Normalize();   //normalize axis for later calcs
@@ -242,15 +258,154 @@ namespace FerramAerospaceResearch.FARAeroComponents
             return axis;
         }
 
+        void GaussianSmoothCrossSections(VoxelCrossSection[] vehicleCrossSection, double stdDevCutoff, double lengthPercentFactor, double sectionThickness, double length, int frontIndex, int backIndex, int areaSmoothingIterations, int derivSmoothingIterations)
+        {
+            double stdDev = length * lengthPercentFactor;
+            int numVals = (int)Math.Ceiling(stdDevCutoff * stdDev / sectionThickness);
+
+            double[] gaussianFactors = new double[numVals];
+            double[] prevUncorrectedVals = new double[numVals];
+            double[] futureUncorrectedVals = new double[numVals - 1];
+
+            double invVariance = 1 / (stdDev * stdDev);
+
+            for(int i = 0; i < gaussianFactors.Length; i++)
+            {
+                double factor = (i * sectionThickness);
+                factor *= factor;
+                gaussianFactors[i] = Math.Exp(-0.5 * factor * invVariance);
+            }
+
+            double sum = 0;
+            for (int i = 0; i < gaussianFactors.Length; i++)
+                if (i == 0)
+                    sum += gaussianFactors[i];
+                else
+                    sum += 2 * gaussianFactors[i];
+
+            double invSum = 1 / sum;
+
+            for (int i = 0; i < gaussianFactors.Length; i++)
+            {
+                gaussianFactors[i] *= invSum;
+            }
+
+            for (int j = 0; j < areaSmoothingIterations; j++)
+            {
+                for (int i = 0; i < prevUncorrectedVals.Length; i++)
+                    prevUncorrectedVals[i] = 0;     //set all the vals to 0 to prevent screwups between iterations
+
+                for (int i = frontIndex; i <= backIndex; i++)       //area smoothing pass
+                {
+                    for (int k = prevUncorrectedVals.Length - 1; k > 0; k--)
+                    {
+                        prevUncorrectedVals[k] = prevUncorrectedVals[k - 1];        //shift prev vals down
+                    }
+                    double curValue = vehicleCrossSection[i].area;
+                    prevUncorrectedVals[0] = curValue;       //and set the central value
+
+
+                    for (int k = 0; k < futureUncorrectedVals.Length; k++)          //update future vals
+                    {
+                        if (i + k < backIndex)
+                            futureUncorrectedVals[k] = vehicleCrossSection[i + k + 1].area;
+                        else
+                            futureUncorrectedVals[k] = 0;
+                    }
+                    curValue = 0;       //zero for coming calculations...
+
+                    for (int k = 0; k < prevUncorrectedVals.Length; k++)
+                    {
+                        curValue += gaussianFactors[k] * prevUncorrectedVals[k];        //central and previous values;
+                    }
+                    for (int k = 0; k < futureUncorrectedVals.Length; k++)
+                    {
+                        curValue += gaussianFactors[k + 1] * futureUncorrectedVals[k];
+                    }
+
+                    vehicleCrossSection[i].area = curValue;
+                }
+            }
+
+            double denom = sectionThickness;
+            denom *= denom;
+            denom = 1 / denom;
+
+            for (int i = frontIndex; i <= backIndex; i++)       //calculate 2nd derivs, raw
+            {
+                double areaM1, area0, areaP1;
+
+                if (i - 1 < frontIndex)
+                    areaM1 = 0;
+                else
+                    areaM1 = vehicleCrossSection[i - 1].area;
+
+                area0 = vehicleCrossSection[i].area;
+
+                if (i + 1 > backIndex)
+                    areaP1 = 0;
+                else
+                    areaP1 = vehicleCrossSection[i + 1].area;
+
+                double areaSecondDeriv = (areaM1 + areaP1) - 2 * area0;
+                areaSecondDeriv *= denom;
+
+                vehicleCrossSection[i].secondAreaDeriv = areaSecondDeriv;
+            }
+
+            //and now smooth the derivs
+
+            for (int j = 0; j < derivSmoothingIterations; j++)
+            {
+                for (int i = 0; i < prevUncorrectedVals.Length; i++)
+                    prevUncorrectedVals[i] = 0;     //set all the vals to 0 to prevent screwups between iterations
+
+                for (int i = frontIndex; i <= backIndex; i++)       //deriv smoothing pass
+                {
+                    for (int k = prevUncorrectedVals.Length - 1; k > 0; k--)
+                    {
+                        prevUncorrectedVals[k] = prevUncorrectedVals[k - 1];        //shift prev vals down
+                    }
+                    double curValue = vehicleCrossSection[i].secondAreaDeriv;
+                    prevUncorrectedVals[0] = curValue;       //and set the central value
+
+
+                    for (int k = 0; k < futureUncorrectedVals.Length; k++)          //update future vals
+                    {
+                        if (i + k < backIndex)
+                            futureUncorrectedVals[k] = vehicleCrossSection[i + k + 1].secondAreaDeriv;
+                        else
+                            futureUncorrectedVals[k] = 0;
+                    }
+                    curValue = 0;       //zero for coming calculations...
+
+                    for (int k = 0; k < prevUncorrectedVals.Length; k++)
+                    {
+                        curValue += gaussianFactors[k] * prevUncorrectedVals[k];        //central and previous values;
+                    }
+                    for (int k = 0; k < futureUncorrectedVals.Length; k++)
+                    {
+                        curValue += gaussianFactors[k + 1] * futureUncorrectedVals[k];
+                    }
+
+                    vehicleCrossSection[i].secondAreaDeriv = curValue;
+                }
+            }
+        }
+
+        #region Aerodynamics Calculations
+
         private void CalculateVesselAeroProperties()
         {
             int front, back, numSections;
 
             _voxel.CrossSectionData(_vehicleCrossSection, _vehicleMainAxis, out front, out back, out _sectionThickness, out _maxCrossSectionArea);
 
-            _voxelLowerRightCorner = _voxel.LocalLowerRightCorner;
-
             numSections = back - front;
+            _length = _sectionThickness * numSections;
+
+            GaussianSmoothCrossSections(_vehicleCrossSection, 3, 0.01, _sectionThickness, _length, front, back, 2, 2);
+
             validSectionCount = numSections;
             firstSection = front;
             double invMaxRadFactor = 1f / Math.Sqrt(_maxCrossSectionArea / Math.PI);
@@ -268,7 +423,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             double transonicWaveDragFactor = -_sectionThickness * _sectionThickness / (2 * Math.PI);
 
-            _length = _sectionThickness * numSections;
 
             _newAeroSections = new List<FARAeroSection>();
             HashSet<FARAeroPartModule> tmpAeroModules = new HashSet<FARAeroPartModule>();
@@ -438,7 +592,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 foreach (KeyValuePair<Part, VoxelCrossSection.SideAreaValues> pair in includedPartsAndAreas)
                 {
-                    FARAeroPartModule m = pair.Key.GetComponent<FARAeroPartModule>();
+                    Part key = pair.Key;
+                    if (key == null)
+                        continue;
+
+                    FARAeroPartModule m = key.GetComponent<FARAeroPartModule>();
                     if (m != null)
                         includedModules.Add(m);
                     weightingFactor += (float)pair.Value.count;
@@ -579,6 +737,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             return 0.07 * finenessRatio + 0.57;
         }
+        #endregion
 
         double MathClampAbs(double value, double abs)
         {

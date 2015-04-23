@@ -37,19 +37,19 @@ namespace FerramAerospaceResearch.FARGUI
 
             _vehicleAero = new VehicleAerodynamics();
             _aeroCenter = new EditorAeroCenter();
-            _areaRulingOverlay = new EditorAreaRulingOverlay(Color.gray, Color.green, Color.yellow);
+            _areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.8f), Color.green, Color.yellow, 10, 5);
             guiRect.height = 500;
             guiRect.width = 650;
             GameEvents.onEditorPartEvent.Add(UpdateGeometryEvent);
-            GameEvents.onEditorUndo.Add(UpdateGeometryEvent);
-            GameEvents.onEditorRedo.Add(UpdateGeometryEvent);
+            GameEvents.onEditorUndo.Add(ResetEditorEvent);
+            GameEvents.onEditorRedo.Add(ResetEditorEvent);
         }
 
         void OnDestroy()
         {
             GameEvents.onEditorPartEvent.Remove(UpdateGeometryEvent);
-            GameEvents.onEditorUndo.Remove(UpdateGeometryEvent);
-            GameEvents.onEditorRedo.Remove(UpdateGeometryEvent);
+            GameEvents.onEditorUndo.Remove(ResetEditorEvent);
+            GameEvents.onEditorRedo.Remove(ResetEditorEvent);
             EditorLogic.fetch.Unlock("FAREdLock");
         }
 
@@ -64,9 +64,9 @@ namespace FerramAerospaceResearch.FARGUI
                 UpdateVoxel();
             }
         }
-        private void UpdateGeometryEvent(ShipConstruct construct)
+        private void ResetEditorEvent(ShipConstruct construct)
         {
-            UpdateVoxel();
+            ResetEditor();
         }
 
 
@@ -95,6 +95,12 @@ namespace FerramAerospaceResearch.FARGUI
 
         #endregion
         #region voxel
+        public static void ResetEditor()
+        {
+            instance._areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.8f), Color.green, Color.yellow, 10, 5);
+            UpdateVoxel();
+        }
+
         public static void UpdateVoxel()
         {
             if (instance._updateRateLimiter > 18)
@@ -132,22 +138,18 @@ namespace FerramAerospaceResearch.FARGUI
 
             double[] xAxis = new double[areas.Length];
 
-            double scalingFactor = 0;
+            double maxValue = 0;
             for (int i = 0; i < areas.Length; i++)
             {
-                scalingFactor = Math.Max(scalingFactor, areas[i]);
+                maxValue = Math.Max(maxValue, areas[i]);
             }
-
-            scalingFactor = 10 / scalingFactor;     //all scaled to a 10 m max height for area;
 
             for (int i = 0; i < xAxis.Length; i++)
             {
                 xAxis[i] = (xAxis.Length - i - 1) * sectionThickness + offset;
-                areas[i] *= scalingFactor;
-                secondDerivAreas[i] *= scalingFactor;
             }
 
-            _areaRulingOverlay.UpdateAeroData(_vehicleAero.VoxelAxisToLocalCoordMatrix(), xAxis, areas, secondDerivAreas);
+            _areaRulingOverlay.UpdateAeroData(_vehicleAero.VoxelAxisToLocalCoordMatrix(), xAxis, areas, secondDerivAreas, maxValue);
         }
         #endregion
 

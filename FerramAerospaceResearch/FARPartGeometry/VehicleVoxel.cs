@@ -988,57 +988,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             maxCrossSectionArea = 0;
 
 
-            double gaussianVal2, gaussianVal1, gaussianVal0;
-            gaussianVal2 = Math.Exp(-4 / 2);
-            gaussianVal1 = Math.Exp(-1 / 2);
-            gaussianVal0 = Math.Exp(0 / 2);
-
-            double sum = gaussianVal0 + 2 * gaussianVal1 + 2 * gaussianVal2;
-
-            gaussianVal2 /= sum;
-            gaussianVal1 /= sum;
-            gaussianVal0 /= sum;
-
-            for (int j = 0; j < 2; j++)
-            {
-                double unSmoothedLastArea = 0;
-                double unSmoothedLastArea2 = 0;
-
-                for (int i = frontIndex; i <= backIndex; i++)       //second area derivative smoothing pass
-                {
-                    double prevArea2, prevArea, curArea, nextArea, nextArea2;
-                    prevArea = unSmoothedLastArea;
-                    prevArea2 = unSmoothedLastArea2;
-
-                    unSmoothedLastArea2 = unSmoothedLastArea;
-
-                    curArea = crossSections[i].area;     //this is used to make sure we don't end up using smoothed derivs for the calculations
-                    unSmoothedLastArea = curArea;
-
-                    if (i <= backIndex)
-                    {
-                        nextArea = crossSections[i + 1].area;
-                        if (i + 1 <= backIndex)
-                            nextArea2 = crossSections[i + 2].area;
-                        else
-                            nextArea2 = 0;
-                    }
-                    else
-                    {
-                        nextArea = 0;
-                        nextArea2 = 0;
-                    }
-
-                    curArea *= gaussianVal0;
-                    curArea += gaussianVal1 * prevArea;
-                    curArea += gaussianVal1 * nextArea;
-                    curArea += gaussianVal2 * prevArea2;
-                    curArea += gaussianVal2 * nextArea2;
-
-                    crossSections[i].area = curArea;
-                }
-            }
-
             for (int i = frontIndex; i <= backIndex; i++)
             {
                 double areaM1, area0, areaP1;
@@ -1058,77 +1007,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 double areaSecondDeriv = (areaM1 + areaP1) - 2 * area0;
                 areaSecondDeriv *= denom;
 
-                /*double prevArea, curArea, nextArea, areaSecondDeriv;
-
-                if (i == frontIndex)
-                {
-                    prevArea = 0;
-                    curArea = crossSections[i].area;
-                    nextArea = crossSections[i + 1].area;
-                }
-                else if (i == backIndex)
-                {
-                    prevArea = crossSections[i - 1].area;
-                    curArea = crossSections[i].area;
-                    nextArea = 0;
-                }
-                else
-                {
-                    prevArea = crossSections[i - 1].area;
-                    curArea = crossSections[i].area;
-                    nextArea = crossSections[i + 1].area;
-                }
-
-                areaSecondDeriv = nextArea + 2 * curArea + prevArea;
-                areaSecondDeriv -= 2 * Math.Sqrt(nextArea * curArea);
-                areaSecondDeriv -= 2 * Math.Sqrt(prevArea * curArea);
-                areaSecondDeriv *= denom;*/
-
                 crossSections[i].secondAreaDeriv = areaSecondDeriv;
 
                 if (crossSections[i].area > maxCrossSectionArea)
                     maxCrossSectionArea = crossSections[i].area;
             }
-
-            for (int j = 0; j < 2; j++)
-            {
-                double unSmoothedLastDeriv = 0;
-                double unSmoothedLastDeriv2 = 0;
-
-                for (int i = frontIndex; i <= backIndex; i++)       //second area derivative smoothing pass
-                {
-                    double prevDeriv2, prevDeriv, curDeriv, nextDeriv, nextDeriv2;
-                    prevDeriv = unSmoothedLastDeriv;
-                    prevDeriv2 = unSmoothedLastDeriv2;
-
-                    unSmoothedLastDeriv2 = unSmoothedLastDeriv;
-
-                    curDeriv = crossSections[i].secondAreaDeriv;     //this is used to make sure we don't end up using smoothed derivs for the calculations
-                    unSmoothedLastDeriv = curDeriv;
-
-                    if (i <= backIndex)
-                    {
-                        nextDeriv = crossSections[i + 1].secondAreaDeriv;
-                        if (i + 1 <= backIndex)
-                            nextDeriv2 = crossSections[i + 2].secondAreaDeriv;
-                        else
-                            nextDeriv2 = 0;
-                    }
-                    else
-                    {
-                        nextDeriv = 0;
-                        nextDeriv2 = 0;
-                    }
-
-                    curDeriv *= gaussianVal0;
-                    curDeriv += gaussianVal1 * prevDeriv;
-                    curDeriv += gaussianVal1 * nextDeriv;
-                    curDeriv += gaussianVal2 * prevDeriv2;
-                    curDeriv += gaussianVal2 * nextDeriv2;
-
-                    crossSections[i].secondAreaDeriv = curDeriv;
-                }
-            }
+            
         }
 
         private unsafe void DetermineIfPartGetsForcesAndAreas(Dictionary<Part, VoxelCrossSection.SideAreaValues> partSideAreas, Part p, int i, int j, int k)

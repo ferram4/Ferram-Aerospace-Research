@@ -446,7 +446,7 @@ namespace ferram4
 
                         Collider[] colliders;
 
-                        if ((object)farModule != null)
+                        if (farModule != null)
                         {
                             colliders = farModule.PartColliders;
                             if (colliders == null)
@@ -636,6 +636,13 @@ namespace ferram4
                 FARWingAerodynamicModel wingModule = wingModules[i];
                 double wingInfluenceFactor = associatedInfluences[i] * directionalInfluence;
 
+                if(wingModule == null)
+                {
+                    HandleNullPart(wingModules, associatedInfluences, i);
+                    i--;
+                    continue;
+                }
+
                 double tmp = Vector3.Dot(wingModule.transform.forward, parentWingModule.transform.forward);
 
                 effectiveUpstreamMAC += wingModule.GetMAC() * wingInfluenceFactor;
@@ -654,6 +661,25 @@ namespace ferram4
 
                 effectiveUpstreamAoA += tmp;
             }
+        }
+
+        private void HandleNullPart(List<FARWingAerodynamicModel> wingModules, List<double> associatedInfluences, int index)
+        {
+            wingModules.RemoveAt(index);
+            associatedInfluences.RemoveAt(index);
+
+            double influenceSum = 0;
+            for (int j = 0; j < associatedInfluences.Count; j++)
+            {
+                influenceSum += associatedInfluences[j];
+            }
+            influenceSum = 1 / influenceSum;
+
+            for (int j = 0; j < associatedInfluences.Count; j++)
+            {
+                associatedInfluences[j] *= influenceSum;
+            }
+
         }
 
         /// <summary>
