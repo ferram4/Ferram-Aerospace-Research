@@ -13,25 +13,33 @@ namespace FerramAerospaceResearch.FARAeroComponents
         VoxelCrossSection[] _vehicleCrossSection = null;
         int _voxelCount;
 
-        double length = 0;
+        double _length = 0;
         public double Length
         {
-            get { return length; }
+            get { return _length; }
         }
 
-        double maxCrossSectionArea = 0;
+        double _maxCrossSectionArea = 0;
         public double MaxCrossSectionArea
         {
-            get { return maxCrossSectionArea; }
+            get { return _maxCrossSectionArea; }
         }
 
-        bool calculationCompleted = false;
+        bool _calculationCompleted = false;
         public bool CalculationCompleted
         {
-            get { return calculationCompleted; }
+            get { return _calculationCompleted; }
         }
 
         Matrix4x4 _worldToLocalMatrix, _localToWorldMatrix;
+
+        Vector3d _voxelLowerRightCorner;
+        double _sectionThickness;
+        public double SectionThickness
+        {
+            get { return _sectionThickness; }
+        }
+
         Vector3 _vehicleMainAxis;
         List<Part> _vehiclePartList;
 
@@ -48,7 +56,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public void GetNewAeroData(out List<FARAeroPartModule> aeroModules, out List<FARAeroSection> aeroSections)
         {
-            calculationCompleted = false;
+            _calculationCompleted = false;
             aeroModules = _currentAeroModules = _newAeroModules;
             _newAeroModules = null;
 
@@ -57,6 +65,19 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             LEGACY_UpdateWingAerodynamicModels();
 
+        }
+
+        public Matrix4x4 VoxelAxisToLocalCoordMatrix()
+        {
+            return Matrix4x4.TRS(Vector3.zero, Quaternion.FromToRotation(_vehicleMainAxis, Vector3.up), Vector3.one);
+        }
+
+        public double FirstSectionXOffset()
+        {
+            double offset = Vector3d.Dot(_vehicleMainAxis, _voxelLowerRightCorner);
+            offset += firstSection * _sectionThickness;
+
+            return offset;
         }
 
         public double[] GetCrossSectionAreas()
@@ -139,7 +160,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     _voxel = newvoxel;
 
                     CalculateVesselAeroProperties();
-                    calculationCompleted = true;
+                    _calculationCompleted = true;
                 }
             }
             catch (Exception e)
@@ -224,16 +245,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
         private void CalculateVesselAeroProperties()
         {
             int front, back, numSections;
-            double sectionThickness;
 
-            _voxel.CrossSectionData(_vehicleCrossSection, _vehicleMainAxis, out front, out back, out sectionThickness, out maxCrossSectionArea);
+            _voxel.CrossSectionData(_vehicleCrossSection, _vehicleMainAxis, out front, out back, out _sectionThickness, out _maxCrossSectionArea);
+
+            _voxelLowerRightCorner = _voxel.LocalLowerRightCorner;
 
             numSections = back - front;
             validSectionCount = numSections;
             firstSection = front;
-            double invMaxRadFactor = 1f / Math.Sqrt(maxCrossSectionArea / Math.PI);
+            double invMaxRadFactor = 1f / Math.Sqrt(_maxCrossSectionArea / Math.PI);
 
-            double finenessRatio = sectionThickness * numSections * 0.5 * invMaxRadFactor;       //vehicle length / max diameter, as calculated from sect thickness * num sections / (2 * max radius) 
+            double finenessRatio = _sectionThickness * numSections * 0.5 * invMaxRadFactor;       //vehicle length / max diameter, as calculated from sect thickness * num sections / (2 * max radius) 
 
             //skin friction and pressure drag for a body, taken from 1978 USAF Stability And Control DATCOM, Section 4.2.3.1, Paragraph A
             double viscousDragFactor = 0;
@@ -244,9 +266,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             double criticalMachNumber = CalculateCriticalMachNumber(finenessRatio);
 
-            double transonicWaveDragFactor = -sectionThickness * sectionThickness / (2 * Math.PI);
+            double transonicWaveDragFactor = -_sectionThickness * _sectionThickness / (2 * Math.PI);
 
-            length = sectionThickness * numSections;
+            _length = _sectionThickness * numSections;
 
             _newAeroSections = new List<FARAeroSection>();
             HashSet<FARAeroPartModule> tmpAeroModules = new HashSet<FARAeroPartModule>();
@@ -302,30 +324,30 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 sonicBaseDrag = Math.Abs(sonicBaseDrag);
 
-                float viscCrossflowDrag = (float)(Math.Sqrt(curArea / Math.PI) * sectionThickness * 2d);
+                float viscCrossflowDrag = (float)(Math.Sqrt(curArea / Math.PI) * _sectionThickness * 2d);
 
                 double surfaceArea = curArea * Math.PI;
                 if (surfaceArea < 0)
                     surfaceArea = 0;
                 surfaceArea = 2d * Math.Sqrt(surfaceArea); //section circumference
-                surfaceArea *= sectionThickness;    //section surface area for viscous effects
+                surfaceArea *= _sectionThickness;    //section surface area for viscous effects
 
                 xForceSkinFriction.Add(0f, (float)(surfaceArea * viscousDragFactor), 0, 0);   //subsonic incomp visc drag
                 xForceSkinFriction.Add(1f, (float)(surfaceArea * viscousDragFactor), 0, 0);   //transonic visc drag
                 xForceSkinFriction.Add(2f, (float)surfaceArea, 0, 0);                     //above Mach 1.4, visc is purely surface drag, no pressure-related components simulated
 
-                float sonicWaveDrag = (float)CalculateTransonicWaveDrag(i, index, numSections, front, sectionThickness, Math.Min(maxCrossSectionArea * 2, curArea * 16));//Math.Min(maxCrossSectionArea * 0.1, curArea * 0.25));
+                float sonicWaveDrag = (float)CalculateTransonicWaveDrag(i, index, numSections, front, _sectionThickness, Math.Min(_maxCrossSectionArea * 2, curArea * 16));//Math.Min(maxCrossSectionArea * 0.1, curArea * 0.25));
                 sonicWaveDrag *= 0.325f;     //this is just to account for the higher drag being felt due to the inherent blockiness of the model being used and noise introduced by the limited control over shape and through voxelization
-                float hypersonicDragForward = (float)CalculateHypersonicDrag(prevArea, curArea, sectionThickness);
-                float hypersonicDragBackward = (float)CalculateHypersonicDrag(nextArea, curArea, sectionThickness);
+                float hypersonicDragForward = (float)CalculateHypersonicDrag(prevArea, curArea, _sectionThickness);
+                float hypersonicDragBackward = (float)CalculateHypersonicDrag(nextArea, curArea, _sectionThickness);
 
                 if (hypersonicDragForward > 0)
                     hypersonicDragForward = 0;
                 if (hypersonicDragBackward > 0)
                     hypersonicDragBackward = 0;
 
-                float hypersonicMomentForward = (float)CalculateHypersonicMoment(prevArea, curArea, sectionThickness);
-                float hypersonicMomentBackward = (float)CalculateHypersonicMoment(nextArea, curArea, sectionThickness);
+                float hypersonicMomentForward = (float)CalculateHypersonicMoment(prevArea, curArea, _sectionThickness);
+                float hypersonicMomentBackward = (float)CalculateHypersonicMoment(nextArea, curArea, _sectionThickness);
 
                 if (hypersonicMomentForward > 0)
                     hypersonicMomentForward = 0;
@@ -392,7 +414,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     xRefVector = (Vector3)(_vehicleCrossSection[index - 1].centroid - _vehicleCrossSection[index + 1].centroid).normalized;
                     Vector3 offMainAxisVec = Vector3.Exclude(_vehicleMainAxis, xRefVector);
-                    float tanAoA = offMainAxisVec.magnitude / (2f * (float)sectionThickness);
+                    float tanAoA = offMainAxisVec.magnitude / (2f * (float)_sectionThickness);
                     if (tanAoA > 0.17632698070846497347109038686862f)
                     {
                         offMainAxisVec.Normalize();

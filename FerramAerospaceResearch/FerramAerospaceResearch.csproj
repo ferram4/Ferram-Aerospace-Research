@@ -80,6 +80,7 @@
     <Compile Include="FARControllableSurface.cs" />
     <Compile Include="FARGlobalControlEditorObject.cs" />
     <Compile Include="FARGlobalControlFlightObject.cs" />
+    <Compile Include="FARGUI\EditorAreaRulingOverlay.cs" />
     <Compile Include="FARGUI\EditorGUI.cs" />
     <Compile Include="FARGUI\FlightGUI.cs" />
     <Compile Include="FARKSPAddonFlightDataInfo.cs" />

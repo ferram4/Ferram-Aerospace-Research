@@ -53,6 +53,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
         object _locker = new object();
 
         Vector3d lowerRightCorner;
+        public Vector3d LocalLowerRightCorner
+        {
+            get { return lowerRightCorner; }
+        }
         const double RC = 0.5f;
 
         public VoxelCrossSection[] EmptyCrossSectionArray

@@ -26,6 +26,7 @@ namespace FerramAerospaceResearch.FARGUI
 
         VehicleAerodynamics _vehicleAero;
         EditorAeroCenter _aeroCenter;
+        EditorAreaRulingOverlay _areaRulingOverlay;
 
         ferramGraph _graph = new ferramGraph(400, 275);
 
@@ -36,6 +37,7 @@ namespace FerramAerospaceResearch.FARGUI
 
             _vehicleAero = new VehicleAerodynamics();
             _aeroCenter = new EditorAeroCenter();
+            _areaRulingOverlay = new EditorAreaRulingOverlay(Color.gray, Color.green, Color.yellow);
             guiRect.height = 500;
             guiRect.width = 650;
             GameEvents.onEditorPartEvent.Add(UpdateGeometryEvent);
@@ -75,6 +77,7 @@ namespace FerramAerospaceResearch.FARGUI
                 if (_vehicleAero.CalculationCompleted)
                 {
                     _aeroCenter.UpdateAeroData(_vehicleAero);
+                    UpdateCrossSections();
                 } 
 
                 if (_updateRateLimiter < 20)
@@ -97,6 +100,8 @@ namespace FerramAerospaceResearch.FARGUI
             if (instance._updateRateLimiter > 18)
                 instance._updateRateLimiter = 18;
             instance._updateQueued = true;
+            //instance._areaRulingOverlay.SetVisibility(false);
+
         }
 
         void RecalculateVoxel()
@@ -117,40 +122,32 @@ namespace FerramAerospaceResearch.FARGUI
 
         void UpdateCrossSections()
         {
-            _graph.Clear();
+            //_graph.Clear();
 
             double[] areas = _vehicleAero.GetCrossSectionAreas();
             double[] secondDerivAreas = _vehicleAero.GetCrossSection2ndAreaDerivs();
 
-            double section = 1d / areas.Length;
+            double sectionThickness = _vehicleAero.SectionThickness;
+            double offset = _vehicleAero.FirstSectionXOffset();
 
             double[] xAxis = new double[areas.Length];
-            for(int i = 0; i < xAxis.Length; i++)
-            {
-                xAxis[i] = section * i;
-            }
 
-            double lowerBound = 0;
-            double upperBound = 0;
-
+            double scalingFactor = 0;
             for (int i = 0; i < areas.Length; i++)
             {
-                lowerBound = Math.Min(lowerBound, secondDerivAreas[i]);
-
-                upperBound = Math.Max(upperBound, areas[i]);
-                upperBound = Math.Max(upperBound, secondDerivAreas[i]);
+                scalingFactor = Math.Max(scalingFactor, areas[i]);
             }
 
-            _graph.SetBoundaries(0, 1, lowerBound, upperBound);
-            _graph.SetGridScaleUsingValues(0.1, 0.5);
+            scalingFactor = 10 / scalingFactor;     //all scaled to a 10 m max height for area;
 
-            _graph.AddLine("S", xAxis, areas, Color.green);
-            _graph.AddLine("S\'\'", xAxis, secondDerivAreas, Color.yellow);
+            for (int i = 0; i < xAxis.Length; i++)
+            {
+                xAxis[i] = (xAxis.Length - i - 1) * sectionThickness + offset;
+                areas[i] *= scalingFactor;
+                secondDerivAreas[i] *= scalingFactor;
+            }
 
-            _graph.horizontalLabel = "Body Station";
-            _graph.verticalLabel = "Area, 2nd Deriv Area";
-
-            _graph.Update();
+            _areaRulingOverlay.UpdateAeroData(_vehicleAero.VoxelAxisToLocalCoordMatrix(), xAxis, areas, secondDerivAreas);
         }
         #endregion
 
@@ -191,10 +188,10 @@ namespace FerramAerospaceResearch.FARGUI
 
         void CrossSectionAnalysisGUI()
         {
-            if (GUILayout.Button("Update"))
-                UpdateCrossSections();
+            if (GUILayout.Button("Toggle CrossSections"))
+                _areaRulingOverlay.ToggleVisibility();
 
-            GraphDisplay();
+            //GraphDisplay();
         }
 
         void GraphDisplay()
