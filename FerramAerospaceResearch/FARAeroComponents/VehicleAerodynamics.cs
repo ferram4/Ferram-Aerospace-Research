@@ -58,13 +58,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
         {
             _calculationCompleted = false;
             aeroModules = _currentAeroModules = _newAeroModules;
-            _newAeroModules = null;
 
             aeroSections = _currentAeroSections = _newAeroSections;
-            _newAeroSections = null;
 
             LEGACY_UpdateWingAerodynamicModels();
-
         }
 
         public Matrix4x4 VoxelAxisToLocalCoordMatrix()
@@ -642,14 +639,21 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         private double CalculateHypersonicDrag(double lowArea, double highArea, double sectionThickness)
         {
-            double drag = highArea + lowArea - 2 * Math.Sqrt(highArea * lowArea);
-            drag = drag / (drag + sectionThickness * sectionThickness * Math.PI);       //calculate sin^2
-            drag *= drag * drag;
-            if (drag < 0)
+            if (lowArea >= highArea)
                 return 0;
-            drag = Math.Sqrt(drag);
-            drag *= (lowArea - highArea) * 2;
-            return drag;        //force is negative 
+
+            double r1, r2;
+            r1 = Math.Sqrt(lowArea / Math.PI);
+            r2 = Math.Sqrt(highArea / Math.PI);
+
+            double radDiffSq = r2 - r1;
+            radDiffSq *= radDiffSq;
+
+            double drag = sectionThickness * sectionThickness + radDiffSq;
+            drag = 2d * Math.PI / drag;
+            drag *= radDiffSq * radDiffSq;
+
+            return -drag;        //force is negative 
         }
 
         private double CalculateTransonicWaveDrag(int i, int index, int numSections, int front, double sectionThickness, double cutoff)

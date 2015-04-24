@@ -54,13 +54,6 @@ namespace ferram4
         public Vector3d pos = Vector3d.zero;
         public double amount = 0.0;
 
-        //Component of ac position created by part location
-        public Vector3d acPartPosComponent = Vector3d.zero;
-
-        //Component of ac position due to interactions with location of AC on other axes
-        public Vector3d acAxisInteractComponent = Vector3d.zero;
-
-
         /*public Vector3d GetACPosition()
         {
             Vector3d bVec = new Vector3d();
@@ -83,6 +76,13 @@ namespace ferram4
 
             return acPos;
         }*/
+        public void ClearAll()
+        {
+            force = Vector3d.zero;
+            torque = Vector3d.zero;
+            pos = Vector3d.zero;
+            amount = 0;
+        }
 
         // Record a force applied at a point
         public void AddForce(Vector3d npos, Vector3d nforce)
@@ -99,7 +99,11 @@ namespace ferram4
         {
             Vector3d rVec = npos - pos;
             if (rVec.sqrMagnitude > 0.00001)
-                force += Vector3d.Cross(rVec, ntorque) / rVec.sqrMagnitude;
+            {
+                Vector3d nforce = Vector3d.Cross(rVec, ntorque) / rVec.sqrMagnitude;
+                force += nforce;
+                amount += nforce.magnitude;
+            }
             torque += ntorque;
         }
 

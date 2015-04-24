@@ -237,6 +237,16 @@ namespace ferram4
 
         #region Editor Functions
 
+        public Vector3d ComputeForceEditor(Vector3d velocityVector, double M)
+        {
+            velocityEditor = velocityVector;
+
+            rho = 1;
+
+            double AoA = CalculateAoA(velocityVector);
+            return CalculateForces(velocityVector, M, AoA);
+        }
+        
         public void ComputeClCdEditor(Vector3d velocityVector, double M)
         {
             velocityEditor = velocityVector;

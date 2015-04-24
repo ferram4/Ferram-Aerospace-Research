@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using FerramAerospaceResearch.FARAeroComponents;
+using FerramAerospaceResearch.FAREditorSim;
 using ferram4;
 
 namespace FerramAerospaceResearch.FARGUI
@@ -27,9 +28,7 @@ namespace FerramAerospaceResearch.FARGUI
         VehicleAerodynamics _vehicleAero;
         EditorAeroCenter _aeroCenter;
         EditorAreaRulingOverlay _areaRulingOverlay;
-
-        ferramGraph _graph = new ferramGraph(400, 275);
-
+        EditorGraphGUI _editorGraph;
 
         void Start()
         {
@@ -37,6 +36,10 @@ namespace FerramAerospaceResearch.FARGUI
 
             _vehicleAero = new VehicleAerodynamics();
             _aeroCenter = new EditorAeroCenter();
+
+            InstantConditionSim instantSim = new InstantConditionSim();
+            _editorGraph = new EditorGraphGUI(instantSim);
+
             _areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.8f), Color.green, Color.yellow, 10, 5);
             guiRect.height = 500;
             guiRect.width = 650;
@@ -62,6 +65,7 @@ namespace FerramAerospaceResearch.FARGUI
             type == ConstructionEventType.PartRootSelected)
             {
                 UpdateVoxel();
+                FARAeroUtil.ResetEditorParts();
             }
         }
         private void ResetEditorEvent(ShipConstruct construct)
@@ -77,6 +81,7 @@ namespace FerramAerospaceResearch.FARGUI
                 if (_vehicleAero.CalculationCompleted)
                 {
                     _aeroCenter.UpdateAeroData(_vehicleAero);
+                    _editorGraph.UpdateAeroData(_vehicleAero);
                     UpdateCrossSections();
                 } 
 
@@ -98,6 +103,7 @@ namespace FerramAerospaceResearch.FARGUI
         public static void ResetEditor()
         {
             instance._areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.8f), Color.green, Color.yellow, 10, 5);
+            FARAeroUtil.ResetEditorParts();
             UpdateVoxel();
         }
 
@@ -128,8 +134,6 @@ namespace FerramAerospaceResearch.FARGUI
 
         void UpdateCrossSections()
         {
-            //_graph.Clear();
-
             double[] areas = _vehicleAero.GetCrossSectionAreas();
             double[] secondDerivAreas = _vehicleAero.GetCrossSection2ndAreaDerivs();
 
@@ -179,6 +183,8 @@ namespace FerramAerospaceResearch.FARGUI
         {
             DebugVisualizationGUI();
             CrossSectionAnalysisGUI();
+            _editorGraph.Display();
+
             GUI.DragWindow();
         }
 
@@ -195,22 +201,7 @@ namespace FerramAerospaceResearch.FARGUI
 
             //GraphDisplay();
         }
-
-        void GraphDisplay()
-        {
-            GUIStyle graphBackingStyle = new GUIStyle(GUI.skin.box);
-            graphBackingStyle.hover = graphBackingStyle.active = graphBackingStyle.normal;
-
-            GUILayout.BeginHorizontal();
-            GUILayout.BeginVertical(GUILayout.Width(540));
-
-            _graph.Display(graphBackingStyle, 0, 0);
-
-            GUILayout.EndVertical();
-            GUILayout.EndHorizontal();
-        }
         #endregion
-
 
         #region AppLauncher
         public void OnGUIAppLauncherReady()
