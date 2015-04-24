@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
-namespace FerramAerospaceResearch.FAREditorSim
+namespace FerramAerospaceResearch.FAREditorGUI.Simulation
 {
     class StabilityDerivOutput
     {
@@ -16,5 +17,9 @@ namespace FerramAerospaceResearch.FAREditorSim
         public double stableCd;
         public double stableAoA;
         public string stableAoAState;
+
+        public double nominalVelocity;
+        public CelestialBody body;
+        public double altitude;
     }
 }

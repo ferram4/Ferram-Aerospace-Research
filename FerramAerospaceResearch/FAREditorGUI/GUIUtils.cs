@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
-namespace FerramAerospaceResearch.FARGUI
+namespace FerramAerospaceResearch.FAREditorGUI
 {
     static class GUIUtils
     {

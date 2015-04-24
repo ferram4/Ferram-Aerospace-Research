@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using FerramAerospaceResearch.FARAeroComponents;
 using ferram4;
 
-namespace FerramAerospaceResearch.FAREditorSim
+namespace FerramAerospaceResearch.FAREditorGUI.Simulation
 {
     class SweepSim
     {
@@ -13,11 +12,6 @@ namespace FerramAerospaceResearch.FAREditorSim
         public SweepSim(InstantConditionSim instantConditionSim)
         {
             _instantCondition = instantConditionSim;
-        }
-
-        public void UpdateAeroData(VehicleAerodynamics vehicleAero)
-        {
-            _instantCondition.UpdateAeroData(vehicleAero);
         }
 
         public GraphData MachNumberSweep(double aoAdegrees, double pitch, double lowerBound, double upperBound, int numPoints, int flapSetting, bool spoilers, CelestialBody body)
@@ -72,10 +66,10 @@ namespace FerramAerospaceResearch.FAREditorSim
 
             GraphData data = new GraphData();
             data.xValues = AlphaValues;
-            data.AddData(ClValues, FAREditorGUI.clColor, "Cl", true);
-            data.AddData(CdValues, FAREditorGUI.cdColor, "Cd", true);
-            data.AddData(CmValues, FAREditorGUI.cmColor, "Cm", true);
-            data.AddData(LDValues, FAREditorGUI.l_DColor, "L/D", true);
+            data.AddData(ClValues, EditorColors.GetColor(0), "Cl", true);
+            data.AddData(CdValues, EditorColors.GetColor(1), "Cd", true);
+            data.AddData(CmValues, EditorColors.GetColor(2), "Cm", true);
+            data.AddData(LDValues, EditorColors.GetColor(3), "L/D", true);
 
             return data;
         }
@@ -154,17 +148,17 @@ namespace FerramAerospaceResearch.FAREditorSim
 
             GraphData data = new GraphData();
             data.xValues = AlphaValues;
-            data.AddData(ClValues2, FAREditorGUI.clColor * 0.5f, "Cl2", false);
-            data.AddData(ClValues, FAREditorGUI.clColor, "Cl", true);
+            data.AddData(ClValues2, EditorColors.GetColor(0) * 0.5f, "Cl2", false);
+            data.AddData(ClValues, EditorColors.GetColor(0), "Cl", true);
 
-            data.AddData(CdValues2, FAREditorGUI.cdColor * 0.5f, "Cd2", false);
-            data.AddData(CdValues, FAREditorGUI.cdColor, "Cd", true);
+            data.AddData(CdValues2, EditorColors.GetColor(1) * 0.5f, "Cd2", false);
+            data.AddData(CdValues, EditorColors.GetColor(1), "Cd", true);
 
-            data.AddData(CmValues2, FAREditorGUI.cmColor * 0.5f, "Cm2", false);
-            data.AddData(CmValues, FAREditorGUI.cmColor, "Cm", true);
+            data.AddData(CmValues2, EditorColors.GetColor(2) * 0.5f, "Cm2", false);
+            data.AddData(CmValues, EditorColors.GetColor(2), "Cm", true);
 
-            data.AddData(LDValues2, FAREditorGUI.l_DColor * 0.5f, "L/D2", false);
-            data.AddData(LDValues, FAREditorGUI.l_DColor, "L/D", true);
+            data.AddData(LDValues2, EditorColors.GetColor(3) * 0.5f, "L/D2", false);
+            data.AddData(LDValues, EditorColors.GetColor(3), "L/D", true);
 
 
             return data;

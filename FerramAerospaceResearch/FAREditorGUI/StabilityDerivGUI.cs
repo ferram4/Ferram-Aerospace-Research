@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using FerramAerospaceResearch.FARAeroComponents;
-using FerramAerospaceResearch.FAREditorSim;
+using FerramAerospaceResearch.FAREditorGUI.Simulation;
 using ferram4;
 
-namespace FerramAerospaceResearch.FARGUI
+namespace FerramAerospaceResearch.FAREditorGUI
 {
     class StabilityDerivGUI
     {
-        StabilityDerivSim _stabDerivSim;
 
         GUIDropDown<int> _flapSettingDropdown;
         GUIDropDown<CelestialBody> _bodySettingDropdown;
@@ -21,11 +20,11 @@ namespace FerramAerospaceResearch.FARGUI
         string machNumber = "0.2";
         bool spoilersDeployed = false;
 
-        double u0;
+        EditorSimManager simManager;
 
-        public StabilityDerivGUI(InstantConditionSim instantSim, GUIDropDown<int> flapSettingDropDown, GUIDropDown<CelestialBody> bodySettingDropdown)
+        public StabilityDerivGUI(EditorSimManager simManager, GUIDropDown<int> flapSettingDropDown, GUIDropDown<CelestialBody> bodySettingDropdown)
         {
-            _stabDerivSim = new StabilityDerivSim(instantSim);
+            this.simManager = simManager;
             _flapSettingDropdown = flapSettingDropDown;
             _bodySettingDropdown = bodySettingDropdown;
 
@@ -34,7 +33,7 @@ namespace FerramAerospaceResearch.FARGUI
 
         public void UpdateAeroData(VehicleAerodynamics vehicleAero)
         {
-            _stabDerivSim.UpdateAeroData(vehicleAero);
+            simManager.UpdateAeroData(vehicleAero);
         }
 
         public void Display()
@@ -89,8 +88,8 @@ namespace FerramAerospaceResearch.FARGUI
 
                     double q = vel * vel * rho * 0.5f;
 
-                    stabDerivOutput = _stabDerivSim.CalculateStabilityDerivs(vel, q, machDouble, 0, 0, 0, _flapSettingDropdown.ActiveSelection(), spoilersDeployed, body, altitudeDouble);
-                    u0 = vel;
+                    stabDerivOutput = simManager.StabDerivCalculator.CalculateStabilityDerivs(vel, q, machDouble, 0, 0, 0, _flapSettingDropdown.ActiveSelection(), spoilersDeployed, body, altitudeDouble);
+                    simManager.vehicleData = stabDerivOutput;
                 }
                 else
                     PopupDialog.SpawnPopupDialog("Error!", "Altitude was above atmosphere", "OK", false, HighLogic.Skin);
@@ -104,9 +103,9 @@ namespace FerramAerospaceResearch.FARGUI
 
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical(GUILayout.Width(180));
-            GUILayout.Label("Wing Area: " + stabDerivOutput.area + " m²");
-            GUILayout.Label("Scaled Chord: " + stabDerivOutput.MAC + " m");
-            GUILayout.Label("Scaled Span: " + stabDerivOutput.b + " m");
+            GUILayout.Label("Ref Area: " + stabDerivOutput.area.ToString("G3") + " m²");
+            GUILayout.Label("Scaled Chord: " + stabDerivOutput.MAC.ToString("G3") + " m");
+            GUILayout.Label("Scaled Span: " + stabDerivOutput.b.ToString("G3") + " m");
             GUILayout.EndVertical();
 
 
@@ -123,7 +122,7 @@ namespace FerramAerospaceResearch.FARGUI
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical(GUILayout.Width(140));
-            GUILayout.Label(new GUIContent("u0: " + u0.ToString("G6") + " m/s", "Air speed based on this mach number and temperature."));
+            GUILayout.Label(new GUIContent("u0: " + stabDerivOutput.nominalVelocity.ToString("G6") + " m/s", "Air speed based on this mach number and temperature."));
             GUILayout.BeginHorizontal();
             GUILayout.Label(new GUIContent("Cl: " + stabDerivOutput.stableCl.ToString("G3"), "Required lift coefficient at this mass, speed and air density."));
             GUILayout.Label(new GUIContent("Cd: " + stabDerivOutput.stableCd.ToString("G3"), "Resulting drag coefficient at this mass, speed and air density."));

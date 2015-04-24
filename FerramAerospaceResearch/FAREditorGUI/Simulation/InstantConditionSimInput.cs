@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FerramAerospaceResearch.FAREditorSim
+namespace FerramAerospaceResearch.FAREditorGUI.Simulation
 {
     class InstantConditionSimInput
     {

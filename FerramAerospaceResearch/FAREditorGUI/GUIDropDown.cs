@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace FerramAerospaceResearch.FARGUI
+namespace FerramAerospaceResearch.FAREditorGUI
 {
     class GUIDropDown<T>
     {

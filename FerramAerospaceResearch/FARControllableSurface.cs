@@ -501,11 +501,14 @@ namespace ferram4
         {
             if (HighLogic.LoadedSceneIsEditor)
             {
-                Vector3 CoMoffset = (part.transform.position - CoM).normalized;
-                PitchLocation = Vector3.Dot(part.transform.forward, EditorLogic.RootPart.transform.forward) * Mathf.Sign(Vector3.Dot(CoMoffset, EditorLogic.RootPart.transform.up));
-                YawLocation = -Vector3.Dot(part.transform.forward, EditorLogic.RootPart.transform.right) * Mathf.Sign(Vector3.Dot(CoMoffset, EditorLogic.RootPart.transform.up));
-                RollLocation = Vector3.Dot(part.transform.forward, EditorLogic.RootPart.transform.forward) * Mathf.Sign(Vector3.Dot(CoMoffset, -EditorLogic.RootPart.transform.right));
-                AoAsign = Math.Sign(Vector3.Dot(part.transform.up, EditorLogic.RootPart.transform.up));
+                Transform partTransform = part.transform;
+                Transform rootTransform = EditorLogic.RootPart.transform;
+
+                Vector3 CoMoffset = (partTransform.position - CoM);
+                PitchLocation = Vector3.Dot(partTransform.forward, rootTransform.forward) * Math.Sign(Vector3.Dot(CoMoffset, rootTransform.up));
+                YawLocation = -Vector3.Dot(partTransform.forward, rootTransform.right) * Math.Sign(Vector3.Dot(CoMoffset, rootTransform.up));
+                RollLocation = Vector3.Dot(partTransform.forward, rootTransform.forward) * Math.Sign(Vector3.Dot(CoMoffset, -rootTransform.right));
+                AoAsign = Math.Sign(Vector3.Dot(partTransform.up, rootTransform.up));
                 AoAdesiredControl = 0;
                 if (pitchaxis != 0.0)
                 {
@@ -522,7 +525,7 @@ namespace ferram4
                 AoAdesiredControl *= maxdeflect;
                 if (pitchaxisDueToAoA != 0.0)
                 {
-                    Vector3 tmpVec = EditorLogic.RootPart.transform.up * Vector3.Dot(EditorLogic.RootPart.transform.up, velocityVec) + EditorLogic.RootPart.transform.forward * Vector3.Dot(EditorLogic.RootPart.transform.forward, velocityVec);   //velocity vector projected onto a plane that divides the airplane into left and right halves
+                    Vector3 tmpVec = rootTransform.up * Vector3.Dot(rootTransform.up, velocityVec) + rootTransform.forward * Vector3.Dot(rootTransform.forward, velocityVec);   //velocity vector projected onto a plane that divides the airplane into left and right halves
                     double AoA = base.CalculateAoA(tmpVec.normalized);      //using base.CalculateAoA gets the deflection using WingAeroModel's code, which does not account for deflection; this gives us the AoA that the surface _would_ be at if it hadn't deflected at all.
                     AoA = FARMathUtil.rad2deg * AoA;
                     if (double.IsNaN(AoA))
@@ -537,12 +540,12 @@ namespace ferram4
                 if (isFlap == true)
                 {
                     int flapDeflectionLevel = flap;
-                    flapLocation = (int)Math.Sign(Vector3.Dot(EditorLogic.RootPart.transform.forward, part.transform.forward));      //figure out which way is up
+                    flapLocation = (int)Math.Sign(Vector3.Dot(rootTransform.forward, partTransform.forward));      //figure out which way is up
                     AoAcurrentFlap += maxdeflectFlap * flapLocation * flapDeflectionLevel * 0.3333333333333;
                 }
                 else if (isSpoiler == true)
                 {
-                    flapLocation = -(int)Math.Sign(Vector3.Dot(EditorLogic.RootPart.transform.forward, part.transform.forward));      //figure out which way is up
+                    flapLocation = -(int)Math.Sign(Vector3.Dot(rootTransform.forward, partTransform.forward));      //figure out which way is up
                     AoAcurrentFlap += brake ? maxdeflectFlap * flapLocation : 0;
                 }
                 AoAdesiredFlap = AoAcurrentFlap;

@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 using FerramAerospaceResearch.FARAeroComponents;
-using FerramAerospaceResearch.FAREditorSim;
+using FerramAerospaceResearch.FAREditorGUI.Simulation;
 using ferram4;
 
-namespace FerramAerospaceResearch.FARGUI
+namespace FerramAerospaceResearch.FAREditorGUI
 {
     [KSPAddon(KSPAddon.Startup.EditorAny, false)]
     public class EditorGUI : MonoBehaviour
@@ -30,16 +30,19 @@ namespace FerramAerospaceResearch.FARGUI
         static ApplicationLauncherButton editorGUIAppLauncherButton;
 
         VehicleAerodynamics _vehicleAero;
-        EditorAeroCenter _aeroCenter;
+        EditorSimManager _simManager;
+
         EditorAreaRulingOverlay _areaRulingOverlay;
         StaticAnalysisGraphGUI _editorGraph;
         StabilityDerivGUI _stabDeriv;
+        StabilityDerivSimulationGUI _stabDerivLinSim;
 
         FAREditorMode currentMode = FAREditorMode.STATIC;
         private enum FAREditorMode
         {
             STATIC,
             STABILITY,
+            SIMULATION,
             AREA_RULING
         }
 
@@ -47,7 +50,8 @@ namespace FerramAerospaceResearch.FARGUI
         {
             "Static Analysis",
             "Data + Stability Derivatives",
-            "Transonic Design",
+            "Stability Deriv Simulation",
+            "Transonic Design"
         };
 
 
@@ -56,14 +60,16 @@ namespace FerramAerospaceResearch.FARGUI
             instance = this;
 
             _vehicleAero = new VehicleAerodynamics();
-            _aeroCenter = new EditorAeroCenter();
 
             InstantConditionSim instantSim = new InstantConditionSim();
             GUIDropDown<int> flapSettingDropDown = new GUIDropDown<int>(new string[] { "0 (up)", "1 (init climb)", "2 (takeoff)", "3 (landing)" }, new int[] { 0, 1, 2, 3 }, 0);
             GUIDropDown<CelestialBody> celestialBodyDropdown = CreateBodyDropdown();
 
-            _editorGraph = new StaticAnalysisGraphGUI(instantSim, flapSettingDropDown, celestialBodyDropdown);
-            _stabDeriv = new StabilityDerivGUI(instantSim, flapSettingDropDown, celestialBodyDropdown);
+            _simManager = new EditorSimManager();
+
+            _editorGraph = new StaticAnalysisGraphGUI(_simManager, flapSettingDropDown, celestialBodyDropdown);
+            _stabDeriv = new StabilityDerivGUI(_simManager, flapSettingDropDown, celestialBodyDropdown);
+            _stabDerivLinSim = new StabilityDerivSimulationGUI(_simManager);
 
             _areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.8f), Color.green, Color.yellow, 10, 5);
             guiRect.height = 500;
@@ -81,6 +87,7 @@ namespace FerramAerospaceResearch.FARGUI
             EditorLogic.fetch.Unlock("FAREdLock");
         }
 
+        #region EditorEvents
         private void UpdateGeometryEvent(ConstructionEventType type, Part pEvent)
         {
             if (type == ConstructionEventType.PartRotated ||
@@ -91,6 +98,7 @@ namespace FerramAerospaceResearch.FARGUI
             {
                 UpdateVoxel();
                 FARAeroUtil.ResetEditorParts();
+                LEGACY_UpdateWingAeroModels();
             }
         }
         private void ResetEditorEvent(ShipConstruct construct)
@@ -98,6 +106,24 @@ namespace FerramAerospaceResearch.FARGUI
             ResetEditor();
         }
 
+        public static void ResetEditor()
+        {
+            instance._areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.8f), Color.green, Color.yellow, 10, 5);
+            UpdateVoxel();
+            FARAeroUtil.ResetEditorParts();
+            instance.LEGACY_UpdateWingAeroModels();
+        }
+        private void LEGACY_UpdateWingAeroModels()
+        {
+            for (int i = 0; i < FARAeroUtil.CurEditorWings.Count; i++)
+            {
+                FARWingAerodynamicModel w = FARAeroUtil.CurEditorWings[i];
+                if (w != null)
+                    w.EditorUpdateWingInteractions();
+            }
+
+        }
+        #endregion
 
         void FixedUpdate()
         {
@@ -105,8 +131,7 @@ namespace FerramAerospaceResearch.FARGUI
             {
                 if (_vehicleAero.CalculationCompleted)
                 {
-                    _aeroCenter.UpdateAeroData(_vehicleAero);
-                    _editorGraph.UpdateAeroData(_vehicleAero);
+                    _simManager.UpdateAeroData(_vehicleAero);
                     UpdateCrossSections();
                 } 
 
@@ -121,17 +146,7 @@ namespace FerramAerospaceResearch.FARGUI
             OnGUIAppLauncherReady();
         }
 
-        #region CenterOfLiftCalcs
-
-        #endregion
         #region voxel
-        public static void ResetEditor()
-        {
-            instance._areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.8f), Color.green, Color.yellow, 10, 5);
-            FARAeroUtil.ResetEditorParts();
-            UpdateVoxel();
-        }
-
         public static void UpdateVoxel()
         {
             if (instance._updateRateLimiter > 18)
@@ -185,11 +200,16 @@ namespace FerramAerospaceResearch.FARGUI
         #region GUIFunctions
         void OnGUI()
         {
+            //Make this an option
+            bool useKSPSkin = true;
+            if (useKSPSkin)
+                GUI.skin = HighLogic.Skin;
+
             bool cursorInGUI = false;
             EditorLogic EdLogInstance = EditorLogic.fetch;
             if (showGUI)
             {
-                guiRect = GUILayout.Window(this.GetHashCode(), guiRect, OverallSelectionGUI, "FAR Analysis");
+                guiRect = GUILayout.Window(this.GetHashCode(), guiRect, OverallSelectionGUI, "FAR Analysis", GUILayout.MinHeight(useKSPSkin ? 600 : 500));
 
                 cursorInGUI = guiRect.Contains(FARGUIUtils.GetMousePos());
             }
@@ -206,7 +226,7 @@ namespace FerramAerospaceResearch.FARGUI
 
         void OverallSelectionGUI(int windowId)
         {
-            currentMode = (FAREditorMode)GUILayout.SelectionGrid((int)currentMode, FAReditorMode_str, 3);
+            currentMode = (FAREditorMode)GUILayout.SelectionGrid((int)currentMode, FAReditorMode_str, 4);
 
 
             //GUILayout.EndHorizontal();
@@ -214,6 +234,8 @@ namespace FerramAerospaceResearch.FARGUI
                 _editorGraph.Display();
             else if (currentMode == FAREditorMode.STABILITY)
                 _stabDeriv.Display();
+            else if (currentMode == FAREditorMode.SIMULATION)
+                _stabDerivLinSim.Display();
             else if (currentMode == FAREditorMode.AREA_RULING)
             {
                 CrossSectionAnalysisGUI();

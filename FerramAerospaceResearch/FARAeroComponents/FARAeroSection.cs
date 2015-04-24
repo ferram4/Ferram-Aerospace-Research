@@ -143,6 +143,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public void EditorCalculateAeroForces(float atmDensity, float machNumber, float reynoldsPerUnitLength, float skinFrictionDrag, Vector3 vel, ferram4.FARCenterQuery center)
         {
+            if (partsIncluded.Count == 0)
+                return;
+
             double skinFrictionForce = skinFrictionDrag * xForceSkinFriction.Evaluate(machNumber);      //this will be the same for each part, so why recalc it multiple times?
             float xForceAoA0 = xForcePressureAoA0.Evaluate(machNumber);
             float xForceAoA180 = xForcePressureAoA180.Evaluate(machNumber);

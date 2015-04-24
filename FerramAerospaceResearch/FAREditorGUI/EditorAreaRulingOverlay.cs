@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace FerramAerospaceResearch.FARGUI
+namespace FerramAerospaceResearch.FAREditorGUI
 {
     class EditorAreaRulingOverlay
     {

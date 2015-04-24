@@ -1,34 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
-using FerramAerospaceResearch.FARAeroComponents;
 using ferram4;
 using UnityEngine;
 
-namespace FerramAerospaceResearch.FAREditorSim
+namespace FerramAerospaceResearch.FAREditorGUI.Simulation
 {
-    class StabilityDerivSim
+    class StabilityDerivCalculator
     {
         InstantConditionSim _instantCondition;
 
-        public StabilityDerivSim(InstantConditionSim instantConditionSim)
+        public StabilityDerivCalculator(InstantConditionSim instantConditionSim)
         {
             _instantCondition = instantConditionSim;
-        }
-
-        public void UpdateAeroData(VehicleAerodynamics vehicleAero)
-        {
-            _instantCondition.UpdateAeroData(vehicleAero);
         }
 
         public StabilityDerivOutput CalculateStabilityDerivs(double u0, double q, double machNumber, double alpha, double beta, double phi, int flapSetting, bool spoilers, CelestialBody body, double alt)
         {
             StabilityDerivOutput stabDerivOutput = new StabilityDerivOutput();
+            stabDerivOutput.nominalVelocity = u0;
+            stabDerivOutput.altitude = alt;
+            stabDerivOutput.body = body;
 
             Vector3d CoM = Vector3d.zero;
             double mass = 0;
+
             double MAC = 0;
             double b = 0;
             double area = 0;
+
             double Ix = 0;
             double Iy = 0;
             double Iz = 0;
@@ -159,7 +158,7 @@ namespace FerramAerospaceResearch.FAREditorSim
             //Longitudinal Mess
             _instantCondition.SetState(machNumber, neededCl, CoM, 0, input.flaps, input.spoilers);
 
-            alpha = FARMathUtil.BrentsMethod(_instantCondition.FunctionIterateForAlpha, -5 * FARMathUtil.deg2rad, 25 * FARMathUtil.deg2rad, 0.001, 35) * FARMathUtil.rad2deg;
+            alpha = FARMathUtil.BrentsMethod(_instantCondition.FunctionIterateForAlpha, -5d * FARMathUtil.deg2rad, 25d * FARMathUtil.deg2rad, 0.001, 60) * FARMathUtil.rad2deg;
 
             nominalOutput = _instantCondition.iterationOutput;
             //alpha_str = (alpha * Mathf.PI / 180).ToString();

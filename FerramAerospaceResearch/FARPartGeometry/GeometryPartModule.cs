@@ -56,6 +56,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
         private bool _ready = false;
         private int _sendUpdateTick = 0;
 
+        [SerializeField]
+        bool forceUseColliders;
+        [SerializeField]
+        bool forceUseMeshes;
+
         void Start()
         {
             //RebuildAllMeshData();
@@ -239,7 +244,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (HighLogic.LoadedSceneIsFlight)
                 vessel.SendMessage("AnimationVoxelUpdate");
             else if (HighLogic.LoadedSceneIsEditor)
-                FARGUI.EditorGUI.UpdateVoxel();
+                FAREditorGUI.EditorGUI.UpdateVoxel();
         }
 
         public void EditorUpdate()
@@ -264,7 +269,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Bounds colliderBounds = this.part.GetPartColliderBoundsInBasis(part.transform.worldToLocalMatrix);
 
             bool cantUseColliders = true;
-            if (rendererBounds.size.x * rendererBounds.size.z < colliderBounds.size.x * colliderBounds.size.z * 1.6f && rendererBounds.size.y < colliderBounds.size.y * 1.2f && (rendererBounds.center - colliderBounds.center).magnitude < 0.3f)
+
+            //Voxelize colliders
+            if (forceUseColliders || (rendererBounds.size.x * rendererBounds.size.z < colliderBounds.size.x * colliderBounds.size.z * 1.6f && rendererBounds.size.y < colliderBounds.size.y * 1.2f && (rendererBounds.center - colliderBounds.center).magnitude < 0.3f))
             {
                 foreach (Transform t in meshTransforms)
                 {
@@ -294,11 +301,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
             }
 
-            if (cantUseColliders)       //in this case, voxelize _everything_
+            //Voxelize Everything
+            if (cantUseColliders || forceUseMeshes)       //in this case, voxelize _everything_
             {
                 foreach (Transform t in meshTransforms)
                 {
-                    MeshCollider mc = t.GetComponent<MeshCollider>();
+                    //MeshCollider mc = t.GetComponent<MeshCollider>();
 
                     //if (mc != null)
                     //{
@@ -306,16 +314,16 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     //}
                     //else
                     //{
-                        MeshFilter mf = t.GetComponent<MeshFilter>();
-                        if (mf == null)
-                            continue;
-                        Mesh m = mf.mesh;
+                    MeshFilter mf = t.GetComponent<MeshFilter>();
+                    if (mf == null)
+                        continue;
+                    Mesh m = mf.sharedMesh;
 
-                        if (m == null)
-                            continue;
+                    if (m == null)
+                        continue;
 
-                        meshList.Add(new MeshData(m.vertices, m.triangles, m.bounds));
-                        validTransformList.Add(t);
+                    meshList.Add(new MeshData(m.vertices, m.triangles, m.bounds));
+                    validTransformList.Add(t);
                     //}
                 }
             }
@@ -423,6 +431,19 @@ namespace FerramAerospaceResearch.FARPartGeometry
             UpdateTransformMatrixList(transformMatrix);
         }
 
-
+        public override void OnLoad(ConfigNode node)
+        {
+            base.OnLoad(node);
+            if(node.HasValue("forceUseColliders"))
+            {
+                bool.TryParse(node.GetValue("forceUseColliders"), out forceUseColliders);
+                _ready = false;
+            }
+            if (node.HasValue("forceUseMeshes"))
+            {
+                bool.TryParse(node.GetValue("forceUseMeshes"), out forceUseMeshes);
+                _ready = false;
+            }
+        }
     }
 }

@@ -465,12 +465,12 @@ namespace ferram4
 
             // With unity objects, "foo" or "foo != null" calls a method to check if
             // it's destroyed. (object)foo != null just checks if it is actually null.
-            if (HighLogic.LoadedSceneIsFlight && (object)part != null && FlightGlobals.ready && !isShielded)
+            if (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !isShielded)
             {
                 Rigidbody rb = part.Rigidbody;
                 Vessel vessel = part.vessel;
 
-                if (!rb || (object)vessel == null || vessel.packed)
+                if (!rb || vessel.packed)
                     return;
 
                 //bool set_vel = false;
@@ -1151,12 +1151,12 @@ namespace ferram4
             double tmp = FARMathUtil.Clamp(Vector3.Dot(sweepPerp2Local, ParallelInPlaneLocal), -1, 1);
 
             if (Math.Abs(CosPartAngle) > Math.Abs(tmp))                //Based on perp vector find which line is the right one
-                sweepHalfChord = Math.Acos(CosPartAngle);
+                sweepHalfChord = CosPartAngle;//Math.Acos(CosPartAngle);       //keep as cos to make things right
             else
-                sweepHalfChord = Math.Acos(tmp);
+                sweepHalfChord = CosPartAngle;//Math.Acos(tmp);
 
-            if (sweepHalfChord > Math.PI * 0.5)
-                sweepHalfChord -= Math.PI;
+            //if (sweepHalfChord > Math.PI * 0.5)
+            //    sweepHalfChord -= Math.PI;
 
             CosPartAngle = FARMathUtil.Clamp(ParallelInPlaneLocal.y, -1, 1);
 
@@ -1166,6 +1166,8 @@ namespace ferram4
             effective_b_2 = Math.Max(b_2 * CosPartAngle, MAC * SinPartAngle2);
             effective_MAC = MAC * CosPartAngle + b_2 * SinPartAngle2;
             transformed_AR = 2 * effective_b_2 / effective_MAC;
+
+            sweepHalfChord = Math.Sqrt(Math.Max(1 - sweepHalfChord * sweepHalfChord, 0)) / sweepHalfChord;  //convert to tangent
 
             SetSweepAngle(sweepHalfChord);
 
@@ -1183,7 +1185,7 @@ namespace ferram4
             else
                 tmp = 0.09;
 
-            double sweepTmp = Math.Tan(sweepHalfChord);
+            double sweepTmp = sweepHalfChord;
             sweepTmp *= sweepTmp;
 
             tmp += sweepTmp;
@@ -1204,15 +1206,15 @@ namespace ferram4
 
         }
 
-        //Transforms sweep of the midchord to cosine(sweep of the leading edge)
-        private void SetSweepAngle(double sweepHalfChord)
+        //Transforms cos sweep of the midchord to cosine(sweep of the leading edge)
+        private void SetSweepAngle(double tanSweepHalfChord)
         {
-            cosSweepAngle = sweepHalfChord;
-            cosSweepAngle = Math.Tan(cosSweepAngle);
+            //cosSweepAngle = cosSweepHalfChord;
+            //cosSweepAngle = Math.Tan(cosSweepAngle);
             double tmp = (1 - TaperRatio) / (1 + TaperRatio);
             tmp *= 2 / transformed_AR;
-            cosSweepAngle += tmp;
-            cosSweepAngle = Math.Cos(Math.Atan(cosSweepAngle));
+            tanSweepHalfChord += tmp;
+            cosSweepAngle = 1 / Math.Sqrt(1 + tanSweepHalfChord * tanSweepHalfChord);
         }
 
 

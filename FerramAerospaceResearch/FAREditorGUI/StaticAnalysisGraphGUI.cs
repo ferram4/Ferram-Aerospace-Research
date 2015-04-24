@@ -3,35 +3,35 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
-using FerramAerospaceResearch.FAREditorSim;
+using FerramAerospaceResearch.FAREditorGUI.Simulation;
 using FerramAerospaceResearch.FARAeroComponents;
 using ferram4;
 
-namespace FerramAerospaceResearch.FARGUI
+namespace FerramAerospaceResearch.FAREditorGUI
 {
     class StaticAnalysisGraphGUI
     {
-        ferramGraph _graph = new ferramGraph(400, 275);
-        SweepSim _sweepSim;
+        ferramGraph _graph = new ferramGraph(400, 350);
 
         double lastMaxBounds, lastMinBounds;
         bool isMachMode = false;
 
         GraphInputs aoASweepInputs, machSweepInputs;
-        GUIDropDown<int> _flapSettingDropdown;
-        GUIDropDown<CelestialBody> _bodySettingDropdown;
+        GUIDropDown<int> flapSettingDropdown;
+        GUIDropDown<CelestialBody> bodySettingDropdown;
+        EditorSimManager simManager;
 
-        public StaticAnalysisGraphGUI(InstantConditionSim instantSim, GUIDropDown<int> flapSettingDropDown, GUIDropDown<CelestialBody> bodySettingDropdown)
+        public StaticAnalysisGraphGUI(EditorSimManager simManager, GUIDropDown<int> flapSettingDropDown, GUIDropDown<CelestialBody> bodySettingDropdown)
         {
-            _sweepSim = new SweepSim(instantSim);
-            _flapSettingDropdown = flapSettingDropDown;
-            _bodySettingDropdown = bodySettingDropdown;
+            this.simManager = simManager;
+            this.flapSettingDropdown = flapSettingDropDown;
+            this.bodySettingDropdown = bodySettingDropdown;
 
             //Set up defaults for AoA Sweep
             aoASweepInputs = new GraphInputs();
             aoASweepInputs.lowerBound = "0";
             aoASweepInputs.upperBound = "25";
-            aoASweepInputs.numPts = "200";
+            aoASweepInputs.numPts = "100";
             aoASweepInputs.flapSetting = 0;
             aoASweepInputs.pitchSetting = "0";
             aoASweepInputs.otherInput = "0.2";
@@ -40,15 +40,16 @@ namespace FerramAerospaceResearch.FARGUI
             machSweepInputs = new GraphInputs();
             machSweepInputs.lowerBound = "0";
             machSweepInputs.upperBound = "3";
-            machSweepInputs.numPts = "200";
+            machSweepInputs.numPts = "100";
             machSweepInputs.flapSetting = 0;
             machSweepInputs.pitchSetting = "0";
             machSweepInputs.otherInput = "2";
-        }
 
-        public void UpdateAeroData(VehicleAerodynamics vehicleAero)
-        {
-            _sweepSim.UpdateAeroData(vehicleAero);
+            _graph.SetBoundaries(0, 25, 0, 2);
+            _graph.SetGridScaleUsingValues(5, 0.5);
+            _graph.horizontalLabel = "Angle of Attack, degrees";
+            _graph.verticalLabel = "Cl\nCd\nCm\nL/D / 10";
+            _graph.Update();
         }
 
         public void Display()
@@ -56,7 +57,7 @@ namespace FerramAerospaceResearch.FARGUI
             GUILayout.BeginVertical();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label(isMachMode ? "Mach Number Sweep Analysis" : "Angle of Attack Sweep Analysis");
+            GUILayout.Label(isMachMode ? "Mach Number Sweep Analysis" : "Angle of Attack Sweep Analysis", GUILayout.Width(250));
             if (GUILayout.Button(isMachMode ? "Switch To AoA Sweep" : "Switch To Mach Sweep"))
                 isMachMode = !isMachMode;
             GUILayout.EndHorizontal();
@@ -90,11 +91,11 @@ namespace FerramAerospaceResearch.FARGUI
         {
             GUILayout.BeginVertical();
             GUILayout.Label("Celestial Body:");
-            _bodySettingDropdown.GUIDropDownDisplay();
+            bodySettingDropdown.GUIDropDownDisplay();
 
             GUILayout.Label("Flap Setting:");
-            _flapSettingDropdown.GUIDropDownDisplay();
-            input.flapSetting = _flapSettingDropdown.ActiveSelection();
+            flapSettingDropdown.GUIDropDownDisplay();
+            input.flapSetting = flapSettingDropdown.ActiveSelection();
             GUILayout.Label("Pitch Setting:");
             input.pitchSetting = GUILayout.TextField(input.pitchSetting, GUILayout.ExpandWidth(true));
             input.pitchSetting = Regex.Replace(input.pitchSetting, @"[^-?[0-9]*(\.[0-9]*)?]", "");
@@ -148,9 +149,9 @@ namespace FerramAerospaceResearch.FARGUI
                 GraphData data;
 
                 if (isMachMode)
-                    data = _sweepSim.MachNumberSweep(otherInput, pitchSetting, lowerBound, upperBound, (int)numPts, input.flapSetting, input.spoilers, _bodySettingDropdown.ActiveSelection());
+                    data = simManager.SweepSim.MachNumberSweep(otherInput, pitchSetting, lowerBound, upperBound, (int)numPts, input.flapSetting, input.spoilers, bodySettingDropdown.ActiveSelection());
                 else
-                    data = _sweepSim.AngleOfAttackSweep(otherInput, pitchSetting, lowerBound, upperBound, (int)numPts, input.flapSetting, input.spoilers, _bodySettingDropdown.ActiveSelection());
+                    data = simManager.SweepSim.AngleOfAttackSweep(otherInput, pitchSetting, lowerBound, upperBound, (int)numPts, input.flapSetting, input.spoilers, bodySettingDropdown.ActiveSelection());
 
                 UpdateGraph(data, isMachMode ? "Mach Number" : "Angle of Attack, degrees", "Cl\nCd\nCm\nL/D / 10", lowerBound, upperBound);
             }

@@ -1913,11 +1913,11 @@ namespace ferram4
 
         public static void SaveCustomColors()
         {
-            ConfigNode node = new ConfigNode("@FARGUIColors[Default]:FOR[FerramAerospaceResearch]");
-            node.AddValue("ClColor", clColor.ToString());
-            node.AddValue("CdColor", cdColor.ToString());
-            node.AddValue("CmColor", cmColor.ToString());
-            node.AddValue("L_DColor", l_DColor.ToString());
+            ConfigNode node = new ConfigNode("%FARGUIColors[Default]:FOR[FerramAerospaceResearch]");
+            node.AddValue("ClColor", clColor.r.ToString() + "," + clColor.g.ToString() + "," + clColor.b.ToString());
+            node.AddValue("CdColor", cdColor.r.ToString() + "," + cdColor.g.ToString() + "," + cdColor.b.ToString());
+            node.AddValue("CmColor", cmColor.r.ToString() + "," + cmColor.g.ToString() + "," + cmColor.b.ToString());
+            node.AddValue("L_DColor", l_DColor.r.ToString() + "," + l_DColor.g.ToString() + "," + l_DColor.b.ToString());
 
             ConfigNode saveNode = new ConfigNode();
             saveNode.AddNode(node);
