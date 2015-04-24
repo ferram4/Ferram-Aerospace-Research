@@ -35,7 +35,7 @@ namespace FerramAerospaceResearch.FAREditorGUI.Simulation
             double Iyz = 0;
             double Ixz = 0;
 
-            InstantConditionSimInput input = new InstantConditionSimInput(alpha * FARMathUtil.deg2rad, beta * FARMathUtil.deg2rad, phi * FARMathUtil.deg2rad, 0, 0, 0, machNumber, 0, flapSetting, spoilers);
+            InstantConditionSimInput input = new InstantConditionSimInput(alpha, beta, phi, 0, 0, 0, machNumber, 0, flapSetting, spoilers);
             InstantConditionSimOutput nominalOutput;
             InstantConditionSimOutput pertOutput = new InstantConditionSimOutput();
 
@@ -158,12 +158,12 @@ namespace FerramAerospaceResearch.FAREditorGUI.Simulation
             //Longitudinal Mess
             _instantCondition.SetState(machNumber, neededCl, CoM, 0, input.flaps, input.spoilers);
 
-            alpha = FARMathUtil.BrentsMethod(_instantCondition.FunctionIterateForAlpha, -5d * FARMathUtil.deg2rad, 25d * FARMathUtil.deg2rad, 0.001, 60) * FARMathUtil.rad2deg;
+            alpha = FARMathUtil.BrentsMethod(_instantCondition.FunctionIterateForAlpha, -5d, 25d, 0.01, 30);
 
             nominalOutput = _instantCondition.iterationOutput;
             //alpha_str = (alpha * Mathf.PI / 180).ToString();
 
-            input.alpha = (alpha + 0.1) * FARMathUtil.deg2rad;
+            input.alpha = (alpha + 0.1);
 
             _instantCondition.GetClCdCmSteady(CoM, input, out pertOutput, true, true);
 
@@ -251,7 +251,7 @@ namespace FerramAerospaceResearch.FAREditorGUI.Simulation
             //Lateral Mess
 
             input.pitchValue = 0;
-            input.beta = (beta + 0.1) * FARMathUtil.deg2rad;
+            input.beta = (beta + 0.1);
 
             _instantCondition.GetClCdCmSteady(CoM, input, out pertOutput, true, false);
             pertOutput.Cy = (pertOutput.Cy - nominalOutput.Cy) / 0.1 * FARMathUtil.rad2deg;                   //sideslip angle derivs
@@ -266,7 +266,7 @@ namespace FerramAerospaceResearch.FAREditorGUI.Simulation
             stabDerivOutput.stabDerivs[17] = pertOutput.Cn;
             stabDerivOutput.stabDerivs[16] = pertOutput.C_roll;
 
-            input.beta = beta * FARMathUtil.deg2rad;
+            input.beta = beta;
 
             _instantCondition.GetClCdCmSteady(CoM, input, out pertOutput, true, true);
 

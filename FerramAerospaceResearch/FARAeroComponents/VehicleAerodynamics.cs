@@ -31,6 +31,18 @@ namespace FerramAerospaceResearch.FARAeroComponents
             get { return _calculationCompleted; }
         }
 
+        double _sonicDragArea;
+        public double SonicDragArea
+        {
+            get { return _sonicDragArea; }
+        }
+
+        double _criticalMach;
+        public double CriticalMach
+        {
+            get { return _criticalMach; }
+        }
+
         Matrix4x4 _worldToLocalMatrix, _localToWorldMatrix;
 
         Vector3d _voxelLowerRightCorner;
@@ -418,12 +430,14 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             double criticalMachNumber = CalculateCriticalMachNumber(finenessRatio);
 
+            _criticalMach = criticalMachNumber;
+
             double transonicWaveDragFactor = -_sectionThickness * _sectionThickness / (2 * Math.PI);
 
 
             _newAeroSections = new List<FARAeroSection>();
             HashSet<FARAeroPartModule> tmpAeroModules = new HashSet<FARAeroPartModule>();
-
+            _sonicDragArea = 0;
             for (int i = 0; i <= numSections; i++)  //index in the cross sections
             {
                 int index = i + front;      //index along the actual body
@@ -541,7 +555,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     //xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.1f, 0f, 0f);     //positive is force forward; negative is force backward
                     //xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.1f, 0f, 0f);
                 }
-
+                _sonicDragArea -= sonicAoA0Drag;
                 float diffSonicHyperAoA0 = Math.Abs(sonicAoA0Drag) - Math.Abs(hypersonicDragForward);
                 float diffSonicHyperAoA180 = Math.Abs(sonicAoA180Drag) - Math.Abs(hypersonicDragBackward);
 

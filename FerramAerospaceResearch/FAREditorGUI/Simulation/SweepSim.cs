@@ -45,7 +45,7 @@ namespace FerramAerospaceResearch.FAREditorGUI.Simulation
             double[] LDValues = new double[(int)numPoints];
             double[] AlphaValues = new double[(int)numPoints];
 
-            InstantConditionSimInput input = new InstantConditionSimInput(aoAdegrees * FARMathUtil.deg2rad, 0, 0, 0, 0, 0, 0, pitch, flapSetting, spoilers);
+            InstantConditionSimInput input = new InstantConditionSimInput(aoAdegrees, 0, 0, 0, 0, 0, 0, pitch, flapSetting, spoilers);
             
             for (int i = 0; i < numPoints; i++)
             {
@@ -122,7 +122,7 @@ namespace FerramAerospaceResearch.FAREditorGUI.Simulation
                 else
                     angle = (i - (double)numPoints + 1) / (double)numPoints * (lowerBound - upperBound) + upperBound;
 
-                input.alpha = angle * FARMathUtil.deg2rad;
+                input.alpha = angle;
 
                 InstantConditionSimOutput output;
 

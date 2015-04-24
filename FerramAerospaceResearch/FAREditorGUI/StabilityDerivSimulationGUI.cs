@@ -15,7 +15,7 @@ namespace FerramAerospaceResearch.FAREditorGUI
 
         EditorSimManager simManager;
         InitialConditions lonConditions, latConditions;
-        ferramGraph _graph = new ferramGraph(400, 275);
+        ferramGraph _graph = new ferramGraph(400, 200);
 
         private enum SimMode
         {
@@ -35,6 +35,12 @@ namespace FerramAerospaceResearch.FAREditorGUI
 
             lonConditions = new InitialConditions(new string[] { "0", "0", "0", "0" }, new string[] { "u", "w", "q", "θ" }, new double[]{1, 1, Math.PI/180, Math.PI/180}, "0.01", "10");
             latConditions = new InitialConditions(new string[] { "0", "0", "0", "0" }, new string[] { "β", "r", "p", "φ" }, new double[]{Math.PI/180, Math.PI/180, Math.PI/180, Math.PI/180}, "0.01", "10");
+
+            _graph.SetBoundaries(0, 10, 0, 2);
+            _graph.SetGridScaleUsingValues(1, 0.25);
+            _graph.horizontalLabel = "time";
+            _graph.verticalLabel = "params";
+            _graph.Update();
         }
 
         public void Display()

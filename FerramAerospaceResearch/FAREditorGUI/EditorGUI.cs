@@ -22,10 +22,11 @@ namespace FerramAerospaceResearch.FAREditorGUI
         bool _updateQueued = true;
 
         static bool showGUI = false;
-        static Rect guiRect;
+        bool useKSPSkin = true;
+        Rect guiRect;
         public static Rect GUIRect
         {
-            get { return guiRect; }
+            get { return instance.guiRect; }
         }
         static ApplicationLauncherButton editorGUIAppLauncherButton;
 
@@ -97,8 +98,6 @@ namespace FerramAerospaceResearch.FAREditorGUI
             type == ConstructionEventType.PartRootSelected)
             {
                 UpdateVoxel();
-                FARAeroUtil.ResetEditorParts();
-                LEGACY_UpdateWingAeroModels();
             }
         }
         private void ResetEditorEvent(ShipConstruct construct)
@@ -110,8 +109,6 @@ namespace FerramAerospaceResearch.FAREditorGUI
         {
             instance._areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.8f), Color.green, Color.yellow, 10, 5);
             UpdateVoxel();
-            FARAeroUtil.ResetEditorParts();
-            instance.LEGACY_UpdateWingAeroModels();
         }
         private void LEGACY_UpdateWingAeroModels()
         {
@@ -133,6 +130,8 @@ namespace FerramAerospaceResearch.FAREditorGUI
                 {
                     _simManager.UpdateAeroData(_vehicleAero);
                     UpdateCrossSections();
+                    FARAeroUtil.ResetEditorParts();
+                    LEGACY_UpdateWingAeroModels();
                 } 
 
                 if (_updateRateLimiter < 20)
@@ -201,7 +200,6 @@ namespace FerramAerospaceResearch.FAREditorGUI
         void OnGUI()
         {
             //Make this an option
-            bool useKSPSkin = true;
             if (useKSPSkin)
                 GUI.skin = HighLogic.Skin;
 
@@ -209,8 +207,8 @@ namespace FerramAerospaceResearch.FAREditorGUI
             EditorLogic EdLogInstance = EditorLogic.fetch;
             if (showGUI)
             {
-                guiRect = GUILayout.Window(this.GetHashCode(), guiRect, OverallSelectionGUI, "FAR Analysis", GUILayout.MinHeight(useKSPSkin ? 600 : 500));
-
+                guiRect = GUILayout.Window(this.GetHashCode(), guiRect, OverallSelectionGUI, "FAR Analysis");
+                guiRect = GUIUtils.ClampToScreen(guiRect);
                 cursorInGUI = guiRect.Contains(FARGUIUtils.GetMousePos());
             }
             if (cursorInGUI)
@@ -231,15 +229,25 @@ namespace FerramAerospaceResearch.FAREditorGUI
 
             //GUILayout.EndHorizontal();
             if (currentMode == FAREditorMode.STATIC)
+            {
                 _editorGraph.Display();
+                guiRect.height = useKSPSkin ? 570 : 450;
+            }
             else if (currentMode == FAREditorMode.STABILITY)
+            {
                 _stabDeriv.Display();
+                guiRect.height = useKSPSkin ? 570 : 450;
+            }
             else if (currentMode == FAREditorMode.SIMULATION)
+            {
                 _stabDerivLinSim.Display();
+                guiRect.height = useKSPSkin ? 570 : 450;
+            }
             else if (currentMode == FAREditorMode.AREA_RULING)
             {
                 CrossSectionAnalysisGUI();
                 DebugVisualizationGUI();
+                guiRect.height = useKSPSkin ? 300 : 200;
             }
 
 
@@ -254,10 +262,30 @@ namespace FerramAerospaceResearch.FAREditorGUI
 
         void CrossSectionAnalysisGUI()
         {
-            if (GUILayout.Button("Toggle CrossSections"))
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Transonic Area Ruling Analysis", GUILayout.Width(350));
+            if (GUILayout.Button("Toggle Cross-Section Area Curves", GUILayout.Width(350)))
                 _areaRulingOverlay.ToggleVisibility();
+            GUILayout.EndHorizontal();
 
-            //GraphDisplay();
+            GUIStyle BackgroundStyle = new GUIStyle(GUI.skin.box);
+            BackgroundStyle.hover = BackgroundStyle.active = BackgroundStyle.normal;
+
+            GUILayout.BeginHorizontal();
+            GUILayout.BeginVertical(BackgroundStyle, GUILayout.Width(350));
+            GUILayout.Label("Max Cross-Section Area: " + _vehicleAero.MaxCrossSectionArea.ToString("G6") + " m²");
+            GUILayout.Label("Mach 1 Wave Drag-Area: " + _vehicleAero.SonicDragArea.ToString("G6") + " m²");
+            GUILayout.Label("Critical Mach Number: " + _vehicleAero.CriticalMach.ToString("G6"));
+            GUILayout.Label("\n\r\n\r");
+            GUILayout.EndVertical();
+
+            GUILayout.BeginVertical(BackgroundStyle);
+            GUILayout.Label("Minimal wave drag is achieved by maintaining a\n\rsmooth, minimal curvature cross-section curve.\n\r");
+            GUILayout.Label("Green: cross-sectional area.");
+            GUILayout.Label("Yellow: curvature cross-sectional area curve.");
+            GUILayout.Label("Minimize curvature to minimize wave drag");
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
         }
         #endregion
 
