@@ -23,12 +23,33 @@ namespace FerramAerospaceResearch.FARGUI
 
         static bool showGUI = false;
         static Rect guiRect;
+        public static Rect GUIRect
+        {
+            get { return guiRect; }
+        }
         static ApplicationLauncherButton editorGUIAppLauncherButton;
 
         VehicleAerodynamics _vehicleAero;
         EditorAeroCenter _aeroCenter;
         EditorAreaRulingOverlay _areaRulingOverlay;
-        EditorGraphGUI _editorGraph;
+        StaticAnalysisGraphGUI _editorGraph;
+        StabilityDerivGUI _stabDeriv;
+
+        FAREditorMode currentMode = FAREditorMode.STATIC;
+        private enum FAREditorMode
+        {
+            STATIC,
+            STABILITY,
+            AREA_RULING
+        }
+
+        private static string[] FAReditorMode_str = 
+        {
+            "Static Analysis",
+            "Data + Stability Derivatives",
+            "Transonic Design",
+        };
+
 
         void Start()
         {
@@ -38,7 +59,11 @@ namespace FerramAerospaceResearch.FARGUI
             _aeroCenter = new EditorAeroCenter();
 
             InstantConditionSim instantSim = new InstantConditionSim();
-            _editorGraph = new EditorGraphGUI(instantSim);
+            GUIDropDown<int> flapSettingDropDown = new GUIDropDown<int>(new string[] { "0 (up)", "1 (init climb)", "2 (takeoff)", "3 (landing)" }, new int[] { 0, 1, 2, 3 }, 0);
+            GUIDropDown<CelestialBody> celestialBodyDropdown = CreateBodyDropdown();
+
+            _editorGraph = new StaticAnalysisGraphGUI(instantSim, flapSettingDropDown, celestialBodyDropdown);
+            _stabDeriv = new StabilityDerivGUI(instantSim, flapSettingDropDown, celestialBodyDropdown);
 
             _areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.8f), Color.green, Color.yellow, 10, 5);
             guiRect.height = 500;
@@ -181,9 +206,20 @@ namespace FerramAerospaceResearch.FARGUI
 
         void OverallSelectionGUI(int windowId)
         {
-            DebugVisualizationGUI();
-            CrossSectionAnalysisGUI();
-            _editorGraph.Display();
+            currentMode = (FAREditorMode)GUILayout.SelectionGrid((int)currentMode, FAReditorMode_str, 3);
+
+
+            //GUILayout.EndHorizontal();
+            if (currentMode == FAREditorMode.STATIC)
+                _editorGraph.Display();
+            else if (currentMode == FAREditorMode.STABILITY)
+                _stabDeriv.Display();
+            else if (currentMode == FAREditorMode.AREA_RULING)
+            {
+                CrossSectionAnalysisGUI();
+                DebugVisualizationGUI();
+            }
+
 
             GUI.DragWindow();
         }
@@ -247,6 +283,21 @@ namespace FerramAerospaceResearch.FARGUI
         }
 
         void DummyVoid() { }
+        #endregion
+
+        #region UtilFuncs
+        GUIDropDown<CelestialBody> CreateBodyDropdown()
+        {
+            CelestialBody[] bodies = FlightGlobals.Bodies.ToArray();
+            string[] bodyNames = new string[bodies.Length];
+            for (int i = 0; i < bodyNames.Length; i++)
+                bodyNames[i] = bodies[i].bodyName;
+
+            int kerbinIndex = 1;
+            GUIDropDown<CelestialBody> celestialBodyDropdown = new GUIDropDown<CelestialBody>(bodyNames, bodies, kerbinIndex);
+            return celestialBodyDropdown;
+        }
+
         #endregion
     }
 }

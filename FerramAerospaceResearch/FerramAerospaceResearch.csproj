@@ -82,6 +82,8 @@
     <Compile Include="FAREditorSim\InstantConditionSim.cs" />
     <Compile Include="FAREditorSim\InstantConditionSimInput.cs" />
     <Compile Include="FAREditorSim\InstantConditionSimOutput.cs" />
+    <Compile Include="FAREditorSim\StabilityDerivOutput.cs" />
+    <Compile Include="FAREditorSim\StabilityDerivSim.cs" />
     <Compile Include="FAREditorSim\SweepSim.cs" />
     <Compile Include="FARGlobalControlEditorObject.cs" />
     <Compile Include="FARGlobalControlFlightObject.cs" />
@@ -89,6 +91,9 @@
     <Compile Include="FARGUI\EditorGraphGUI.cs" />
     <Compile Include="FARGUI\EditorGUI.cs" />
     <Compile Include="FARGUI\FlightGUI.cs" />
+    <Compile Include="FARGUI\GUIDropDown.cs" />
+    <Compile Include="FARGUI\GUIUtils.cs" />
+    <Compile Include="FARGUI\StabilityDerivGUI.cs" />
     <Compile Include="FARKSPAddonFlightDataInfo.cs" />
     <Compile Include="FARPartGeometry\DebugVisualVoxel.cs" />
     <Compile Include="FARPartGeometry\GeometryMesh.cs" />

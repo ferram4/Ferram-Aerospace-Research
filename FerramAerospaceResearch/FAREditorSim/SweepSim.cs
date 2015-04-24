@@ -20,9 +20,9 @@ namespace FerramAerospaceResearch.FAREditorSim
             _instantCondition.UpdateAeroData(vehicleAero);
         }
 
-        public GraphData MachNumberSweep(double aoAdegrees, double pitch, double lowerBound, double upperBound, int numPoints, int flapSetting, bool spoilers)
+        public GraphData MachNumberSweep(double aoAdegrees, double pitch, double lowerBound, double upperBound, int numPoints, int flapSetting, bool spoilers, CelestialBody body)
         {
-            FARAeroUtil.UpdateCurrentActiveBody(FlightGlobals.Bodies[1]);
+            FARAeroUtil.UpdateCurrentActiveBody(body);
 
             double mass = 0;
             Vector3d CoM = Vector3d.zero;
@@ -80,14 +80,14 @@ namespace FerramAerospaceResearch.FAREditorSim
             return data;
         }
 
-        public GraphData AngleOfAttackSweep(double machNumber, double pitch, double lowerBound, double upperBound, int numPoints, int flapSetting, bool spoilers)
+        public GraphData AngleOfAttackSweep(double machNumber, double pitch, double lowerBound, double upperBound, int numPoints, int flapSetting, bool spoilers, CelestialBody body)
         {
             if (machNumber == 0)
                 machNumber = 0.001;
 
             InstantConditionSimInput input = new InstantConditionSimInput(0, 0, 0, 0, 0, 0, machNumber, pitch, flapSetting, spoilers);
 
-            FARAeroUtil.UpdateCurrentActiveBody(FlightGlobals.Bodies[1]);
+            FARAeroUtil.UpdateCurrentActiveBody(body);
 
             double mass = 0;
             Vector3d CoM = Vector3d.zero;

@@ -88,10 +88,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
         public void GeometryPartModuleRebuildMeshData()
         {
             RebuildAllMeshData();
+            UpdateVoxelShape();
         }
 
         private void RebuildAllMeshData()
         {
+            if(!(HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor))
+                return;
+
             partTransform = part.transform;
             partRigidBody = part.Rigidbody;
             List<Transform> meshTransforms = part.PartModelTransformList();
@@ -227,6 +231,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             UpdateTransformMatrixList(transformMatrix);
 
+            UpdateVoxelShape();
+        }
+
+        private void UpdateVoxelShape()
+        {
             if (HighLogic.LoadedSceneIsFlight)
                 vessel.SendMessage("AnimationVoxelUpdate");
             else if (HighLogic.LoadedSceneIsEditor)

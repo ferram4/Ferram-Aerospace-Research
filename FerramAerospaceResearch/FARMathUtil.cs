@@ -43,7 +43,7 @@ using UnityEngine;
 
 namespace ferram4
 {
-    public unsafe static class FARMathUtil
+    public static class FARMathUtil
     {
         public const double rad2deg = 180d / Math.PI;
         public const double deg2rad = Math.PI / 180d;
