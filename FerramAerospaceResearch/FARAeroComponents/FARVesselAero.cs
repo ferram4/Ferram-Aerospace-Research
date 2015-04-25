@@ -109,7 +109,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (atmDensity <= 0)
                     return;
 
-                machNumber = FARAeroUtil.GetMachNumber(_vessel.mainBody, _vessel.altitude, _vessel.srfSpeed);
+                machNumber = _vessel.mach;
                 reynoldsNumber = FARAeroUtil.CalculateReynoldsNumber(_vessel.atmDensity, Length, _vessel.srfSpeed, machNumber, FlightGlobals.getExternalTemperature((float)_vessel.altitude, _vessel.mainBody) + 273.15f);
                 float skinFrictionDragCoefficient = (float)FARAeroUtil.SkinFrictionDrag(reynoldsNumber, machNumber);
 

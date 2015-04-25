@@ -69,13 +69,6 @@ namespace ferram4
 
             OnVesselPartsChange = UpdateShipPartsList;
             UpdateShipPartsList();
-
-            if (HighLogic.LoadedSceneIsEditor)
-            {
-                part.OnEditorAttach += OnEditorAttach;
-                part.OnEditorDetach += OnEditorAttach;
-                part.OnEditorDestroy += OnEditorAttach;
-            }
         }
 
         public void TriggerPartBoundsUpdate()
@@ -117,14 +110,6 @@ namespace ferram4
             if (this.partColliders == null)
                 this.partColliders = part.GetPartColliders();
         }
-
-        public virtual void OnEditorAttach()
-        {
-            //print(part + " OnEditorAttach");
-
-            FARGlobalControlEditorObject.EditorPartsChanged = true;
-        }
-
         protected void UpdateShipPartsList()
         {
             VesselPartList = GetShipPartList();

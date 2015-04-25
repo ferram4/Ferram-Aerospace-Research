@@ -52,7 +52,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             partsIncluded = new List<PartData>();
 
             Vector3 centroidLocationAlongxRef = Vector3.Project(centroidWorldSpace, vehicleMainAxis);
-            Vector3 centroidSansxRef = Vector3.Exclude(vehicleMainAxis, centroidWorldSpace);
+            Vector3 centroidSansxRef = Vector3.ProjectOnPlane(vehicleMainAxis, centroidWorldSpace);
 
             Vector3 worldSpaceAvgPos = Vector3.zero;
             float totalDragFactor = 0;
@@ -65,7 +65,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             worldSpaceAvgPos /= totalDragFactor;
 
-            worldSpaceAvgPos = Vector3.Exclude(vehicleMainAxis, worldSpaceAvgPos);
+            worldSpaceAvgPos = Vector3.ProjectOnPlane(vehicleMainAxis, worldSpaceAvgPos);
 
             Vector3 avgPosDiffFromCentroid = centroidSansxRef - worldSpaceAvgPos;
 
@@ -76,7 +76,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 Transform transform = data.aeroModule.part.transform;
                 Matrix4x4 transformMatrix = transform.worldToLocalMatrix;
 
-                Vector3 forceCenterWorldSpace = centroidLocationAlongxRef + Vector3.Exclude(vehicleMainAxis, transform.position) + avgPosDiffFromCentroid;
+                Vector3 forceCenterWorldSpace = centroidLocationAlongxRef + Vector3.ProjectOnPlane(vehicleMainAxis, transform.position) + avgPosDiffFromCentroid;
 
                 data.centroidPartSpace = transformMatrix.MultiplyPoint3x4(forceCenterWorldSpace);
                 data.xRefVectorPartSpace = transformMatrix.MultiplyVector(xRefVectorWorldSpace);
@@ -164,7 +164,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             //velLocal += Vector3.Cross(angVelLocal, data.centroidPartSpace);       //some transform issue here, needs investigation
             Vector3 velLocalNorm = velLocal.normalized;
 
-            Vector3 localNormalForceVec = Vector3.Exclude(xRefVector, -velLocalNorm).normalized;
+            Vector3 localNormalForceVec = Vector3.ProjectOnPlane(xRefVector, -velLocalNorm).normalized;
 
             double cosAoA = Vector3.Dot(xRefVector, velLocalNorm);
             double cosSqrAoA = cosAoA * cosAoA;
@@ -274,7 +274,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 //velLocal += Vector3.Cross(angVelLocal, data.centroidPartSpace);       //some transform issue here, needs investigation
                 Vector3 velLocalNorm = velLocal.normalized;
 
-                Vector3 localNormalForceVec = Vector3.Exclude(xRefVector, -velLocalNorm).normalized;
+                Vector3 localNormalForceVec = Vector3.ProjectOnPlane(xRefVector, -velLocalNorm).normalized;
 
                 double cosAoA = Vector3.Dot(xRefVector, velLocalNorm);
                 double cosSqrAoA = cosAoA * cosAoA;

@@ -578,7 +578,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 else
                 {
                     xRefVector = (Vector3)(_vehicleCrossSection[index - 1].centroid - _vehicleCrossSection[index + 1].centroid).normalized;
-                    Vector3 offMainAxisVec = Vector3.Exclude(_vehicleMainAxis, xRefVector);
+                    Vector3 offMainAxisVec = Vector3.ProjectOnPlane(_vehicleMainAxis, xRefVector);
                     float tanAoA = offMainAxisVec.magnitude / (2f * (float)_sectionThickness);
                     if (tanAoA > 0.17632698070846497347109038686862f)
                     {

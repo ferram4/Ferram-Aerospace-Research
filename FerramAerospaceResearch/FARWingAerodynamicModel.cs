@@ -485,8 +485,8 @@ namespace ferram4
 
                     double machNumber, v_scalar = velocity.magnitude;
 
-                    rho = FARAeroUtil.GetCurrentDensity(vessel.mainBody, part.transform.position);
-                    machNumber = GetMachNumber(vessel.mainBody, vessel.altitude, velocity);
+                    rho = FARAeroUtil.GetCurrentDensity(vessel);
+                    machNumber = vessel.mach;
                     if (rho > 0 && v_scalar > 0.1)
                     {
                         double AoA = CalculateAoA(velocity);

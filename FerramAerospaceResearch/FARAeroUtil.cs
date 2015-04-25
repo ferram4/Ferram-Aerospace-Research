@@ -216,8 +216,6 @@ namespace ferram4
             }
 
             SetDefaultValuesIfNoValuesLoaded();
-
-            FARBasicDragModel.SetBluntBodyParams(radiusOfCurvatureBluntBody);
           
             loaded = true;
 
@@ -613,31 +611,6 @@ namespace ferram4
             }
         }
 
-        private static float joolTempOffset = 0;
-
-        public static float JoolTempOffset      //This is another kluge hotfix for the "Jool's atmosphere is below 0 Kelvin bug"
-        {                                         //Essentially it just shifts its outer atmosphere temperature up to 4 Kelvin
-            get{
-                if(joolTempOffset == 0)
-                {
-                    CelestialBody Jool = null;
-                    foreach (CelestialBody body in  FlightGlobals.Bodies)
-                        if (body.GetName() == "Jool")
-                        {
-                            Jool = body;
-                            break;
-                        }
-                    Jool.atmoshpereTemperatureMultiplier *= 0.5f;
-                    float outerAtmTemp = FlightGlobals.getExternalTemperature(138000f, Jool) + 273.15f;
-                    joolTempOffset = 25f - outerAtmTemp;
-                    joolTempOffset = Mathf.Clamp(joolTempOffset, 0.1f, Mathf.Infinity);
-                }
-                
-
-            return joolTempOffset;
-            }
-        }
-
         public static bool IsNonphysical(Part p)
         {
             return p.physicalSignificance == Part.PhysicalSignificance.NONE ||
@@ -647,7 +620,6 @@ namespace ferram4
         }
 
         private static List<FARWingAerodynamicModel> curEditorWingCache = null;
-        private static List<FARBasicDragModel> curEditorOtherDragCache = null;
 
         public static List<FARWingAerodynamicModel> CurEditorWings
         {
@@ -658,17 +630,6 @@ namespace ferram4
                 return curEditorWingCache;
             }
         }
-
-        public static List<FARBasicDragModel> CurEditorOtherDrag
-        {
-            get
-            {
-                if (curEditorOtherDragCache == null)
-                    curEditorOtherDragCache = ListEditorOtherDrag(false);
-                return curEditorOtherDragCache;
-            }
-        }
-
         // Parts currently added to the vehicle in the editor
         private static List<Part> CurEditorPartsCache = null;
 
@@ -699,7 +660,6 @@ namespace ferram4
         {
             AllEditorPartsCache = CurEditorPartsCache = null;
             curEditorWingCache = null;
-            curEditorOtherDragCache = null;
         }
 
         // Checks if there are any ghost parts almost attached to the craft
@@ -747,21 +707,6 @@ namespace ferram4
             return wings;
         }
 
-        public static List<FARBasicDragModel> ListEditorOtherDrag(bool include_selected)
-        {
-            List<Part> list = CurEditorParts;
-
-            List<FARBasicDragModel> otherDrag = new List<FARBasicDragModel>();
-            for (int i = 0; i < list.Count; i++)
-            {
-                Part p = list[i];
-                FARBasicDragModel dragModule = p.GetComponent<FARBasicDragModel>();
-                if ((object)dragModule != null)
-                    otherDrag.Add(dragModule);
-            }
-            return otherDrag;
-        }
-
         private static void RecursePartList(List<Part> list, Part part)
         {
             list.Add(part);
@@ -800,359 +745,6 @@ namespace ferram4
             }
         }
 
-        public static void AddBasicDragModule(Part p)
-        {
-            AddBasicDragModuleWithoutDragPropertySetup(p);
-
-            SetBasicDragModuleProperties(p);
-        }
-
-        public static void AddBasicDragModuleWithoutDragPropertySetup(Part p)
-        {
-            if (p.Modules.Contains("KerbalEVA"))
-                return;
-
-            p.minimum_drag = 0;
-            p.maximum_drag = 0;
-            p.dragModelType = "override";
-            p.angularDrag = 0;
-
-            /*if (p.Modules.Contains("ModuleResourceIntake"))
-                if (AJELoaded)
-                    return;*/
-
-
-            p.AddModule("FARBasicDragModel");
-        }
-
-        public static void SetBasicDragModuleProperties(Part p)
-        {
-            FARBasicDragModel d = p.Modules["FARBasicDragModel"] as FARBasicDragModel;
-            string title = p.partInfo.title.ToLowerInvariant();
-
-            if (p.Modules.Contains("ModuleAsteroid"))
-            {
-                FARGeoUtil.BodyGeometryForDrag data = FARGeoUtil.CalcBodyGeometryFromMesh(p);
-
-                FloatCurve TempCurve1 = new FloatCurve();
-                double cd = 0.2; //cd based on diameter
-                cd *= Math.Sqrt(data.crossSectionalArea / Math.PI) * 2 / data.area;
-
-                TempCurve1.Add(-1, (float)cd);
-                TempCurve1.Add(1, (float)cd);
-
-                FloatCurve TempCurve2 = new FloatCurve();
-                TempCurve2.Add(-1, 0);
-                TempCurve2.Add(1, 0);
-
-                FloatCurve TempCurve4 = new FloatCurve();
-                TempCurve4.Add(-1, 0);
-                TempCurve4.Add(1, 0);
-
-                FloatCurve TempCurve3 = new FloatCurve();
-                TempCurve3.Add(-1, 0);
-                TempCurve3.Add(1, 0);
-
-
-
-                d.BuildNewDragModel(data.area * FARAeroUtil.areaFactor, TempCurve1, TempCurve2, TempCurve4, TempCurve3, data.originToCentroid, data.majorMinorAxisRatio, 0, data.taperCrossSectionArea, double.MaxValue, double.MaxValue, Math.Sqrt(data.crossSectionalArea / Math.PI) * data.finenessRatio * FARAeroUtil.areaFactor);
-                return;
-            }
-            else if (FARPartClassification.IncludePartInGreeble(p, title))
-            {
-                FloatCurve TempCurve1 = new FloatCurve();
-                /*if (title.Contains("heatshield") || (title.Contains("heat") && title.Contains("shield")))
-                    TempCurve1.Add(-1, 0.3f);
-                else*/
-                TempCurve1.Add(-1, 0);
-                TempCurve1.Add(0, 0.02f);
-                TempCurve1.Add(1, 0);
-
-                FloatCurve TempCurve2 = new FloatCurve();
-                TempCurve2.Add(-1, 0);
-                TempCurve2.Add(1, 0);
-
-                FloatCurve TempCurve4 = new FloatCurve();
-                TempCurve4.Add(-1, 0);
-                TempCurve4.Add(1, 0);
-
-                FloatCurve TempCurve3 = new FloatCurve();
-                TempCurve3.Add(-1, 0);
-                TempCurve3.Add(1, 0);
-
-                FARGeoUtil.BodyGeometryForDrag data = FARGeoUtil.CalcBodyGeometryFromMesh(p);
-
-
-                d.BuildNewDragModel(data.area * FARAeroUtil.areaFactor, TempCurve1, TempCurve2, TempCurve4, TempCurve3, Vector3.zero, 1, 0, 0, double.MaxValue, double.MaxValue, Math.Sqrt(data.crossSectionalArea / Math.PI) * data.finenessRatio * FARAeroUtil.areaFactor);
-                return;
-            }
-            else
-            {
-                FARGeoUtil.BodyGeometryForDrag data = FARGeoUtil.CalcBodyGeometryFromMesh(p);
-                FloatCurve TempCurve1 = new FloatCurve();
-                FloatCurve TempCurve2 = new FloatCurve();
-                FloatCurve TempCurve4 = new FloatCurve();
-                FloatCurve TempCurve3 = new FloatCurve();
-                double YmaxForce = double.MaxValue;
-                double XZmaxForce = double.MaxValue;
-
-                double Cn1, Cn2, intakeCd = 0, cutoffAngle, cosCutoffAngle = 0;
-
-                ModuleResourceIntake intake = p.GetComponent<ModuleResourceIntake>();
-                if(intake != null)
-                {
-                    intakeCd = GetIntakeDragEstimate(intake, data.area);
-                }
-
-                if (title.Contains("truss") || title.Contains("strut") || title.Contains("railing") || p.Modules.Contains("ModuleWheel"))
-                {
-                    TempCurve1.Add(-1, 0.1f);
-                    TempCurve1.Add(1, 0.1f);
-                    TempCurve2.Add(-1, 0f);
-                    TempCurve2.Add(1, 0f);
-                    TempCurve3.Add(-1, 0f);
-                    TempCurve3.Add(1, 0f);
-                }
-                else if (title.Contains("plate") || title.Contains("panel"))
-                {
-                    TempCurve1.Add(-1, 1.2f);
-                    TempCurve1.Add(0, 0f);
-                    TempCurve1.Add(1, 1.2f);
-                    TempCurve2.Add(-1, 0f);
-                    TempCurve2.Add(1, 0f);
-                    TempCurve3.Add(-1, 0f);
-                    TempCurve3.Add(1, 0f);
-                }
-                else
-                {
-
-                    if (data.taperRatio <= 1)
-                    {
-                        Cn1 = NormalForceCoefficientTerm1(data.finenessRatio, data.taperRatio, data.crossSectionalArea, data.area);
-                        Cn2 = NormalForceCoefficientTerm2(data.finenessRatio, data.taperRatio, data.crossSectionalArea, data.area);
-                        cutoffAngle = cutoffAngleForLift(data.finenessRatio, data.taperRatio, data.crossSectionalArea, data.area);
-
-                        cosCutoffAngle = -Math.Cos(cutoffAngle);
-
-                        double axialPressureDrag = PressureDragDueToTaperingConic(data.finenessRatio, data.taperRatio, data.crossSectionalArea, data.area);
-
-                        TempCurve1.Add(-1, (float)Math.Max(axialPressureDrag, intakeCd), 0, 0);
-                        TempCurve1.Add(0, (float)Cn2, 0, 0);
-                        TempCurve1.Add(1, (float)Math.Max(axialPressureDrag, intakeCd), 0, 0);
-
-
-                        TempCurve2.Add((float)cosCutoffAngle, 0, (float)Cn1, 0);
-                        TempCurve2.Add(-0.8660f, (float)(Math.Cos((Math.PI * 0.5 - Math.Acos(0.8660)) * 0.5) * Math.Sin(2 * (Math.PI * 0.5 - Math.Acos(0.8660))) * Cn1), 0, 0);
-                        TempCurve2.Add(0, 0);
-                        TempCurve2.Add(0.8660f, (float)(Math.Cos((Math.PI * 0.5 - Math.Acos(0.8660)) * 0.5) * Math.Sin(2 * (Math.PI * 0.5 - Math.Acos(0.8660))) * Cn1), 0, 0);
-                        TempCurve2.Add(1, 0, (float)Cn1, (float)Cn1);
-
-                        TempCurve4.Add(-1, 0, 0, 0);
-                        TempCurve4.Add(-0.95f, (float)(Math.Pow(Math.Sin(Math.Acos(0.95)), 2) * Cn2 * -0.95));
-                        TempCurve4.Add(-0.8660f, (float)(Math.Pow(Math.Sin(Math.Acos(0.8660)), 2) * Cn2 * -0.8660));
-                        TempCurve4.Add(-0.5f, (float)(Math.Pow(Math.Sin(Math.Acos(0.5f)), 2) * Cn2 * -0.5));
-                        TempCurve4.Add(0, 0);
-                        TempCurve4.Add(0.5f, (float)(Math.Pow(Math.Sin(Math.Acos(0.5)), 2) * Cn2 * 0.5));
-                        TempCurve4.Add(0.8660f, (float)(Math.Pow(Math.Sin(Math.Acos(0.8660)), 2) * Cn2 * 0.8660));
-                        TempCurve4.Add(0.95f, (float)(Math.Pow(Math.Sin(Math.Acos(0.95)), 2) * Cn2 * 0.95));
-                        TempCurve4.Add(1, 0, 0, 0);
-                    }
-                    else
-                    {
-                        Cn1 = NormalForceCoefficientTerm1(data.finenessRatio, 1 / data.taperRatio, data.crossSectionalArea, data.area);
-                        Cn2 = NormalForceCoefficientTerm2(data.finenessRatio, 1 / data.taperRatio, data.crossSectionalArea, data.area);
-                        cutoffAngle = cutoffAngleForLift(data.finenessRatio, 1 / data.taperRatio, data.crossSectionalArea, data.area);
-
-                        cosCutoffAngle = Math.Cos(cutoffAngle);
-
-                        double axialPressureDrag = PressureDragDueToTaperingConic(data.finenessRatio, 1 / data.taperRatio, data.crossSectionalArea, data.area);
-
-                        TempCurve1.Add(-1, (float)Math.Max(axialPressureDrag, intakeCd), 0, 0);
-                        TempCurve1.Add(0, (float)Cn2, 0, 0);
-                        TempCurve1.Add(1, (float)Math.Max(axialPressureDrag, intakeCd), 0, 0);
-
-                        TempCurve2.Add(-1, 0, (float)-Cn1, (float)-Cn1);
-                        TempCurve2.Add(-0.8660f, (float)((-Math.Cos((Math.PI *0.5 - Math.Acos(0.8660)) *0.5) * Math.Sin(2 * (Math.PI *0.5 - Math.Acos(0.8660))) * Cn1)), 0, 0);
-                        TempCurve2.Add(0, 0);
-                        TempCurve2.Add(0.8660f, (float)((-Math.Cos((Math.PI *0.5 - Math.Acos(0.8660)) *0.5) * Math.Sin(2 * (Math.PI *0.5 - Math.Acos(0.8660))) * Cn1)), 0, 0);
-                        TempCurve2.Add((float)cosCutoffAngle, 0, (float)-Cn1, 0);
-
-                        TempCurve4.Add(-1, 0, 0, 0);
-                        TempCurve4.Add(-0.95f, (float)(Math.Pow(Math.Sin(Math.Acos(0.95)), 2) * Cn2 * -0.95));
-                        TempCurve4.Add(-0.8660f, (float)(Math.Pow(Math.Sin(Math.Acos(0.8660)), 2) * Cn2 * -0.8660));
-                        TempCurve4.Add(-0.5f, (float)(Math.Pow(Math.Sin(Math.Acos(0.5)), 2) * Cn2 * -0.5));
-                        TempCurve4.Add(0, 0);
-                        TempCurve4.Add(0.5f, (float)(Math.Pow(Math.Sin(Math.Acos(0.5)), 2) * Cn2 * 0.5));
-                        TempCurve4.Add(0.8660f, (float)(Math.Pow(Math.Sin(Math.Acos(0.8660)), 2) * Cn2 * 0.8660));
-                        TempCurve4.Add(0.95f, (float)(Math.Pow(Math.Sin(Math.Acos(0.95)), 2) * Cn2 * 0.95));
-                        TempCurve4.Add(1, 0, 0, 0);
-                    }
-
-                    float cdM = (float)MomentDueToTapering(data.finenessRatio, data.taperRatio, data.crossSectionalArea, data.area);
-
-                    TempCurve3.Add(-1, cdM);
-                    TempCurve3.Add(-0.5f, cdM * 2);
-                    TempCurve3.Add(0, cdM * 3);
-                    TempCurve3.Add(0.5f, cdM * 2);
-                    TempCurve3.Add(1, cdM);
-
-
-                    if (HighLogic.LoadedSceneIsFlight && !FARAeroStress.PartIsGreeble(p, data.crossSectionalArea, data.finenessRatio, data.area) && FARDebugValues.allowStructuralFailures)
-                    {
-                        FARPartStressTemplate template = FARAeroStress.DetermineStressTemplate(p);
-
-                        YmaxForce = template.YmaxStress;    //in MPa
-                        YmaxForce *= data.crossSectionalArea;
-
-                        /*XZmaxForce = 2 * Math.Sqrt(data.crossSectionalArea / Math.PI);
-                        XZmaxForce = XZmaxForce * data.finenessRatio * XZmaxForce;
-                        XZmaxForce *= template.XZmaxStress;*/
-
-                        XZmaxForce = template.XZmaxStress * data.area * 0.5;
-
-                        //Debug.Log("Template: " + template.name + " YmaxForce: " + YmaxForce + " XZmaxForce: " + XZmaxForce);
-                    }
-
-                }
-
-                d.BuildNewDragModel(data.area * FARAeroUtil.areaFactor, TempCurve1, TempCurve2, TempCurve4, TempCurve3, data.originToCentroid, data.majorMinorAxisRatio, cosCutoffAngle, data.taperCrossSectionArea, YmaxForce, XZmaxForce, Math.Sqrt(data.crossSectionalArea / Math.PI) * data.finenessRatio * FARAeroUtil.areaFactor);
-                return;
-            }
-        }
-
-        private static double GetIntakeDragEstimate(ModuleResourceIntake intake, double refArea)
-        {
-            double dragArea = 0.035 * 158.859927382939 * intake.area;       //this is based on a Cd of 0.035 for a ref area of 158.859927382939 per unit intake.area
-            return dragArea / refArea;
-        }
-
-        //Approximate drag of a tapering conic body
-        public static double PressureDragDueToTaperingConic(double finenessRatio, double taperRatio, double crossSectionalArea, double surfaceArea)
-        {
-            double b = 1 + (taperRatio / (1 - taperRatio));
-
-            double refbeta = 2f * FARMathUtil.Clamp(finenessRatio, 1, double.PositiveInfinity) / Math.Sqrt(Math.Pow(2.5f, 2) - 1);     //Reference beta for the calculation; currently based at Mach 2.5
-            double cdA;
-            if (double.IsNaN(b) || double.IsInfinity(b))
-            {
-                return 0;
-            }
-            else if (b > 1)
-            {
-                cdA = 2 * (2 * b * b - 2 * b + 1) * Math.Log(2 * refbeta) - 2 * Math.Pow(b - 1, 2) * Math.Log(1 - 1 / b) - 1;
-                cdA /= b * b * b * b;
-                //Based on linear supersonic potential for a conic body, from
-                //The Theoretical Wave-Drag of Some Bodies of Revolution, L. E. FRAENKEL, 1955
-                //MINISTRY OF SUPPLY
-                //AERONAUTICAL RESEARCH COUNCIL
-                //REPORTS AND MEMORANDA
-                //London
-            }
-            else
-            {
-                cdA = 2 * Math.Log(2 * refbeta) - 1;
-            }
-
-            cdA *= 0.25 / (finenessRatio * finenessRatio);
-            cdA *= crossSectionalArea / surfaceArea;
-
-            cdA /= 1.31;   //Approximate subsonic drag...
-
-            //if (float.IsNaN(cdA))
-            //    return 0;
-
-            return cdA;
-        }
-        
-        //Approximate drag of a tapering parabolic body
-        public static double PressureDragDueToTaperingParabolic(double finenessRatio, double taperRatio, double crossSectionalArea, double surfaceArea)
-        {
-            double exponent = 2 + (Math.Sqrt(FARMathUtil.Clamp(finenessRatio, 0.1, double.PositiveInfinity)) - 2.2) / 3;
-
-            double cdA = 4.6 * Math.Pow(Math.Abs(taperRatio - 1), 2 * exponent);
-            cdA *= 0.25 / (finenessRatio * finenessRatio);
-            cdA *= crossSectionalArea / surfaceArea;
-
-            cdA /= 1.35;   //Approximate subsonic drag...
-
-
-            double taperCrossSectionArea = Math.Sqrt(crossSectionalArea / Math.PI);
-            taperCrossSectionArea *= taperRatio;
-            taperCrossSectionArea = Math.Pow(taperCrossSectionArea, 2) * Math.PI;
-
-            taperCrossSectionArea = Math.Abs(taperCrossSectionArea - crossSectionalArea);      //This is the cross-sectional area of the tapered section
-
-            double maxcdA = taperCrossSectionArea * (incompressibleRearAttachDrag + sonicRearAdditionalAttachDrag);
-            maxcdA /= surfaceArea;      //This is the maximum drag that this part can create
-
-            cdA = FARMathUtil.Clamp(cdA, 0, maxcdA);      //make sure that stupid amounts of drag don't exist
-
-            return cdA;
-        }
-
-
-        //This returns the normal force coefficient based on surface area due to potential flow
-        public static double NormalForceCoefficientTerm1(double finenessRatio, double taperRatio, double crossSectionalArea, double surfaceArea)
-        {
-            double Cn1 = 0;
-
-            Cn1 = crossSectionalArea * (1 - taperRatio * taperRatio);
-            Cn1 /= surfaceArea;
-
-            return Cn1;
-        }
-
-        //This returns the normal force coefficient based on surface area due to viscous flow
-        public static double NormalForceCoefficientTerm2(double finenessRatio, double taperRatio, double crossSectionalArea, double surfaceArea)
-        {
-            double Cn2 = 0;
-            double radius = Math.Sqrt(crossSectionalArea * 0.318309886184f);
-            double length = radius * 2 * finenessRatio;
-
-            //Assuming a linearly tapered cone
-            Cn2 = radius * (1 + taperRatio) * length * 0.5f;
-            Cn2 *= 2 * 1.2f;
-            Cn2 /= surfaceArea;
-
-            return Cn2;
-        }
-
-        public static double cutoffAngleForLift(double finenessRatio, double taperRatio, double crossSectionalArea, double surfaceArea)
-        {
-            double angle = 0;
-
-            angle = (1 - taperRatio) / (2 * finenessRatio);
-            angle = Math.Atan(angle);
-
-            return angle;
-        }
-
-        public static double MomentDueToTapering(double finenessRatio, double taperRatio, double crossSectionalArea, double surfaceArea)
-        {
-
-            double rad = crossSectionalArea / Math.PI;
-            rad = Math.Sqrt(rad);
-
-            double cdM = 0f;
-            if (taperRatio < 1)
-            {
-                double dragDueToTapering = PressureDragDueToTaperingConic(finenessRatio, taperRatio, crossSectionalArea, surfaceArea);
-
-                cdM -= dragDueToTapering * rad * taperRatio;    //This applies the drag force over the front of the tapered area multiplied by the distance it acts from the center of the part (radius * taperRatio)
-            }
-            else
-            {
-                taperRatio = 1 / taperRatio;
-                double dragDueToTapering = PressureDragDueToTaperingConic(finenessRatio, taperRatio, crossSectionalArea, surfaceArea);
-
-                cdM += dragDueToTapering * rad * taperRatio;    //This applies the drag force over the front of the tapered area multiplied by the distance it acts from the center of the part (radius * taperRatio)
-            }
-
-            //cdM *= 1 / surfaceArea;
-
-            return cdM;
-        }
-
         //This approximates e^x; it's slightly inaccurate, but good enough.  It's much faster than an actual exponential function
         //It runs on the assumption e^x ~= (1 + x/256)^256
         public static double ExponentialApproximation(double x)
@@ -1168,31 +760,6 @@ namespace ferram4
             exp *= exp;
 
             return exp;
-        }
-
-
-        public static double GetMachNumber(CelestialBody body, double altitude, Vector3d velocity)
-        {
-            return GetMachNumber(body, altitude, velocity.magnitude);
-        }
-        
-        public static double GetMachNumber(CelestialBody body, double altitude, double v_scalar)
-        {
-            double MachNumber = 0;
-            if (HighLogic.LoadedSceneIsFlight)
-            {
-                //continue updating Mach Number for debris
-                UpdateCurrentActiveBody(body);
-                double temp = Math.Max(0.1, currentBodyTemp + FlightGlobals.getExternalTemperature((float)altitude, body));
-                double Soundspeed = Math.Sqrt(temp * currentBodyAtm[0]);// * 401.8f;              //Calculation for speed of sound in ideal gas using air constants of gamma = 1.4 and R = 287 kJ/kg*K
-
-                MachNumber = v_scalar / Soundspeed;
-
-                if (MachNumber < 0)
-                    MachNumber = 0;
-
-            }
-            return MachNumber;
         }
 
         public static double GetFailureForceScaling(CelestialBody body, double altitude)
@@ -1217,88 +784,41 @@ namespace ferram4
             return densityMultFactor;
         }
 
-        public static double GetCurrentDensity(CelestialBody body, Vector3 worldLocation, bool densitySmoothingAtOcean = true)
-        {
-            return GetCurrentDensity(body, (Vector3d)worldLocation, densitySmoothingAtOcean);
-        }
-
-        public static double GetCurrentDensity(CelestialBody body, Vector3d worldLocation, bool densitySmoothingAtOcean = true)
-        {
-            UpdateCurrentActiveBody(body);
-
-            double altitude = body.GetAltitude(worldLocation);
-
-            double temp = Math.Max(0.1, currentBodyTemp + FlightGlobals.getExternalTemperature((float)altitude, body));
-
-            double pressure = FlightGlobals.getStaticPressure(worldLocation, body);
-            if (pressure > 0)
-                pressure = (pressure - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
-
-            if (altitude < 0 && densitySmoothingAtOcean)
-            {
-                double densityMultFromOcean = Math.Max(-altitude, 1);
-                densityMultFromOcean *= UNDERWATER_DENSITY_FACTOR_MINUS_ONE;
-                densityMultFromOcean++;
-                pressure *= densityMultFromOcean;
-            }
-
-            return pressure / (temp * currentBodyAtm[2]);
-        }
-
         public static double GetCurrentDensity(CelestialBody body, double altitude, bool densitySmoothingAtOcean = true)
         {
-            UpdateCurrentActiveBody(body);
+            double pressure, temperature;
+            pressure = FlightGlobals.getStaticPressure(altitude, body);
+            temperature = FlightGlobals.getExternalTemperature(altitude, body);
 
-            if (altitude > body.maxAtmosphereAltitude)
-                return 0;
-
-            double temp = Math.Max(0.1, currentBodyTemp + FlightGlobals.getExternalTemperature((float)altitude, body));
-
-            double pressure = FlightGlobals.getStaticPressure(altitude, body);
-            if (pressure > 0)
-                pressure = (pressure - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
+            double density = FlightGlobals.getAtmDensity(pressure, temperature, body);
 
             if (altitude < 0 && densitySmoothingAtOcean)
             {
                 double densityMultFromOcean = Math.Max(-altitude, 1);
                 densityMultFromOcean *= UNDERWATER_DENSITY_FACTOR_MINUS_ONE;
                 densityMultFromOcean++;
-                pressure *= densityMultFromOcean;
+                density *= densityMultFromOcean;
             }
 
-            return pressure / (temp * currentBodyAtm[2]);
+            return density;
         }
 
         // Vessel has altitude and cached pressure, and both density and sound speed need temperature
-        public static double GetCurrentDensity(Vessel vessel, out double soundspeed, bool densitySmoothingAtOcean = true)
+        public static double GetCurrentDensity(Vessel vessel, bool densitySmoothingAtOcean = true)
         {
             double altitude = vessel.altitude;
             CelestialBody body = vessel.mainBody;
-
-            soundspeed = 1e+6f;
-
-            if ((object)body == null || altitude > body.maxAtmosphereAltitude)
-                return 0;
-
-            UpdateCurrentActiveBody(body);
-
-            double temp = Math.Max(0.1, currentBodyTemp + FlightGlobals.getExternalTemperature((float)altitude, body));
-
-            double pressure = 0;
-            if (vessel.staticPressure > 0)
-                pressure = (vessel.staticPressure - currentBodyAtmPressureOffset) * 101300;     //Need to convert atm to Pa
-
-            soundspeed = Math.Sqrt(temp * currentBodyAtm[0]); // * 401.8f;              //Calculation for speed of sound in ideal gas using air constants of gamma = 1.4 and R = 287 kJ/kg*K
+            double density = vessel.atmDensity;
 
             if (altitude < 0 && densitySmoothingAtOcean)
             {
                 double densityMultFromOcean = Math.Max(-altitude, 1);
                 densityMultFromOcean *= UNDERWATER_DENSITY_FACTOR_MINUS_ONE;
                 densityMultFromOcean++;
-                pressure *= densityMultFromOcean;
+                density *= densityMultFromOcean;
             }
 
-            return pressure / (temp * currentBodyAtm[2]);
+            return density;
         }
 
         public static double CalculateCurrentViscosity(double tempInK)
@@ -1402,9 +922,6 @@ namespace ferram4
             if ((object)body != null && body.flightGlobalsIndex != prevBody)
             {
                 UpdateCurrentActiveBody(body.flightGlobalsIndex, body);
-//                if (body.name == "Jool" || body.name == "Sentar")
-                if(body.pqsController == null)
-                    currentBodyTemp += FARAeroUtil.JoolTempOffset;
             }
         }
 
@@ -1415,12 +932,6 @@ namespace ferram4
                 prevBody = index;
                 currentBodyAtm = bodyAtmosphereConfiguration[prevBody];
                 currentBodyTemp = 273.15f;
-                if(body.useLegacyAtmosphere && body.atmosphere)
-                {
-                    currentBodyAtmPressureOffset = body.atmosphereMultiplier * 1e-6;
-                }
-                else
-                    currentBodyAtmPressureOffset = 0;
 
                 prandtlMeyerMach = null;
                 prandtlMeyerAngle = null;

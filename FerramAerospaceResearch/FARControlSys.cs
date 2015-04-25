@@ -328,12 +328,11 @@ namespace ferram4
                 roll = (vesselRot.eulerAngles.z > 180) ? (360 - vesselRot.eulerAngles.z) : -vesselRot.eulerAngles.z;
             }
 
-            double soundspeed;
-            rho = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed, false);
+            rho = FARAeroUtil.GetCurrentDensity(vessel, false);
             double realToStockDensityRatio = vessel.atmDensity / rho;
 
             bool zero_q = FARMathUtil.Approximately(0, q);
-            double drag_coeff = FlightGlobals.DragMultiplier * 1000 * realToStockDensityRatio;
+            double drag_coeff = 1;
             double fixedDeltaTime = TimeWarp.fixedDeltaTime;
 
             Vector3 lift_axis = -vessel.transform.forward;
@@ -395,16 +394,6 @@ namespace ferram4
                             k++;
                             break;
                         }
-                        else if (m is FARBasicDragModel)
-                        {
-                            FARBasicDragModel d = m as FARBasicDragModel;
-                            DragArea += d.S * d.Cd;
-                            LiftArea += d.S * d.Cl * Vector3.Dot(d.GetLiftDirection(), lift_axis);
-                            otherArea += d.S;
-                            lengthScale += d.lengthScale;
-                            k++;
-                            break;
-                        }
                     }
                 }
                 DragArea += (p.mass + rmass) * p.maximum_drag * drag_coeff; //Resources matter here
@@ -418,7 +407,7 @@ namespace ferram4
             temp *= FARAeroUtil.ReferenceTemperatureRatio(MachNumber, 0.843);
             double visc = FARAeroUtil.CalculateCurrentViscosity(temp);
 
-            if (vessel.staticPressure > 0)
+            if (vessel.atmDensity > 0)
                 reynoldsNumber = airDensity * vessel.srfSpeed * lengthScale / visc;
             else
                 reynoldsNumber = 0;
@@ -1227,7 +1216,7 @@ namespace ferram4
         private void ChangeSurfVelocity(SurfaceVelMode velMode)
         {
             //DaMichel: Keep our fingers off of this also if there is no atmosphere (staticPressure <= 0)
-            if (FlightUIController.speedDisplayMode != FlightUIController.SpeedDisplayModes.Surface || vessel.staticPressure <= 0)
+            if (FlightUIController.speedDisplayMode != FlightUIController.SpeedDisplayModes.Surface || vessel.atmDensity <= 0)
                 return;
 
             FlightUIController UI = FlightUIController.fetch;
@@ -1406,14 +1395,11 @@ namespace ferram4
                 {
                     if (activeControlSys == this)
                     {
-                        if (vessel.staticPressure > 0)
+                        if (vessel.atmDensity > 0)
                         {
-                            double soundspeed;
-                            airDensity = FARAeroUtil.GetCurrentDensity(vessel, out soundspeed, false);
+                            airDensity = FARAeroUtil.GetCurrentDensity(vessel, false);
 
                             //this.vessel.srf_velocity += FARWind.GetWind(this.vessel.mainBody, part, vessel.transform.position);
-
-                            MachNumber = this.vessel.srf_velocity.magnitude / soundspeed;
 
                             if (DensityRelative)
                                 airDensity_str = (airDensity * invKerbinSLDensity).ToString("F3");
@@ -1423,7 +1409,7 @@ namespace ferram4
 
                             q = airDensity * vessel.srf_velocity.sqrMagnitude * 0.5;
 
-                            mach_str = MachNumber.ToString("F3");
+                            mach_str = vessel.mach.ToString("F3");
                         }
                         else
                         {
@@ -1540,7 +1526,7 @@ namespace ferram4
             }
             if (ControlReducer)
             {
-                double std_q = FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(alt, activeControlSys.vessel.mainBody)) * scaleVelocity * scaleVelocity * 0.5;
+                double std_q = vessel.atmDensity * scaleVelocity * scaleVelocity * 0.5;
 
                 if (activeControlSys.q < std_q)
                 {

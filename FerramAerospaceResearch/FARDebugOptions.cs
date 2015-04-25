@@ -434,11 +434,22 @@ namespace ferram4
             FARDebugValues.useSplinesForSupersonicMath = GUILayout.Toggle(FARDebugValues.useSplinesForSupersonicMath, "Use Splines for Supersonic Math", thisStyle);
             FARDebugValues.allowStructuralFailures = GUILayout.Toggle(FARDebugValues.allowStructuralFailures, "Allow Aero-structural Failures", thisStyle);
             GUILayout.Label("Editor GUI Graph Colors");
-            ChangeColor("Cl", ref FAREditorGUI.clColor, ref cLTexture);
-            ChangeColor("Cd", ref FAREditorGUI.cdColor, ref cDTexture);
-            ChangeColor("Cm", ref FAREditorGUI.cmColor, ref cMTexture);
-            ChangeColor("L_D", ref FAREditorGUI.l_DColor, ref l_DTexture);
-            
+
+            Color tmpColor = FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[0];
+            ReColorTexture(ref tmpColor, ref cLTexture);
+            FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[0] = tmpColor;
+
+            tmpColor = FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[1];
+            ReColorTexture(ref tmpColor, ref cDTexture);
+            FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[1] = tmpColor;
+
+            tmpColor = FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[2];
+            ReColorTexture(ref tmpColor, ref cMTexture);
+            FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[2] = tmpColor;
+
+            tmpColor = FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[3];
+            ReColorTexture(ref tmpColor, ref l_DTexture);
+            FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[3] = tmpColor;            
 
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
@@ -536,11 +547,22 @@ namespace ferram4
             FARPartClassification.LoadClassificationTemplates();
             FARAeroUtil.LoadAeroDataFromConfig();
             FARActionGroupConfiguration.LoadConfiguration();
-            FAREditorGUI.LoadColors();
-            ReColorTexture(ref FAREditorGUI.clColor, ref cLTexture);
-            ReColorTexture(ref FAREditorGUI.cdColor, ref cDTexture);
-            ReColorTexture(ref FAREditorGUI.cmColor, ref cMTexture);
-            ReColorTexture(ref FAREditorGUI.l_DColor, ref l_DTexture);
+
+            Color tmpColor = FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[0];
+            ReColorTexture(ref tmpColor, ref cLTexture);
+            FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[0] = tmpColor;
+
+            tmpColor = FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[1];
+            ReColorTexture(ref tmpColor, ref cDTexture);
+            FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[1] = tmpColor;
+
+            tmpColor = FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[2];
+            ReColorTexture(ref tmpColor, ref cMTexture);
+            FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[2] = tmpColor;
+
+            tmpColor = FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[3];
+            ReColorTexture(ref tmpColor, ref l_DTexture);
+            FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[3] = tmpColor;
         }
 
         public static void SaveConfigs()
@@ -561,7 +583,6 @@ namespace ferram4
             FARPartClassification.SaveCustomClassificationTemplates();
             FARAeroStress.SaveCustomStressTemplates();
             FARActionGroupConfiguration.SaveConfigruration();
-            FAREditorGUI.SaveCustomColors();
             config.save();
         }
         void OnDestroy()

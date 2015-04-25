@@ -318,7 +318,7 @@ namespace ferram4
                 CoM /= mass;
 
                 if (HighLogic.LoadedSceneIsEditor && (isFlap || isSpoiler))
-                    SetControlStateEditor(CoM, part.transform.up, 0, 0, 0, FAREditorGUI.CurrentEditorFlapSetting, FAREditorGUI.CurrentEditorSpoilerSetting);
+                    SetControlStateEditor(CoM, part.transform.up, 0, 0, 0, 0, false);
 
                 float roll2 = 0;
                 if (HighLogic.LoadedSceneIsEditor)
@@ -372,7 +372,7 @@ namespace ferram4
         private void AoAOffsetFromControl()
         {
             AoAdesiredControl = 0;
-            if ((object)vessel != null && vessel.staticPressure > 0)
+            if ((object)vessel != null && vessel.atmDensity > 0)
             {
                 if (pitchaxis != 0.0)
                 {

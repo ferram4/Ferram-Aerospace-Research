@@ -253,36 +253,7 @@ namespace ferram4
             if (p.parent && p.parent.Modules != null)
             {
                 Part parent = p.parent;
-                if (parent.Modules.Contains("FARBasicDragModel"))
-                {
-                    FARBasicDragModel d = null;
-                    foreach (PartModule m in parent.Modules)
-                        if (m is FARBasicDragModel)
-                        {
-                            d = m as FARBasicDragModel;
-                            return false;
-                        }
-
-                    Transform selfTransform = p.transform;
-                    if ((object)selfTransform == null)
-                    {
-                        selfTransform = p.vessel.vesselTransform;
-                    }
-
-                    Transform parentTransform = p.parent.transform;
-                    if ((object)parentTransform == null)
-                    {
-                        parentTransform = p.vessel.vesselTransform;
-                    }
-
-                    Vector3d parentVector = (selfTransform.worldToLocalMatrix * parentTransform.localToWorldMatrix).MultiplyVector(d.localUpVector);
-
-                    double dotProd = Vector3d.Dot(parentVector, Vector3d.up);
-                    if (Math.Abs(dotProd) < 0.3)
-                        if (crossSectionalArea / d.S <= 0.1 && d.S > area * 0.2 * Math.Sqrt(1 - dotProd * dotProd))
-                            isGreeble = true;
-                }
-                else if (parent.Modules.Contains("FARWingAerodynamicModel") || parent.Modules.Contains("FARControllableSurface"))
+                if (parent.Modules.Contains("FARWingAerodynamicModel") || parent.Modules.Contains("FARControllableSurface"))
                 {
                     FARWingAerodynamicModel w = parent.GetComponent<FARWingAerodynamicModel>();
 
@@ -291,7 +262,8 @@ namespace ferram4
                         isGreeble = true;
 
                     Debug.Log(p.partInfo.title + " is greeble on wing? " + isGreeble + "\n\rPart area: " + area + " wing area comparison: " + comparisonArea);
-                }
+                } 
+
             }
 
             return isGreeble;

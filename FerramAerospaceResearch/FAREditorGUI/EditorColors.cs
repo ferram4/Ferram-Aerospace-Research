@@ -24,6 +24,22 @@ namespace FerramAerospaceResearch.FAREditorGUI
             LoadColors();
         }
 
+        public Color this[int index]
+        {
+            get
+            {
+                if (_instance == null)
+                    _instance = new EditorColors(); 
+                return _instance.colors[index];
+            }
+            set
+            {
+                if (_instance == null)
+                    _instance = new EditorColors(); 
+                _instance.colors[index] = value;
+            }
+        }
+
         public static Color GetColor(int index)
         {
             if (_instance == null)

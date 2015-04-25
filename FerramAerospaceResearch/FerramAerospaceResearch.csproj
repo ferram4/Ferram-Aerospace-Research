@@ -38,11 +38,11 @@
   <ItemGroup>
     <Reference Include="Assembly-CSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\Release\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\..\..\Games\KSP 1.0 exp\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\Release\Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>..\..\..\..\Games\KSP 1.0 exp\KSP_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="ferramGraph">
       <HintPath>..\ferramGraph\bin\Release\ferramGraph.dll</HintPath>
@@ -59,7 +59,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\Release\UnityEngine.dll</HintPath>
+      <HintPath>..\..\..\..\Games\KSP 1.0 exp\KSP_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -74,8 +74,6 @@
     <Compile Include="FARAeroUtil.cs" />
     <Compile Include="FARAPI.cs" />
     <Compile Include="FARBaseAerodynamics.cs" />
-    <Compile Include="FARBasicDragModel.cs" />
-    <Compile Include="FARCargoBayModule.cs" />
     <Compile Include="FARCenterQuery.cs" />
     <Compile Include="FARControllableSurface.cs" />
     <Compile Include="FAREditorGUI\EditorColors.cs" />
@@ -90,8 +88,6 @@
     <Compile Include="FAREditorGUI\Simulation\StabilityDerivOutput.cs" />
     <Compile Include="FAREditorGUI\Simulation\StabilityDerivCalculator.cs" />
     <Compile Include="FAREditorGUI\Simulation\SweepSim.cs" />
-    <Compile Include="FARGlobalControlEditorObject.cs" />
-    <Compile Include="FARGlobalControlFlightObject.cs" />
     <Compile Include="FAREditorGUI\EditorAreaRulingOverlay.cs" />
     <Compile Include="FAREditorGUI\StabilityDerivSimulationGUI.cs" />
     <Compile Include="FAREditorGUI\StaticAnalysisGraphGUI.cs" />
@@ -105,10 +101,8 @@
     <Compile Include="FARPartGeometry\GeometryMesh.cs" />
     <Compile Include="FARPartGeometry\GeometryPartModule.cs" />
     <Compile Include="FARDebugOptions.cs" />
-    <Compile Include="FAREditorAeroSim.cs" />
     <Compile Include="FAREditorGUI.cs" />
     <Compile Include="FARControlSys.cs" />
-    <Compile Include="FARGeoUtil.cs" />
     <Compile Include="FARGUIDropDown.cs" />
     <Compile Include="FARGUIUtils.cs" />
     <Compile Include="FARMathUtil.cs" />
@@ -121,7 +115,6 @@
     <Compile Include="FARPartGeometry\VoxelCrossSection.cs" />
     <Compile Include="FARPartGeometry\VoxelChunk.cs" />
     <Compile Include="FARPartModule.cs" />
-    <Compile Include="FARPayloadFairingModule.cs" />
     <Compile Include="FARPM.cs" />
     <Compile Include="FARRungeKutta.cs" />
     <Compile Include="FARTest\FAREditorVoxel.cs" />

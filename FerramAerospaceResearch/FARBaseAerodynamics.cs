@@ -208,28 +208,6 @@ namespace ferram4
                 return velocityEditor;
         }
 
-        public double GetMachNumber(CelestialBody body, double altitude, Vector3d velocity)
-        {
-            return GetMachNumber(body, altitude, velocity.magnitude);
-        }
-
-        public double GetMachNumber(CelestialBody body, double altitude, double v_scalar)
-        {
-            if (HighLogic.LoadedSceneIsFlight)
-            {
-
-                if (FARControl != null)
-                    return FARControl.MachNumber;
-                else
-                    return FARAeroUtil.GetMachNumber(body, altitude, v_scalar);
-            }
-            else
-            {
-                print("GetMachNumber called in editor");
-                return 0;
-            }
-        }
-
         protected virtual void ResetCenterOfLift()
         {
             // Clear state when preparing CoL computation
