@@ -55,10 +55,17 @@ namespace FerramAerospaceResearch.FAREditorGUI
             "Transonic Design"
         };
 
+        void Awake()
+        {
+
+        }
 
         void Start()
         {
-            instance = this;
+            if (instance == null)
+                instance = this;
+            else
+                GameObject.Destroy(this);
 
             _vehicleAero = new VehicleAerodynamics();
 
@@ -75,9 +82,14 @@ namespace FerramAerospaceResearch.FAREditorGUI
             _areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.8f), Color.green, Color.yellow, 10, 5);
             guiRect.height = 500;
             guiRect.width = 650;
+
+
+
             GameEvents.onEditorPartEvent.Add(UpdateGeometryEvent);
             GameEvents.onEditorUndo.Add(ResetEditorEvent);
             GameEvents.onEditorRedo.Add(ResetEditorEvent);
+            GameEvents.onEditorShipModified.Add(ResetEditorEvent);
+            GameEvents.onEditorLoad.Add(ResetEditorEvent);
         }
 
         void OnDestroy()
@@ -85,10 +97,27 @@ namespace FerramAerospaceResearch.FAREditorGUI
             GameEvents.onEditorPartEvent.Remove(UpdateGeometryEvent);
             GameEvents.onEditorUndo.Remove(ResetEditorEvent);
             GameEvents.onEditorRedo.Remove(ResetEditorEvent);
+            GameEvents.onEditorShipModified.Remove(ResetEditorEvent);
+            GameEvents.onEditorLoad.Remove(ResetEditorEvent);
             EditorLogic.fetch.Unlock("FAREdLock");
         }
 
         #region EditorEvents
+        private void ResetEditorEvent(ShipConstruct construct)
+        {
+            ResetEditor();
+        }
+        private void ResetEditorEvent(ShipConstruct construct, CraftBrowser.LoadType type)
+        {
+            ResetEditor();
+        }
+
+        public static void ResetEditor()
+        {
+            instance._areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.8f), Color.green, Color.yellow, 10, 5);
+            UpdateVoxel();
+        }
+       
         private void UpdateGeometryEvent(ConstructionEventType type, Part pEvent)
         {
             if (type == ConstructionEventType.PartRotated ||
@@ -100,16 +129,8 @@ namespace FerramAerospaceResearch.FAREditorGUI
                 UpdateVoxel();
             }
         }
-        private void ResetEditorEvent(ShipConstruct construct)
-        {
-            ResetEditor();
-        }
 
-        public static void ResetEditor()
-        {
-            instance._areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.8f), Color.green, Color.yellow, 10, 5);
-            UpdateVoxel();
-        }
+
         private void LEGACY_UpdateWingAeroModels()
         {
             for (int i = 0; i < FARAeroUtil.CurEditorWings.Count; i++)
@@ -134,7 +155,7 @@ namespace FerramAerospaceResearch.FAREditorGUI
                     LEGACY_UpdateWingAeroModels();
                 } 
 
-                if (_updateRateLimiter < 20)
+                if (_updateRateLimiter < 40)
                 {
                     _updateRateLimiter++;
                 }
@@ -157,7 +178,7 @@ namespace FerramAerospaceResearch.FAREditorGUI
 
         void RecalculateVoxel()
         {
-            if (_updateRateLimiter < 20)        //this has been updated recently in the past; queue an update and return
+            if (_updateRateLimiter < 40)        //this has been updated recently in the past; queue an update and return
             {
                 _updateQueued = true;
                 return;
