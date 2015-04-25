@@ -65,6 +65,7 @@
     <Compile Include="FARAeroComponents\FARAeroPartModule.cs" />
     <Compile Include="FARAeroComponents\FARAeroSection.cs" />
     <Compile Include="FARAeroComponents\FARVesselAero.cs" />
+    <Compile Include="FARAeroComponents\TmpFlightIntegratorOverride.cs" />
     <Compile Include="FARAeroComponents\VehicleAerodynamics.cs" />
     <Compile Include="FARAeroStress.cs" />
     <Compile Include="FARAeroUtil.cs" />
@@ -113,7 +114,6 @@
     <Compile Include="FARPartModule.cs" />
     <Compile Include="FARPM.cs" />
     <Compile Include="FARRungeKutta.cs" />
-    <Compile Include="FARTest\FAREditorVoxel.cs" />
     <Compile Include="FARThreading\ThreadBarrier.cs" />
     <Compile Include="FARWind.cs" />
     <Compile Include="FARWingAerodynamicModel.cs" />

@@ -73,7 +73,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 PartData data = new PartData();
                 data.aeroModule = moduleList[i];
-                Transform transform = data.aeroModule.part.transform;
+                Transform transform = data.aeroModule.part.partTransform;
                 Matrix4x4 transformMatrix = transform.worldToLocalMatrix;
 
                 Vector3 forceCenterWorldSpace = centroidLocationAlongxRef + Vector3.ProjectOnPlane(vehicleMainAxis, transform.position) + avgPosDiffFromCentroid;
@@ -157,7 +157,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             Vector3 xRefVector = data.xRefVectorPartSpace;
             Vector3 nRefVector = data.nRefVectorPartSpace;
 
-            Vector3 velLocal = aeroModule.transform.worldToLocalMatrix.MultiplyVector(vel);
+            Vector3 velLocal = aeroModule.part.partTransform.worldToLocalMatrix.MultiplyVector(vel);
 
             //Vector3 angVelLocal = aeroModule.partLocalAngVel;
 
@@ -224,7 +224,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             Vector3 forceVector = (float)xForce * xRefVector + (float)nForce * localNormalForceVec;
             Vector3 torqueVector = Vector3.Cross(xRefVector, localNormalForceVec) * moment;
 
-            Matrix4x4 localToWorld = aeroModule.part.transform.localToWorldMatrix;
+            Matrix4x4 localToWorld = aeroModule.part.partTransform.localToWorldMatrix;
 
             float dynPresAndScaling = 0.0005f * atmDensity * velLocal.sqrMagnitude;        //dyn pres and N -> kN conversion
 
@@ -242,7 +242,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if ((object)aeroModule == null)
                     continue;
 
-                centroid = module.part.transform.localToWorldMatrix.MultiplyPoint3x4(partData.centroidPartSpace);
+                centroid = module.part.partTransform.localToWorldMatrix.MultiplyPoint3x4(partData.centroidPartSpace);
                 center.AddForce(centroid, forceVector * partData.dragFactor);
                 center.AddTorque(centroid, torqueVector * partData.dragFactor);
             }

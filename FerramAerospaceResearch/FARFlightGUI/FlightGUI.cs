@@ -7,7 +7,7 @@ using ferram4;
 
 namespace FerramAerospaceResearch.FARGUI
 {
-    public class FlightGUI : MonoBehaviour
+    public class FlightGUI : VesselModule
     {
         Vessel _vessel;
         FARVesselAero _vesselAero;
@@ -41,9 +41,9 @@ namespace FerramAerospaceResearch.FARGUI
             _currentAeroModules = newAeroModules;
             _LEGACY_currentWingAeroModel.Clear();
 
-            for(int i = 0; i < _vessel.Parts.Count; i++)
+            for(int i = 0; i < _vessel.parts.Count; i++)
             {
-                Part p = _vessel.Parts[i];
+                Part p = _vessel.parts[i];
                 FARWingAerodynamicModel w = p.GetComponent<FARWingAerodynamicModel>();
                 if ((object)w != null)
                     _LEGACY_currentWingAeroModel.Add(w);
@@ -114,6 +114,10 @@ namespace FerramAerospaceResearch.FARGUI
             data.AppendLine(_vesselAero.ReynoldsNumber.ToString("e2"));
             data.AppendLine();
 
+            data.AppendLine(_vessel.dynamicPressurekPa.ToString("F3"));
+            data.AppendLine(_vessel.atmDensity.ToString("F3"));
+            data.AppendLine();
+
             data.Append(liftForce.ToString("F3"));
             data.AppendLine(" kN");
             data.Append(dragForce.ToString("F3"));
@@ -144,7 +148,7 @@ namespace FerramAerospaceResearch.FARGUI
         {
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();
-            GUILayout.Box("Mach:\n\rReynolds:\n\r\n\rLift:\n\rDrag:\n\rSideForce:\n\r\n\rCl:\n\rCd:\n\rCy:\n\rRef Area:", GUILayout.Width(75));
+            GUILayout.Box("Mach:\n\rReynolds:\n\r\n\rQ:\n\rdensity:\n\r\n\rLift:\n\rDrag:\n\rSideForce:\n\r\n\rCl:\n\rCd:\n\rCy:\n\rRef Area:", GUILayout.Width(75));
             GUILayout.EndVertical();
             GUILayout.BeginVertical();
             GUILayout.Box(dataString, GUILayout.Width(75));

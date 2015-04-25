@@ -121,7 +121,7 @@ namespace ferram4
             if (HighLogic.LoadedSceneIsEditor)
                 list = FARAeroUtil.AllEditorParts;
             else if (vessel)
-                list = vessel.Parts;
+                list = vessel.parts;
             else
             {
                 list = new List<Part>();

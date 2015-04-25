@@ -77,16 +77,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
             get { return yCellLength + xCellLength + zCellLength; }
         }
 
-        public VehicleVoxel(List<Part> partList, int elementCount, bool multiThreaded, bool solidify)
+        public VehicleVoxel(List<Part> partList, List<GeometryPartModule> geoModules, int elementCount, bool multiThreaded, bool solidify)
         {
+
             Vector3d min = new Vector3d(double.PositiveInfinity, double.PositiveInfinity, double.PositiveInfinity);
             Vector3d max = new Vector3d(double.NegativeInfinity, double.NegativeInfinity, double.NegativeInfinity);
 
-            List<GeometryPartModule> geoModules = new List<GeometryPartModule>();
-            for(int i = 0; i < partList.Count; i++)
+            for (int i = 0; i < geoModules.Count; i++)
             {
-                Part p = partList[i];
-                GeometryPartModule m = p.GetComponent<GeometryPartModule>();
+                GeometryPartModule m = geoModules[i];
                 if ((object)m != null)
                 {
                     Vector3d minBounds = m.overallMeshBounds.min;
@@ -100,7 +99,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     max.y = Math.Max(max.y, maxBounds.y);
                     max.z = Math.Max(max.z, maxBounds.z);
 
-                    geoModules.Add(m);
+                    Debug.Log(m.overallMeshBounds);
                 }
             }
 
@@ -109,7 +108,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             double voxelVolume = size.x * size.y * size.z;
 
             if (double.IsInfinity(voxelVolume))
+            {
+                Debug.LogError("Voxel Volume was infinity; ending voxelization");
                 return;
+            }
 
             double elementVol = voxelVolume / elementCount;
             elementSize = Math.Pow(elementVol, 1d / 3d);
@@ -133,6 +135,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
             extents.x = xLength * 4 * elementSize;
             extents.y = yLength * 4 * elementSize;
             extents.z = zLength * 4 * elementSize;
+
+            Debug.Log("voxel " + extents);
 
             Vector3d center = (max + min) * 0.5f;    //Center of the vessel
 

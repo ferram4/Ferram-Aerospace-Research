@@ -39,11 +39,12 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Linq;
 using UnityEngine;
+using FerramAerospaceResearch.FARPartGeometry;
 using ferram4;
 
 namespace FerramAerospaceResearch.FARAeroComponents
 {
-    public class FARVesselAero : MonoBehaviour
+    public class FARVesselAero : VesselModule
     {
         Vessel _vessel;
         VesselType _vType;
@@ -70,6 +71,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
             get { return reynoldsNumber; }
         }
 
+        List<GeometryPartModule> _currentGeoModules;
+        int geoModulesReady = 0;
+
         List<FARAeroPartModule> _currentAeroModules;
         List<FARAeroSection> _currentAeroSections;
 
@@ -78,19 +82,46 @@ namespace FerramAerospaceResearch.FARAeroComponents
         bool setup = false;
 
         VehicleAerodynamics _vehicleAero;
+        
 
-        private void Awake()
+        private void Start()
         {
             _vessel = gameObject.GetComponent<Vessel>();
-            VesselUpdate();
             this.enabled = true;
-            for(int i = 0; i < _vessel.Parts.Count; i++)
+
+            _currentGeoModules = new List<GeometryPartModule>();
+            for (int i = 0; i < _vessel.parts.Count; i++)
             {
-                Part p = _vessel.Parts[i];
+                Part p = _vessel.parts[i];
                 p.maximum_drag = 0;
                 p.minimum_drag = 0;
                 p.angularDrag = 0;
+
+                p.dragModel = Part.DragModel.NONE;
+                p.dragReferenceVector = Vector3.zero;
+                p.dragScalar = 0;
+                p.dragVector = Vector3.zero;
+                p.dragVectorDir = Vector3.zero;
+                p.dragVectorDirLocal = Vector3.zero;
+                p.dragVectorMag = 0;
+                p.dragVectorSqrMag = 0;
+
+                p.bodyLiftMultiplier = 0;
+                p.bodyLiftScalar = 0;
+
+                GeometryPartModule g = p.GetComponent<GeometryPartModule>();
+                if((object)g != null)
+                {
+                    _currentGeoModules.Add(g);
+                }
             }
+
+            GameEvents.onVesselGoOffRails.Add(VesselUpdateEvent);
+            GameEvents.onVesselChange.Add(VesselUpdateEvent);
+            //GameEvents.onVesselLoaded.Add(VesselUpdate);
+            GameEvents.onVesselCreate.Add(VesselUpdateEvent);
+            GameEvents.onVesselWasModified.Add(VesselUpdateEvent);
+            VesselUpdate(false);
         }
 
         private void FixedUpdate()
@@ -136,13 +167,35 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if ((object)m != null)
                         m.ApplyForces();
                 }
+            }
 
-                if (_updateRateLimiter < 20)
+            if (_currentGeoModules.Count > geoModulesReady)
+            {
+                CheckGeoModulesReady();
+            }
+            if (_updateRateLimiter < 20)
+            {
+                _updateRateLimiter++;
+            }
+            else if (_updateQueued)
+                VesselUpdate(true);
+        }
+
+        private void CheckGeoModulesReady()
+        {
+            geoModulesReady = 0;
+            for(int i = 0; i < _currentGeoModules.Count; i++)
+            {
+                GeometryPartModule g = _currentGeoModules[i];
+                if(g == null)
                 {
-                    _updateRateLimiter++;
+                    _currentGeoModules.RemoveAt(i);
+                    i--;
                 }
-                else if (_updateQueued)
-                    VesselUpdate();
+                else
+                {
+                    geoModulesReady++;
+                }
             }
         }
 
@@ -150,36 +203,77 @@ namespace FerramAerospaceResearch.FARAeroComponents
         {
             if (_updateRateLimiter == 20)
                 _updateRateLimiter = 18;
-            VesselUpdate();
+            VesselUpdate(false);
         }
 
-        public void VesselUpdate()
+        public void VesselUpdateEvent(Vessel v)
         {
-            if(_vessel == null)
-                _vessel = gameObject.GetComponent<Vessel>();
-            if (_vehicleAero == null)
-                _vehicleAero = new VehicleAerodynamics();
-
-            if (_updateRateLimiter < 20)        //this has been updated recently in the past; queue an update and return
-            {
-                _updateQueued = true;
-                return;
-            }
-            else                                //last update was far enough in the past to run; reset rate limit counter and clear the queued flag
-            {
-                _updateRateLimiter = 0;
-                _updateQueued = false;
-            }
-            _vType = _vessel.vesselType;
-
-            _voxelCount = VoxelCountFromType();
-
-            _vehicleAero.VoxelUpdate(_vessel.transform.worldToLocalMatrix, _vessel.transform.localToWorldMatrix, _voxelCount, _vessel.Parts, !setup);
-
-            setup = true;
-
-            Debug.Log("Updating vessel voxel for " + _vessel.vesselName);
+            if (v == _vessel)
+                VesselUpdate(true);
         }
+
+         public void VesselUpdate(bool recalcGeoModules)
+         {
+             if (_vessel == null)
+                 _vessel = gameObject.GetComponent<Vessel>();
+             if (_vehicleAero == null)
+                 _vehicleAero = new VehicleAerodynamics();
+
+             if (_currentGeoModules.Count > geoModulesReady)
+             {
+                 _updateQueued = true;
+                 return;
+             }
+
+             if (_updateRateLimiter < 20)        //this has been updated recently in the past; queue an update and return
+             {
+                 _updateQueued = true;
+                 return;
+             }
+             else                                //last update was far enough in the past to run; reset rate limit counter and clear the queued flag
+             {
+                 _updateRateLimiter = 0;
+                 _updateQueued = false;
+             }
+
+             if (recalcGeoModules)
+             {
+                 _currentGeoModules = new List<GeometryPartModule>();
+                 geoModulesReady = 0;
+                 for (int i = 0; i < _vessel.parts.Count; i++)
+                 {
+                     Part p = _vessel.parts[i];
+                     GeometryPartModule g = p.GetComponent<GeometryPartModule>();
+                     if ((object)g != null)
+                     {
+                         _currentGeoModules.Add(g);
+                         if (g.Ready)
+                             geoModulesReady++;
+                     }
+                 }
+             }
+
+             if(_currentGeoModules.Count > geoModulesReady)
+             {
+                 _updateQueued = true;
+                 return;
+             }
+
+             if(_currentGeoModules.Count == 0)
+             {
+                 DisableModule();
+             }
+
+             _vType = _vessel.vesselType;
+
+             _voxelCount = VoxelCountFromType();
+
+             _vehicleAero.VoxelUpdate(_vessel.rootPart.partTransform.worldToLocalMatrix, _vessel.rootPart.partTransform.localToWorldMatrix, _voxelCount, _vessel.parts, _currentGeoModules, !setup);
+
+             setup = true;
+
+             Debug.Log("Updating vessel voxel for " + _vessel.vesselName);
+         }
 
         //TODO: have this grab from a config file
         private int VoxelCountFromType()
@@ -188,6 +282,21 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 return 20000;
             else
                 return 125000;
+        }
+
+        private void OnDestroy()
+        {
+            DisableModule();
+        }
+
+        private void DisableModule()
+        {
+            this.enabled = false;
+            GameEvents.onVesselGoOffRails.Remove(VesselUpdateEvent);
+            GameEvents.onVesselChange.Remove(VesselUpdateEvent);
+            //GameEvents.onVesselLoaded.Add(VesselUpdate);
+            GameEvents.onVesselCreate.Remove(VesselUpdateEvent);
+            GameEvents.onVesselWasModified.Remove(VesselUpdateEvent);
         }
     }
 }

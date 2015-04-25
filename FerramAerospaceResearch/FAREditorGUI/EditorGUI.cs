@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using FerramAerospaceResearch.FARAeroComponents;
+using FerramAerospaceResearch.FARPartGeometry;
 using FerramAerospaceResearch.FAREditorGUI.Simulation;
 using ferram4;
 
@@ -20,6 +21,7 @@ namespace FerramAerospaceResearch.FAREditorGUI
 
         int _updateRateLimiter = 0;
         bool _updateQueued = true;
+        bool _updateRebuildGeo = false;
 
         static bool showGUI = false;
         bool useKSPSkin = true;
@@ -31,6 +33,7 @@ namespace FerramAerospaceResearch.FAREditorGUI
         static ApplicationLauncherButton editorGUIAppLauncherButton;
 
         VehicleAerodynamics _vehicleAero;
+        List<GeometryPartModule> _currentGeometryModules = new List<GeometryPartModule>();
         EditorSimManager _simManager;
 
         EditorAreaRulingOverlay _areaRulingOverlay;
@@ -99,6 +102,7 @@ namespace FerramAerospaceResearch.FAREditorGUI
             GameEvents.onEditorRedo.Remove(ResetEditorEvent);
             GameEvents.onEditorShipModified.Remove(ResetEditorEvent);
             GameEvents.onEditorLoad.Remove(ResetEditorEvent);
+
             EditorLogic.fetch.Unlock("FAREdLock");
         }
 
@@ -116,6 +120,7 @@ namespace FerramAerospaceResearch.FAREditorGUI
         {
             instance._areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.8f), Color.green, Color.yellow, 10, 5);
             UpdateVoxel();
+            instance._updateRebuildGeo = true;
         }
        
         private void UpdateGeometryEvent(ConstructionEventType type, Part pEvent)
@@ -127,6 +132,7 @@ namespace FerramAerospaceResearch.FAREditorGUI
             type == ConstructionEventType.PartRootSelected)
             {
                 UpdateVoxel();
+                instance._updateRebuildGeo = true;
             }
         }
 
@@ -188,8 +194,24 @@ namespace FerramAerospaceResearch.FAREditorGUI
                 _updateRateLimiter = 0;
                 _updateQueued = false;
             }
+            List<Part> partList = EditorLogic.SortedShipList;
+            if (_updateRebuildGeo)
+            {
+                _currentGeometryModules.Clear();
 
-            _vehicleAero.VoxelUpdate(EditorLogic.RootPart.transform.worldToLocalMatrix, EditorLogic.RootPart.transform.localToWorldMatrix, EDITOR_VOXEL_COUNT, EditorLogic.SortedShipList, true);
+                for (int i = 0; i < partList.Count; i++)
+                {
+                    Part p = partList[i];
+                    GeometryPartModule g = p.GetComponent<GeometryPartModule>();
+                    if ((object)g != null)
+                    {
+                        _currentGeometryModules.Add(g);
+                        Debug.Log("this works, right?");
+                    }
+                }
+            }
+            _vehicleAero.VoxelUpdate(EditorLogic.RootPart.transform.worldToLocalMatrix, EditorLogic.RootPart.transform.localToWorldMatrix, EDITOR_VOXEL_COUNT, partList, _currentGeometryModules, true);
+            _updateRebuildGeo = false;
         }
 
         void UpdateCrossSections()

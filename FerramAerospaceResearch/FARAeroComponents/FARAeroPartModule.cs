@@ -69,7 +69,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public void ApplyForces()
         {
-            Matrix4x4 matrix = part.transform.localToWorldMatrix;
+            Matrix4x4 matrix = part.partTransform.localToWorldMatrix;
             Rigidbody rb = part.Rigidbody;
 
             worldSpaceAeroForce = matrix.MultiplyVector(partLocalForce);
@@ -100,7 +100,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public void UpdateVelocityAndAngVelocity(Vector3 frameVel)
         {
-            Matrix4x4 matrix = part.transform.worldToLocalMatrix;
+            Matrix4x4 matrix = part.partTransform.worldToLocalMatrix;
             Rigidbody rb = part.Rigidbody;
 
             partLocalVel = rb.velocity + frameVel;

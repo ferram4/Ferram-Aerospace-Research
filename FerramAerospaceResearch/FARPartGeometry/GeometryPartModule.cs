@@ -54,6 +54,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
         private List<float> animStateTime;
 
         private bool _ready = false;
+        public bool Ready
+        {
+            get { return _ready; }
+        }
         private int _sendUpdateTick = 0;
 
         [SerializeField]
@@ -63,7 +67,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         void Start()
         {
-            //RebuildAllMeshData();
+            RebuildAllMeshData();
             GetAnimations();
             GameEvents.onEditorPartEvent.Add(UpdateGeometryEvent);
             GameEvents.onEditorUndo.Add(UpdateGeometryEvent);
@@ -79,12 +83,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         void FixedUpdate()
         {
-            if (!_ready && ((HighLogic.LoadedSceneIsFlight && FlightGlobals.ready) ||
+            /*if (!_ready && ((HighLogic.LoadedSceneIsFlight && FlightGlobals.ready) ||
                 HighLogic.LoadedSceneIsEditor && ApplicationLauncher.Ready))
             {
                 RebuildAllMeshData();
                 _ready = true;
-            }
+            }*/
 
             if (animStates != null && animStates.Count > 0)
                 CheckAnimations();
@@ -102,7 +106,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 return;
 
             partTransform = part.transform;
-            partRigidBody = part.Rigidbody;
             List<Transform> meshTransforms = part.PartModelTransformList();
             List<MeshData> geometryMeshes = CreateMeshListFromTransforms(ref meshTransforms);
 
@@ -111,13 +114,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Matrix4x4 worldToVesselMatrix;
             if (HighLogic.LoadedSceneIsFlight)
             {
-                worldToVesselMatrix = vessel.ReferenceTransform.worldToLocalMatrix;
+                worldToVesselMatrix = vessel.rootPart.partTransform.worldToLocalMatrix;
             }
             else
             {
-                worldToVesselMatrix = EditorLogic.RootPart.transform.worldToLocalMatrix;
+                worldToVesselMatrix = EditorLogic.RootPart.partTransform.worldToLocalMatrix;
             }
-
             for (int i = 0; i < meshTransforms.Count; i++)
             {
                 MeshData m = geometryMeshes[i];
@@ -126,6 +128,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
             UpdateTransformMatrixList(worldToVesselMatrix);
             overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
+            _ready = true;
         }
 
         private void UpdateGeometryEvent(ConstructionEventType type, Part pEvent)
@@ -230,11 +233,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             Matrix4x4 transformMatrix;
             if (HighLogic.LoadedSceneIsFlight)
-                transformMatrix = vessel.ReferenceTransform.worldToLocalMatrix;
+                transformMatrix = vessel.rootPart.partTransform.worldToLocalMatrix;
             else
-                transformMatrix = EditorLogic.RootPart.transform.worldToLocalMatrix;
+                transformMatrix = EditorLogic.RootPart.partTransform.worldToLocalMatrix;
 
             UpdateTransformMatrixList(transformMatrix);
+            overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(transformMatrix);
 
             UpdateVoxelShape();
         }
@@ -265,8 +269,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
             List<MeshData> meshList = new List<MeshData>();
             List<Transform> validTransformList = new List<Transform>();
 
-            Bounds rendererBounds = this.part.GetPartOverallMeshBoundsInBasis(part.transform.worldToLocalMatrix);
-            Bounds colliderBounds = this.part.GetPartColliderBoundsInBasis(part.transform.worldToLocalMatrix);
+            Bounds rendererBounds = this.part.GetPartOverallMeshBoundsInBasis(part.partTransform.worldToLocalMatrix);
+            Bounds colliderBounds = this.part.GetPartColliderBoundsInBasis(part.partTransform.worldToLocalMatrix);
 
             bool cantUseColliders = true;
 
@@ -280,9 +284,20 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (mc != null)
                     {
                         MeshFilter mf = t.GetComponent<MeshFilter>();
-                        if (mf == null)
-                            continue;
-                        Mesh m = mf.sharedMesh;
+                        Mesh m;
+                        if (mf != null)
+                        {
+
+                            m = mf.sharedMesh;
+
+                            if (m != null)
+                            {
+                                meshList.Add(new MeshData(m.vertices, m.triangles, m.bounds));
+                                validTransformList.Add(t);
+                            }
+                        }
+                        m = null;
+                        m = mc.sharedMesh;
 
                         if (m == null)
                             continue;
@@ -427,7 +442,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             Matrix4x4 transformMatrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, relativeRescaleFactor);
             if (HighLogic.LoadedSceneIsFlight)
-                transformMatrix = vessel.ReferenceTransform.worldToLocalMatrix * transformMatrix;
+                transformMatrix = vessel.rootPart.transform.worldToLocalMatrix * transformMatrix;
             else
                 transformMatrix = EditorLogic.RootPart.transform.worldToLocalMatrix * transformMatrix;
 

@@ -55,6 +55,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
         Vector3 _vehicleMainAxis;
         List<Part> _vehiclePartList;
 
+        List<GeometryPartModule> _currentGeoModules;
+
         List<FARAeroPartModule> _currentAeroModules;
         List<FARAeroPartModule> _newAeroModules;
 
@@ -137,18 +139,14 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 DisplayDebugVoxels(localToWorldMatrix);
         }
 
-        public void VoxelUpdate(Matrix4x4 worldToLocalMatrix, Matrix4x4 localToWorldMatrix, int voxelCount, List<Part> vehiclePartList)
-        {
-            VoxelUpdate(worldToLocalMatrix, localToWorldMatrix, voxelCount, vehiclePartList, true);
-        }
-        
-        public void VoxelUpdate(Matrix4x4 worldToLocalMatrix, Matrix4x4 localToWorldMatrix, int voxelCount, List<Part> vehiclePartList, bool updateGeometryPartModules)
+        public void VoxelUpdate(Matrix4x4 worldToLocalMatrix, Matrix4x4 localToWorldMatrix, int voxelCount, List<Part> vehiclePartList, List<GeometryPartModule> currentGeoModules, bool updateGeometryPartModules = true)
         {
             _voxelCount = voxelCount;
 
             this._worldToLocalMatrix = worldToLocalMatrix;
             this._localToWorldMatrix = localToWorldMatrix;
             this._vehiclePartList = vehiclePartList;
+            this._currentGeoModules = currentGeoModules;
             this._vehicleMainAxis = CalculateVehicleMainAxis();
 
             if(_voxel != null)
@@ -168,7 +166,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if((bool)updateGeometryBool)
                         UpdateGeometryPartModules();
 
-                    VehicleVoxel newvoxel = new VehicleVoxel(_vehiclePartList, _voxelCount, true, true);
+                    VehicleVoxel newvoxel = new VehicleVoxel(_vehiclePartList, _currentGeoModules, _voxelCount, true, true);
 
                     _vehicleCrossSection = newvoxel.EmptyCrossSectionArray;
 
@@ -187,12 +185,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         private void UpdateGeometryPartModules()
         {
-            for (int i = 0; i < _vehiclePartList.Count; i++)
+            for (int i = 0; i < _currentGeoModules.Count; i++)
             {
-                Part p = _vehiclePartList[i];
-                if ((object)p == null)
-                    continue;
-                GeometryPartModule geoModule = p.GetComponent<GeometryPartModule>();
+                GeometryPartModule geoModule = _currentGeoModules[i];
                 if ((object)geoModule != null)
                     geoModule.UpdateTransformMatrixList(_worldToLocalMatrix);
             }
@@ -247,17 +242,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
             float dotProd;
 
             dotProd = Math.Abs(Vector3.Dot(axis, _localToWorldMatrix.MultiplyVector(Vector3.up)));
-            if (dotProd >= 0.99)        //if axis and _vessel.up are nearly aligned, just use _vessel.up
+            if (dotProd >= 0.98)        //if axis and _vessel.up are nearly aligned, just use _vessel.up
                 return Vector3.up;
 
             dotProd = Math.Abs(Vector3.Dot(axis, _localToWorldMatrix.MultiplyVector(Vector3.forward)));
 
-            if (dotProd >= 0.99)        //Same for forward...
+            if (dotProd >= 0.98)        //Same for forward...
                 return Vector3.forward;
 
             dotProd = Math.Abs(Vector3.Dot(axis, _localToWorldMatrix.MultiplyVector(Vector3.right)));
 
-            if (dotProd >= 0.99)        //and right...
+            if (dotProd >= 0.98)        //and right...
                 return Vector3.right;
 
             //Otherwise, now we need to use axis, since it's obviously not close to anything else
@@ -412,6 +407,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             numSections = back - front;
             _length = _sectionThickness * numSections;
+
+            Debug.Log(_sectionThickness + " " + _maxCrossSectionArea + " " + numSections + " " + front + " " + back);
 
             GaussianSmoothCrossSections(_vehicleCrossSection, 3, 0.01, _sectionThickness, _length, front, back, 2, 2);
 

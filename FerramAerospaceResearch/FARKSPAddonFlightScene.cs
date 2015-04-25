@@ -57,11 +57,11 @@ namespace FerramAerospaceResearch
             this.enabled = true;
         }
 
-        private void Start()
+        /*private void Start()
         {
             GameEvents.onVesselGoOffRails.Add(VesselUpdate);
             GameEvents.onVesselChange.Add(VesselUpdate);
-            GameEvents.onVesselLoaded.Add(VesselUpdate);
+            //GameEvents.onVesselLoaded.Add(VesselUpdate);
             GameEvents.onVesselCreate.Add(VesselUpdate);
             GameEvents.onVesselWasModified.Add(VesselUpdate);
         }
@@ -89,9 +89,9 @@ namespace FerramAerospaceResearch
         {
             GameEvents.onVesselGoOffRails.Remove(VesselUpdate);
             GameEvents.onVesselChange.Remove(VesselUpdate);
-            GameEvents.onVesselLoaded.Remove(VesselUpdate);
+            //GameEvents.onVesselLoaded.Remove(VesselUpdate);
             GameEvents.onVesselCreate.Remove(VesselUpdate);
             GameEvents.onVesselWasModified.Remove(VesselUpdate);
-        }
+        }*/
     }
 }

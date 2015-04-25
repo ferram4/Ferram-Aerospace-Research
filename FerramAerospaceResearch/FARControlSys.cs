@@ -1283,9 +1283,9 @@ namespace ferram4
                 if (speedometers == null)
                 {
                     speedometers = new List<InternalSpeed>();
-                    for (int i = 0; i < vessel.Parts.Count; ++i)
+                    for (int i = 0; i < vessel.parts.Count; ++i)
                     {
-                        Part p = vessel.Parts[i];
+                        Part p = vessel.parts[i];
                         if (p && p.internalModel)
                         {
                             speedometers.AddRange(p.internalModel.GetComponentsInChildren<InternalSpeed>());
@@ -1339,9 +1339,9 @@ namespace ferram4
         public static void SetActiveControlSys(Vessel v)
         {
             speedometers = null;        //force update of internal speedometer objects
-            for (int i = 0; i < v.Parts.Count; i++)
+            for (int i = 0; i < v.parts.Count; i++)
             {
-                Part p = v.Parts[i];
+                Part p = v.parts[i];
                 if (p.Modules.Contains("FARControlSys"))
                 {
                     activeControlSys = p.Modules["FARControlSys"] as FARControlSys;
