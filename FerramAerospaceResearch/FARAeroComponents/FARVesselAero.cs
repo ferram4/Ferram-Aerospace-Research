@@ -181,6 +181,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 VesselUpdate(true);
         }
 
+        private void TriggerIGeometryUpdaters()
+        {
+            for (int i = 0; i < _currentGeoModules.Count; i++)
+                _currentGeoModules[i].RunIGeometryUpdaters();
+        }
+
         private void CheckGeoModulesReady()
         {
             geoModulesReady = 0;
@@ -263,6 +269,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
              {
                  DisableModule();
              }
+
+             TriggerIGeometryUpdaters();
 
              _vType = _vessel.vesselType;
 

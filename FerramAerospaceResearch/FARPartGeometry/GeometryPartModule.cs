@@ -38,6 +38,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using KSP;
+using FerramAerospaceResearch.FARPartGeometry.GeometryUpdaters;
 
 namespace FerramAerospaceResearch.FARPartGeometry
 {
@@ -49,6 +50,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         public Bounds overallMeshBounds;
 
         public List<GeometryMesh> meshDataList;
+        private List<IGeometryUpdater> geometryUpdaters;
 
         private List<AnimationState> animStates;
         private List<float> animStateTime;
@@ -68,6 +70,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         void Start()
         {
             //RebuildAllMeshData();
+            SetupIGeometryUpdaters();
             GetAnimations();
             GameEvents.onEditorPartEvent.Add(UpdateGeometryEvent);
             GameEvents.onEditorUndo.Add(UpdateGeometryEvent);
@@ -100,7 +103,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             UpdateVoxelShape();
         }
 
-        private void RebuildAllMeshData()
+        internal void RebuildAllMeshData()
         {
             if(!(HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor))
                 return;
@@ -202,6 +205,29 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
         }
 
+        private void SetupIGeometryUpdaters()
+        {
+            geometryUpdaters = new List<IGeometryUpdater>();
+            if(part.Modules.Contains("ModuleProceduralFairing"))
+            {
+                ModuleProceduralFairing fairing = (ModuleProceduralFairing)part.Modules["ModuleProceduralFairing"];
+
+                StockProcFairingGeoUpdater fairingUpdater = new StockProcFairingGeoUpdater(fairing, this);
+                geometryUpdaters.Add(fairingUpdater);
+            }
+        }
+
+        public void RunIGeometryUpdaters()
+        {
+            if (HighLogic.LoadedSceneIsEditor)
+                for (int i = 0; i < geometryUpdaters.Count; i++)
+                    geometryUpdaters[i].EditorGeometryUpdate();
+            else if (HighLogic.LoadedSceneIsFlight)
+                for (int i = 0; i < geometryUpdaters.Count; i++)
+                    geometryUpdaters[i].FlightGeometryUpdate();
+        }
+
+        #region voxelUpdates
         private void CheckAnimations()
         {
             if (_sendUpdateTick > 30)
@@ -263,6 +289,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             for (int i = 0; i < meshDataList.Count; i++)
                 meshDataList[i].TransformBasis(worldToVesselMatrix);
         }
+        #endregion
 
         private List<MeshData> CreateMeshListFromTransforms(ref List<Transform> meshTransforms)
         {

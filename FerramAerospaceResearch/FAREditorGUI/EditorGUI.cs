@@ -129,7 +129,8 @@ namespace FerramAerospaceResearch.FAREditorGUI
             type == ConstructionEventType.PartOffset ||
             type == ConstructionEventType.PartAttached ||
             type == ConstructionEventType.PartDetached ||
-            type == ConstructionEventType.PartRootSelected)
+            type == ConstructionEventType.PartRootSelected ||
+                type == ConstructionEventType.Unknown)
             {
                 UpdateVoxel();
                 instance._updateRebuildGeo = true;
@@ -206,12 +207,19 @@ namespace FerramAerospaceResearch.FAREditorGUI
                     if ((object)g != null)
                     {
                         _currentGeometryModules.Add(g);
-                        Debug.Log("this works, right?");
                     }
                 }
             }
+            TriggerIGeometryUpdaters();
+
             _vehicleAero.VoxelUpdate(EditorLogic.RootPart.transform.worldToLocalMatrix, EditorLogic.RootPart.transform.localToWorldMatrix, EDITOR_VOXEL_COUNT, partList, _currentGeometryModules, true);
             _updateRebuildGeo = false;
+        }
+
+        private void TriggerIGeometryUpdaters()
+        {
+            for (int i = 0; i < _currentGeometryModules.Count; i++)
+                _currentGeometryModules[i].RunIGeometryUpdaters();
         }
 
         void UpdateCrossSections()
