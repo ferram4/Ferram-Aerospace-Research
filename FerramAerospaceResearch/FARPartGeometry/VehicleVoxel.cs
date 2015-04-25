@@ -992,21 +992,28 @@ namespace FerramAerospaceResearch.FARPartGeometry
             maxCrossSectionArea = 0;
 
 
-            for (int i = frontIndex; i <= backIndex; i++)
+            for (int i = frontIndex; i <= backIndex; i++)       //calculate 2nd derivs, raw
             {
                 double areaM1, area0, areaP1;
 
-                if (i - 1 < frontIndex)
-                    areaM1 = 0;
-                else
+                if(i == frontIndex)     //forward difference for frontIndex
+                {
+                    areaM1 = crossSections[i].area;
+                    area0 = crossSections[i + 1].area;
+                    areaP1 = crossSections[i + 2].area;
+                }
+                else if (i == backIndex) //backward difference for backIndex
+                {
+                    areaM1 = crossSections[i - 2].area;
+                    area0 = crossSections[i - 1].area;
+                    areaP1 = crossSections[i].area;
+                }
+                else                     //central difference for all others
+                {
                     areaM1 = crossSections[i - 1].area;
-
-                area0 = crossSections[i].area;
-
-                if (i + 1 > backIndex)
-                    areaP1 = 0;
-                else
+                    area0 = crossSections[i].area;
                     areaP1 = crossSections[i + 1].area;
+                }
 
                 double areaSecondDeriv = (areaM1 + areaP1) - 2 * area0;
                 areaSecondDeriv *= denom;

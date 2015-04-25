@@ -94,16 +94,9 @@ namespace ferram4
             amount += size;
         }
 
-        // Record an torque; applied at a location
-        public void AddTorque(Vector3d npos, Vector3d ntorque)
+        // Record an abstracted torque or couple; application point is irrelevant
+        public void AddTorque(Vector3d ntorque)
         {
-            Vector3d rVec = npos - pos;
-            if (rVec.sqrMagnitude > 0.00001)
-            {
-                Vector3d nforce = Vector3d.Cross(rVec, ntorque) / rVec.sqrMagnitude;
-                force += nforce;
-                amount += nforce.magnitude;
-            }
             torque += ntorque;
         }
 

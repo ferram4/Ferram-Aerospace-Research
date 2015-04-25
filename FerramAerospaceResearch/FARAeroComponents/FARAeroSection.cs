@@ -205,7 +205,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 float momentFactor = -hypersonicMomentForward;
 
                 if (machNumber < 1.5)
-                    momentFactor += hypersonicMomentBackward * (0.5f - machNumber * 0.33333333333333333333333333333333f);
+                    momentFactor += hypersonicMomentBackward * (0.5f - machNumber * 0.33333333333333333333333333333333f) * 0.2f;
 
                 moment *= momentFactor;
             }
@@ -215,7 +215,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 float momentFactor = hypersonicMomentBackward;
 
                 if (machNumber < 1.5)
-                    momentFactor += -hypersonicMomentForward * (0.5f - machNumber * 0.33333333333333333333333333333333f);
+                    momentFactor += -hypersonicMomentForward * (0.5f - machNumber * 0.33333333333333333333333333333333f) * 0.2f;
 
                 moment *= momentFactor;
             }
@@ -244,7 +244,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 centroid = module.part.partTransform.localToWorldMatrix.MultiplyPoint3x4(partData.centroidPartSpace);
                 center.AddForce(centroid, forceVector * partData.dragFactor);
-                center.AddTorque(centroid, torqueVector * partData.dragFactor);
+                center.AddTorque(torqueVector * partData.dragFactor);
             }
         }
 
@@ -317,7 +317,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     float momentFactor = -hypersonicMomentForward;
 
                     if (machNumber < 1.5)
-                        momentFactor += hypersonicMomentBackward * (0.5f - machNumber * 0.33333333333333333333333333333333f);
+                        momentFactor += hypersonicMomentBackward * (0.5f - machNumber * 0.33333333333333333333333333333333f) * 0.2f;
 
                     moment *= momentFactor;
                     dampingMoment *= momentFactor;
@@ -328,7 +328,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     float momentFactor = hypersonicMomentBackward;
 
                     if (machNumber < 1.5)
-                        momentFactor += -hypersonicMomentForward * (0.5f - machNumber * 0.33333333333333333333333333333333f);
+                        momentFactor += -hypersonicMomentForward * (0.5f - machNumber * 0.33333333333333333333333333333333f) * 0.2f;
 
                     moment *= momentFactor;
                     dampingMoment *= momentFactor;

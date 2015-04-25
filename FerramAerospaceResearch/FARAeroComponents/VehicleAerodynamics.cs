@@ -273,6 +273,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             double invVariance = 1 / (stdDev * stdDev);
 
+            //calculate Gaussian factors for each of the points that will be hit
             for(int i = 0; i < gaussianFactors.Length; i++)
             {
                 double factor = (i * sectionThickness);
@@ -280,6 +281,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 gaussianFactors[i] = Math.Exp(-0.5 * factor * invVariance);
             }
 
+            //then sum them up...
             double sum = 0;
             for (int i = 0; i < gaussianFactors.Length; i++)
                 if (i == 0)
@@ -287,13 +289,16 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 else
                     sum += 2 * gaussianFactors[i];
 
-            double invSum = 1 / sum;
+            double invSum = 1 / sum;    //and then use that to normalize the factors
 
             for (int i = 0; i < gaussianFactors.Length; i++)
             {
                 gaussianFactors[i] *= invSum;
             }
 
+
+
+            //first smooth the area itself.  This has a greater effect on the 2nd deriv due to the effect of noise on derivatives
             for (int j = 0; j < areaSmoothingIterations; j++)
             {
                 for (int i = 0; i < prevUncorrectedVals.Length; i++)
@@ -318,19 +323,34 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     }
                     curValue = 0;       //zero for coming calculations...
 
+                    double borderScaling = 1;      //factor to correct for the 0s lurking at the borders of the curve...
+                    
                     for (int k = 0; k < prevUncorrectedVals.Length; k++)
                     {
-                        curValue += gaussianFactors[k] * prevUncorrectedVals[k];        //central and previous values;
+                        double val = prevUncorrectedVals[k];
+                        double gaussianFactor = gaussianFactors[k];
+
+                        curValue += gaussianFactor * val;        //central and previous values;
+                        if (val == 0)
+                            borderScaling -= gaussianFactor;
                     }
                     for (int k = 0; k < futureUncorrectedVals.Length; k++)
                     {
-                        curValue += gaussianFactors[k + 1] * futureUncorrectedVals[k];
+                        double val = futureUncorrectedVals[k];
+                        double gaussianFactor = gaussianFactors[k + 1];
+
+                        curValue += gaussianFactor * val;      //future values
+                        if (val == 0)
+                            borderScaling -= gaussianFactor;
                     }
+                    if (borderScaling > 0)
+                        curValue /= borderScaling;      //and now all of the 0s beyond the edge have been removed
 
                     vehicleCrossSection[i].area = curValue;
                 }
             }
 
+            //2nd derivs must be recalculated now using the adjusted areas
             double denom = sectionThickness;
             denom *= denom;
             denom = 1 / denom;
@@ -339,17 +359,24 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 double areaM1, area0, areaP1;
 
-                if (i - 1 < frontIndex)
-                    areaM1 = 0;
-                else
+                if(i == frontIndex)     //forward difference for frontIndex
+                {
+                    areaM1 = vehicleCrossSection[i].area;
+                    area0 = vehicleCrossSection[i + 1].area;
+                    areaP1 = vehicleCrossSection[i + 2].area;
+                }
+                else if (i == backIndex) //backward difference for backIndex
+                {
+                    areaM1 = vehicleCrossSection[i - 2].area;
+                    area0 = vehicleCrossSection[i - 1].area;
+                    areaP1 = vehicleCrossSection[i].area;
+                }
+                else                     //central difference for all others
+                {
                     areaM1 = vehicleCrossSection[i - 1].area;
-
-                area0 = vehicleCrossSection[i].area;
-
-                if (i + 1 > backIndex)
-                    areaP1 = 0;
-                else
+                    area0 = vehicleCrossSection[i].area;
                     areaP1 = vehicleCrossSection[i + 1].area;
+                }
 
                 double areaSecondDeriv = (areaM1 + areaP1) - 2 * area0;
                 areaSecondDeriv *= denom;
@@ -358,7 +385,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
 
             //and now smooth the derivs
-
             for (int j = 0; j < derivSmoothingIterations; j++)
             {
                 for (int i = 0; i < prevUncorrectedVals.Length; i++)
@@ -383,14 +409,28 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     }
                     curValue = 0;       //zero for coming calculations...
 
+                    double borderScaling = 1;      //factor to correct for the 0s lurking at the borders of the curve...
+
                     for (int k = 0; k < prevUncorrectedVals.Length; k++)
                     {
-                        curValue += gaussianFactors[k] * prevUncorrectedVals[k];        //central and previous values;
+                        double val = prevUncorrectedVals[k];
+                        double gaussianFactor = gaussianFactors[k];
+
+                        curValue += gaussianFactor * val;        //central and previous values;
+                        if (val == 0)
+                            borderScaling -= gaussianFactor;
                     }
                     for (int k = 0; k < futureUncorrectedVals.Length; k++)
                     {
-                        curValue += gaussianFactors[k + 1] * futureUncorrectedVals[k];
+                        double val = futureUncorrectedVals[k];
+                        double gaussianFactor = gaussianFactors[k + 1];
+
+                        curValue += gaussianFactor * val;      //future values
+                        if (val == 0)
+                            borderScaling -= gaussianFactor;
                     }
+                    if (borderScaling > 0)
+                        curValue /= borderScaling;      //and now all of the 0s beyond the edge have been removed
 
                     vehicleCrossSection[i].secondAreaDeriv = curValue;
                 }
@@ -410,7 +450,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             Debug.Log(_sectionThickness + " " + _maxCrossSectionArea + " " + numSections + " " + front + " " + back);
 
-            GaussianSmoothCrossSections(_vehicleCrossSection, 3, 0.01, _sectionThickness, _length, front, back, 2, 2);
+            GaussianSmoothCrossSections(_vehicleCrossSection, 3, 0.015, _sectionThickness, _length, front, back, 1, 1);
 
             validSectionCount = numSections;
             firstSection = front;
