@@ -67,7 +67,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         void Start()
         {
-            RebuildAllMeshData();
+            //RebuildAllMeshData();
             GetAnimations();
             GameEvents.onEditorPartEvent.Add(UpdateGeometryEvent);
             GameEvents.onEditorUndo.Add(UpdateGeometryEvent);
@@ -83,12 +83,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         void FixedUpdate()
         {
-            /*if (!_ready && ((HighLogic.LoadedSceneIsFlight && FlightGlobals.ready) ||
-                HighLogic.LoadedSceneIsEditor && ApplicationLauncher.Ready))
+            if (!_ready && ((HighLogic.LoadedSceneIsFlight && FlightGlobals.ready) ||       //this is done because it takes a frame for colliders to be set up in the editor
+                HighLogic.LoadedSceneIsEditor && ApplicationLauncher.Ready))                //waiting prevents changes in physics in flight or in predictions because the voxel switches to colliders rather than meshes
             {
                 RebuildAllMeshData();
                 _ready = true;
-            }*/
+            }
 
             if (animStates != null && animStates.Count > 0)
                 CheckAnimations();
@@ -126,7 +126,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 GeometryMesh geoMesh = new GeometryMesh(m.vertices, m.triangles, m.bounds, meshTransforms[i], worldToVesselMatrix);
                 meshDataList.Add(geoMesh);
             }
-            UpdateTransformMatrixList(worldToVesselMatrix);
+            //UpdateTransformMatrixList(worldToVesselMatrix);
             overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
             _ready = true;
         }
