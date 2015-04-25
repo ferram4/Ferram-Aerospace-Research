@@ -279,7 +279,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                     if (mc != null)
                     {
-                        Mesh m = mc.sharedMesh;
+                        MeshFilter mf = t.GetComponent<MeshFilter>();
+                        if (mf == null)
+                            continue;
+                        Mesh m = mf.sharedMesh;
+
                         if (m == null)
                             continue;
 
