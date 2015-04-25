@@ -280,7 +280,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (mc != null)
                     {
                         Mesh m = mc.sharedMesh;
-
                         if (m == null)
                             continue;
 
