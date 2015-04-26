@@ -448,9 +448,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             numSections = back - front;
             _length = _sectionThickness * numSections;
 
-            Debug.Log(_sectionThickness + " " + _maxCrossSectionArea + " " + numSections + " " + front + " " + back);
-
-            GaussianSmoothCrossSections(_vehicleCrossSection, 3, 0.015, _sectionThickness, _length, front, back, 1, 1);
+            GaussianSmoothCrossSections(_vehicleCrossSection, 3, 0.01, _sectionThickness, _length, front, back, 2, 3);
 
             validSectionCount = numSections;
             firstSection = front;
@@ -471,7 +469,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             double transonicWaveDragFactor = -_sectionThickness * _sectionThickness / (2 * Math.PI);
 
-
+            Dictionary<FARAeroPartModule, FARAeroPartModule.ProjectedArea> moduleAndAreas = new Dictionary<FARAeroPartModule, FARAeroPartModule.ProjectedArea>();
             _newAeroSections = new List<FARAeroSection>();
             HashSet<FARAeroPartModule> tmpAeroModules = new HashSet<FARAeroPartModule>();
             _sonicDragArea = 0;
@@ -647,6 +645,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     FARAeroPartModule m = key.GetComponent<FARAeroPartModule>();
                     if (m != null)
                         includedModules.Add(m);
+
+                    if (moduleAndAreas.ContainsKey(m))
+                        moduleAndAreas[m] += pair.Value;
+                    else
+                        moduleAndAreas[m] = new FARAeroPartModule.ProjectedArea() + pair.Value;
+
                     weightingFactor += (float)pair.Value.count;
                     weighting.Add((float)pair.Value.count);
                 }
@@ -662,7 +666,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 _newAeroSections.Add(section);
                 tmpAeroModules.UnionWith(includedModules);
             }
+            foreach(KeyValuePair<FARAeroPartModule, FARAeroPartModule.ProjectedArea> pair in moduleAndAreas)
+            {
+                pair.Key.SetProjectedArea(pair.Value, _localToWorldMatrix);
+            }
             _newAeroModules = tmpAeroModules.ToList();
+
+
             if(HighLogic.LoadedSceneIsFlight)
                 _voxel = null;
         }

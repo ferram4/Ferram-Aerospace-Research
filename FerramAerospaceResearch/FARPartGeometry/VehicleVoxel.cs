@@ -98,8 +98,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     max.x = Math.Max(max.x, maxBounds.x);
                     max.y = Math.Max(max.y, maxBounds.y);
                     max.z = Math.Max(max.z, maxBounds.z);
-
-                    Debug.Log(m.overallMeshBounds);
                 }
             }
 
@@ -135,8 +133,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             extents.x = xLength * 4 * elementSize;
             extents.y = yLength * 4 * elementSize;
             extents.z = zLength * 4 * elementSize;
-
-            Debug.Log("voxel " + extents);
 
             Vector3d center = (max + min) * 0.5f;    //Center of the vessel
 

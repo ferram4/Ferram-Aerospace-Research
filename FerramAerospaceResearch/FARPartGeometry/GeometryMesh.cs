@@ -69,8 +69,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
             bounds = new Bounds(thisToVesselMatrix.MultiplyPoint3x4(meshBounds.center), size);
         }
 
-        public void TransformBasis(Matrix4x4 newThisToVesselMatrix)
+        public bool TryTransformBasis(Matrix4x4 newThisToVesselMatrix)
         {
+            if (meshTransform == null)
+                return false;
+
             Matrix4x4 tempMatrix = thisToVesselMatrix.inverse;
             thisToVesselMatrix = newThisToVesselMatrix * meshTransform.localToWorldMatrix;
 
@@ -86,6 +89,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             for (int i = 0; i < vertices.Length; i++)
                 vertices[i] = tempMatrix.MultiplyPoint3x4(vertices[i]);
 
+            return true;
         }
     }
 }

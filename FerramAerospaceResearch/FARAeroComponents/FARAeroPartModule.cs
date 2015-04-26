@@ -54,6 +54,83 @@ namespace FerramAerospaceResearch.FARAeroComponents
         Vector3 partLocalForce;
         Vector3 partLocalTorque;
 
+        ProjectedArea projectedArea;
+        public ProjectedArea ProjectedAreas
+        {
+            get { return projectedArea; }
+        }
+
+        public struct ProjectedArea
+        {
+            public double iN, iP;  //area in x direction
+            public double jN, jP;  //area in y direction
+            public double kN, kP;  //area in z direction
+            public double totalArea;
+
+
+            public static ProjectedArea operator +(ProjectedArea a, ProjectedArea b)
+            {
+                a.iN += b.iN;
+                a.iP += b.iP;
+                a.jN += b.jN;
+                a.jP += b.jP;
+                a.kN += b.kN;
+                a.kP += b.kP;
+                return a;
+            }
+
+            public static ProjectedArea operator + (ProjectedArea a, FARPartGeometry.VoxelCrossSection.SideAreaValues b)
+            {
+                a.iN += b.iN;
+                a.iP += b.iP;
+                a.jN += b.jN;
+                a.jP += b.jP;
+                a.kN += b.kN;
+                a.kP += b.kP;
+                return a;
+            }
+        }
+
+        public void SetProjectedArea(ProjectedArea areas, Matrix4x4 vesselToWorldMatrix)
+        {
+            ProjectedArea transformedArea = new ProjectedArea();
+            Matrix4x4 transformMatrix = part.transform.worldToLocalMatrix * vesselToWorldMatrix;
+
+            IncrementAreas(ref transformedArea, (float)areas.iP * Vector3.right, transformMatrix);
+            IncrementAreas(ref transformedArea, (float)areas.iN * -Vector3.right, transformMatrix);
+            IncrementAreas(ref transformedArea, (float)areas.jP * Vector3.up, transformMatrix);
+            IncrementAreas(ref transformedArea, (float)areas.jN * -Vector3.up, transformMatrix);
+            IncrementAreas(ref transformedArea, (float)areas.kP * Vector3.forward, transformMatrix);
+            IncrementAreas(ref transformedArea, (float)areas.kN * -Vector3.forward, transformMatrix);
+
+            projectedArea = transformedArea;
+            projectedArea.totalArea = projectedArea.iN + projectedArea.iP + projectedArea.jN + projectedArea.jP + projectedArea.kN + projectedArea.kP;
+
+            if (projectedArea.totalArea <= 0)
+                part.ShieldedFromAirstream = true;
+            else
+                part.ShieldedFromAirstream = false;
+        }
+
+        private void IncrementAreas(ref ProjectedArea data, Vector3 vector, Matrix4x4 transformMatrix)
+        {
+            vector = transformMatrix.MultiplyVector(vector);
+
+            if (vector.x >= 0)
+                data.iP += vector.x;
+            else
+                data.iN -= vector.x;
+
+            if (vector.y >= 0)
+                data.jP += vector.y;
+            else
+                data.jN -= vector.y;
+
+            if (vector.z >= 0)
+                data.kP += vector.z;
+            else
+                data.kN -= vector.z;
+        }
 
         void Start()
         {
@@ -65,6 +142,32 @@ namespace FerramAerospaceResearch.FARAeroComponents
             partLocalVel = Vector3.zero;
             partLocalForce = Vector3.zero;
             partLocalTorque = Vector3.zero;
+        }
+
+        public double ProjectedAreaWorld(Vector3 normalizedDirectionVector)
+        {
+            return ProjectedAreaLocal(part.transform.worldToLocalMatrix.MultiplyVector(normalizedDirectionVector));
+        }
+
+        public double ProjectedAreaLocal(Vector3 normalizedDirectionVector)
+        {
+            double area = 0;
+            if (normalizedDirectionVector.x > 0)
+                area += normalizedDirectionVector.x * projectedArea.iP;
+            else
+                area -= normalizedDirectionVector.x * projectedArea.iN;
+
+            if (normalizedDirectionVector.y > 0)
+                area += normalizedDirectionVector.y * projectedArea.jP;
+            else
+                area -= normalizedDirectionVector.y * projectedArea.jN;
+
+            if (normalizedDirectionVector.z > 0)
+                area += normalizedDirectionVector.z * projectedArea.kP;
+            else
+                area -= normalizedDirectionVector.z * projectedArea.kN;
+
+            return area;
         }
 
         public void ApplyForces()

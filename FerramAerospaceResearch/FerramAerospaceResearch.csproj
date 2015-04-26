@@ -107,6 +107,7 @@
     <Compile Include="FARPartClassification.cs" />
     <Compile Include="FARPartExtensions.cs" />
     <Compile Include="FARPartGeometry\GeometryUpdaters\IGeometryUpdater.cs" />
+    <Compile Include="FARPartGeometry\GeometryUpdaters\StockJettisonTransformGeoUpdater.cs" />
     <Compile Include="FARPartGeometry\GeometryUpdaters\StockProcFairingGeoUpdater.cs" />
     <Compile Include="FARPartGeometry\MeshData.cs" />
     <Compile Include="FARPartGeometry\PartGeometryExtensions.cs" />

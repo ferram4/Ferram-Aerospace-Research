@@ -93,6 +93,7 @@ namespace FerramAerospaceResearch.FAREditorGUI
             GameEvents.onEditorRedo.Add(ResetEditorEvent);
             GameEvents.onEditorShipModified.Add(ResetEditorEvent);
             GameEvents.onEditorLoad.Add(ResetEditorEvent);
+            UpdateVoxel();
         }
 
         void OnDestroy()
@@ -109,7 +110,12 @@ namespace FerramAerospaceResearch.FAREditorGUI
         #region EditorEvents
         private void ResetEditorEvent(ShipConstruct construct)
         {
-            ResetEditor();
+            List<Part> partsList = EditorLogic.SortedShipList;
+            for (int i = 0; i < partsList.Count; i++)
+                UpdateGeometryModule(partsList[i]);
+
+            UpdateVoxel();
+            instance._updateRebuildGeo = true;
         }
         private void ResetEditorEvent(ShipConstruct construct, CraftBrowser.LoadType type)
         {
@@ -118,6 +124,7 @@ namespace FerramAerospaceResearch.FAREditorGUI
 
         public static void ResetEditor()
         {
+            instance._areaRulingOverlay = null;
             instance._areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.8f), Color.green, Color.yellow, 10, 5);
             UpdateVoxel();
             instance._updateRebuildGeo = true;
@@ -132,8 +139,30 @@ namespace FerramAerospaceResearch.FAREditorGUI
             type == ConstructionEventType.PartRootSelected ||
                 type == ConstructionEventType.Unknown)
             {
+                UpdateGeometryModule(type, pEvent);
                 UpdateVoxel();
                 instance._updateRebuildGeo = true;
+            }
+        }
+
+        private void UpdateGeometryModule(ConstructionEventType type, Part p)
+        {
+            GeometryPartModule g = p.GetComponent<GeometryPartModule>();
+            if (g != null && g.Ready)
+            {
+                if (type == ConstructionEventType.Unknown)
+                    g.RebuildAllMeshData();
+                else
+                    g.EditorUpdate();
+            }
+        }
+
+        private void UpdateGeometryModule(Part p)
+        {
+            GeometryPartModule g = p.GetComponent<GeometryPartModule>();
+            if (g != null && g.Ready)
+            {
+                g.EditorUpdate();
             }
         }
 
@@ -287,7 +316,7 @@ namespace FerramAerospaceResearch.FAREditorGUI
             else if (currentMode == FAREditorMode.STABILITY)
             {
                 _stabDeriv.Display();
-                guiRect.height = useKSPSkin ? 570 : 450;
+                guiRect.height = useKSPSkin ? 610 : 450;
             }
             else if (currentMode == FAREditorMode.SIMULATION)
             {

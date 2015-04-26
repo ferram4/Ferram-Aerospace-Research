@@ -72,16 +72,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             //RebuildAllMeshData();
             SetupIGeometryUpdaters();
             GetAnimations();
-            GameEvents.onEditorPartEvent.Add(UpdateGeometryEvent);
-            GameEvents.onEditorUndo.Add(UpdateGeometryEvent);
-            GameEvents.onEditorRedo.Add(UpdateGeometryEvent);
-        }
-
-        void OnDestroy()
-        {
-            GameEvents.onEditorPartEvent.Remove(UpdateGeometryEvent);
-            GameEvents.onEditorUndo.Remove(UpdateGeometryEvent);
-            GameEvents.onEditorRedo.Remove(UpdateGeometryEvent);
         }
 
         void FixedUpdate()
@@ -95,6 +85,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             if (animStates != null && animStates.Count > 0)
                 CheckAnimations();
+        }
+
+        public void ClearMeshData()
+        {
+            meshDataList = null;
+            _ready = false;
         }
 
         public void GeometryPartModuleRebuildMeshData()
@@ -132,23 +128,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             //UpdateTransformMatrixList(worldToVesselMatrix);
             overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
             _ready = true;
-        }
-
-        private void UpdateGeometryEvent(ConstructionEventType type, Part pEvent)
-        {
-            if (pEvent = this.part)
-                if (type == ConstructionEventType.PartRotated ||
-                type == ConstructionEventType.PartOffset ||
-                type == ConstructionEventType.PartAttached ||
-                type == ConstructionEventType.PartRootSelected)
-                {
-                    EditorUpdate();
-                }
-        }
-
-        private void UpdateGeometryEvent(ShipConstruct construct)
-        {
-             EditorUpdate();
         }
 
         private void GetAnimations()
@@ -210,10 +189,25 @@ namespace FerramAerospaceResearch.FARPartGeometry
             geometryUpdaters = new List<IGeometryUpdater>();
             if(part.Modules.Contains("ModuleProceduralFairing"))
             {
-                ModuleProceduralFairing fairing = (ModuleProceduralFairing)part.Modules["ModuleProceduralFairing"];
+                ModuleProceduralFairing[] fairings = part.GetComponents<ModuleProceduralFairing>();
+                for (int i = 0; i < fairings.Length; i++)
+                {
+                    ModuleProceduralFairing fairing = fairings[i];
 
-                StockProcFairingGeoUpdater fairingUpdater = new StockProcFairingGeoUpdater(fairing, this);
-                geometryUpdaters.Add(fairingUpdater);
+                    StockProcFairingGeoUpdater fairingUpdater = new StockProcFairingGeoUpdater(fairing, this);
+                    geometryUpdaters.Add(fairingUpdater);
+                }
+            }
+            if(part.Modules.Contains("ModuleJettison"))
+            {
+                ModuleJettison[] engineFairings = part.GetComponents<ModuleJettison>();
+                for (int i = 0; i < engineFairings.Length; i++)
+                {
+                    ModuleJettison engineFairing = engineFairings[i];
+
+                    StockJettisonTransformGeoUpdater fairingUpdater = new StockJettisonTransformGeoUpdater(engineFairing, this);
+                    geometryUpdaters.Add(fairingUpdater);
+                }
             }
         }
 
@@ -287,7 +281,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
         public void UpdateTransformMatrixList(Matrix4x4 worldToVesselMatrix)
         {
             for (int i = 0; i < meshDataList.Count; i++)
-                meshDataList[i].TransformBasis(worldToVesselMatrix);
+            {
+                if (!meshDataList[i].TryTransformBasis(worldToVesselMatrix))
+                {
+                    meshDataList.RemoveAt(i);
+                    i--;
+                }
+            }
         }
         #endregion
 
@@ -378,7 +378,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 ModuleJettison[] jettisons = part.GetComponents<ModuleJettison>();
                 foreach (ModuleJettison j in jettisons)
                 {
-                    if (j.isJettisoned || j.jettisonTransform == null || j.checkBottomNode)
+                    if (j.isJettisoned || j.jettisonTransform == null || !j.jettisonTransform.gameObject.activeSelf)
                         continue;
 
                     Transform t = j.jettisonTransform;

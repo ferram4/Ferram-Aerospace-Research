@@ -17,7 +17,6 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryUpdaters
         public StockProcFairingGeoUpdater(ModuleProceduralFairing fairing, GeometryPartModule geoModule)
         {
             this.fairing = fairing;
-            Part p = fairing.part;
             this.geoModule = geoModule;
 
             if (HighLogic.LoadedSceneIsEditor)
