@@ -20,6 +20,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         float invFlatnessRatio;
         float hypersonicMomentForward;
         float hypersonicMomentBackward;
+        float diameter;
 
         List<PartData> partsIncluded;
 
@@ -34,7 +35,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         }
 
         public FARAeroSection(FloatCurve xForcePressureAoA0, FloatCurve xForcePressureAoA180, FloatCurve xForceSkinFriction,
-            float potentialFlowNormalForce, float viscCrossflowDrag, float flatnessRatio, float hypersonicMomentForward, float hypersonicMomentBackward,
+            float potentialFlowNormalForce, float viscCrossflowDrag, float diameter, float flatnessRatio, float hypersonicMomentForward, float hypersonicMomentBackward,
             Vector3 centroidWorldSpace, Vector3 xRefVectorWorldSpace, Vector3 nRefVectorWorldSpace, Matrix4x4 vesselToWorldMatrix, Vector3 vehicleMainAxis, List<FARAeroPartModule> moduleList,
             Dictionary<Part, FARPartGeometry.VoxelCrossSection.SideAreaValues> sideAreaValues, List<float> dragFactor)
         {
@@ -48,6 +49,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             invFlatnessRatio = 1 / flatnessRatio;
             this.hypersonicMomentForward = hypersonicMomentForward;
             this.hypersonicMomentBackward = hypersonicMomentBackward;
+            this.diameter = diameter;
 
             partsIncluded = new List<PartData>();
 
@@ -190,7 +192,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             float crossFlowMach, crossFlowReynolds;
             crossFlowMach = machNumber * (float)sinAoA;
-            crossFlowReynolds = reynoldsPerUnitLength * viscCrossflowDrag * normalForceFactor * (float)sinAoA;
+            crossFlowReynolds = reynoldsPerUnitLength * diameter * normalForceFactor * (float)sinAoA;
 
             nForce += viscCrossflowDrag * sinSqrAoA * CalculateCrossFlowDrag(crossFlowMach, crossFlowReynolds);            //viscous crossflow normal force
 
@@ -202,23 +204,24 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if (cosAoA > 0)
             {
                 xForce += cosSqrAoA * xForceAoA0;
-                float momentFactor = -hypersonicMomentForward;
+                float momentFactor = hypersonicMomentForward;
 
-                if (machNumber < 1.5)
-                    momentFactor += hypersonicMomentBackward * (0.5f - machNumber * 0.33333333333333333333333333333333f) * 0.2f;
+                //if (machNumber < 1.5)
+                //    momentFactor += hypersonicMomentBackward * (0.5f - machNumber * 0.33333333333333333333333333333333f) * 0.2f;
 
                 moment *= momentFactor;
             }
             else
             {
                 xForce += cosSqrAoA * xForceAoA180;
-                float momentFactor = hypersonicMomentBackward;
+                float momentFactor = hypersonicMomentBackward;     //negative to deal with the ref vector facing the opposite direction, causing the moment vector to point in the opposite direction
 
-                if (machNumber < 1.5)
-                    momentFactor += -hypersonicMomentForward * (0.5f - machNumber * 0.33333333333333333333333333333333f) * 0.2f;
+                //if (machNumber < 1.5)
+                //    momentFactor += hypersonicMomentForward * (0.5f - machNumber * 0.33333333333333333333333333333333f) * 0.2f;
 
                 moment *= momentFactor;
             }
+
             moment /= normalForceFactor;
 
             Vector3 forceVector = (float)xForce * xRefVector + (float)nForce * localNormalForceVec;
@@ -301,7 +304,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 
                 float crossFlowMach, crossFlowReynolds;
                 crossFlowMach = machNumber * (float)sinAoA;
-                crossFlowReynolds = reynoldsPerUnitLength * viscCrossflowDrag * normalForceFactor * (float)sinAoA;
+                crossFlowReynolds = reynoldsPerUnitLength * diameter * normalForceFactor * (float)sinAoA;
 
                 nForce += viscCrossflowDrag * sinSqrAoA * CalculateCrossFlowDrag(crossFlowMach, crossFlowReynolds);            //viscous crossflow normal force
 
@@ -314,10 +317,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (cosAoA > 0)
                 {
                     xForce += cosSqrAoA * xForceAoA0;
-                    float momentFactor = -hypersonicMomentForward;
+                    float momentFactor = hypersonicMomentForward;
 
-                    if (machNumber < 1.5)
-                        momentFactor += hypersonicMomentBackward * (0.5f - machNumber * 0.33333333333333333333333333333333f) * 0.2f;
+                    //if (machNumber < 1.5)
+                    //    momentFactor += hypersonicMomentBackward * (0.5f - machNumber * 0.33333333333333333333333333333333f) * 0.2f;
 
                     moment *= momentFactor;
                     dampingMoment *= momentFactor;
@@ -325,10 +328,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 else
                 {
                     xForce += cosSqrAoA * xForceAoA180;
-                    float momentFactor = hypersonicMomentBackward;
+                    float momentFactor = hypersonicMomentBackward;     //negative to deal with the ref vector facing the opposite direction, causing the moment vector to point in the opposite direction
 
-                    if (machNumber < 1.5)
-                        momentFactor += -hypersonicMomentForward * (0.5f - machNumber * 0.33333333333333333333333333333333f) * 0.2f;
+                    //if (machNumber < 1.5)
+                    //    momentFactor += hypersonicMomentForward * (0.5f - machNumber * 0.33333333333333333333333333333333f) * 0.2f;
 
                     moment *= momentFactor;
                     dampingMoment *= momentFactor;

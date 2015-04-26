@@ -135,7 +135,7 @@ namespace ferram4
             fa = function(a);
             fb = function(b);
 
-            if (fa * fb > 0)
+            if (fa * fb >= 0)
                 return 0;
 
             if(Math.Abs(fa) < Math.Abs(fb))
@@ -157,7 +157,7 @@ namespace ferram4
             int iter = 0;
             while(fs != 0 && Math.Abs(a - b) > epsilon && iter < maxIter)
             {
-                if(fa != fc && fb != fc)
+                if(fa != fc && fb != fc)    //inverse quadratic interpolation
                 {
                     s = a * fc * fb / ((fa - fb) * (fa - fc));
                     s += b * fc * fa / ((fb - fa) * (fb - fc));
@@ -165,18 +165,57 @@ namespace ferram4
                 }
                 else
                 {
-                    s = (b - a) / (fb - fa);
+                    s = (b - a) / (fb - fa);    //secant method
                     s *= fb;
                     s = b - s;
                 }
 
-                double b_s = b - s, b_c = b-c, c_d = c - d;
+                double b_s = Math.Abs(b - s), b_c = Math.Abs(b-c), c_d = Math.Abs(c - d);
 
-                if ((b_s) * ((3 * a + b) * 0.25 - s) < 0 ||
-                    flag && Math.Abs(b_s) >= Math.Abs(b_c) * 0.5 ||
-                    !flag && Math.Abs(b_s) >= Math.Abs(c_d) * 0.5 ||
-                    flag && Math.Abs(b_c) < epsilon ||
-                    !flag && Math.Abs(c_d) < epsilon)
+                //Conditions for bisection method
+                bool condition1;
+                double a3pb_over4 = (3 * a + b) * 0.25;
+
+                if (a3pb_over4 > b)
+                    if (s <= a3pb_over4 && s >= b)
+                        condition1 = false;
+                    else
+                        condition1 = true;
+                else
+                    if (s >= a3pb_over4 && s <= b)
+                        condition1 = false;
+                    else
+                        condition1 = true;
+
+                bool condition2;
+
+                if (flag && b_s >= b_c * 0.5)
+                    condition2 = true;
+                else
+                    condition2 = false;
+
+                bool condition3;
+
+                if (!flag && b_s >= c_d * 0.5)
+                    condition3 = true;
+                else
+                    condition3 = false;
+
+                bool condition4;
+
+                if (flag && b_c < epsilon)
+                    condition4 = true;
+                else
+                    condition4 = false;
+
+                bool conditon5;
+
+                if (!flag && c_d < epsilon)
+                    conditon5 = true;
+                else
+                    conditon5 = false;
+
+                if (condition1 || condition2 || condition3 || condition4 || conditon5)
                 {
                     s = a + b;
                     s *= 0.5;
@@ -188,6 +227,7 @@ namespace ferram4
                 fs = function(s);
                 d = c;
                 c = b;
+
                 if (fa * fs < 0)
                 {
                     b = s;

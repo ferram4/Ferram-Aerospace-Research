@@ -27,6 +27,16 @@ namespace FerramAerospaceResearch.FAREditorGUI
             _yScaleMaxDistance = yScaleMaxDistance;
             _yAxisGridScale = yAxisGridScale;
 
+            Initialize();
+        }
+
+        ~EditorAreaRulingOverlay()
+        {
+            Cleanup();
+        }
+
+        private void Initialize()
+        {
             //Based on Kronal Vessel Viewer CoM axes rendering
             _rendererMaterial = new Material("Shader \"Lines/Colored Blended\" {" +
                     "SubShader { Pass { " +
@@ -45,16 +55,22 @@ namespace FerramAerospaceResearch.FAREditorGUI
             _markingRenderers.Add(CreateNewRenderer(_axisColor, 0.1f, _rendererMaterial));
         }
 
-        ~EditorAreaRulingOverlay()
+        private void Cleanup()
         {
-            if(_areaRenderer)
+            if (_areaRenderer)
                 GameObject.Destroy(_areaRenderer.gameObject);
-            if(_derivRenderer)
+            if (_derivRenderer)
                 GameObject.Destroy(_derivRenderer.gameObject);
             for (int i = 0; i < _markingRenderers.Count; i++)
                 GameObject.Destroy(_markingRenderers[i].gameObject);
 
             _markingRenderers = null;
+        }
+
+        private void RestartOverlay()
+        {
+            Cleanup();
+            Initialize();
         }
 
         LineRenderer CreateNewRenderer(Color color, float width, Material material)
@@ -75,6 +91,9 @@ namespace FerramAerospaceResearch.FAREditorGUI
 
         public void ToggleVisibility()
         {
+            if (!_areaRenderer)
+                RestartOverlay();
+
             _areaRenderer.enabled = !_areaRenderer.enabled;
             _derivRenderer.enabled = !_derivRenderer.enabled;
 
@@ -89,6 +108,9 @@ namespace FerramAerospaceResearch.FAREditorGUI
 
         public void SetVisibility(bool visible)
         {
+            if (!_areaRenderer)
+                RestartOverlay();
+
             _areaRenderer.enabled = visible;
             _derivRenderer.enabled = visible;
             for (int i = 0; i < _markingRenderers.Count; i++)
@@ -102,6 +124,14 @@ namespace FerramAerospaceResearch.FAREditorGUI
         public void UpdateAeroData(Matrix4x4 voxelLocalToWorldMatrix, double[] xCoords, double[] yCoordsCrossSection, double[] yCoordsDeriv, double maxValue)
         {
             _numGridLines = (int)Math.Ceiling(maxValue / _yAxisGridScale);       //add one to account for the xAxis
+            double gridScale = _yScaleMaxDistance / (double)_numGridLines;
+            double scalingFactor = _yScaleMaxDistance / (_yAxisGridScale * _numGridLines);
+
+            if (!_areaRenderer)
+                RestartOverlay();
+
+            UpdateRenderer(_areaRenderer, voxelLocalToWorldMatrix, xCoords, yCoordsCrossSection, scalingFactor);
+            UpdateRenderer(_derivRenderer, voxelLocalToWorldMatrix, xCoords, yCoordsDeriv, scalingFactor);
 
             while (_markingRenderers.Count <= _numGridLines)
             {
@@ -110,7 +140,6 @@ namespace FerramAerospaceResearch.FAREditorGUI
                 _markingRenderers.Add(newMarkingRenderer);
             }
 
-            double gridScale = _yScaleMaxDistance / (double)_numGridLines;
 
             double[] shortXCoords = new double[] {xCoords[0], xCoords[xCoords.Length - 1]};
 
@@ -124,10 +153,7 @@ namespace FerramAerospaceResearch.FAREditorGUI
                     _markingRenderers[i].enabled = _areaRenderer.enabled;
             }
 
-            double scalingFactor = _yScaleMaxDistance / (_yAxisGridScale * _numGridLines);
 
-            UpdateRenderer(_areaRenderer, voxelLocalToWorldMatrix, xCoords, yCoordsCrossSection, scalingFactor);
-            UpdateRenderer(_derivRenderer, voxelLocalToWorldMatrix, xCoords, yCoordsDeriv, scalingFactor);
         }
 
         void UpdateRenderer(LineRenderer renderer, Matrix4x4 transformMatrix, double[] xCoords, double[] yCoords)

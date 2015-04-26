@@ -58,11 +58,6 @@ namespace FerramAerospaceResearch.FAREditorGUI
             "Transonic Design"
         };
 
-        void Awake()
-        {
-
-        }
-
         void Start()
         {
             if (instance == null)
@@ -187,7 +182,6 @@ namespace FerramAerospaceResearch.FAREditorGUI
                 {
                     _simManager.UpdateAeroData(_vehicleAero);
                     UpdateCrossSections();
-                    FARAeroUtil.ResetEditorParts();
                     LEGACY_UpdateWingAeroModels();
                 } 
 
@@ -239,6 +233,8 @@ namespace FerramAerospaceResearch.FAREditorGUI
                     }
                 }
             }
+            FARAeroUtil.ResetEditorParts();
+
             TriggerIGeometryUpdaters();
 
             _vehicleAero.VoxelUpdate(EditorLogic.RootPart.transform.worldToLocalMatrix, EditorLogic.RootPart.transform.localToWorldMatrix, EDITOR_VOXEL_COUNT, partList, _currentGeometryModules, true);

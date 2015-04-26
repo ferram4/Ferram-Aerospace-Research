@@ -177,7 +177,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             worldSpaceAeroForce = matrix.MultiplyVector(partLocalForce);
 
-            rb.AddForce(worldSpaceAeroForce);
+            rb.AddForceAtPosition(worldSpaceAeroForce, part.transform.position);
             rb.AddTorque(matrix.MultiplyVector(partLocalTorque));
 
             partLocalForce = Vector3.zero;

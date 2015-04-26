@@ -48,16 +48,20 @@ namespace FerramAerospaceResearch.FAREditorGUI.Simulation
                 up = -Vector3.forward;
             }
 
-            double cosAlpha = Math.Cos(input.alpha * Math.PI / 180);
-            double sinAlpha = Math.Sqrt(Math.Max(1 - cosAlpha * cosAlpha, 0));
+            double sinAlpha = Math.Sin(input.alpha * Math.PI / 180);
+            double cosAlpha = Math.Sqrt(Math.Max(1 - sinAlpha * sinAlpha, 0));
 
-            double cosBeta = Math.Cos(input.beta * Math.PI / 180);
-            double sinBeta = Math.Sqrt(Math.Max(1 - cosBeta * cosBeta, 0));
+            double sinBeta = Math.Sin(input.beta * Math.PI / 180);
+            double cosBeta = Math.Sqrt(Math.Max(1 - sinBeta * sinBeta, 0));
 
-            double cosPhi = Math.Cos(input.phi * Math.PI / 180);
-            double sinPhi = Math.Sqrt(Math.Max(1 - cosPhi * cosPhi, 0));
+            double sinPhi = Math.Sin(input.phi * Math.PI / 180);
+            double cosPhi = Math.Sqrt(Math.Max(1 - sinPhi * sinPhi, 0));
 
-            Vector3d AngVel = (input.phiDot - sinAlpha * input.betaDot) * forward + (cosPhi * input.alphaDot + cosAlpha * sinPhi * input.betaDot) * right + (sinPhi * input.alphaDot - cosAlpha * cosPhi * input.betaDot) * up;
+            double alphaDot = input.alphaDot * Math.PI / 180;
+            double betaDot = input.betaDot * Math.PI / 180;
+            double phiDot = input.phiDot * Math.PI / 180;
+
+            Vector3d AngVel = (phiDot - sinAlpha * betaDot) * forward + (cosPhi * alphaDot + cosAlpha * sinPhi * betaDot) * right + (sinPhi * alphaDot - cosAlpha * cosPhi * betaDot) * up;
 
             Vector3d velocity = forward * cosAlpha * cosBeta + right * (sinPhi * cosAlpha * cosBeta - cosPhi * sinBeta) - up * cosPhi * (sinAlpha * cosBeta - sinBeta);
 
@@ -66,7 +70,7 @@ namespace FerramAerospaceResearch.FAREditorGUI.Simulation
             //this is negative wrt the ground
             Vector3d liftVector = -forward * sinAlpha + right * sinPhi * cosAlpha - up * cosPhi * cosAlpha;
 
-            Vector3d sideways = Vector3.Cross(velocity, liftVector);
+            Vector3d sideways = Vector3.Cross(velocity, liftVector).normalized;
 
 
             for (int i = 0; i < FARAeroUtil.CurEditorWings.Count; i++)
@@ -86,28 +90,28 @@ namespace FerramAerospaceResearch.FAREditorGUI.Simulation
                 if (w is FARControllableSurface)
                     (w as FARControllableSurface).SetControlStateEditor(CoM, vel, (float)input.pitchValue, 0, 0, input.flaps, input.spoilers);
 
-                /*Vector3d force = w.ComputeForceEditor(vel.normalized, input.machNumber) * 1000;
+                Vector3d force = w.ComputeForceEditor(vel.normalized, input.machNumber) * 1000;
 
                 output.Cl += -Vector3d.Dot(force, liftVector);
                 output.Cy += -Vector3d.Dot(force, sideways);
                 output.Cd += -Vector3d.Dot(force, velocity);
 
-                Vector3d moment = Vector3d.Cross(relPos, force);
+                Vector3d moment = -Vector3d.Cross(relPos, force);
 
-                output.Cm += -Vector3d.Dot(moment, sideways);
+                output.Cm += Vector3d.Dot(moment, sideways);
                 output.Cn += -Vector3d.Dot(moment, liftVector);
-                output.C_roll += -Vector3d.Dot(moment, velocity);*/
+                output.C_roll += Vector3d.Dot(moment, velocity);
 
-                w.ComputeClCdEditor(vel.normalized, input.machNumber);
+                //w.ComputeClCdEditor(vel.normalized, input.machNumber);
 
-                double tmpCl = w.GetCl() * w.S;
+                /*double tmpCl = w.GetCl() * w.S;
                 output.Cl += tmpCl * -Vector3d.Dot(w.GetLiftDirection(), liftVector);
                 output.Cy += tmpCl * -Vector3d.Dot(w.GetLiftDirection(), sideways);
                 double tmpCd = w.GetCd() * w.S;
                 output.Cd += tmpCd;
                 output.Cm += tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(w.GetLiftDirection(), liftVector) + tmpCd * -Vector3d.Dot((relPos), liftVector);
                 output.Cn += tmpCd * Vector3d.Dot((relPos), sideways) + tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(w.GetLiftDirection(), sideways);
-                output.C_roll += tmpCl * Vector3d.Dot((relPos), sideways) * -Vector3d.Dot(w.GetLiftDirection(), liftVector);
+                output.C_roll += tmpCl * Vector3d.Dot((relPos), sideways) * -Vector3d.Dot(w.GetLiftDirection(), liftVector);*/
                 area += w.S;
                 MAC += w.GetMAC() * w.S;
                 b_2 += w.Getb_2() * w.S;
@@ -115,7 +119,7 @@ namespace FerramAerospaceResearch.FAREditorGUI.Simulation
             FARCenterQuery center = new FARCenterQuery();
             for (int i = 0; i < _currentAeroSections.Count; i++)
             {
-                _currentAeroSections[i].EditorCalculateAeroForces(1, (float)input.machNumber, 10000, 0.005f, velocity, center);
+                _currentAeroSections[i].EditorCalculateAeroForces(1, (float)input.machNumber, 10000, 0.005f, velocity.normalized, center);
             }
 
             Vector3d centerForce = center.force * 1000;
@@ -124,11 +128,11 @@ namespace FerramAerospaceResearch.FAREditorGUI.Simulation
             output.Cy += -Vector3d.Dot(centerForce, sideways);
             output.Cd += -Vector3d.Dot(centerForce, velocity);
 
-            Vector3d centerMoment = Vector3d.Cross(center.GetMinTorquePos() - CoM, centerForce);
+            Vector3d centerMoment = -Vector3d.Cross(center.GetMinTorquePos() - CoM, centerForce);
 
-            output.Cm += -Vector3d.Dot(centerMoment, sideways);
+            output.Cm += Vector3d.Dot(centerMoment, sideways);
             output.Cn += -Vector3d.Dot(centerMoment, liftVector);
-            output.C_roll += -Vector3d.Dot(centerMoment, velocity);
+            output.C_roll += Vector3d.Dot(centerMoment, velocity);
             
 
             /*for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
