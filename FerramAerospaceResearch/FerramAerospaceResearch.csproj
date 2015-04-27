@@ -60,6 +60,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CompatibilityChecker.cs" />
+    <Compile Include="FARGUI\FARFlightGUI\FlightStatusGUI.cs" />
+    <Compile Include="FARGUI\FARFlightGUI\StabilityAugmentation.cs" />
+    <Compile Include="FARGUI\FARFlightGUI\VesselFlightInfo.cs" />
+    <Compile Include="FARGUI\FARFlightGUI\PhysicsCalcs.cs" />
     <Compile Include="LEGACYferram4\FARAction.cs" />
     <Compile Include="FARAeroComponents\EditorAeroCenter.cs" />
     <Compile Include="FARAeroComponents\FARAeroPartModule.cs" />
@@ -68,7 +72,7 @@
     <Compile Include="FARAeroComponents\TmpFlightIntegratorOverride.cs" />
     <Compile Include="FARAeroComponents\VehicleAerodynamics.cs" />
     <Compile Include="LEGACYferram4\FARAeroStress.cs" />
-    <Compile Include="LEGACYferram4\FARAeroUtil.cs" />
+    <Compile Include="FARAeroUtil.cs" />
     <Compile Include="LEGACYferram4\FARBaseAerodynamics.cs" />
     <Compile Include="LEGACYferram4\FARCenterQuery.cs" />
     <Compile Include="LEGACYferram4\FARControllableSurface.cs" />

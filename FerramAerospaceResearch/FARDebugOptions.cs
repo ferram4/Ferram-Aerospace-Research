@@ -46,7 +46,7 @@ using ferram4;
 
 namespace FerramAerospaceResearch
 {
-    [KSPAddon(KSPAddon.Startup.SpaceCentre, false)]
+    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
     public class FARDebugOptions : MonoBehaviour
     {
 

@@ -1544,35 +1544,6 @@ namespace ferram4
             lastDt = dt;
         }
 
-        /*public void SaveGUIParameters()
-        {
-            var config = KSP.IO.PluginConfiguration.CreateForType<FAREditorGUI>();
-            config.load();
-            config.SetValue("FlightWindowPos", windowPos);
-            config.SetValue("AutopilotWinPos", AutopilotWinPos);
-            config.SetValue("HelpWindowPos", HelpWindowPos);
-            config.SetValue("FlightDataPos", FlightDataPos);
-            config.SetValue("FlightDataHelpPos", FlightDataHelpPos);
-            config.SetValue("AirSpeedPos", AirSpeedPos);
-            config.SetValue("AirSpeedHelpPos", AirSpeedHelpPos);
-            config.SetValue("FlightGUIBool", minimize);
-            config.save();
-        }
-
-        public void LoadGUIParameters()
-        {
-            var config = KSP.IO.PluginConfiguration.CreateForType<FAREditorGUI>();
-            config.load();
-            windowPos = config.GetValue("FlightWindowPos", new Rect(100, 100, 150, 100));
-            AutopilotWinPos = config.GetValue("AutopilotWinPos", new Rect());
-            HelpWindowPos = config.GetValue("HelpWindowPos", new Rect());
-            FlightDataPos = config.GetValue("FlightDataPos", new Rect());
-            FlightDataHelpPos = config.GetValue("FlightDataHelpPos", new Rect());
-            AirSpeedPos = config.GetValue("AirSpeedPos", new Rect());
-            AirSpeedHelpPos = config.GetValue("AirSpeedHelpPos", new Rect());
-            minimize = config.GetValue<bool>("FlightGUIBool", false);
-        }*/
-
         //Blank save node ensures that nothing for this partmodule is saved
         public override void OnSave(ConfigNode node)
         {

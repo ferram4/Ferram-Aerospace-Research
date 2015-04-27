@@ -40,6 +40,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using KSP;
+using FerramAerospaceResearch;
 
 namespace FerramAerospaceResearch.FARAeroComponents
 {
@@ -204,7 +205,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             Matrix4x4 matrix = part.partTransform.worldToLocalMatrix;
             Rigidbody rb = part.Rigidbody;
 
-            partLocalVel = rb.velocity + frameVel;
+            partLocalVel = rb.velocity + frameVel
+                        - FARWind.GetWind(FARAeroUtil.currentBody, part, rb.position); 
             partLocalVel = matrix.MultiplyVector(partLocalVel);
 
             partLocalAngVel = rb.angularVelocity;

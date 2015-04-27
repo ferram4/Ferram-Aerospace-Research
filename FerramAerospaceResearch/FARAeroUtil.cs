@@ -40,9 +40,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using UnityEngine;
-using FerramAerospaceResearch;
+using ferram4;
 
-namespace ferram4
+namespace FerramAerospaceResearch
 {
     public static class FARAeroUtil
     {

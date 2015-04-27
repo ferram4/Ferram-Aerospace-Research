@@ -582,7 +582,7 @@ namespace ferram4
             if (Math.Abs(Vector3d.Dot(scaledForce, forward)) > YmaxForce * failureForceScaling || Vector3d.Exclude(forward, scaledForce).magnitude > XZmaxForce * failureForceScaling)
                 if (part.parent && !vessel.packed)
                 {
-                    part.SendEvent("AerodynamicFailureStatus");
+                    vessel.SendMessage("AerodynamicFailureStatus");
                     FlightLogger.eventLog.Add("[" + FARMathUtil.FormatTime(vessel.missionTime) + "] Joint between " + part.partInfo.title + " and " + part.parent.partInfo.title + " failed due to aerodynamic stresses.");
                     part.decouple(25);
                     if(FARDebugValues.aeroFailureExplosions)
