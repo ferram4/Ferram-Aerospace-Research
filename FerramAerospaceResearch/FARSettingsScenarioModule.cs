@@ -41,13 +41,18 @@ namespace FerramAerospaceResearch
             node.AddValue("numAreaSmoothingPasses", settings.numAreaSmoothingPasses);
             node.AddValue("numDerivSmoothingPasses", settings.numDerivSmoothingPasses);
             node.AddValue("customSettings", FARDifficultySettings.customSettings);
+            node.AddValue("presetIndex", FARDifficultySettings.presetIndex);
             base.OnSave(node);
         }
 
         public override void OnLoad(ConfigNode node)
         {
-            if(settings == null)
-                settings = new FARDifficultySettings();
+            int index = 0;
+            if (node.HasValue("index"))
+                index = int.Parse(node.GetValue("index"));
+            
+            if (settings == null)
+                settings = new FARDifficultySettings(index);
             if (node.HasValue("newGame"))
                 settings.newGame = bool.Parse(node.GetValue("newGame"));
 
@@ -63,6 +68,8 @@ namespace FerramAerospaceResearch
 
             if (node.HasValue("customSettings"))
                 FARDifficultySettings.customSettings = bool.Parse(node.GetValue("customSettings"));
+
+            
             base.OnLoad(node);
         }
     }
@@ -74,6 +81,7 @@ namespace FerramAerospaceResearch
         public double gaussianVehicleLengthFractionForSmoothing = 0.015;
         public int numAreaSmoothingPasses = 1;
         public int numDerivSmoothingPasses = 1;
+        public int index;
 
         public static bool customSettings = false;
 
@@ -82,8 +90,9 @@ namespace FerramAerospaceResearch
         static GUIDropDown<FARDifficultySettings> dropdown;
 
         public static FARDifficultySettings currentSettings;
+        public static int presetIndex;
 
-        public FARDifficultySettings()
+        public FARDifficultySettings(int index)
         {
             if(presets == null)
             {
@@ -110,7 +119,16 @@ namespace FerramAerospaceResearch
                 presets[4] = tmp;
                 presetNames[4] = "Full Drag, No Leniency";
 
-                dropdown = new GUIDropDown<FARDifficultySettings>(presetNames, presets, 2);
+                if (index > 0)
+                {
+                    dropdown = new GUIDropDown<FARDifficultySettings>(presetNames, presets, index);
+                    presetIndex = index;
+                }
+                else
+                {
+                    dropdown = new GUIDropDown<FARDifficultySettings>(presetNames, presets, 2);
+                    presetIndex = -1;
+                }
             }
             currentSettings = FARSettingsScenarioModule.settings;
         }
@@ -126,6 +144,7 @@ namespace FerramAerospaceResearch
 
         public static void DisplaySelection()
         {
+            GUILayout.BeginVertical();
             GUILayout.Label("Transonic Drag Settings");
             GUILayout.Label("Absolute magnitude of drag can be scaled, as can how lenient FAR is about enforcing proper area ruling.");
 
@@ -134,6 +153,7 @@ namespace FerramAerospaceResearch
             {
                 dropdown.GUIDropDownDisplay(GUILayout.Width(300));
                 FARSettingsScenarioModule.settings = dropdown.ActiveSelection;
+                presetIndex = FARSettingsScenarioModule.settings.index;
             }
             else
             {
@@ -153,6 +173,7 @@ namespace FerramAerospaceResearch
             if (GUILayout.Button(customSettings ? "Switch Back To Presets" : "Choose Custom Settings"))
                 customSettings = !customSettings;
             GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
             currentSettings = FARSettingsScenarioModule.settings;
         }
     }

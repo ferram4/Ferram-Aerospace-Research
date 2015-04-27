@@ -42,7 +42,7 @@ using FerramAerospaceResearch;
 
 namespace ferram4
 {
-    public abstract class FARBaseAerodynamics : FARPartModule
+    public abstract class FARBaseAerodynamics : FARPartModule, ILiftProvider
     {
         [KSPField(isPersistant = false, guiActive = false)]
         public double Cl;

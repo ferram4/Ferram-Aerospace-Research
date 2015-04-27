@@ -53,9 +53,6 @@ namespace FerramAerospaceResearch
 
         public static List<string> exemptModules = new List<string>();
 
-        public static List<string> payloadFairingTitles = new List<string>();
-        public static List<string> cargoBayTitles = new List<string>();
-
         public static void SaveCustomClassificationTemplates()
         {
             ConfigNode node = new ConfigNode("@FARPartClassification[Default]:FOR[FerramAerospaceResearch]");
@@ -65,10 +62,6 @@ namespace FerramAerospaceResearch
             node.AddNode(StringOverrideNode(greebleModules, "GreebleModule", "hasModule"));
             node.AddNode(new ConfigNode("!ExemptModule"));
             node.AddNode(StringOverrideNode(exemptModules, "ExemptModule", "hasModule"));
-            node.AddNode(new ConfigNode("!PayloadFairing"));
-            node.AddNode(StringOverrideNode(payloadFairingTitles, "PayloadFairing", "title"));
-            node.AddNode(new ConfigNode("!CargoBay"));
-            node.AddNode(StringOverrideNode(cargoBayTitles, "CargoBay", "title"));
 
             ConfigNode saveNode = new ConfigNode();
             saveNode.AddNode(node);
@@ -125,25 +118,6 @@ namespace FerramAerospaceResearch
                     }
                 }
 
-                if (node.HasNode("PayloadFairing"))
-                {
-                    ConfigNode fairing = node.GetNode("PayloadFairing");
-
-                    foreach (string title in fairing.GetValues("title"))
-                    {
-                        payloadFairingTitles.Add(title);
-                    }
-                }
-                if (node.HasNode("CargoBay"))
-                {
-                    ConfigNode fairing = node.GetNode("CargoBay");
-
-                    foreach (string title in fairing.GetValues("title"))
-                    {
-                        cargoBayTitles.Add(title);
-                    }
-                }
-
             }
             loaded = true;
         }
@@ -169,24 +143,6 @@ namespace FerramAerospaceResearch
                     return true;
 
             //p.Modules.Contains("LaunchClamp") || p.Modules.Contains("FARBaseAerodynamics") || p.Modules.Contains("KerbalEVA") || p.Modules.Contains("ModuleControlSurface") || p.Modules.Contains("ModuleResourceIntake") || p.Modules.Contains("ModuleParachute")
-            return false;
-        }
-
-        public static bool PartIsPayloadFairing(Part p, string title)
-        {
-            foreach (string titleString in payloadFairingTitles)
-                if (title.Contains(titleString))
-                    return true;
-
-            return false;
-        }
-
-        public static bool PartIsCargoBay(Part p, string title)
-        {
-            foreach (string titleString in cargoBayTitles)
-                if (title.Contains(titleString))
-                    return true;
-
             return false;
         }
     }

@@ -109,6 +109,7 @@ namespace FerramAerospaceResearch.FARGUI
         private void Start()
         {
             this.enabled = true;
+            GameObject.DontDestroyOnLoad(this);
         }
 
 

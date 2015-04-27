@@ -48,7 +48,7 @@ using FerramAerospaceResearch;
 
 namespace ferram4
 {
-    public class FARWingAerodynamicModel : FARBaseAerodynamics, TweakScale.IRescalable<FARWingAerodynamicModel>
+    public class FARWingAerodynamicModel : FARBaseAerodynamics, TweakScale.IRescalable<FARWingAerodynamicModel>, ILiftProvider
     {
         public double AoAmax = 15;
 

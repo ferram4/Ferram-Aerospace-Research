@@ -226,8 +226,6 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 for (int i = 0; i < partList.Count; i++)
                 {
                     Part p = partList[i];
-                    if (p == null)
-                        continue;
                     GeometryPartModule g = p.GetComponent<GeometryPartModule>();
                     if ((object)g != null)
                     {

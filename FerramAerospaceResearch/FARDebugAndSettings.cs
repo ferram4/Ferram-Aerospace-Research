@@ -25,7 +25,6 @@ namespace FerramAerospaceResearch
 
         private enum MenuTab
         {
-            DifficultySettings,
             DebugAndData,
             PartClassification,
             AeroStress,
@@ -34,8 +33,7 @@ namespace FerramAerospaceResearch
 
         private static string[] MenuTab_str = new string[]
         {
-            "Difficulty Settings",
-            "Debug Options",
+            "Difficulty and Debug",
             "Part Classification",
             "Aerodynamic Failure",
             "Atm Composition",
@@ -62,7 +60,7 @@ namespace FerramAerospaceResearch
             LoadConfigs();
             GameObject.DontDestroyOnLoad(this);
 
-            Debug.Log("I'm still here");
+            debugMenu = false;
 
             if (FARDebugValues.useBlizzyToolbar && FARDebugButtonBlizzy != null)
             {
@@ -108,6 +106,9 @@ namespace FerramAerospaceResearch
         
         public void OnGUI()
         {
+            if (HighLogic.LoadedScene != GameScenes.SPACECENTER)
+                debugMenu = false;
+
             GUI.skin = HighLogic.Skin;
             if (debugMenu)
             {
@@ -153,9 +154,7 @@ namespace FerramAerospaceResearch
 
             activeTab = (MenuTab)GUILayout.SelectionGrid((int)activeTab, MenuTab_str, 5);
 
-            if (activeTab == MenuTab.DifficultySettings)
-                DifficultyTab(thisStyle);
-            else if (activeTab == MenuTab.DebugAndData)
+            if (activeTab == MenuTab.DebugAndData)
                 DebugAndDataTab(thisStyle);
             else if (activeTab == MenuTab.PartClassification)
                 PartClassificationTab(buttonStyle, boxStyle);
@@ -170,12 +169,6 @@ namespace FerramAerospaceResearch
             GUI.DragWindow();
             debugWinPos = GUIUtils.ClampToScreen(debugWinPos);
         }
-
-        private void DifficultyTab(GUIStyle thisStyle)
-        {
-            FARDifficultySettings.DisplaySelection();
-        }
-
 
         private void AeroDataTab(GUIStyle buttonStyle, GUIStyle boxStyle)
         {
@@ -223,17 +216,8 @@ namespace FerramAerospaceResearch
 
             double[] atmProperties = FARAeroUtil.bodyAtmosphereConfiguration[flightGlobalsIndex];
 
-            atmProperties[1] = GUIUtils.TextEntryForDouble("Ratio of Specific Heats:", 80, atmProperties[1]);
-
-
-            double dTmp = 8314.5 / atmProperties[2];
-            dTmp = GUIUtils.TextEntryForDouble("Gas Molecular Mass:", 80, dTmp);
-            atmProperties[2] = 8314.5 / dTmp;
-
-            atmProperties[0] = atmProperties[1] * atmProperties[2];
-
-            atmProperties[3] = GUIUtils.TextEntryForDouble("Gas Viscosity:", 80, atmProperties[3]);
-            atmProperties[4] = GUIUtils.TextEntryForDouble("Ref Temp for Viscosity:", 80, atmProperties[4]);
+            atmProperties[0] = GUIUtils.TextEntryForDouble("Gas Viscosity:", 80, atmProperties[0]);
+            atmProperties[1] = GUIUtils.TextEntryForDouble("Ref Temp for Viscosity:", 80, atmProperties[1]);
 
             FARAeroUtil.bodyAtmosphereConfiguration[flightGlobalsIndex] = atmProperties;
 
@@ -351,18 +335,6 @@ namespace FerramAerospaceResearch
             StringListUpdateGUI(FARPartClassification.exemptModules, buttonStyle, boxStyle);
 
             GUILayout.EndVertical();
-            GUILayout.BeginVertical();
-            GUILayout.Label("Specialized Modules - Used to determine fairings and cargo bays");
-
-            //Payload Fairing Section
-            GUILayout.Label("Fairing Title Contains:");
-            StringListUpdateGUI(FARPartClassification.payloadFairingTitles, buttonStyle, boxStyle);
-
-            //Payload Fairing Section
-            GUILayout.Label("Cargo Bay Title Contains:");
-            StringListUpdateGUI(FARPartClassification.cargoBayTitles, buttonStyle, boxStyle);
-
-            GUILayout.EndVertical();
             GUILayout.EndHorizontal();
         }
 
@@ -397,13 +369,19 @@ namespace FerramAerospaceResearch
         private void DebugAndDataTab(GUIStyle thisStyle)
         {
             GUILayout.BeginHorizontal();
-            GUILayout.BeginVertical();
+            GUILayout.BeginVertical(GUILayout.Width(250));
             GUILayout.Label("Part Right-Click Menu");
             FARDebugValues.displayForces = GUILayout.Toggle(FARDebugValues.displayForces, "Display Aero Forces", thisStyle);
             FARDebugValues.displayCoefficients = GUILayout.Toggle(FARDebugValues.displayCoefficients, "Display Coefficients", thisStyle);
             FARDebugValues.displayShielding = GUILayout.Toggle(FARDebugValues.displayShielding, "Display Shielding", thisStyle);
             GUILayout.Label("Debug / Cheat Options");
             FARDebugValues.allowStructuralFailures = GUILayout.Toggle(FARDebugValues.allowStructuralFailures, "Allow Aero-structural Failures", thisStyle);
+            GUILayout.EndVertical();
+
+            FARDifficultySettings.DisplaySelection();
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.BeginVertical();
             GUILayout.Label("Editor GUI Graph Colors");
 
 

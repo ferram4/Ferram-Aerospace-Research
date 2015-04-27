@@ -42,7 +42,7 @@ using FerramAerospaceResearch;
 
 namespace ferram4
 {
-    public class FARControllableSurface : FARWingAerodynamicModel
+    public class FARControllableSurface : FARWingAerodynamicModel, ILiftProvider
     {        
         protected Transform movableSection = null;
 
