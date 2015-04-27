@@ -8,6 +8,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
     {
         protected override void UpdateAerodynamics(Part part)
         {
+            if (part.Modules.Contains("ModuleAeroSurface"))     //FIXME Proper model for airbrakes
+                base.UpdateAerodynamics(part);
+            
             //base.UpdateAerodynamics(part);
             part.radiativeArea = CalculateAreaRadiative(part);
             part.exposedArea = CalculateAreaExposed(part);

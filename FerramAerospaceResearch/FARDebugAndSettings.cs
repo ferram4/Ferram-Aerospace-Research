@@ -1,40 +1,4 @@
-﻿/*
-Ferram Aerospace Research v0.14.6
-Copyright 2014, Michael Ferrara, aka Ferram4
-
-    This file is part of Ferram Aerospace Research.
-
-    Ferram Aerospace Research is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Ferram Aerospace Research is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Ferram Aerospace Research.  If not, see <http://www.gnu.org/licenses/>.
-
-    Serious thanks:		a.g., for tons of bugfixes and code-refactorings
-            			Taverius, for correcting a ton of incorrect values
-            			sarbian, for refactoring code for working with MechJeb, and the Module Manager 1.5 updates
-            			ialdabaoth (who is awesome), who originally created Module Manager
-                        Regex, for adding RPM support
-            			Duxwing, for copy editing the readme
- * 
- * Kerbal Engineer Redux created by Cybutek, Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
- *      Referenced for starting point for fixing the "editor click-through-GUI" bug
- *
- * Part.cfg changes powered by sarbian & ialdabaoth's ModuleManager plugin; used with permission
- *	http://forum.kerbalspaceprogram.com/threads/55219
- *
- * Toolbar integration powered by blizzy78's Toolbar plugin; used with permission
- *	http://forum.kerbalspaceprogram.com/threads/60863
- */
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
@@ -42,14 +6,12 @@ using KSP;
 using FerramAerospaceResearch.FARGUI;
 using FerramAerospaceResearch.FARGUI.FAREditorGUI;
 using ferram4;
-//using Toolbar;
 
 namespace FerramAerospaceResearch
 {
     [KSPAddon(KSPAddon.Startup.MainMenu, true)]
-    public class FARDebugOptions : MonoBehaviour
+    public class FARDebugAndSettings : MonoBehaviour
     {
-
         public static KSP.IO.PluginConfiguration config;
         private IButton FARDebugButtonBlizzy = null;
         private ApplicationLauncherButton FARDebugButtonStock = null;
@@ -63,6 +25,7 @@ namespace FerramAerospaceResearch
 
         private enum MenuTab
         {
+            DifficultySettings,
             DebugAndData,
             PartClassification,
             AeroStress,
@@ -71,6 +34,7 @@ namespace FerramAerospaceResearch
 
         private static string[] MenuTab_str = new string[]
         {
+            "Difficulty Settings",
             "Debug Options",
             "Part Classification",
             "Aerodynamic Failure",
@@ -84,23 +48,25 @@ namespace FerramAerospaceResearch
             "STAGE_PRIORITY_FLOW",
             "STACK_PRIORITY_SEARCH",
         };
-       
+
         private MenuTab activeTab = MenuTab.DebugAndData;
 
         private int aeroStressIndex = 0;
         private int atmBodyIndex = 1;
 
-        public void Awake()
+        void Start()
         {
-            if (!CompatibilityChecker.IsAllCompatible())
-            {
-                this.enabled = false;
-                return;
-            }
-
+            FARAeroStress.LoadStressTemplates();
+            FARPartClassification.LoadClassificationTemplates();
+            FARAeroUtil.LoadAeroDataFromConfig();
             LoadConfigs();
-            if (FARDebugValues.useBlizzyToolbar)
+            GameObject.DontDestroyOnLoad(this);
+
+            Debug.Log("I'm still here");
+
+            if (FARDebugValues.useBlizzyToolbar && FARDebugButtonBlizzy != null)
             {
+                 
                 FARDebugButtonBlizzy = ToolbarManager.Instance.add("FerramAerospaceResearch", "FARDebugButtonBlizzy");
                 FARDebugButtonBlizzy.TexturePath = "FerramAerospaceResearch/Textures/icon_button_blizzy";
                 FARDebugButtonBlizzy.ToolTip = "FAR Debug Options";
@@ -112,7 +78,7 @@ namespace FerramAerospaceResearch
 
         void OnGUIAppLauncherReady()
         {
-            if (ApplicationLauncher.Ready)
+            if (ApplicationLauncher.Ready && FARDebugButtonStock == null)
             {
                     FARDebugButtonStock = ApplicationLauncher.Instance.AddModApplication(
                         onAppLaunchToggleOn,
@@ -139,7 +105,7 @@ namespace FerramAerospaceResearch
 
         void DummyVoid() { }
 
-
+        
         public void OnGUI()
         {
             GUI.skin = HighLogic.Skin;
@@ -164,7 +130,6 @@ namespace FerramAerospaceResearch
             }
         }
 
-
         private void debugWindow(int windowID)
         {
 
@@ -186,9 +151,11 @@ namespace FerramAerospaceResearch
             boxStyle.padding = new RectOffset(4, 4, 4, 4);
             boxStyle.margin = new RectOffset(4, 4, 4, 4);
 
-            activeTab = (MenuTab)GUILayout.SelectionGrid((int)activeTab, MenuTab_str, 4);
+            activeTab = (MenuTab)GUILayout.SelectionGrid((int)activeTab, MenuTab_str, 5);
 
-            if (activeTab == MenuTab.DebugAndData)
+            if (activeTab == MenuTab.DifficultySettings)
+                DifficultyTab(thisStyle);
+            else if (activeTab == MenuTab.DebugAndData)
                 DebugAndDataTab(thisStyle);
             else if (activeTab == MenuTab.PartClassification)
                 PartClassificationTab(buttonStyle, boxStyle);
@@ -203,6 +170,12 @@ namespace FerramAerospaceResearch
             GUI.DragWindow();
             debugWinPos = GUIUtils.ClampToScreen(debugWinPos);
         }
+
+        private void DifficultyTab(GUIStyle thisStyle)
+        {
+            FARDifficultySettings.DisplaySelection();
+        }
+
 
         private void AeroDataTab(GUIStyle buttonStyle, GUIStyle boxStyle)
         {
@@ -430,25 +403,25 @@ namespace FerramAerospaceResearch
             FARDebugValues.displayCoefficients = GUILayout.Toggle(FARDebugValues.displayCoefficients, "Display Coefficients", thisStyle);
             FARDebugValues.displayShielding = GUILayout.Toggle(FARDebugValues.displayShielding, "Display Shielding", thisStyle);
             GUILayout.Label("Debug / Cheat Options");
-            FARDebugValues.useSplinesForSupersonicMath = GUILayout.Toggle(FARDebugValues.useSplinesForSupersonicMath, "Use Splines for Supersonic Math", thisStyle);
             FARDebugValues.allowStructuralFailures = GUILayout.Toggle(FARDebugValues.allowStructuralFailures, "Allow Aero-structural Failures", thisStyle);
             GUILayout.Label("Editor GUI Graph Colors");
 
+
             Color tmpColor = EditorColors.Instance[0];
-            ReColorTexture(ref tmpColor, ref cLTexture);
+            ChangeColor("Cl", ref tmpColor, ref cLTexture);
             EditorColors.Instance[0] = tmpColor;
 
             tmpColor = EditorColors.Instance[1];
-            ReColorTexture(ref tmpColor, ref cDTexture);
+            ChangeColor("Cd", ref tmpColor, ref cDTexture);
             EditorColors.Instance[1] = tmpColor;
 
             tmpColor = EditorColors.Instance[2];
-            ReColorTexture(ref tmpColor, ref cMTexture);
+            ChangeColor("Cm", ref tmpColor, ref cMTexture);
             EditorColors.Instance[2] = tmpColor;
 
             tmpColor = EditorColors.Instance[3];
-            ReColorTexture(ref tmpColor, ref l_DTexture);
-            EditorColors.Instance[3] = tmpColor;            
+            ChangeColor("L_D", ref tmpColor, ref l_DTexture);
+            EditorColors.Instance[3] = tmpColor;
 
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
@@ -531,12 +504,11 @@ namespace FerramAerospaceResearch
 
         public static void LoadConfigs()
         {
-            config = KSP.IO.PluginConfiguration.CreateForType<FARDebugOptions>();
+            config = KSP.IO.PluginConfiguration.CreateForType<FARSettingsScenarioModule>();
             config.load();
             FARDebugValues.displayForces = Convert.ToBoolean(config.GetValue("displayForces", "false"));
             FARDebugValues.displayCoefficients = Convert.ToBoolean(config.GetValue("displayCoefficients", "false"));
             FARDebugValues.displayShielding = Convert.ToBoolean(config.GetValue("displayShielding", "false"));
-            FARDebugValues.useSplinesForSupersonicMath = Convert.ToBoolean(config.GetValue("useSplinesForSupersonicMath", "true"));
             FARDebugValues.allowStructuralFailures = Convert.ToBoolean(config.GetValue("allowStructuralFailures", "true"));
 
             FARDebugValues.useBlizzyToolbar = Convert.ToBoolean(config.GetValue("useBlizzyToolbar", "false"));
@@ -570,7 +542,6 @@ namespace FerramAerospaceResearch
             config.SetValue("displayCoefficients", FARDebugValues.displayCoefficients.ToString());
             config.SetValue("displayShielding", FARDebugValues.displayShielding.ToString());
 
-            config.SetValue("useSplinesForSupersonicMath", FARDebugValues.useSplinesForSupersonicMath.ToString());
             config.SetValue("allowStructuralFailures", FARDebugValues.allowStructuralFailures.ToString());
 
             config.SetValue("useBlizzyToolbar", FARDebugValues.useBlizzyToolbar.ToString());
@@ -597,9 +568,7 @@ namespace FerramAerospaceResearch
             if (FARDebugButtonBlizzy != null)
                 FARDebugButtonBlizzy.Destroy();
         }
-
     }
-
     public static class FARDebugValues
     {
         //Right-click menu options
@@ -607,10 +576,11 @@ namespace FerramAerospaceResearch
         public static bool displayCoefficients = false;
         public static bool displayShielding = false;
 
-        public static bool useSplinesForSupersonicMath = true;
         public static bool allowStructuralFailures = true;
 
         public static bool useBlizzyToolbar = false;
         public static bool aeroFailureExplosions = true;
+    
     }
 }
+

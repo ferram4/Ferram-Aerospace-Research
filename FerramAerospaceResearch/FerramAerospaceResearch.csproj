@@ -60,11 +60,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CompatibilityChecker.cs" />
+    <Compile Include="FARDebugAndSettings.cs" />
     <Compile Include="FARGUI\FARFlightGUI\FlightStatusGUI.cs" />
     <Compile Include="FARGUI\FARFlightGUI\FlightDataGUI.cs" />
     <Compile Include="FARGUI\FARFlightGUI\StabilityAugmentation.cs" />
     <Compile Include="FARGUI\FARFlightGUI\VesselFlightInfo.cs" />
     <Compile Include="FARGUI\FARFlightGUI\PhysicsCalcs.cs" />
+    <Compile Include="FARSettingsScenarioModule.cs" />
     <Compile Include="LEGACYferram4\FARAction.cs" />
     <Compile Include="FARAeroComponents\EditorAeroCenter.cs" />
     <Compile Include="FARAeroComponents\FARAeroPartModule.cs" />
@@ -97,11 +99,9 @@
     <Compile Include="FARGUI\GUIDropDown.cs" />
     <Compile Include="FARGUI\GUIUtils.cs" />
     <Compile Include="FARGUI\FAREditorGUI\StabilityDerivGUI.cs" />
-    <Compile Include="FARKSPAddonDataInfo.cs" />
     <Compile Include="FARPartGeometry\DebugVisualVoxel.cs" />
     <Compile Include="FARPartGeometry\GeometryMesh.cs" />
     <Compile Include="FARPartGeometry\GeometryPartModule.cs" />
-    <Compile Include="FARDebugOptions.cs" />
     <Compile Include="FAREditorGUI.cs" />
     <Compile Include="FARControlSys_KILLME.cs" />
     <Compile Include="FARMathUtil.cs" />

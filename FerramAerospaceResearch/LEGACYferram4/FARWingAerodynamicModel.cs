@@ -801,10 +801,7 @@ namespace ferram4
                 double supersonicLENormalForceFactor = CalculateSupersonicLEFactor(beta, TanSweep, beta_TanSweep);
 
                 double normalForce;
-                if (FARDebugValues.useSplinesForSupersonicMath)
-                    normalForce = GetSupersonicPressureDifference(MachNumber, AoA);
-                else
-                    normalForce = GetSupersonicPressureDifference(MachNumber, AoA);
+                normalForce = GetSupersonicPressureDifference(MachNumber, AoA);
 //                double SinAoA = Math.Sin(AoA);
                 //Cl = coefMult * (normalForce * CosAoA * Math.Sign(AoA) * sonicLEFactor - axialForce * SinAoA);
                 //Cd = coefMult * (Math.Abs(normalForce * SinAoA) * sonicLEFactor + axialForce * CosAoA);

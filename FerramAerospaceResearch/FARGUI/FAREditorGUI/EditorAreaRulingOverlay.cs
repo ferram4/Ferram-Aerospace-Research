@@ -61,8 +61,12 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 GameObject.Destroy(_areaRenderer.gameObject);
             if (_derivRenderer)
                 GameObject.Destroy(_derivRenderer.gameObject);
-            for (int i = 0; i < _markingRenderers.Count; i++)
-                GameObject.Destroy(_markingRenderers[i].gameObject);
+            if(_markingRenderers != null)
+                for (int i = 0; i < _markingRenderers.Count; i++)
+                {
+                    if (_markingRenderers[i])
+                        GameObject.Destroy(_markingRenderers[i].gameObject);
+                }
 
             _markingRenderers = null;
         }

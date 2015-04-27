@@ -99,7 +99,7 @@ namespace ferram4
             }
 
             // straight forward, reading the (action name, action group) tuples
-            KSP.IO.PluginConfiguration config = FARDebugOptions.config;
+            KSP.IO.PluginConfiguration config = FARDebugAndSettings.config;
             for (int i = 0; i < ACTION_COUNT; ++i)
             {
                 try
@@ -128,7 +128,7 @@ namespace ferram4
 
         public static void SaveConfigruration()
         {
-            KSP.IO.PluginConfiguration config = FARDebugOptions.config;
+            KSP.IO.PluginConfiguration config = FARDebugAndSettings.config;
             for (int i = 0; i < ACTION_COUNT; ++i)
             {
                 Debug.Log(String.Format("FAR: save AG {0} as {1}", configKeys[i], id2actionGroup[i]));

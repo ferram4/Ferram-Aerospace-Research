@@ -80,7 +80,7 @@ namespace FerramAerospaceResearch.FARGUI
 
         private void ListDisplay(int id)
         {
-            scroll = GUILayout.BeginScrollView(scroll, listStyle, GUILayout.ExpandWidth(true));
+            scroll = GUILayout.BeginScrollView(scroll, listStyle);
             for (int i = 0; i < optionStrings.Length; i++)
             {
                 if (GUILayout.Button(optionStrings[i], buttonStyle, GUILayout.Height(20)))

@@ -26,6 +26,17 @@ namespace FerramAerospaceResearch.FARGUI
             return double.Parse(valString);
         }
 
+        public static int TextEntryForInt(string label, int labelWidth, int prevValue)
+        {
+            string valString = prevValue.ToString();
+            TextEntryField(label, labelWidth, ref valString);
+
+            if (!Regex.IsMatch(valString, @"^[-+]?[0-9]*"))
+                return prevValue;
+
+            return int.Parse(valString);
+        }
+
         public static void TextEntryField(string label, int labelWidth, ref string inputOutput)
         {
             GUILayout.BeginHorizontal();
