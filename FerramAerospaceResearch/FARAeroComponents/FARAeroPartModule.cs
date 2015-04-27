@@ -190,7 +190,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             worldSpaceAeroForce = matrix.MultiplyVector(partLocalForce);
 
-            if (worldSpaceAeroForce.magnitude > partStressMax)
+            if (worldSpaceAeroForce.magnitude > partStressMax && FlightGlobals.ready)
                 AeroStressFailure();
 
             rb.AddForceAtPosition(worldSpaceAeroForce, part.transform.position);

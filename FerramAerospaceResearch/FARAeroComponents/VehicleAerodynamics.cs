@@ -242,17 +242,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
             float dotProd;
 
             dotProd = Math.Abs(Vector3.Dot(axis, _localToWorldMatrix.MultiplyVector(Vector3.up)));
-            if (dotProd >= 0.98)        //if axis and _vessel.up are nearly aligned, just use _vessel.up
+            if (dotProd >= 0.965)        //if axis and _vessel.up are nearly aligned, just use _vessel.up
                 return Vector3.up;
 
             dotProd = Math.Abs(Vector3.Dot(axis, _localToWorldMatrix.MultiplyVector(Vector3.forward)));
 
-            if (dotProd >= 0.98)        //Same for forward...
+            if (dotProd >= 0.965)        //Same for forward...
                 return Vector3.forward;
 
             dotProd = Math.Abs(Vector3.Dot(axis, _localToWorldMatrix.MultiplyVector(Vector3.right)));
 
-            if (dotProd >= 0.98)        //and right...
+            if (dotProd >= 0.965)        //and right...
                 return Vector3.right;
 
             //Otherwise, now we need to use axis, since it's obviously not close to anything else
