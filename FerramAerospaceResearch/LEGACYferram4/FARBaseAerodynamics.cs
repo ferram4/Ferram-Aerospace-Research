@@ -225,7 +225,7 @@ namespace ferram4
         {
             var parts = new List<FARBaseAerodynamics>();
 
-            foreach (Part p in FARAeroUtil.AllEditorParts)
+            foreach (Part p in EditorLogic.SortedShipList)
                 foreach (PartModule m in p.Modules)
                     if (m is FARBaseAerodynamics)
                         parts.Add(m as FARBaseAerodynamics);
@@ -253,6 +253,7 @@ namespace ferram4
                 vel_fuzz = -0.02f * Vector3.forward;
             }
 
+            
             var parts = GetAllEditorModules();
 
             // Pass 1

@@ -9,7 +9,7 @@ using ferram4;
 
 namespace FerramAerospaceResearch
 {
-    [KSPScenario(ScenarioCreationOptions.AddToAllGames, GameScenes.SPACECENTER)]
+    [KSPScenario(ScenarioCreationOptions.AddToAllGames, GameScenes.SPACECENTER, GameScenes.EDITOR, GameScenes.FLIGHT)]
     public class FARSettingsScenarioModule : ScenarioModule
     {
         public static FARSettingsScenarioModule instance;
@@ -66,10 +66,10 @@ namespace FerramAerospaceResearch
             if (node.HasValue("numDerivSmoothingPasses"))
                 settings.numDerivSmoothingPasses = int.Parse(node.GetValue("numDerivSmoothingPasses"));
 
-            if (node.HasValue("customSettings"))
-                FARDifficultySettings.customSettings = bool.Parse(node.GetValue("customSettings"));
+            if (node.HasValue("presetIndex"))
+                FARDifficultySettings.presetIndex = int.Parse(node.GetValue("presetIndex"));
 
-            
+            FARDifficultySettings.currentSettings = settings;
             base.OnLoad(node);
         }
     }
@@ -130,7 +130,6 @@ namespace FerramAerospaceResearch
                     presetIndex = -1;
                 }
             }
-            currentSettings = FARSettingsScenarioModule.settings;
         }
 
         private FARDifficultySettings(double transDrag, double gaussianLength, int areaPass, int derivPass)

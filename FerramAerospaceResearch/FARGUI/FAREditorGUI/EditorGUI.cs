@@ -41,6 +41,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         StabilityDerivGUI _stabDeriv;
         StabilityDerivSimulationGUI _stabDerivLinSim;
 
+        bool gearToggle = false;
+
         FAREditorMode currentMode = FAREditorMode.STATIC;
         private enum FAREditorMode
         {
@@ -164,11 +166,16 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         private void LEGACY_UpdateWingAeroModels()
         {
-            for (int i = 0; i < FARAeroUtil.CurEditorWings.Count; i++)
+            List<Part> partsList = EditorLogic.SortedShipList;
+            for (int i = 0; i < partsList.Count; i++)
             {
-                FARWingAerodynamicModel w = FARAeroUtil.CurEditorWings[i];
-                if (w != null)
-                    w.EditorUpdateWingInteractions();
+                Part p = partsList[i];
+                if (p.Modules.Contains("FARWingAerodynamicModel"))
+                {
+                    FARWingAerodynamicModel w = (FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
+                    if (w != null)
+                        w.EditorUpdateWingInteractions();
+                }
             }
 
         }
@@ -182,7 +189,6 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 {
                     _simManager.UpdateAeroData(_vehicleAero);
                     UpdateCrossSections();
-                    LEGACY_UpdateWingAeroModels();
                 } 
 
                 if (_updateRateLimiter < 40)
@@ -208,7 +214,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         void RecalculateVoxel()
         {
-            if (_updateRateLimiter < 40)        //this has been updated recently in the past; queue an update and return
+            if (_updateRateLimiter < 30)        //this has been updated recently in the past; queue an update and return
             {
                 _updateQueued = true;
                 return;
@@ -233,11 +239,10 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                     }
                 }
             }
-            FARAeroUtil.ResetEditorParts();
-
             TriggerIGeometryUpdaters();
 
             _vehicleAero.VoxelUpdate(EditorLogic.RootPart.transform.worldToLocalMatrix, EditorLogic.RootPart.transform.localToWorldMatrix, EDITOR_VOXEL_COUNT, partList, _currentGeometryModules, true);
+
             _updateRebuildGeo = false;
         }
 
@@ -300,9 +305,14 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         void OverallSelectionGUI(int windowId)
         {
+            GUILayout.BeginHorizontal();
             currentMode = (FAREditorMode)GUILayout.SelectionGrid((int)currentMode, FAReditorMode_str, 4);
+            GUILayout.BeginVertical();
+            if (GUILayout.Button("Toggle Gear"))
+                ToggleGear();
+            GUILayout.EndVertical();
 
-
+            GUILayout.EndHorizontal();
             //GUILayout.EndHorizontal();
             if (currentMode == FAREditorMode.STATIC)
             {
@@ -325,7 +335,6 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 DebugVisualizationGUI();
                 guiRect.height = useKSPSkin ? 300 : 200;
             }
-
 
             GUI.DragWindow();
         }
@@ -422,6 +431,26 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             int kerbinIndex = 1;
             GUIDropDown<CelestialBody> celestialBodyDropdown = new GUIDropDown<CelestialBody>(bodyNames, bodies, kerbinIndex);
             return celestialBodyDropdown;
+        }
+
+        void ToggleGear()
+        {
+            List<Part> partsList = EditorLogic.SortedShipList;
+            for(int i = 0; i < partsList.Count; i++)
+            {
+                Part p = partsList[i];
+                if(p.Modules.Contains("ModuleLandingGear"))
+                {
+                    ModuleLandingGear l = (ModuleLandingGear)p.Modules["ModuleLandingGear"];
+                    l.StartDeployed = gearToggle;
+                }
+                if (p.Modules.Contains("ModuleAdvancedLandingGear"))
+                {
+                    ModuleAdvancedLandingGear l = (ModuleAdvancedLandingGear)p.Modules["ModuleAdvancedLandingGear"];
+                    l.startDeployed = gearToggle;
+                }
+            }
+            gearToggle = !gearToggle;
         }
 
         #endregion

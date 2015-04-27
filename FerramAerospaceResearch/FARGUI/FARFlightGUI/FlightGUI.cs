@@ -19,15 +19,21 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         static Rect dataGuiRect;
         static Rect settingsGuiRect;
         static ApplicationLauncherButton flightGUIAppLauncherButton;
+        public static Dictionary<Vessel, FlightGUI> vesselFlightGUI;
 
         PhysicsCalcs _physicsCalcs;
         VesselFlightInfo infoParameters;
+        public VesselFlightInfo InfoParameters
+        {
+            get { return infoParameters; }
+        }
 
         FlightStatusGUI _flightStatusGUI;
         StabilityAugmentation _stabilityAugmentation;
         FlightDataGUI _flightDataGUI;
 
-        bool ShowFlightDataWindow = false;
+        bool showFlightDataWindow = false;
+        bool showSettingsWindow = false;
 
         internal static GUIStyle boxStyle = null;
         internal static GUIStyle buttonStyle = null;
@@ -46,9 +52,19 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             settingsWindow = new GUIDropDown<int>(new string[3]{"Flt Data","Stab Aug","Air Speed"}, new int[3]{0,1,2}, 0);
             //boxStyle.padding = new RectOffset(4, 4, 4, 4);
 
+            if (vesselFlightGUI == null)
+            {
+                vesselFlightGUI = new Dictionary<Vessel, FlightGUI>();
+            }
+            vesselFlightGUI.Add(_vessel, this);
 
             this.enabled = true;
             OnGUIAppLauncherReady();
+        }
+
+        void OnDestroy()
+        {
+            vesselFlightGUI.Remove(_vessel);
         }
 
         //Receives message from FARVesselAero through _vessel on the recalc being completed
@@ -73,7 +89,6 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             _stabilityAugmentation.UpdatePhysicsInfo(infoParameters);
             _flightStatusGUI.UpdateInfoParameters(infoParameters);
             _flightDataGUI.UpdateInfoParameters(infoParameters);
-
         }
 
         #endregion
@@ -103,10 +118,11 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             {
                 mainGuiRect = GUILayout.Window(this.GetHashCode(), mainGuiRect, MainFlightGUIWindow, "FAR Flight Systems", GUILayout.MinWidth(200));
 
-                if(ShowFlightDataWindow)
+                if(showFlightDataWindow)
                     dataGuiRect = GUILayout.Window(this.GetHashCode() + 1, dataGuiRect, FlightDataWindow, "FAR FlightData", GUILayout.MinWidth(150));
 
-                settingsGuiRect = GUILayout.Window(this.GetHashCode() + 2, settingsGuiRect, SettingsWindow, "FAR Settings", GUILayout.MinWidth(200));
+                if (showSettingsWindow)
+                    settingsGuiRect = GUILayout.Window(this.GetHashCode() + 2, settingsGuiRect, SettingsWindow, "FAR Settings", GUILayout.MinWidth(200));
             }
         }
 
@@ -120,7 +136,8 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             GUILayout.Box("ATM Density: " + _vessel.atmDensity.ToString("F3"), boxStyle, GUILayout.ExpandWidth(true));
 
             _flightStatusGUI.Display();
-            ShowFlightDataWindow = GUILayout.Toggle(ShowFlightDataWindow, "Flt Data", buttonStyle, GUILayout.ExpandWidth(true));
+            showFlightDataWindow = GUILayout.Toggle(showFlightDataWindow, "Flt Data", buttonStyle, GUILayout.ExpandWidth(true));
+            showSettingsWindow = GUILayout.Toggle(showSettingsWindow, "Flt Settings", buttonStyle, GUILayout.ExpandWidth(true));
 
             GUILayout.Label("Flight Assistance Toggles:");
 
@@ -143,12 +160,12 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             switch (selection)
             {
                 case 0:
-                    _flightDataGUI.SettingsDisplay();
+                    if (_flightDataGUI.SettingsDisplay())
+                        dataGuiRect.height = 0;
                     break;
                 case 1:
                     _stabilityAugmentation.SettingsDisplay();
                     break;
-                    
             }
             GUI.DragWindow();
         }

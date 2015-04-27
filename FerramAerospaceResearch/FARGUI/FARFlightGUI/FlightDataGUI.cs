@@ -144,7 +144,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 dataReadoutString.AppendLine(((infoParameters.fullMass - infoParameters.dryMass) / infoParameters.fullMass).ToString("N2"));
                 dataReadoutString.Append(infoParameters.tSFC.ToString("N3"));
                 dataReadoutString.AppendLine(" hr⁻¹");
-                dataReadoutString.AppendLine(infoParameters.intakeAirFrac.ToString("P1"));
+                dataReadoutString.AppendLine((infoParameters.intakeAirFrac * 100).ToString("P1"));
                 dataReadoutString.Append(infoParameters.specExcessPower.ToString("N2"));
                 dataReadoutString.AppendLine(" m²/s²");
                 dataReadoutString.AppendLine();
@@ -186,18 +186,32 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             GUILayout.EndHorizontal();
         }
 
-        public void SettingsDisplay()
+        //Returns true on a setting change
+        public bool SettingsDisplay()
         {
             if (buttonStyle == null)
                 buttonStyle = FlightGUI.buttonStyle;
 
             GUILayout.Label("Flight Data Items To Show");
             GUILayout.BeginVertical();
+            bool change = false;
             for (int i = 0; i < activeFlightDataSections.Length; i++)
             {
-                activeFlightDataSections[i] = GUILayout.Toggle(activeFlightDataSections[i], flightDataOptionLabels[i], GUILayout.Width(100));
+                bool currentVal = activeFlightDataSections[i];
+                bool newVal = GUILayout.Toggle(currentVal, flightDataOptionLabels[i], GUILayout.Width(100));
+                activeFlightDataSections[i] = newVal;
+
+                change |= (newVal != currentVal);
             }
             GUILayout.EndVertical();
+
+            if (change)
+            {
+                CreateDataString();
+                CreateLabelString();
+            }
+
+            return change;
         }
     }
 }

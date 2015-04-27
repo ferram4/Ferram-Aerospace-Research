@@ -5,7 +5,7 @@ using System.Text;
 
 namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 {
-    struct VesselFlightInfo
+    public struct VesselFlightInfo
     {
         public double liftForce, dragForce, sideForce;
         public double dynPres;

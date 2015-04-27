@@ -31,11 +31,6 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             stabDerivOutput = new StabilityDerivOutput();
         }
 
-        public void UpdateAeroData(VehicleAerodynamics vehicleAero)
-        {
-            simManager.UpdateAeroData(vehicleAero);
-        }
-
         public void Display()
         {
             //stabDerivHelp = GUILayout.Toggle(stabDerivHelp, "?", ButtonStyle, GUILayout.Width(200));

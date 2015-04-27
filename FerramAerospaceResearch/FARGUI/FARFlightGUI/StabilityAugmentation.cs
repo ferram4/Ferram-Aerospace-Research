@@ -98,7 +98,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 else
                     phi = -phi;
 
-                phi *= FARMathUtil.deg2rad;
+                phi *= -FARMathUtil.deg2rad;
 
                 double output = ControlStateChange(sys, phi);
 
@@ -115,7 +115,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             sys = systems[1];
             if (sys.active)
             {
-                double beta = info.sideslipAngle * FARMathUtil.deg2rad;
+                double beta = -info.sideslipAngle * FARMathUtil.deg2rad;
 
                 double output = ControlStateChange(sys, beta);
 

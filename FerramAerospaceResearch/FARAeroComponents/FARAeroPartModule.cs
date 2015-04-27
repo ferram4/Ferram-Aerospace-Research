@@ -45,7 +45,7 @@ using FerramAerospaceResearch;
 namespace FerramAerospaceResearch.FARAeroComponents
 {
     //Used to hold relevant aero data for each part before applying it
-    public class FARAeroPartModule : PartModule
+    public class FARAeroPartModule : PartModule, ILiftProvider
     {
         public Vector3 partLocalVel;
         public Vector3 partLocalAngVel;
@@ -56,6 +56,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
         Vector3 partLocalTorque;
 
         ProjectedArea projectedArea;
+
+        private double partStressMax = double.MaxValue;
+        private double totalAeroForce = double.MaxValue;
+
         public ProjectedArea ProjectedAreas
         {
             get { return projectedArea; }
@@ -111,6 +115,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 part.ShieldedFromAirstream = true;
             else
                 part.ShieldedFromAirstream = false;
+
+            totalAeroForce = projectedArea.totalArea * partStressMax;
         }
 
         private void IncrementAreas(ref ProjectedArea data, Vector3 vector, Matrix4x4 transformMatrix)
@@ -143,6 +149,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
             partLocalVel = Vector3.zero;
             partLocalForce = Vector3.zero;
             partLocalTorque = Vector3.zero;
+
+            if(FARDebugValues.allowStructuralFailures)
+            {
+                FARPartStressTemplate template = FARAeroStress.DetermineStressTemplate(this.part);
+                partStressMax = template.XZmaxStress * 2 + template.YmaxStress * 2;
+            }
         }
 
         public double ProjectedAreaWorld(Vector3 normalizedDirectionVector)
@@ -177,6 +189,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
             Rigidbody rb = part.Rigidbody;
 
             worldSpaceAeroForce = matrix.MultiplyVector(partLocalForce);
+
+            if (worldSpaceAeroForce.magnitude > partStressMax)
+                AeroStressFailure();
 
             rb.AddForceAtPosition(worldSpaceAeroForce, part.transform.position);
             rb.AddTorque(matrix.MultiplyVector(partLocalTorque));
@@ -221,6 +236,37 @@ namespace FerramAerospaceResearch.FARAeroComponents
             CoLMarker.pos = EditorLogic.RootPart.transform.localToWorldMatrix.MultiplyPoint3x4(CoLMarker.pos);
             CoLMarker.dir = Vector3.zero;
             CoLMarker.lift = 1;
+        }
+
+        private void AeroStressFailure()
+        {
+            bool failureOccured = false;
+            if(part.Modules.Contains("ModuleProceduralFairing"))
+            {
+                ModuleProceduralFairing fairing = (ModuleProceduralFairing)part.Modules["ModuleProceduralFairing"];
+                fairing.ejectionForce = 0.5f;
+                fairing.DeployFairing();
+                failureOccured = true;
+            }
+
+            List<Part> children = part.children;
+            for(int i = 0; i < children.Count; i++)
+            {
+                Part child = children[i];
+                child.decouple(25);
+                failureOccured = true;
+            }
+            if (part.parent)
+            {
+                part.decouple(25);
+                failureOccured = true;
+            }
+
+            if(failureOccured)
+            {
+                vessel.SendMessage("AerodynamicFailureStatus");
+                FlightLogger.eventLog.Add("[" + FARMathUtil.FormatTime(vessel.missionTime) + "] " + part.partInfo.title + " failed due to aerodynamic stresses.");
+            }
         }
     }
 }

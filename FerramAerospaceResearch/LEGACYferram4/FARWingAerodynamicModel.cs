@@ -160,7 +160,7 @@ namespace ferram4
                 sum += model.NUFAR_areaExposedFactor;
             }
 
-            sum /= counterparts.Count;
+            sum /= (counterparts.Count + 1);
             NUFAR_areaExposedFactor = sum;
             for (int i = 0; i < counterparts.Count; i++)
             {
@@ -281,6 +281,8 @@ namespace ferram4
                 return Vector3.zero;
             }
         }
+
+        
 
         public void EditorClClear(bool reset_stall)
         {

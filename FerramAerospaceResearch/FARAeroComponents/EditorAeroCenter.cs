@@ -75,11 +75,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
 
             FARBaseAerodynamics.PrecomputeGlobalCenterOfLift(lift, dummy);
-
+            //Debug.Log("Updated CoL");
             aeroSection.AddAll(lift);
 
             aeroForce = aeroSection.force;
-            vesselRootLocalAeroCenter = aeroSection.GetPos();
+            vesselRootLocalAeroCenter = aeroSection.GetMinTorquePos();
             vesselRootLocalAeroCenter = EditorLogic.RootPart.transform.worldToLocalMatrix.MultiplyPoint3x4(vesselRootLocalAeroCenter);
         }
     }

@@ -20,10 +20,11 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
 
             double mass = 0;
             Vector3d CoM = Vector3d.zero;
-
-            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
+            FARAeroUtil.ResetEditorParts();
+            List<Part> partsList = EditorLogic.SortedShipList;
+            for (int i = 0; i < partsList.Count; i++)
             {
-                Part p = FARAeroUtil.CurEditorParts[i];
+                Part p = partsList[i];
 
                 if (FARAeroUtil.IsNonphysical(p))
                     continue;
@@ -85,12 +86,12 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
 
             double mass = 0;
             Vector3d CoM = Vector3d.zero;
+            FARAeroUtil.ResetEditorParts();
 
-
-            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
+            List<Part> partsList = EditorLogic.SortedShipList;
+            for (int i = 0; i < partsList.Count; i++)
             {
-                Part p = FARAeroUtil.CurEditorParts[i];
-
+                Part p = partsList[i];
                 if (FARAeroUtil.IsNonphysical(p))
                     continue;
 

@@ -152,7 +152,7 @@ namespace FerramAerospaceResearch
             boxStyle.padding = new RectOffset(4, 4, 4, 4);
             boxStyle.margin = new RectOffset(4, 4, 4, 4);
 
-            activeTab = (MenuTab)GUILayout.SelectionGrid((int)activeTab, MenuTab_str, 5);
+            activeTab = (MenuTab)GUILayout.SelectionGrid((int)activeTab, MenuTab_str, 4);
 
             if (activeTab == MenuTab.DebugAndData)
                 DebugAndDataTab(thisStyle);

@@ -204,7 +204,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if (cosAoA > 0)
             {
                 xForce += cosSqrAoA * xForceAoA0;
-                float momentFactor = hypersonicMomentForward;
+                float momentFactor = hypersonicMomentForward * 0.1f;
 
                 //if (machNumber < 1.5)
                 //    momentFactor += hypersonicMomentBackward * (0.5f - machNumber * 0.33333333333333333333333333333333f) * 0.2f;
@@ -214,7 +214,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             else
             {
                 xForce += cosSqrAoA * xForceAoA180;
-                float momentFactor = hypersonicMomentBackward;     //negative to deal with the ref vector facing the opposite direction, causing the moment vector to point in the opposite direction
+                float momentFactor = hypersonicMomentBackward * 0.1f;     //negative to deal with the ref vector facing the opposite direction, causing the moment vector to point in the opposite direction
 
                 //if (machNumber < 1.5)
                 //    momentFactor += hypersonicMomentForward * (0.5f - machNumber * 0.33333333333333333333333333333333f) * 0.2f;
@@ -317,7 +317,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (cosAoA > 0)
                 {
                     xForce += cosSqrAoA * xForceAoA0;
-                    float momentFactor = hypersonicMomentForward;
+                    float momentFactor = hypersonicMomentForward * 0.1f;
 
                     //if (machNumber < 1.5)
                     //    momentFactor += hypersonicMomentBackward * (0.5f - machNumber * 0.33333333333333333333333333333333f) * 0.2f;
@@ -328,7 +328,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 else
                 {
                     xForce += cosSqrAoA * xForceAoA180;
-                    float momentFactor = hypersonicMomentBackward;     //negative to deal with the ref vector facing the opposite direction, causing the moment vector to point in the opposite direction
+                    float momentFactor = hypersonicMomentBackward * 0.1f;     //negative to deal with the ref vector facing the opposite direction, causing the moment vector to point in the opposite direction
 
                     //if (machNumber < 1.5)
                     //    momentFactor += hypersonicMomentForward * (0.5f - machNumber * 0.33333333333333333333333333333333f) * 0.2f;

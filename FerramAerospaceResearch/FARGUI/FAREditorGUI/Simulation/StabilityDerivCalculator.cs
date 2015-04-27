@@ -41,9 +41,10 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
 
             _instantCondition.GetClCdCmSteady(Vector3d.zero, input, out nominalOutput, true);
 
-            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
+            List<Part> partsList = EditorLogic.SortedShipList;
+            for (int i = 0; i < partsList.Count; i++)
             {
-                Part p = FARAeroUtil.CurEditorParts[i];
+                Part p = partsList[i];
 
                 if (FARAeroUtil.IsNonphysical(p))
                     continue;
