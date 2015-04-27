@@ -42,7 +42,7 @@ using System.Reflection;
 using UnityEngine;
 using KSP;
 
-namespace ferram4
+namespace FerramAerospaceResearch
 {
     public static class FARPartClassification
     {

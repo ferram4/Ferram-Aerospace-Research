@@ -39,9 +39,12 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using KSP;
+using FerramAerospaceResearch.FARGUI;
+using FerramAerospaceResearch.FARGUI.FAREditorGUI;
+using ferram4;
 //using Toolbar;
 
-namespace ferram4
+namespace FerramAerospaceResearch
 {
     [KSPAddon(KSPAddon.Startup.SpaceCentre, false)]
     public class FARDebugOptions : MonoBehaviour
@@ -98,7 +101,7 @@ namespace ferram4
             LoadConfigs();
             if (FARDebugValues.useBlizzyToolbar)
             {
-                FARDebugButtonBlizzy = ToolbarManager.Instance.add("ferram4", "FARDebugButtonBlizzy");
+                FARDebugButtonBlizzy = ToolbarManager.Instance.add("FerramAerospaceResearch", "FARDebugButtonBlizzy");
                 FARDebugButtonBlizzy.TexturePath = "FerramAerospaceResearch/Textures/icon_button_blizzy";
                 FARDebugButtonBlizzy.ToolTip = "FAR Debug Options";
                 FARDebugButtonBlizzy.OnClick += (e) => debugMenu = !debugMenu;
@@ -143,12 +146,12 @@ namespace ferram4
             if (debugMenu)
             {
                 debugWinPos = GUILayout.Window("FARDebug".GetHashCode(), debugWinPos, debugWindow, "FAR Debug Options, v0.14.6", GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
-                if (!inputLocked && debugWinPos.Contains(FARGUIUtils.GetMousePos()))
+                if (!inputLocked && debugWinPos.Contains(GUIUtils.GetMousePos()))
                 {
                     InputLockManager.SetControlLock(ControlTypes.KSC_ALL, "FARDebugLock");
                     inputLocked = true;
                 }
-                else if (inputLocked && !debugWinPos.Contains(FARGUIUtils.GetMousePos()))
+                else if (inputLocked && !debugWinPos.Contains(GUIUtils.GetMousePos()))
                 {
                     InputLockManager.RemoveControlLock("FARDebugLock");
                     inputLocked = false;
@@ -198,7 +201,7 @@ namespace ferram4
             //            SaveWindowPos.y = windowPos.y;
 
             GUI.DragWindow();
-            debugWinPos = FARGUIUtils.ClampToScreen(debugWinPos);
+            debugWinPos = GUIUtils.ClampToScreen(debugWinPos);
         }
 
         private void AeroDataTab(GUIStyle buttonStyle, GUIStyle boxStyle)
@@ -206,13 +209,9 @@ namespace ferram4
             int i = 0;
             GUILayout.BeginVertical(boxStyle);
 
-            FARAeroUtil.areaFactor = FARGUIUtils.TextEntryForDouble("Area Factor:", 160, FARAeroUtil.areaFactor);
-            FARAeroUtil.attachNodeRadiusFactor = FARGUIUtils.TextEntryForDouble("Node Diameter Factor:", 160, FARAeroUtil.attachNodeRadiusFactor * 2) * 0.5;
-            FARAeroUtil.incompressibleRearAttachDrag = FARGUIUtils.TextEntryForDouble("Rear Node Drag, Incomp:", 160, FARAeroUtil.incompressibleRearAttachDrag);
-            FARAeroUtil.sonicRearAdditionalAttachDrag = FARGUIUtils.TextEntryForDouble("Rear Node Drag, M = 1:", 160, FARAeroUtil.sonicRearAdditionalAttachDrag);
-            FARControllableSurface.timeConstant = FARGUIUtils.TextEntryForDouble("Ctrl Surf Time Constant:", 160, FARControllableSurface.timeConstant);
-            FARControllableSurface.timeConstantFlap = FARGUIUtils.TextEntryForDouble("Flap Time Constant:", 160, FARControllableSurface.timeConstantFlap);
-            FARControllableSurface.timeConstantSpoiler = FARGUIUtils.TextEntryForDouble("Spoiler Time Constant:", 160, FARControllableSurface.timeConstantSpoiler);
+            FARControllableSurface.timeConstant = GUIUtils.TextEntryForDouble("Ctrl Surf Time Constant:", 160, FARControllableSurface.timeConstant);
+            FARControllableSurface.timeConstantFlap = GUIUtils.TextEntryForDouble("Flap Time Constant:", 160, FARControllableSurface.timeConstantFlap);
+            FARControllableSurface.timeConstantSpoiler = GUIUtils.TextEntryForDouble("Spoiler Time Constant:", 160, FARControllableSurface.timeConstantSpoiler);
 
 
             GUILayout.EndVertical();
@@ -251,17 +250,17 @@ namespace ferram4
 
             double[] atmProperties = FARAeroUtil.bodyAtmosphereConfiguration[flightGlobalsIndex];
 
-            atmProperties[1] = FARGUIUtils.TextEntryForDouble("Ratio of Specific Heats:", 80, atmProperties[1]);
+            atmProperties[1] = GUIUtils.TextEntryForDouble("Ratio of Specific Heats:", 80, atmProperties[1]);
 
 
             double dTmp = 8314.5 / atmProperties[2];
-            dTmp = FARGUIUtils.TextEntryForDouble("Gas Molecular Mass:", 80, dTmp);
+            dTmp = GUIUtils.TextEntryForDouble("Gas Molecular Mass:", 80, dTmp);
             atmProperties[2] = 8314.5 / dTmp;
 
             atmProperties[0] = atmProperties[1] * atmProperties[2];
 
-            atmProperties[3] = FARGUIUtils.TextEntryForDouble("Gas Viscosity:", 80, atmProperties[3]);
-            atmProperties[4] = FARGUIUtils.TextEntryForDouble("Ref Temp for Viscosity:", 80, atmProperties[4]);
+            atmProperties[3] = GUIUtils.TextEntryForDouble("Gas Viscosity:", 80, atmProperties[3]);
+            atmProperties[4] = GUIUtils.TextEntryForDouble("Ref Temp for Viscosity:", 80, atmProperties[4]);
 
             FARAeroUtil.bodyAtmosphereConfiguration[flightGlobalsIndex] = atmProperties;
 
@@ -321,15 +320,15 @@ namespace ferram4
 
             string tmp;
 
-            FARGUIUtils.TextEntryField("Name:", 80, ref activeTemplate.name);
+            GUIUtils.TextEntryField("Name:", 80, ref activeTemplate.name);
 
-            activeTemplate.YmaxStress = FARGUIUtils.TextEntryForDouble("Axial (Y-axis) Max Stress:", 240, activeTemplate.YmaxStress);
-            activeTemplate.XZmaxStress = FARGUIUtils.TextEntryForDouble("Lateral (X,Z-axis) Max Stress:", 240, activeTemplate.XZmaxStress);
+            activeTemplate.YmaxStress = GUIUtils.TextEntryForDouble("Axial (Y-axis) Max Stress:", 240, activeTemplate.YmaxStress);
+            activeTemplate.XZmaxStress = GUIUtils.TextEntryForDouble("Lateral (X,Z-axis) Max Stress:", 240, activeTemplate.XZmaxStress);
            
             activeTemplate.crewed = GUILayout.Toggle(activeTemplate.crewed, "Requires Crew Compartment");
 
             tmp = activeTemplate.minNumResources.ToString();
-            FARGUIUtils.TextEntryField("Min Num Resources:", 80, ref tmp);
+            GUIUtils.TextEntryField("Min Num Resources:", 80, ref tmp);
                         tmp = Regex.Replace(tmp, @"[^\d]", "");
             activeTemplate.minNumResources = Convert.ToInt32(tmp);
 
@@ -435,21 +434,21 @@ namespace ferram4
             FARDebugValues.allowStructuralFailures = GUILayout.Toggle(FARDebugValues.allowStructuralFailures, "Allow Aero-structural Failures", thisStyle);
             GUILayout.Label("Editor GUI Graph Colors");
 
-            Color tmpColor = FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[0];
+            Color tmpColor = EditorColors.Instance[0];
             ReColorTexture(ref tmpColor, ref cLTexture);
-            FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[0] = tmpColor;
+            EditorColors.Instance[0] = tmpColor;
 
-            tmpColor = FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[1];
+            tmpColor = EditorColors.Instance[1];
             ReColorTexture(ref tmpColor, ref cDTexture);
-            FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[1] = tmpColor;
+            EditorColors.Instance[1] = tmpColor;
 
-            tmpColor = FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[2];
+            tmpColor = EditorColors.Instance[2];
             ReColorTexture(ref tmpColor, ref cMTexture);
-            FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[2] = tmpColor;
+            EditorColors.Instance[2] = tmpColor;
 
-            tmpColor = FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[3];
+            tmpColor = EditorColors.Instance[3];
             ReColorTexture(ref tmpColor, ref l_DTexture);
-            FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[3] = tmpColor;            
+            EditorColors.Instance[3] = tmpColor;            
 
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
@@ -496,19 +495,19 @@ namespace ferram4
 
             GUILayout.BeginHorizontal(GUILayout.Width(150));
             float tmp = input.r;
-            input.r = (float)FARGUIUtils.TextEntryForDouble("", 0, input.r);
+            input.r = (float)GUIUtils.TextEntryForDouble("", 0, input.r);
             updateTexture |= tmp != input.r;
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal(GUILayout.Width(150));
             tmp = input.g;
-            input.g = (float)FARGUIUtils.TextEntryForDouble("", 0, input.g);
+            input.g = (float)GUIUtils.TextEntryForDouble("", 0, input.g);
             updateTexture |= tmp != input.g;
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal(GUILayout.Width(150));
             tmp = input.b;
-            input.b = (float)FARGUIUtils.TextEntryForDouble("", 0, input.b);
+            input.b = (float)GUIUtils.TextEntryForDouble("", 0, input.b);
             updateTexture |= tmp != input.b;
             GUILayout.EndHorizontal();
 
@@ -548,21 +547,21 @@ namespace ferram4
             FARAeroUtil.LoadAeroDataFromConfig();
             FARActionGroupConfiguration.LoadConfiguration();
 
-            Color tmpColor = FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[0];
+            Color tmpColor = EditorColors.Instance[0];
             ReColorTexture(ref tmpColor, ref cLTexture);
-            FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[0] = tmpColor;
+            EditorColors.Instance[0] = tmpColor;
 
-            tmpColor = FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[1];
+            tmpColor = EditorColors.Instance[1];
             ReColorTexture(ref tmpColor, ref cDTexture);
-            FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[1] = tmpColor;
+            EditorColors.Instance[1] = tmpColor;
 
-            tmpColor = FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[2];
+            tmpColor = EditorColors.Instance[2];
             ReColorTexture(ref tmpColor, ref cMTexture);
-            FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[2] = tmpColor;
+            EditorColors.Instance[2] = tmpColor;
 
-            tmpColor = FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[3];
+            tmpColor = EditorColors.Instance[3];
             ReColorTexture(ref tmpColor, ref l_DTexture);
-            FerramAerospaceResearch.FAREditorGUI.EditorColors.Instance[3] = tmpColor;
+            EditorColors.Instance[3] = tmpColor;
         }
 
         public static void SaveConfigs()

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace ferram4
+namespace FerramAerospaceResearch
 {
     /// <summary>
     /// Entry point where another assembly can specify a function to calculate the wind.

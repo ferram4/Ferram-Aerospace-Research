@@ -268,7 +268,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (HighLogic.LoadedSceneIsFlight)
                 vessel.SendMessage("AnimationVoxelUpdate");
             else if (HighLogic.LoadedSceneIsEditor)
-                FAREditorGUI.EditorGUI.UpdateVoxel();
+                FARGUI.FAREditorGUI.EditorGUI.UpdateVoxel();
         }
 
         public void EditorUpdate()

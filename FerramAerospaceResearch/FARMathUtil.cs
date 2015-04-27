@@ -36,12 +36,9 @@ Copyright 2014, Michael Ferrara, aka Ferram4
 
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
-namespace ferram4
+namespace FerramAerospaceResearch
 {
     public static class FARMathUtil
     {
