@@ -13,13 +13,11 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         Vessel _vessel;
         FARVesselAero _vesselAero;
 
-        string labelString = "";
-        string dataString = "";
-
         static bool showGUI = false;
         public static bool showAllGUI = true;
         static Rect mainGuiRect;
         static Rect dataGuiRect;
+        static Rect settingsGuiRect;
         static ApplicationLauncherButton flightGUIAppLauncherButton;
 
         PhysicsCalcs _physicsCalcs;
@@ -27,8 +25,14 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         FlightStatusGUI _flightStatusGUI;
         StabilityAugmentation _stabilityAugmentation;
+        FlightDataGUI _flightDataGUI;
 
-        bool[] activeFlightDataSections = new bool[] { true, true, true, true, true, true, true, true, true };
+        bool ShowFlightDataWindow = false;
+
+        internal static GUIStyle boxStyle = null;
+        internal static GUIStyle buttonStyle = null;
+
+        GUIDropDown<int> settingsWindow;
 
         void Start()
         {
@@ -37,6 +41,11 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             _physicsCalcs = new PhysicsCalcs(_vessel, _vesselAero);
             _flightStatusGUI = new FlightStatusGUI();
             _stabilityAugmentation = new StabilityAugmentation(_vessel);
+            _flightDataGUI = new FlightDataGUI();
+
+            settingsWindow = new GUIDropDown<int>(new string[3]{"Flt Data","Stab Aug","Air Speed"}, new int[3]{0,1,2}, 0);
+            //boxStyle.padding = new RectOffset(4, 4, 4, 4);
+
 
             this.enabled = true;
             OnGUIAppLauncherReady();
@@ -63,166 +72,41 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
             _stabilityAugmentation.UpdatePhysicsInfo(infoParameters);
             _flightStatusGUI.UpdateInfoParameters(infoParameters);
+            _flightDataGUI.UpdateInfoParameters(infoParameters);
 
-            CreateLabelString();
-            CreateDataString();
         }
 
         #endregion
 
         #region GUI Functions
-        void LateUpdate()
-        {
-
-        }
-
-        void CreateLabelString()
-        {
-            StringBuilder dataReadoutString = new StringBuilder();
-            dataReadoutString.AppendLine();
-            if (activeFlightDataSections[0])        //PYR angles
-            {
-                dataReadoutString.AppendLine("Pitch Angle: \n\rHeading: \n\rRoll Angle: ");
-                dataReadoutString.AppendLine();
-            }
-            if (activeFlightDataSections[1])        //AoA and sidelip
-            {
-                dataReadoutString.AppendLine("Angle of Attack: \n\rSideslip Angle: ");
-                dataReadoutString.AppendLine();
-            }
-            if (activeFlightDataSections[2])        //Dyn pres
-            {
-                dataReadoutString.AppendLine("Dyn Pres: ");
-                dataReadoutString.AppendLine();
-            }
-            if (activeFlightDataSections[3])        //Raw Forces
-            {
-                dataReadoutString.AppendLine("Lift: \n\rDrag: \n\rSideForce: ");
-                dataReadoutString.AppendLine();
-            }
-            if (activeFlightDataSections[4])        //Coeffs + refArea
-            {
-                dataReadoutString.AppendLine("Cl: \n\rCd: \n\rCy: \n\rRef Area: ");
-                dataReadoutString.AppendLine();
-            }
-            if (activeFlightDataSections[5])        //L/D and VL/D
-            {
-                dataReadoutString.AppendLine("L/D: \n\rV*L/D: ");
-                dataReadoutString.AppendLine();
-            }
-            if (activeFlightDataSections[6])        //Engine and intake data
-            {
-
-                dataReadoutString.AppendLine("Fuel Fraction: \n\rTSFC: \n\rAir Req Met: \n\rSpec. Excess Pwr:");
-                dataReadoutString.AppendLine();
-            }
-            if (activeFlightDataSections[7])        //Range, Endurance est
-            {
-                dataReadoutString.AppendLine("Est. Endurance: \n\rEst. Range: ");
-                dataReadoutString.AppendLine();
-            }
-            if (activeFlightDataSections[8])        //Ballistic Coeff and Term Vel
-            {
-                dataReadoutString.AppendLine("BC: \n\rTerminal V: ");
-                dataReadoutString.AppendLine();
-            }
-            labelString = dataReadoutString.ToString();
-        }
-        
-        void CreateDataString()
-        {
-            StringBuilder dataReadoutString = new StringBuilder();
-            dataReadoutString.AppendLine();
-            if (activeFlightDataSections[0])        //PYR angles
-            {
-                dataReadoutString.Append(infoParameters.pitchAngle.ToString("N1") + "°");
-                dataReadoutString.AppendLine("°");
-                dataReadoutString.Append(infoParameters.headingAngle.ToString("N1"));
-                dataReadoutString.AppendLine("°");
-                dataReadoutString.Append(infoParameters.rollAngle.ToString("N1"));
-                dataReadoutString.AppendLine("°");
-                dataReadoutString.AppendLine();
-            }
-            if (activeFlightDataSections[1])        //AoA and sidelip
-            {
-                dataReadoutString.Append(infoParameters.aoA.ToString("N1"));
-                dataReadoutString.AppendLine("°");
-                dataReadoutString.Append(infoParameters.sideslipAngle.ToString("N1"));
-                dataReadoutString.AppendLine("°");
-                dataReadoutString.AppendLine();
-            }
-            if (activeFlightDataSections[2])        //Dyn pres
-            {
-                dataReadoutString.Append(infoParameters.dynPres.ToString("F3"));
-                dataReadoutString.AppendLine(" kPa");
-                dataReadoutString.AppendLine();
-            }
-            if (activeFlightDataSections[3])        //Raw Forces
-            {
-                dataReadoutString.Append(infoParameters.liftForce.ToString("F3"));
-                dataReadoutString.AppendLine(" kN");
-                dataReadoutString.Append(infoParameters.dragForce.ToString("F3"));
-                dataReadoutString.AppendLine(" kN");
-                dataReadoutString.Append(infoParameters.sideForce.ToString("F3"));
-                dataReadoutString.AppendLine(" kN");
-                dataReadoutString.Append(infoParameters.dynPres.ToString("F3"));
-                dataReadoutString.AppendLine();
-            }
-            if (activeFlightDataSections[4])        //Coeffs + refArea
-            {
-                dataReadoutString.AppendLine(infoParameters.liftCoeff.ToString("F3"));
-                dataReadoutString.AppendLine(infoParameters.dragCoeff.ToString("F3"));
-                dataReadoutString.AppendLine(infoParameters.sideCoeff.ToString("F3"));
-                dataReadoutString.Append(infoParameters.refArea.ToString("F3"));
-                dataReadoutString.AppendLine(" m²");
-                dataReadoutString.AppendLine();
-            }
-            if (activeFlightDataSections[5])        //L/D and VL/D
-            {
-                dataReadoutString.AppendLine(infoParameters.liftToDragRatio.ToString("F3"));
-                dataReadoutString.AppendLine(infoParameters.velocityLiftToDragRatio.ToString("F3"));
-                dataReadoutString.AppendLine();
-            }
-            if (activeFlightDataSections[6])        //Engine and intake data
-            {
-
-                dataReadoutString.AppendLine(((infoParameters.fullMass - infoParameters.dryMass) / infoParameters.fullMass).ToString("N2"));
-                dataReadoutString.Append(infoParameters.tSFC.ToString("N3"));
-                dataReadoutString.AppendLine(" hr⁻¹");
-                dataReadoutString.AppendLine(infoParameters.intakeAirFrac.ToString("P1"));
-                dataReadoutString.Append(infoParameters.specExcessPower.ToString("N2") + " m²/s²");
-                dataReadoutString.AppendLine(" m²/s²");
-                dataReadoutString.AppendLine();
-            }
-            if (activeFlightDataSections[7])        //Range, Endurance est
-            {
-
-                dataReadoutString.Append(infoParameters.endurance.ToString("N2"));
-                dataReadoutString.AppendLine(" hr");
-                dataReadoutString.Append(infoParameters.range.ToString("N2"));
-                dataReadoutString.AppendLine(" km");
-                dataReadoutString.AppendLine();
-            }
-            if (activeFlightDataSections[8])        //Ballistic Coeff and Term Vel
-            {
-
-                dataReadoutString.Append(infoParameters.ballisticCoeff.ToString("N2"));
-                dataReadoutString.AppendLine(" kg/m²");
-                dataReadoutString.Append(infoParameters.termVelEst.ToString("N2"));
-                dataReadoutString.AppendLine(" m/s");
-                dataReadoutString.AppendLine();
-            }
-            dataString = dataReadoutString.ToString();
-        }
-
 
         void OnGUI()
         {
             GUI.skin = HighLogic.Skin;
+            if(boxStyle == null)
+            {
+                boxStyle = new GUIStyle(GUI.skin.box);
+                boxStyle.normal.textColor = boxStyle.focused.textColor = Color.white;
+                boxStyle.hover.textColor = boxStyle.active.textColor = Color.yellow;
+                boxStyle.onNormal.textColor = boxStyle.onFocused.textColor = boxStyle.onHover.textColor = boxStyle.onActive.textColor = Color.green;
+            }
+            if (buttonStyle == null)
+            {
+                buttonStyle = new GUIStyle(GUI.skin.button);
+                buttonStyle.normal.textColor = buttonStyle.focused.textColor = Color.white;
+                buttonStyle.hover.textColor = buttonStyle.active.textColor = buttonStyle.onActive.textColor = Color.yellow;
+                buttonStyle.onNormal.textColor = buttonStyle.onFocused.textColor = buttonStyle.onHover.textColor = Color.green;
+                buttonStyle.padding = new RectOffset(2, 2, 2, 2);
+
+            }
             if (_vessel == FlightGlobals.ActiveVessel && showGUI && showAllGUI)
             {
-                mainGuiRect = GUILayout.Window(this.GetHashCode(), mainGuiRect, MainFlightGUIWindow, "FAR Flight Systems", GUILayout.MinWidth(150));
-                dataGuiRect = GUILayout.Window(this.GetHashCode() + 1, dataGuiRect, FlightDataWindow, "FAR Flight Systems", GUILayout.MinWidth(150));
+                mainGuiRect = GUILayout.Window(this.GetHashCode(), mainGuiRect, MainFlightGUIWindow, "FAR Flight Systems", GUILayout.MinWidth(200));
+
+                if(ShowFlightDataWindow)
+                    dataGuiRect = GUILayout.Window(this.GetHashCode() + 1, dataGuiRect, FlightDataWindow, "FAR FlightData", GUILayout.MinWidth(150));
+
+                settingsGuiRect = GUILayout.Window(this.GetHashCode() + 2, settingsGuiRect, SettingsWindow, "FAR Settings", GUILayout.MinWidth(200));
             }
         }
 
@@ -230,12 +114,13 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         {
             GUILayout.BeginVertical(GUILayout.Height(100));
             GUILayout.BeginHorizontal();
-            GUILayout.Box("Mach: " + _vesselAero.MachNumber + "   Reynolds: " + _vesselAero.ReynoldsNumber.ToString("e2"), GUILayout.ExpandWidth(true));
+            GUILayout.Box("Mach: " + _vesselAero.MachNumber.ToString("F3") + "   Reynolds: " + _vesselAero.ReynoldsNumber.ToString("e2"), boxStyle, GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
 
-            GUILayout.Box("ATM Density: " + _vessel.atmDensity, GUILayout.ExpandWidth(true));
+            GUILayout.Box("ATM Density: " + _vessel.atmDensity.ToString("F3"), boxStyle, GUILayout.ExpandWidth(true));
 
-            _flightStatusGUI.Display(GUI.skin.box);
+            _flightStatusGUI.Display();
+            ShowFlightDataWindow = GUILayout.Toggle(ShowFlightDataWindow, "Flt Data", buttonStyle, GUILayout.ExpandWidth(true));
 
             GUILayout.Label("Flight Assistance Toggles:");
 
@@ -247,16 +132,25 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         void FlightDataWindow(int windowId)
         {
-            GUILayout.BeginHorizontal();
-            GUILayout.BeginVertical();
-            GUILayout.Box(labelString, GUILayout.Width(120));
-            GUILayout.EndVertical();
-            GUILayout.BeginVertical();
-            GUILayout.Box(dataString, GUILayout.Width(120));
-            GUILayout.EndVertical();
-            GUILayout.EndHorizontal();
+            _flightDataGUI.DataDisplay();
             GUI.DragWindow();
+        }
 
+        void SettingsWindow(int windowId)
+        {
+            settingsWindow.GUIDropDownDisplay();
+            int selection = settingsWindow.ActiveSelection;
+            switch (selection)
+            {
+                case 0:
+                    _flightDataGUI.SettingsDisplay();
+                    break;
+                case 1:
+                    _stabilityAugmentation.SettingsDisplay();
+                    break;
+                    
+            }
+            GUI.DragWindow();
         }
         #endregion
 

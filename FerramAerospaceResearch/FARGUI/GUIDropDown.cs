@@ -16,6 +16,12 @@ namespace FerramAerospaceResearch.FARGUI
         string[] optionStrings;
         T[] options;
 
+        T activeSelection;
+        public T ActiveSelection
+        {
+            get { return activeSelection; }
+        }
+
         static GUIStyle listStyle;
         static GUIStyle buttonStyle;
         static FARGUIDropDownDisplay displayObject;
@@ -28,6 +34,7 @@ namespace FerramAerospaceResearch.FARGUI
             options = typeOptions;
 
             selectedOption = defaultOption;
+            activeSelection = typeOptions[selectedOption];
 
             if(displayObject == null)
             {
@@ -38,14 +45,9 @@ namespace FerramAerospaceResearch.FARGUI
             }
         }
 
-        public T ActiveSelection()
+        public void GUIDropDownDisplay(params GUILayoutOption[] GUIOptions)
         {
-            return options[selectedOption];
-        }
-
-        public void GUIDropDownDisplay(params GUILayoutOption[] GUIoptions)
-        {
-            if (GUILayout.Button(optionStrings[selectedOption], GUIoptions))
+            if (GUILayout.Button(optionStrings[selectedOption], GUIOptions))
             {
                 listActive = true;
             }
@@ -62,7 +64,7 @@ namespace FerramAerospaceResearch.FARGUI
             if (listActive && !hasActivated)
             {
                 Vector3 upperLeft = GUIUtils.GetMousePos();
-                displayObject.ActivateDisplay(this.GetHashCode(), new Rect(upperLeft.x - 5, upperLeft.y - 5, 100, 150), ListDisplay, listStyle);
+                displayObject.ActivateDisplay(this.GetHashCode(), new Rect(upperLeft.x - 5, upperLeft.y - 5, 100, 150), ListDisplay, listStyle, GUIOptions);
                 hasActivated = true;
                 InputLockManager.SetControlLock(ControlTypes.All, "DropdownScrollLock");
             }
@@ -78,13 +80,14 @@ namespace FerramAerospaceResearch.FARGUI
 
         private void ListDisplay(int id)
         {
-            scroll = GUILayout.BeginScrollView(scroll, listStyle);
+            scroll = GUILayout.BeginScrollView(scroll, listStyle, GUILayout.ExpandWidth(true));
             for (int i = 0; i < optionStrings.Length; i++)
             {
                 if (GUILayout.Button(optionStrings[i], buttonStyle, GUILayout.Height(20)))
                 {
                     Debug.Log("Selected " + optionStrings[i]);
                     selectedOption = i;
+                    activeSelection = options[i];
                     listActive = false;
                     hasActivated = false;
                     displayObject.DisableDisplay();
@@ -101,6 +104,7 @@ namespace FerramAerospaceResearch.FARGUI
         int windowID;
         GUI.WindowFunction windowFunction;
         GUIStyle listStyle;
+        GUILayoutOption[] GUIOptions;
 
         private void Start()
         {
@@ -112,16 +116,17 @@ namespace FerramAerospaceResearch.FARGUI
         {
             if (windowFunction != null)
             {
-                displayRect = GUILayout.Window(windowID, displayRect, windowFunction, "", listStyle);
+                displayRect = GUILayout.Window(windowID, displayRect, windowFunction, "", listStyle, GUIOptions);
             }
         }
 
-        public void ActivateDisplay(int id, Rect rect, GUI.WindowFunction window, GUIStyle style)
+        public void ActivateDisplay(int id, Rect rect, GUI.WindowFunction window, GUIStyle style, params GUILayoutOption[] GUIOptions)
         {
             windowID = id;
             displayRect = rect;
             windowFunction = window;
             listStyle = style;
+            this.GUIOptions = GUIOptions;
         }
 
         public void DisableDisplay()

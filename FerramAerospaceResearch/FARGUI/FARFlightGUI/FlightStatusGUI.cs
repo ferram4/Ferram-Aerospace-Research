@@ -13,12 +13,15 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         double statusOverrideTimer;
         double statusBlinkerTimer;
         bool statusBlinker;
+        GUIStyle stallStyle;
 
         VesselFlightInfo infoParameters;
+
 
         public void UpdateInfoParameters(VesselFlightInfo info)
         {
             infoParameters = info;
+            SetFlightStatusWindow();
         }
 
         public void AerodynamicFailureStatus()
@@ -74,15 +77,17 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
         }
 
-        public void Display(GUIStyle currentStyle)
+        public void Display()
         {
             GUIStyle minorTitle = new GUIStyle(GUI.skin.label);
             minorTitle.alignment = TextAnchor.UpperCenter;
             minorTitle.padding = new RectOffset(0, 0, 0, 0);
 
+            if (stallStyle == null)
+                stallStyle = new GUIStyle(FlightGUI.boxStyle);
+
             GUILayout.Label("Flight Status", minorTitle, GUILayout.ExpandWidth(true));
             GUILayout.BeginHorizontal();
-            GUIStyle stallStyle = currentStyle;
             if (statusBlinker)
             {
                 stallStyle.normal.textColor = stallStyle.focused.textColor = stallStyle.hover.textColor = stallStyle.active.textColor = stallStyle.onActive.textColor = stallStyle.onNormal.textColor = stallStyle.onFocused.textColor = stallStyle.onHover.textColor = stallStyle.onActive.textColor = statusColor;

@@ -62,7 +62,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             if (GUILayout.Button("Calculate Stability Derivatives", GUILayout.Width(250.0F), GUILayout.Height(25.0F)))
             {
-                FARAeroUtil.UpdateCurrentActiveBody(_bodySettingDropdown.ActiveSelection());
+                CelestialBody body = _bodySettingDropdown.ActiveSelection;
+                FARAeroUtil.UpdateCurrentActiveBody(body);
                 //atm_temp_str = Regex.Replace(atm_temp_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
                 //rho_str = Regex.Replace(rho_str, @"[^-?[0-9]*(\.[0-9]*)?]", "");
                 machNumber = Regex.Replace(machNumber, @"[^-?[0-9]*(\.[0-9]*)?]", "");
@@ -71,7 +72,6 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 double altitudeDouble = Convert.ToDouble(altitude);
                 altitudeDouble *= 1000;
 
-                CelestialBody body = _bodySettingDropdown.ActiveSelection();
 
                 double temp = FlightGlobals.getExternalTemperature((float)altitudeDouble, body);
                 double rho = FARAeroUtil.GetCurrentDensity(body, altitudeDouble, false);
@@ -88,7 +88,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
                     double q = vel * vel * rho * 0.5f;
 
-                    stabDerivOutput = simManager.StabDerivCalculator.CalculateStabilityDerivs(vel, q, machDouble, 0, 0, 0, _flapSettingDropdown.ActiveSelection(), spoilersDeployed, body, altitudeDouble);
+                    stabDerivOutput = simManager.StabDerivCalculator.CalculateStabilityDerivs(vel, q, machDouble, 0, 0, 0, _flapSettingDropdown.ActiveSelection, spoilersDeployed, body, altitudeDouble);
                     simManager.vehicleData = stabDerivOutput;
                 }
                 else

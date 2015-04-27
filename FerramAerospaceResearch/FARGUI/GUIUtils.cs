@@ -17,7 +17,7 @@ namespace FerramAerospaceResearch.FARGUI
 
         public static double TextEntryForDouble(string label, int labelWidth, double prevValue)
         {
-            string valString = prevValue.ToString();
+            string valString = prevValue.ToString("F5");
             TextEntryField(label, labelWidth, ref valString);
 
             if (!Regex.IsMatch(valString, @"^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$"))

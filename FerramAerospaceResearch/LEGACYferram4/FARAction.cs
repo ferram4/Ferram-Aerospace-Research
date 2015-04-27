@@ -152,7 +152,7 @@ namespace ferram4
             for (int i = 0; i < FARActionGroupConfiguration.ACTION_COUNT; ++i)
             {
                 actionGroupDropDown[i].GUIDropDownDisplay(GUILayout.Width(150));
-                id2actionGroup[i] = actionGroupDropDown[i].ActiveSelection();
+                id2actionGroup[i] = actionGroupDropDown[i].ActiveSelection;
 /*                GUILayout.BeginHorizontal();
                 currentGuiStrings[i] = GUILayout.TextField(currentGuiStrings[i], GUILayout.Width(150));
                 bool ok = false;

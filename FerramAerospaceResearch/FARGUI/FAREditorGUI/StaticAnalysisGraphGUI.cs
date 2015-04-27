@@ -95,7 +95,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             GUILayout.Label("Flap Setting:");
             flapSettingDropdown.GUIDropDownDisplay();
-            input.flapSetting = flapSettingDropdown.ActiveSelection();
+            input.flapSetting = flapSettingDropdown.ActiveSelection;
             GUILayout.Label("Pitch Setting:");
             input.pitchSetting = GUILayout.TextField(input.pitchSetting, GUILayout.ExpandWidth(true));
             input.pitchSetting = Regex.Replace(input.pitchSetting, @"[^-?[0-9]*(\.[0-9]*)?]", "");
@@ -149,9 +149,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 GraphData data;
 
                 if (isMachMode)
-                    data = simManager.SweepSim.MachNumberSweep(otherInput, pitchSetting, lowerBound, upperBound, (int)numPts, input.flapSetting, input.spoilers, bodySettingDropdown.ActiveSelection());
+                    data = simManager.SweepSim.MachNumberSweep(otherInput, pitchSetting, lowerBound, upperBound, (int)numPts, input.flapSetting, input.spoilers, bodySettingDropdown.ActiveSelection);
                 else
-                    data = simManager.SweepSim.AngleOfAttackSweep(otherInput, pitchSetting, lowerBound, upperBound, (int)numPts, input.flapSetting, input.spoilers, bodySettingDropdown.ActiveSelection());
+                    data = simManager.SweepSim.AngleOfAttackSweep(otherInput, pitchSetting, lowerBound, upperBound, (int)numPts, input.flapSetting, input.spoilers, bodySettingDropdown.ActiveSelection);
 
                 UpdateGraph(data, isMachMode ? "Mach Number" : "Angle of Attack, degrees", "Cl\nCd\nCm\nL/D / 10", lowerBound, upperBound);
             }

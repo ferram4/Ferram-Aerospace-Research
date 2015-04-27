@@ -59,7 +59,23 @@ namespace FerramAerospaceResearch
         public static Dictionary<int, double[]> bodyAtmosphereConfiguration = null;
         public static int prevBodyIndex = -1;
         public static double[] currentBodyVisc = new double[2];
-        public static CelestialBody currentBody = null;
+        private static CelestialBody currentBody = null;
+        public static CelestialBody CurrentBody
+        {
+            get
+            {
+                if ((object)currentBody == null)
+                {
+                    if (FlightGlobals.Bodies[1] || !FlightGlobals.ActiveVessel)
+                        currentBody = FlightGlobals.Bodies[1];
+                    else
+                        currentBody = FlightGlobals.ActiveVessel.mainBody;
+
+                }
+
+                return currentBody;
+            }
+        }
 
         public static bool loaded = false;
         
@@ -193,7 +209,7 @@ namespace FerramAerospaceResearch
 
         public static double MaxPressureCoefficientCalc(double M)
         {
-            double gamma = currentBody.atmosphereAdiabaticIndex;
+            double gamma = CurrentBody.atmosphereAdiabaticIndex;
 
             if (M <= 0)
                 return 1;
@@ -219,7 +235,7 @@ namespace FerramAerospaceResearch
 
         public static double StagnationPressureCalc(double M)
         {
-            double gamma = currentBody.atmosphereAdiabaticIndex;
+            double gamma = CurrentBody.atmosphereAdiabaticIndex;
 
             double ratio;
             ratio = M * M;
@@ -233,7 +249,7 @@ namespace FerramAerospaceResearch
 
         public static double PressureBehindShockCalc(double M)
         {
-            double gamma = currentBody.atmosphereAdiabaticIndex;
+            double gamma = CurrentBody.atmosphereAdiabaticIndex;
 
             double ratio;
             ratio = M * M;
@@ -248,7 +264,7 @@ namespace FerramAerospaceResearch
 
         public static double MachBehindShockCalc(double M)
         {
-            double gamma = currentBody.atmosphereAdiabaticIndex;
+            double gamma = CurrentBody.atmosphereAdiabaticIndex;
 
             double ratio;
             ratio = (gamma - 1) * 0.5;
@@ -268,7 +284,7 @@ namespace FerramAerospaceResearch
                     prandtlMeyerMach = new FloatCurve();
                     prandtlMeyerAngle = new FloatCurve();
                     double M = 1;
-                    double gamma = currentBody.atmosphereAdiabaticIndex;
+                    double gamma = CurrentBody.atmosphereAdiabaticIndex;
 
                     double gamma_ = Math.Sqrt((gamma + 1) / (gamma - 1));
 
@@ -322,7 +338,7 @@ namespace FerramAerospaceResearch
                     prandtlMeyerAngle = new FloatCurve();
                     double M = 1;
                     //float gamma = 1.4f;
-                    double gamma = currentBody.atmosphereAdiabaticIndex;
+                    double gamma = CurrentBody.atmosphereAdiabaticIndex;
 
                     double gamma_ = Math.Sqrt((gamma + 1) / (gamma - 1));
 

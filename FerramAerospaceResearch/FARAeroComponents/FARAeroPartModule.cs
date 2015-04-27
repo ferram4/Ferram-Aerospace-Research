@@ -206,7 +206,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             Rigidbody rb = part.Rigidbody;
 
             partLocalVel = rb.velocity + frameVel
-                        - FARWind.GetWind(FARAeroUtil.currentBody, part, rb.position); 
+                        - FARWind.GetWind(FARAeroUtil.CurrentBody, part, rb.position); 
             partLocalVel = matrix.MultiplyVector(partLocalVel);
 
             partLocalAngVel = rb.angularVelocity;

@@ -19,6 +19,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         int intakeAirId;
         double intakeAirDensity = 1;
         bool useWingArea;
+        double wingArea = 0;
 
         VesselFlightInfo vesselInfo;
 
@@ -40,13 +41,18 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         {
             _currentAeroModules = newAeroModules;
             _LEGACY_currentWingAeroModel.Clear();
-
+            wingArea = 0;
+            useWingArea = false;
             for (int i = 0; i < _vessel.parts.Count; i++)
             {
                 Part p = _vessel.parts[i];
                 FARWingAerodynamicModel w = p.GetComponent<FARWingAerodynamicModel>();
                 if ((object)w != null)
+                {
                     _LEGACY_currentWingAeroModel.Add(w);
+                    useWingArea = true;
+                    wingArea += w.S;
+                }
             }
         }
 
@@ -99,7 +105,10 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             vesselInfo.liftForce = -Vector3d.Dot(remainderVector, _vessel.ReferenceTransform.forward);     //forward points down for the vessel, so reverse along that will be lift
             vesselInfo.sideForce = Vector3d.Dot(remainderVector, _vessel.ReferenceTransform.right);        //and the side force
 
-            vesselInfo.refArea = _vesselAero.MaxCrossSectionArea;
+            if (useWingArea)
+                vesselInfo.refArea = wingArea;
+            else
+                vesselInfo.refArea = _vesselAero.MaxCrossSectionArea;
 
             vesselInfo.dynPres = _vessel.dynamicPressurekPa;
 
@@ -195,7 +204,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 }
             }
             vesselInfo.tSFC = totalThrust / totalThrust_Isp;    //first, calculate inv Isp
-            vesselInfo.tSFC *= 2.7777777777777777777777777777778e-4;   //then, convert from 1/s to 1/hr
+            vesselInfo.tSFC *= 3600;   //then, convert from 1/s to 1/hr
 
             vesselInfo.intakeAirFrac = airAvailableVol / airDemandVol;
 
@@ -240,7 +249,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         {
             double geeForce = FlightGlobals.getGeeForceAtPosition(_vessel.CoM).magnitude;
 
-            vesselInfo.ballisticCoeff = vesselInfo.fullMass / vesselInfo.dragForce;
+            vesselInfo.ballisticCoeff = vesselInfo.fullMass * vesselInfo.dynPres / vesselInfo.dragForce;
 
             vesselInfo.termVelEst = 2 * vesselInfo.ballisticCoeff * geeForce;
             vesselInfo.termVelEst /= _vessel.atmDensity;
