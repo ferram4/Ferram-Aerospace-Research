@@ -72,6 +72,8 @@ namespace FerramAerospaceResearch
             }
             else
                 GameEvents.onGUIApplicationLauncherReady.Add(OnGUIAppLauncherReady);
+
+            GameEvents.onGameSceneLoadRequested.Add(SaveConfigs);
         }
 
         void OnGUIAppLauncherReady()
@@ -512,6 +514,11 @@ namespace FerramAerospaceResearch
             tmpColor = EditorColors.Instance[3];
             ReColorTexture(ref tmpColor, ref l_DTexture);
             EditorColors.Instance[3] = tmpColor;
+        }
+
+        public static void SaveConfigs(GameScenes scene)
+        {
+            SaveConfigs();
         }
 
         public static void SaveConfigs()

@@ -107,8 +107,10 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
             if (useWingArea)
                 vesselInfo.refArea = wingArea;
-            else
+            else if (_vesselAero)
                 vesselInfo.refArea = _vesselAero.MaxCrossSectionArea;
+            else
+                vesselInfo.refArea = 1;
 
             vesselInfo.dynPres = _vessel.dynamicPressurekPa;
 

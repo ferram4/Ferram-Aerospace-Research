@@ -197,7 +197,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
         {
             for (int i = 0; i < _currentAeroModules.Count; i++)
             {
-                ferram4.FARWingAerodynamicModel w = _currentAeroModules[i].part.GetComponent<ferram4.FARWingAerodynamicModel>();
+                Part p = _currentAeroModules[i].part;
+                if (!p)
+                    continue;
+                ferram4.FARWingAerodynamicModel w = p.GetComponent<ferram4.FARWingAerodynamicModel>();
                 if (w)
                     w.NUFAR_ClearAreaExposedFactor();
             }
@@ -210,7 +213,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             for (int i = 0; i < _currentAeroModules.Count; i++)
             {
-                ferram4.FARWingAerodynamicModel w = _currentAeroModules[i].part.GetComponent<ferram4.FARWingAerodynamicModel>();
+                Part p = _currentAeroModules[i].part;
+                if (!p)
+                    continue;
+                ferram4.FARWingAerodynamicModel w = p.GetComponent<ferram4.FARWingAerodynamicModel>();
                 if (w)
                     w.NUFAR_SetExposedAreaFactor();
             }

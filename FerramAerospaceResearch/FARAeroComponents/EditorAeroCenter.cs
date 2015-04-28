@@ -79,7 +79,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             aeroSection.AddAll(lift);
 
             aeroForce = aeroSection.force;
-            vesselRootLocalAeroCenter = aeroSection.GetMinTorquePos();
+            vesselRootLocalAeroCenter = aeroSection.GetPos();
             vesselRootLocalAeroCenter = EditorLogic.RootPart.transform.worldToLocalMatrix.MultiplyPoint3x4(vesselRootLocalAeroCenter);
         }
     }

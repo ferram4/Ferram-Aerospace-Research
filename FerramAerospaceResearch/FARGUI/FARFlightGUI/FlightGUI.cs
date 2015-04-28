@@ -40,7 +40,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         GUIDropDown<int> settingsWindow;
 
-        void Awake()
+        void Start()
         {
             _vessel = GetComponent<Vessel>();
             _vesselAero = GetComponent<FARVesselAero>();

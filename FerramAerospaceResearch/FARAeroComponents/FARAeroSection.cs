@@ -22,7 +22,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         float hypersonicMomentBackward;
         float diameter;
 
-        List<PartData> partsIncluded;
+        List<PartData> partData;
 
         public struct PartData
         {
@@ -51,7 +51,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             this.hypersonicMomentBackward = hypersonicMomentBackward;
             this.diameter = diameter;
 
-            partsIncluded = new List<PartData>();
+            partData = new List<PartData>();
 
             Vector3 worldVehicleAxis = vesselToWorldMatrix.MultiplyVector(vehicleMainAxis);
 
@@ -88,8 +88,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 data.dragFactor = dragFactor[i];
 
                 FARPartGeometry.VoxelCrossSection.SideAreaValues values = sideAreaValues[data.aeroModule.part];
-                Vector3 posAreas = new Vector3((float)values.iP, (float)values.jP, (float)values.kP);
-                Vector3 negAreas = new Vector3((float)values.iN, (float)values.jN, (float)values.kN);
 
                 transformMatrix = transformMatrix * vesselToWorldMatrix;
 
@@ -100,7 +98,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 IncrementAreas(ref data, (float)values.kP * Vector3.forward, transformMatrix);
                 IncrementAreas(ref data, (float)values.kN * -Vector3.forward, transformMatrix);
                 
-                partsIncluded.Add(data);
+                partData.Add(data);
             }
 
             if (crossFlowDragMachCurve == null)
@@ -129,9 +127,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public void LEGACY_SetLiftForFARWingAerodynamicModel()
         {
-            for(int i = 0; i < partsIncluded.Count; i++)
+            for(int i = 0; i < partData.Count; i++)
             {
-                PartData data = partsIncluded[i];
+                PartData data = partData[i];
                 Part p = data.aeroModule.part;
                 if (p == null)
                     continue;
@@ -147,7 +145,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public void EditorCalculateAeroForces(float atmDensity, float machNumber, float reynoldsPerUnitLength, float skinFrictionDrag, Vector3 vel, ferram4.FARCenterQuery center)
         {
-            if (partsIncluded.Count == 0)
+            if (partData.Count == 0)
                 return;
 
             double skinFrictionForce = skinFrictionDrag * xForceSkinFriction.Evaluate(machNumber);      //this will be the same for each part, so why recalc it multiple times?
@@ -155,7 +153,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             float xForceAoA180 = xForcePressureAoA180.Evaluate(machNumber);
 
 
-            PartData data = partsIncluded[0];
+            PartData data = partData[0];
             FARAeroPartModule aeroModule = data.aeroModule;
 
             Vector3 xRefVector = data.xRefVectorPartSpace;
@@ -256,16 +254,16 @@ namespace FerramAerospaceResearch.FARAeroComponents
             torqueVector = localToWorld.MultiplyVector(torqueVector);
             Vector3 centroid = Vector3.zero;
 
-            for (int i = 0; i < partsIncluded.Count; i++)
+            for (int i = 0; i < partData.Count; i++)
             {
-                PartData partData = partsIncluded[i];
-                FARAeroPartModule module = partData.aeroModule;
+                PartData data2 = partData[i];
+                FARAeroPartModule module = data2.aeroModule;
                 if ((object)aeroModule == null)
                     continue;
 
-                centroid = module.part.partTransform.localToWorldMatrix.MultiplyPoint3x4(partData.centroidPartSpace);
-                center.AddForce(centroid, forceVector * partData.dragFactor);
-                center.AddTorque(torqueVector * partData.dragFactor);
+                centroid = module.part.partTransform.localToWorldMatrix.MultiplyPoint3x4(data2.centroidPartSpace);
+                center.AddForce(centroid, forceVector * data2.dragFactor);
+                center.AddTorque(torqueVector * data2.dragFactor);
             }
         }
 
@@ -276,9 +274,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
             float xForceAoA0 = xForcePressureAoA0.Evaluate(machNumber);
             float xForceAoA180 = xForcePressureAoA180.Evaluate(machNumber);
 
-            for(int i = 0; i < partsIncluded.Count; i++)
+            for(int i = 0; i < partData.Count; i++)
             {
-                PartData data = partsIncluded[i];
+                PartData data = partData[i];
                 FARAeroPartModule aeroModule = data.aeroModule;
                 if ((object)aeroModule == null)
                 {
