@@ -196,7 +196,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             crossFlowMach = machNumber * (float)sinAoA;
             crossFlowReynolds = reynoldsPerUnitLength * diameter * normalForceFactor * (float)sinAoA;
 
-            //nForce += viscCrossflowDrag * sinSqrAoA * CalculateCrossFlowDrag(crossFlowMach, crossFlowReynolds);            //viscous crossflow normal force
+            nForce += viscCrossflowDrag * sinSqrAoA * CalculateCrossFlowDrag(crossFlowMach, crossFlowReynolds);            //viscous crossflow normal force
 
             nForce *= normalForceFactor;
 

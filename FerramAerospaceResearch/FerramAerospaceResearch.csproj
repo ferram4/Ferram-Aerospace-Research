@@ -126,6 +126,10 @@
     <Compile Include="FARKSPAddonFlightScene.cs" />
     <Compile Include="InstallChecker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RealChuteLite\ChuteCalculator.cs" />
+    <Compile Include="RealChuteLite\PartExtensions.cs" />
+    <Compile Include="RealChuteLite\PhysicsWatch.cs" />
+    <Compile Include="RealChuteLite\RealChuteFAR.cs" />
     <Compile Include="ToolbarWrapper.cs" />
   </ItemGroup>
   <ItemGroup />
