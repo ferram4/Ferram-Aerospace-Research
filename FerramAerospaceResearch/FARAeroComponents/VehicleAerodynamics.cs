@@ -448,7 +448,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             numSections = back - front;
             _length = _sectionThickness * numSections;
 
-            GaussianSmoothCrossSections(_vehicleCrossSection, 3, FARDifficultySettings.currentSettings.gaussianVehicleLengthFractionForSmoothing, _sectionThickness, _length, front, back, FARDifficultySettings.currentSettings.numAreaSmoothingPasses, FARDifficultySettings.currentSettings.numDerivSmoothingPasses);
+            GaussianSmoothCrossSections(_vehicleCrossSection, 3, FARDifficultyAndExactnessSettings.currentSettings.gaussianVehicleLengthFractionForSmoothing, _sectionThickness, _length, front, back, FARDifficultyAndExactnessSettings.currentSettings.numAreaSmoothingPasses, FARDifficultyAndExactnessSettings.currentSettings.numDerivSmoothingPasses);
 
             validSectionCount = numSections;
             firstSection = front;
@@ -494,12 +494,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 //Potential and Viscous lift calcs
                 float potentialFlowNormalForce;
-                if(i == 0)
-                    potentialFlowNormalForce = (float)(nextArea - curArea);
-                else if(i == numSections)
+                //if(i == 0)
+                //    potentialFlowNormalForce = (float)(nextArea - curArea);
+                //else if(i == numSections)
                     potentialFlowNormalForce = (float)(curArea - prevArea);
-                else
-                    potentialFlowNormalForce = (float)(nextArea - prevArea) * 0.5f;      //calcualted from area change
+                //else
+                //    potentialFlowNormalForce = (float)(nextArea - prevArea) * 0.5f;      //calcualted from area change
 
                 float areaChangeMax = (float)Math.Min(nextArea, prevArea) * 0.1f;
 
@@ -527,6 +527,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 double surfaceArea = curArea * Math.PI;
                 if (surfaceArea < 0)
                     surfaceArea = 0;
+
                 surfaceArea = 2d * Math.Sqrt(surfaceArea); //section circumference
                 surfaceArea *= _sectionThickness;    //section surface area for viscous effects
 
@@ -535,7 +536,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 xForceSkinFriction.Add(2f, (float)surfaceArea, 0, 0);                     //above Mach 1.4, visc is purely surface drag, no pressure-related components simulated
 
                 float sonicWaveDrag = (float)CalculateTransonicWaveDrag(i, index, numSections, front, _sectionThickness, Math.Min(_maxCrossSectionArea * 2, curArea * 16));//Math.Min(maxCrossSectionArea * 0.1, curArea * 0.25));
-                sonicWaveDrag *= (float)FARDifficultySettings.currentSettings.fractionTransonicDrag;     //this is just to account for the higher drag being felt due to the inherent blockiness of the model being used and noise introduced by the limited control over shape and through voxelization
+                sonicWaveDrag *= (float)FARDifficultyAndExactnessSettings.currentSettings.fractionTransonicDrag;     //this is just to account for the higher drag being felt due to the inherent blockiness of the model being used and noise introduced by the limited control over shape and through voxelization
                 float hypersonicDragForward = (float)CalculateHypersonicDrag(prevArea, curArea, _sectionThickness);
                 float hypersonicDragBackward = (float)CalculateHypersonicDrag(nextArea, curArea, _sectionThickness);
 
@@ -624,6 +625,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 float weightingFactor = 0;
 
+                //weight the forces applied to each part
                 foreach (KeyValuePair<Part, VoxelCrossSection.SideAreaValues> pair in includedPartsAndAreas)
                 {
                     Part key = pair.Key;
@@ -647,6 +649,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     weighting[j] *= weightingFactor;
                 }
+
+
                 FARAeroSection section = new FARAeroSection(xForcePressureAoA0, xForcePressureAoA180, xForceSkinFriction, potentialFlowNormalForce, viscCrossflowDrag
                     ,viscCrossflowDrag / (float)(_sectionThickness), (float)flatnessRatio, hypersonicMomentForward, hypersonicMomentBackward,
                     centroid, xRefVector, nRefVector, _localToWorldMatrix, _vehicleMainAxis, includedModules, includedPartsAndAreas, weighting);

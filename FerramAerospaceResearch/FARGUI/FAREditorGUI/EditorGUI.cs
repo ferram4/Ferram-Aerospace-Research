@@ -79,7 +79,13 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             _stabDeriv = new StabilityDerivGUI(_simManager, flapSettingDropDown, celestialBodyDropdown);
             _stabDerivLinSim = new StabilityDerivSimulationGUI(_simManager);
 
-            _areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.8f), Color.green, Color.yellow, 10, 5);
+            Color crossSection = EditorColors.GetColor(3);
+            crossSection.a = 0.8f;
+
+            Color crossSectionDeriv = EditorColors.GetColor(2);
+            crossSectionDeriv.a = 0.8f;
+
+            _areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.7f), crossSection, crossSectionDeriv, 10, 5);
             guiRect.height = 500;
             guiRect.width = 650;
 
@@ -121,8 +127,13 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         public static void ResetEditor()
         {
-            instance._areaRulingOverlay = null;
-            instance._areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.8f), Color.green, Color.yellow, 10, 5);
+            Color crossSection = EditorColors.GetColor(3);
+            crossSection.a = 0.8f;
+
+            Color crossSectionDeriv = EditorColors.GetColor(2);
+            crossSectionDeriv.a = 0.8f;
+
+            instance._areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.7f), crossSection, crossSectionDeriv, 10, 5);
             UpdateVoxel();
             instance._updateRebuildGeo = true;
         }
@@ -241,7 +252,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             }
             TriggerIGeometryUpdaters();
 
-            _vehicleAero.VoxelUpdate(EditorLogic.RootPart.transform.worldToLocalMatrix, EditorLogic.RootPart.transform.localToWorldMatrix, EDITOR_VOXEL_COUNT, partList, _currentGeometryModules, true);
+            
+            if(_currentGeometryModules.Count > 0)
+                _vehicleAero.VoxelUpdate(EditorLogic.RootPart.transform.worldToLocalMatrix, EditorLogic.RootPart.transform.localToWorldMatrix, EDITOR_VOXEL_COUNT, partList, _currentGeometryModules, true);
 
             _updateRebuildGeo = false;
         }

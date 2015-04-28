@@ -269,7 +269,7 @@ namespace ferram4
                 ba.PrecomputeCenterOfLift(vel, 0, dummy);
             foreach (var ba in parts)
                 ba.CoLForce = ba.PrecomputeCenterOfLift(vel, 0, lift);
-
+            
             // flip sign of data in the accumulator to indirectly subtract passes
             lift.force = -lift.force;
             lift.torque = - lift.torque;
@@ -286,7 +286,7 @@ namespace ferram4
                 ba.PrecomputeCenterOfLift(vel, 0, dummy);
             foreach (var ba in parts)
                 ba.CoLForce -= ba.PrecomputeCenterOfLift(vel, 0, lift);
-
+            
             // Choose the center location
             //GlobalCoL = lift.GetMinTorquePos();
             //GlobalCoLReady = true;

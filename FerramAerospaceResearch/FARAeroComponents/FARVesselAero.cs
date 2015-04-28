@@ -242,6 +242,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                  _updateQueued = false;
              }
 
+             if (_vessel.rootPart.Modules.Contains("LaunchClamp"))
+                 return;
+
              if (recalcGeoModules)
              {
                  _currentGeoModules = new List<GeometryPartModule>();

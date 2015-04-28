@@ -60,9 +60,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
             for(int i = 0; i < _currentAeroSections.Count; i++)
             {
                 FARAeroSection section = _currentAeroSections[i];
-                section.EditorCalculateAeroForces(1, 0, 100000, 0.005f, vel, aeroSection);
+                section.EditorCalculateAeroForces(1, 3, 100000, 0.005f, vel, aeroSection);
             }
-
+            
             aeroSection.force = -aeroSection.force;
             aeroSection.torque = -aeroSection.torque;
 
@@ -71,7 +71,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             for (int i = 0; i < _currentAeroSections.Count; i++)
             {
                 FARAeroSection section = _currentAeroSections[i];
-                section.EditorCalculateAeroForces(1, 0, 100000, 0.005f, vel, aeroSection);
+                section.EditorCalculateAeroForces(1, 3, 100000, 0.005f, vel, aeroSection);
             }
 
             FARBaseAerodynamics.PrecomputeGlobalCenterOfLift(lift, dummy);

@@ -249,7 +249,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         {
             double geeForce = FlightGlobals.getGeeForceAtPosition(_vessel.CoM).magnitude;
 
-            vesselInfo.ballisticCoeff = vesselInfo.fullMass * vesselInfo.dynPres / vesselInfo.dragForce * 1000;
+            vesselInfo.ballisticCoeff = vesselInfo.fullMass / vesselInfo.dragCoeff * 1000;
 
             vesselInfo.termVelEst = 2 * vesselInfo.ballisticCoeff * geeForce;
             vesselInfo.termVelEst /= _vessel.atmDensity;

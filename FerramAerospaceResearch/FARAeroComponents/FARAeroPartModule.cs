@@ -57,8 +57,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         ProjectedArea projectedArea;
 
-        private double partStressMax = double.MaxValue;
-        private double totalAeroForce = double.MaxValue;
+        private double partStressMaxY = double.MaxValue;
+        private double partStressMaxXZ = double.MaxValue;
+        private double partForceMaxY = double.MaxValue;
+        private double partForceMaxXZ = double.MaxValue;
+
 
         public ProjectedArea ProjectedAreas
         {
@@ -116,7 +119,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             else
                 part.ShieldedFromAirstream = false;
 
-            totalAeroForce = projectedArea.totalArea * partStressMax;
+            partForceMaxY = (projectedArea.jN + projectedArea.jP) * partStressMaxY;
+            partForceMaxXZ = (projectedArea.iN + projectedArea.iP + projectedArea.kN + projectedArea.kP) * partStressMaxXZ;
         }
 
         private void IncrementAreas(ref ProjectedArea data, Vector3 vector, Matrix4x4 transformMatrix)
@@ -153,7 +157,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if(FARDebugValues.allowStructuralFailures)
             {
                 FARPartStressTemplate template = FARAeroStress.DetermineStressTemplate(this.part);
-                partStressMax = template.XZmaxStress * 2 + template.YmaxStress * 2;
+                partStressMaxY = template.YmaxStress * 0.5; //must account for the fact that we're considering jP and jN in this
+                partStressMaxXZ = template.YmaxStress * 0.25;   //account for iP, iN, kP, kN;
             }
         }
 
@@ -185,13 +190,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public void ApplyForces()
         {
+            if(!vessel.packed)
+                CheckAeroStressFailure();
+
             Matrix4x4 matrix = part.partTransform.localToWorldMatrix;
             Rigidbody rb = part.Rigidbody;
 
             worldSpaceAeroForce = matrix.MultiplyVector(partLocalForce);
-
-            if (worldSpaceAeroForce.magnitude > partStressMax && FlightGlobals.ready)
-                AeroStressFailure();
 
             rb.AddForceAtPosition(worldSpaceAeroForce, part.transform.position);
             rb.AddTorque(matrix.MultiplyVector(partLocalTorque));
@@ -238,10 +243,19 @@ namespace FerramAerospaceResearch.FARAeroComponents
             CoLMarker.lift = 1;
         }
 
-        private void AeroStressFailure()
+        private void CheckAeroStressFailure()
+        {
+            double yForce = partLocalForce.y;       //up component of partLocalForce
+            double xZForce = partLocalForce.x + partLocalForce.z;
+
+            if (yForce > partForceMaxY || xZForce > partForceMaxXZ)
+                ApplyAeroStressFailure();
+        }
+
+        private void ApplyAeroStressFailure()
         {
             bool failureOccured = false;
-            if(part.Modules.Contains("ModuleProceduralFairing"))
+            if (part.Modules.Contains("ModuleProceduralFairing"))
             {
                 ModuleProceduralFairing fairing = (ModuleProceduralFairing)part.Modules["ModuleProceduralFairing"];
                 fairing.ejectionForce = 0.5f;
@@ -250,7 +264,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
 
             List<Part> children = part.children;
-            for(int i = 0; i < children.Count; i++)
+            for (int i = 0; i < children.Count; i++)
             {
                 Part child = children[i];
                 child.decouple(25);
@@ -262,10 +276,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 failureOccured = true;
             }
 
-            if(failureOccured)
+            if (failureOccured)
             {
-                vessel.SendMessage("AerodynamicFailureStatus");
-                FlightLogger.eventLog.Add("[" + FARMathUtil.FormatTime(vessel.missionTime) + "] " + part.partInfo.title + " failed due to aerodynamic stresses.");
+                if (vessel)
+                {
+                    vessel.SendMessage("AerodynamicFailureStatus");
+                    FlightLogger.eventLog.Add("[" + FARMathUtil.FormatTime(vessel.missionTime) + "] " + part.partInfo.title + " failed due to aerodynamic stresses.");
+                }
             }
         }
     }

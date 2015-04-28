@@ -40,7 +40,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         GUIDropDown<int> settingsWindow;
 
-        void Start()
+        void Awake()
         {
             _vessel = GetComponent<Vessel>();
             _vesselAero = GetComponent<FARVesselAero>();
@@ -49,7 +49,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             _stabilityAugmentation = new StabilityAugmentation(_vessel);
             _flightDataGUI = new FlightDataGUI();
 
-            settingsWindow = new GUIDropDown<int>(new string[3]{"Flt Data","Stab Aug","Air Speed"}, new int[3]{0,1,2}, 0);
+            settingsWindow = new GUIDropDown<int>(new string[2]{"Flt Data","Stab Aug"}, new int[2]{0,1}, 0);
             //boxStyle.padding = new RectOffset(4, 4, 4, 4);
 
             if (vesselFlightGUI == null)
@@ -64,7 +64,8 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         void OnDestroy()
         {
-            vesselFlightGUI.Remove(_vessel);
+            if(_vessel)
+                vesselFlightGUI.Remove(_vessel);
         }
 
         //Receives message from FARVesselAero through _vessel on the recalc being completed
@@ -155,6 +156,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         void SettingsWindow(int windowId)
         {
+            GUILayout.Label("Current Settings Group:");
             settingsWindow.GUIDropDownDisplay();
             int selection = settingsWindow.ActiveSelection;
             switch (selection)

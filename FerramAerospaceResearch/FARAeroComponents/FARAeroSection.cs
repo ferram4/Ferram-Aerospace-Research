@@ -53,8 +53,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             partsIncluded = new List<PartData>();
 
-            Vector3 centroidLocationAlongxRef = Vector3.Project(centroidWorldSpace, vehicleMainAxis);
-            Vector3 centroidSansxRef = Vector3.ProjectOnPlane(centroidWorldSpace, vehicleMainAxis);
+            Vector3 worldVehicleAxis = vesselToWorldMatrix.MultiplyVector(vehicleMainAxis);
+
+            Vector3 centroidLocationAlongxRef = Vector3.Project(centroidWorldSpace, worldVehicleAxis);
+            Vector3 centroidSansxRef = Vector3.ProjectOnPlane(centroidWorldSpace, worldVehicleAxis);
 
             Vector3 worldSpaceAvgPos = Vector3.zero;
             float totalDragFactor = 0;
@@ -67,10 +69,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             worldSpaceAvgPos /= totalDragFactor;
 
-            worldSpaceAvgPos = Vector3.ProjectOnPlane(worldSpaceAvgPos, vehicleMainAxis);
+            worldSpaceAvgPos = Vector3.ProjectOnPlane(worldSpaceAvgPos, worldVehicleAxis);
 
             Vector3 avgPosDiffFromCentroid = centroidSansxRef - worldSpaceAvgPos;
-
+            
             for (int i = 0; i < moduleList.Count; i++)
             {
                 PartData data = new PartData();
@@ -78,7 +80,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 Transform transform = data.aeroModule.part.partTransform;
                 Matrix4x4 transformMatrix = transform.worldToLocalMatrix;
 
-                Vector3 forceCenterWorldSpace = centroidLocationAlongxRef + Vector3.ProjectOnPlane(transform.position, vehicleMainAxis) + avgPosDiffFromCentroid;
+                Vector3 forceCenterWorldSpace = centroidLocationAlongxRef + Vector3.ProjectOnPlane(transform.position, worldVehicleAxis) + avgPosDiffFromCentroid;
 
                 data.centroidPartSpace = transformMatrix.MultiplyPoint3x4(forceCenterWorldSpace);
                 data.xRefVectorPartSpace = transformMatrix.MultiplyVector(xRefVectorWorldSpace);
@@ -181,8 +183,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 nForce = cosHalfAoA * sin2AoA * potentialFlowNormalForce * Math.Sign(cosAoA);  //potential flow normal force
             if (nForce < 0)     //potential flow is not significant over the rear face of things
                 nForce = 0;
-            if (machNumber > 3)
-                nForce *= 2d - machNumber * 0.3333333333333333d;
+            //if (machNumber > 3)
+            //    nForce *= 2d - machNumber * 0.3333333333333333d;
 
             float normalForceFactor = Math.Abs(Vector3.Dot(localNormalForceVec, nRefVector));
             normalForceFactor *= normalForceFactor;
@@ -194,7 +196,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             crossFlowMach = machNumber * (float)sinAoA;
             crossFlowReynolds = reynoldsPerUnitLength * diameter * normalForceFactor * (float)sinAoA;
 
-            nForce += viscCrossflowDrag * sinSqrAoA * CalculateCrossFlowDrag(crossFlowMach, crossFlowReynolds);            //viscous crossflow normal force
+            //nForce += viscCrossflowDrag * sinSqrAoA * CalculateCrossFlowDrag(crossFlowMach, crossFlowReynolds);            //viscous crossflow normal force
 
             nForce *= normalForceFactor;
 
@@ -238,7 +240,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 moment *= momentFactor;
             }
-
             moment /= normalForceFactor;
 
             Vector3 forceVector = (float)xForce * xRefVector + (float)nForce * localNormalForceVec;
@@ -310,8 +311,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (nForce < 0)     //potential flow is not significant over the rear face of things
                     nForce = 0;
 
-                if (machNumber > 3)
-                    nForce *= 2d - machNumber * 0.3333333333333333d;
+                //if (machNumber > 3)
+                //    nForce *= 2d - machNumber * 0.3333333333333333d;
 
                 float normalForceFactor = Math.Abs(Vector3.Dot(localNormalForceVec, nRefVector));
                 normalForceFactor *= normalForceFactor;
@@ -321,7 +322,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 
                 float crossFlowMach, crossFlowReynolds;
                 crossFlowMach = machNumber * (float)sinAoA;
-                crossFlowReynolds = reynoldsPerUnitLength * diameter * normalForceFactor * (float)sinAoA;
+                crossFlowReynolds = reynoldsPerUnitLength * diameter * (float)sinAoA / normalForceFactor;
 
                 nForce += viscCrossflowDrag * sinSqrAoA * CalculateCrossFlowDrag(crossFlowMach, crossFlowReynolds);            //viscous crossflow normal force
 
@@ -372,23 +373,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 moment /= normalForceFactor;
                 dampingMoment = Math.Abs(dampingMoment);
                 dampingMoment += (float)Math.Abs(skinFrictionForce) * 0.1f;
-
-                if(double.IsNaN(xForce))
-                {
-                    Debug.Log("xForce is NaN");
-                    xForce = 0;
-                }
-                if (double.IsNaN(nForce))
-                {
-                    Debug.Log("nForce is NaN");
-                    nForce = 0;
-                }
-                if(double.IsNaN(moment))
-                {
-                    Debug.Log("moment is NaN");
-                    moment = 0;
-                    dampingMoment = 0;
-                }
 
                 Vector3 forceVector = (float)xForce * xRefVector + (float)nForce * localNormalForceVec;
                 Vector3 torqueVector = Vector3.Cross(xRefVector, localNormalForceVec) * moment;

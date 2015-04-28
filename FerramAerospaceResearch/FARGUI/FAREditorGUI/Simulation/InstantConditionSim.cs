@@ -13,11 +13,13 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
         List<FARAeroPartModule> _currentAeroModules;
 
         double _maxCrossSectionFromBody;
+        double _bodyLength;
 
         public void UpdateAeroData(VehicleAerodynamics vehicleAero)
         {
             vehicleAero.GetNewAeroData(out _currentAeroModules, out _currentAeroSections);
             _maxCrossSectionFromBody = vehicleAero.MaxCrossSectionArea;
+            _bodyLength = vehicleAero.Length;
         }
 
         public double CalculateAccelerationDueToGravity(CelestialBody body, double alt)
@@ -156,7 +158,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             {
                 area = _maxCrossSectionFromBody;
                 b_2 = 1;
-                MAC = 1;
+                MAC = _bodyLength;
             }
 
             double recipArea = 1 / area;

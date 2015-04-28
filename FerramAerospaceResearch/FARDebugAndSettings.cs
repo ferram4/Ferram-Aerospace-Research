@@ -378,7 +378,7 @@ namespace FerramAerospaceResearch
             FARDebugValues.allowStructuralFailures = GUILayout.Toggle(FARDebugValues.allowStructuralFailures, "Allow Aero-structural Failures", thisStyle);
             GUILayout.EndVertical();
 
-            FARDifficultySettings.DisplaySelection();
+            FARDifficultyAndExactnessSettings.DisplaySelection();
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();
