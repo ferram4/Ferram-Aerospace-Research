@@ -6,6 +6,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 {
     class EditorAreaRulingOverlay
     {
+        //VectorLine _areaLine;
+        //VectorLine _derivLine;
+        //List<VectorLine> _markingLines;
         LineRenderer _areaRenderer;
         LineRenderer _derivRenderer;
         List<LineRenderer> _markingRenderers;
@@ -17,7 +20,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         double _yAxisGridScale;
         int _numGridLines;
 
-        Material _rendererMaterial;
+        static Material _rendererMaterial;
+
+        bool display = false;
         
         public EditorAreaRulingOverlay(Color axisColor, Color crossSectionColor, Color derivColor, double yScaleMaxDistance, double yAxisGridScale)
         {
@@ -38,15 +43,18 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         private void Initialize()
         {
             //Based on Kronal Vessel Viewer CoM axes rendering
-            _rendererMaterial = new Material("Shader \"Lines/Colored Blended\" {" +
-                    "SubShader { Pass { " +
-                    "    Blend SrcAlpha OneMinusSrcAlpha " +
-                    "    ZWrite Off ZTest Always Cull Off Fog { Mode Off } " +
-                    "    BindChannels {" +
-                    "      Bind \"vertex\", vertex Bind \"color\", color }" +
-                    "} } }");
-            _rendererMaterial.hideFlags = HideFlags.HideAndDontSave;
-            _rendererMaterial.shader.hideFlags = HideFlags.HideAndDontSave;
+            if (_rendererMaterial == null)
+            {
+                _rendererMaterial = new Material("Shader \"Lines/Colored Blended\" {" +
+                        "SubShader { Pass { " +
+                        "    Blend SrcAlpha OneMinusSrcAlpha " +
+                        "    ZWrite Off ZTest Always Cull Off Fog { Mode Off } " +
+                        "    BindChannels {" +
+                        "      Bind \"vertex\", vertex Bind \"color\", color }" +
+                        "} } }");
+                _rendererMaterial.hideFlags = HideFlags.HideAndDontSave;
+                _rendererMaterial.shader.hideFlags = HideFlags.HideAndDontSave;
+            }
 
             _areaRenderer = CreateNewRenderer(_crossSectionColor, 0.1f, _rendererMaterial);
             _derivRenderer = CreateNewRenderer(_derivColor, 0.1f, _rendererMaterial);
@@ -57,7 +65,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         private void Cleanup()
         {
-            if (_areaRenderer)
+          if (_areaRenderer)
                 GameObject.Destroy(_areaRenderer.gameObject);
             if (_derivRenderer)
                 GameObject.Destroy(_derivRenderer.gameObject);
@@ -95,6 +103,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         public void ToggleVisibility()
         {
+            display = !display;
+            
             if (!_areaRenderer)
                 RestartOverlay();
 
@@ -112,6 +122,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         public void SetVisibility(bool visible)
         {
+            display = visible;
+            
             if (!_areaRenderer)
                 RestartOverlay();
 
@@ -125,11 +137,52 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             }
         }
 
+        /*public void Display()
+        {
+            if (!display)
+                return;
+
+            Transform lineTransform = EditorLogic.RootPart.transform;
+
+            Vector.DrawLine3D(_areaLine, lineTransform);
+            Vector.DrawLine3D(_derivLine, lineTransform);
+            for (int i = 0; i < _markingLines.Count; i++)
+                Vector.DrawLine3D(_markingLines[i], lineTransform);
+        }*/
+
         public void UpdateAeroData(Matrix4x4 voxelLocalToWorldMatrix, double[] xCoords, double[] yCoordsCrossSection, double[] yCoordsDeriv, double maxValue)
         {
             _numGridLines = (int)Math.Ceiling(maxValue / _yAxisGridScale);       //add one to account for the xAxis
             double gridScale = _yScaleMaxDistance / (double)_numGridLines;
             double scalingFactor = _yScaleMaxDistance / (_yAxisGridScale * _numGridLines);
+
+            /*if (_areaLine == null)
+                _areaLine = BuildLine(xCoords, yCoordsCrossSection, "area", scalingFactor, _crossSectionColor);
+            else
+                _areaLine = BuildLine(_areaLine, xCoords, yCoordsCrossSection, scalingFactor);
+
+
+            if (_derivLine == null)
+                _derivLine = BuildLine(xCoords, yCoordsDeriv, "deriv", scalingFactor, _derivColor);
+            else
+                _derivLine = BuildLine(_areaLine, xCoords, yCoordsCrossSection, scalingFactor);
+
+            double[] shortXCoords = new double[] {xCoords[0], xCoords[xCoords.Length - 1]};
+
+
+            for (int i = 0; i <= _numGridLines; i++)
+            {
+                double height = i * gridScale;
+                if(i >= _markingLines.Count)
+                {
+                    VectorLine line = BuildLine(shortXCoords, new double[] { height, height }, "marker" + i, 1, _axisColor);
+                    _markingLines.Add(line);
+                }
+                else
+                {
+                    _markingLines[i] = BuildLine(_markingLines[i], shortXCoords, new double[] { height, height }, 1);
+                }
+            }*/
 
             if (!_areaRenderer)
                 RestartOverlay();
@@ -156,9 +209,39 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 else
                     _markingRenderers[i].enabled = _areaRenderer.enabled;
             }
-
-
         }
+
+        /*VectorLine BuildLine(double[] xCoords, double[] yCoords, string name, double yScalingFactor, Color color)
+        {
+            Vector3[] points = new Vector3[xCoords.Length];
+
+            for(int i = 0; i < points.Length; i++)
+            {
+                points[i].y = (float)xCoords[i];
+                points[i].z = -(float)(yCoords[i] * yScalingFactor);
+            }
+            VectorLine line = new VectorLine(name, points, color, _rendererMaterial, 2);
+
+            line.vectorObject.renderer.sortingOrder = 30;
+            line.depth = 30;
+
+            return line;
+        }
+
+        VectorLine BuildLine(VectorLine line, double[] xCoords, double[] yCoords, double yScalingFactor)
+        {
+            Vector3[] points = new Vector3[xCoords.Length];
+
+            for (int i = 0; i < points.Length; i++)
+            {
+                points[i].y = (float)xCoords[i];
+                points[i].z = -(float)(yCoords[i] * yScalingFactor);
+            }
+            line.points3 = points;
+
+            return line;
+        }*/
+
 
         void UpdateRenderer(LineRenderer renderer, Matrix4x4 transformMatrix, double[] xCoords, double[] yCoords)
         {

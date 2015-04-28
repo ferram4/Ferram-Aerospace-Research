@@ -11,8 +11,6 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
     [KSPAddon(KSPAddon.Startup.EditorAny, false)]
     public class EditorGUI : MonoBehaviour
     {
-        const int EDITOR_VOXEL_COUNT = 125000;
-
         static EditorGUI instance;
         public static EditorGUI Instance
         {
@@ -254,7 +252,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             
             if(_currentGeometryModules.Count > 0)
-                _vehicleAero.VoxelUpdate(EditorLogic.RootPart.transform.worldToLocalMatrix, EditorLogic.RootPart.transform.localToWorldMatrix, EDITOR_VOXEL_COUNT, partList, _currentGeometryModules, true);
+                _vehicleAero.VoxelUpdate(EditorLogic.RootPart.transform.worldToLocalMatrix, EditorLogic.RootPart.transform.localToWorldMatrix, FARDifficultyAndExactnessSettings.currentSettings.numVoxelsControllableVessel, partList, _currentGeometryModules, true);
 
             _updateRebuildGeo = false;
         }
@@ -291,6 +289,11 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         #endregion
 
         #region GUIFunctions
+        /*void LateUpdate()
+        {
+            if (_areaRulingOverlay != null)
+                _areaRulingOverlay.Display();
+        }*/
         void OnGUI()
         {
             //Make this an option

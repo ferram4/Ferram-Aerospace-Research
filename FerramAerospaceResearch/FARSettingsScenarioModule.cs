@@ -40,6 +40,8 @@ namespace FerramAerospaceResearch
             node.AddValue("gaussianVehicleLengthFractionForSmoothing", settings.gaussianVehicleLengthFractionForSmoothing);
             node.AddValue("numAreaSmoothingPasses", settings.numAreaSmoothingPasses);
             node.AddValue("numDerivSmoothingPasses", settings.numDerivSmoothingPasses);
+            node.AddValue("numVoxelsControllableVessel", settings.numVoxelsControllableVessel);
+            node.AddValue("numVoxelsDebrisVessel", settings.numVoxelsDebrisVessel);
             node.AddValue("customSettings", FARDifficultyAndExactnessSettings.customSettings);
             node.AddValue("presetIndex", FARDifficultyAndExactnessSettings.presetIndex);
             base.OnSave(node);
@@ -66,6 +68,11 @@ namespace FerramAerospaceResearch
             if (node.HasValue("numDerivSmoothingPasses"))
                 settings.numDerivSmoothingPasses = int.Parse(node.GetValue("numDerivSmoothingPasses"));
 
+            if (node.HasValue("numVoxelsControllableVessel"))
+                settings.numVoxelsControllableVessel = int.Parse(node.GetValue("numVoxelsControllableVessel"));
+            if (node.HasValue("numVoxelsDebrisVessel"))
+                settings.numVoxelsDebrisVessel = int.Parse(node.GetValue("numVoxelsDebrisVessel"));
+
             if (node.HasValue("presetIndex"))
                 FARDifficultyAndExactnessSettings.presetIndex = int.Parse(node.GetValue("presetIndex"));
 
@@ -82,6 +89,9 @@ namespace FerramAerospaceResearch
         public int numAreaSmoothingPasses = 1;
         public int numDerivSmoothingPasses = 1;
         public int index;
+
+        public int numVoxelsControllableVessel;
+        public int numVoxelsDebrisVessel;
 
         public static bool customSettings = false;
 
@@ -139,6 +149,8 @@ namespace FerramAerospaceResearch
             gaussianVehicleLengthFractionForSmoothing = gaussianLength;
             numAreaSmoothingPasses = areaPass;
             numDerivSmoothingPasses = derivPass;
+            numVoxelsControllableVessel = 125000;
+            numVoxelsDebrisVessel = 20000;
         }
 
         public static void DisplaySelection()
@@ -172,6 +184,19 @@ namespace FerramAerospaceResearch
             if (GUILayout.Button(customSettings ? "Switch Back To Presets" : "Choose Custom Settings"))
                 customSettings = !customSettings;
             GUILayout.EndHorizontal();
+            GUILayout.Label("Voxel Detail Settings; increasing these will improve accuracy at the cost of performance");
+
+            FARDifficultyAndExactnessSettings voxelSettings = FARSettingsScenarioModule.settings;
+            voxelSettings.numVoxelsControllableVessel = GUIUtils.TextEntryForInt("Voxels Controllable Vessel: ", 200, voxelSettings.numVoxelsControllableVessel);
+            if (voxelSettings.numVoxelsControllableVessel < 0)
+                voxelSettings.numVoxelsControllableVessel = 100000;
+
+            voxelSettings.numVoxelsDebrisVessel = GUIUtils.TextEntryForInt("Voxels Debris: ", 200, voxelSettings.numVoxelsDebrisVessel);
+            if (voxelSettings.numVoxelsDebrisVessel < 0)
+                voxelSettings.numVoxelsDebrisVessel = 5000;
+
+            currentSettings = voxelSettings;
+
             GUILayout.EndVertical();
             currentSettings = FARSettingsScenarioModule.settings;
         }

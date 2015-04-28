@@ -404,10 +404,15 @@ namespace FerramAerospaceResearch
             EditorColors.Instance[3] = tmpColor;
 
             GUILayout.EndVertical();
+            GUILayout.BeginVertical();
+
+            FARActionGroupConfiguration.DrawGUI();
+
+            GUILayout.EndVertical();
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Other Options"); // DaMichel: put it above the toolbar toggle
             GUILayout.BeginVertical();
+            GUILayout.Label("Other Options"); // DaMichel: put it above the toolbar toggle
             FARDebugValues.aeroFailureExplosions = GUILayout.Toggle(FARDebugValues.aeroFailureExplosions, "Aero Failures Create Explosions", thisStyle);
             if (ToolbarManager.ToolbarAvailable)
             {
@@ -433,7 +438,6 @@ namespace FerramAerospaceResearch
                         GameEvents.onGUIApplicationLauncherReady.Add(OnGUIAppLauncherReady);
                 }
             }
-            FARActionGroupConfiguration.DrawGUI();
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
         }
@@ -446,19 +450,19 @@ namespace FerramAerospaceResearch
 
             bool updateTexture = false;
 
-            GUILayout.BeginHorizontal(GUILayout.Width(150));
+            GUILayout.BeginHorizontal(GUILayout.Width(100));
             float tmp = input.r;
             input.r = (float)GUIUtils.TextEntryForDouble("", 0, input.r);
             updateTexture |= tmp != input.r;
             GUILayout.EndHorizontal();
 
-            GUILayout.BeginHorizontal(GUILayout.Width(150));
+            GUILayout.BeginHorizontal(GUILayout.Width(100));
             tmp = input.g;
             input.g = (float)GUIUtils.TextEntryForDouble("", 0, input.g);
             updateTexture |= tmp != input.g;
             GUILayout.EndHorizontal();
 
-            GUILayout.BeginHorizontal(GUILayout.Width(150));
+            GUILayout.BeginHorizontal(GUILayout.Width(100));
             tmp = input.b;
             input.b = (float)GUIUtils.TextEntryForDouble("", 0, input.b);
             updateTexture |= tmp != input.b;

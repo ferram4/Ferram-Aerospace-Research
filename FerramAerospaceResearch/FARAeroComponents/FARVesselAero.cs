@@ -278,7 +278,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
              _vType = _vessel.vesselType;
 
              _voxelCount = VoxelCountFromType();
-
              _vehicleAero.VoxelUpdate(_vessel.rootPart.partTransform.worldToLocalMatrix, _vessel.rootPart.partTransform.localToWorldMatrix, _voxelCount, _vessel.parts, _currentGeoModules, !setup);
 
              setup = true;
@@ -290,9 +289,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
         private int VoxelCountFromType()
         {
             if (_vType == VesselType.Debris || _vType == VesselType.Unknown)
-                return 20000;
+                return FARDifficultyAndExactnessSettings.currentSettings.numVoxelsDebrisVessel;
             else
-                return 125000;
+                return FARDifficultyAndExactnessSettings.currentSettings.numVoxelsControllableVessel;
         }
 
         private void OnDestroy()
