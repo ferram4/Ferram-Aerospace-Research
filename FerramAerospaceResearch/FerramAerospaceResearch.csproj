@@ -111,7 +111,6 @@
     <Compile Include="FAREditorGUI.cs" />
     <Compile Include="FARControlSys_KILLME.cs" />
     <Compile Include="FARMathUtil.cs" />
-    <Compile Include="FARPartClassification.cs" />
     <Compile Include="FARPartExtensions.cs" />
     <Compile Include="FARPartGeometry\GeometryUpdaters\IGeometryUpdater.cs" />
     <Compile Include="FARPartGeometry\GeometryUpdaters\StockJettisonTransformGeoUpdater.cs" />

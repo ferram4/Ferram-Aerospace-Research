@@ -51,7 +51,6 @@ namespace FerramAerospaceResearch
         private void Awake()
         {
             FARAeroStress.LoadStressTemplates();
-            FARPartClassification.LoadClassificationTemplates();
             FARAeroUtil.LoadAeroDataFromConfig();
             //FARSettingsScenarioModule.LoadConfigs();
             this.enabled = true;

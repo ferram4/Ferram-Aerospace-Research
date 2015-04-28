@@ -198,9 +198,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 {
                     _simManager.UpdateAeroData(_vehicleAero);
                     UpdateCrossSections();
-                } 
+                }
 
-                if (_updateRateLimiter < 40)
+                if (_updateRateLimiter < FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate)
                 {
                     _updateRateLimiter++;
                 }
@@ -214,8 +214,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         #region voxel
         public static void UpdateVoxel()
         {
-            if (instance._updateRateLimiter > 18)
-                instance._updateRateLimiter = 18;
+            if (instance._updateRateLimiter > FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate)
+                instance._updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
             instance._updateQueued = true;
             //instance._areaRulingOverlay.SetVisibility(false);
 
@@ -223,7 +223,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         void RecalculateVoxel()
         {
-            if (_updateRateLimiter < 30)        //this has been updated recently in the past; queue an update and return
+            if (_updateRateLimiter < FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate)        //this has been updated recently in the past; queue an update and return
             {
                 _updateQueued = true;
                 return;
@@ -252,7 +252,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             
             if(_currentGeometryModules.Count > 0)
-                _vehicleAero.VoxelUpdate(EditorLogic.RootPart.transform.worldToLocalMatrix, EditorLogic.RootPart.transform.localToWorldMatrix, FARDifficultyAndExactnessSettings.currentSettings.numVoxelsControllableVessel, partList, _currentGeometryModules, true);
+                _vehicleAero.VoxelUpdate(EditorLogic.RootPart.transform.worldToLocalMatrix, EditorLogic.RootPart.transform.localToWorldMatrix, FARSettingsScenarioModule.VoxelSettings.numVoxelsControllableVessel, partList, _currentGeometryModules, true);
 
             _updateRebuildGeo = false;
         }

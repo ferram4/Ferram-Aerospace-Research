@@ -12,8 +12,31 @@ namespace FerramAerospaceResearch
     [KSPScenario(ScenarioCreationOptions.AddToAllGames, GameScenes.SPACECENTER, GameScenes.EDITOR, GameScenes.FLIGHT)]
     public class FARSettingsScenarioModule : ScenarioModule
     {
-        public static FARSettingsScenarioModule instance;
-        public static FARDifficultyAndExactnessSettings settings;
+        public bool newGame = false;
+        public FARDifficultyAndExactnessSettings settings;
+        public static FARDifficultyAndExactnessSettings Settings
+        {
+            get { return instance.settings; }
+        }
+
+        public FARDifficultyAndExactnessSettings customSettings;
+        public List<FARDifficultyAndExactnessSettings> presets;
+        public FARVoxelSettings voxelSettings;
+        public static FARVoxelSettings VoxelSettings
+        {
+            get { return instance.voxelSettings; }
+        }
+        static List<string> presetNames;
+
+        public int currentIndex;
+
+        static FARSettingsScenarioModule instance;
+        GUIDropDown<FARDifficultyAndExactnessSettings> dropdown;
+
+        public static FARSettingsScenarioModule Instance
+        {
+            get { return instance; }
+        }
 
         FARSettingsScenarioModule()
         {
@@ -28,148 +51,116 @@ namespace FerramAerospaceResearch
                 return;
             }
 
-            if (settings.newGame)
+            if (newGame)
                 PopupDialog.SpawnPopupDialog("Ferram Aerospace Research", "Welcome to KSP with FAR!\n\r\n\rThings will be much harder from here on out; the FAR button in the top-right corner will bring you to difficulty settings if you ever decide to change them.  Have fun!", "OK", false, HighLogic.Skin);
 
-            settings.newGame = false;
+            newGame = false;
         }
         public override void OnSave(ConfigNode node)
         {
-            node.AddValue("newGame", settings.newGame);
+            Debug.Log("saved");
+            node.AddValue("newGame", newGame);
             node.AddValue("fractionTransonicDrag", settings.fractionTransonicDrag);
             node.AddValue("gaussianVehicleLengthFractionForSmoothing", settings.gaussianVehicleLengthFractionForSmoothing);
             node.AddValue("numAreaSmoothingPasses", settings.numAreaSmoothingPasses);
             node.AddValue("numDerivSmoothingPasses", settings.numDerivSmoothingPasses);
-            node.AddValue("numVoxelsControllableVessel", settings.numVoxelsControllableVessel);
-            node.AddValue("numVoxelsDebrisVessel", settings.numVoxelsDebrisVessel);
-            node.AddValue("customSettings", FARDifficultyAndExactnessSettings.customSettings);
-            node.AddValue("presetIndex", FARDifficultyAndExactnessSettings.presetIndex);
+            node.AddValue("numVoxelsControllableVessel", voxelSettings.numVoxelsControllableVessel);
+            node.AddValue("numVoxelsDebrisVessel", voxelSettings.numVoxelsDebrisVessel);
+            node.AddValue("minPhysTicksPerUpdate", voxelSettings.minPhysTicksPerUpdate);
+            node.AddValue("index", settings.index);
             base.OnSave(node);
         }
 
         public override void OnLoad(ConfigNode node)
         {
-            int index = 0;
+            GeneratePresets();
+            int index = 2;
+            if (node.HasValue("newGame"))
+                newGame = bool.Parse(node.GetValue("newGame"));
+
             if (node.HasValue("index"))
                 index = int.Parse(node.GetValue("index"));
-            
-            if (settings == null)
-                settings = new FARDifficultyAndExactnessSettings(index);
-            if (node.HasValue("newGame"))
-                settings.newGame = bool.Parse(node.GetValue("newGame"));
 
-            if (node.HasValue("fractionTransonicDrag"))
-                settings.fractionTransonicDrag = double.Parse(node.GetValue("fractionTransonicDrag"));
-            if (node.HasValue("gaussianVehicleLengthFractionForSmoothing"))
-                settings.gaussianVehicleLengthFractionForSmoothing = double.Parse(node.GetValue("gaussianVehicleLengthFractionForSmoothing"));
-
-            if (node.HasValue("numAreaSmoothingPasses"))
-                settings.numAreaSmoothingPasses = int.Parse(node.GetValue("numAreaSmoothingPasses"));
-            if (node.HasValue("numDerivSmoothingPasses"))
-                settings.numDerivSmoothingPasses = int.Parse(node.GetValue("numDerivSmoothingPasses"));
+            dropdown = new GUIDropDown<FARDifficultyAndExactnessSettings>(presetNames.ToArray(), presets.ToArray(), index);
+            voxelSettings = new FARVoxelSettings();
 
             if (node.HasValue("numVoxelsControllableVessel"))
-                settings.numVoxelsControllableVessel = int.Parse(node.GetValue("numVoxelsControllableVessel"));
+                voxelSettings.numVoxelsControllableVessel = int.Parse(node.GetValue("numVoxelsControllableVessel"));
             if (node.HasValue("numVoxelsDebrisVessel"))
-                settings.numVoxelsDebrisVessel = int.Parse(node.GetValue("numVoxelsDebrisVessel"));
+                voxelSettings.numVoxelsDebrisVessel = int.Parse(node.GetValue("numVoxelsDebrisVessel"));
+            if (node.HasValue("minPhysTicksPerUpdate"))
+                voxelSettings.minPhysTicksPerUpdate = int.Parse(node.GetValue("minPhysTicksPerUpdate"));
 
-            if (node.HasValue("presetIndex"))
-                FARDifficultyAndExactnessSettings.presetIndex = int.Parse(node.GetValue("presetIndex"));
+            if (index == -1)
+            {
+                settings = new FARDifficultyAndExactnessSettings(index);
 
-            FARDifficultyAndExactnessSettings.currentSettings = settings;
+                if (node.HasValue("fractionTransonicDrag"))
+                    settings.fractionTransonicDrag = double.Parse(node.GetValue("fractionTransonicDrag"));
+                if (node.HasValue("gaussianVehicleLengthFractionForSmoothing"))
+                    settings.gaussianVehicleLengthFractionForSmoothing = double.Parse(node.GetValue("gaussianVehicleLengthFractionForSmoothing"));
+
+                if (node.HasValue("numAreaSmoothingPasses"))
+                    settings.numAreaSmoothingPasses = int.Parse(node.GetValue("numAreaSmoothingPasses"));
+                if (node.HasValue("numDerivSmoothingPasses"))
+                    settings.numDerivSmoothingPasses = int.Parse(node.GetValue("numDerivSmoothingPasses"));
+
+
+                customSettings = settings;
+            }
+            else
+            {
+                settings = presets[index];
+                customSettings = new FARDifficultyAndExactnessSettings(-1);
+            }
+            currentIndex = index;
+
             base.OnLoad(node);
         }
-    }
 
-    public class FARDifficultyAndExactnessSettings
-    {
-        public bool newGame = true;
-        public double fractionTransonicDrag = 0.625;
-        public double gaussianVehicleLengthFractionForSmoothing = 0.015;
-        public int numAreaSmoothingPasses = 1;
-        public int numDerivSmoothingPasses = 1;
-        public int index;
-
-        public int numVoxelsControllableVessel;
-        public int numVoxelsDebrisVessel;
-
-        public static bool customSettings = false;
-
-        static FARDifficultyAndExactnessSettings[] presets;
-        static string[] presetNames;
-        static GUIDropDown<FARDifficultyAndExactnessSettings> dropdown;
-
-        public static FARDifficultyAndExactnessSettings currentSettings;
-        public static int presetIndex;
-
-        public FARDifficultyAndExactnessSettings(int index)
+        private void GeneratePresets()
         {
-            if(presets == null)
-            {
-                presets = new FARDifficultyAndExactnessSettings[5];
-                presetNames = new string[5];
+            presets = new List<FARDifficultyAndExactnessSettings>();
+            presetNames = new List<string>();
 
-                FARDifficultyAndExactnessSettings tmp = new FARDifficultyAndExactnessSettings(0.4, 0.03, 2, 2);
-                presets[0] = tmp;
-                presetNames[0] = "Low Drag, Lenient Design";
+            FARDifficultyAndExactnessSettings tmp = new FARDifficultyAndExactnessSettings(0.4, 0.03, 2, 2, 0);
+            presets.Add(tmp);
+            presetNames.Add("Low Drag, Lenient Design");
 
-                tmp = new FARDifficultyAndExactnessSettings(0.6, 0.03, 2, 2);
-                presets[1] = tmp;
-                presetNames[1] = "Moderate Drag, Lenient Design";
+            tmp = new FARDifficultyAndExactnessSettings(0.6, 0.03, 2, 2, 1);
+            presets.Add(tmp);
+            presetNames.Add("Moderate Drag, Lenient Design");
 
-                tmp = new FARDifficultyAndExactnessSettings(0.6, 0.015, 1, 1);
-                presets[2] = tmp;
-                presetNames[2] = "Moderate Drag, Strict Design";
+            tmp = new FARDifficultyAndExactnessSettings(0.6, 0.015, 1, 1, 2);
+            presets.Add(tmp);
+            presetNames.Add("Moderate Drag, Strict Design");
 
-                tmp = new FARDifficultyAndExactnessSettings(0.9, 0.015, 1, 1);
-                presets[3] = tmp;
-                presetNames[3] = "High Drag, Strict Design";
+            tmp = new FARDifficultyAndExactnessSettings(0.9, 0.015, 1, 1, 3);
+            presets.Add(tmp);
+            presetNames.Add("High Drag, Strict Design");
 
-                tmp = new FARDifficultyAndExactnessSettings(1, 0.005, 1, 1);
-                presets[4] = tmp;
-                presetNames[4] = "Full Drag, No Leniency";
-
-                if (index > 0)
-                {
-                    dropdown = new GUIDropDown<FARDifficultyAndExactnessSettings>(presetNames, presets, index);
-                    presetIndex = index;
-                }
-                else
-                {
-                    dropdown = new GUIDropDown<FARDifficultyAndExactnessSettings>(presetNames, presets, 2);
-                    presetIndex = -1;
-                }
-            }
+            tmp = new FARDifficultyAndExactnessSettings(1, 0.005, 1, 1, 4);
+            presets.Add(tmp);
+            presetNames.Add("Full Drag, No Leniency");
         }
 
-        private FARDifficultyAndExactnessSettings(double transDrag, double gaussianLength, int areaPass, int derivPass)
-        {
-            newGame = false;
-            fractionTransonicDrag = transDrag;
-            gaussianVehicleLengthFractionForSmoothing = gaussianLength;
-            numAreaSmoothingPasses = areaPass;
-            numDerivSmoothingPasses = derivPass;
-            numVoxelsControllableVessel = 125000;
-            numVoxelsDebrisVessel = 20000;
-        }
-
-        public static void DisplaySelection()
+        public void DisplaySelection()
         {
             GUILayout.BeginVertical();
             GUILayout.Label("Transonic Drag Settings");
             GUILayout.Label("Absolute magnitude of drag can be scaled, as can how lenient FAR is about enforcing proper area ruling.");
 
             GUILayout.BeginHorizontal();
-            if (!customSettings)
+            if (currentIndex >= 0)
             {
                 dropdown.GUIDropDownDisplay(GUILayout.Width(300));
-                FARSettingsScenarioModule.settings = dropdown.ActiveSelection;
-                presetIndex = FARSettingsScenarioModule.settings.index;
+                settings = dropdown.ActiveSelection;
+                currentIndex = settings.index;
             }
             else
             {
                 GUILayout.BeginVertical();
-                FARDifficultyAndExactnessSettings settings = FARSettingsScenarioModule.settings;
+                settings = customSettings;
                 settings.fractionTransonicDrag = GUIUtils.TextEntryForDouble("Frac Mach 1 Drag: ", 150, settings.fractionTransonicDrag);
                 GUILayout.Label("The below are used in controlling leniency of design.  Higher values for all will result in more leniency");
                 settings.gaussianVehicleLengthFractionForSmoothing = GUIUtils.TextEntryForDouble("% Vehicle Length for Smoothing", 250, settings.gaussianVehicleLengthFractionForSmoothing);
@@ -179,14 +170,20 @@ namespace FerramAerospaceResearch
                 settings.numDerivSmoothingPasses = GUIUtils.TextEntryForInt("Smoothing Passes, area 2nd deriv", 250, settings.numDerivSmoothingPasses);
                 if (settings.numDerivSmoothingPasses < 0)
                     settings.numDerivSmoothingPasses = 0;
+
+                customSettings = settings;
                 GUILayout.EndVertical();
             }
-            if (GUILayout.Button(customSettings ? "Switch Back To Presets" : "Choose Custom Settings"))
-                customSettings = !customSettings;
+            if (GUILayout.Button(currentIndex < 0 ? "Switch Back To Presets" : "Choose Custom Settings"))
+            {
+                if (currentIndex >= 0)
+                    currentIndex = -1;
+                else
+                    currentIndex = 2;
+            }
             GUILayout.EndHorizontal();
             GUILayout.Label("Voxel Detail Settings; increasing these will improve accuracy at the cost of performance");
 
-            FARDifficultyAndExactnessSettings voxelSettings = FARSettingsScenarioModule.settings;
             voxelSettings.numVoxelsControllableVessel = GUIUtils.TextEntryForInt("Voxels Controllable Vessel: ", 200, voxelSettings.numVoxelsControllableVessel);
             if (voxelSettings.numVoxelsControllableVessel < 0)
                 voxelSettings.numVoxelsControllableVessel = 100000;
@@ -195,10 +192,53 @@ namespace FerramAerospaceResearch
             if (voxelSettings.numVoxelsDebrisVessel < 0)
                 voxelSettings.numVoxelsDebrisVessel = 5000;
 
-            currentSettings = voxelSettings;
+            voxelSettings.minPhysTicksPerUpdate = GUIUtils.TextEntryForInt("Min Phys Ticks per Voxel Update: ", 200, voxelSettings.minPhysTicksPerUpdate);
+            if (voxelSettings.minPhysTicksPerUpdate < 0)
+                voxelSettings.minPhysTicksPerUpdate = 30;
 
             GUILayout.EndVertical();
-            currentSettings = FARSettingsScenarioModule.settings;
+        }
+    }
+
+    public class FARDifficultyAndExactnessSettings
+    {
+        public double fractionTransonicDrag = 0.625;
+        public double gaussianVehicleLengthFractionForSmoothing = 0.015;
+        public int numAreaSmoothingPasses = 1;
+        public int numDerivSmoothingPasses = 1;
+        public int index;
+
+
+        public static bool customSettings = false;
+
+        public FARDifficultyAndExactnessSettings(int index)
+        {
+            this.index = index;
+        }
+
+        public FARDifficultyAndExactnessSettings(double transDrag, double gaussianLength, int areaPass, int derivPass, int index)
+        {
+            this.index = index;
+            fractionTransonicDrag = transDrag;
+            gaussianVehicleLengthFractionForSmoothing = gaussianLength;
+            numAreaSmoothingPasses = areaPass;
+            numDerivSmoothingPasses = derivPass;
+        }
+    }
+
+    public class FARVoxelSettings
+    {
+        public int numVoxelsControllableVessel;
+        public int numVoxelsDebrisVessel;
+        public int minPhysTicksPerUpdate;
+
+        public FARVoxelSettings() : this(125000, 20000, 30) { }
+
+        public FARVoxelSettings(int vesselCount, int debrisCount, int minPhysTicks)
+        {
+            numVoxelsControllableVessel = vesselCount;
+            numVoxelsDebrisVessel = debrisCount;
+            minPhysTicksPerUpdate = minPhysTicks;
         }
     }
 }

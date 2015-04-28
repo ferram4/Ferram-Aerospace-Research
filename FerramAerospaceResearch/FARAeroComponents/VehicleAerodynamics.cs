@@ -454,7 +454,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             numSections = back - front;
             _length = _sectionThickness * numSections;
 
-            GaussianSmoothCrossSections(_vehicleCrossSection, 3, FARDifficultyAndExactnessSettings.currentSettings.gaussianVehicleLengthFractionForSmoothing, _sectionThickness, _length, front, back, FARDifficultyAndExactnessSettings.currentSettings.numAreaSmoothingPasses, FARDifficultyAndExactnessSettings.currentSettings.numDerivSmoothingPasses);
+            GaussianSmoothCrossSections(_vehicleCrossSection, 3, FARSettingsScenarioModule.Settings.gaussianVehicleLengthFractionForSmoothing, _sectionThickness, _length, front, back, FARSettingsScenarioModule.Settings.numAreaSmoothingPasses, FARSettingsScenarioModule.Settings.numDerivSmoothingPasses);
 
             validSectionCount = numSections;
             firstSection = front;
@@ -542,7 +542,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 xForceSkinFriction.Add(2f, (float)surfaceArea, 0, 0);                     //above Mach 1.4, visc is purely surface drag, no pressure-related components simulated
 
                 float sonicWaveDrag = (float)CalculateTransonicWaveDrag(i, index, numSections, front, _sectionThickness, Math.Min(_maxCrossSectionArea * 2, curArea * 16));//Math.Min(maxCrossSectionArea * 0.1, curArea * 0.25));
-                sonicWaveDrag *= (float)FARDifficultyAndExactnessSettings.currentSettings.fractionTransonicDrag;     //this is just to account for the higher drag being felt due to the inherent blockiness of the model being used and noise introduced by the limited control over shape and through voxelization
+                sonicWaveDrag *= (float)FARSettingsScenarioModule.Settings.fractionTransonicDrag;     //this is just to account for the higher drag being felt due to the inherent blockiness of the model being used and noise introduced by the limited control over shape and through voxelization
                 float hypersonicDragForward = (float)CalculateHypersonicDrag(prevArea, curArea, _sectionThickness);
                 float hypersonicDragBackward = (float)CalculateHypersonicDrag(nextArea, curArea, _sectionThickness);
 

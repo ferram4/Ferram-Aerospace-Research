@@ -173,7 +173,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 CheckGeoModulesReady();
             }
-            if (_updateRateLimiter < 20)
+            if (_updateRateLimiter < FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate)
             {
                 _updateRateLimiter++;
             }
@@ -207,8 +207,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public void AnimationVoxelUpdate()
         {
-            if (_updateRateLimiter == 20)
-                _updateRateLimiter = 18;
+            if (_updateRateLimiter == FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate)
+                _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
             VesselUpdate(false);
         }
 
@@ -231,7 +231,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                  return;
              }
 
-             if (_updateRateLimiter < 20)        //this has been updated recently in the past; queue an update and return
+             if (_updateRateLimiter < FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate)        //this has been updated recently in the past; queue an update and return
              {
                  _updateQueued = true;
                  return;
@@ -289,9 +289,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
         private int VoxelCountFromType()
         {
             if (_vType == VesselType.Debris || _vType == VesselType.Unknown)
-                return FARDifficultyAndExactnessSettings.currentSettings.numVoxelsDebrisVessel;
+                return FARSettingsScenarioModule.VoxelSettings.numVoxelsDebrisVessel;
             else
-                return FARDifficultyAndExactnessSettings.currentSettings.numVoxelsControllableVessel;
+                return FARSettingsScenarioModule.VoxelSettings.numVoxelsControllableVessel;
         }
 
         private void OnDestroy()

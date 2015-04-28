@@ -157,7 +157,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if(FARDebugValues.allowStructuralFailures)
             {
                 FARPartStressTemplate template = FARAeroStress.DetermineStressTemplate(this.part);
-                partStressMaxY = template.YmaxStress * 0.3;
+                partStressMaxY = template.YmaxStress;
             }
             partTransform = part.transform;
         }
@@ -190,6 +190,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public void ApplyForces()
         {
+            if (float.IsNaN(partLocalForce.sqrMagnitude))
+                partLocalForce = Vector3.zero;
+            if (float.IsNaN(partLocalTorque.sqrMagnitude))
+                partLocalTorque = Vector3.zero;
+
             if(!vessel.packed)
                 CheckAeroStressFailure();
 
@@ -245,7 +250,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         private void CheckAeroStressFailure()
         {
-            if (partForceMaxY < worldSpaceAeroForce.magnitude)
+            if (partForceMaxY < partLocalForce.magnitude)
                 ApplyAeroStressFailure();
         }
 

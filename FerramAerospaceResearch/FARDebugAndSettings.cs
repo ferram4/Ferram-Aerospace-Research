@@ -26,7 +26,6 @@ namespace FerramAerospaceResearch
         private enum MenuTab
         {
             DebugAndData,
-            PartClassification,
             AeroStress,
             AtmComposition
         }
@@ -34,7 +33,6 @@ namespace FerramAerospaceResearch
         private static string[] MenuTab_str = new string[]
         {
             "Difficulty and Debug",
-            "Part Classification",
             "Aerodynamic Failure",
             "Atm Composition",
         };
@@ -55,7 +53,6 @@ namespace FerramAerospaceResearch
         void Start()
         {
             FARAeroStress.LoadStressTemplates();
-            FARPartClassification.LoadClassificationTemplates();
             FARAeroUtil.LoadAeroDataFromConfig();
             LoadConfigs();
             GameObject.DontDestroyOnLoad(this);
@@ -73,7 +70,7 @@ namespace FerramAerospaceResearch
             else
                 GameEvents.onGUIApplicationLauncherReady.Add(OnGUIAppLauncherReady);
 
-            GameEvents.onGameSceneLoadRequested.Add(SaveConfigs);
+           // GameEvents.onGameSceneLoadRequested.Add(SaveConfigs);
         }
 
         void OnGUIAppLauncherReady()
@@ -154,18 +151,16 @@ namespace FerramAerospaceResearch
             boxStyle.padding = new RectOffset(4, 4, 4, 4);
             boxStyle.margin = new RectOffset(4, 4, 4, 4);
 
-            activeTab = (MenuTab)GUILayout.SelectionGrid((int)activeTab, MenuTab_str, 4);
+            activeTab = (MenuTab)GUILayout.SelectionGrid((int)activeTab, MenuTab_str, 3);
 
             if (activeTab == MenuTab.DebugAndData)
                 DebugAndDataTab(thisStyle);
-            else if (activeTab == MenuTab.PartClassification)
-                PartClassificationTab(buttonStyle, boxStyle);
             else if (activeTab == MenuTab.AeroStress)
                 AeroStressTab(buttonStyle, boxStyle);
             else
                 AeroDataTab(buttonStyle, boxStyle);
 
-            //            SaveWindowPos.x = windowPos.x;
+            //            SaveWindowPos.x = windowPos.x;3
             //            SaveWindowPos.y = windowPos.y;
 
             GUI.DragWindow();
@@ -314,32 +309,6 @@ namespace FerramAerospaceResearch
             GUILayout.EndHorizontal();
         }
             
-        private void PartClassificationTab(GUIStyle buttonStyle, GUIStyle boxStyle)
-        {
-            GUILayout.BeginHorizontal();
-            GUILayout.BeginVertical();
-            GUILayout.Label("Greeble - Parts with low, orientation un-affected drag");
-
-            //Greeble Title Section
-            GUILayout.Label("Title Contains:");
-            StringListUpdateGUI(FARPartClassification.greebleTitles, buttonStyle, boxStyle);
-
-            //Greeble Modules Section
-            GUILayout.Label("Part Modules:");
-            StringListUpdateGUI(FARPartClassification.greebleModules, buttonStyle, boxStyle);
-
-            GUILayout.EndVertical();
-            GUILayout.BeginVertical();
-            GUILayout.Label("Exempt - Parts that do not get a FAR drag model");
-
-            //Exempt Modules Section
-            GUILayout.Label("Part Modules:");
-            StringListUpdateGUI(FARPartClassification.exemptModules, buttonStyle, boxStyle);
-
-            GUILayout.EndVertical();
-            GUILayout.EndHorizontal();
-        }
-
         private void StringListUpdateGUI(List<string> stringList, GUIStyle thisStyle, GUIStyle boxStyle)
         {
             int removeIndex = -1;
@@ -378,12 +347,7 @@ namespace FerramAerospaceResearch
             FARDebugValues.displayShielding = GUILayout.Toggle(FARDebugValues.displayShielding, "Display Shielding", thisStyle);
             GUILayout.Label("Debug / Cheat Options");
             FARDebugValues.allowStructuralFailures = GUILayout.Toggle(FARDebugValues.allowStructuralFailures, "Allow Aero-structural Failures", thisStyle);
-            GUILayout.EndVertical();
 
-            FARDifficultyAndExactnessSettings.DisplaySelection();
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            GUILayout.BeginVertical();
             GUILayout.Label("Editor GUI Graph Colors");
 
 
@@ -405,6 +369,8 @@ namespace FerramAerospaceResearch
 
             GUILayout.EndVertical();
             GUILayout.BeginVertical();
+            FARSettingsScenarioModule.Instance.DisplaySelection();
+
 
             FARActionGroupConfiguration.DrawGUI();
 
@@ -499,7 +465,6 @@ namespace FerramAerospaceResearch
             FARDebugValues.aeroFailureExplosions = Convert.ToBoolean(config.GetValue("aeroFailureExplosions", "true"));
 
             FARAeroStress.LoadStressTemplates();
-            FARPartClassification.LoadClassificationTemplates();
             FARAeroUtil.LoadAeroDataFromConfig();
             FARActionGroupConfiguration.LoadConfiguration();
 
@@ -539,7 +504,6 @@ namespace FerramAerospaceResearch
             FARDebugValues.useBlizzyToolbar &= ToolbarManager.ToolbarAvailable;
 
             FARAeroUtil.SaveCustomAeroDataToConfig();
-            FARPartClassification.SaveCustomClassificationTemplates();
             FARAeroStress.SaveCustomStressTemplates();
             FARActionGroupConfiguration.SaveConfigruration();
             config.save();
