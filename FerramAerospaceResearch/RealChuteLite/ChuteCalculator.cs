@@ -24,8 +24,7 @@ namespace FerramAerospaceResearch.RealChuteLite
                     DragCube semi = prefab.DragCubes.Cubes.Find(c => c.Name == "SEMIDEPLOYED"), deployed = prefab.DragCubes.Cubes.Find(c => c.Name == "DEPLOYED");
                     module.preDeployedDiameter = GetApparentDiameter(semi);
                     module.deployedDiameter = GetApparentDiameter(deployed);
-                    AvailablePart.ModuleInfo moduleInfo = part.moduleInfos.Find(m => m.moduleName == "RealChute");
-                    moduleInfo.info = module.GetInfo();
+                    part.moduleInfos.Find(m => m.moduleName == "RealChute").info = module.GetInfo();
                 }
             }
         }
@@ -41,7 +40,7 @@ namespace FerramAerospaceResearch.RealChuteLite
                 area += cube.Area[i] * cube.Drag[i]
                     * PhysicsGlobals.DragCurveValue((Vector3.Dot(Vector3.up, DragCubeList.GetFaceDirection((DragCube.DragFace)i)) + 1f) * 0.5f, 0);
             }
-            return (float)(Math.Max(Math.Round(Math.Sqrt((area * PhysicsGlobals.DragCubeMultiplier * PhysicsGlobals.DragMultiplier) / Mathf.PI) * 2d, 1), 0.1));
+            return (float)(Math.Max(Math.Round(Math.Sqrt((area * PhysicsGlobals.DragCubeMultiplier * PhysicsGlobals.DragMultiplier) / Math.PI) * 2d, 1), 0.1));
         }
         #endregion
     }

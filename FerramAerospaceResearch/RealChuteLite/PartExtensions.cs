@@ -52,9 +52,11 @@ namespace FerramAerospaceResearch.RealChuteLite
         }
 
         /// <summary>
-        /// Skips directly to the end of the animation
+        /// Skips directly to the given time of the animation
         /// </summary>
-        /// <param name="animationName">Name of the animation</param>
+        /// <param name="animationName">Name of the animation to skip to</param>
+        /// <param name="animationSpeed">Speed of the animation after the skip</param>
+        /// <param name="animationTime">Normalized time skip</param>
         public static void SkipToAnimationTime(this Part part, string animationName, float animationSpeed, float animationTime)
         {
             foreach (Animation animation in part.FindModelAnimators(animationName))
