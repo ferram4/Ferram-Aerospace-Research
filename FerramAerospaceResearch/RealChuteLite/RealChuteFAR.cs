@@ -5,6 +5,10 @@ using System.Text;
 using UnityEngine;
 using Random = System.Random;
 
+/* RealChuteLite is the work of Christophe Savard (stupid_chris), and is licensed the same way than the rest of FAR is.
+ * If you have any questions about this code, or want to report something, don't bug ferram about it, ask me
+ * directly on GitHub, the forums, or IRC. */
+
 namespace FerramAerospaceResearch.RealChuteLite
 {
     /// <summary>

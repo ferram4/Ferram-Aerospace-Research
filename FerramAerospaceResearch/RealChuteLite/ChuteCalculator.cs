@@ -1,11 +1,16 @@
 ﻿using System;
 using UnityEngine;
 
+/* RealChuteLite is the work of Christophe Savard (stupid_chris), and is licensed the same way than the rest of FAR is.
+ * If you have any questions about this code, or want to report something, don't bug ferram about it, ask me
+ * directly on GitHub, the forums, or IRC. */
+
 namespace FerramAerospaceResearch.RealChuteLite
 {
     [KSPAddon(KSPAddon.Startup.MainMenu, true)]
     public class ChuteCalculator : MonoBehaviour
     {
+        #region Initialization
         private void Start()
         {
             foreach (AvailablePart part in PartLoader.Instance.parts)
@@ -24,7 +29,9 @@ namespace FerramAerospaceResearch.RealChuteLite
                 }
             }
         }
+        #endregion
 
+        #region Methods
         //Retreives an "apparent" diameter from a DragCube
         private float GetApparentDiameter(DragCube cube)
         {
@@ -36,5 +43,6 @@ namespace FerramAerospaceResearch.RealChuteLite
             }
             return (float)(Math.Max(Math.Round(Math.Sqrt((area * PhysicsGlobals.DragCubeMultiplier * PhysicsGlobals.DragMultiplier) / Mathf.PI) * 2d, 1), 0.1));
         }
+        #endregion
     }
 }
