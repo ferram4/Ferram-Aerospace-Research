@@ -268,7 +268,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (HighLogic.LoadedSceneIsFlight)
                 vessel.SendMessage("AnimationVoxelUpdate");
             else if (HighLogic.LoadedSceneIsEditor)
-                FARGUI.FAREditorGUI.EditorGUI.UpdateVoxel();
+                FARGUI.FAREditorGUI.EditorGUI.RequestUpdateVoxel();
         }
 
         public void EditorUpdate()
@@ -280,14 +280,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public void UpdateTransformMatrixList(Matrix4x4 worldToVesselMatrix)
         {
-            for (int i = 0; i < meshDataList.Count; i++)
-            {
-                if (!meshDataList[i].TryTransformBasis(worldToVesselMatrix))
+            if(meshDataList != null)
+                for (int i = 0; i < meshDataList.Count; i++)
                 {
-                    meshDataList.RemoveAt(i);
-                    i--;
+                    if (!meshDataList[i].TryTransformBasis(worldToVesselMatrix))
+                    {
+                        meshDataList.RemoveAt(i);
+                        i--;
+                    }
                 }
-            }
         }
         #endregion
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using FerramAerospaceResearch.RealChuteLite;
 
 namespace FerramAerospaceResearch.FARAeroComponents
 {
@@ -8,12 +9,14 @@ namespace FerramAerospaceResearch.FARAeroComponents
     {
         protected override void UpdateAerodynamics(Part part)
         {
+            double extraArea = 0;
             if (part.Modules.Contains("ModuleAeroSurface"))     //FIXME Proper model for airbrakes
                 base.UpdateAerodynamics(part);
+
             
             //base.UpdateAerodynamics(part);
-            part.radiativeArea = CalculateAreaRadiative(part);
-            part.exposedArea = CalculateAreaExposed(part);
+            part.radiativeArea = CalculateAreaRadiative(part) + extraArea;
+            part.exposedArea = CalculateAreaExposed(part) + extraArea;
         }
 
         protected override double CalculateAreaRadiative(Part part)

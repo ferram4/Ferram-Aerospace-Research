@@ -66,6 +66,7 @@
     <Compile Include="CompatibilityChecker.cs" />
     <Compile Include="FARAPI.cs" />
     <Compile Include="FARDebugAndSettings.cs" />
+    <Compile Include="FARGUI\FAREditorGUI\DesignConcerns\AreaRulingConcern.cs" />
     <Compile Include="FARGUI\FARFlightGUI\AirspeedSettingsGUI.cs" />
     <Compile Include="FARGUI\FARFlightGUI\FlightStatusGUI.cs" />
     <Compile Include="FARGUI\FARFlightGUI\FlightDataGUI.cs" />

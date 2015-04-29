@@ -79,6 +79,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         int _updateRateLimiter = 20;
         bool _updateQueued = true;
+        bool _recalcGeoModules = false;
         bool setup = false;
 
         VehicleAerodynamics _vehicleAero;
@@ -178,7 +179,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 _updateRateLimiter++;
             }
             else if (_updateQueued)
-                VesselUpdate(true);
+                VesselUpdate(_recalcGeoModules);
         }
 
         private void TriggerIGeometryUpdaters()
@@ -209,13 +210,21 @@ namespace FerramAerospaceResearch.FARAeroComponents
         {
             if (_updateRateLimiter == FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate)
                 _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
-            VesselUpdate(false);
+            RequestUpdateVoxel(false);
         }
 
         public void VesselUpdateEvent(Vessel v)
         {
             if (v == _vessel)
-                VesselUpdate(true);
+                RequestUpdateVoxel(true);
+        }
+
+        public void RequestUpdateVoxel(bool recalcGeoModules)
+        {
+            if (_updateRateLimiter > FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate)
+                _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
+            _updateQueued = true;
+            _recalcGeoModules = recalcGeoModules;
         }
 
          public void VesselUpdate(bool recalcGeoModules)

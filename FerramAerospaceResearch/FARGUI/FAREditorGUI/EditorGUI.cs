@@ -4,6 +4,7 @@ using UnityEngine;
 using FerramAerospaceResearch.FARAeroComponents;
 using FerramAerospaceResearch.FARPartGeometry;
 using FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation;
+using FerramAerospaceResearch.FARGUI.FAREditorGUI.DesignConcerns;
 using ferram4;
 
 namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
@@ -92,9 +93,21 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             GameEvents.onEditorPartEvent.Add(UpdateGeometryEvent);
             GameEvents.onEditorUndo.Add(ResetEditorEvent);
             GameEvents.onEditorRedo.Add(ResetEditorEvent);
-            GameEvents.onEditorShipModified.Add(ResetEditorEvent);
+            //GameEvents.onEditorShipModified.Add(ResetEditorEvent);
             GameEvents.onEditorLoad.Add(ResetEditorEvent);
-            UpdateVoxel();
+            GameEvents.onGUIEngineersReportReady.Add(AddDesignConcerns);
+            GameEvents.onGUIEngineersReportDestroy.Add(AddDesignConcerns);
+            RequestUpdateVoxel();
+        }
+
+        void AddDesignConcerns()
+        {
+            EngineersReport.Instance.AddTest(new AreaRulingConcern(_vehicleAero));
+        }
+
+        void RemoveDesignConcerns()
+        {
+            EngineersReport.Instance.RemoveTest(new AreaRulingConcern(_vehicleAero));
         }
 
         void OnDestroy()
@@ -102,21 +115,27 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             GameEvents.onEditorPartEvent.Remove(UpdateGeometryEvent);
             GameEvents.onEditorUndo.Remove(ResetEditorEvent);
             GameEvents.onEditorRedo.Remove(ResetEditorEvent);
-            GameEvents.onEditorShipModified.Remove(ResetEditorEvent);
+            //GameEvents.onEditorShipModified.Remove(ResetEditorEvent);
             GameEvents.onEditorLoad.Remove(ResetEditorEvent);
+            GameEvents.onGUIEngineersReportReady.Remove(AddDesignConcerns);
+            GameEvents.onGUIEngineersReportDestroy.Remove(AddDesignConcerns);
 
             EditorLogic.fetch.Unlock("FAREdLock");
+
         }
 
         #region EditorEvents
         private void ResetEditorEvent(ShipConstruct construct)
         {
-            List<Part> partsList = EditorLogic.SortedShipList;
-            for (int i = 0; i < partsList.Count; i++)
-                UpdateGeometryModule(partsList[i]);
+            if (EditorLogic.RootPart)
+            {
+                List<Part> partsList = EditorLogic.SortedShipList;
+                for (int i = 0; i < partsList.Count; i++)
+                    UpdateGeometryModule(partsList[i]);
 
-            UpdateVoxel();
-            instance._updateRebuildGeo = true;
+                RequestUpdateVoxel();
+                instance._updateRebuildGeo = true;
+            }
         }
         private void ResetEditorEvent(ShipConstruct construct, CraftBrowser.LoadType type)
         {
@@ -132,8 +151,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             crossSectionDeriv.a = 0.8f;
 
             instance._areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.7f), crossSection, crossSectionDeriv, 10, 5);
-            UpdateVoxel();
             instance._updateRebuildGeo = true;
+            RequestUpdateVoxel();
         }
        
         private void UpdateGeometryEvent(ConstructionEventType type, Part pEvent)
@@ -145,9 +164,12 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             type == ConstructionEventType.PartRootSelected ||
                 type == ConstructionEventType.Unknown)
             {
-                UpdateGeometryModule(type, pEvent);
-                UpdateVoxel();
-                instance._updateRebuildGeo = true;
+                if (EditorLogic.RootPart)
+                {
+                    UpdateGeometryModule(type, pEvent);
+                    RequestUpdateVoxel();
+                    instance._updateRebuildGeo = true;
+                }
             }
         }
 
@@ -207,12 +229,18 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 else if (_updateQueued)
                     RecalculateVoxel();
             }
+            else
+            {
+                _updateQueued = true;
+                _updateRebuildGeo = true;
+                _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate;
+            }
 
             OnGUIAppLauncherReady();
         }
 
         #region voxel
-        public static void UpdateVoxel()
+        public static void RequestUpdateVoxel()
         {
             if (instance._updateRateLimiter > FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate)
                 instance._updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;

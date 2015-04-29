@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using FerramAerospaceResearch.FARAeroComponents;
+using FerramAerospaceResearch.RealChuteLite;
 using ferram4;
 
 namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
@@ -251,7 +252,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         {
             double geeForce = FlightGlobals.getGeeForceAtPosition(_vessel.CoM).magnitude;
 
-            vesselInfo.ballisticCoeff = vesselInfo.fullMass / vesselInfo.dragCoeff * 1000;
+            vesselInfo.ballisticCoeff = vesselInfo.fullMass / (vesselInfo.dragCoeff * vesselInfo.refArea) * 1000;
 
             vesselInfo.termVelEst = 2 * vesselInfo.ballisticCoeff * geeForce;
             vesselInfo.termVelEst /= _vessel.atmDensity;
