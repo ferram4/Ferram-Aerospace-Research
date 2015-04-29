@@ -111,6 +111,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             _vehicleAero = new VehicleAerodynamics();
 
+            guiRect = new Rect(Screen.width / 2, Screen.height / 4, 10, 10);
+
             _instantSim = new InstantConditionSim();
             GUIDropDown<int> flapSettingDropDown = new GUIDropDown<int>(new string[] { "0 (up)", "1 (init climb)", "2 (takeoff)", "3 (landing)" }, new int[] { 0, 1, 2, 3 }, 0);
             GUIDropDown<CelestialBody> celestialBodyDropdown = CreateBodyDropdown();
