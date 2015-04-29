@@ -58,9 +58,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
         ProjectedArea projectedArea;
 
         private double partStressMaxY = double.MaxValue;
-        //private double partStressMaxXZ = double.MaxValue;
+        private double partStressMaxXZ = double.MaxValue;
         private double partForceMaxY = double.MaxValue;
-        //private double partForceMaxXZ = double.MaxValue;
+        private double partForceMaxXZ = double.MaxValue;
 
         private Transform partTransform;
 
@@ -120,7 +120,15 @@ namespace FerramAerospaceResearch.FARAeroComponents
             else
                 part.ShieldedFromAirstream = false;
 
-            partForceMaxY = projectedArea.totalArea * partStressMaxY;
+            double areaForStress = projectedArea.totalArea / 6;
+            if (areaForStress <= 0.1)
+            {
+                partForceMaxY = double.MaxValue;
+                partForceMaxXZ = double.MaxValue;
+                return;
+            }
+            partForceMaxY = areaForStress * partStressMaxY;
+            partForceMaxXZ = areaForStress * partStressMaxXZ;
         }
 
         private void IncrementAreas(ref ProjectedArea data, Vector3 vector, Matrix4x4 transformMatrix)
@@ -158,6 +166,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 FARPartStressTemplate template = FARAeroStress.DetermineStressTemplate(this.part);
                 partStressMaxY = template.YmaxStress;
+                partStressMaxXZ = template.XZmaxStress;
             }
             partTransform = part.transform;
         }
@@ -256,7 +265,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         private void CheckAeroStressFailure()
         {
-            if (partForceMaxY < partLocalForce.magnitude)
+            if (partForceMaxY < partLocalForce.y || Vector3.ProjectOnPlane(partLocalForce, Vector3.up).magnitude > partForceMaxXZ)
                 ApplyAeroStressFailure();
         }
 
