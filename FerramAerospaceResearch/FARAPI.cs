@@ -1,7 +1,40 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿/*
+Ferram Aerospace Research v0.14.6
+Copyright 2014, Michael Ferrara, aka Ferram4
+
+    This file is part of Ferram Aerospace Research.
+
+    Ferram Aerospace Research is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Ferram Aerospace Research is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Ferram Aerospace Research.  If not, see <http://www.gnu.org/licenses/>.
+
+    Serious thanks:		a.g., for tons of bugfixes and code-refactorings
+            			Taverius, for correcting a ton of incorrect values
+            			sarbian, for refactoring code for working with MechJeb, and the Module Manager 1.5 updates
+            			ialdabaoth (who is awesome), who originally created Module Manager
+                        Regex, for adding RPM support
+            			Duxwing, for copy editing the readme
+ * 
+ * Kerbal Engineer Redux created by Cybutek, Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
+ *      Referenced for starting point for fixing the "editor click-through-GUI" bug
+ *
+ * Part.cfg changes powered by sarbian & ialdabaoth's ModuleManager plugin; used with permission
+ *	http://forum.kerbalspaceprogram.com/threads/55219
+ *
+ * Toolbar integration powered by blizzy78's Toolbar plugin; used with permission
+ *	http://forum.kerbalspaceprogram.com/threads/60863
+ */
+
+using System;
 using FerramAerospaceResearch.FARGUI.FARFlightGUI;
 
 namespace FerramAerospaceResearch
@@ -16,6 +49,11 @@ namespace FerramAerospaceResearch
             return gui;
         }
 
+        public static double ActiveVesselDynPres()
+        {
+            return VesselDynPres(FlightGlobals.ActiveVessel);
+        }
+
         public static double VesselDynPres(Vessel v)
         {
             FlightGUI gui = VesselFlightInfo(v);
@@ -23,6 +61,11 @@ namespace FerramAerospaceResearch
                 return 0;
             else
                 return gui.InfoParameters.dynPres;
+        }
+
+        public static double ActiveVesselLiftCoeff()
+        {
+            return VesselLiftCoeff(FlightGlobals.ActiveVessel);
         }
 
         public static double VesselLiftCoeff(Vessel v)
@@ -34,6 +77,11 @@ namespace FerramAerospaceResearch
                 return gui.InfoParameters.liftCoeff;
         }
 
+        public static double ActiveVesselDragCoeff()
+        {
+            return VesselDragCoeff(FlightGlobals.ActiveVessel);
+        }
+
         public static double VesselDragCoeff(Vessel v)
         {
             FlightGUI gui = VesselFlightInfo(v);
@@ -41,6 +89,11 @@ namespace FerramAerospaceResearch
                 return 0;
             else
                 return gui.InfoParameters.dragCoeff;
+        }
+
+        public static double ActiveVesselRefArea()
+        {
+            return VesselRefArea(FlightGlobals.ActiveVessel);
         }
 
         public static double VesselRefArea(Vessel v)
@@ -52,6 +105,11 @@ namespace FerramAerospaceResearch
                 return gui.InfoParameters.refArea;
         }
 
+        public static double ActiveVesselTermVelEst()
+        {
+            return VesselTermVelEst(FlightGlobals.ActiveVessel);
+        }
+
         public static double VesselTermVelEst(Vessel v)
         {
             FlightGUI gui = VesselFlightInfo(v);
@@ -61,7 +119,12 @@ namespace FerramAerospaceResearch
                 return gui.InfoParameters.termVelEst;
         }
 
-        public static double VesselTermBallisticCoeff(Vessel v)
+        public static double ActiveVesselBallisticCoeff()
+        {
+            return VesselBallisticCoeff(FlightGlobals.ActiveVessel);
+        }
+
+        public static double VesselBallisticCoeff(Vessel v)
         {
             FlightGUI gui = VesselFlightInfo(v);
             if(gui == null)
@@ -70,7 +133,12 @@ namespace FerramAerospaceResearch
                 return gui.InfoParameters.ballisticCoeff;
         }
 
-        public static double VesselTermAoA(Vessel v)
+        public static double ActiveVesselAoA()
+        {
+            return VesselAoA(FlightGlobals.ActiveVessel);
+        }
+
+        public static double VesselAoA(Vessel v)
         {
             FlightGUI gui = VesselFlightInfo(v);
             if(gui == null)
@@ -79,7 +147,12 @@ namespace FerramAerospaceResearch
                 return gui.InfoParameters.aoA;
         }
 
-        public static double VesselTermSideslip(Vessel v)
+        public static double ActiveVesselSideslip()
+        {
+            return VesselSideslip(FlightGlobals.ActiveVessel);
+        }
+
+        public static double VesselSideslip(Vessel v)
         {
             FlightGUI gui = VesselFlightInfo(v);
             if(gui == null)
@@ -88,7 +161,12 @@ namespace FerramAerospaceResearch
                 return gui.InfoParameters.sideslipAngle;
         }
 
-        public static double VesselTermTSFC(Vessel v)
+        public static double ActiveVesselTSFC()
+        {
+            return VesselTSFC(FlightGlobals.ActiveVessel);
+        }
+        
+        public static double VesselTSFC(Vessel v)
         {
             FlightGUI gui = VesselFlightInfo(v);
             if(gui == null)
@@ -97,7 +175,12 @@ namespace FerramAerospaceResearch
                 return gui.InfoParameters.tSFC;
         }
 
-        public static double VesselTermStallFrac(Vessel v)
+        public static double ActiveVesselStallFrac()
+        {
+            return VesselStallFrac(FlightGlobals.ActiveVessel);
+        }
+        
+        public static double VesselStallFrac(Vessel v)
         {
             FlightGUI gui = VesselFlightInfo(v);
             if(gui == null)

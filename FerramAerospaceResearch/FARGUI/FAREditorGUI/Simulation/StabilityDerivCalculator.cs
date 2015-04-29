@@ -1,4 +1,40 @@
-﻿using System;
+﻿/*
+Ferram Aerospace Research v0.14.6
+Copyright 2014, Michael Ferrara, aka Ferram4
+
+    This file is part of Ferram Aerospace Research.
+
+    Ferram Aerospace Research is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Ferram Aerospace Research is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Ferram Aerospace Research.  If not, see <http://www.gnu.org/licenses/>.
+
+    Serious thanks:		a.g., for tons of bugfixes and code-refactorings
+            			Taverius, for correcting a ton of incorrect values
+            			sarbian, for refactoring code for working with MechJeb, and the Module Manager 1.5 updates
+            			ialdabaoth (who is awesome), who originally created Module Manager
+                        Regex, for adding RPM support
+            			Duxwing, for copy editing the readme
+ * 
+ * Kerbal Engineer Redux created by Cybutek, Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
+ *      Referenced for starting point for fixing the "editor click-through-GUI" bug
+ *
+ * Part.cfg changes powered by sarbian & ialdabaoth's ModuleManager plugin; used with permission
+ *	http://forum.kerbalspaceprogram.com/threads/55219
+ *
+ * Toolbar integration powered by blizzy78's Toolbar plugin; used with permission
+ *	http://forum.kerbalspaceprogram.com/threads/60863
+ */
+
+using System;
 using System.Collections.Generic;
 using ferram4;
 using UnityEngine;
@@ -39,7 +75,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             InstantConditionSimOutput nominalOutput;
             InstantConditionSimOutput pertOutput = new InstantConditionSimOutput();
 
-            _instantCondition.GetClCdCmSteady(Vector3d.zero, input, out nominalOutput, true);
+            _instantCondition.GetClCdCmSteady(input, out nominalOutput, true);
 
             List<Part> partsList = EditorLogic.SortedShipList;
             for (int i = 0; i < partsList.Count; i++)
@@ -166,7 +202,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
 
             input.alpha = (alpha + 0.1);
 
-            _instantCondition.GetClCdCmSteady(CoM, input, out pertOutput, true, true);
+            _instantCondition.GetClCdCmSteady(input, out pertOutput, true, true);
 
             stabDerivOutput.stableCl = neededCl;
             stabDerivOutput.stableCd = nominalOutput.Cd;
@@ -195,7 +231,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             input.alpha = alpha * FARMathUtil.deg2rad;
             input.machNumber = machNumber + 0.01;
 
-            _instantCondition.GetClCdCmSteady(CoM, input, out pertOutput, true, false);
+            _instantCondition.GetClCdCmSteady(input, out pertOutput, true, false);
 
             pertOutput.Cl = (pertOutput.Cl - nominalOutput.Cl) / 0.01 * machNumber;                   //fwd vel derivs
             pertOutput.Cd = (pertOutput.Cd - nominalOutput.Cd) / 0.01 * machNumber;
@@ -214,11 +250,11 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
 
             input.machNumber = machNumber;
 
-            _instantCondition.GetClCdCmSteady(CoM, input, out pertOutput, true, true);
+            _instantCondition.GetClCdCmSteady(input, out pertOutput, true, true);
 
             input.alphaDot = -0.05;
 
-            _instantCondition.GetClCdCmSteady(CoM, input, out pertOutput, true, false);
+            _instantCondition.GetClCdCmSteady(input, out pertOutput, true, false);
            
             pertOutput.Cl = (pertOutput.Cl - nominalOutput.Cl) / 0.05;                   //pitch rate derivs
             pertOutput.Cd = (pertOutput.Cd - nominalOutput.Cd) / 0.05;
@@ -235,7 +271,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             input.alphaDot = 0;
             input.pitchValue = 0.1;
 
-            _instantCondition.GetClCdCmSteady(CoM, input, out pertOutput, true, false);
+            _instantCondition.GetClCdCmSteady(input, out pertOutput, true, false);
             
             pertOutput.Cl = (pertOutput.Cl - nominalOutput.Cl) / 0.1;                   //elevator derivs
             pertOutput.Cd = (pertOutput.Cd - nominalOutput.Cd) / 0.1;
@@ -254,7 +290,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             input.pitchValue = 0;
             input.beta = (beta + 0.1);
 
-            _instantCondition.GetClCdCmSteady(CoM, input, out pertOutput, true, false);
+            _instantCondition.GetClCdCmSteady(input, out pertOutput, true, false);
             pertOutput.Cy = (pertOutput.Cy - nominalOutput.Cy) / 0.1 * FARMathUtil.rad2deg;                   //sideslip angle derivs
             pertOutput.Cn = (pertOutput.Cn - nominalOutput.Cn) / 0.1 * FARMathUtil.rad2deg;
             pertOutput.C_roll = (pertOutput.C_roll - nominalOutput.C_roll) / 0.1 * FARMathUtil.rad2deg;
@@ -269,11 +305,11 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
 
             input.beta = beta;
 
-            _instantCondition.GetClCdCmSteady(CoM, input, out pertOutput, true, true);
+            _instantCondition.GetClCdCmSteady(input, out pertOutput, true, true);
 
             input.phiDot = 0.05;
 
-            _instantCondition.GetClCdCmSteady(CoM, input, out pertOutput, true, false);
+            _instantCondition.GetClCdCmSteady(input, out pertOutput, true, false);
            
             pertOutput.Cy = (pertOutput.Cy - nominalOutput.Cy) / 0.05;                   //roll rate derivs
             pertOutput.Cn = (pertOutput.Cn - nominalOutput.Cn) / 0.05;
@@ -290,11 +326,11 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
 
             input.phiDot = 0;
 
-            _instantCondition.GetClCdCmSteady(CoM, input, out pertOutput, true, true);
+            _instantCondition.GetClCdCmSteady(input, out pertOutput, true, true);
 
             input.betaDot = 0.05;
 
-            _instantCondition.GetClCdCmSteady(CoM, input, out pertOutput, true, false); pertOutput.Cy = (pertOutput.Cy - nominalOutput.Cy) / 0.05f;                   //yaw rate derivs
+            _instantCondition.GetClCdCmSteady(input, out pertOutput, true, false); pertOutput.Cy = (pertOutput.Cy - nominalOutput.Cy) / 0.05f;                   //yaw rate derivs
             pertOutput.Cn = (pertOutput.Cn - nominalOutput.Cn) / 0.05f;
             pertOutput.C_roll = (pertOutput.C_roll - nominalOutput.C_roll) / 0.05f;
 

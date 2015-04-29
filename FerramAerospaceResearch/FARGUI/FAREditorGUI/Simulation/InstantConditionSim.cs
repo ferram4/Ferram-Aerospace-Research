@@ -1,4 +1,40 @@
-﻿using System;
+﻿/*
+Ferram Aerospace Research v0.14.6
+Copyright 2014, Michael Ferrara, aka Ferram4
+
+    This file is part of Ferram Aerospace Research.
+
+    Ferram Aerospace Research is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Ferram Aerospace Research is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Ferram Aerospace Research.  If not, see <http://www.gnu.org/licenses/>.
+
+    Serious thanks:		a.g., for tons of bugfixes and code-refactorings
+            			Taverius, for correcting a ton of incorrect values
+            			sarbian, for refactoring code for working with MechJeb, and the Module Manager 1.5 updates
+            			ialdabaoth (who is awesome), who originally created Module Manager
+                        Regex, for adding RPM support
+            			Duxwing, for copy editing the readme
+ * 
+ * Kerbal Engineer Redux created by Cybutek, Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
+ *      Referenced for starting point for fixing the "editor click-through-GUI" bug
+ *
+ * Part.cfg changes powered by sarbian & ialdabaoth's ModuleManager plugin; used with permission
+ *	http://forum.kerbalspaceprogram.com/threads/55219
+ *
+ * Toolbar integration powered by blizzy78's Toolbar plugin; used with permission
+ *	http://forum.kerbalspaceprogram.com/threads/60863
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -11,13 +47,15 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
     {
         List<FARAeroSection> _currentAeroSections;
         List<FARAeroPartModule> _currentAeroModules;
+        List<FARWingAerodynamicModel> _wingAerodynamicModel;
 
         double _maxCrossSectionFromBody;
         double _bodyLength;
 
-        public void UpdateAeroData(VehicleAerodynamics vehicleAero)
+        public void UpdateAeroData(VehicleAerodynamics vehicleAero, List<FARWingAerodynamicModel> wingAerodynamicModel)
         {
             vehicleAero.GetNewAeroData(out _currentAeroModules, out _currentAeroSections);
+            _wingAerodynamicModel = wingAerodynamicModel;
             _maxCrossSectionFromBody = vehicleAero.MaxCrossSectionArea;
             _bodyLength = vehicleAero.Length;
         }
@@ -32,7 +70,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             return accel;
         }
 
-        public void GetClCdCmSteady(Vector3d CoM, InstantConditionSimInput input, out InstantConditionSimOutput output, bool clear, bool reset_stall = false)
+        public void GetClCdCmSteady(InstantConditionSimInput input, out InstantConditionSimOutput output, bool clear, bool reset_stall = false)
         {
             output = new InstantConditionSimOutput();
 
@@ -43,6 +81,26 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             Vector3d forward = Vector3.forward;
             Vector3d up = Vector3.up;
             Vector3d right = Vector3.right;
+
+            Vector3d CoM = Vector3d.zero;
+            double mass = 0;
+            List<Part> partsList = EditorLogic.SortedShipList;
+            for (int i = 0; i < partsList.Count; i++)
+            {
+                Part p = partsList[i];
+
+                if (FARAeroUtil.IsNonphysical(p))
+                    continue;
+
+                double partMass = p.mass;
+                if (p.Resources.Count > 0)
+                    partMass += p.GetResourceMass();
+
+                partMass += p.GetModuleMass(p.mass);
+                CoM += partMass * (Vector3d)p.transform.TransformPoint(p.CoMOffset);
+                mass += partMass;
+            }
+            CoM /= mass;
 
             if (EditorDriver.editorFacility == EditorFacility.VAB)
             {
@@ -75,9 +133,12 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             Vector3d sideways = Vector3.Cross(velocity, liftVector).normalized;
 
 
-            for (int i = 0; i < FARAeroUtil.CurEditorWings.Count; i++)
+            for (int i = 0; i < _wingAerodynamicModel.Count; i++)
             {
-                FARWingAerodynamicModel w = FARAeroUtil.CurEditorWings[i];
+                FARWingAerodynamicModel w = _wingAerodynamicModel[i];
+                if (!(w && w.part))
+                    continue;
+
                 if (w.isShielded)
                     continue;
 
@@ -174,7 +235,6 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
         }
 
         private double neededCl;
-        Vector3d CoM;
 
         private InstantConditionSimInput iterationInput = new InstantConditionSimInput();
         public InstantConditionSimOutput iterationOutput;
@@ -183,7 +243,6 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
         {
             iterationInput.machNumber = machNumber;
             neededCl = Cl;
-            this.CoM = CoM;
             iterationInput.pitchValue = pitch;
             iterationInput.flaps = flapSetting;
             iterationInput.spoilers = spoilers;
@@ -202,7 +261,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
         public double FunctionIterateForAlpha(double alpha)
         {
             iterationInput.alpha = alpha;
-            GetClCdCmSteady(CoM, iterationInput, out iterationOutput, true, true);
+            GetClCdCmSteady(iterationInput, out iterationOutput, true, true);
             return iterationOutput.Cl - neededCl;
         }
 

@@ -67,6 +67,7 @@
     <Compile Include="FARAPI.cs" />
     <Compile Include="FARDebugAndSettings.cs" />
     <Compile Include="FARGUI\FAREditorGUI\DesignConcerns\AreaRulingConcern.cs" />
+    <Compile Include="FARGUI\FAREditorGUI\DesignConcerns\AeroStabilityConcern.cs" />
     <Compile Include="FARGUI\FARFlightGUI\AirspeedSettingsGUI.cs" />
     <Compile Include="FARGUI\FARFlightGUI\FlightStatusGUI.cs" />
     <Compile Include="FARGUI\FARFlightGUI\FlightDataGUI.cs" />
@@ -109,7 +110,6 @@
     <Compile Include="FARPartGeometry\DebugVisualVoxel.cs" />
     <Compile Include="FARPartGeometry\GeometryMesh.cs" />
     <Compile Include="FARPartGeometry\GeometryPartModule.cs" />
-    <Compile Include="FAREditorGUI.cs" />
     <Compile Include="FARControlSys_KILLME.cs" />
     <Compile Include="FARMathUtil.cs" />
     <Compile Include="FARPartExtensions.cs" />
@@ -122,7 +122,7 @@
     <Compile Include="FARPartGeometry\VoxelCrossSection.cs" />
     <Compile Include="FARPartGeometry\VoxelChunk.cs" />
     <Compile Include="LEGACYferram4\FARPartModule.cs" />
-    <Compile Include="FARPM_FIXME.cs" />
+    <Compile Include="FARPM.cs" />
     <Compile Include="FARThreading\ThreadBarrier.cs" />
     <Compile Include="FARWind.cs" />
     <Compile Include="LEGACYferram4\FARWingAerodynamicModel.cs" />

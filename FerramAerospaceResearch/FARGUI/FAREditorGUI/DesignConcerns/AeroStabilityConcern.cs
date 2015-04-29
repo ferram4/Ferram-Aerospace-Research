@@ -37,28 +37,40 @@ Copyright 2014, Michael Ferrara, aka Ferram4
 using System;
 using System.Collections.Generic;
 using PreFlightTests;
-using FerramAerospaceResearch.FARAeroComponents;
+using FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation;
 
 namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.DesignConcerns
 {
-    class AreaRulingConcern : DesignConcernBase
+    class AeroStabilityConcern : DesignConcernBase
     {
-        private VehicleAerodynamics _vesselAero;
+        private InstantConditionSim _instantSim;
+        private InstantConditionSimInput _simInput;
+        private EditorFacilities _editorFacility;
 
-        public AreaRulingConcern(VehicleAerodynamics vesselAero)
+        public AeroStabilityConcern(InstantConditionSim instantSim, EditorFacilities editorFacility)
         {
-            _vesselAero = vesselAero;
+            _instantSim = instantSim;
+            _editorFacility = editorFacility;
+            _simInput = new InstantConditionSimInput();
         }
 
         public override bool TestCondition()
         {
-            if (_vesselAero == null)
-                return true;
+            if (EditorLogic.SortedShipList.Count > 0)
+            {
+                _simInput.alpha = -1;
+                _simInput.machNumber = 0.5;
+                InstantConditionSimOutput output;
+                _instantSim.GetClCdCmSteady(_simInput, out output, true, true);
 
-            if (_vesselAero.SonicDragArea * 0.75 < _vesselAero.MaxCrossSectionArea)
-                return true;
+                double Cm_1 = output.Cm;
+                _simInput.alpha = 1;
+                _instantSim.GetClCdCmSteady(_simInput, out output, true, true);
 
-            return false;
+                if (output.Cm - Cm_1 > 0)
+                    return false;
+            }
+            return true;
         }
 
         public override EditorFacilities GetEditorFacilities()
@@ -67,15 +79,25 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.DesignConcerns
         }
         public override string GetConcernTitle()
         {
-            return "High Transonic / Supersonic Drag!";
+            return "Vehicle is aerodynamically unstable!";
         }
         public override string GetConcernDescription()
         {
-            return "Cross-sectional area distribution is insufficiently smooth and/or contains very large instantaneous changes in area";
+            if (_editorFacility == EditorFacilities.VAB)
+                return "The aerodynamic center is ahead of the center of mass; the rocket will require sufficient thrust vectoring to maintain forward flight.";
+            else if (_editorFacility == EditorFacilities.SPH)
+                return "The aerodynamic center is ahead of the center of mass; the plane will require sufficient control surfaces to maintain forward flight.";
+            else
+                return "";
         }
         public override DesignConcernSeverity GetSeverity()
         {
-            return DesignConcernSeverity.WARNING;
+            if (_editorFacility == EditorFacilities.VAB)
+                return DesignConcernSeverity.WARNING;
+            else if (_editorFacility == EditorFacilities.SPH)
+                return DesignConcernSeverity.CRITICAL;
+            else
+                return DesignConcernSeverity.WARNING;
         }
     }
 }
