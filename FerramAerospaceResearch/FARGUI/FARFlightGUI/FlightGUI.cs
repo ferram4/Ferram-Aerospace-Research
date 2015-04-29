@@ -77,7 +77,8 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         //Receives a message from any FARWingAerodynamicModel or FARAeroPartModule that has failed to update the GUI
         void AerodynamicFailureStatus()
         {
-            _flightStatusGUI.AerodynamicFailureStatus();
+            if(_flightStatusGUI != null)
+                _flightStatusGUI.AerodynamicFailureStatus();
         }
 
         #region PhysicsAndOrientationBlock

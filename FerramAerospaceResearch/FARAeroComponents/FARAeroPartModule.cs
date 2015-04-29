@@ -227,6 +227,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public void UpdateVelocityAndAngVelocity(Vector3 frameVel)
         {
+            if (partTransform == null)
+                if (part != null)
+                    partTransform = part.transform;
+                else
+                    return;
+
             Matrix4x4 matrix = partTransform.worldToLocalMatrix;
             Rigidbody rb = part.Rigidbody;
 
@@ -289,7 +295,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     FlightLogger.eventLog.Add("[" + FARMathUtil.FormatTime(vessel.missionTime) + "] " + part.partInfo.title + " failed due to aerodynamic stresses.");
                     if (FARDebugValues.aeroFailureExplosions)
                     {
-                        FXMonger.Explode(part, partTransform.position, (float)projectedArea.totalArea * 0.005f);
+                        FXMonger.Explode(part, partTransform.position, (float)projectedArea.totalArea * 0.001f);
                     }
                 }
             }
