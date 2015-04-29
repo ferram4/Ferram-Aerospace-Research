@@ -63,17 +63,65 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                 Matrix4x4 matrix = worldToBasisMatrix * t.localToWorldMatrix;
 
+                Vector3 center, extents;
+                center = m.bounds.center;//matrix.MultiplyPoint3x4(m.bounds.center);
+                extents = m.bounds.extents;//matrix.MultiplyVector(m.bounds.size);
 
-                /*if (m.vertices.Length < excessiveVerts)
-                    for (int j = 0; j < m.vertices.Length; j++)
-                    {
-                        bounds.Encapsulate(matrix.MultiplyPoint3x4(m.vertices[j]));
-                    }*/
-                //else
-                //{
-                    bounds.Encapsulate(matrix.MultiplyPoint3x4(m.bounds.min));
-                    bounds.Encapsulate(matrix.MultiplyPoint3x4(m.bounds.max));
-                //}
+                /*size.x = Math.Abs(size.x);
+                size.y = Math.Abs(size.y);
+                size.z = Math.Abs(size.z);*/
+
+                Vector3 boundPt;
+                boundPt = center + extents;
+                boundPt = matrix.MultiplyPoint3x4(boundPt);
+                bounds.Encapsulate(boundPt);
+
+                boundPt = center - extents;
+                boundPt = matrix.MultiplyPoint3x4(boundPt);
+                bounds.Encapsulate(boundPt);
+
+                boundPt = center;
+                boundPt.x += extents.x;
+                boundPt.y += extents.y;
+                boundPt.z -= extents.z;
+                boundPt = matrix.MultiplyPoint3x4(boundPt);
+                bounds.Encapsulate(boundPt);
+
+                boundPt = center;
+                boundPt.x += extents.x;
+                boundPt.y -= extents.y;
+                boundPt.z += extents.z;
+                boundPt = matrix.MultiplyPoint3x4(boundPt);
+                bounds.Encapsulate(boundPt);
+
+                boundPt = center;
+                boundPt.x -= extents.x;
+                boundPt.y += extents.y;
+                boundPt.z += extents.z;
+                boundPt = matrix.MultiplyPoint3x4(boundPt);
+                bounds.Encapsulate(boundPt);
+
+                boundPt = center;
+                boundPt.x -= extents.x;
+                boundPt.y -= extents.y;
+                boundPt.z += extents.z;
+                boundPt = matrix.MultiplyPoint3x4(boundPt);
+                bounds.Encapsulate(boundPt);
+
+                boundPt = center;
+                boundPt.x -= extents.x;
+                boundPt.y += extents.y;
+                boundPt.z -= extents.z;
+                boundPt = matrix.MultiplyPoint3x4(boundPt);
+                bounds.Encapsulate(boundPt);
+
+                boundPt = center;
+                boundPt.x += extents.x;
+                boundPt.y -= extents.y;
+                boundPt.z -= extents.z;
+                boundPt = matrix.MultiplyPoint3x4(boundPt);
+
+                bounds.Encapsulate(boundPt);
             }
             return bounds;
         }
@@ -109,74 +157,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 bounds.Encapsulate(matrix.MultiplyPoint3x4(m.bounds.min));
                 bounds.Encapsulate(matrix.MultiplyPoint3x4(m.bounds.max));
                 
-            }
-            return bounds;
-        }
-        
-        public static Bounds[] GetPartMeshBoundsInPartSpace(this Part part, int excessiveVerts = 2500)
-        {
-            Transform[] transforms = part.FindModelComponents<Transform>();
-            Bounds[] bounds = new Bounds[transforms.Length];
-            Matrix4x4 partMatrix = part.transform.worldToLocalMatrix;
-            for (int i = 0; i < transforms.Length; i++)
-            {
-                Bounds newBounds = new Bounds();
-                Transform t = transforms[i];
-
-                MeshFilter mf = t.GetComponent<MeshFilter>();
-                if (mf == null)
-                    continue;
-                Mesh m = mf.sharedMesh;
-
-                if (m == null)
-                    continue;
-                Matrix4x4 matrix = partMatrix * t.localToWorldMatrix;
-
-                if (m.vertices.Length < excessiveVerts)
-                    for (int j = 0; j < m.vertices.Length; j++)
-                    {
-                        newBounds.Encapsulate(matrix.MultiplyPoint3x4(m.vertices[j]));
-                    }
-                else
-                {
-                    newBounds.SetMinMax(matrix.MultiplyPoint3x4(m.bounds.min), matrix.MultiplyPoint3x4(m.bounds.max));
-                }
-
-                bounds[i] = newBounds;
-            }
-            return bounds;
-        }
-
-        public static Bounds[] GetPartMeshBoundsListInBasis(this Part part, Transform basis, int excessiveVerts = 2500)
-        {
-            Transform[] transforms = part.FindModelComponents<Transform>();
-            Bounds[] bounds = new Bounds[transforms.Length];
-            Matrix4x4 partMatrix = basis.worldToLocalMatrix;
-            for (int i = 0; i < transforms.Length; i++)
-            {
-                Bounds newBounds = new Bounds();
-                Transform t = transforms[i];
-
-                MeshFilter mf = t.GetComponent<MeshFilter>();
-                if (mf == null)
-                    continue;
-                Mesh m = mf.sharedMesh;
-
-                if (m == null)
-                    continue;
-                Matrix4x4 matrix = partMatrix * t.localToWorldMatrix;
-
-                if (m.vertices.Length < excessiveVerts)
-                    for (int j = 0; j < m.vertices.Length; j++)
-                    {
-                        newBounds.Encapsulate(matrix.MultiplyPoint3x4(m.vertices[j]));
-                    }
-                else
-                {
-                    newBounds.SetMinMax(matrix.MultiplyPoint3x4(m.bounds.min), matrix.MultiplyPoint3x4(m.bounds.max));
-                }
-
-                bounds[i] = newBounds;
             }
             return bounds;
         }

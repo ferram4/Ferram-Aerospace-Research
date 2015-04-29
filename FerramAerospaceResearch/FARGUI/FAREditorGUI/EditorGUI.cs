@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
+using PreFlightTests;
 using FerramAerospaceResearch.FARAeroComponents;
 using FerramAerospaceResearch.FARPartGeometry;
 using FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation;
@@ -20,7 +22,6 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         int _updateRateLimiter = 0;
         bool _updateQueued = true;
-        bool _updateRebuildGeo = false;
 
         static bool showGUI = false;
         bool useKSPSkin = true;
@@ -39,6 +40,10 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         StaticAnalysisGraphGUI _editorGraph;
         StabilityDerivGUI _stabDeriv;
         StabilityDerivSimulationGUI _stabDerivLinSim;
+
+        List<IDesignConcern> _customDesignConcerns = new List<IDesignConcern>();
+
+        MethodInfo editorReportUpdate;
 
         bool gearToggle = false;
 
@@ -89,25 +94,29 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             guiRect.width = 650;
 
 
-
             GameEvents.onEditorPartEvent.Add(UpdateGeometryEvent);
             GameEvents.onEditorUndo.Add(ResetEditorEvent);
             GameEvents.onEditorRedo.Add(ResetEditorEvent);
-            //GameEvents.onEditorShipModified.Add(ResetEditorEvent);
+            GameEvents.onEditorShipModified.Add(ResetEditorEvent);
             GameEvents.onEditorLoad.Add(ResetEditorEvent);
             GameEvents.onGUIEngineersReportReady.Add(AddDesignConcerns);
             GameEvents.onGUIEngineersReportDestroy.Add(AddDesignConcerns);
+
             RequestUpdateVoxel();
         }
 
         void AddDesignConcerns()
         {
-            EngineersReport.Instance.AddTest(new AreaRulingConcern(_vehicleAero));
+            editorReportUpdate = EngineersReport.Instance.GetType().GetMethod("OnCraftModified", BindingFlags.Instance | BindingFlags.NonPublic, null, Type.EmptyTypes, null);
+            _customDesignConcerns.Add(new AreaRulingConcern(_vehicleAero));
+            for (int i = 0; i < _customDesignConcerns.Count; i++)
+                EngineersReport.Instance.AddTest(_customDesignConcerns[i]);
         }
 
         void RemoveDesignConcerns()
         {
-            EngineersReport.Instance.RemoveTest(new AreaRulingConcern(_vehicleAero));
+            for (int i = 0; i < _customDesignConcerns.Count; i++)
+                EngineersReport.Instance.RemoveTest(_customDesignConcerns[i]);
         }
 
         void OnDestroy()
@@ -115,7 +124,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             GameEvents.onEditorPartEvent.Remove(UpdateGeometryEvent);
             GameEvents.onEditorUndo.Remove(ResetEditorEvent);
             GameEvents.onEditorRedo.Remove(ResetEditorEvent);
-            //GameEvents.onEditorShipModified.Remove(ResetEditorEvent);
+            GameEvents.onEditorShipModified.Remove(ResetEditorEvent);
             GameEvents.onEditorLoad.Remove(ResetEditorEvent);
             GameEvents.onGUIEngineersReportReady.Remove(AddDesignConcerns);
             GameEvents.onGUIEngineersReportDestroy.Remove(AddDesignConcerns);
@@ -127,15 +136,14 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         #region EditorEvents
         private void ResetEditorEvent(ShipConstruct construct)
         {
-            if (EditorLogic.RootPart)
+            if (EditorLogic.SortedShipList.Count > 0)
             {
                 List<Part> partsList = EditorLogic.SortedShipList;
                 for (int i = 0; i < partsList.Count; i++)
                     UpdateGeometryModule(partsList[i]);
-
-                RequestUpdateVoxel();
-                instance._updateRebuildGeo = true;
             }
+
+            RequestUpdateVoxel();
         }
         private void ResetEditorEvent(ShipConstruct construct, CraftBrowser.LoadType type)
         {
@@ -151,7 +159,6 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             crossSectionDeriv.a = 0.8f;
 
             instance._areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.7f), crossSection, crossSectionDeriv, 10, 5);
-            instance._updateRebuildGeo = true;
             RequestUpdateVoxel();
         }
        
@@ -164,12 +171,10 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             type == ConstructionEventType.PartRootSelected ||
                 type == ConstructionEventType.Unknown)
             {
-                if (EditorLogic.RootPart)
-                {
+                if (EditorLogic.SortedShipList.Count > 0)
                     UpdateGeometryModule(type, pEvent);
-                    RequestUpdateVoxel();
-                    instance._updateRebuildGeo = true;
-                }
+                RequestUpdateVoxel();
+
             }
         }
 
@@ -214,12 +219,14 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         void FixedUpdate()
         {
-            if ((object)EditorLogic.RootPart != null)
+            if (EditorLogic.RootPart != null)
             {
                 if (_vehicleAero.CalculationCompleted)
                 {
                     _simManager.UpdateAeroData(_vehicleAero);
                     UpdateCrossSections();
+                    LEGACY_UpdateWingAeroModels();
+                    editorReportUpdate.Invoke(EngineersReport.Instance, null);
                 }
 
                 if (_updateRateLimiter < FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate)
@@ -232,8 +239,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             else
             {
                 _updateQueued = true;
-                _updateRebuildGeo = true;
-                _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate;
+                _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 1;
             }
 
             OnGUIAppLauncherReady();
@@ -243,7 +249,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         public static void RequestUpdateVoxel()
         {
             if (instance._updateRateLimiter > FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate)
-                instance._updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
+                instance._updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 1;
             instance._updateQueued = true;
             //instance._areaRulingOverlay.SetVisibility(false);
 
@@ -262,27 +268,24 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 _updateQueued = false;
             }
             List<Part> partList = EditorLogic.SortedShipList;
-            if (_updateRebuildGeo)
-            {
-                _currentGeometryModules.Clear();
 
-                for (int i = 0; i < partList.Count; i++)
+            _currentGeometryModules.Clear();
+
+            for (int i = 0; i < partList.Count; i++)
+            {
+                Part p = partList[i];
+                GeometryPartModule g = p.GetComponent<GeometryPartModule>();
+                if ((object)g != null)
                 {
-                    Part p = partList[i];
-                    GeometryPartModule g = p.GetComponent<GeometryPartModule>();
-                    if ((object)g != null)
-                    {
-                        _currentGeometryModules.Add(g);
-                    }
+                    _currentGeometryModules.Add(g);
                 }
             }
+
             TriggerIGeometryUpdaters();
 
             
             if(_currentGeometryModules.Count > 0)
                 _vehicleAero.VoxelUpdate(EditorLogic.RootPart.transform.worldToLocalMatrix, EditorLogic.RootPart.transform.localToWorldMatrix, FARSettingsScenarioModule.VoxelSettings.numVoxelsControllableVessel, partList, _currentGeometryModules, true);
-
-            _updateRebuildGeo = false;
         }
 
         private void TriggerIGeometryUpdaters()

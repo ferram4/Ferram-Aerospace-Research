@@ -117,9 +117,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             double tmp = 0.125 * invElementSize;
 
-            xLength = (int)Math.Ceiling(size.x * tmp) + 1;
-            yLength = (int)Math.Ceiling(size.y * tmp) + 1;
-            zLength = (int)Math.Ceiling(size.z * tmp) + 1;
+            xLength = (int)Math.Ceiling(size.x * tmp) + 2;
+            yLength = (int)Math.Ceiling(size.y * tmp) + 2;
+            zLength = (int)Math.Ceiling(size.z * tmp) + 2;
 
             xCellLength = xLength * 8;
             yCellLength = yLength * 8;
@@ -1357,10 +1357,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             double invDenom = 1 / (dot12_12 * dot13_13 - dot12_13 * dot12_13);
 
             int lowJ, highJ, lowK, highK;
-            lowJ = (int)(Math.Min(vert1Proj.x, Math.Min(vert2Proj.x, vert3Proj.x)) - RC);
-            highJ = (int)(Math.Ceiling(Math.Max(vert1Proj.x, Math.Max(vert2Proj.x, vert3Proj.x)) + RC));
-            lowK = (int)(Math.Min(vert1Proj.y, Math.Min(vert2Proj.y, vert3Proj.y)) - RC);
-            highK = (int)(Math.Ceiling(Math.Max(vert1Proj.y, Math.Max(vert2Proj.y, vert3Proj.y)) + RC));
+            lowJ = (int)(Math.Min(vert1Proj.x, Math.Min(vert2Proj.x, vert3Proj.x)) - 1);
+            highJ = (int)(Math.Ceiling(Math.Max(vert1Proj.x, Math.Max(vert2Proj.x, vert3Proj.x)) + 1));
+            lowK = (int)(Math.Min(vert1Proj.y, Math.Min(vert2Proj.y, vert3Proj.y)) - 1);
+            highK = (int)(Math.Ceiling(Math.Max(vert1Proj.y, Math.Max(vert2Proj.y, vert3Proj.y)) + 1));
 
             if (lowJ < 0)
                 lowJ = 0;
@@ -1451,10 +1451,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             double invDenom = 1 / (dot12_12 * dot13_13 - dot12_13 * dot12_13);
 
             int lowI, highI, lowK, highK;
-            lowI = (int)(Math.Min(vert1Proj.x, Math.Min(vert2Proj.x, vert3Proj.x)) - RC);
-            highI = (int)(Math.Ceiling(Math.Max(vert1Proj.x, Math.Max(vert2Proj.x, vert3Proj.x)) + RC));
-            lowK = (int)(Math.Min(vert1Proj.y, Math.Min(vert2Proj.y, vert3Proj.y)) - RC);
-            highK = (int)(Math.Ceiling(Math.Max(vert1Proj.y, Math.Max(vert2Proj.y, vert3Proj.y)) + RC));
+            lowI = (int)(Math.Min(vert1Proj.x, Math.Min(vert2Proj.x, vert3Proj.x)) - 1);
+            highI = (int)(Math.Ceiling(Math.Max(vert1Proj.x, Math.Max(vert2Proj.x, vert3Proj.x)) + 1));
+            lowK = (int)(Math.Min(vert1Proj.y, Math.Min(vert2Proj.y, vert3Proj.y)) - 1);
+            highK = (int)(Math.Ceiling(Math.Max(vert1Proj.y, Math.Max(vert2Proj.y, vert3Proj.y)) + 1));
 
 
             if (lowI < 0)
@@ -1541,10 +1541,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             double invDenom = 1 / (dot12_12 * dot13_13 - dot12_13 * dot12_13);
 
             int lowI, highI, lowJ, highJ;
-            lowI = (int)(Math.Min(vert1Proj.x, Math.Min(vert2Proj.x, vert3Proj.x)) - RC);
-            highI = (int)(Math.Ceiling(Math.Max(vert1Proj.x, Math.Max(vert2Proj.x, vert3Proj.x)) + RC));
-            lowJ = (int)(Math.Min(vert1Proj.y, Math.Min(vert2Proj.y, vert3Proj.y)) - RC);
-            highJ = (int)(Math.Ceiling(Math.Max(vert1Proj.y, Math.Max(vert2Proj.y, vert3Proj.y)) + RC));
+            lowI = (int)(Math.Min(vert1Proj.x, Math.Min(vert2Proj.x, vert3Proj.x)) - 1);
+            highI = (int)(Math.Ceiling(Math.Max(vert1Proj.x, Math.Max(vert2Proj.x, vert3Proj.x)) + 1));
+            lowJ = (int)(Math.Min(vert1Proj.y, Math.Min(vert2Proj.y, vert3Proj.y)) - 1);
+            highJ = (int)(Math.Ceiling(Math.Max(vert1Proj.y, Math.Max(vert2Proj.y, vert3Proj.y)) + 1));
 
 
             if (lowJ < 0)
