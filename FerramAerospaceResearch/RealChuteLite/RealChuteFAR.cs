@@ -11,20 +11,20 @@ using Random = System.Random;
 
 namespace FerramAerospaceResearch.RealChuteLite
 {
-    /// <summary>
-    /// Parachute deployment states
-    /// </summary>
-    public enum DeploymentStates
-    {
-        NONE,
-        STOWED,
-        PREDEPLOYED,
-        DEPLOYED,
-        CUT
-    }
-
     public class RealChuteFAR : PartModule, IModuleInfo
     {
+        /// <summary>
+        /// Parachute deployment states
+        /// </summary>
+        public enum DeploymentStates
+        {
+            NONE,
+            STOWED,
+            PREDEPLOYED,
+            DEPLOYED,
+            CUT
+        }
+
         #region Constants
         //Few useful constants
         public const float areaDensity = 0.000058f, areaCost = 0.075f;
@@ -82,6 +82,8 @@ namespace FerramAerospaceResearch.RealChuteLite
         public int chuteCount = 5;
         [KSPField(isPersistant = true)]
         public string depState = "STOWED";
+        [KSPField(isPersistant = true)]
+        public float currentArea = 0;
         #endregion
 
         #region Propreties
@@ -130,6 +132,7 @@ namespace FerramAerospaceResearch.RealChuteLite
             get { return this.deployedArea * areaDensity; }
         }
 
+        //Total dry mass of the chute part
         public float totalMass
         {
             get
@@ -161,8 +164,8 @@ namespace FerramAerospaceResearch.RealChuteLite
             }
         }
 
-        //If the parachute has passed the minimum deployment clause
-        public bool deploymentClause
+        //If the parachute is in a high enough atmospheric pressure to deploy
+        public bool pressureCheck
         {
             get
             {
@@ -177,8 +180,8 @@ namespace FerramAerospaceResearch.RealChuteLite
             {
                 if (this.groundStop || this.atmPressure == 0) { return false; }
                 else if (this.deploymentState == DeploymentStates.CUT) { return false; }
-                else if (this.deploymentClause) { return true; }
-                else if (!this.deploymentClause && this.isDeployed) { return true; }
+                else if (this.pressureCheck) { return true; }
+                else if (!this.pressureCheck && this.isDeployed) { return true; }
                 return false;
             }
         }
@@ -330,7 +333,10 @@ namespace FerramAerospaceResearch.RealChuteLite
                 this.repack.guiActiveUnfocused = false;
                 this.part.stackIcon.SetIconColor(XKCDColors.White);
                 if (this.chuteCount != -1) { this.chuteCount--; }
-                Repack();
+                this.deploymentState = DeploymentStates.STOWED;
+                this.randomTimer.Reset();
+                this.time = 0;
+                this.cap.gameObject.SetActive(true);
             }
         }
 
@@ -513,18 +519,9 @@ namespace FerramAerospaceResearch.RealChuteLite
             this.part.Effect("rccut");
             this.deploymentState = DeploymentStates.CUT;
             this.parachute.gameObject.SetActive(false);
+            this.currentArea = 0;
+            this.dragTimer.Reset();
             SetRepack();
-            this.dragTimer.Reset();
-        }
-
-        //Repack actions
-        public void Repack()
-        {
-            this.deploymentState = DeploymentStates.STOWED;
-            this.randomTimer.Reset();
-            this.dragTimer.Reset();
-            this.time = 0;
-            this.cap.gameObject.SetActive(true);
         }
 
         //Calculates parachute deployed area
@@ -539,9 +536,11 @@ namespace FerramAerospaceResearch.RealChuteLite
                 /* While this looks linear, area scales with the square of the diameter, and therefore
                  * Deployment will be quadratic. The previous exponential function was too slow at first and rough at the end */
                 float currentDiam = Mathf.Lerp(debutDiameter, endDiameter, (float)(t / time));
-                return GetArea(currentDiam);
+                this.currentArea = GetArea(currentDiam);
+                return this.currentArea;
             }
-            return GetArea(endDiameter);
+            this.currentArea = GetArea(endDiameter);
+            return this.currentArea;
         }
 
         //Drag force vector
@@ -627,7 +626,7 @@ namespace FerramAerospaceResearch.RealChuteLite
                             case DeploymentStates.STOWED:
                                 {
                                     this.part.stackIcon.SetIconColor(XKCDColors.LightCyan);
-                                    if (this.deploymentClause && this.randomDeployment) { PreDeploy(); }
+                                    if (this.pressureCheck && this.randomDeployment) { PreDeploy(); }
                                     break;
                                 }
 
