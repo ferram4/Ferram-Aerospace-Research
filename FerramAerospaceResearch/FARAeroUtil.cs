@@ -253,10 +253,9 @@ namespace FerramAerospaceResearch
 
             double ratio;
             ratio = M * M;
-            ratio--;
             ratio *= 2 * gamma;
+            ratio -= (gamma - 1);
             ratio /= (gamma + 1);
-            ratio++;
 
             return ratio;
 
@@ -267,10 +266,10 @@ namespace FerramAerospaceResearch
             double gamma = CurrentBody.atmosphereAdiabaticIndex;
 
             double ratio;
-            ratio = (gamma - 1) * 0.5;
+            ratio = (gamma - 1);
             ratio *= M * M;
-            ratio++;
-            ratio /= (gamma * M * M - (gamma - 1) * 0.5);
+            ratio += 2;
+            ratio /= (2 * gamma * M * M - (gamma - 1));
             ratio = Math.Sqrt(ratio);
 
             return ratio;
@@ -297,7 +296,7 @@ namespace FerramAerospaceResearch
                         nu -= Math.Atan(mach);
                         nu *= FARMathUtil.rad2deg;
 
-                        double nu_mach = (currentBodyVisc[1] - 1) / 2;
+                        double nu_mach = (gamma - 1) / 2;
                         nu_mach *= M * M;
                         nu_mach++;
                         nu_mach *= M;
@@ -322,6 +321,7 @@ namespace FerramAerospaceResearch
 
                     maxPrandtlMeyerTurnAngle = gamma_ - 1;
                     maxPrandtlMeyerTurnAngle *= 90;
+
                 }
                 return prandtlMeyerMach;
             }
@@ -339,7 +339,6 @@ namespace FerramAerospaceResearch
                     double M = 1;
                     //float gamma = 1.4f;
                     double gamma = CurrentBody.atmosphereAdiabaticIndex;
-
                     double gamma_ = Math.Sqrt((gamma + 1) / (gamma - 1));
 
                     while (M < 250)
@@ -351,7 +350,7 @@ namespace FerramAerospaceResearch
                         nu -= Math.Atan(mach);
                         nu *= FARMathUtil.rad2deg;
 
-                        double nu_mach = (currentBodyVisc[1] - 1) / 2;
+                        double nu_mach = (gamma - 1) / 2;
                         nu_mach *= M * M;
                         nu_mach++;
                         nu_mach *= M;

@@ -48,6 +48,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
     public class FARAeroPartModule : PartModule, ILiftProvider
     {
         public Vector3 partLocalVel;
+        public Vector3 partLocalVelNorm;
         public Vector3 partLocalAngVel;
 
         public Vector3 worldSpaceAeroForce;
@@ -61,6 +62,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
         private double partStressMaxXZ = double.MaxValue;
         private double partForceMaxY = double.MaxValue;
         private double partForceMaxXZ = double.MaxValue;
+
+        private ArrowPointer liftArrow;
+        private ArrowPointer dragArrow;
+
+        bool fieldsVisible = false;
+
+        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = false, guiFormat = "F3", guiUnits = "kN")]
+        public float dragForce;
+
+        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = false, guiFormat = "F3", guiUnits = "kN")]
+        public float liftForce;
 
         private Transform partTransform;
 
@@ -221,13 +233,14 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             worldSpaceAeroForce = matrix.MultiplyVector(partLocalForce);
 
+            UpdateAeroDisplay();
+
             rb.AddForce(worldSpaceAeroForce);
             rb.AddTorque(matrix.MultiplyVector(partLocalTorque));
 
             partLocalForce = Vector3.zero;
             partLocalTorque = Vector3.zero;
 
-            Debug.Log(part.partInfo.title + " " + projectedArea.totalArea + " " + part.ShieldedFromAirstream);
         }
 
         public void AddLocalForce(Vector3 partLocalForce, Vector3 partLocalLocation)
@@ -259,6 +272,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             partLocalVel = rb.velocity + frameVel
                         - FARWind.GetWind(FARAeroUtil.CurrentBody, part, rb.position); 
             partLocalVel = matrix.MultiplyVector(partLocalVel);
+
+            partLocalVelNorm = partLocalVel.normalized;
 
             partLocalAngVel = rb.angularVelocity;
             partLocalAngVel = matrix.MultiplyVector(partLocalAngVel);
@@ -319,6 +334,70 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     }
                 }
             }
+        }
+
+        private void UpdateAeroDisplay()
+        {
+            Vector3 localDragArrow = Vector3.zero;
+            Vector3 localLiftArrow = Vector3.zero;
+
+            if (PhysicsGlobals.AeroForceDisplay || PhysicsGlobals.AeroDataDisplay)
+            {
+                localDragArrow = Vector3.Dot(partLocalForce, partLocalVelNorm) * partLocalVelNorm;
+                localLiftArrow = partLocalForce - localDragArrow;
+            }
+            if (PhysicsGlobals.AeroForceDisplay)
+            {
+                if (liftArrow == null)
+                    liftArrow = ArrowPointer.Create(partTransform, Vector3.zero, localLiftArrow, localLiftArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale, Color.cyan, false);
+                else
+                {
+                    liftArrow.Direction = localLiftArrow;
+                    liftArrow.Length = localLiftArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale;
+                }
+
+                if (dragArrow == null)
+                    dragArrow = ArrowPointer.Create(partTransform, Vector3.zero, localDragArrow, localDragArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale, Color.red, false);
+                else
+                {
+                    dragArrow.Direction = localDragArrow;
+                    dragArrow.Length = localDragArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale;
+                }
+            }
+            else
+            {
+                if ((object)liftArrow != null)
+                {
+                    UnityEngine.Object.Destroy(liftArrow);
+                    liftArrow = null;
+                }
+                if ((object)dragArrow != null)
+                {
+                    UnityEngine.Object.Destroy(dragArrow);
+                    dragArrow = null;
+                }
+            }
+
+            if (PhysicsGlobals.AeroDataDisplay)
+            {
+                if (!fieldsVisible)
+                {
+                    Fields["dragForce"].guiActive = true;
+                    Fields["liftForce"].guiActive = true;
+                    fieldsVisible = true;
+                }
+
+                dragForce = localDragArrow.magnitude;
+                liftForce = localLiftArrow.magnitude;
+
+            }
+            else if (fieldsVisible)
+            {
+                Fields["dragForce"].guiActive = false;
+                Fields["liftForce"].guiActive = false;
+                fieldsVisible = false;
+            }
+
         }
     }
 }

@@ -377,10 +377,6 @@ namespace FerramAerospaceResearch
         {
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical(GUILayout.Width(250));
-            GUILayout.Label("Part Right-Click Menu");
-            FARDebugValues.displayForces = GUILayout.Toggle(FARDebugValues.displayForces, "Display Aero Forces", thisStyle);
-            FARDebugValues.displayCoefficients = GUILayout.Toggle(FARDebugValues.displayCoefficients, "Display Coefficients", thisStyle);
-            FARDebugValues.displayShielding = GUILayout.Toggle(FARDebugValues.displayShielding, "Display Shielding", thisStyle);
             GUILayout.Label("Debug / Cheat Options");
             FARDebugValues.allowStructuralFailures = GUILayout.Toggle(FARDebugValues.allowStructuralFailures, "Allow Aero-structural Failures", thisStyle);
 
@@ -492,9 +488,6 @@ namespace FerramAerospaceResearch
         {
             config = KSP.IO.PluginConfiguration.CreateForType<FARSettingsScenarioModule>();
             config.load();
-            FARDebugValues.displayForces = Convert.ToBoolean(config.GetValue("displayForces", "false"));
-            FARDebugValues.displayCoefficients = Convert.ToBoolean(config.GetValue("displayCoefficients", "false"));
-            FARDebugValues.displayShielding = Convert.ToBoolean(config.GetValue("displayShielding", "false"));
             FARDebugValues.allowStructuralFailures = Convert.ToBoolean(config.GetValue("allowStructuralFailures", "true"));
 
             FARDebugValues.useBlizzyToolbar = Convert.ToBoolean(config.GetValue("useBlizzyToolbar", "false"));
@@ -528,10 +521,6 @@ namespace FerramAerospaceResearch
 
         public static void SaveConfigs()
         {
-            config.SetValue("displayForces", FARDebugValues.displayForces.ToString());
-            config.SetValue("displayCoefficients", FARDebugValues.displayCoefficients.ToString());
-            config.SetValue("displayShielding", FARDebugValues.displayShielding.ToString());
-
             config.SetValue("allowStructuralFailures", FARDebugValues.allowStructuralFailures.ToString());
 
             config.SetValue("useBlizzyToolbar", FARDebugValues.useBlizzyToolbar.ToString());
@@ -561,10 +550,6 @@ namespace FerramAerospaceResearch
     public static class FARDebugValues
     {
         //Right-click menu options
-        public static bool displayForces = false;
-        public static bool displayCoefficients = false;
-        public static bool displayShielding = false;
-
         public static bool allowStructuralFailures = true;
 
         public static bool useBlizzyToolbar = false;

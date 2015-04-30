@@ -247,9 +247,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             iterationInput.flaps = flapSetting;
             iterationInput.spoilers = spoilers;
 
-            for (int i = 0; i < FARAeroUtil.CurEditorWings.Count; i++)
+            for (int i = 0; i < _wingAerodynamicModel.Count; i++)
             {
-                FARWingAerodynamicModel w = FARAeroUtil.CurEditorWings[i];
+                FARWingAerodynamicModel w = _wingAerodynamicModel[i];
                 if (w.isShielded)
                     continue;
 

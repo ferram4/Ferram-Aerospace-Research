@@ -52,10 +52,10 @@ namespace ferram4
     {
         public double AoAmax = 15;
 
-        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
+        //[KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
         public float curWingMass = 1;
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Mass/Strength Multiplier", guiFormat = "0.##"), UI_FloatRange(minValue = 0.1f, maxValue = 2.0f, stepIncrement = 0.01f)]
+       // [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Mass/Strength Multiplier", guiFormat = "0.##"), UI_FloatRange(minValue = 0.1f, maxValue = 2.0f, stepIncrement = 0.01f)]
         public float massMultiplier = 1.0f;
 
         public float oldMassMultiplier = -1f;
@@ -95,11 +95,16 @@ namespace ferram4
         protected double effective_AR = 4;
         protected double transformed_AR = 4;
 
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Current lift", guiUnits = "kN", guiFormat = "F3")]
-        protected float currentLift = 0.0f;
+        private ArrowPointer liftArrow;
+        private ArrowPointer dragArrow;
 
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Current drag", guiUnits = "kN", guiFormat = "F3")]
-        protected float currentDrag = 0.0f;
+        bool fieldsVisible = false;
+
+        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = false, guiFormat = "F3", guiUnits = "kN")]
+        public float dragForceWing;
+
+        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = false, guiFormat = "F3", guiUnits = "kN")]
+        public float liftForceWing;
 
         private double liftslope = 0;
         protected double zeroLiftCdIncrement = 0;
@@ -390,8 +395,6 @@ namespace ferram4
                 w.maximum_drag = 0;
                 w.minimum_drag = 0;
             }
-            Fields["currentLift"].guiActive = FARDebugValues.displayForces;
-            Fields["currentDrag"].guiActive = FARDebugValues.displayForces;
 
             OnWingAttach();
 
@@ -443,6 +446,7 @@ namespace ferram4
 
         public void EditorUpdateWingInteractions()
         {
+
             HashSet<FARWingAerodynamicModel> wingsHandled = wingInteraction.UpdateNearbyWingInteractions();     //first update the old nearby wings
             UpdateThisWingInteractions();
             wingInteraction.UpdateNearbyWingInteractions(wingsHandled);     //then update the new nearby wings, not doing the ones already handled
@@ -462,8 +466,6 @@ namespace ferram4
 
         public virtual void FixedUpdate()
         {
-            currentLift = currentDrag = 0;
-
             // With unity objects, "foo" or "foo != null" calls a method to check if
             // it's destroyed. (object)foo != null just checks if it is actually null.
             if (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && !isShielded)
@@ -566,11 +568,11 @@ namespace ferram4
 
 
             //lift and drag vectors
-            Vector3d L = liftDirection * (q * Cl * S);    //lift;
-            Vector3d D = velocity_normalized * (-q * Cd * S);                         //drag is parallel to velocity vector
-            currentLift = (float)(L.magnitude * 0.001);
-            currentDrag = (float)(D.magnitude * 0.001);
-            Vector3d force = (L + D) * 0.001;
+            Vector3d L = liftDirection * (q * Cl * S) * 0.001;    //lift;
+            Vector3d D = velocity_normalized * (-q * Cd * S) * 0.001;                         //drag is parallel to velocity vector
+
+            UpdateAeroDisplay(L, D);
+            Vector3d force = (L + D);
             if (double.IsNaN(force.sqrMagnitude) || double.IsNaN(AerodynamicCenter.sqrMagnitude))// || float.IsNaN(moment.magnitude))
             {
                 Debug.LogWarning("FAR Error: Aerodynamic force = " + force.magnitude + " AC Loc = " + AerodynamicCenter.magnitude + " AoA = " + AoA + "\n\rMAC = " + effective_MAC + " B_2 = " + effective_b_2 + " sweepAngle = " + cosSweepAngle + "\n\rMidChordSweep = " + MidChordSweep + " MidChordSweepSideways = " + MidChordSweepSideways + "\n\r at " + part.name);
@@ -673,7 +675,7 @@ namespace ferram4
             return Math.Asin(FARMathUtil.Clamp(PerpVelocity, -1, 1));
         }
 
-        protected override Color AeroVisualizationTintingCalculation()
+        /*protected override Color AeroVisualizationTintingCalculation()
         {
             if(FARControlSys.tintForStall)
             {
@@ -681,7 +683,7 @@ namespace ferram4
             }
             else
                 return base.AeroVisualizationTintingCalculation();
-        }
+        }*/
 
         #region Interactive Effects
 
@@ -798,7 +800,7 @@ namespace ferram4
              */
             else if (MachNumber > 1.4)
             {
-                double coefMult = 1 / (FARAeroUtil.currentBodyVisc[1] * MachNumber * MachNumber);
+                double coefMult = 2 / (FARAeroUtil.CurrentBody.atmosphereAdiabaticIndex * MachNumber * MachNumber);
 
                 double supersonicLENormalForceFactor = CalculateSupersonicLEFactor(beta, TanSweep, beta_TanSweep);
 
@@ -807,7 +809,6 @@ namespace ferram4
 //                double SinAoA = Math.Sin(AoA);
                 //Cl = coefMult * (normalForce * CosAoA * Math.Sign(AoA) * sonicLEFactor - axialForce * SinAoA);
                 //Cd = coefMult * (Math.Abs(normalForce * SinAoA) * sonicLEFactor + axialForce * CosAoA);
-
                 Cl = coefMult * normalForce * CosAoA * Math.Sign(AoA) * supersonicLENormalForceFactor;
                 Cd = beta * Cl * Cl / piARe;
 
@@ -833,8 +834,8 @@ namespace ferram4
                 Cl *= subScale;
 
                 double M = FARMathUtil.Clamp(MachNumber, 1.2, double.PositiveInfinity);
-                
-                double coefMult = 1 / (FARAeroUtil.currentBodyVisc[1] * M * M);
+
+                double coefMult = 2 / (FARAeroUtil.CurrentBody.atmosphereAdiabaticIndex * M * M);
 
                 double supersonicLENormalForceFactor = CalculateSupersonicLEFactor(beta, TanSweep, beta_TanSweep);
 
@@ -921,11 +922,10 @@ namespace ferram4
         {
             double pRatio;
 
-            double maxSinBeta = FARAeroUtil.CalculateSinMaxShockAngle(M, FARAeroUtil.currentBodyVisc[1]);//GetBetaMax(M) * FARMathUtil.deg2rad;
+            double maxSinBeta = FARAeroUtil.CalculateSinMaxShockAngle(M, FARAeroUtil.CurrentBody.atmosphereAdiabaticIndex);//GetBetaMax(M) * FARMathUtil.deg2rad;
             double minSinBeta = 1 / M;
 
-
-            double halfAngle = 0.05;            //Corresponds to ~2.8 degrees or approximately what you would get from a ~4.8% thick diamond airfoil
+            double halfAngle = 0.05;            //In radians, Corresponds to ~2.8 degrees or approximately what you would get from a ~4.8% thick diamond airfoil
 
             double AbsAoA = Math.Abs(AoA);
 
@@ -948,7 +948,7 @@ namespace ferram4
             //Region 4 is the lower surface behind the max thickness
             double p4 = PMExpansionCalculation(2 * halfAngle, M3) * p3;
 
-
+            //Debug.Log(p1 + " " + p2 + " " + p3 + " " + p4);
             pRatio = (p3 + p4) - (p1 + p2);
 
             return pRatio;
@@ -958,14 +958,14 @@ namespace ferram4
         private double ShockWaveCalculation(double angle, double inM, out double outM, double maxSinBeta, double minSinBeta)
         {
             //float sinBeta = (maxBeta - minBeta) * angle / maxTheta + minBeta;
-            double sinBeta = FARAeroUtil.CalculateSinWeakObliqueShockAngle(inM, FARAeroUtil.currentBodyVisc[1], angle);
+            double sinBeta = FARAeroUtil.CalculateSinWeakObliqueShockAngle(inM, FARAeroUtil.CurrentBody.atmosphereAdiabaticIndex, angle);
             if (double.IsNaN(sinBeta))
                 sinBeta = maxSinBeta;
 
             FARMathUtil.Clamp(sinBeta, minSinBeta, maxSinBeta);
 
             double normalInM = sinBeta * inM;
-            normalInM = FARMathUtil.Clamp(normalInM, 1f, Mathf.Infinity);
+            normalInM = FARMathUtil.Clamp(normalInM, 1, double.PositiveInfinity);
 
             double tanM = inM * Math.Sqrt(FARMathUtil.Clamp(1 - sinBeta * sinBeta, 0, 1));
 
@@ -1262,5 +1262,62 @@ namespace ferram4
 
             StartInitialization();
         }
+
+        private void UpdateAeroDisplay(Vector3 lift, Vector3 drag)
+        {
+            if (PhysicsGlobals.AeroForceDisplay)
+            {
+                if (liftArrow == null)
+                    liftArrow = ArrowPointer.Create(part_transform, localWingCentroid, lift, lift.magnitude * PhysicsGlobals.AeroForceDisplayScale, Color.cyan, true);
+                else
+                {
+                    liftArrow.Direction = lift;
+                    liftArrow.Length = lift.magnitude * PhysicsGlobals.AeroForceDisplayScale;
+                }
+
+                if (dragArrow == null)
+                    dragArrow = ArrowPointer.Create(part_transform, localWingCentroid, drag, drag.magnitude * PhysicsGlobals.AeroForceDisplayScale, Color.red, true);
+                else
+                {
+                    dragArrow.Direction = drag;
+                    dragArrow.Length = drag.magnitude * PhysicsGlobals.AeroForceDisplayScale;
+                }
+            }
+            else
+            {
+                if ((object)liftArrow != null)
+                {
+                    UnityEngine.Object.Destroy(liftArrow);
+                    liftArrow = null;
+                }
+                if ((object)dragArrow != null)
+                {
+                    UnityEngine.Object.Destroy(dragArrow);
+                    dragArrow = null;
+                }
+            }
+
+            if (PhysicsGlobals.AeroDataDisplay)
+            {
+                if (!fieldsVisible)
+                {
+                    Fields["dragForceWing"].guiActive = true;
+                    Fields["liftForceWing"].guiActive = true;
+                    fieldsVisible = true;
+                }
+
+                dragForceWing = drag.magnitude;
+                liftForceWing = lift.magnitude;
+
+            }
+            else if (fieldsVisible)
+            {
+                Fields["dragForceWing"].guiActive = false;
+                Fields["liftForceWing"].guiActive = false;
+                fieldsVisible = false;
+            }
+
+        }
+
     }
 }

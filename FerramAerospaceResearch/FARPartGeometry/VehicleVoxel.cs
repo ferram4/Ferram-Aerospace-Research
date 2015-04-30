@@ -43,6 +43,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 {
     public class VehicleVoxel
     {
+        const int MAX_CHUNKS_IN_QUEUE = 1500;
+        static Queue<VoxelChunk> clearedChunks = new Queue<VoxelChunk>();
+
         double elementSize;
         double invElementSize;
 
@@ -57,7 +60,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             get { return lowerRightCorner; }
         }
-        const double RC = 0.5f;
+        const double RC = 0.5;
 
         public VoxelCrossSection[] EmptyCrossSectionArray
         {
@@ -79,7 +82,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public VehicleVoxel(List<Part> partList, List<GeometryPartModule> geoModules, int elementCount, bool multiThreaded, bool solidify)
         {
-
             Vector3d min = new Vector3d(double.PositiveInfinity, double.PositiveInfinity, double.PositiveInfinity);
             Vector3d max = new Vector3d(double.NegativeInfinity, double.NegativeInfinity, double.NegativeInfinity);
 
@@ -185,7 +187,27 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         ~VehicleVoxel()
         {
+            RecycleVoxelChunks();
             ClearVisualVoxels();
+        }
+
+        public void RecycleVoxelChunks()
+        {
+            for(int i = 0; i < xLength; i++)
+                for(int j = 0; j < yLength; j++)
+                    for(int k = 0; k < zLength; k++)
+                    {
+                        VoxelChunk chunk = voxelChunks[i, j, k];
+                        if(chunk == null)
+                            continue;
+
+                        chunk.ClearChunk();
+
+                        if (clearedChunks.Count < MAX_CHUNKS_IN_QUEUE)
+                            clearedChunks.Enqueue(chunk);
+                        else
+                            return;
+                    }
         }
 
         public unsafe void CrossSectionData(VoxelCrossSection[] crossSections, Vector3 orientationVector, out int frontIndex, out int backIndex, out double sectionThickness, out double maxCrossSectionArea)
@@ -1134,7 +1156,18 @@ namespace FerramAerospaceResearch.FARPartGeometry
             section = voxelChunks[iSec, jSec, kSec];
             if (section == null)
             {
-                section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
+                lock(clearedChunks)
+                {
+                    if(clearedChunks.Count > 0)
+                    {
+                        section = clearedChunks.Dequeue();
+                    }
+                }
+                if (section == null)
+                    section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
+                else
+                    section.SetChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
+
                 voxelChunks[iSec, jSec, kSec] = section;
             }
            
@@ -1159,7 +1192,18 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 section = voxelChunks[iSec, jSec, kSec];
                 if (section == null)
                 {
-                    section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
+                    lock (clearedChunks)
+                    {
+                        if (clearedChunks.Count > 0)
+                        {
+                            section = clearedChunks.Dequeue();
+                        }
+                    }
+                    if (section == null)
+                        section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
+                    else
+                        section.SetChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
+
                     voxelChunks[iSec, jSec, kSec] = section;
                 }
             }
@@ -1413,7 +1457,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         continue;
                     }
 
-                    if (IsWithinDistanceFromSide(p1p2, p1TestPt) ||
+                    /*if (IsWithinDistanceFromSide(p1p2, p1TestPt) ||
                         IsWithinDistanceFromSide(p1p3, p1TestPt) ||
                         IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt))
                     {
@@ -1423,7 +1467,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         SetVoxelSection(i, j, k, part);
 
-                    }
+                    }*/
                 }
         }
 
@@ -1506,7 +1550,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         continue;
                     }
 
-                    if (IsWithinDistanceFromSide(p1p2, p1TestPt) ||
+                    /*if (IsWithinDistanceFromSide(p1p2, p1TestPt) ||
                         IsWithinDistanceFromSide(p1p3, p1TestPt) ||
                         IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt))
                     {
@@ -1514,7 +1558,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         if (j < 0 || j >= yCellLength)
                             continue;
                         SetVoxelSection(i, j, k, part);
-                    }
+                    }*/
                 }
         }
 
@@ -1598,7 +1642,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         continue;
                     }
 
-                    if (IsWithinDistanceFromSide(p1p2, p1TestPt)||
+                    /*if (IsWithinDistanceFromSide(p1p2, p1TestPt)||
                         IsWithinDistanceFromSide(p1p3, p1TestPt)||
                         IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt))
                     {
@@ -1607,7 +1651,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             continue;
 
                         SetVoxelSection(i, j, k, part);
-                    }
+                    }*/
                 }
         }
 

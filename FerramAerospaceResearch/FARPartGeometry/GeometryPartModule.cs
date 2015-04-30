@@ -142,42 +142,29 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             foreach (PartModule m in part.Modules)
             {
-                FieldInfo field = m.GetType().GetField("animationName");
-                if (field != null)        //This handles stock and Firespitter deployment animations
+                FindAnimStatesInModule(animations, m, "animationName");
+                FindAnimStatesInModule(animations, m, "animName");
+                FindAnimStatesInModule(animations, m, "deployAnimationName");
+            }
+        }
+
+        private void FindAnimStatesInModule(Animation[] animations, PartModule m, string fieldName)
+        {
+            FieldInfo field = m.GetType().GetField(fieldName);
+            if (field != null)        //This handles stock and Firespitter deployment animations
+            {
+                string animationName = (string)field.GetValue(m);
+                for (int i = 0; i < animations.Length; i++)
                 {
-                    string animationName = (string)field.GetValue(m);
-                    for (int i = 0; i < animations.Length; i++)
+                    Animation anim = animations[i];
+
+                    if (anim != null)
                     {
-                        Animation anim = animations[i];
-
-                        if (anim != null)
+                        AnimationState state = anim[animationName];
+                        if (state)
                         {
-                            AnimationState state = anim[animationName];
-                            if (state)
-                            {
-                                animStates.Add(state);
-                                animStateTime.Add(state.time);
-                            }
-                        }
-                    }
-                }
-
-                field = m.GetType().GetField("animName");
-                if (field != null)         //This handles Interstellar's deployment animations
-                {
-                    string animationName = (string)field.GetValue(m);
-                    for (int i = 0; i < animations.Length; i++)
-                    {
-                        Animation anim = animations[i];
-
-                        if (anim != null)
-                        {
-                            AnimationState state = anim[animationName];
-                            if (state)
-                            {
-                                animStates.Add(state);
-                                animStateTime.Add(state.time);
-                            }
+                            animStates.Add(state);
+                            animStateTime.Add(state.time);
                         }
                     }
                 }

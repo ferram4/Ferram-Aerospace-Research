@@ -44,7 +44,8 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
     {
         Vessel _vessel;
         static ControlSystem[] systems;
-        string[] systemLabel = new string[] { "Roll", "Yaw", "Pitch", "AoA", "DCA" };
+        string[] systemLabel = new string[] { "Roll", "Yaw", "Pitch", "AoA", "DPCR" };
+        string[] systemLabelLong = new string[] { "Roll System", "Yaw System", "Pitch System", "AoA Limiter", "Dynamic Pressure Control Reduction" };
 
         double aoALowLim, aoAHighLim;
         double scalingDynPres;
@@ -93,7 +94,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 boxStyle = FlightGUI.boxStyle;
 
             GUILayout.Label("Control System Tweaking");
-            systemDropdown.GUIDropDownDisplay();
+            systemDropdown.GUIDropDownDisplay(GUILayout.Width(120));
             int selectedItem = systemDropdown.ActiveSelection;
 
             ControlSystem sys = systems[selectedItem];

@@ -51,9 +51,7 @@ namespace ferram4
         [KSPField(isPersistant = false, guiActive = false)]
         public double Cm;
 
-        
-        protected FARControlSys FARControl;
-        //protected float MachNumber = 0;
+                //protected float MachNumber = 0;
         protected Vector3d velocityEditor = Vector3.zero;
 
         protected Transform part_transform;
@@ -62,7 +60,7 @@ namespace ferram4
         protected static RaycastHit hit;
 
         //Reset tinting for this part and its children
-        private bool resetTinting;
+ //       private bool resetTinting;
 
         //[KSPField(isPersistant = false, guiActive = true)]
         public double S;
@@ -75,7 +73,7 @@ namespace ferram4
         private Vector3 CoLForce;
 
         // Keep track if the tinting effect is active or not
-        private bool tintIsActive = false;
+        //private bool tintIsActive = false;
 
         public override void OnAwake()
         {
@@ -93,18 +91,9 @@ namespace ferram4
         public override void Start()
         {
             base.Start();
-
-            Fields["isShielded"].guiActive = FARDebugValues.displayShielding;
-
-            part.OnEditorDetach += ClearShielding;
-
-            if (!(this is FARControlSys))
-            {
-                Fields["Cl"].guiActive = Fields["Cd"].guiActive = Fields["Cm"].guiActive = FARDebugValues.displayCoefficients;
-            }
         }
 
-        public virtual void LateUpdate()
+/*        public virtual void LateUpdate()
         {
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -167,9 +156,9 @@ namespace ferram4
             Color tintColor = new Color(satCd, 0.5f * (satCl + satCd), satCl, 1);
 
             return tintColor;
-        }
+        }*/
 
-        public void ClearShielding()
+        /*public void ClearShielding()
         {
             isShielded = false;
         }
@@ -180,7 +169,7 @@ namespace ferram4
             Cl = 0;
             Cd = 0;
             Cm = 0;
-        }
+        }*/
 
 
         public virtual Vector3d GetVelocity()

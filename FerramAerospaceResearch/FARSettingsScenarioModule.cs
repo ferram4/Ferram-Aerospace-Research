@@ -237,7 +237,7 @@ namespace FerramAerospaceResearch
         public int numVoxelsDebrisVessel;
         public int minPhysTicksPerUpdate;
 
-        public FARVoxelSettings() : this(125000, 20000, 30) { }
+        public FARVoxelSettings() : this(250000, 20000, 30) { }
 
         public FARVoxelSettings(int vesselCount, int debrisCount, int minPhysTicks)
         {

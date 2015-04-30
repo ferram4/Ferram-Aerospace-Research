@@ -41,7 +41,7 @@ using FerramAerospaceResearch.RealChuteLite;
 
 namespace FerramAerospaceResearch.FARAeroComponents
 {
-    class TmpFlightIntegratorOverride : FlightIntegrator
+/*    class TmpFlightIntegratorOverride : FlightIntegrator
     {
         protected override void Start()
         {
@@ -88,5 +88,5 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 return a.ProjectedAreas.totalArea;// / part.DragCubes.GetCubeAreaDir(a.partLocalVel);
             }
         }
-    }
+    }*/
 }

@@ -46,7 +46,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
     class VehicleAerodynamics
     {
         VehicleVoxel _voxel = null;
-        VoxelCrossSection[] _vehicleCrossSection = null;
+        VoxelCrossSection[] _vehicleCrossSection = new VoxelCrossSection[1];
         int _voxelCount;
 
         double _length = 0;
@@ -219,7 +219,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                     VehicleVoxel newvoxel = new VehicleVoxel(_vehiclePartList, _currentGeoModules, _voxelCount, true, true);
 
-                    _vehicleCrossSection = newvoxel.EmptyCrossSectionArray;
+                    if (_vehicleCrossSection.Length < newvoxel.MaxArrayLength)
+                        _vehicleCrossSection = newvoxel.EmptyCrossSectionArray;
 
                     _voxel = newvoxel;
                     _voxelLowerRightCorner = _voxel.LocalLowerRightCorner;

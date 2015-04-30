@@ -59,6 +59,21 @@ namespace FerramAerospaceResearch.FARPartGeometry
             this.lowerCorner = lowerCorner;
         }
 
+        public void SetChunk(double size, Vector3d lowerCorner, int iOffset, int jOffset, int kOffset)
+        {
+            this.size = size;
+            offset = iOffset + 8 * jOffset + 64 * kOffset;
+            this.lowerCorner = lowerCorner;
+        }
+
+        public void ClearChunk()
+        {
+            size = 0;
+            offset = 0;
+            lowerCorner = Vector3d.zero;
+            for (int i = 0; i < voxelPoints.Length; i++)
+                voxelPoints[i] = null;
+        }
 
         //Use when certian that locking is unnecessary
         public unsafe void SetVoxelPointGlobalIndexNoLock(int i, int j, int k, Part p)
