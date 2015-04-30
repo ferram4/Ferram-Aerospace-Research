@@ -75,6 +75,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         int geoModulesReady = 0;
 
         List<FARAeroPartModule> _currentAeroModules;
+        List<FARAeroPartModule> _unusedAeroModules;
         List<FARAeroSection> _currentAeroSections;
 
         int _updateRateLimiter = 20;
@@ -129,9 +130,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
         {
             if (_vehicleAero.CalculationCompleted)
             {
-                _vehicleAero.GetNewAeroData(out _currentAeroModules, out _currentAeroSections);
+                _vehicleAero.GetNewAeroData(out _currentAeroModules, out _unusedAeroModules, out _currentAeroSections);                
 
                 _vessel.SendMessage("UpdateAeroModules", _currentAeroModules);
+
+                for (int i = 0; i < _unusedAeroModules.Count; i++)
+                    _unusedAeroModules[i].SetShielded();
             } 
             
             if (FlightGlobals.ready && _currentAeroSections != null)

@@ -96,10 +96,13 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
             this.enabled = true;
             OnGUIAppLauncherReady();
+            if(_vessel == FlightGlobals.ActiveVessel)
+                LoadConfigs();
         }
 
         void OnDestroy()
         {
+            SaveConfigs();
             if(_vessel)
                 vesselFlightGUI.Remove(_vessel);
         }

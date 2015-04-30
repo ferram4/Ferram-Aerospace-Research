@@ -100,6 +100,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
         }
 
+        public void SetShielded()
+        {
+            part.ShieldedFromAirstream = true;
+        }
+
         public void SetProjectedArea(ProjectedArea areas, Matrix4x4 vesselToWorldMatrix)
         {
             ProjectedArea transformedArea = new ProjectedArea();
@@ -116,9 +121,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
             projectedArea.totalArea = projectedArea.iN + projectedArea.iP + projectedArea.jN + projectedArea.jP + projectedArea.kN + projectedArea.kP;
 
             if (projectedArea.totalArea <= 0)
+            {
                 part.ShieldedFromAirstream = true;
+            }
             else
+            {
                 part.ShieldedFromAirstream = false;
+            }
 
             double areaForStress = projectedArea.totalArea / 6;
             if (areaForStress <= 0.1)
@@ -217,6 +226,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             partLocalForce = Vector3.zero;
             partLocalTorque = Vector3.zero;
+
+            Debug.Log(part.partInfo.title + " " + projectedArea.totalArea + " " + part.ShieldedFromAirstream);
         }
 
         public void AddLocalForce(Vector3 partLocalForce, Vector3 partLocalLocation)

@@ -68,6 +68,9 @@ namespace FerramAerospaceResearch
             node.AddValue("numVoxelsDebrisVessel", voxelSettings.numVoxelsDebrisVessel);
             node.AddValue("minPhysTicksPerUpdate", voxelSettings.minPhysTicksPerUpdate);
             node.AddValue("index", settings.index);
+
+            FARGUI.FARFlightGUI.StabilityAugmentation.OnSave(node);
+
             base.OnSave(node);
         }
 
@@ -114,6 +117,8 @@ namespace FerramAerospaceResearch
                 customSettings = new FARDifficultyAndExactnessSettings(-1);
             }
             currentIndex = index;
+
+            FARGUI.FARFlightGUI.StabilityAugmentation.OnLoad(node);
 
             base.OnLoad(node);
         }

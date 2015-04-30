@@ -616,7 +616,7 @@ namespace ferram4
                 GetRefAreaChildren();
                 UpdateMassToAccountForArea();
             }
-
+            
         }
 
         public void OnWingAttach()

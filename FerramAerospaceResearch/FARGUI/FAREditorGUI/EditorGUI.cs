@@ -111,7 +111,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             _vehicleAero = new VehicleAerodynamics();
 
-            guiRect = new Rect(Screen.width / 2, Screen.height / 4, 10, 10);
+            guiRect = new Rect(Screen.width / 4, Screen.height / 6, 10, 10);
 
             _instantSim = new InstantConditionSim();
             GUIDropDown<int> flapSettingDropDown = new GUIDropDown<int>(new string[] { "0 (up)", "1 (init climb)", "2 (takeoff)", "3 (landing)" }, new int[] { 0, 1, 2, 3 }, 0);
@@ -140,7 +140,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             GameEvents.onEditorShipModified.Add(ResetEditorEvent);
             GameEvents.onEditorLoad.Add(ResetEditorEvent);
             GameEvents.onGUIEngineersReportReady.Add(AddDesignConcerns);
-            GameEvents.onGUIEngineersReportDestroy.Add(AddDesignConcerns);
+            GameEvents.onGUIEngineersReportDestroy.Add(RemoveDesignConcerns);
 
             RequestUpdateVoxel();
         }

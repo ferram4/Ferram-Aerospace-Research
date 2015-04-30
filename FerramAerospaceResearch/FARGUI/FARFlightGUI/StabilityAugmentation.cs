@@ -43,8 +43,8 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
     class StabilityAugmentation
     {
         Vessel _vessel;
-        ControlSystem[] systems;
-        string[] systemLabel = new string[] { "Lvl", "Yaw", "Pitch", "AoA", "DCA" };
+        static ControlSystem[] systems;
+        string[] systemLabel = new string[] { "Roll", "Yaw", "Pitch", "AoA", "DCA" };
 
         double aoALowLim, aoAHighLim;
         double scalingDynPres;
@@ -56,7 +56,6 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         public StabilityAugmentation(Vessel vessel)
         {
-            systems = new ControlSystem[5];
             _vessel = vessel;
             _vessel.OnAutopilotUpdate += OnAutoPilotUpdate;
             systemDropdown = new GUIDropDown<int>(systemLabel, new int[] { 0, 1, 2, 3, 4, 5 }, 0);
@@ -110,6 +109,8 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                     aoALowLim = GUIUtils.TextEntryForDouble("Min AoA Lim:", 120, aoALowLim);
                     aoAHighLim = GUIUtils.TextEntryForDouble("Min AoA Lim:", 120, aoAHighLim);
                 }
+                else
+                    sys.zeroPoint = GUIUtils.TextEntryForDouble("Desired Point:", 120, sys.zeroPoint);
             }
             else
                 scalingDynPres = GUIUtils.TextEntryForDouble("Dyn Pres For Control Scaling:", 150, scalingDynPres);
@@ -124,7 +125,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             ControlSystem sys = systems[0];     //wing leveler
             if (sys.active)
             {
-                double phi = info.rollAngle;
+                double phi = info.rollAngle - sys.zeroPoint;
                 if (sys.kP < 0)
                 {
                     phi += 180;
@@ -151,7 +152,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             sys = systems[1];
             if (sys.active)
             {
-                double beta = -info.sideslipAngle * FARMathUtil.deg2rad;
+                double beta = -(info.sideslipAngle - sys.zeroPoint) * FARMathUtil.deg2rad;
 
                 double output = ControlStateChange(sys, beta);
 
@@ -169,7 +170,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             sys = systems[2];
             if (sys.active)
             {
-                double pitch = info.aoA * FARMathUtil.deg2rad;
+                double pitch = (info.aoA - sys.zeroPoint) * FARMathUtil.deg2rad;
 
                 double output = ControlStateChange(sys, pitch);
 
@@ -227,9 +228,109 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             return state;
         }
 
+        public static void OnLoad(ConfigNode node)
+        {
+            if(systems == null)
+                systems = new ControlSystem[5];
+
+            bool loadedSystems = false;
+            for(int i = 0; i < systems.Length; i++)
+            {
+                string nodeName = "ControlSys" + i;
+                if (node.HasNode(nodeName))
+                    loadedSystems |= TryLoadSystem(node.GetNode(nodeName), i);
+            }
+
+            if (!loadedSystems)
+                BuildDefaultSystems();
+        }
+
+        public static void BuildDefaultSystems()
+        {
+            ControlSystem sys = new ControlSystem();
+            //Roll system
+            sys.kP = 0.05;
+            sys.kD = 0.0002;
+            sys.kI = 0.001;
+
+            systems[0] = sys;
+
+            //Yaw system
+            sys.kP = 0;
+            sys.kD = 0.1;
+            sys.kI = 0;
+
+            systems[1] = sys;
+
+            //Pitch system
+            sys.kP = 0;
+            sys.kD = 0.1;
+            sys.kI = 0;
+
+            systems[2] = sys;
+
+            //AoA system
+            sys.kP = 0.25;
+            sys.kD = 0;
+            sys.kI = 0;
+
+            systems[3] = sys;
+        }
+
+        public static bool TryLoadSystem(ConfigNode systemNode, int index)
+        {
+            bool sysExists = false;
+            ControlSystem sys = systems[index];
+
+            if (systemNode.HasValue("active"))
+            {
+                bool.TryParse(systemNode.GetValue("active"), out sys.active);
+                sysExists |= true;
+            }
+
+            if (systemNode.HasValue("zeroPoint"))
+                double.TryParse(systemNode.GetValue("zeroPoint"), out sys.zeroPoint);
+
+            if (systemNode.HasValue("kP"))
+                double.TryParse(systemNode.GetValue("kP"), out sys.kP);
+            if (systemNode.HasValue("kD"))
+                double.TryParse(systemNode.GetValue("kD"), out sys.kD);
+            if (systemNode.HasValue("kI"))
+                double.TryParse(systemNode.GetValue("kI"), out sys.kI);
+
+            systems[index] = sys;
+            return sysExists;
+        }
+
+        public static void OnSave(ConfigNode node)
+        {
+            for (int i = 0; i < systems.Length; i++)
+            {
+                node.AddNode(BuildSystemNode(i));
+            }
+        }
+
+        public static ConfigNode BuildSystemNode(int index)
+        {
+            ControlSystem sys = systems[index];
+
+            ConfigNode node = new ConfigNode("ControlSys" + index);
+            node.AddValue("active", sys.active);
+            node.AddValue("zeroPoint", sys.zeroPoint);
+
+            node.AddValue("kP", sys.kP);
+            node.AddValue("kD", sys.kD);
+            node.AddValue("kI", sys.kI);
+
+            return node;
+        }
+
         struct ControlSystem
         {
             public bool active;
+
+            public double zeroPoint;
+
             public double kP;
             public double kD;
             public double kI;

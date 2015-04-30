@@ -96,6 +96,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
         List<FARAeroPartModule> _currentAeroModules;
         List<FARAeroPartModule> _newAeroModules;
 
+        List<FARAeroPartModule> _currentUnusedAeroModules;
+        List<FARAeroPartModule> _newUnusedAeroModules;
+
         List<FARAeroSection> _currentAeroSections;
         List<FARAeroSection> _newAeroSections;
 
@@ -103,6 +106,18 @@ namespace FerramAerospaceResearch.FARAeroComponents
         int firstSection;
 
         bool visualizing = false;
+
+        public void GetNewAeroData(out List<FARAeroPartModule> aeroModules, out List<FARAeroPartModule> unusedAeroModules, out List<FARAeroSection> aeroSections)
+        {
+            _calculationCompleted = false;
+            aeroModules = _currentAeroModules = _newAeroModules;
+
+            aeroSections = _currentAeroSections = _newAeroSections;
+
+            unusedAeroModules = _currentUnusedAeroModules = _newUnusedAeroModules;
+
+            LEGACY_UpdateWingAerodynamicModels();
+        }
 
         public void GetNewAeroData(out List<FARAeroPartModule> aeroModules, out List<FARAeroSection> aeroSections)
         {
@@ -706,7 +721,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
             _newAeroModules = tmpAeroModules.ToList();
 
+            _newUnusedAeroModules = new List<FARAeroPartModule>();
 
+            for (int i = 0; i < _currentGeoModules.Count; i++)
+            {
+                FARAeroPartModule aeroModule = _currentGeoModules[i].GetComponent<FARAeroPartModule>();
+                if ((object)aeroModule != null && !tmpAeroModules.Contains(aeroModule))
+                    _newUnusedAeroModules.Add(aeroModule);
+            }
+
+
+                ;
             if(HighLogic.LoadedSceneIsFlight)
                 _voxel = null;
         }

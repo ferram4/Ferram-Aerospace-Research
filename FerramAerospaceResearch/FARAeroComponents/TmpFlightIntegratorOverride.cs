@@ -43,13 +43,23 @@ namespace FerramAerospaceResearch.FARAeroComponents
 {
     class TmpFlightIntegratorOverride : FlightIntegrator
     {
+        protected override void Start()
+        {
+            base.Start();
+            string msg = "Start. Current modules coVesselModule : \n";
+            foreach (var vesselModuleWrapper in VesselModuleManager.GetModules(false, false))
+            {
+                msg += "  " + vesselModuleWrapper.type.ToString() + " active=" + vesselModuleWrapper.active + " order=" + vesselModuleWrapper.order + "\n";
+            }
+            print(msg);
+        }
         protected override void UpdateAerodynamics(Part part)
         {
             double extraArea = 0;
             if (part.Modules.Contains("ModuleAeroSurface"))     //FIXME Proper model for airbrakes
                 base.UpdateAerodynamics(part);
 
-            
+
             //base.UpdateAerodynamics(part);
             part.radiativeArea = CalculateAreaRadiative(part) + extraArea;
             part.exposedArea = CalculateAreaExposed(part) + extraArea;
