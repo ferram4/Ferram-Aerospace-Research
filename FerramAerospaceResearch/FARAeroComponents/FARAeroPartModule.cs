@@ -114,14 +114,18 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
         }
 
-        public void SetShielded()
+        public void SetShielded(bool value)
         {
-            part.ShieldedFromAirstream = true;
+            part.ShieldedFromAirstream = value;
         }
+
 
         public void SetProjectedArea(ProjectedArea areas, Matrix4x4 vesselToWorldMatrix)
         {
             ProjectedArea transformedArea = new ProjectedArea();
+            if (!part)
+                return;
+
             Matrix4x4 transformMatrix = part.transform.worldToLocalMatrix * vesselToWorldMatrix;
 
             IncrementAreas(ref transformedArea, (float)areas.iP * Vector3.right, transformMatrix);

@@ -1,4 +1,40 @@
-﻿using System;
+﻿/*
+Ferram Aerospace Research v0.14.6
+Copyright 2014, Michael Ferrara, aka Ferram4
+
+    This file is part of Ferram Aerospace Research.
+
+    Ferram Aerospace Research is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Ferram Aerospace Research is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Ferram Aerospace Research.  If not, see <http://www.gnu.org/licenses/>.
+
+    Serious thanks:		a.g., for tons of bugfixes and code-refactorings
+            			Taverius, for correcting a ton of incorrect values
+            			sarbian, for refactoring code for working with MechJeb, and the Module Manager 1.5 updates
+            			ialdabaoth (who is awesome), who originally created Module Manager
+                        Regex, for adding RPM support
+            			Duxwing, for copy editing the readme
+ * 
+ * Kerbal Engineer Redux created by Cybutek, Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
+ *      Referenced for starting point for fixing the "editor click-through-GUI" bug
+ *
+ * Part.cfg changes powered by sarbian & ialdabaoth's ModuleManager plugin; used with permission
+ *	http://forum.kerbalspaceprogram.com/threads/55219
+ *
+ * Toolbar integration powered by blizzy78's Toolbar plugin; used with permission
+ *	http://forum.kerbalspaceprogram.com/threads/60863
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
@@ -84,7 +120,7 @@ namespace FerramAerospaceResearch
             if (node.HasValue("index"))
                 index = int.Parse(node.GetValue("index"));
 
-            dropdown = new GUIDropDown<FARDifficultyAndExactnessSettings>(presetNames.ToArray(), presets.ToArray(), index);
+            dropdown = new GUIDropDown<FARDifficultyAndExactnessSettings>(presetNames.ToArray(), presets.ToArray(), index < 0 ? 2 : index);
             voxelSettings = new FARVoxelSettings();
 
             if (node.HasValue("numVoxelsControllableVessel"))
@@ -128,25 +164,25 @@ namespace FerramAerospaceResearch
             presets = new List<FARDifficultyAndExactnessSettings>();
             presetNames = new List<string>();
 
-            FARDifficultyAndExactnessSettings tmp = new FARDifficultyAndExactnessSettings(0.4, 0.03, 2, 2, 0);
+            FARDifficultyAndExactnessSettings tmp = new FARDifficultyAndExactnessSettings(0.6, 0.03, 2, 2, 0);
             presets.Add(tmp);
-            presetNames.Add("Low Drag, Lenient Design");
+            presetNames.Add("Low Drag, Lenient Area Ruling");
 
-            tmp = new FARDifficultyAndExactnessSettings(0.6, 0.03, 2, 2, 1);
+            tmp = new FARDifficultyAndExactnessSettings(0.7, 0.03, 2, 2, 1);
             presets.Add(tmp);
-            presetNames.Add("Moderate Drag, Lenient Design");
+            presetNames.Add("Moderate Drag, Lenient Area Ruling");
 
-            tmp = new FARDifficultyAndExactnessSettings(0.6, 0.015, 1, 1, 2);
+            tmp = new FARDifficultyAndExactnessSettings(0.7, 0.015, 2, 1, 2);
             presets.Add(tmp);
-            presetNames.Add("Moderate Drag, Strict Design");
+            presetNames.Add("Moderate Drag, Moderate Area Ruling");
 
-            tmp = new FARDifficultyAndExactnessSettings(0.9, 0.015, 1, 1, 3);
+            tmp = new FARDifficultyAndExactnessSettings(0.85, 0.015, 2, 1, 3);
             presets.Add(tmp);
-            presetNames.Add("High Drag, Strict Design");
+            presetNames.Add("High Drag, Moderate Area Ruling");
 
-            tmp = new FARDifficultyAndExactnessSettings(1, 0.005, 1, 1, 4);
+            tmp = new FARDifficultyAndExactnessSettings(1, 0.010, 1, 1, 4);
             presets.Add(tmp);
-            presetNames.Add("Full Drag, No Leniency");
+            presetNames.Add("Full Drag, Strict Area Ruling");
         }
 
         public void DisplaySelection()
@@ -207,9 +243,9 @@ namespace FerramAerospaceResearch
 
     public class FARDifficultyAndExactnessSettings
     {
-        public double fractionTransonicDrag = 0.625;
+        public double fractionTransonicDrag = 0.7;
         public double gaussianVehicleLengthFractionForSmoothing = 0.015;
-        public int numAreaSmoothingPasses = 1;
+        public int numAreaSmoothingPasses = 2;
         public int numDerivSmoothingPasses = 1;
         public int index;
 

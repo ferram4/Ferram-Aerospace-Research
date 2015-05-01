@@ -21,6 +21,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
             //double extraArea = 0;
             if (part.Modules.Contains("ModuleAeroSurface"))     //FIXME Proper model for airbrakes
                 fi.BaseFIUpdateAerodynamics(part);
+            else if(!part.DragCubes.None)
+            {
+                Rigidbody rb = part.Rigidbody;
+                if (rb)
+                    part.DragCubes.SetDrag((rb.velocity + Krakensbane.GetFrameVelocityV3f()).normalized, (float)part.machNumber);
+            }
 
             FARAeroPartModule aeroModule = part.GetComponent<FARAeroPartModule>();
 

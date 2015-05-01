@@ -157,7 +157,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
             if (_vessel == FlightGlobals.ActiveVessel && showGUI && showAllGUI)
             {
-                mainGuiRect = GUILayout.Window(this.GetHashCode(), mainGuiRect, MainFlightGUIWindow, "FAR Flight Systems", GUILayout.MinWidth(200));
+                mainGuiRect = GUILayout.Window(this.GetHashCode(), mainGuiRect, MainFlightGUIWindow, "FAR Flight Systems", GUILayout.MinWidth(250));
                 GUIUtils.ClampToScreen(mainGuiRect);
 
                 if (showFlightDataWindow)

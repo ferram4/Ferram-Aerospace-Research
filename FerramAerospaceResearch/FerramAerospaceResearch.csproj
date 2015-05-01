@@ -76,7 +76,6 @@
     <Compile Include="FARAeroComponents\FARAeroPartModule.cs" />
     <Compile Include="FARAeroComponents\FARAeroSection.cs" />
     <Compile Include="FARAeroComponents\FARVesselAero.cs" />
-    <Compile Include="FARAeroComponents\TmpFlightIntegratorOverride.cs" />
     <Compile Include="FARAeroComponents\VehicleAerodynamics.cs" />
     <Compile Include="LEGACYferram4\FARAeroStress.cs" />
     <Compile Include="FARAeroUtil.cs" />

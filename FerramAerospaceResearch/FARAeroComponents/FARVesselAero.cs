@@ -135,7 +135,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 _vessel.SendMessage("UpdateAeroModules", _currentAeroModules);
 
                 for (int i = 0; i < _unusedAeroModules.Count; i++)
-                    _unusedAeroModules[i].SetShielded();
+                    _unusedAeroModules[i].SetShielded(true);
+
+                for (int i = 0; i < _currentAeroModules.Count; i++)
+                    _currentAeroModules[i].SetShielded(false);
             } 
             
             if (FlightGlobals.ready && _currentAeroSections != null)
@@ -212,6 +215,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public void AnimationVoxelUpdate()
         {
+            Debug.Log("animUpdate");
             if (_updateRateLimiter == FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate)
                 _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
             RequestUpdateVoxel(false);
@@ -237,12 +241,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
                  _vessel = gameObject.GetComponent<Vessel>();
              if (_vehicleAero == null)
                  _vehicleAero = new VehicleAerodynamics();
-
-             if (_currentGeoModules.Count > geoModulesReady)
-             {
-                 _updateQueued = true;
-                 return;
-             }
 
              if (_updateRateLimiter < FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate)        //this has been updated recently in the past; queue an update and return
              {

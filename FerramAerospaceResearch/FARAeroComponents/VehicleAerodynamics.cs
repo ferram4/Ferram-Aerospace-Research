@@ -208,6 +208,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 this._localToWorldMatrix = localToWorldMatrix;
                 this._vehiclePartList = vehiclePartList;
                 this._currentGeoModules = currentGeoModules;
+
                 _partWorldToLocalMatrix.Clear();
 
                 for (int i = 0; i < _currentGeoModules.Count; i++)
@@ -244,16 +245,15 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     voxelizing = true;
 
-                    VehicleVoxel newvoxel = new VehicleVoxel(_vehiclePartList, _currentGeoModules, _voxelCount, true, true);
+                    _voxel = new VehicleVoxel(_vehiclePartList, _currentGeoModules, _voxelCount, true, true);
+                    if (_vehicleCrossSection.Length < _voxel.MaxArrayLength)
+                        _vehicleCrossSection = _voxel.EmptyCrossSectionArray;
 
-                    if (_vehicleCrossSection.Length < newvoxel.MaxArrayLength)
-                        _vehicleCrossSection = newvoxel.EmptyCrossSectionArray;
-
-                    _voxel = newvoxel;
                     _voxelLowerRightCorner = _voxel.LocalLowerRightCorner;
 
                     CalculateVesselAeroProperties();
                     _calculationCompleted = true;
+
                     voxelizing = false;
                 }
             }
@@ -712,7 +712,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if (key == null)
                         continue;
 
-                    FARAeroPartModule m = key.GetComponent<FARAeroPartModule>();
+                    if (!key.Modules.Contains("FARAeroPartModule"))
+                        continue;
+
+                    FARAeroPartModule m = (FARAeroPartModule)key.Modules["FARAeroPartModule"];
                     if (m != null)
                         includedModules.Add(m);
 
@@ -737,7 +740,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 _newAeroSections.Add(section);
 
-                tmpAeroModules.UnionWith(includedModules);
+                for (int j = 0; j < includedModules.Count; j++)
+                {
+                    FARAeroPartModule a = includedModules[j];
+                    tmpAeroModules.Add(a);
+                }
 
                 includedModules.Clear();
                 weighting.Clear();
@@ -754,7 +761,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             for (int i = 0; i < _currentGeoModules.Count; i++)
             {
                 FARAeroPartModule aeroModule = _currentGeoModules[i].GetComponent<FARAeroPartModule>();
-                if ((object)aeroModule != null && !tmpAeroModules.Contains(aeroModule))
+                if (aeroModule != null && !tmpAeroModules.Contains(aeroModule))
                     _newUnusedAeroModules.Add(aeroModule);
             }
 
