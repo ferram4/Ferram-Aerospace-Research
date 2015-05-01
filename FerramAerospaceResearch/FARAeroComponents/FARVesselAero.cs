@@ -291,7 +291,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
              _vType = _vessel.vesselType;
 
              _voxelCount = VoxelCountFromType();
-             _vehicleAero.VoxelUpdate(_vessel.rootPart.partTransform.worldToLocalMatrix, _vessel.rootPart.partTransform.localToWorldMatrix, _voxelCount, _vessel.parts, _currentGeoModules, !setup);
+             if(!_vehicleAero.TryVoxelUpdate(_vessel.rootPart.partTransform.worldToLocalMatrix, _vessel.rootPart.partTransform.localToWorldMatrix, _voxelCount, _vessel.parts, _currentGeoModules, !setup))
+             {
+                 _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
+                 _updateQueued = true;
+             }
 
              setup = true;
 

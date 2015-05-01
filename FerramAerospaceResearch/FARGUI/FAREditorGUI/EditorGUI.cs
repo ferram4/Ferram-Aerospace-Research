@@ -340,7 +340,11 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             
             if(_currentGeometryModules.Count > 0)
-                _vehicleAero.VoxelUpdate(EditorLogic.RootPart.transform.worldToLocalMatrix, EditorLogic.RootPart.transform.localToWorldMatrix, FARSettingsScenarioModule.VoxelSettings.numVoxelsControllableVessel, partList, _currentGeometryModules, true);
+               if(!_vehicleAero.TryVoxelUpdate(EditorLogic.RootPart.transform.worldToLocalMatrix, EditorLogic.RootPart.transform.localToWorldMatrix, FARSettingsScenarioModule.VoxelSettings.numVoxelsControllableVessel, partList, _currentGeometryModules, true))
+               {
+                    _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
+                    _updateQueued = true;
+               }
         }
 
         private void TriggerIGeometryUpdaters()

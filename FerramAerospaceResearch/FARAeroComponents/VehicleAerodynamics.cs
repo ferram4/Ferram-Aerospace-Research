@@ -107,6 +107,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         int firstSection;
 
         bool visualizing = false;
+        bool voxelizing = false;
 
         public void GetNewAeroData(out List<FARAeroPartModule> aeroModules, out List<FARAeroPartModule> unusedAeroModules, out List<FARAeroSection> aeroSections)
         {
@@ -191,33 +192,45 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 DisplayDebugVoxels(localToWorldMatrix);
         }
 
-        public void VoxelUpdate(Matrix4x4 worldToLocalMatrix, Matrix4x4 localToWorldMatrix, int voxelCount, List<Part> vehiclePartList, List<GeometryPartModule> currentGeoModules, bool updateGeometryPartModules = true)
+        public bool TryVoxelUpdate(Matrix4x4 worldToLocalMatrix, Matrix4x4 localToWorldMatrix, int voxelCount, List<Part> vehiclePartList, List<GeometryPartModule> currentGeoModules, bool updateGeometryPartModules = true)
         {
-            _voxelCount = voxelCount;
-
-            this._worldToLocalMatrix = worldToLocalMatrix;
-            this._localToWorldMatrix = localToWorldMatrix;
-            this._vehiclePartList = vehiclePartList;
-            this._currentGeoModules = currentGeoModules;
-            _partWorldToLocalMatrix.Clear();
-
-            for (int i = 0; i < _currentGeoModules.Count; i++)
+            if (Monitor.TryEnter(this))
             {
-                GeometryPartModule g = _currentGeoModules[i];
-                _partWorldToLocalMatrix.Add(g.part, new PartTransformInfo(g.part.transform));
-            }
+                if (voxelizing)
+                {
+                    Monitor.Exit(this);
+                    return false;
+                }
+                _voxelCount = voxelCount;
 
-            this._vehicleMainAxis = CalculateVehicleMainAxis();
+                this._worldToLocalMatrix = worldToLocalMatrix;
+                this._localToWorldMatrix = localToWorldMatrix;
+                this._vehiclePartList = vehiclePartList;
+                this._currentGeoModules = currentGeoModules;
+                _partWorldToLocalMatrix.Clear();
 
-            if (_voxel != null)
-            {
+                for (int i = 0; i < _currentGeoModules.Count; i++)
+                {
+                    GeometryPartModule g = _currentGeoModules[i];
+                    _partWorldToLocalMatrix.Add(g.part, new PartTransformInfo(g.part.transform));
+                }
+
+                this._vehicleMainAxis = CalculateVehicleMainAxis();
+
+                if (_voxel != null)
+                {
+                    visualizing = false;
+                    _voxel.CleanupVoxel();
+                }
+
                 visualizing = false;
-                _voxel.CleanupVoxel();
+
+                ThreadPool.QueueUserWorkItem(CreateVoxel, updateGeometryPartModules);
+                Monitor.Exit(this);
+                return true;
             }
-
-            visualizing = false;
-
-            ThreadPool.QueueUserWorkItem(CreateVoxel, updateGeometryPartModules);
+            else
+                return false;
         }
 
         private void CreateVoxel(object updateGeometryBool)
@@ -226,6 +239,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 lock (this)
                 {
+                    voxelizing = true;
                     if((bool)updateGeometryBool)
                         UpdateGeometryPartModules();
 
@@ -239,6 +253,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                     CalculateVesselAeroProperties();
                     _calculationCompleted = true;
+                    voxelizing = false;
                 }
             }
             catch (Exception e)
