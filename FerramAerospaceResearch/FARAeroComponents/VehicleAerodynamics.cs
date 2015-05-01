@@ -93,6 +93,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         List<GeometryPartModule> _currentGeoModules;
         Dictionary<Part, PartTransformInfo> _partWorldToLocalMatrix = new Dictionary<Part, PartTransformInfo>();
+        Dictionary<FARAeroPartModule, FARAeroPartModule.ProjectedArea> _moduleAndAreas = new Dictionary<FARAeroPartModule, FARAeroPartModule.ProjectedArea>();
 
         List<FARAeroPartModule> _currentAeroModules;
         List<FARAeroPartModule> _newAeroModules;
@@ -213,6 +214,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     GeometryPartModule g = _currentGeoModules[i];
                     _partWorldToLocalMatrix.Add(g.part, new PartTransformInfo(g.part.transform));
+                    if(updateGeometryPartModules)
+                        g.UpdateTransformMatrixList(_worldToLocalMatrix);
                 }
 
                 this._vehicleMainAxis = CalculateVehicleMainAxis();
@@ -225,7 +228,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 visualizing = false;
 
-                ThreadPool.QueueUserWorkItem(CreateVoxel, updateGeometryPartModules);
+                ThreadPool.QueueUserWorkItem(CreateVoxel);
                 Monitor.Exit(this);
                 return true;
             }
@@ -233,15 +236,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 return false;
         }
 
-        private void CreateVoxel(object updateGeometryBool)
+        private void CreateVoxel(object nullObj)
         {
             try
             {
                 lock (this)
                 {
                     voxelizing = true;
-                    if((bool)updateGeometryBool)
-                        UpdateGeometryPartModules();
 
                     VehicleVoxel newvoxel = new VehicleVoxel(_vehiclePartList, _currentGeoModules, _voxelCount, true, true);
 
@@ -259,16 +260,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
             catch (Exception e)
             {
                 Debug.LogException(e);
-            }
-        }
-
-        private void UpdateGeometryPartModules()
-        {
-            for (int i = 0; i < _currentGeoModules.Count; i++)
-            {
-                GeometryPartModule geoModule = _currentGeoModules[i];
-                if ((object)geoModule != null)
-                    geoModule.UpdateTransformMatrixList(_worldToLocalMatrix);
             }
         }
 
@@ -304,21 +295,21 @@ namespace FerramAerospaceResearch.FARAeroComponents
         private Vector3 CalculateVehicleMainAxis()
         {
             Vector3 axis = Vector3.zero;
-            for (int i = 0; i < _vehiclePartList.Count; i++)      //get axis by averaging all parts up vectors
+            for (int i = 0; i < _currentGeoModules.Count; i++)      //get axis by averaging all parts up vectors
             {
-                Part p = _vehiclePartList[i];
-                GeometryPartModule m = p.GetComponent<GeometryPartModule>();
+                GeometryPartModule m = _currentGeoModules[i];
                 if (m != null)
                 {
                     Bounds b = m.overallMeshBounds;
-                    Vector3 vec = p.transform.up;
-                    ModuleResourceIntake intake = p.GetComponent<ModuleResourceIntake>();
+                    Vector3 vec = m.part.transform.up;
+                    ModuleResourceIntake intake = m.part.GetComponent<ModuleResourceIntake>();
                     if (intake)
                     {
-                        Transform intakeTrans = p.FindModelTransform(intake.intakeTransformName);
+                        Transform intakeTrans = m.part.FindModelTransform(intake.intakeTransformName);
                         if ((object)intakeTrans != null)
                             vec = intakeTrans.forward;
                     }
+                    vec = _worldToLocalMatrix.MultiplyVector(vec);
                     vec.x = Math.Abs(vec.x);
                     vec.y = Math.Abs(vec.y);
                     vec.z = Math.Abs(vec.z);
@@ -329,9 +320,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
             axis.Normalize();   //normalize axis for later calcs
             float dotProdX, dotProdY, dotProdZ;
 
-            dotProdX = Math.Abs(Vector3.Dot(axis, _localToWorldMatrix.MultiplyVector(Vector3.right)));
-            dotProdY = Math.Abs(Vector3.Dot(axis, _localToWorldMatrix.MultiplyVector(Vector3.up)));
-            dotProdZ = Math.Abs(Vector3.Dot(axis, _localToWorldMatrix.MultiplyVector(Vector3.forward)));
+            //axis = _worldToLocalMatrix.MultiplyVector(axis);
+
+            dotProdX = Math.Abs(Vector3.Dot(axis, Vector3.right));
+            dotProdY = Math.Abs(Vector3.Dot(axis, Vector3.up));
+            dotProdZ = Math.Abs(Vector3.Dot(axis, Vector3.forward));
 
             if (dotProdY > 2 * dotProdX && dotProdY > 2 * dotProdZ)
                 return Vector3.up;
@@ -344,7 +337,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             //Otherwise, now we need to use axis, since it's obviously not close to anything else
 
-            axis = _worldToLocalMatrix.MultiplyVector(axis);
 
             return axis;
         }
@@ -552,10 +544,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             double criticalMachNumber = CalculateCriticalMachNumber(finenessRatio);
 
-            _criticalMach = criticalMachNumber;
+            _criticalMach = criticalMachNumber * CriticalMachFactorForUnsmoothCrossSection(_vehicleCrossSection, finenessRatio, _sectionThickness);
 
-            Dictionary<FARAeroPartModule, FARAeroPartModule.ProjectedArea> moduleAndAreas = new Dictionary<FARAeroPartModule, FARAeroPartModule.ProjectedArea>();
+            _moduleAndAreas.Clear();
             _newAeroSections = new List<FARAeroSection>();
+            List<FARAeroPartModule> includedModules = new List<FARAeroPartModule>();
+            List<float> weighting = new List<float>();
             HashSet<FARAeroPartModule> tmpAeroModules = new HashSet<FARAeroPartModule>();
             _sonicDragArea = 0;
             for (int i = 0; i <= numSections; i++)  //index in the cross sections
@@ -581,12 +575,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 //Potential and Viscous lift calcs
                 float potentialFlowNormalForce;
-                //if(i == 0)
-                //    potentialFlowNormalForce = (float)(nextArea - curArea);
-                //else if(i == numSections)
+                if(i == 0)
+                    potentialFlowNormalForce = (float)(nextArea - curArea);
+                else if(i == numSections)
                     potentialFlowNormalForce = (float)(curArea - prevArea);
-                //else
-                //    potentialFlowNormalForce = (float)(nextArea - prevArea) * 0.5f;      //calcualted from area change
+                else
+                    potentialFlowNormalForce = (float)(nextArea - prevArea) * 0.5f;      //calcualted from area change
 
                 float areaChangeMax = (float)Math.Min(nextArea, prevArea) * 0.1f;
 
@@ -609,14 +603,16 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 sonicBaseDrag = Math.Abs(sonicBaseDrag);
 
+                Dictionary<Part, VoxelCrossSection.SideAreaValues> includedPartsAndAreas = _vehicleCrossSection[index].partSideAreaValues;
+
+                double surfaceArea = 0;
+                foreach (KeyValuePair<Part, VoxelCrossSection.SideAreaValues> pair in includedPartsAndAreas)
+                {
+                    VoxelCrossSection.SideAreaValues areas = pair.Value;
+                    surfaceArea += areas.iN + areas.iP + areas.jN + areas.jP + areas.kN + areas.kP;
+                }
+
                 float viscCrossflowDrag = (float)(Math.Sqrt(curArea / Math.PI) * _sectionThickness * 2d);
-
-                double surfaceArea = curArea * Math.PI;
-                if (surfaceArea < 0)
-                    surfaceArea = 0;
-
-                surfaceArea = 2d * Math.Sqrt(surfaceArea); //section circumference
-                surfaceArea *= _sectionThickness;    //section surface area for viscous effects
 
                 xForceSkinFriction.Add(0f, (float)(surfaceArea * viscousDragFactor), 0, 0);   //subsonic incomp visc drag
                 xForceSkinFriction.Add(1f, (float)(surfaceArea * viscousDragFactor), 0, 0);   //transonic visc drag
@@ -706,9 +702,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 xRefVector = _localToWorldMatrix.MultiplyVector(xRefVector);
                 nRefVector = _localToWorldMatrix.MultiplyVector(nRefVector);
 
-                Dictionary<Part, VoxelCrossSection.SideAreaValues> includedPartsAndAreas = _vehicleCrossSection[index].partSideAreaValues;
-                List<FARAeroPartModule> includedModules = new List<FARAeroPartModule>();
-                List<float> weighting = new List<float>();
 
                 float weightingFactor = 0;
 
@@ -723,10 +716,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if (m != null)
                         includedModules.Add(m);
 
-                    if (moduleAndAreas.ContainsKey(m))
-                        moduleAndAreas[m] += pair.Value;
+                    if (_moduleAndAreas.ContainsKey(m))
+                        _moduleAndAreas[m] += pair.Value;
                     else
-                        moduleAndAreas[m] = new FARAeroPartModule.ProjectedArea() + pair.Value;
+                        _moduleAndAreas[m] = new FARAeroPartModule.ProjectedArea() + pair.Value;
 
                     weightingFactor += (float)pair.Value.count;
                     weighting.Add((float)pair.Value.count);
@@ -743,9 +736,14 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     centroid, xRefVector, nRefVector, _localToWorldMatrix, _vehicleMainAxis, includedModules, includedPartsAndAreas, weighting, _partWorldToLocalMatrix);
 
                 _newAeroSections.Add(section);
+
                 tmpAeroModules.UnionWith(includedModules);
+
+                includedModules.Clear();
+                weighting.Clear();
+
             }
-            foreach(KeyValuePair<FARAeroPartModule, FARAeroPartModule.ProjectedArea> pair in moduleAndAreas)
+            foreach(KeyValuePair<FARAeroPartModule, FARAeroPartModule.ProjectedArea> pair in _moduleAndAreas)
             {
                 pair.Key.SetProjectedArea(pair.Value, _localToWorldMatrix);
             }
@@ -760,8 +758,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     _newUnusedAeroModules.Add(aeroModule);
             }
 
-
-                
             if (HighLogic.LoadedSceneIsFlight)
             {
                 _voxel.CleanupVoxel();
@@ -848,7 +844,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             double lj3rdTerm = Math.Log(sectionThickness) - 1;
 
-            for (int j = 0; j <= limDoubleDrag; j++)      //section of influence from ahead and behind
+            lj2ndTerm = 0.5 * Math.Log(0.5);
+            drag = currentSectAreaCrossSection * (lj2ndTerm + lj3rdTerm);
+
+
+            for (int j = 1; j <= limDoubleDrag; j++)      //section of influence from ahead and behind
             {
                 double thisLj = (j + 0.5) * Math.Log(j + 0.5);
                 double tmp = thisLj;
@@ -918,6 +918,36 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 return 0.33 * finenessRatio - 0.21;
 
             return 0.07 * finenessRatio + 0.57;
+        }
+
+        private double CriticalMachFactorForUnsmoothCrossSection(VoxelCrossSection[] crossSections, double finenessRatio, double sectionThickness)
+        {
+            double maxAbsRateOfChange = 0;
+            double prevArea = 0;
+            double invSectionThickness = 1/ sectionThickness;
+
+            for(int i = 0; i < crossSections.Length; i++)
+            {
+                double currentArea = crossSections[i].area;
+                double absRateOfChange = Math.Abs(currentArea - prevArea) * invSectionThickness;
+                if (absRateOfChange > maxAbsRateOfChange)
+                    maxAbsRateOfChange = absRateOfChange;
+                prevArea = currentArea;
+            }
+
+            //double normalizedRateOfChange = maxAbsRateOfChange / _maxCrossSectionArea;
+
+            double maxCritMachAdjustmentFactor = 2 * _maxCrossSectionArea + 5 * maxAbsRateOfChange;
+            maxCritMachAdjustmentFactor = 0.5 + _maxCrossSectionArea / maxCritMachAdjustmentFactor;     //will vary based on x = maxAbsRateOfChange / _maxCrossSectionArea from 1 @ x = 0 to 0.5 as x -> infinity
+
+            double critAdjustmentFactor = 4 + finenessRatio;
+            critAdjustmentFactor = 6 * (1 - maxCritMachAdjustmentFactor) / critAdjustmentFactor;
+            critAdjustmentFactor += maxCritMachAdjustmentFactor;
+
+            if (critAdjustmentFactor > 1)
+                critAdjustmentFactor = 1;
+
+            return critAdjustmentFactor;
         }
         #endregion
 

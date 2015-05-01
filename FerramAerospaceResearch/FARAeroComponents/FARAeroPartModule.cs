@@ -52,6 +52,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         public Vector3 partLocalAngVel;
 
         public Vector3 worldSpaceAeroForce;
+        public Vector3 worldSpaceTorque;
 
         Vector3 partLocalForce;
         Vector3 partLocalTorque;
@@ -65,6 +66,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         private ArrowPointer liftArrow;
         private ArrowPointer dragArrow;
+        private ArrowPointer momentArrow;
 
         bool fieldsVisible = false;
 
@@ -248,15 +250,14 @@ namespace FerramAerospaceResearch.FARAeroComponents
             Rigidbody rb = part.Rigidbody;
 
             worldSpaceAeroForce = matrix.MultiplyVector(partLocalForce);
-
+            worldSpaceTorque = matrix.MultiplyVector(partLocalTorque);
             UpdateAeroDisplay();
 
             rb.AddForce(worldSpaceAeroForce);
-            rb.AddTorque(matrix.MultiplyVector(partLocalTorque));
+            rb.AddTorque(worldSpaceTorque);
 
             partLocalForce = Vector3.zero;
             partLocalTorque = Vector3.zero;
-
         }
 
         public void AddLocalForce(Vector3 partLocalForce, Vector3 partLocalLocation)
@@ -272,6 +273,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             this.partLocalTorque += Vector3.Cross(localRadVector, partLocalForce);
 
             this.partLocalTorque += partLocalTorque;
+
         }
 
         public void UpdateVelocityAndAngVelocity(Vector3 frameVel)
@@ -293,6 +295,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             partLocalAngVel = rb.angularVelocity;
             partLocalAngVel = matrix.MultiplyVector(partLocalAngVel);
+
         }
 
         public void OnCenterOfLiftQuery(CenterOfLiftQuery CoLMarker)
@@ -379,6 +382,14 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     dragArrow.Direction = worldDragArrow;
                     dragArrow.Length = worldDragArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale;
+                }
+
+                if (momentArrow == null)
+                    momentArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldSpaceTorque, worldSpaceTorque.magnitude * PhysicsGlobals.AeroForceDisplayScale, Color.yellow, true);
+                else
+                {
+                    momentArrow.Direction = worldSpaceTorque;
+                    momentArrow.Length = worldSpaceTorque.magnitude * PhysicsGlobals.AeroForceDisplayScale;
                 }
             }
             else

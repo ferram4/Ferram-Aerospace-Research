@@ -43,8 +43,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
 {
     public class VehicleVoxel
     {
-        const int MAX_CHUNKS_IN_QUEUE = 1500;
-        static Queue<VoxelChunk> clearedChunks = new Queue<VoxelChunk>();
+        //const int MAX_CHUNKS_IN_QUEUE = 1500;
+        //static Queue<VoxelChunk> clearedChunks = new Queue<VoxelChunk>();
 
         double elementSize;
         double invElementSize;
@@ -186,12 +186,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public void CleanupVoxel()
         {
-            RecycleVoxelChunks();
+            //RecycleVoxelChunks();
             ClearVisualVoxels();
         }
 
 
-        public void RecycleVoxelChunks()
+        /*public void RecycleVoxelChunks()
         {
             for(int i = 0; i < xLength; i++)
                 for(int j = 0; j < yLength; j++)
@@ -208,7 +208,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         else
                             return;
                     }
-        }
+        }*/
 
         public unsafe void CrossSectionData(VoxelCrossSection[] crossSections, Vector3 orientationVector, out int frontIndex, out int backIndex, out double sectionThickness, out double maxCrossSectionArea)
         {
@@ -1002,11 +1002,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
             }
 
-            double denom = sectionThickness;
-            denom *= denom;
-            //denom *= 12;
-            //denom *= Math.PI;
-            denom = 1 / denom;
+            double denom = 1 / (sectionThickness * sectionThickness);
             maxCrossSectionArea = 0;
 
 
@@ -1156,17 +1152,17 @@ namespace FerramAerospaceResearch.FARPartGeometry
             section = voxelChunks[iSec, jSec, kSec];
             if (section == null)
             {
-                lock(clearedChunks)
+                /*lock(clearedChunks)
                 {
                     if(clearedChunks.Count > 0)
                     {
                         section = clearedChunks.Dequeue();
                     }
                 }
-                if (section == null)
+                if (section == null)*/
                     section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
-                else
-                    section.SetChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
+                //else
+                //    section.SetChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
 
                 voxelChunks[iSec, jSec, kSec] = section;
             }
@@ -1192,17 +1188,17 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 section = voxelChunks[iSec, jSec, kSec];
                 if (section == null)
                 {
-                    lock (clearedChunks)
+                    /*lock(clearedChunks)
                     {
-                        if (clearedChunks.Count > 0)
+                        if(clearedChunks.Count > 0)
                         {
                             section = clearedChunks.Dequeue();
                         }
                     }
-                    if (section == null)
-                        section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
-                    else
-                        section.SetChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
+                    if (section == null)*/
+                    section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
+                    //else
+                    //    section.SetChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
 
                     voxelChunks[iSec, jSec, kSec] = section;
                 }

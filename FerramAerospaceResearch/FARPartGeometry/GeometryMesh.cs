@@ -66,7 +66,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             size.y = Math.Abs(size.y);
             size.z = Math.Abs(size.z);
 
-            bounds = new Bounds(thisToVesselMatrix.MultiplyPoint3x4(meshBounds.center), size);
+            bounds = TransformBounds(meshBounds, thisToVesselMatrix);
         }
 
         public bool TryTransformBasis(Matrix4x4 newThisToVesselMatrix)
@@ -79,17 +79,78 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             tempMatrix = thisToVesselMatrix *  tempMatrix;
 
-            Vector3 size = tempMatrix.MultiplyVector(bounds.size);
-            size.x = Math.Abs(size.x);
-            size.y = Math.Abs(size.y);
-            size.z = Math.Abs(size.z);
-
-            bounds = new Bounds(tempMatrix.MultiplyPoint3x4(bounds.center), size);
+            bounds = TransformBounds(bounds, tempMatrix);
 
             for (int i = 0; i < vertices.Length; i++)
                 vertices[i] = tempMatrix.MultiplyPoint3x4(vertices[i]);
 
             return true;
+        }
+
+        private Bounds TransformBounds(Bounds oldBounds, Matrix4x4 matrix)
+        {
+            Bounds bounds = new Bounds();
+            Vector3 center, extents;
+            center = oldBounds.center;//matrix.MultiplyPoint3x4(m.bounds.center);
+            extents = oldBounds.extents;//matrix.MultiplyVector(m.bounds.size);
+
+            /*size.x = Math.Abs(size.x);
+            size.y = Math.Abs(size.y);
+            size.z = Math.Abs(size.z);*/
+
+            Vector3 boundPt;
+            boundPt = center + extents;
+            boundPt = matrix.MultiplyPoint3x4(boundPt);
+            bounds.Encapsulate(boundPt);
+
+            boundPt = center - extents;
+            boundPt = matrix.MultiplyPoint3x4(boundPt);
+            bounds.Encapsulate(boundPt);
+
+            boundPt = center;
+            boundPt.x += extents.x;
+            boundPt.y += extents.y;
+            boundPt.z -= extents.z;
+            boundPt = matrix.MultiplyPoint3x4(boundPt);
+            bounds.Encapsulate(boundPt);
+
+            boundPt = center;
+            boundPt.x += extents.x;
+            boundPt.y -= extents.y;
+            boundPt.z += extents.z;
+            boundPt = matrix.MultiplyPoint3x4(boundPt);
+            bounds.Encapsulate(boundPt);
+
+            boundPt = center;
+            boundPt.x -= extents.x;
+            boundPt.y += extents.y;
+            boundPt.z += extents.z;
+            boundPt = matrix.MultiplyPoint3x4(boundPt);
+            bounds.Encapsulate(boundPt);
+
+            boundPt = center;
+            boundPt.x -= extents.x;
+            boundPt.y -= extents.y;
+            boundPt.z += extents.z;
+            boundPt = matrix.MultiplyPoint3x4(boundPt);
+            bounds.Encapsulate(boundPt);
+
+            boundPt = center;
+            boundPt.x -= extents.x;
+            boundPt.y += extents.y;
+            boundPt.z -= extents.z;
+            boundPt = matrix.MultiplyPoint3x4(boundPt);
+            bounds.Encapsulate(boundPt);
+
+            boundPt = center;
+            boundPt.x += extents.x;
+            boundPt.y -= extents.y;
+            boundPt.z -= extents.z;
+            boundPt = matrix.MultiplyPoint3x4(boundPt);
+
+            bounds.Encapsulate(boundPt);
+
+            return bounds;
         }
     }
 }

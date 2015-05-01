@@ -103,7 +103,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 worldSpaceAvgPos += partWorldToLocalMatrixDict[p].worldPosition * dragFactor[i];
                 totalDragFactor += dragFactor[i];
             }
-
+            
             worldSpaceAvgPos /= totalDragFactor;
 
             worldSpaceAvgPos = Vector3.ProjectOnPlane(worldSpaceAvgPos, worldVehicleAxis);
