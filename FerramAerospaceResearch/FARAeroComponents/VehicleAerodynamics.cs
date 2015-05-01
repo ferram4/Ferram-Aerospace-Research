@@ -92,6 +92,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         List<Part> _vehiclePartList;
 
         List<GeometryPartModule> _currentGeoModules;
+        Dictionary<Part, PartTransformInfo> _partWorldToLocalMatrix = new Dictionary<Part, PartTransformInfo>();
 
         List<FARAeroPartModule> _currentAeroModules;
         List<FARAeroPartModule> _newAeroModules;
@@ -198,10 +199,21 @@ namespace FerramAerospaceResearch.FARAeroComponents
             this._localToWorldMatrix = localToWorldMatrix;
             this._vehiclePartList = vehiclePartList;
             this._currentGeoModules = currentGeoModules;
+            _partWorldToLocalMatrix.Clear();
+
+            for (int i = 0; i < _currentGeoModules.Count; i++)
+            {
+                GeometryPartModule g = _currentGeoModules[i];
+                _partWorldToLocalMatrix.Add(g.part, new PartTransformInfo(g.part.transform));
+            }
+
             this._vehicleMainAxis = CalculateVehicleMainAxis();
 
-            if(_voxel != null)
-                ClearDebugVoxel();
+            if (_voxel != null)
+            {
+                visualizing = false;
+                _voxel.CleanupVoxel();
+            }
 
             visualizing = false;
 
@@ -292,26 +304,28 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         if ((object)intakeTrans != null)
                             vec = intakeTrans.forward;
                     }
+                    vec.x = Math.Abs(vec.x);
+                    vec.y = Math.Abs(vec.y);
+                    vec.z = Math.Abs(vec.z);
 
                     axis += vec * b.size.x * b.size.y * b.size.z;    //scale part influence by approximate size
                 }
             }
             axis.Normalize();   //normalize axis for later calcs
-            float dotProd;
+            float dotProdX, dotProdY, dotProdZ;
 
-            dotProd = Math.Abs(Vector3.Dot(axis, _localToWorldMatrix.MultiplyVector(Vector3.up)));
-            if (dotProd >= 0.965)        //if axis and _vessel.up are nearly aligned, just use _vessel.up
+            dotProdX = Math.Abs(Vector3.Dot(axis, _localToWorldMatrix.MultiplyVector(Vector3.right)));
+            dotProdY = Math.Abs(Vector3.Dot(axis, _localToWorldMatrix.MultiplyVector(Vector3.up)));
+            dotProdZ = Math.Abs(Vector3.Dot(axis, _localToWorldMatrix.MultiplyVector(Vector3.forward)));
+
+            if (dotProdY > 2 * dotProdX && dotProdY > 2 * dotProdZ)
                 return Vector3.up;
 
-            dotProd = Math.Abs(Vector3.Dot(axis, _localToWorldMatrix.MultiplyVector(Vector3.forward)));
-
-            if (dotProd >= 0.965)        //Same for forward...
-                return Vector3.forward;
-
-            dotProd = Math.Abs(Vector3.Dot(axis, _localToWorldMatrix.MultiplyVector(Vector3.right)));
-
-            if (dotProd >= 0.965)        //and right...
+            if (dotProdX > 2 * dotProdY && dotProdX > 2 * dotProdZ)
                 return Vector3.right;
+
+            if (dotProdZ > 2 * dotProdX && dotProdZ > 2 * dotProdY)
+                return Vector3.forward;
 
             //Otherwise, now we need to use axis, since it's obviously not close to anything else
 
@@ -711,7 +725,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 FARAeroSection section = new FARAeroSection(xForcePressureAoA0, xForcePressureAoA180, xForceSkinFriction, potentialFlowNormalForce, viscCrossflowDrag
                     ,viscCrossflowDrag / (float)(_sectionThickness), (float)flatnessRatio, hypersonicMomentForward, hypersonicMomentBackward,
-                    centroid, xRefVector, nRefVector, _localToWorldMatrix, _vehicleMainAxis, includedModules, includedPartsAndAreas, weighting);
+                    centroid, xRefVector, nRefVector, _localToWorldMatrix, _vehicleMainAxis, includedModules, includedPartsAndAreas, weighting, _partWorldToLocalMatrix);
 
                 _newAeroSections.Add(section);
                 tmpAeroModules.UnionWith(includedModules);
@@ -732,9 +746,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
 
 
-                ;
-            if(HighLogic.LoadedSceneIsFlight)
+                
+            if (HighLogic.LoadedSceneIsFlight)
+            {
+                _voxel.CleanupVoxel();
                 _voxel = null;
+            }
         }
 
         private double CalculateHypersonicMoment(double lowArea, double highArea, double sectionThickness)
@@ -897,5 +914,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 return abs;
             return value;
         }
+
+
     }
 }

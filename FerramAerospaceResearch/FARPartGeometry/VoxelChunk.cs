@@ -158,9 +158,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         }
         }
 
-        ~VoxelChunk()
-        {
-            ClearVisualVoxels();
-        }
+        //~VoxelChunk()
+        //{
+        //    ClearVisualVoxels();
+        //}
     }
 }

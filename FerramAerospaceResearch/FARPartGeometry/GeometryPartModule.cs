@@ -240,9 +240,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             Matrix4x4 transformMatrix;
             if (HighLogic.LoadedSceneIsFlight)
-                transformMatrix = vessel.rootPart.partTransform.worldToLocalMatrix;
+                transformMatrix = vessel.rootPart.transform.worldToLocalMatrix;
             else
-                transformMatrix = EditorLogic.RootPart.partTransform.worldToLocalMatrix;
+                transformMatrix = EditorLogic.RootPart.transform.worldToLocalMatrix;
 
             UpdateTransformMatrixList(transformMatrix);
             overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(transformMatrix);

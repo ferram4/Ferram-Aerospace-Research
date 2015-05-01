@@ -135,6 +135,22 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if (projectedArea.totalArea <= 0)
             {
                 part.ShieldedFromAirstream = true;
+                if (fieldsVisible)
+                {
+                    Fields["dragForce"].guiActive = false;
+                    Fields["liftForce"].guiActive = false;
+                    fieldsVisible = false;
+                }
+                if ((object)liftArrow != null)
+                {
+                    UnityEngine.Object.Destroy(liftArrow);
+                    liftArrow = null;
+                }
+                if ((object)dragArrow != null)
+                {
+                    UnityEngine.Object.Destroy(dragArrow);
+                    dragArrow = null;
+                }
             }
             else
             {
@@ -338,30 +354,31 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         private void UpdateAeroDisplay()
         {
-            Vector3 localDragArrow = Vector3.zero;
-            Vector3 localLiftArrow = Vector3.zero;
+            Vector3 worldDragArrow = Vector3.zero;
+            Vector3 worldLiftArrow = Vector3.zero;
 
             if (PhysicsGlobals.AeroForceDisplay || PhysicsGlobals.AeroDataDisplay)
             {
-                localDragArrow = Vector3.Dot(partLocalForce, partLocalVelNorm) * partLocalVelNorm;
-                localLiftArrow = partLocalForce - localDragArrow;
+                Vector3 worldVelNorm = partTransform.localToWorldMatrix.MultiplyVector(partLocalVelNorm);
+                worldDragArrow = Vector3.Dot(worldSpaceAeroForce, worldVelNorm) * worldVelNorm;
+                worldLiftArrow = worldSpaceAeroForce - worldDragArrow;
             }
             if (PhysicsGlobals.AeroForceDisplay)
             {
                 if (liftArrow == null)
-                    liftArrow = ArrowPointer.Create(partTransform, Vector3.zero, localLiftArrow, localLiftArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale, Color.cyan, false);
+                    liftArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldLiftArrow, worldLiftArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale, Color.cyan, true);
                 else
                 {
-                    liftArrow.Direction = localLiftArrow;
-                    liftArrow.Length = localLiftArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale;
+                    liftArrow.Direction = worldLiftArrow;
+                    liftArrow.Length = worldLiftArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale;
                 }
 
                 if (dragArrow == null)
-                    dragArrow = ArrowPointer.Create(partTransform, Vector3.zero, localDragArrow, localDragArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale, Color.red, false);
+                    dragArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldDragArrow, worldDragArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale, Color.red, true);
                 else
                 {
-                    dragArrow.Direction = localDragArrow;
-                    dragArrow.Length = localDragArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale;
+                    dragArrow.Direction = worldDragArrow;
+                    dragArrow.Length = worldDragArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale;
                 }
             }
             else
@@ -387,8 +404,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     fieldsVisible = true;
                 }
 
-                dragForce = localDragArrow.magnitude;
-                liftForce = localLiftArrow.magnitude;
+                dragForce = worldDragArrow.magnitude;
+                liftForce = worldLiftArrow.magnitude;
 
             }
             else if (fieldsVisible)

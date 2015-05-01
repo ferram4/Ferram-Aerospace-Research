@@ -279,12 +279,15 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                     _updateRateLimiter++;
                 }
                 else if (_updateQueued)
+                {
+                    Debug.Log("Updating " + EditorLogic.fetch.ship.shipName);
                     RecalculateVoxel();
+                }
             }
             else
             {
                 _updateQueued = true;
-                _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 1;
+                _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
             }
 
             OnGUIAppLauncherReady();
@@ -294,7 +297,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         public static void RequestUpdateVoxel()
         {
             if (instance._updateRateLimiter > FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate)
-                instance._updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 1;
+                instance._updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
             instance._updateQueued = true;
             //instance._areaRulingOverlay.SetVisibility(false);
 
@@ -320,12 +323,19 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             {
                 Part p = partList[i];
                 GeometryPartModule g = p.GetComponent<GeometryPartModule>();
-                if ((object)g != null)
+                if (g != null)
                 {
-                    _currentGeometryModules.Add(g);
+                    if(g.Ready)
+                        _currentGeometryModules.Add(g);
+                    else
+                    {
+                        _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
+                        _updateQueued = true;
+                        return;
+                    }
                 }
-            }
 
+            }
             TriggerIGeometryUpdaters();
 
             

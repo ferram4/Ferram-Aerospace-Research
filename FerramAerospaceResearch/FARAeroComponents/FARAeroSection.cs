@@ -39,6 +39,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using FerramAerospaceResearch.FARPartGeometry;
 
 namespace FerramAerospaceResearch.FARAeroComponents
 {
@@ -73,7 +74,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         public FARAeroSection(FloatCurve xForcePressureAoA0, FloatCurve xForcePressureAoA180, FloatCurve xForceSkinFriction,
             float potentialFlowNormalForce, float viscCrossflowDrag, float diameter, float flatnessRatio, float hypersonicMomentForward, float hypersonicMomentBackward,
             Vector3 centroidWorldSpace, Vector3 xRefVectorWorldSpace, Vector3 nRefVectorWorldSpace, Matrix4x4 vesselToWorldMatrix, Vector3 vehicleMainAxis, List<FARAeroPartModule> moduleList,
-            Dictionary<Part, FARPartGeometry.VoxelCrossSection.SideAreaValues> sideAreaValues, List<float> dragFactor)
+            Dictionary<Part, FARPartGeometry.VoxelCrossSection.SideAreaValues> sideAreaValues, List<float> dragFactor, Dictionary<Part, PartTransformInfo> partWorldToLocalMatrixDict)
         {
             this.xForcePressureAoA0 = xForcePressureAoA0;       //copy references to floatcurves over
             this.xForcePressureAoA180 = xForcePressureAoA180;
@@ -99,7 +100,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             for (int i = 0; i < moduleList.Count; i++)
             {
                 Part p = moduleList[i].part;
-                worldSpaceAvgPos += p.transform.position * dragFactor[i];
+                worldSpaceAvgPos += partWorldToLocalMatrixDict[p].worldPosition * dragFactor[i];
                 totalDragFactor += dragFactor[i];
             }
 
@@ -113,10 +114,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 PartData data = new PartData();
                 data.aeroModule = moduleList[i];
-                Transform transform = data.aeroModule.part.partTransform;
-                Matrix4x4 transformMatrix = transform.worldToLocalMatrix;
+                Matrix4x4 transformMatrix = partWorldToLocalMatrixDict[data.aeroModule.part].worldToLocalMatrix;
 
-                Vector3 forceCenterWorldSpace = centroidLocationAlongxRef + Vector3.ProjectOnPlane(transform.position, worldVehicleAxis) + avgPosDiffFromCentroid;
+                Vector3 forceCenterWorldSpace = centroidLocationAlongxRef + Vector3.ProjectOnPlane(partWorldToLocalMatrixDict[data.aeroModule.part].worldPosition, worldVehicleAxis) + avgPosDiffFromCentroid;
 
                 data.centroidPartSpace = transformMatrix.MultiplyPoint3x4(forceCenterWorldSpace);
                 data.xRefVectorPartSpace = transformMatrix.MultiplyVector(xRefVectorWorldSpace);
