@@ -11,7 +11,7 @@ using Random = System.Random;
 
 namespace FerramAerospaceResearch.RealChuteLite
 {
-    public class RealChuteFAR : PartModule, IModuleInfo
+    public class RealChuteFAR : PartModule, IModuleInfo, IMultipleDragCube
     {
         /// <summary>
         /// Parachute deployment states
@@ -26,10 +26,16 @@ namespace FerramAerospaceResearch.RealChuteLite
         }
 
         #region Constants
-        //Few useful constants
-        public const float areaDensity = 0.000058f, areaCost = 0.075f;
+        //Material constants
+        public const string materialName = "Nylon";
+        public const float areaDensity = 5.65E-5f, areaCost = 0.075f, staticCd = 1;  //t/m², and F/m² for the first two
+        public const double startTemp = 300, maxTemp = 493.15;
+        public const double specificHeat = 1700, absoluteZero = -273.15;
+
+        //More useful constants
         public const int maxSpares = 5;
         public const string stowed = "STOWED", predeployed = "PREDEPLOYED", deployed = "DEPLOYED", cut = "CUT";
+        public static readonly string[] cubeNames = { "STOWED", "RCDEPLOYED" };
 
         //Quick enum parsing/tostring dictionaries
         private static readonly Dictionary<DeploymentStates, string> names = new Dictionary<DeploymentStates, string>(5)
@@ -84,6 +90,12 @@ namespace FerramAerospaceResearch.RealChuteLite
         public string depState = "STOWED";
         [KSPField(isPersistant = true)]
         public float currentArea = 0;
+        [KSPField(isPersistant = true)]
+        public double chuteTemperature = 300;
+        [KSPField(isPersistant = true, guiActive = false, guiName = "Chute temp", guiFormat = "0.00", guiUnits = "°C")]
+        public float currentTemp = 20;
+        [KSPField(guiActive = false, guiName = "Max temp", guiFormat = "0.00", guiUnits = "°C")]
+        public float chuteMaxTemp = (float)(maxTemp + absoluteZero);
         #endregion
 
         #region Propreties
@@ -216,6 +228,32 @@ namespace FerramAerospaceResearch.RealChuteLite
             }
         }
 
+        //The inverse thermal mass of the parachute
+        public double invThermalMass
+        {
+            get
+            {
+                if (thermMass == 0)
+                {
+                    thermMass = 1d / (specificHeat * this.chuteMass);
+                }
+                return thermMass;
+            }
+        }
+
+        public double chuteEmissivity
+        {
+            get
+            {
+                if (this.chuteTemperature < 293.15) {return 0.92;}
+                else if (this.chuteTemperature > 403.15) { return 0.9;}
+                else
+                {
+                    return UtilMath.Lerp(0.72, 0.9, ((this.chuteTemperature - 293.15) / 110) + 293.15);
+                }
+            }
+        }
+
         //Bold KSP style GUI label
         private static GUIStyle _boldLabel = null;
         public static GUIStyle boldLabel
@@ -229,6 +267,23 @@ namespace FerramAerospaceResearch.RealChuteLite
                     _boldLabel = style;
                 }
                 return _boldLabel;
+            }
+        }
+
+        //Red KSP style GUI label
+        private static GUIStyle _redLabel = null;
+        public static GUIStyle redLabel
+        {
+            get
+            {
+                if (_redLabel == null)
+                {
+                    GUIStyle style = new GUIStyle(HighLogic.Skin.label);
+                    style.normal.textColor = XKCDColors.Red;
+                    style.hover.textColor = XKCDColors.Red;
+                    _redLabel = style;
+                }
+                return _redLabel;
             }
         }
 
@@ -276,6 +331,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         private double ASL, trueAlt;
         private double atmPressure, atmDensity;
         private float sqrSpeed;
+        private double thermMass = 0;
 
         //Part
         private Animation anim = null;
@@ -337,6 +393,8 @@ namespace FerramAerospaceResearch.RealChuteLite
                 this.randomTimer.Reset();
                 this.time = 0;
                 this.cap.gameObject.SetActive(true);
+                this.part.DragCubes.SetCubeWeight("PACKED", 1);
+                this.part.DragCubes.SetCubeWeight("RCDEPLOYED", 0);
             }
         }
 
@@ -435,7 +493,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         //Drag formula calculations
         public float DragCalculation(float area)
         {
-            return (float)this.atmDensity * this.sqrSpeed * area / 2000f;
+            return (float)this.atmDensity * this.sqrSpeed * staticCd * area / 2000f;
         }
 
         //Gives the cost for this parachute
@@ -501,6 +559,10 @@ namespace FerramAerospaceResearch.RealChuteLite
             this.cap.gameObject.SetActive(false);
             this.part.PlayAnimation(this.semiDeployedAnimation, this.semiDeploymentSpeed);
             this.dragTimer.Start();
+            this.part.DragCubes.SetCubeWeight("PACKED", 0);
+            this.part.DragCubes.SetCubeWeight("RCDEPLOYED", 1);
+            Fields["currentTemp"].guiActive = true;
+            Fields["chuteMaxTemp"].guiActive = true;
         }
 
         //Parachute deployment
@@ -521,6 +583,10 @@ namespace FerramAerospaceResearch.RealChuteLite
             this.parachute.gameObject.SetActive(false);
             this.currentArea = 0;
             this.dragTimer.Reset();
+            this.currentTemp = (float)(startTemp + absoluteZero);
+            this.chuteTemperature = startTemp;
+            Fields["currentTemp"].guiActive = false;
+            Fields["chuteMaxTemp"].guiActive = false;
             SetRepack();
         }
 
@@ -547,6 +613,69 @@ namespace FerramAerospaceResearch.RealChuteLite
         private Vector3 DragForce(float debutDiameter, float endDiameter, float time)
         {
             return DragCalculation(DragDeployment(time, debutDiameter, endDiameter)) * this.dragVector;
+        }
+
+        //Calculates the temperature of the chute and cuts it if needed
+        private bool CalculateChuteTemp()
+        {
+            if (this.chuteTemperature < PhysicsGlobals.SpaceTemperature) { this.chuteTemperature = startTemp; }
+
+            double flux = this.vessel.convectiveCoefficient * UtilMath.Lerp(1d, 1d + this.vessel.mach * this.vessel.mach * this.vessel.mach,
+                    (this.vessel.mach - PhysicsGlobals.FullToCrossSectionLerpStart) / (PhysicsGlobals.FullToCrossSectionLerpEnd))
+                    * (this.vessel.externalTemperature - this.chuteTemperature);
+
+            if (this.vessel.mach > PhysicsGlobals.MachConvectionStart)
+            {
+                double machLerp = (this.part.machNumber - PhysicsGlobals.MachConvectionStart) / (PhysicsGlobals.MachConvectionEnd - PhysicsGlobals.MachConvectionStart);
+                machLerp = Math.Pow(machLerp, PhysicsGlobals.MachConvectionExponent);
+                flux = UtilMath.Lerp(flux, this.vessel.convectiveMachFlux, machLerp);
+            }
+            this.chuteTemperature += 0.001 * this.invThermalMass * flux * this.currentArea * TimeWarp.fixedDeltaTime;
+            if (chuteTemperature > 0d)
+            {
+                this.chuteTemperature -= 0.001 * this.invThermalMass * PhysicsGlobals.StefanBoltzmanConstant * this.currentArea * this.chuteEmissivity
+                    * PhysicsGlobals.RadiationFactor * TimeWarp.fixedDeltaTime
+                    * Math.Pow(this.chuteTemperature, PhysicsGlobals.PartEmissivityExponent);
+            }
+            this.chuteTemperature = Math.Max(PhysicsGlobals.SpaceTemperature, this.chuteTemperature);
+            if (this.chuteTemperature > maxTemp)
+            {
+                ScreenMessages.PostScreenMessage("<color=orange>[RealChute]: " + this.part.partInfo.title + "'s parachute has been destroyed due to aero forces and heat.</color>", 6f, ScreenMessageStyle.UPPER_LEFT);
+                Cut();
+                return false;
+            }
+            this.currentTemp = (float)(this.chuteTemperature + absoluteZero);
+            return true;
+        }
+
+        //Sets the part in the correct position for DragCube rendering
+        public void AssumeDragCubePosition(string name)
+        {
+            if (string.IsNullOrEmpty(name)) { return; }
+            this.part.FindModelTransform(this.canopyName).gameObject.SetActive(false);
+            Transform cap = this.part.FindModelTransform(this.capName);
+            switch (name)
+            {
+                case "STOWED":
+                    cap.gameObject.SetActive(true); break;
+                case "RCDEPLOYED":
+                    cap.gameObject.SetActive(false); break;
+
+                default:
+                    break;
+            }
+        }
+
+        //Gives DragCube names
+        public string[] GetDragCubeNames()
+        {
+            return cubeNames;
+        }
+
+        //Unused
+        public bool UsesProceduralDragCubes()
+        {
+            return false;
         }
         #endregion
 
@@ -583,6 +712,7 @@ namespace FerramAerospaceResearch.RealChuteLite
 
             this.disarm.active = (this.armed || this.showDisarm);
             this.deploy.active = !this.staged && this.deploymentState != DeploymentStates.CUT;
+            this.cutE.active = this.isDeployed;
             this.repack.guiActiveUnfocused = this.canRepack;
         }
 
@@ -593,10 +723,10 @@ namespace FerramAerospaceResearch.RealChuteLite
             this.pos = this.part.transform.position;
             this.ASL = FlightGlobals.getAltitudeAtPos(this.pos);
             this.trueAlt = this.ASL;
-            if (vessel.mainBody.pqsController != null)
+            if (this.vessel.mainBody.pqsController != null)
             {
-                double terrainAlt = vessel.pqsAltitude;
-                if (!vessel.mainBody.ocean || terrainAlt > 0) { this.trueAlt -= terrainAlt; }
+                double terrainAlt = this.vessel.pqsAltitude;
+                if (!this.vessel.mainBody.ocean || terrainAlt > 0) { this.trueAlt -= terrainAlt; }
             }
             this.atmPressure = FlightGlobals.getStaticPressure(this.ASL, this.vessel.mainBody);
             this.atmDensity = FARAeroUtil.GetCurrentDensity(this.vessel.mainBody, this.ASL, false);
@@ -619,7 +749,11 @@ namespace FerramAerospaceResearch.RealChuteLite
                     //Parachutes
                     if (this.canDeploy)
                     {
-                        if (this.isDeployed) { FollowDragDirection(); }
+                        if (this.isDeployed)
+                        {
+                            if (!CalculateChuteTemp()) { return; }
+                            FollowDragDirection();
+                        }
 
                         switch (this.deploymentState)
                         {
@@ -745,6 +879,24 @@ namespace FerramAerospaceResearch.RealChuteLite
                             break;
                     }
                 }
+
+                DragCubeList cubes = this.part.DragCubes;
+                //Set stock cubes to 0
+                cubes.SetCubeWeight("PACKED", 0);
+                cubes.SetCubeWeight("SEMIDEPLOYED", 0);
+                cubes.SetCubeWeight("DEPLOYED", 0);
+
+                //Sets RC cubes
+                if (this.deploymentState == DeploymentStates.STOWED)
+                {
+                    cubes.SetCubeWeight("PACKED", 1);
+                    cubes.SetCubeWeight("RCDEPLOYED", 0);
+                }
+                else
+                {
+                    cubes.SetCubeWeight("PACKED", 0);
+                    cubes.SetCubeWeight("RCDEPLOYED", 1);
+                }
             }
 
             //GUI
@@ -774,14 +926,15 @@ namespace FerramAerospaceResearch.RealChuteLite
             b.AppendFormat("<b>Case mass</b>: {0}\n", this.caseMass);
             b.AppendFormat("<b>Spare chutes</b>: {0}\n", maxSpares);
             b.AppendFormat("<b>Autocut speed</b>: {0}m/s\n", this.autoCutSpeed);
-            b.AppendLine("<b>Parachute material</b>: Nylon");
-            b.AppendLine("<b>Drag coefficient</b>: 1.0");
+            b.AppendLine("<b>Parachute material</b>: " + materialName);
+            b.AppendFormat("<b>Drag coefficient</b>: {0:0.0}\n", staticCd);
+            b.AppendFormat("<b>Chute max temperature</b>: {0}°C\n", maxTemp + absoluteZero);
             b.AppendFormat("<b>Predeployed diameter</b>: {0}m\n", this.preDeployedDiameter);
             b.AppendFormat("<b>Deployed diameter</b>: {0}m\n", this.deployedDiameter);
             b.AppendFormat("<b>Minimum deployment pressure</b>: {0}atm\n", this.minAirPressureToOpen);
             b.AppendFormat("<b>Deployment altitude</b>: {0}m\n", this.deployAltitude);
-            b.AppendFormat("<b>Predeployment speed</b>: {0}s\n", 1f / this.semiDeploymentSpeed);
-            b.AppendFormat("<b>Deployment speed</b>: {0}s\n", 1f / this.deploymentSpeed);
+            b.AppendFormat("<b>Predeployment speed</b>: {0}s\n", Math.Round(1f / this.semiDeploymentSpeed, 1, MidpointRounding.AwayFromZero));
+            b.AppendFormat("<b>Deployment speed</b>: {0}s\n", Math.Round(1f / this.deploymentSpeed, 1, MidpointRounding.AwayFromZero));
             return b.ToString();
         }
         #endregion
@@ -808,7 +961,7 @@ namespace FerramAerospaceResearch.RealChuteLite
             //Top info labels
             StringBuilder b = new StringBuilder("Part name: ").AppendLine(this.part.partInfo.title);
             b.Append("Symmetry counterparts: ").AppendLine(this.part.symmetryCounterparts.Count.ToString());
-            b.Append("Part mass: ").Append(this.part.TotalMass().ToString("0.###")).Append("t");
+            b.Append("Part mass: ").Append(this.part.TotalMass().ToString("0.###")).AppendLine("t");
             GUILayout.Label(b.ToString(), this.skins.label);
 
             //Beggining scroll
@@ -827,11 +980,17 @@ namespace FerramAerospaceResearch.RealChuteLite
             GUILayout.Label("Main chute:", boldLabel, GUILayout.Width(120));
             //Initial label
             b = new StringBuilder();
-            b.AppendLine("Material: Nylon");
-            b.AppendLine("Drag coefficient: 1.0");
+            b.AppendLine("Material: " + materialName);
+            b.AppendLine("Drag coefficient: " + staticCd.ToString("0.0"));
             b.Append("Predeployed diameter: ").Append(this.preDeployedDiameter).Append("m\nArea: ").Append(this.preDeployedArea.ToString("0.###")).AppendLine("m²");
             b.Append("Deployed diameter: ").Append(this.deployedDiameter).Append("m\nArea: ").Append(this.deployedArea.ToString("0.###")).Append("m²");
             GUILayout.Label(b.ToString(), this.skins.label);
+
+            //Temperature info
+            b = new StringBuilder();
+            b.Append("Chute max temperature: ").Append(maxTemp + absoluteZero).AppendLine("°C");
+            b.Append("Current chute temperature: ").Append(Math.Round(this.chuteTemperature + absoluteZero, 1, MidpointRounding.AwayFromZero)).Append("°C");
+            GUILayout.Label(b.ToString(), this.chuteTemperature / maxTemp > 0.85 ? redLabel : this.skins.label);
 
             //Predeployment pressure selection
             GUILayout.Label("Predeployment pressure: " + this.minAirPressureToOpen + "atm", this.skins.label);
@@ -851,8 +1010,8 @@ namespace FerramAerospaceResearch.RealChuteLite
 
             //Other labels
             b = new StringBuilder();
-            b.Append("Predeployment speed: ").Append(1f / this.semiDeploymentSpeed).AppendLine("s");
-            b.Append("Deployment speed: ").Append(1f / this.deploymentSpeed).Append("s");
+            b.Append("Predeployment speed: ").Append(Math.Round(1f / this.semiDeploymentSpeed, 1, MidpointRounding.AwayFromZero)).AppendLine("s");
+            b.Append("Deployment speed: ").Append(Math.Round(1f / this.deploymentSpeed, 1, MidpointRounding.AwayFromZero)).Append("s");
             GUILayout.Label(b.ToString(), this.skins.label);
 
             //End scroll
