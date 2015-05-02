@@ -31,7 +31,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         public const string materialName = "Nylon";
         public const float areaDensity = 5.65E-5f, areaCost = 0.075f, staticCd = 1;  //t/m², and F/m² for the first two
         public const double startTemp = 300, maxTemp = 493.15;
-        public const double specificHeat = 1700, absoluteZero = -273.15;
+        public const double specificHeat = 1700, absoluteZero = -273.15;  //Specific heat in J/kg*K
 
         //More useful constants
         public const int maxSpares = 5;
@@ -139,6 +139,19 @@ namespace FerramAerospaceResearch.RealChuteLite
             get { return GetArea(this.deployedDiameter); }
         }
 
+        //The current useful convection area
+        private double convectionArea
+        {
+            get
+            {
+                if (this.deploymentState == DeploymentStates.PREDEPLOYED && this.dragTimer.elapsed.Seconds < (1f / this.semiDeploymentSpeed))
+                {
+                    return UtilMath.Lerp(0, this.deployedArea, this.dragTimer.elapsed.Seconds * this.semiDeploymentSpeed);
+                }
+                return this.deployedArea;
+            }
+        }
+
         //Mass of the chute
         public float chuteMass
         {
@@ -234,20 +247,21 @@ namespace FerramAerospaceResearch.RealChuteLite
         {
             get
             {
-                if (thermMass == 0)
+                if (this.thermMass == 0)
                 {
-                    thermMass = 1d / (specificHeat * this.chuteMass);
+                    this.thermMass = 1d / (specificHeat * this.chuteMass);
                 }
                 return thermMass;
             }
         }
 
+        //The current chute emissivity constant
         public double chuteEmissivity
         {
             get
             {
-                if (this.chuteTemperature < 293.15) {return 0.92;}
-                else if (this.chuteTemperature > 403.15) { return 0.9;}
+                if (this.chuteTemperature < 293.15) { return 0.72; }
+                else if (this.chuteTemperature > 403.15) { return 0.9; }
                 else
                 {
                     return UtilMath.Lerp(0.72, 0.9, ((this.chuteTemperature - 293.15) / 110) + 293.15);
@@ -631,10 +645,10 @@ namespace FerramAerospaceResearch.RealChuteLite
                 machLerp = Math.Pow(machLerp, PhysicsGlobals.MachConvectionExponent);
                 flux = UtilMath.Lerp(flux, this.vessel.convectiveMachFlux, machLerp);
             }
-            this.chuteTemperature += 0.001 * this.invThermalMass * flux * this.currentArea * TimeWarp.fixedDeltaTime;
+            this.chuteTemperature += 0.001 * this.invThermalMass * flux * this.convectionArea * TimeWarp.fixedDeltaTime;
             if (chuteTemperature > 0d)
             {
-                this.chuteTemperature -= 0.001 * this.invThermalMass * PhysicsGlobals.StefanBoltzmanConstant * this.currentArea * this.chuteEmissivity
+                this.chuteTemperature -= 0.001 * this.invThermalMass * PhysicsGlobals.StefanBoltzmanConstant * this.convectionArea * this.chuteEmissivity
                     * PhysicsGlobals.RadiationFactor * TimeWarp.fixedDeltaTime
                     * Math.Pow(this.chuteTemperature, PhysicsGlobals.PartEmissivityExponent);
             }
