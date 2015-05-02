@@ -67,6 +67,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         FlightStatusGUI _flightStatusGUI;
         StabilityAugmentation _stabilityAugmentation;
         FlightDataGUI _flightDataGUI;
+        AirspeedSettingsGUI _airSpeedGUI;
 
         bool showFlightDataWindow = false;
         bool showSettingsWindow = false;
@@ -85,7 +86,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             _stabilityAugmentation = new StabilityAugmentation(_vessel);
             _flightDataGUI = new FlightDataGUI();
 
-            settingsWindow = new GUIDropDown<int>(new string[2]{"Flt Data","Stab Aug"}, new int[2]{0,1}, 0);
+            settingsWindow = new GUIDropDown<int>(new string[3]{"Flt Data","Stab Aug", "Air Spd"}, new int[3]{0,1,2}, 0);
             //boxStyle.padding = new RectOffset(4, 4, 4, 4);
 
             if (vesselFlightGUI == null)
@@ -133,6 +134,14 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         }
 
         #endregion
+
+        void LateUpdate()
+        {
+            if(_airSpeedGUI != null)
+                _airSpeedGUI.ChangeSurfVelocity();
+            else if (FlightUIController.fetch != null)
+                _airSpeedGUI = new AirspeedSettingsGUI(_vessel);
+        }
 
         #region GUI Functions
 
@@ -215,6 +224,9 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                     break;
                 case 1:
                     _stabilityAugmentation.SettingsDisplay();
+                    break;
+                case 2:
+                    _airSpeedGUI.AirSpeedSettings();
                     break;
             }
             GUI.DragWindow();
