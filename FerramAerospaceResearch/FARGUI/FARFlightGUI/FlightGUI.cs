@@ -145,6 +145,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 boxStyle.normal.textColor = boxStyle.focused.textColor = Color.white;
                 boxStyle.hover.textColor = boxStyle.active.textColor = Color.yellow;
                 boxStyle.onNormal.textColor = boxStyle.onFocused.textColor = boxStyle.onHover.textColor = boxStyle.onActive.textColor = Color.green;
+                boxStyle.padding = new RectOffset(2, 2, 2, 2);
             }
             if (buttonStyle == null)
             {
@@ -157,7 +158,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
             if (_vessel == FlightGlobals.ActiveVessel && showGUI && showAllGUI)
             {
-                mainGuiRect = GUILayout.Window(this.GetHashCode(), mainGuiRect, MainFlightGUIWindow, "FAR Flight Systems", GUILayout.MinWidth(250));
+                mainGuiRect = GUILayout.Window(this.GetHashCode(), mainGuiRect, MainFlightGUIWindow, "FAR Flight Systems", GUILayout.MinWidth(230));
                 GUIUtils.ClampToScreen(mainGuiRect);
 
                 if (showFlightDataWindow)
@@ -178,7 +179,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         {
             GUILayout.BeginVertical(GUILayout.Height(100));
             GUILayout.BeginHorizontal();
-            GUILayout.Box("Mach: " + _vesselAero.MachNumber.ToString("F3") + "   Reynolds: " + _vesselAero.ReynoldsNumber.ToString("e2"), boxStyle, GUILayout.ExpandWidth(true));
+            GUILayout.Box("Mach: " + _vesselAero.MachNumber.ToString("F3") + " \n\rReynolds: " + _vesselAero.ReynoldsNumber.ToString("e2"), boxStyle, GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
 
             GUILayout.Box("ATM Density: " + _vessel.atmDensity.ToString("F3"), boxStyle, GUILayout.ExpandWidth(true));

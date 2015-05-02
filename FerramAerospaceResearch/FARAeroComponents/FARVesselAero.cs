@@ -215,7 +215,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public void AnimationVoxelUpdate()
         {
-            Debug.Log("animUpdate");
             if (_updateRateLimiter == FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate)
                 _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
             RequestUpdateVoxel(false);

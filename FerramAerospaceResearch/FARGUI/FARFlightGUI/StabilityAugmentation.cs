@@ -47,8 +47,8 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         string[] systemLabel = new string[] { "Roll", "Yaw", "Pitch", "AoA", "DPCR" };
         string[] systemLabelLong = new string[] { "Roll System", "Yaw System", "Pitch System", "AoA Limiter", "Dynamic Pressure Control Reduction" };
 
-        double aoALowLim, aoAHighLim;
-        double scalingDynPres;
+        static double aoALowLim, aoAHighLim;
+        static double scalingDynPres;
         VesselFlightInfo info;
 
         GUIStyle buttonStyle;
@@ -147,9 +147,11 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                     else if (output < -1)
                         output = -1;
 
-                    state.roll = (float)output;
+                    state.roll = (float)output + state.rollTrim;
                 }
             }
+            else
+                sys.lastError = 0;
             sys = systems[1];
             if (sys.active)
             {
@@ -164,10 +166,12 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                     else if (output < -1)
                         output = -1;
 
-                    state.yaw = (float)output;
+                    state.yaw = (float)output + state.yawTrim;
                 }
 
             }
+            else
+                sys.lastError = 0;
             sys = systems[2];
             if (sys.active)
             {
@@ -182,22 +186,26 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                     else if (output < -1)
                         output = -1;
 
-                    state.pitch = (float)output;
+                    state.pitch = (float)output + state.pitchTrim;
                 }
 
             }
+            else
+                sys.lastError = 0;
             sys = systems[3];
             if (sys.active)
             {
                 if (info.aoA > aoAHighLim)
                 {
-                    state.pitch = (float)FARMathUtil.Clamp(ControlStateChange(sys, info.aoA - aoAHighLim), -1, 1);
+                    state.pitch = (float)FARMathUtil.Clamp(ControlStateChange(sys, info.aoA - aoAHighLim), -1, 1) + state.pitchTrim;
                 }
                 else if (info.aoA < aoALowLim)
                 {
-                    state.pitch = (float)FARMathUtil.Clamp(ControlStateChange(sys, info.aoA - aoALowLim), -1, 1);
+                    state.pitch = (float)FARMathUtil.Clamp(ControlStateChange(sys, info.aoA - aoALowLim), -1, 1) + state.pitchTrim;
                 }
             }
+            else
+                sys.lastError = 0;
             sys = systems[4];
             if (sys.active)
             {
@@ -224,7 +232,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
             state -= system.kP * error + system.kD * dError_dt + system.kI * system.errorIntegral;
 
-            system.lastError += error;
+            system.lastError += error * dt;
 
             return state;
         }
@@ -241,9 +249,19 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 if (node.HasNode(nodeName))
                     loadedSystems |= TryLoadSystem(node.GetNode(nodeName), i);
             }
-
-            if (!loadedSystems)
+            if(loadedSystems)
+            {
+                if (node.HasValue("aoALowLim"))
+                    double.TryParse(node.GetValue("aoALowLim"), out aoALowLim);
+                if (node.HasValue("aoAHighLim"))
+                    double.TryParse(node.GetValue("aoAHighLim"), out aoAHighLim);
+                if (node.HasValue("scalingDynPres"))
+                    double.TryParse(node.GetValue("scalingDynPres"), out scalingDynPres);
+            }
+            else
+            {
                 BuildDefaultSystems();
+            }
         }
 
         public static void BuildDefaultSystems()
@@ -251,8 +269,8 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             ControlSystem sys = new ControlSystem();
             //Roll system
             sys.kP = 0.05;
-            sys.kD = 0.0002;
-            sys.kI = 0.001;
+            sys.kD = 0.005;
+            sys.kI = 0.5;
 
             systems[0] = sys;
 
@@ -275,7 +293,12 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             sys.kD = 0;
             sys.kI = 0;
 
+            aoALowLim = -10;
+            aoAHighLim = 20;
+
             systems[3] = sys;
+
+            scalingDynPres = 20;
         }
 
         public static bool TryLoadSystem(ConfigNode systemNode, int index)
@@ -309,6 +332,9 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             {
                 node.AddNode(BuildSystemNode(i));
             }
+            node.AddValue("aoALowLim", aoALowLim);
+            node.AddValue("aoAHighLim", aoAHighLim);
+            node.AddValue("scalingDynPres", scalingDynPres);
         }
 
         public static ConfigNode BuildSystemNode(int index)
