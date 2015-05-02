@@ -95,12 +95,15 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         public VesselFlightInfo UpdatePhysicsParameters()
         {
+            vesselInfo = new VesselFlightInfo();
+            if (_vessel == null)
+                return vesselInfo;
+
             Vector3d velVector = _vessel.srf_velocity
                 - FARWind.GetWind(_vessel.mainBody, _vessel.rootPart, _vessel.ReferenceTransform.position);
             Vector3d velVectorNorm = velVector.normalized;
             double vesselSpeed = velVector.magnitude;
 
-            vesselInfo = new VesselFlightInfo();
 
             CalculateTotalAeroForce();
             CalculateForceBreakdown(velVectorNorm, velVector);

@@ -109,8 +109,11 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         public void ChangeSurfVelocity()
         {
             if (FlightGlobals.ActiveVessel != _vessel)
+            {
+                if (speedometers != null)
+                    speedometers = null;
                 return;
-
+            }
             //DaMichel: Keep our fingers off of this also if there is no atmosphere (staticPressure <= 0)
             if (FlightUIController.speedDisplayMode != FlightUIController.SpeedDisplayModes.Surface || _vessel.atmDensity <= 0)
                 return;
@@ -191,6 +194,11 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                     speedometers[i].textObject.text.Text = text; // replace with FAR velocity readout
                 }
             }
+        }
+
+        void ResetSpeedometers()
+        {
+
         }
     }
 }

@@ -52,10 +52,10 @@ namespace ferram4
     {
         public double AoAmax = 15;
 
-        //[KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
+        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
         public float curWingMass = 1;
 
-       // [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Mass/Strength Multiplier", guiFormat = "0.##"), UI_FloatRange(minValue = 0.1f, maxValue = 2.0f, stepIncrement = 0.01f)]
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Mass/Strength Multiplier", guiFormat = "0.##"), UI_FloatRange(minValue = 0.1f, maxValue = 2.0f, stepIncrement = 0.01f)]
         public float massMultiplier = 1.0f;
 
         public float oldMassMultiplier = -1f;

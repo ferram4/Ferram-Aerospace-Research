@@ -104,8 +104,15 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         void OnDestroy()
         {
             SaveConfigs();
-            if(_vessel)
+            if (_vessel)
+            {
                 vesselFlightGUI.Remove(_vessel);
+            }
+            _physicsCalcs = null;
+            _flightDataGUI = null;
+            _stabilityAugmentation = null;
+            _flightStatusGUI = null;
+            settingsWindow = null;
         }
 
         //Receives message from FARVesselAero through _vessel on the recalc being completed
@@ -137,7 +144,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         void LateUpdate()
         {
-            if(_airSpeedGUI != null)
+            if (_airSpeedGUI != null)
                 _airSpeedGUI.ChangeSurfVelocity();
             else if (FlightUIController.fetch != null)
                 _airSpeedGUI = new AirspeedSettingsGUI(_vessel);

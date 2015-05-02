@@ -252,8 +252,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
                  _updateQueued = false;
              }
 
-             if (_vessel.rootPart.Modules.Contains("LaunchClamp"))
+             if (_vessel.rootPart.Modules.Contains("LaunchClamp") || _vessel.rootPart.Modules.Contains("KerbalEVA"))
+             {
+                 DisableModule();
                  return;
+             }
 
              if (recalcGeoModules)
              {

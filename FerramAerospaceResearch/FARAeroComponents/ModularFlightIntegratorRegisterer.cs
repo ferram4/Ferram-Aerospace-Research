@@ -18,9 +18,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         void UpdateAerodynamics(ModularFlightIntegrator fi, Part part)
         {
-            if (part.Modules.Contains("ModuleAeroSurface"))     //FIXME Proper model for airbrakes
+            if (part.Modules.Contains("ModuleAeroSurface") || part.Modules.Contains("KerbalEVA"))     //FIXME Proper model for airbrakes
+            {
                 fi.BaseFIUpdateAerodynamics(part);
-            else if(!part.DragCubes.None)
+                return;
+            }
+            else if (!part.DragCubes.None)
             {
                 Rigidbody rb = part.Rigidbody;
                 if (rb)
