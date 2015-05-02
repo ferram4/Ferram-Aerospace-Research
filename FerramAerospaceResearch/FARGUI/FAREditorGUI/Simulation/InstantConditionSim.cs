@@ -52,6 +52,11 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
         double _maxCrossSectionFromBody;
         double _bodyLength;
 
+        public bool Ready
+        {
+            get { return _currentAeroSections != null && _currentAeroModules != null && _wingAerodynamicModel != null; }
+        }
+
         public void UpdateAeroData(VehicleAerodynamics vehicleAero, List<FARWingAerodynamicModel> wingAerodynamicModel)
         {
             vehicleAero.GetNewAeroData(out _currentAeroModules, out _currentAeroSections);

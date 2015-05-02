@@ -73,9 +73,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         void UpdateAerodynamicCenter()
         {
-            FARCenterQuery aeroSection, lift, dummy;
+            FARCenterQuery aeroSection, dummy;
             aeroSection = new FARCenterQuery();
-            lift = new FARCenterQuery();
             dummy = new FARCenterQuery();
 
             Vector3 vel_base, vel_fuzz;
@@ -98,9 +97,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 FARAeroSection section = _currentAeroSections[i];
                 section.EditorCalculateAeroForces(1, 3, 100000, 0.005f, vel, aeroSection);
             }
-            
+
+            FARBaseAerodynamics.PrecomputeGlobalCenterOfLift(aeroSection, dummy, vel);
+
+            //Vector3 force0, moment0;
+            //force0 = aeroSection.force;
+            //moment0 = aeroSection.TorqueAt(Vector3.zero);
+
             aeroSection.force = -aeroSection.force;
             aeroSection.torque = -aeroSection.torque;
+
+            //aeroSection.ClearAll();
 
             vel = (vel_base + vel_fuzz).normalized;
 
@@ -110,12 +117,66 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 section.EditorCalculateAeroForces(1, 3, 100000, 0.005f, vel, aeroSection);
             }
 
-            FARBaseAerodynamics.PrecomputeGlobalCenterOfLift(lift, dummy);
-            //Debug.Log("Updated CoL");
-            aeroSection.AddAll(lift);
+            FARBaseAerodynamics.PrecomputeGlobalCenterOfLift(aeroSection, dummy, vel);
+
+            //Vector3 force2, moment2;
+            //force2 = aeroSection.force;
+            //moment2 = aeroSection.TorqueAt(Vector3.zero);
+
+
+            //aeroSection.ClearAll();
+
+            /*vel = vel_base.normalized;
+
+            for (int i = 0; i < _currentAeroSections.Count; i++)
+            {
+                FARAeroSection section = _currentAeroSections[i];
+                section.EditorCalculateAeroForces(1, 3, 100000, 0.005f, vel, aeroSection);
+            }
+
+
+            FARBaseAerodynamics.PrecomputeGlobalCenterOfLift(aeroSection, dummy, vel);
+
+            Vector3 force1, moment1;
+            force1 = aeroSection.force;
+            moment1 = aeroSection.TorqueAt(Vector3.zero);
+
+            vel_fuzz /= 0.02f;
+
+            double L0, L1, L2;
+            double D0, D1, D2;
+            double M0, M1, M2;
+
+            L0 = Vector3.Dot(vel_fuzz, force0);
+            L1 = Vector3.Dot(vel_fuzz, force1);
+            L2 = Vector3.Dot(vel_fuzz, force2);
+
+            D0 = Vector3.Dot(vel_base, force0);
+            D1 = Vector3.Dot(vel_base, force1);
+            D2 = Vector3.Dot(vel_base, force2);
+
+            M0 = moment0.magnitude;
+            M1 = moment1.magnitude;
+            M2 = moment2.magnitude;
+
+            double dL_dalpha = (L2 - L0) * 0.5;
+            double dD_dalpha = (D2 - D0) * 0.5;
+            double dM_dalpha = (M2 - M0) * 0.5;
+
+            double d2L_dalpha2 = L2 + L0 - 2 * L1;
+            double d2D_dalpha2 = D2 + D0 - 2 * D1;
+            double d2M_dalpha2 = M2 + M0 - 2 * M1;
 
             aeroForce = aeroSection.force;
-            vesselRootLocalAeroCenter = aeroSection.GetPos();
+
+
+            double x_ac = d2D_dalpha2 * dL_dalpha - dD_dalpha * d2L_dalpha2;
+            x_ac = (-dM_dalpha * d2D_dalpha2 + dD_dalpha * d2M_dalpha2) / x_ac;
+
+            double z_ac = (-d2M_dalpha2 - d2L_dalpha2 * x_ac) / d2D_dalpha2;
+
+            vesselRootLocalAeroCenter = vel_base * (float)x_ac + vel_fuzz * (float)z_ac;*/
+            //vesselRootLocalAeroCenter = aeroSection.GetPos();
             vesselRootLocalAeroCenter = EditorLogic.RootPart.transform.worldToLocalMatrix.MultiplyPoint3x4(vesselRootLocalAeroCenter);
         }
     }

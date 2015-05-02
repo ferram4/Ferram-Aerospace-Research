@@ -62,7 +62,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
         public class SideAreaValues
         {
             public double iP, iN, jP, jN, kP, kN;
-            public double count;
+            public double exposedAreaCount;
+            public double crossSectionalAreaCount;
         }
     }
 }

@@ -69,6 +69,7 @@
     <Compile Include="FARGUI\FARFlightGUI\StabilityAugmentation.cs" />
     <Compile Include="FARGUI\FARFlightGUI\VesselFlightInfo.cs" />
     <Compile Include="FARGUI\FARFlightGUI\PhysicsCalcs.cs" />
+    <Compile Include="FARPartGeometry\GeometryModification\AirbreathingEngineCrossSectonAdjuster.cs" />
     <Compile Include="FARPartGeometry\GeometryModification\ICrossSectionAdjuster.cs" />
     <Compile Include="FARPartGeometry\GeometryModification\IntakeCrossSectionAdjuster.cs" />
     <Compile Include="FARPartGeometry\PartTransformInfo.cs" />

@@ -51,6 +51,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public List<GeometryMesh> meshDataList;
         private List<IGeometryUpdater> geometryUpdaters;
+        private List<ICrossSectionAdjuster> crossSectionAdjusters;
 
         private List<AnimationState> animStates;
         private List<float> animStateTime;
@@ -195,6 +196,41 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     StockJettisonTransformGeoUpdater fairingUpdater = new StockJettisonTransformGeoUpdater(engineFairing, this);
                     geometryUpdaters.Add(fairingUpdater);
                 }
+            }
+        }
+
+        private void SetupICrossSectionAdjusters()
+        {
+            Matrix4x4 worldToVesselMatrix;
+            if (HighLogic.LoadedSceneIsFlight)
+            {
+                worldToVesselMatrix = vessel.rootPart.partTransform.worldToLocalMatrix;
+            }
+            else
+            {
+                worldToVesselMatrix = EditorLogic.RootPart.partTransform.worldToLocalMatrix;
+            } 
+            crossSectionAdjusters = new List<ICrossSectionAdjuster>();
+            if(part.Modules.Contains("ModuleEngines") || part.Modules.Contains("ModuleEnginesFX"))
+            {
+                ModuleEngines engines = (ModuleEngines)part.Modules["ModuleEngines"];
+                for(int i = 0; i < engines.propellants.Count; i++)
+                {
+                    Propellant p = engines.propellants[i];
+                    if (p.name == "IntakeAir")
+                    {
+                        AirbreathingEngineCrossSectonAdjuster engineAdjuster = new AirbreathingEngineCrossSectonAdjuster(engines, worldToVesselMatrix);
+                        crossSectionAdjusters.Add(engineAdjuster);
+                        break;
+                    }
+                }
+            }
+            if (part.Modules.Contains("ModuleResourceIntake"))
+            {
+                ModuleResourceIntake intake = (ModuleResourceIntake)part.Modules["ModuleResourceIntake"];
+
+                IntakeCrossSectionAdjuster engineAdjuster = new IntakeCrossSectionAdjuster(intake, worldToVesselMatrix);
+                crossSectionAdjusters.Add(engineAdjuster);
             }
         }
 

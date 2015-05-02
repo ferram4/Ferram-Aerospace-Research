@@ -186,6 +186,9 @@ namespace ferram4
             FARWingAerodynamicModel[] nearbyWingModulesLeftward;
             FARWingAerodynamicModel[] nearbyWingModulesRightward;
 
+            if (parentWingPart == null)
+                return;
+
             rootChordMidPt = parentWingPart.transform.position + parentWingPart.transform.TransformDirection(rootChordMidLocal);
 
             if(isSmallSrf)

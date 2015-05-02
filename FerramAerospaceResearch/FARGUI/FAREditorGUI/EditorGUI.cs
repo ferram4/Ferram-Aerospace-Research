@@ -248,15 +248,19 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             for (int i = 0; i < partsList.Count; i++)
             {
                 Part p = partsList[i];
-                if (p.Modules.Contains("FARWingAerodynamicModel"))
-                {
-                    FARWingAerodynamicModel w = (FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
-                    if (w != null)
+                if(p != null)
+                    if (p.Modules.Contains("FARWingAerodynamicModel"))
                     {
+                        FARWingAerodynamicModel w = (FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
                         w.EditorUpdateWingInteractions();
                         _wingAerodynamicModel.Add(w);
                     }
-                }
+                    else if (p.Modules.Contains("FARControllableSurface"))
+                    {
+                        FARControllableSurface c = (FARControllableSurface)p.Modules["FARControllableSurface"];
+                        c.EditorUpdateWingInteractions();
+                        _wingAerodynamicModel.Add(c);
+                    }
             }
 
         }

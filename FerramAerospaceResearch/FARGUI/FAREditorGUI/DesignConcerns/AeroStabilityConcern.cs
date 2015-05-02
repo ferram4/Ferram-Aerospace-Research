@@ -56,7 +56,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.DesignConcerns
 
         public override bool TestCondition()
         {
-            if (EditorLogic.SortedShipList.Count > 0)
+            if (EditorLogic.SortedShipList.Count > 0 && _instantSim.Ready)
             {
                 _simInput.alpha = -1;
                 _simInput.machNumber = 0.5;

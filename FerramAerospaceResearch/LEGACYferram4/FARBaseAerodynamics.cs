@@ -222,31 +222,15 @@ namespace ferram4
             return parts;
         }
 
-        public static void PrecomputeGlobalCenterOfLift(FARCenterQuery lift, FARCenterQuery dummy)
+        public static void PrecomputeGlobalCenterOfLift(FARCenterQuery lift, FARCenterQuery dummy, Vector3 vel)
         {
             /* Center of lift is the location where the derivative of
                the total torque provided by aerodynamic forces relative to
                AoA is zero (or at least minimal). This approximates the
                derivative by a simple subtraction, like before. */
-
-            Vector3 vel_base, vel_fuzz;
-
-            if (EditorDriver.editorFacility == EditorFacility.SPH)
-            {
-                vel_base = Vector3.forward;
-                vel_fuzz = 0.02f * Vector3.up;
-            }
-            else
-            {
-                vel_base = Vector3.up;
-                vel_fuzz = -0.02f * Vector3.forward;
-            }
-
             
             var parts = GetAllEditorModules();
 
-            // Pass 1
-            Vector3 vel = (vel_base - vel_fuzz).normalized;
             foreach (var ba in parts)
             {
                 ba.velocityEditor = vel;
@@ -257,28 +241,7 @@ namespace ferram4
             foreach (var ba in parts)
                 ba.PrecomputeCenterOfLift(vel, 0, dummy);
             foreach (var ba in parts)
-                ba.CoLForce = ba.PrecomputeCenterOfLift(vel, 0, lift);
-            
-            // flip sign of data in the accumulator to indirectly subtract passes
-            lift.force = -lift.force;
-            lift.torque = - lift.torque;
-
-            // Pass 2
-            vel = (vel_base + vel_fuzz).normalized;
-            foreach (var ba in parts)
-            {
-                ba.velocityEditor = vel;
-                ba.ResetCenterOfLift();
-            }
-
-            foreach (var ba in parts)
-                ba.PrecomputeCenterOfLift(vel, 0, dummy);
-            foreach (var ba in parts)
-                ba.CoLForce -= ba.PrecomputeCenterOfLift(vel, 0, lift);
-            
-            // Choose the center location
-            //GlobalCoL = lift.GetMinTorquePos();
-            //GlobalCoLReady = true;
+                ba.PrecomputeCenterOfLift(vel, 0, lift);
         }
 
         public void OnCenterOfLiftQuery(CenterOfLiftQuery CoLMarker)
