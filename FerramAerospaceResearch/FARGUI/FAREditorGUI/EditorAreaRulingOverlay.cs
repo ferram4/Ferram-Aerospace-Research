@@ -115,10 +115,11 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             _markingRenderers = null;
         }
 
-        private void RestartOverlay()
+        public void RestartOverlay()
         {
             Cleanup();
             Initialize();
+            SetVisibility(display);
         }
 
         LineRenderer CreateNewRenderer(Color color, float width, Material material)

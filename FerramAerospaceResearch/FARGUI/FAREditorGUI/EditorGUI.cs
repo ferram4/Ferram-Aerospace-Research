@@ -198,8 +198,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             Color crossSectionDeriv = EditorColors.GetColor(2);
             crossSectionDeriv.a = 0.8f;
-
-            instance._areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.7f), crossSection, crossSectionDeriv, 10, 5);
+            instance._areaRulingOverlay.RestartOverlay();
+            //instance._areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.7f), crossSection, crossSectionDeriv, 10, 5);
             RequestUpdateVoxel();
         }
        
@@ -276,6 +276,16 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                     _simManager.UpdateAeroData(_vehicleAero, _wingAerodynamicModel);
                     UpdateCrossSections();
                     editorReportUpdate.Invoke(EngineersReport.Instance, null);
+
+
+                    foreach(Part p in EditorLogic.SortedShipList)
+                        if(p.Modules.Contains("ModuleSeeThroughObject"))
+                        {
+                            ModuleSeeThroughObject s = (ModuleSeeThroughObject)p.Modules["ModuleSeeThroughObject"];
+                            Shader shader = Shader.Find(s.shaderName);
+                            Debug.Log(shader.ToString());
+                        }
+                    
                 }
 
                 if (_updateRateLimiter < FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate)
