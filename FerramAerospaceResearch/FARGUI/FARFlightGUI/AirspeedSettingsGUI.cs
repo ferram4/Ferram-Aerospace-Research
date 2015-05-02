@@ -108,6 +108,9 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         public void ChangeSurfVelocity()
         {
+            if (FlightGlobals.ActiveVessel != _vessel)
+                return;
+
             //DaMichel: Keep our fingers off of this also if there is no atmosphere (staticPressure <= 0)
             if (FlightUIController.speedDisplayMode != FlightUIController.SpeedDisplayModes.Surface || _vessel.atmDensity <= 0)
                 return;
@@ -115,7 +118,6 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
             if (UI.spdCaption == null || UI.speed == null)
                 return;
-            Vessel activeVessel = _vessel;
 
             string speedometerCaption = "Surf: ";
             double unitConversion = 1;
@@ -138,7 +140,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             if (velMode == SurfaceVelMode.TAS)
             {
                 UI.spdCaption.text = "Surface";
-                UI.speed.text = (activeVessel.srfSpeed * unitConversion).ToString("F1") + unitString;
+                UI.speed.text = (_vessel.srfSpeed * unitConversion).ToString("F1") + unitString;
             }
             else
             {
@@ -146,16 +148,16 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 {
                     UI.spdCaption.text = "IAS";
                     speedometerCaption = "IAS: ";
-                    double densityRatio = (FARAeroUtil.GetCurrentDensity(activeVessel.mainBody, activeVessel.altitude, false) * 1.225);
+                    double densityRatio = (FARAeroUtil.GetCurrentDensity(_vessel.mainBody, _vessel.altitude, false) * 1.225);
                     double pressureRatio = FARAeroUtil.StagnationPressureCalc(_vessel.mach);
-                    UI.speed.text = (activeVessel.srfSpeed * Math.Sqrt(densityRatio) * pressureRatio * unitConversion).ToString("F1") + unitString;
+                    UI.speed.text = (_vessel.srfSpeed * Math.Sqrt(densityRatio) * pressureRatio * unitConversion).ToString("F1") + unitString;
                 }
                 else if (velMode == SurfaceVelMode.EAS)
                 {
                     UI.spdCaption.text = "EAS";
                     speedometerCaption = "EAS: ";
-                    double densityRatio = (FARAeroUtil.GetCurrentDensity(activeVessel.mainBody, activeVessel.altitude, false) * 1.225);
-                    UI.speed.text = (activeVessel.srfSpeed * Math.Sqrt(densityRatio) * unitConversion).ToString("F1") + unitString;
+                    double densityRatio = (FARAeroUtil.GetCurrentDensity(_vessel.mainBody, _vessel.altitude, false) * 1.225);
+                    UI.speed.text = (_vessel.srfSpeed * Math.Sqrt(densityRatio) * unitConversion).ToString("F1") + unitString;
                 }
                 else// if (velMode == SurfaceVelMode.MACH)
                 {
