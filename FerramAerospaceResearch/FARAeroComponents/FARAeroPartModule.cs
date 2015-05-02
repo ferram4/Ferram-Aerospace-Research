@@ -157,6 +157,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     UnityEngine.Object.Destroy(dragArrow);
                     dragArrow = null;
                 }
+                if ((object)momentArrow != null)
+                {
+                    UnityEngine.Object.Destroy(momentArrow);
+                    momentArrow = null;
+                }
             }
             else
             {
@@ -407,6 +412,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     UnityEngine.Object.Destroy(dragArrow);
                     dragArrow = null;
+                }
+                if ((object)momentArrow != null)
+                {
+                    UnityEngine.Object.Destroy(momentArrow);
+                    momentArrow = null;
                 }
             }
 

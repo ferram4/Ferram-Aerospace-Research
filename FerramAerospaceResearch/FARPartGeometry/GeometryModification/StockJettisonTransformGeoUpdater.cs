@@ -40,7 +40,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace FerramAerospaceResearch.FARPartGeometry.GeometryUpdaters
+namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 {
     class StockJettisonTransformGeoUpdater : IGeometryUpdater
     {

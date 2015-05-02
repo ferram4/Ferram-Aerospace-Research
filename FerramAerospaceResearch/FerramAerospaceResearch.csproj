@@ -69,6 +69,8 @@
     <Compile Include="FARGUI\FARFlightGUI\StabilityAugmentation.cs" />
     <Compile Include="FARGUI\FARFlightGUI\VesselFlightInfo.cs" />
     <Compile Include="FARGUI\FARFlightGUI\PhysicsCalcs.cs" />
+    <Compile Include="FARPartGeometry\GeometryModification\ICrossSectionAdjuster.cs" />
+    <Compile Include="FARPartGeometry\GeometryModification\IntakeCrossSectionAdjuster.cs" />
     <Compile Include="FARPartGeometry\PartTransformInfo.cs" />
     <Compile Include="FARSettingsScenarioModule.cs" />
     <Compile Include="LEGACYferram4\FARAction.cs" />
@@ -107,9 +109,9 @@
     <Compile Include="FARPartGeometry\GeometryPartModule.cs" />
     <Compile Include="FARMathUtil.cs" />
     <Compile Include="FARPartExtensions.cs" />
-    <Compile Include="FARPartGeometry\GeometryUpdaters\IGeometryUpdater.cs" />
-    <Compile Include="FARPartGeometry\GeometryUpdaters\StockJettisonTransformGeoUpdater.cs" />
-    <Compile Include="FARPartGeometry\GeometryUpdaters\StockProcFairingGeoUpdater.cs" />
+    <Compile Include="FARPartGeometry\GeometryModification\IGeometryUpdater.cs" />
+    <Compile Include="FARPartGeometry\GeometryModification\StockJettisonTransformGeoUpdater.cs" />
+    <Compile Include="FARPartGeometry\GeometryModification\StockProcFairingGeoUpdater.cs" />
     <Compile Include="FARPartGeometry\MeshData.cs" />
     <Compile Include="FARPartGeometry\PartGeometryExtensions.cs" />
     <Compile Include="FARPartGeometry\VehicleVoxel.cs" />

@@ -38,7 +38,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace FerramAerospaceResearch.FARPartGeometry.GeometryUpdaters
+namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 {
     interface IGeometryUpdater
     {

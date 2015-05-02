@@ -41,7 +41,7 @@ using UnityEngine;
 using KSP;
 using ProceduralFairings;
 
-namespace FerramAerospaceResearch.FARPartGeometry.GeometryUpdaters
+namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 {
     class StockProcFairingGeoUpdater : IGeometryUpdater
     {

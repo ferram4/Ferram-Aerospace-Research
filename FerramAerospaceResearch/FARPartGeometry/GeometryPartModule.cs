@@ -38,7 +38,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using KSP;
-using FerramAerospaceResearch.FARPartGeometry.GeometryUpdaters;
+using FerramAerospaceResearch.FARPartGeometry.GeometryModification;
 
 namespace FerramAerospaceResearch.FARPartGeometry
 {
