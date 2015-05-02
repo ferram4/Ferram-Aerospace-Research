@@ -72,6 +72,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             //RebuildAllMeshData();
             SetupIGeometryUpdaters();
+            SetupICrossSectionAdjusters();
             GetAnimations();
         }
 
@@ -211,7 +212,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 worldToVesselMatrix = EditorLogic.RootPart.partTransform.worldToLocalMatrix;
             } 
             crossSectionAdjusters = new List<ICrossSectionAdjuster>();
-            if(part.Modules.Contains("ModuleEngines") || part.Modules.Contains("ModuleEnginesFX"))
+            if(part.Modules.Contains("ModuleEngines"))
             {
                 ModuleEngines engines = (ModuleEngines)part.Modules["ModuleEngines"];
                 for(int i = 0; i < engines.propellants.Count; i++)
@@ -221,6 +222,21 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
                         AirbreathingEngineCrossSectonAdjuster engineAdjuster = new AirbreathingEngineCrossSectonAdjuster(engines, worldToVesselMatrix);
                         crossSectionAdjusters.Add(engineAdjuster);
+                        break;
+                    }
+                }
+            }
+            if (part.Modules.Contains("ModuleEnginesFX"))
+            {
+                ModuleEnginesFX engines = (ModuleEnginesFX)part.Modules["ModuleEnginesFX"];
+                for (int i = 0; i < engines.propellants.Count; i++)
+                {
+                    Propellant p = engines.propellants[i];
+                    if (p.name == "IntakeAir")
+                    {
+                        AirbreathingEngineCrossSectonAdjuster engineAdjuster = new AirbreathingEngineCrossSectonAdjuster(engines, worldToVesselMatrix);
+                        crossSectionAdjusters.Add(engineAdjuster);
+                        Debug.Log("added engine");
                         break;
                     }
                 }
@@ -242,6 +258,20 @@ namespace FerramAerospaceResearch.FARPartGeometry
             else if (HighLogic.LoadedSceneIsFlight)
                 for (int i = 0; i < geometryUpdaters.Count; i++)
                     geometryUpdaters[i].FlightGeometryUpdate();
+        }
+
+        public void GetICrossSectionAdjusters(List<ICrossSectionAdjuster> forwardFacing, List<ICrossSectionAdjuster> rearwardFacing, Matrix4x4 basis, Vector3 vehicleMainAxis)
+        {
+            for(int i = 0; i < crossSectionAdjusters.Count;i++)
+            {
+                ICrossSectionAdjuster adjuster = crossSectionAdjusters[i];
+                adjuster.TransformBasis(basis);
+
+                if (adjuster.AreaRemovedFromCrossSection(vehicleMainAxis) != 0)
+                    forwardFacing.Add(adjuster);
+                else if (adjuster.AreaRemovedFromCrossSection(-vehicleMainAxis) != 0)
+                    rearwardFacing.Add(adjuster);
+            }
         }
 
         #region voxelUpdates

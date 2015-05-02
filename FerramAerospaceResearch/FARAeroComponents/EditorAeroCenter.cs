@@ -55,7 +55,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
         {
             get { return instance.vesselRootLocalAeroCenter; }
         }
-        Vector3 aeroForce;
 
         List<FARAeroPartModule> _currentAeroModules;
         List<FARAeroSection> _currentAeroSections;
@@ -176,7 +175,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             double z_ac = (-d2M_dalpha2 - d2L_dalpha2 * x_ac) / d2D_dalpha2;
 
             vesselRootLocalAeroCenter = vel_base * (float)x_ac + vel_fuzz * (float)z_ac;*/
-            //vesselRootLocalAeroCenter = aeroSection.GetPos();
+            vesselRootLocalAeroCenter = aeroSection.GetPos();
             vesselRootLocalAeroCenter = EditorLogic.RootPart.transform.worldToLocalMatrix.MultiplyPoint3x4(vesselRootLocalAeroCenter);
         }
     }

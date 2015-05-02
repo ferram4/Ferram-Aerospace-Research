@@ -40,7 +40,7 @@ using UnityEngine;
 
 namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 {
-    interface IGeometryUpdater
+    public interface IGeometryUpdater
     {
         void EditorGeometryUpdate();
 

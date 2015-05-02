@@ -18,7 +18,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         void UpdateAerodynamics(ModularFlightIntegrator fi, Part part)
         {
-            double extraArea = 0;
             if (part.Modules.Contains("ModuleAeroSurface"))     //FIXME Proper model for airbrakes
                 fi.BaseFIUpdateAerodynamics(part);
             else if(!part.DragCubes.None)

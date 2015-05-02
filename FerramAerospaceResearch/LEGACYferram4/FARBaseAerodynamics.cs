@@ -70,8 +70,6 @@ namespace ferram4
 
         public double rho;
 
-        private Vector3 CoLForce;
-
         // Keep track if the tinting effect is active or not
         //private bool tintIsActive = false;
 
