@@ -652,25 +652,13 @@ namespace FerramAerospaceResearch
                 return lamCf;
             }
 
-            double sqrtTransRe = Math.Sqrt(TRANSITION_REYNOLDS_NUMBER);
-            double rePerLength = Re / lengthScale;
+            double transitionFraction = TRANSITION_REYNOLDS_NUMBER / Re;
 
-            double laminarCf = 1.328 / sqrtTransRe;
+            double laminarCf = 1.328 / Math.Sqrt(TRANSITION_REYNOLDS_NUMBER);
+            double turbulentCfInLaminar = 0.074 / Math.Pow(TRANSITION_REYNOLDS_NUMBER, 0.2);
+            double turbulentCf = 0.074 / Math.Pow(Re, 0.2);
 
-            double turbInitialLength = 0.074 / 1.328 * sqrtTransRe;     //this is needed to match momentum thicknesses at the transition point
-            double tmp = turbInitialLength;
-            turbInitialLength *= turbInitialLength;
-            turbInitialLength *= turbInitialLength;
-            turbInitialLength *= tmp;            //raised to the 5th
-
-            turbInitialLength /= rePerLength;
-
-            double turbulentDistance = lengthScale - TRANSITION_REYNOLDS_NUMBER / rePerLength;
-
-            double turbulentCf = 1 / Math.Pow(rePerLength * (turbulentDistance + turbInitialLength), 0.2) - 1 / Math.Pow(rePerLength * turbInitialLength, 0.2);
-            turbulentCf = 0.074 * turbulentCf;
-
-            return turbulentCf + laminarCf;
+            return turbulentCf - transitionFraction * (turbulentCfInLaminar - laminarCf);
         }
 
         public static double SkinFrictionDrag(double reynoldsNumber, double machNumber)
