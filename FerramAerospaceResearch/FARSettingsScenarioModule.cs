@@ -112,8 +112,10 @@ namespace FerramAerospaceResearch
             node.AddValue("minPhysTicksPerUpdate", voxelSettings.minPhysTicksPerUpdate);
             node.AddValue("index", settings.index);
 
+            FARGUI.FARFlightGUI.FlightGUI.SaveActiveData();
             ConfigNode flightGUINode = new ConfigNode("FlightGUISettings");
-            for(int i = 0; i < flightGUISettings.Count; i++)
+            Debug.Log("Saving FAR Data");
+            for (int i = 0; i < flightGUISettings.Count; i++)
             {
                 flightGUINode.AddNode(flightGUISettings[i]);
             }
@@ -164,6 +166,8 @@ namespace FerramAerospaceResearch
             }
             currentIndex = index;
 
+
+            Debug.Log("Loading FAR Data");
             flightGUISettings = new List<ConfigNode>();
             if(node.HasNode("FlightGUISettings"))
             {

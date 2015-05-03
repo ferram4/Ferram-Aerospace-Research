@@ -45,8 +45,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
     {
         const int MAX_CHUNKS_IN_QUEUE = 1000;
         const int MAX_SWEEP_PLANES_IN_QUEUE = 8;
-        static Queue<VoxelChunk> clearedChunks = new Queue<VoxelChunk>();
-        static Queue<SweepPlanePoint[,]> clearedPlanes;
+        static Stack<VoxelChunk> clearedChunks = new Stack<VoxelChunk>();
+        static Stack<SweepPlanePoint[,]> clearedPlanes;
 
         double elementSize;
         public double ElementSize
@@ -90,9 +90,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             if(clearedPlanes == null)
             {
-                clearedPlanes = new Queue<SweepPlanePoint[,]>();
+                clearedPlanes = new Stack<SweepPlanePoint[,]>();
                 for (int i = 0; i < MAX_SWEEP_PLANES_IN_QUEUE; i++)
-                    clearedPlanes.Enqueue(new SweepPlanePoint[1, 1]);
+                    clearedPlanes.Push(new SweepPlanePoint[1, 1]);
             }
             Vector3d min = new Vector3d(double.PositiveInfinity, double.PositiveInfinity, double.PositiveInfinity);
             Vector3d max = new Vector3d(double.NegativeInfinity, double.NegativeInfinity, double.NegativeInfinity);
@@ -297,7 +297,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         chunk.ClearChunk();
 
                         if (clearedChunks.Count < MAX_CHUNKS_IN_QUEUE)
-                            clearedChunks.Enqueue(chunk);
+                            clearedChunks.Push(chunk);
                         else
                             return;
                     }
@@ -1282,7 +1282,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 {
                     if(clearedChunks.Count > 0)
                     {
-                        section = clearedChunks.Dequeue();
+                        section = clearedChunks.Pop();
                     }
                 }
                 if (section == null)
@@ -1318,7 +1318,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
                         if(clearedChunks.Count > 0)
                         {
-                            section = clearedChunks.Dequeue();
+                            section = clearedChunks.Pop();
                         }
                     }
                     if (section == null)
@@ -1899,7 +1899,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 while (clearedPlanes.Count == 0)
                     Monitor.Wait(clearedPlanes);
 
-                plane = clearedPlanes.Dequeue();
+                plane = clearedPlanes.Pop();
             }
 
 
@@ -1935,7 +1935,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             lock(clearedPlanes)
             {
-                clearedPlanes.Enqueue(plane);
+                clearedPlanes.Push(plane);
                 Monitor.Pulse(clearedPlanes);
             }
             

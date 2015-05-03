@@ -110,12 +110,10 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             if(_vessel == FlightGlobals.ActiveVessel)
                 LoadConfigs();
 
-            GameEvents.onGamePause.Add(SaveData);
         }
 
         void OnDestroy()
         {
-            GameEvents.onGamePause.Remove(SaveData);
             SaveConfigs();
             if (_vessel)
             {
@@ -138,13 +136,22 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 blizzyFlightGUIButton.Destroy();
         }
 
-        void SaveData()
+        public void SaveData()
         {
             if (_vessel == FlightGlobals.ActiveVessel)
             {
                 SaveConfigs();
                 _airSpeedGUI.SaveSettings();
                 _stabilityAugmentation.SaveSettings();
+            }
+        }
+        public static void SaveActiveData()
+        {
+            FlightGUI gui;
+            if(vesselFlightGUI != null && vesselFlightGUI.TryGetValue(FlightGlobals.ActiveVessel, out gui))
+            {
+                if(gui != null)
+                    gui.SaveData();
             }
         }
 

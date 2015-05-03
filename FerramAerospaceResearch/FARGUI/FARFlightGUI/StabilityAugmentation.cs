@@ -118,7 +118,6 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
             else
                 scalingDynPres = GUIUtils.TextEntryForDouble("Dyn Pres For Control Scaling:", 150, scalingDynPres);
-            systems[selectedItem] = sys;
 
             GUILayout.EndVertical();
 
@@ -231,11 +230,11 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             double dError_dt = error - system.lastError;
             dError_dt /= dt;
 
-            system.errorIntegral += error;
+            system.errorIntegral += error * dt;
 
             state -= system.kP * error + system.kD * dError_dt + system.kI * system.errorIntegral;
 
-            system.lastError += error * dt;
+            system.lastError = error;
 
             return state;
         }
@@ -252,28 +251,33 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                     break;
                 }
 
-            if(systems == null)
+            if (systems == null)
+            {
                 systems = new ControlSystem[5];
-
-
-            if (node != null)
-            {
                 for (int i = 0; i < systems.Length; i++)
+                    systems[i] = new ControlSystem();
+
+
+
+                if (node != null)
                 {
-                    string nodeName = "ControlSys" + i;
-                    if (node.HasNode(nodeName))
-                        TryLoadSystem(node.GetNode(nodeName), i);
+                    for (int i = 0; i < systems.Length; i++)
+                    {
+                        string nodeName = "ControlSys" + i;
+                        if (node.HasNode(nodeName))
+                            TryLoadSystem(node.GetNode(nodeName), i);
+                    }
+                    if (node.HasValue("aoALowLim"))
+                        double.TryParse(node.GetValue("aoALowLim"), out aoALowLim);
+                    if (node.HasValue("aoAHighLim"))
+                        double.TryParse(node.GetValue("aoAHighLim"), out aoAHighLim);
+                    if (node.HasValue("scalingDynPres"))
+                        double.TryParse(node.GetValue("scalingDynPres"), out scalingDynPres);
                 }
-                if (node.HasValue("aoALowLim"))
-                    double.TryParse(node.GetValue("aoALowLim"), out aoALowLim);
-                if (node.HasValue("aoAHighLim"))
-                    double.TryParse(node.GetValue("aoAHighLim"), out aoAHighLim);
-                if (node.HasValue("scalingDynPres"))
-                    double.TryParse(node.GetValue("scalingDynPres"), out scalingDynPres);
-            }
-            else
-            {
-                BuildDefaultSystems();
+                else
+                {
+                    BuildDefaultSystems();
+                }
             }
         }
 
@@ -282,21 +286,21 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             ControlSystem sys = new ControlSystem();
             //Roll system
             sys.kP = 0.05;
-            sys.kD = 0.005;
+            sys.kD = 1;
             sys.kI = 0.5;
 
             systems[0] = sys;
 
             //Yaw system
             sys.kP = 0;
-            sys.kD = 0.1;
+            sys.kD = 1;
             sys.kI = 0;
 
             systems[1] = sys;
 
             //Pitch system
             sys.kP = 0;
-            sys.kD = 0.1;
+            sys.kD = 1;
             sys.kI = 0;
 
             systems[2] = sys;
@@ -386,7 +390,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             return node;
         }
 
-        struct ControlSystem
+        class ControlSystem
         {
             public bool active;
 
