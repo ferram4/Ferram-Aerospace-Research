@@ -36,20 +36,19 @@ Copyright 2014, Michael Ferrara, aka Ferram4
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace FerramAerospaceResearch.FARPartGeometry
 {
-    class DebugVisualVoxel
+    class DebugVisualVoxel : IDisposable
     {
-        static Mesh mesh;
-        static Material mat;
-        static List<Vector3> Points;
+        //static Mesh mesh;
+        //static Material mat;
+        static UnityEngine.Sprite sprite;
+        /*static List<Vector3> Points;
         static List<Vector3> Verts;
         static List<int> Tris;
-        static List<Vector2> UVs;
+        static List<Vector2> UVs;*/
         float size;
         public GameObject gameObject;
 
@@ -59,7 +58,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
             size *= 0.5f;
             gameObject = new GameObject();
             gameObject.transform.position = pos;
-            if (mesh == null)
+            gameObject.transform.localScale = Vector3.one * size;
+            if(sprite == null)
+            {
+                sprite = UnityEngine.Sprite.Create(GameDatabase.Instance.GetTexture("FerramAerospaceResearch/Textures/sprite_debug_voxel", false), new Rect(0, 0, 16, 16), new Vector2(0.5f, 0.5f), 8);
+            }
+            /*if (mesh == null)
             {
                 Points = new List<Vector3>();
                 Points.Add(new Vector3(-size, size, -size));
@@ -73,15 +77,24 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 Verts = new List<Vector3>();
                 Tris = new List<int>();
                 UVs = new List<Vector2>();
-            }
+            }*/
             InitVoxel();
+        }
+
+        public void Dispose()
+        {
+            GameObject.Destroy(gameObject);
         }
 
         private void InitVoxel()
         {
-            MeshFilter meshFilter = (MeshFilter)gameObject.AddComponent("MeshFilter");
-            gameObject.AddComponent("MeshRenderer");
-            if (mesh == null)
+            SpriteRenderer renderer = gameObject.AddComponent<SpriteRenderer>();
+            renderer.sprite = sprite;
+            renderer.enabled = true;
+
+            //MeshFilter meshFilter = (MeshFilter)gameObject.AddComponent("MeshFilter");
+            //gameObject.AddComponent("MeshRenderer");
+            /*if (mesh == null)
             {
                 meshFilter.mesh = new Mesh();
                 mesh = meshFilter.sharedMesh;
@@ -91,10 +104,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 meshFilter.sharedMesh = null;
                 meshFilter.sharedMesh = mesh;
-            }
+            }*/
         }
 
-        private void UpdateMesh()
+        /*private void UpdateMesh()
         {
             mat = Resources.Load("Materials/Default") as Material;
 
@@ -224,6 +237,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 tangents[a].w = (Vector3.Dot(Vector3.Cross(n, t), tan2[a]) < 0.0f) ? -1.0f : 1.0f;
             }
             mesh.tangents = tangents;
-        }
+        }*/
     }
 }

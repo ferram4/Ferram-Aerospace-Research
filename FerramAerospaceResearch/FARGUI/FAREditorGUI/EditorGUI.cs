@@ -67,6 +67,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             get { return instance.guiRect; }
         }
         static ApplicationLauncherButton editorGUIAppLauncherButton;
+        static IButton blizzyEditorGUIButton;
 
         VehicleAerodynamics _vehicleAero;
         List<GeometryPartModule> _currentGeometryModules = new List<GeometryPartModule>();
@@ -172,6 +173,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             EditorLogic.fetch.Unlock("FAREdLock");
 
+            if (blizzyEditorGUIButton != null)
+                blizzyEditorGUIButton.Destroy();
         }
 
         #region EditorEvents
@@ -275,17 +278,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                     LEGACY_UpdateWingAeroModels();
                     _simManager.UpdateAeroData(_vehicleAero, _wingAerodynamicModel);
                     UpdateCrossSections();
-                    editorReportUpdate.Invoke(EngineersReport.Instance, null);
-
-
-                    foreach(Part p in EditorLogic.SortedShipList)
-                        if(p.Modules.Contains("ModuleSeeThroughObject"))
-                        {
-                            ModuleSeeThroughObject s = (ModuleSeeThroughObject)p.Modules["ModuleSeeThroughObject"];
-                            Shader shader = Shader.Find(s.shaderName);
-                            Debug.Log(shader.ToString());
-                        }
-                    
+                    editorReportUpdate.Invoke(EngineersReport.Instance, null);                   
                 }
 
                 if (_updateRateLimiter < FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate)
@@ -304,7 +297,10 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
             }
 
-            OnGUIAppLauncherReady();
+            if (FARDebugValues.useBlizzyToolbar)
+                GenerateBlizzyToolbarButton();
+            else
+                OnGUIAppLauncherReady();
         }
 
         #region voxel
@@ -495,7 +491,19 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         #endregion
 
         #region AppLauncher
-        public void OnGUIAppLauncherReady()
+
+        private void GenerateBlizzyToolbarButton()
+        {
+            if (blizzyEditorGUIButton == null)
+            {
+                blizzyEditorGUIButton = ToolbarManager.Instance.add("FerramAerospaceResearch", "FAREditorButtonBlizzy");
+                blizzyEditorGUIButton.TexturePath = "FerramAerospaceResearch/Textures/icon_button_blizzy";
+                blizzyEditorGUIButton.ToolTip = "FAR Editor";
+                blizzyEditorGUIButton.OnClick += (e) => showGUI = !showGUI;
+            }
+        }
+
+        private void OnGUIAppLauncherReady()
         {
             if (ApplicationLauncher.Ready && editorGUIAppLauncherButton == null)
             {

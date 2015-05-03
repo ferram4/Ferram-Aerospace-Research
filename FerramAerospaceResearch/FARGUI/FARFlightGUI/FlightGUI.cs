@@ -55,6 +55,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         static Rect dataGuiRect;
         static Rect settingsGuiRect;
         static ApplicationLauncherButton flightGUIAppLauncherButton;
+        static IButton blizzyFlightGUIButton;
         public static Dictionary<Vessel, FlightGUI> vesselFlightGUI;
 
         PhysicsCalcs _physicsCalcs;
@@ -96,7 +97,12 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             vesselFlightGUI.Add(_vessel, this);
 
             this.enabled = true;
-            OnGUIAppLauncherReady();
+
+            if (FARDebugValues.useBlizzyToolbar)
+                GenerateBlizzyToolbarButton();
+            else
+                OnGUIAppLauncherReady();
+
             if(_vessel == FlightGlobals.ActiveVessel)
                 LoadConfigs();
         }
@@ -113,6 +119,9 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             _stabilityAugmentation = null;
             _flightStatusGUI = null;
             settingsWindow = null;
+
+            if (blizzyFlightGUIButton != null)
+                blizzyFlightGUIButton.Destroy();
         }
 
         //Receives message from FARVesselAero through _vessel on the recalc being completed
@@ -241,6 +250,17 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         #endregion
 
         #region AppLauncher
+
+        private void GenerateBlizzyToolbarButton()
+        {
+            if (blizzyFlightGUIButton == null)
+            {
+                blizzyFlightGUIButton = ToolbarManager.Instance.add("FerramAerospaceResearch", "FARFlightButtonBlizzy");
+                blizzyFlightGUIButton.TexturePath = "FerramAerospaceResearch/Textures/icon_button_blizzy";
+                blizzyFlightGUIButton.ToolTip = "FAR Flight Sys";
+                blizzyFlightGUIButton.OnClick += (e) => showGUI = !showGUI;
+            }
+        }
 
         public void OnGUIAppLauncherReady()
         {
