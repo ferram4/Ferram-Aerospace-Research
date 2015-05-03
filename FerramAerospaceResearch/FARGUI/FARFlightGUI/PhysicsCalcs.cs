@@ -301,9 +301,13 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         private void CalculateStallFraction()
         {
             for (int i = 0; i < _LEGACY_currentWingAeroModel.Count; i++)
-                vesselInfo.stallFraction += _LEGACY_currentWingAeroModel[i].GetStall();
+            {
+                FARWingAerodynamicModel w = _LEGACY_currentWingAeroModel[i];
+                vesselInfo.stallFraction += w.GetStall() * w.S;
 
-            vesselInfo.stallFraction /= (double)_LEGACY_currentWingAeroModel.Count;
+            }
+
+            vesselInfo.stallFraction /= wingArea;
         }
     }
 }

@@ -75,7 +75,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 statusOverrideTimer -= TimeWarp.deltaTime;
                 return;
             }
-            if (infoParameters.dynPres < 10)
+            if (infoParameters.dynPres < 0.01)
             {
                 statusString = "Nominal";
                 statusColor = Color.green;
@@ -99,7 +99,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 statusColor = Color.yellow;
                 statusBlinker = false;
             }
-            else if (infoParameters.dynPres > 40000)
+            else if (infoParameters.dynPres > 40)
             {
                 statusString = "High Dyn Pressure";
                 statusColor = Color.yellow;
