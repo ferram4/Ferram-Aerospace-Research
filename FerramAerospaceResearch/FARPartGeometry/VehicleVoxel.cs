@@ -49,6 +49,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
         static Queue<SweepPlanePoint[,]> clearedPlanes;
 
         double elementSize;
+        public double ElementSize
+        {
+            get { return elementSize; }
+        }
         double invElementSize;
 
         VoxelChunk[, ,] voxelChunks;
@@ -82,7 +86,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             get { return yCellLength + xCellLength + zCellLength; }
         }
 
-        public VehicleVoxel(List<Part> partList, List<GeometryPartModule> geoModules, int elementCount, bool multiThreaded, bool solidify)
+        public VehicleVoxel(List<Part> partList, List<GeometryPartModule> geoModules, int elementCount, bool multiThreaded = true, bool solidify = true)
         {
             if(clearedPlanes == null)
             {
@@ -126,9 +130,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             double tmp = 0.125 * invElementSize;
 
-            xLength = (int)Math.Ceiling(size.x * tmp) + 2;
-            yLength = (int)Math.Ceiling(size.y * tmp) + 2;
-            zLength = (int)Math.Ceiling(size.z * tmp) + 2;
+            xLength = (int)Math.Ceiling(size.x * tmp) + 1;
+            yLength = (int)Math.Ceiling(size.y * tmp) + 1;
+            zLength = (int)Math.Ceiling(size.z * tmp) + 1;
 
             xCellLength = xLength * 8;
             yCellLength = yLength * 8;
@@ -149,6 +153,75 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             voxelChunks = new VoxelChunk[xLength, yLength, zLength];
 
+            BuildVoxel(geoModules, multiThreaded, solidify);
+        }
+
+        public VehicleVoxel(List<Part> partList, List<GeometryPartModule> geoModules, double elementSize, Vector3 lowerRightCorner, bool multiThreaded = true, bool solidify = true)
+        {
+            if (clearedPlanes == null)
+            {
+                clearedPlanes = new Queue<SweepPlanePoint[,]>();
+                for (int i = 0; i < MAX_SWEEP_PLANES_IN_QUEUE; i++)
+                    clearedPlanes.Enqueue(new SweepPlanePoint[1, 1]);
+            }
+            Vector3d min = new Vector3d(double.PositiveInfinity, double.PositiveInfinity, double.PositiveInfinity);
+            Vector3d max = new Vector3d(double.NegativeInfinity, double.NegativeInfinity, double.NegativeInfinity);
+
+            for (int i = 0; i < geoModules.Count; i++)
+            {
+                GeometryPartModule m = geoModules[i];
+                if ((object)m != null)
+                {
+                    Vector3d minBounds = m.overallMeshBounds.min;
+                    Vector3d maxBounds = m.overallMeshBounds.max;
+
+                    min.x = Math.Min(min.x, minBounds.x);
+                    min.y = Math.Min(min.y, minBounds.y);
+                    min.z = Math.Min(min.z, minBounds.z);
+
+                    max.x = Math.Max(max.x, maxBounds.x);
+                    max.y = Math.Max(max.y, maxBounds.y);
+                    max.z = Math.Max(max.z, maxBounds.z);
+                }
+            }
+
+            Vector3d size = max - min;
+
+            double voxelVolume = size.x * size.y * size.z;
+            invElementSize = 1 / elementSize;
+
+            if (double.IsInfinity(voxelVolume))
+            {
+                Debug.LogError("Voxel Volume was infinity; ending voxelization");
+                return;
+            }
+            double tmp = 0.125 * invElementSize;
+
+            xLength = (int)Math.Ceiling(size.x * tmp) + 1;
+            yLength = (int)Math.Ceiling(size.y * tmp) + 1;
+            zLength = (int)Math.Ceiling(size.z * tmp) + 1;
+
+            xCellLength = xLength * 8;
+            yCellLength = yLength * 8;
+            zCellLength = zLength * 8;
+
+            //Debug.Log(elementSize);
+            //Debug.Log(xLength + " " + yLength + " " + zLength);
+            //Debug.Log(size);
+
+            Vector3d extents = new Vector3d(); //this will be the distance from the center to the edges of the voxel object
+            extents.x = xLength * 4 * elementSize;
+            extents.y = yLength * 4 * elementSize;
+            extents.z = zLength * 4 * elementSize;
+
+
+            voxelChunks = new VoxelChunk[xLength, yLength, zLength];
+
+            BuildVoxel(geoModules, multiThreaded, solidify);
+        }
+
+        private void BuildVoxel(List<GeometryPartModule> geoModules, bool multiThreaded, bool solidify)
+        {
             threadsQueued = 0;
 
             for (int i = 0; i < geoModules.Count; i++)
@@ -163,24 +236,24 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
                         //lock (_locker)
                         //{
-                            //while (threadsQueued > 4)
-                            //    Monitor.Wait(_locker);
-                            //threadsQueued++;
+                        //while (threadsQueued > 4)
+                        //    Monitor.Wait(_locker);
+                        //threadsQueued++;
 
-                            VoxelShellParams data = new VoxelShellParams(m.part, m.meshDataList[j]);
-                            ThreadPool.QueueUserWorkItem(UpdateFromMesh, data);
+                        VoxelShellParams data = new VoxelShellParams(m.part, m.meshDataList[j]);
+                        ThreadPool.QueueUserWorkItem(UpdateFromMesh, data);
                         //}
                     }
                     else
                         UpdateFromMesh(m.meshDataList[j], m.part);
                 }
-                
+
             }
-            if(multiThreaded)
+            if (multiThreaded)
                 lock (_locker)
                     while (threadsQueued > 0)
                         Monitor.Wait(_locker);
-                
+
             if (solidify)
             {
                 threadsQueued = 2;
@@ -202,7 +275,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         while (threadsQueued > 0)
                             Monitor.Wait(_locker);
             }
-
         }
 
         public void CleanupVoxel()

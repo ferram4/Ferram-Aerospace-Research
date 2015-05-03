@@ -83,6 +83,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         Matrix4x4 _worldToLocalMatrix, _localToWorldMatrix;
 
         Vector3d _voxelLowerRightCorner;
+        double _voxelElementSize;
         double _sectionThickness;
         public double SectionThickness
         {
@@ -250,7 +251,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 visualizing = false;
 
-                ThreadPool.QueueUserWorkItem(CreateVoxel);
+                ThreadPool.QueueUserWorkItem(CreateVoxel, updateGeometryPartModules);
                 Monitor.Exit(this);
                 return true;
             }
@@ -259,7 +260,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         }
 
         //And this actually creates the voxel and then begins the aero properties determination
-        private void CreateVoxel(object nullObj)
+        private void CreateVoxel(object updateGeometryPartModules)
         {
             try
             {
@@ -267,11 +268,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     voxelizing = true;
 
-                    _voxel = new VehicleVoxel(_vehiclePartList, _currentGeoModules, _voxelCount, true, true);
+                    _voxel = new VehicleVoxel(_vehiclePartList, _currentGeoModules, _voxelCount);
                     if (_vehicleCrossSection.Length < _voxel.MaxArrayLength)
                         _vehicleCrossSection = _voxel.EmptyCrossSectionArray;
 
                     _voxelLowerRightCorner = _voxel.LocalLowerRightCorner;
+                    _voxelElementSize = _voxel.ElementSize;
 
                     CalculateVesselAeroProperties();
                     _calculationCompleted = true;
@@ -505,33 +507,45 @@ namespace FerramAerospaceResearch.FARAeroComponents
             //2nd derivs must be recalculated now using the adjusted areas
             double denom = sectionThickness;
             denom *= denom;
-            denom = 1 / denom;
+            denom = 0.0625 / denom;
 
             for (int i = frontIndex; i <= backIndex; i++)       //calculate 2nd derivs, raw
             {
-                double areaM1, area0, areaP1;
+                double areaM3, areaM2, areaM1, area0, areaP1, areaP2, areaP3;
 
-                if(i == frontIndex)     //forward difference for frontIndex
+                double areaSecondDeriv;
+
+                if(i - frontIndex < 2)     //N5 forward difference for frontIndex
                 {
-                    areaM1 = vehicleCrossSection[i].area;
-                    area0 = vehicleCrossSection[i + 1].area;
-                    areaP1 = vehicleCrossSection[i + 2].area;
+                    areaM2 = vehicleCrossSection[i].area;
+                    area0 = vehicleCrossSection[i + 2].area;
+                    areaP2 = vehicleCrossSection[i + 4].area;
+
+                    areaSecondDeriv = (areaM2 + areaP2) - 2 * area0;
+                    areaSecondDeriv *= denom * 4;
                 }
-                else if (i == backIndex) //backward difference for backIndex
+                else if (backIndex - i < 2) //N5 backward difference for backIndex
                 {
-                    areaM1 = vehicleCrossSection[i - 2].area;
-                    area0 = vehicleCrossSection[i - 1].area;
-                    areaP1 = vehicleCrossSection[i].area;
+                    areaM2 = vehicleCrossSection[i - 4].area;
+                    area0 = vehicleCrossSection[i - 2].area;
+                    areaP2 = vehicleCrossSection[i].area;
+
+                    areaSecondDeriv = (areaM2 + areaP2) - 2 * area0;
+                    areaSecondDeriv *= denom * 4;
                 }
-                else                     //central difference for all others
+                else                     //N7 central difference for all others
                 {
+                    areaM3 = vehicleCrossSection[i - 3].area;
+                    areaM2 = vehicleCrossSection[i - 2].area;
                     areaM1 = vehicleCrossSection[i - 1].area;
                     area0 = vehicleCrossSection[i].area;
                     areaP1 = vehicleCrossSection[i + 1].area;
-                }
+                    areaP2 = vehicleCrossSection[i + 2].area;
+                    areaP3 = vehicleCrossSection[i + 3].area;
 
-                double areaSecondDeriv = (areaM1 + areaP1) - 2 * area0;
-                areaSecondDeriv *= denom;
+                    areaSecondDeriv = (areaM3 + areaP3) + 2 * (areaM2 + areaP2) - (areaM1 + areaP1) - 4 * area0;
+                    areaSecondDeriv *= denom;
+                }
 
                 vehicleCrossSection[i].secondAreaDeriv = areaSecondDeriv;
             }
