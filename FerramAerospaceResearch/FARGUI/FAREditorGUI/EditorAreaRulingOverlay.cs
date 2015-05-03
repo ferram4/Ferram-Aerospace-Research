@@ -179,7 +179,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             if (!display)
                 return;
 
-            Transform lineTransform = EditorLogic.RootPart.transform;
+            Transform lineTransform = EditorLogic.Rootpart.partTransform;
 
             Vector.DrawLine3D(_areaLine, lineTransform);
             Vector.DrawLine3D(_derivLine, lineTransform);
@@ -287,7 +287,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         void UpdateRenderer(LineRenderer renderer, Matrix4x4 transformMatrix, double[] xCoords, double[] yCoords, double yScalingFactor)
         {
-            renderer.transform.parent = EditorLogic.RootPart.transform;
+            renderer.transform.parent = EditorLogic.RootPart.partTransform;
             renderer.transform.localPosition = Vector3.zero;
             renderer.transform.localRotation = Quaternion.identity;
 

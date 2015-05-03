@@ -37,6 +37,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Diagnostics;
 using UnityEngine;
 using PreFlightTests;
 using FerramAerospaceResearch.FARAeroComponents;
@@ -72,6 +73,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         VehicleAerodynamics _vehicleAero;
         List<GeometryPartModule> _currentGeometryModules = new List<GeometryPartModule>();
         List<FARWingAerodynamicModel> _wingAerodynamicModel = new List<FARWingAerodynamicModel>();
+        Stopwatch voxelWatch = new Stopwatch();
+
         EditorSimManager _simManager;
 
         InstantConditionSim _instantSim;
@@ -276,9 +279,15 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 if (_vehicleAero.CalculationCompleted)
                 {
                     LEGACY_UpdateWingAeroModels();
+
+                    voxelWatch.Stop();
+                    UnityEngine.Debug.Log("Voxelization Time (ms): " + voxelWatch.ElapsedMilliseconds);
+
+                    voxelWatch.Reset();
+
                     _simManager.UpdateAeroData(_vehicleAero, _wingAerodynamicModel);
                     UpdateCrossSections();
-                    editorReportUpdate.Invoke(EngineersReport.Instance, null);                   
+                    editorReportUpdate.Invoke(EngineersReport.Instance, null);
                 }
 
                 if (_updateRateLimiter < FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate)
@@ -287,7 +296,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 }
                 else if (_updateQueued)
                 {
-                    Debug.Log("Updating " + EditorLogic.fetch.ship.shipName);
+                    UnityEngine.Debug.Log("Updating " + EditorLogic.fetch.ship.shipName);
                     RecalculateVoxel();
                 }
             }
@@ -348,13 +357,18 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             }
             TriggerIGeometryUpdaters();
 
-            
-            if(_currentGeometryModules.Count > 0)
-               if(!_vehicleAero.TryVoxelUpdate(EditorLogic.RootPart.transform.worldToLocalMatrix, EditorLogic.RootPart.transform.localToWorldMatrix, FARSettingsScenarioModule.VoxelSettings.numVoxelsControllableVessel, partList, _currentGeometryModules, true))
-               {
+
+            if (_currentGeometryModules.Count > 0)
+            {
+                voxelWatch.Start();
+                if (!_vehicleAero.TryVoxelUpdate(EditorLogic.RootPart.partTransform.worldToLocalMatrix, EditorLogic.RootPart.partTransform.localToWorldMatrix, FARSettingsScenarioModule.VoxelSettings.numVoxelsControllableVessel, partList, _currentGeometryModules, true))
+                {
+                    voxelWatch.Stop();
+                    voxelWatch.Reset();
                     _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
                     _updateQueued = true;
-               }
+                }
+            }
         }
 
         private void TriggerIGeometryUpdaters()
@@ -458,7 +472,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         void DebugVisualizationGUI()
         {
             if (GUILayout.Button("Display Debug Voxels"))
-                _vehicleAero.DebugVisualizeVoxels(EditorLogic.RootPart.transform.localToWorldMatrix);
+                _vehicleAero.DebugVisualizeVoxels(EditorLogic.RootPart.partTransform.localToWorldMatrix);
         }
 
         void CrossSectionAnalysisGUI()

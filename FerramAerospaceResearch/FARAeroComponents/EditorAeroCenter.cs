@@ -176,7 +176,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             vesselRootLocalAeroCenter = vel_base * (float)x_ac + vel_fuzz * (float)z_ac;*/
             vesselRootLocalAeroCenter = aeroSection.GetPos();
-            vesselRootLocalAeroCenter = EditorLogic.RootPart.transform.worldToLocalMatrix.MultiplyPoint3x4(vesselRootLocalAeroCenter);
+            vesselRootLocalAeroCenter = EditorLogic.RootPart.partTransform.worldToLocalMatrix.MultiplyPoint3x4(vesselRootLocalAeroCenter);
         }
     }
 }

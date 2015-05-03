@@ -735,7 +735,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         {
             //Flight values
             if (!CompatibilityChecker.IsAllCompatible() || !HighLogic.LoadedSceneIsFlight || FlightGlobals.ActiveVessel == null || this.part.Rigidbody == null) { return; }
-            this.pos = this.part.transform.position;
+            this.pos = this.part.partTransform.position;
             this.ASL = FlightGlobals.getAltitudeAtPos(this.pos);
             this.trueAlt = this.ASL;
             if (this.vessel.mainBody.pqsController != null)

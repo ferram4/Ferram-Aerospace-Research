@@ -142,7 +142,7 @@ namespace ferram4
 
         public Vector3 worldSpaceForce;
 
-        private double NUFAR_areaExposedFactor = 0;
+        protected double NUFAR_areaExposedFactor = 0;
 
         public void NUFAR_ClearAreaExposedFactor()
         {
@@ -319,7 +319,7 @@ namespace ferram4
 
         public Vector3 WingCentroid()
         {
-            return part_transform.TransformDirection(localWingCentroid) + part.transform.position;
+            return part_transform.TransformDirection(localWingCentroid) + part.partTransform.position;
         }
 
         private Vector3d CalculateAerodynamicCenter(double MachNumber, double AoA, Vector3d WC)

@@ -44,7 +44,91 @@ namespace FerramAerospaceResearch.FARPartGeometry
 {
     public static class PartGeometryExtensions
     {
-        public static Bounds GetPartOverallMeshBoundsInBasis(this Part part, Matrix4x4 worldToBasisMatrix, int excessiveVerts = 2500)
+        public static Bounds GetPartOverallLocalMeshBound(this Part part)
+        {
+            Matrix4x4 worldToBasisMatrix = part.partTransform.worldToLocalMatrix;
+
+            Transform[] transforms = part.FindModelComponents<Transform>();
+            Bounds bounds = new Bounds();
+            for (int i = 0; i < transforms.Length; i++)
+            {
+                Transform t = transforms[i];
+
+                MeshFilter mf = t.GetComponent<MeshFilter>();
+                if (mf == null)
+                    continue;
+                Mesh m = mf.sharedMesh;
+
+                if (m == null)
+                    continue;
+
+
+                Matrix4x4 matrix = worldToBasisMatrix * t.localToWorldMatrix;
+
+                Vector3 center, extents;
+                center = m.bounds.center;//matrix.MultiplyPoint3x4(m.bounds.center);
+                extents = m.bounds.extents;//matrix.MultiplyVector(m.bounds.size);
+
+                /*size.x = Math.Abs(size.x);
+                size.y = Math.Abs(size.y);
+                size.z = Math.Abs(size.z);*/
+
+                Vector3 boundPt;
+                boundPt = center + extents;
+                boundPt = matrix.MultiplyPoint3x4(boundPt);
+                bounds.Encapsulate(boundPt);
+
+                boundPt = center - extents;
+                boundPt = matrix.MultiplyPoint3x4(boundPt);
+                bounds.Encapsulate(boundPt);
+
+                boundPt = center;
+                boundPt.x += extents.x;
+                boundPt.y += extents.y;
+                boundPt.z -= extents.z;
+                boundPt = matrix.MultiplyPoint3x4(boundPt);
+                bounds.Encapsulate(boundPt);
+
+                boundPt = center;
+                boundPt.x += extents.x;
+                boundPt.y -= extents.y;
+                boundPt.z += extents.z;
+                boundPt = matrix.MultiplyPoint3x4(boundPt);
+                bounds.Encapsulate(boundPt);
+
+                boundPt = center;
+                boundPt.x -= extents.x;
+                boundPt.y += extents.y;
+                boundPt.z += extents.z;
+                boundPt = matrix.MultiplyPoint3x4(boundPt);
+                bounds.Encapsulate(boundPt);
+
+                boundPt = center;
+                boundPt.x -= extents.x;
+                boundPt.y -= extents.y;
+                boundPt.z += extents.z;
+                boundPt = matrix.MultiplyPoint3x4(boundPt);
+                bounds.Encapsulate(boundPt);
+
+                boundPt = center;
+                boundPt.x -= extents.x;
+                boundPt.y += extents.y;
+                boundPt.z -= extents.z;
+                boundPt = matrix.MultiplyPoint3x4(boundPt);
+                bounds.Encapsulate(boundPt);
+
+                boundPt = center;
+                boundPt.x += extents.x;
+                boundPt.y -= extents.y;
+                boundPt.z -= extents.z;
+                boundPt = matrix.MultiplyPoint3x4(boundPt);
+
+                bounds.Encapsulate(boundPt);
+            }
+            return bounds;
+        }
+        
+        public static Bounds GetPartOverallMeshBoundsInBasis(this Part part, Matrix4x4 worldToBasisMatrix)
         {
             Transform[] transforms = part.FindModelComponents<Transform>();
             Bounds bounds = new Bounds();

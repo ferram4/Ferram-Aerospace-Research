@@ -27,7 +27,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 Rigidbody rb = part.Rigidbody;
                 if (rb)
-                    part.DragCubes.SetDrag((rb.velocity + Krakensbane.GetFrameVelocityV3f()).normalized, (float)part.machNumber);
+                    part.DragCubes.SetDrag(-(rb.velocity + Krakensbane.GetFrameVelocityV3f()).normalized, (float)part.machNumber);
             }
 
             FARAeroPartModule aeroModule = part.GetComponent<FARAeroPartModule>();

@@ -93,7 +93,7 @@ namespace ferram4
             {
                 Transform[] transforms = part.FindModelComponents<Transform>();
                 Bounds[] bounds = new Bounds[transforms.Length];
-                Matrix4x4 partMatrix = part.transform.worldToLocalMatrix;
+                Matrix4x4 partMatrix = part.partTransform.worldToLocalMatrix;
                 for(int i = 0; i < transforms.Length; i++)
                 {
                     Bounds newBounds = new Bounds();

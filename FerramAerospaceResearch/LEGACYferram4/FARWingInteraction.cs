@@ -189,27 +189,27 @@ namespace ferram4
             if (parentWingPart == null)
                 return;
 
-            rootChordMidPt = parentWingPart.transform.position + parentWingPart.transform.TransformDirection(rootChordMidLocal);
+            rootChordMidPt = parentWingPart.partTransform.position + parentWingPart.partTransform.TransformDirection(rootChordMidLocal);
 
             if(isSmallSrf)
             {
-                forwardExposure = ExposureSmallSrf(out nearbyWingModulesForward, parentWingPart.transform.up, VesselPartList, flt_MAC, flt_MAC);
+                forwardExposure = ExposureSmallSrf(out nearbyWingModulesForward, parentWingPart.partTransform.up, VesselPartList, flt_MAC, flt_MAC);
 
-                backwardExposure = ExposureSmallSrf(out nearbyWingModulesBackward, -parentWingPart.transform.up, VesselPartList, flt_MAC, flt_MAC);
+                backwardExposure = ExposureSmallSrf(out nearbyWingModulesBackward, -parentWingPart.partTransform.up, VesselPartList, flt_MAC, flt_MAC);
 
-                leftwardExposure = ExposureSmallSrf(out nearbyWingModulesLeftward, -parentWingPart.transform.right, VesselPartList, flt_b_2, flt_MAC);
+                leftwardExposure = ExposureSmallSrf(out nearbyWingModulesLeftward, -parentWingPart.partTransform.right, VesselPartList, flt_b_2, flt_MAC);
 
-                rightwardExposure = ExposureSmallSrf(out nearbyWingModulesRightward, parentWingPart.transform.right, VesselPartList, flt_b_2, flt_MAC);
+                rightwardExposure = ExposureSmallSrf(out nearbyWingModulesRightward, parentWingPart.partTransform.right, VesselPartList, flt_b_2, flt_MAC);
             }
             else
             {
-                forwardExposure = ExposureInChordDirection(out nearbyWingModulesForward, parentWingPart.transform.up, VesselPartList, flt_b_2, flt_MAC, flt_TaperRatio, flt_MidChordSweep);
+                forwardExposure = ExposureInChordDirection(out nearbyWingModulesForward, parentWingPart.partTransform.up, VesselPartList, flt_b_2, flt_MAC, flt_TaperRatio, flt_MidChordSweep);
 
-                backwardExposure = ExposureInChordDirection(out nearbyWingModulesBackward, -parentWingPart.transform.up, VesselPartList, flt_b_2, flt_MAC, flt_TaperRatio, flt_MidChordSweep);
+                backwardExposure = ExposureInChordDirection(out nearbyWingModulesBackward, -parentWingPart.partTransform.up, VesselPartList, flt_b_2, flt_MAC, flt_TaperRatio, flt_MidChordSweep);
 
-                leftwardExposure = ExposureInSpanDirection(out nearbyWingModulesLeftward, -parentWingPart.transform.right, VesselPartList, flt_b_2, flt_MAC, flt_TaperRatio, flt_MidChordSweep);
+                leftwardExposure = ExposureInSpanDirection(out nearbyWingModulesLeftward, -parentWingPart.partTransform.right, VesselPartList, flt_b_2, flt_MAC, flt_TaperRatio, flt_MidChordSweep);
 
-                rightwardExposure = ExposureInSpanDirection(out nearbyWingModulesRightward, parentWingPart.transform.right, VesselPartList, flt_b_2, flt_MAC, flt_TaperRatio, flt_MidChordSweep);
+                rightwardExposure = ExposureInSpanDirection(out nearbyWingModulesRightward, parentWingPart.partTransform.right, VesselPartList, flt_b_2, flt_MAC, flt_TaperRatio, flt_MidChordSweep);
             }
 
             CompressArrayToList(nearbyWingModulesForward, ref nearbyWingModulesForwardList, ref nearbyWingModulesForwardInfluence);
@@ -219,8 +219,8 @@ namespace ferram4
 
             //This part handles effects of biplanes, triplanes, etc.
             double ClCdInterference = 1;
-            ClCdInterference *= WingInterference(parentWingPart.transform.forward, VesselPartList, flt_b_2);
-            ClCdInterference *= WingInterference(-parentWingPart.transform.forward, VesselPartList, flt_b_2);
+            ClCdInterference *= WingInterference(parentWingPart.partTransform.forward, VesselPartList, flt_b_2);
+            ClCdInterference *= WingInterference(-parentWingPart.partTransform.forward, VesselPartList, flt_b_2);
 
             ClInterferenceFactor = ClCdInterference;
         }
@@ -288,7 +288,7 @@ namespace ferram4
                 {
                     if(moduleList[j] == w)
                     {
-                        associatedInfluences[j] += influencePerIndex * Math.Abs(Vector3.Dot(parentWingPart.transform.forward, w.part.transform.forward));
+                        associatedInfluences[j] += influencePerIndex * Math.Abs(Vector3.Dot(parentWingPart.partTransform.forward, w.part.partTransform.forward));
                         foundModule = true;
                         break;
                     }
@@ -298,7 +298,7 @@ namespace ferram4
 
 
                 moduleList.Add(w);
-                associatedInfluences.Add(influencePerIndex * Math.Abs(Vector3.Dot(parentWingPart.transform.forward, w.part.transform.forward)));
+                associatedInfluences.Add(influencePerIndex * Math.Abs(Vector3.Dot(parentWingPart.partTransform.forward, w.part.partTransform.forward)));
             }
         }
 
@@ -369,7 +369,7 @@ namespace ferram4
             double exposure = 1;
             for (int i = 0; i < 5; i++)
             {
-                ray.origin = rootChordMidPt + (float)((i * 0.2 + 0.1)) * -b_2 * (parentWingPart.transform.right * srfAttachFlipped + parentWingPart.transform.up * (float)Math.Tan(MidChordSweep * FARMathUtil.deg2rad));   //shift the raycast origin along the midchord line
+                ray.origin = rootChordMidPt + (float)((i * 0.2 + 0.1)) * -b_2 * (parentWingPart.partTransform.right * srfAttachFlipped + parentWingPart.partTransform.up * (float)Math.Tan(MidChordSweep * FARMathUtil.deg2rad));   //shift the raycast origin along the midchord line
 
                 RaycastHit[] hits = Physics.RaycastAll(ray, MAC, FARAeroUtil.RaycastMask);
 
@@ -389,13 +389,13 @@ namespace ferram4
 
             for (int i = 0; i < 5; i++)
             {
-                ray.origin = rootChordMidPt + (0.5f) * -b_2 * (parentWingPart.transform.right * srfAttachFlipped + parentWingPart.transform.up * (float)Math.Tan(MidChordSweep * FARMathUtil.deg2rad));   //shift the origin along the midchord line
+                ray.origin = rootChordMidPt + (0.5f) * -b_2 * (parentWingPart.partTransform.right * srfAttachFlipped + parentWingPart.partTransform.up * (float)Math.Tan(MidChordSweep * FARMathUtil.deg2rad));   //shift the origin along the midchord line
 
                 float chord_length = 2 * MAC / (1 + TaperRatio);    //first, calculate the root chord
 
                 chord_length = chord_length * (1 - 0.5f) + TaperRatio * chord_length * 0.5f;  //determine the chord length based on how far down the span it is
 
-                ray.origin += (chord_length * (-0.4f + 0.2f * i) * parentWingPart.transform.up);
+                ray.origin += (chord_length * (-0.4f + 0.2f * i) * parentWingPart.partTransform.up);
 
                 RaycastHit[] hits = Physics.RaycastAll(ray, b_2, FARAeroUtil.RaycastMask);
 
@@ -415,7 +415,7 @@ namespace ferram4
             nearbyWings = new FARWingAerodynamicModel[1];
 
             double exposure = 1;
-            ray.origin = rootChordMidPt - (MAC * 0.7f) * parentWingPart.transform.up;
+            ray.origin = rootChordMidPt - (MAC * 0.7f) * parentWingPart.partTransform.up;
 
             RaycastHit[] hits = Physics.RaycastAll(ray.origin, ray.direction, rayCastDist, FARAeroUtil.RaycastMask);
 
@@ -475,7 +475,7 @@ namespace ferram4
                                 FARWingAerodynamicModel hitModule = p.GetComponent<FARWingAerodynamicModel>();
                                 if (hitModule != null)
                                 {
-                                    double tmp = Math.Abs(Vector3.Dot(p.transform.forward, parentWingPart.transform.forward));
+                                    double tmp = Math.Abs(Vector3.Dot(p.transform.forward, parentWingPart.partTransform.forward));
                                     if (tmp > wingInteractionFactor + 0.01)
                                     {
                                         wingInteractionFactor = tmp;

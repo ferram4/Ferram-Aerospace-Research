@@ -76,14 +76,14 @@ namespace ferram4
         public override void OnAwake()
         {
             base.OnAwake();
-            part_transform = part.transform;
+            part_transform = part.partTransform;
 
             //refArea = S;
-            //Terrible, hacky fix for part.transform going bad
-            if (part.transform == null && part == part.vessel.rootPart)
+            //Terrible, hacky fix for part.partTransform going bad
+            if (part.partTransform == null && part == part.vessel.rootPart)
                 part_transform = vessel.vesselTransform;
             if(HighLogic.LoadedSceneIsEditor)
-                part_transform = part.transform;
+                part_transform = part.partTransform;
         }
 
         public override void Start()
@@ -247,7 +247,7 @@ namespace ferram4
             // Compute the actual center ourselves once per frame
             // Feed the precomputed values to the vanilla indicator
             CoLMarker.pos = FerramAerospaceResearch.FARAeroComponents.EditorAeroCenter.VesselRootLocalAeroCenter;      //hacking the old stuff to work with the new
-            CoLMarker.pos = EditorLogic.RootPart.transform.localToWorldMatrix.MultiplyPoint3x4(CoLMarker.pos);
+            CoLMarker.pos = EditorLogic.RootPart.partTransform.localToWorldMatrix.MultiplyPoint3x4(CoLMarker.pos);
             CoLMarker.dir = Vector3.zero;
             CoLMarker.lift = 1;
         }

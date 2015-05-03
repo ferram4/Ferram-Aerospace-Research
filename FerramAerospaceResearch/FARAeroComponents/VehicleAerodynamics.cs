@@ -235,7 +235,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 for (int i = 0; i < _currentGeoModules.Count; i++)
                 {
                     GeometryPartModule g = _currentGeoModules[i];
-                    _partWorldToLocalMatrix.Add(g.part, new PartTransformInfo(g.part.transform));
+                    _partWorldToLocalMatrix.Add(g.part, new PartTransformInfo(g.part.partTransform));
                     if (updateGeometryPartModules)
                         g.UpdateTransformMatrixList(_worldToLocalMatrix);
                 }
@@ -319,19 +319,43 @@ namespace FerramAerospaceResearch.FARAeroComponents
         private Vector3 CalculateVehicleMainAxis()
         {
             Vector3 axis = Vector3.zero;
+
+            List<ferram4.FARWingAerodynamicModel> wings = new List<ferram4.FARWingAerodynamicModel>();
+            Vector3 avgWingPos = Vector3.zero;
+            float wingCount = 0;
+
             for (int i = 0; i < _currentGeoModules.Count; i++)      //get axis by averaging all parts up vectors
             {
                 GeometryPartModule m = _currentGeoModules[i];
                 if (m != null)
                 {
-                    Bounds b = m.overallMeshBounds;
-                    Vector3 vec = m.part.transform.up;
-                    ModuleResourceIntake intake = m.part.GetComponent<ModuleResourceIntake>();
-                    if (intake)
+                    Bounds b = m.part.GetPartOverallLocalMeshBound();
+                    Vector3 vec = m.part.partTransform.up;
+                    Part p = m.part;
+                    if(p.Modules.Contains("ModuleResourceIntake"))      //intakes are probably pointing in the direction we're gonna be going in
                     {
+                        ModuleResourceIntake intake = (ModuleResourceIntake)p.Modules["ModuleResourceIntake"];
                         Transform intakeTrans = m.part.FindModelTransform(intake.intakeTransformName);
                         if ((object)intakeTrans != null)
                             vec = intakeTrans.forward;
+                    }
+                    if (p.Modules.Contains("FARWingAerodynamicModel"))      //aggregate wings for later calc...
+                    {
+                        ferram4.FARWingAerodynamicModel wing = (ferram4.FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
+                        wings.Add(wing);
+                        float S = (float)wing.S;
+                        avgWingPos += p.transform.position * S;
+                        wingCount += S;
+                        continue;       //and don't add them to the axis calc
+                    }
+                    if (p.Modules.Contains("FARControllableSurface"))      //aggregate control surfaces as well
+                    {
+                        ferram4.FARWingAerodynamicModel wing = (ferram4.FARControllableSurface)p.Modules["FARControllableSurface"];
+                        wings.Add(wing);
+                        float S = (float)wing.S;
+                        avgWingPos += p.transform.position * S;
+                        wingCount += S;
+                        continue;
                     }
                     vec = _worldToLocalMatrix.MultiplyVector(vec);
                     vec.x = Math.Abs(vec.x);
@@ -341,7 +365,31 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     axis += vec * b.size.x * b.size.y * b.size.z;    //scale part influence by approximate size
                 }
             }
+
+            avgWingPos /= wingCount;
+
+            Vector3 wingAxis = Vector3.zero;
+
+            for (int i = 0; i < wings.Count; i++)
+            {
+                ferram4.FARWingAerodynamicModel wing = wings[i];
+                double S = wing.S;
+                S *= S * S;
+                S = Math.Sqrt(S);       //scale by 3/2 to balance with volume basis for other ones
+                Transform t = wing.transform;
+                wingAxis += Vector3.Cross((t.position - avgWingPos).normalized, t.forward * (float)S);
+            }
+            wingAxis = _worldToLocalMatrix.MultiplyVector(wingAxis);
+
+            float axisMag = axis.magnitude;
+            float wingMag = wingAxis.magnitude;
+
             axis.Normalize();   //normalize axis for later calcs
+            wingAxis.Normalize();
+
+            if (Math.Abs(Vector3.Dot(axis, wingAxis)) < 0.8 && axisMag < 2 * wingMag)
+                axis = wingAxis;
+
             float dotProdX, dotProdY, dotProdZ;
 
             //axis = _worldToLocalMatrix.MultiplyVector(axis);

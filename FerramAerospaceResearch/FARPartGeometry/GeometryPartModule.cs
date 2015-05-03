@@ -72,7 +72,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             //RebuildAllMeshData();
             SetupIGeometryUpdaters();
-            SetupICrossSectionAdjusters();
+            //SetupICrossSectionAdjusters();
             GetAnimations();
         }
 
@@ -106,7 +106,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if(!(HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor))
                 return;
 
-            partTransform = part.transform;
+            partTransform = part.partTransform;
             List<Transform> meshTransforms = part.PartModelTransformList();
             List<MeshData> geometryMeshes = CreateMeshListFromTransforms(ref meshTransforms);
 
@@ -306,9 +306,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             Matrix4x4 transformMatrix;
             if (HighLogic.LoadedSceneIsFlight)
-                transformMatrix = vessel.rootPart.transform.worldToLocalMatrix;
+                transformMatrix = vessel.rootPart.partTransform.worldToLocalMatrix;
             else
-                transformMatrix = EditorLogic.RootPart.transform.worldToLocalMatrix;
+                transformMatrix = EditorLogic.RootPart.partTransform.worldToLocalMatrix;
 
             UpdateTransformMatrixList(transformMatrix);
             overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(transformMatrix);
@@ -326,7 +326,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public void EditorUpdate()
         {
-            Matrix4x4 transformMatrix = EditorLogic.RootPart.transform.worldToLocalMatrix;
+            Matrix4x4 transformMatrix = EditorLogic.RootPart.partTransform.worldToLocalMatrix;
             UpdateTransformMatrixList(transformMatrix);
             overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(transformMatrix);
         }
@@ -523,9 +523,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             Matrix4x4 transformMatrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, relativeRescaleFactor);
             if (HighLogic.LoadedSceneIsFlight)
-                transformMatrix = vessel.rootPart.transform.worldToLocalMatrix * transformMatrix;
+                transformMatrix = vessel.rootPart.partTransform.worldToLocalMatrix * transformMatrix;
             else
-                transformMatrix = EditorLogic.RootPart.transform.worldToLocalMatrix * transformMatrix;
+                transformMatrix = EditorLogic.RootPart.partTransform.worldToLocalMatrix * transformMatrix;
 
             UpdateTransformMatrixList(transformMatrix);
         }

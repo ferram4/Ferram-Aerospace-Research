@@ -126,7 +126,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if (!part)
                 return;
 
-            Matrix4x4 transformMatrix = part.transform.worldToLocalMatrix * vesselToWorldMatrix;
+            Matrix4x4 transformMatrix = part.partTransform.worldToLocalMatrix * vesselToWorldMatrix;
 
             IncrementAreas(ref transformedArea, (float)areas.iP * Vector3.right, transformMatrix);
             IncrementAreas(ref transformedArea, (float)areas.iN * -Vector3.right, transformMatrix);
@@ -216,7 +216,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 partStressMaxY = template.YmaxStress;
                 partStressMaxXZ = template.XZmaxStress;
             }
-            partTransform = part.transform;
+            partTransform = part.partTransform;
         }
 
         public double ProjectedAreaWorld(Vector3 normalizedDirectionVector)
@@ -289,7 +289,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         {
             if (partTransform == null)
                 if (part != null)
-                    partTransform = part.transform;
+                    partTransform = part.partTransform;
                 else
                     return;
 
@@ -312,7 +312,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             // Compute the actual center ourselves once per frame
             // Feed the precomputed values to the vanilla indicator
             CoLMarker.pos = FerramAerospaceResearch.FARAeroComponents.EditorAeroCenter.VesselRootLocalAeroCenter;      //hacking the old stuff to work with the new
-            CoLMarker.pos = EditorLogic.RootPart.transform.localToWorldMatrix.MultiplyPoint3x4(CoLMarker.pos);
+            CoLMarker.pos = EditorLogic.RootPart.partTransform.localToWorldMatrix.MultiplyPoint3x4(CoLMarker.pos);
             CoLMarker.dir = Vector3.zero;
             CoLMarker.lift = 1;
         }
@@ -397,7 +397,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     momentArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldSpaceTorque, worldSpaceTorque.magnitude * PhysicsGlobals.AeroForceDisplayScale, Color.yellow, true);
                 else
                 {
-                    momentArrow.Direction = worldSpaceTorque;
+                    momentArrow.Direction = -worldSpaceTorque;
                     momentArrow.Length = worldSpaceTorque.magnitude * PhysicsGlobals.AeroForceDisplayScale;
                 }
             }

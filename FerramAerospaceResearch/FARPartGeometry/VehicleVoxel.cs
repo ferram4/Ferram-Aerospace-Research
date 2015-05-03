@@ -151,8 +151,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             threadsQueued = 0;
 
-            //for (int i = 0; i < geoModules.Count; i++)
-                //threadsQueued += geoModules[i].meshDataList.Count;      //Doing this out here allows us to get rid of the lock, which should reduce sync costs for many meshes
+            for (int i = 0; i < geoModules.Count; i++)
+                threadsQueued += geoModules[i].meshDataList.Count;      //Doing this out here allows us to get rid of the lock, which should reduce sync costs for many meshes
 
             for (int i = 0; i < geoModules.Count; i++)       //Go through it backwards; this ensures that children (and so interior to cargo bay parts) are handled first
             {
@@ -161,15 +161,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 {
                     if (multiThreaded)
                     {
-                        lock (_locker)
-                        {
-                            while (threadsQueued > 4)
-                                Monitor.Wait(_locker);
-                            threadsQueued++;
+                        //lock (_locker)
+                        //{
+                            //while (threadsQueued > 4)
+                            //    Monitor.Wait(_locker);
+                            //threadsQueued++;
 
                             VoxelShellParams data = new VoxelShellParams(m.part, m.meshDataList[j]);
                             ThreadPool.QueueUserWorkItem(UpdateFromMesh, data);
-                        }
+                        //}
                     }
                     else
                         UpdateFromMesh(m.meshDataList[j], m.part);
@@ -1396,7 +1396,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 VoxelShellTrianglePerpZ(indexPlane, vert1, vert2, vert3, part);
         }
 
-        private void VoxelShellTrianglePerpX(Vector4d indexPlane, Vector3d vert1, Vector3d vert2, Vector3d vert3, Part part)
+        private void VoxelShellTrianglePerpX(Vector4 indexPlane, Vector3 vert1, Vector3 vert2, Vector3 vert3, Part part)
         {
             Vector3 vert1Proj, vert2Proj, vert3Proj;
             vert1Proj = (vert1 - lowerRightCorner) * invElementSize;
@@ -1462,14 +1462,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (i < 0 || i >= xCellLength)
                         continue;
 
-                    pt.x = i;
-                    p1TestPt = pt - vert1Proj;
-
                     if (u >= 0 && v >= 0 && u + v <= 1)
                     {
                         SetVoxelSection(i, j, k, part);
                         continue;
                     }
+
+                    pt.x = i;
+                    p1TestPt = pt - vert1Proj;
+
                     Vector3 p2TestPt = pt - vert2Proj;
                     Vector3 p3TestPt = pt - vert3Proj;
                     if (p1TestPt.magnitude <= RC || p2TestPt.magnitude <= RC || p3TestPt.magnitude <= RC)
@@ -1490,7 +1491,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
         }
 
-        private void VoxelShellTrianglePerpY(Vector4d indexPlane, Vector3d vert1, Vector3d vert2, Vector3d vert3, Part part)
+        private void VoxelShellTrianglePerpY(Vector4 indexPlane, Vector3 vert1, Vector3 vert2, Vector3 vert3, Part part)
         {
             Vector3 vert1Proj, vert2Proj, vert3Proj;
             vert1Proj = (vert1 - lowerRightCorner) * invElementSize;
@@ -1559,14 +1560,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (j < 0 || j >= yCellLength)
                         continue;
 
-                    pt.y = j;
-                    p1TestPt = pt - vert1Proj;
-
                     if (u >= 0 && v >= 0 && u + v <= 1)
                     {
                         SetVoxelSection(i, j, k, part);
                         continue;
                     }
+
+                    pt.y = j;
+                    p1TestPt = pt - vert1Proj;
+
                     Vector3 p2TestPt = pt - vert2Proj;
                     Vector3 p3TestPt = pt - vert3Proj;
 
@@ -1585,7 +1587,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
         }
 
-        private void VoxelShellTrianglePerpZ(Vector4d indexPlane, Vector3d vert1, Vector3d vert2, Vector3d vert3, Part part)
+        private void VoxelShellTrianglePerpZ(Vector4 indexPlane, Vector3 vert1, Vector3 vert2, Vector3 vert3, Part part)
         {
             Vector3 vert1Proj, vert2Proj, vert3Proj;
             vert1Proj = (vert1 - lowerRightCorner) * invElementSize;
@@ -1652,14 +1654,16 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (k < 0 || k >= zCellLength)
                         continue;
 
-                    pt.z = k;
-                    p1TestPt = pt - vert1Proj;
 
                     if (u >= 0 && v >= 0 && u + v <= 1)
                     {
                         SetVoxelSection(i, j, k, part);
                         continue;
                     }
+
+                    pt.z = k;
+                    p1TestPt = pt - vert1Proj;
+                    
                     Vector3 p2TestPt = pt - vert2Proj;
                     Vector3 p3TestPt = pt - vert3Proj;
                     if (p1TestPt.magnitude <= RC || p2TestPt.magnitude <= RC || p3TestPt.magnitude <= RC)
@@ -1680,25 +1684,23 @@ namespace FerramAerospaceResearch.FARPartGeometry
         private bool IsWithinDistanceFromSide(Vector3 sideVector, Vector3 testVec)
         {
             float sideDot = Vector3.Dot(sideVector, testVec);
+            float sideSqMag = sideVector.sqrMagnitude;
 
-            Vector3 perpVector = (sideDot / sideVector.sqrMagnitude) * sideVector;
+            Vector3 perpVector = (sideDot / sideSqMag) * sideVector;
             perpVector = testVec - perpVector;
 
             if (perpVector.magnitude > RC)
                 return false;
 
-            testVec -= perpVector;   //this projects testVec onto sideVector
-
-
-            if (sideDot >= 0 && sideDot <= sideVector.sqrMagnitude)
+            if (sideDot >= 0 && sideDot <= sideSqMag)
                 return true;
 
             return false;
         }
 
-        private Vector4d CalculateEquationOfSweepPlane(Vector3d normalVector, out double wInc)
+        private Vector4d CalculateEquationOfSweepPlane(Vector3 normalVector, out double wInc)
         {
-            Vector4d result = new Vector4d(normalVector.x, normalVector.y, normalVector.z);
+            Vector4 result = new Vector4(normalVector.x, normalVector.y, normalVector.z);
 
             if(result.x > 0)
                 result.w -= result.x * xCellLength;
@@ -1707,7 +1709,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (result.z > 0)
                 result.w -= result.z * zCellLength;
 
-            double x, y, z;
+            float x, y, z;
             x = Math.Abs(result.x);
             y = Math.Abs(result.y);
             z = Math.Abs(result.z);
@@ -1904,17 +1906,20 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     neighboringSweepPlanePts[3] = null;
 
                 bool remove = false;
-                foreach (SweepPlanePoint neighbor in neighboringSweepPlanePts)//Check if the active point is surrounded by all 4 neighbors
+                for (int m = 0; m < neighboringSweepPlanePts.Length; m++)// (SweepPlanePoint neighbor in neighboringSweepPlanePts)//Check if the active point is surrounded by all 4 neighbors
+                {
+                    SweepPlanePoint neighbor = neighboringSweepPlanePts[m];
                     if (neighbor == null || neighbor.mark == SweepPlanePoint.MarkingType.Clear) //If any of them are null or marked clear, this active point is not an interior point
                     {                                                                       //In that case, it should be set to be removed
                         remove = true;
                         break;
                     }
+                }
                 if (remove) //If it is set to be removed...
                 {
-                    foreach (SweepPlanePoint neighbor in neighboringSweepPlanePts) //Go through all the neighboring points
+                    for (int m = 0; m < neighboringSweepPlanePts.Length; m++)// //Go through all the neighboring points
                     {
-                        //SweepPlanePoint neighbor = neighboringSweepPlanePts[m];
+                        SweepPlanePoint neighbor = neighboringSweepPlanePts[m];
                         if (neighbor != null && neighbor.mark == SweepPlanePoint.MarkingType.InactiveInterior) //For the ones that exist, and are inactive interior...
                         {
                             inactiveInteriorPts.Remove(neighbor); //remove them from inactiveInterior
