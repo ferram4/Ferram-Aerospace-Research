@@ -43,7 +43,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 {
     unsafe class VoxelChunk
     {
-        private Part[] voxelPoints = null;
+        //private Part[] voxelPoints = null;
+        //private float[] voxelSize = null;
+        private PartSizePair[] voxelPoints = null;
         private DebugVisualVoxel[, ,] visualVoxels = null;
 
         double size;
@@ -55,7 +57,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             this.size = size;
             offset = iOffset + 8 * jOffset + 64 * kOffset;
-            voxelPoints = new Part[512];
+            //voxelPoints = new Part[512];
+            //voxelSize = new float[512];
+            voxelPoints = new PartSizePair[512];
             this.lowerCorner = lowerCorner;
         }
 
@@ -72,48 +76,58 @@ namespace FerramAerospaceResearch.FARPartGeometry
             offset = 0;
             lowerCorner = Vector3d.zero;
             for (int i = 0; i < voxelPoints.Length; i++)
-                voxelPoints[i] = null;
+            {
+                voxelPoints[i].part = null;
+                voxelPoints[i].size = 0;
+            }
         }
 
         //Use when certian that locking is unnecessary
-        public unsafe void SetVoxelPointGlobalIndexNoLock(int i, int j, int k, Part p)
+        public unsafe void SetVoxelPointGlobalIndexNoLock(int i, int j, int k, Part p, float size = 1)
         {
-            voxelPoints[i + 8 * j + 64 * k - offset] =  p;          
+            int index = i + 8 * j + 64 * k - offset;
+            voxelPoints[index].part = p;
+            voxelPoints[index].size += size;
         }
         //Sets point and ensures that includedParts includes p
-        public unsafe void SetVoxelPointGlobalIndex(int i, int j, int k, Part p)
+        public unsafe void SetVoxelPointGlobalIndex(int i, int j, int k, Part p, float size = 1)
         {
             lock (voxelPoints)
             {
-                voxelPoints[i + 8 * j + 64 * k - offset] = p;
+                int index = i + 8 * j + 64 * k - offset;
+                voxelPoints[index].part = p;
+                voxelPoints[index].size += size;
             }
         }
 
         public unsafe bool VoxelPointExistsLocalIndex(int zeroBaseIndex)
         {
-            return voxelPoints[zeroBaseIndex];
+            return (object)(voxelPoints[zeroBaseIndex].part) != null;
         }
 
         public unsafe bool VoxelPointExistsLocalIndex(int i, int j, int k)
         {
-            return voxelPoints[i + 8 * j + 64 * k];
+            int index = i + 8 * j + 64 * k;
+            return (object)(voxelPoints[index].part) != null;
         }
 
         public unsafe bool VoxelPointExistsGlobalIndex(int zeroBaseIndex)
         {
-            return voxelPoints[zeroBaseIndex - offset];
+            return (object)(voxelPoints[zeroBaseIndex - offset].part) != null;
         }
         
         public unsafe bool VoxelPointExistsGlobalIndex(int i, int j, int k)
         {
-            return voxelPoints[i + 8 * j + 64 * k - offset];
+            int index = i + 8 * j + 64 * k - offset;
+            return (object)(voxelPoints[index].part) != null;
         }
 
 
         public unsafe Part GetVoxelPartGlobalIndex(int zeroBaseIndex)
         {
             Part p = null;
-            p = voxelPoints[zeroBaseIndex - offset];
+            int index = zeroBaseIndex - offset;
+            p = voxelPoints[index].part;
             return p;
         }
         
@@ -121,11 +135,25 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             Part p = null;
 
-            p = voxelPoints[i + 8 * j + 64 * k - offset];
+            int index = i + 8 * j + 64 * k - offset;
+            p = voxelPoints[index].part;
 
             return p;
         }
 
+        public unsafe PartSizePair GetVoxelPartSizePairGlobalIndex(int zeroBaseIndex)
+        {
+            int index = zeroBaseIndex - offset;
+            return voxelPoints[index];
+        }
+        
+        public unsafe PartSizePair GetVoxelPartSizePairGlobalIndex(int i, int j, int k)
+        {
+            int index = i + 8 * j + 64 * k - offset;
+
+            return voxelPoints[index];
+        }
+        
         public void VisualizeVoxels(Matrix4x4 vesselLocalToWorldMatrix)
         {
             ClearVisualVoxels();
@@ -136,7 +164,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
                         DebugVisualVoxel vx;
                         //if(voxelPoints[i,j,k] != null)
-                        if ((object)voxelPoints[i + 8 * j + 64 * k] != null)
+                        if ((object)voxelPoints[i + 8 * j + 64 * k].part != null)
                         {
                             vx = new DebugVisualVoxel(vesselLocalToWorldMatrix.MultiplyPoint3x4(lowerCorner + new Vector3d(i, j, k) * size), size * 0.5f);
                             visualVoxels[i, j, k] = vx;
@@ -162,5 +190,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
         //{
         //    ClearVisualVoxels();
         //}
+
+        public struct PartSizePair
+        {
+            public Part part;
+            public float size;
+        }
     }
 }

@@ -783,7 +783,7 @@ namespace ferram4
 
             double CosAoA = Math.Cos(AoA);
             //            Debug.Log("Part: " + part.partInfo.title + " AoA: " + AoA);
-            if (MachNumber <= 0.6)
+            if (MachNumber <= 0.8)
             {
                 double Cn = liftslope;
                 Cl = Cn * Math.Sin(2 * AoA) * 0.5;
@@ -820,7 +820,15 @@ namespace ferram4
              */
             else
             {
-                double subScale = 1.75 - 1.25 * MachNumber;            //This determines the weight of subsonic flow; supersonic uses 1-this
+                //This determines the weight of supersonic flow; subsonic uses 1-this
+                double supScale = 2 * MachNumber;
+                supScale -= 6.6;
+                supScale *= MachNumber;
+                supScale += 6.72;
+                supScale *= MachNumber;
+                supScale += -2.176;
+                supScale *= -4.6296296296296296296296296296296;
+
                 double Cn = liftslope;
                 Cl = Cn * Math.Sin(2 * AoA) * 0.5;
 
@@ -831,7 +839,7 @@ namespace ferram4
                         ACshift *= FARMathUtil.Clamp(Math.Abs(ACweight / Cl), 0, 1);
                 }
                 
-                Cl *= subScale;
+                Cl *= (1 - supScale);
 
                 double M = FARMathUtil.Clamp(MachNumber, 1.2, double.PositiveInfinity);
 
@@ -839,13 +847,13 @@ namespace ferram4
 
                 double supersonicLENormalForceFactor = CalculateSupersonicLEFactor(beta, TanSweep, beta_TanSweep);
 
-                subScale = 1 - subScale; //Adjust for supersonic code
+                //supScale = 1 - supScale; //Adjust for supersonic code
                 double normalForce;
                 normalForce = GetSupersonicPressureDifference(M, AoA);
 
-                Cl += coefMult * normalForce * CosAoA * Math.Sign(AoA) * supersonicLENormalForceFactor * subScale;
+                Cl += coefMult * normalForce * CosAoA * Math.Sign(AoA) * supersonicLENormalForceFactor * supScale;
 
-                double effectiveBeta = beta * subScale + (1 - subScale);
+                double effectiveBeta = beta * supScale + (1 - supScale);
 
                 Cd = effectiveBeta * Cl * Cl / piARe;
 

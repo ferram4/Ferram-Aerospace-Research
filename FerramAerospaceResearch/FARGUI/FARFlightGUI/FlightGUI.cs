@@ -140,9 +140,12 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         void SaveData()
         {
-            SaveConfigs();
-            _airSpeedGUI.SaveSettings();
-            _stabilityAugmentation.SaveSettings();
+            if (_vessel == FlightGlobals.ActiveVessel)
+            {
+                SaveConfigs();
+                _airSpeedGUI.SaveSettings();
+                _stabilityAugmentation.SaveSettings();
+            }
         }
 
         //Receives message from FARVesselAero through _vessel on the recalc being completed
