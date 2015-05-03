@@ -61,7 +61,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             gameObject.transform.localScale = Vector3.one * size;
             if(sprite == null)
             {
-                sprite = UnityEngine.Sprite.Create(GameDatabase.Instance.GetTexture("FerramAerospaceResearch/Textures/sprite_debug_voxel", false), new Rect(0, 0, 16, 16), new Vector2(0.5f, 0.5f), 8);
+                sprite = UnityEngine.Sprite.Create(GameDatabase.Instance.GetTexture("FerramAerospaceResearch/Textures/sprite_debug_voxel", false), new Rect(0, 0, 16, 16), new Vector2(0.5f, 0.5f), 4);
             }
             /*if (mesh == null)
             {
