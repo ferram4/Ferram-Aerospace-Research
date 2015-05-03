@@ -84,12 +84,13 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 _rendererMaterial = new Material("Shader \"Lines/Colored Blended\" {" +
                         "SubShader { Pass { " +
                         "    Blend SrcAlpha OneMinusSrcAlpha " +
-                        "    ZWrite Off ZTest Always Cull Off Fog { Mode Off } " +
+                        "    ZWrite Off ZTest Off Cull Off Fog { Mode Off } " +
                         "    BindChannels {" +
                         "      Bind \"vertex\", vertex Bind \"color\", color }" +
                         "} } }");
                 _rendererMaterial.hideFlags = HideFlags.HideAndDontSave;
                 _rendererMaterial.shader.hideFlags = HideFlags.HideAndDontSave;
+                _rendererMaterial.renderQueue = 4500;
             }
 
             _areaRenderer = CreateNewRenderer(_crossSectionColor, 0.1f, _rendererMaterial);
