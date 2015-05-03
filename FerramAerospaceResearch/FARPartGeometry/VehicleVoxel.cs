@@ -156,7 +156,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             BuildVoxel(geoModules, multiThreaded, solidify);
         }
 
-        public VehicleVoxel(List<Part> partList, List<GeometryPartModule> geoModules, double elementSize, Vector3 lowerRightCorner, bool multiThreaded = true, bool solidify = true)
+        /*public VehicleVoxel(List<Part> partList, List<GeometryPartModule> geoModules, double elementSize, Vector3 lowerRightCorner, bool multiThreaded = true, bool solidify = true)
         {
             if (clearedPlanes == null)
             {
@@ -218,7 +218,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             voxelChunks = new VoxelChunk[xLength, yLength, zLength];
 
             BuildVoxel(geoModules, multiThreaded, solidify);
-        }
+        }*/
 
         private void BuildVoxel(List<GeometryPartModule> geoModules, bool multiThreaded, bool solidify)
         {

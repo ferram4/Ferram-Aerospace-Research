@@ -49,6 +49,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         public AirspeedSettingsGUI(Vessel vessel)
         {
             _vessel = vessel;
+            LoadSettings();
         }
 
         public enum SurfaceVelMode
@@ -104,6 +105,11 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
             //            SaveAirSpeedPos.x = AirSpeedPos.x;
             //            SaveAirSpeedPos.y = AirSpeedPos.y;
+        }
+
+        public void SaveAndDestroy()
+        {
+            SaveSettings();
         }
 
         public void ChangeSurfVelocity()
@@ -196,9 +202,63 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
         }
 
-        void ResetSpeedometers()
+        void SaveSettings()
         {
+            List<ConfigNode> flightGUISettings = FARSettingsScenarioModule.FlightGUISettings;
+            if(flightGUISettings == null)
+            {
+                Debug.LogError("Could not save Airspeed Settings because settings config list was null");
+            }
+            ConfigNode node = null;
+            for(int i = 0; i < flightGUISettings.Count; i++)
+                if (flightGUISettings[i].name == "AirSpeedSettings")
+                {
+                    node = flightGUISettings[i];
+                    break;
+                }
 
+            if (node == null)
+            {
+                node = new ConfigNode("AirSpeedSettings");
+                flightGUISettings.Add(node);
+            }
+            node.ClearData();
+
+            node.AddValue("unitTypeIndex", (int)unitMode);
+            node.AddValue("velTypeIndex", (int)velMode);
+        }
+
+        void LoadSettings()
+        {
+            List<ConfigNode> flightGUISettings = FARSettingsScenarioModule.FlightGUISettings;
+
+            ConfigNode node = null;
+            for (int i = 0; i < flightGUISettings.Count; i++)
+                if (flightGUISettings[i].name == "AirSpeedSettings")
+                {
+                    node = flightGUISettings[i];
+                    break;
+                }
+
+            if (node == null)
+            {
+                unitMode = 0;
+                velMode = 0;
+            }
+            else
+            {
+                int tmp;
+                //unitMode = (SurfaceVelUnit)int.Parse(node.GetValue("unitTypeIndex"));
+                if (int.TryParse(node.GetValue("unitTypeIndex"), out tmp))
+                    unitMode = (SurfaceVelUnit)tmp;
+                else
+                    unitMode = 0;
+
+                if (int.TryParse(node.GetValue("velTypeIndex"), out tmp))
+                    velMode = (SurfaceVelMode)tmp;
+                else
+                    velMode = 0;
+            }
         }
     }
 }

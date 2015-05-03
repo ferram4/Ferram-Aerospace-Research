@@ -115,8 +115,15 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 vesselFlightGUI.Remove(_vessel);
             }
             _physicsCalcs = null;
+
             _flightDataGUI = null;
+
+            _stabilityAugmentation.SaveAndDestroy();
             _stabilityAugmentation = null;
+
+            _airSpeedGUI.SaveAndDestroy();
+            _airSpeedGUI = null;
+
             _flightStatusGUI = null;
             settingsWindow = null;
 

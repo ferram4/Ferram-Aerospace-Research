@@ -62,6 +62,13 @@ namespace FerramAerospaceResearch
         {
             get { return instance.voxelSettings; }
         }
+
+        public List<ConfigNode> flightGUISettings;
+        public static List<ConfigNode> FlightGUISettings
+        {
+            get { return instance.flightGUISettings; }
+        }
+
         static List<string> presetNames;
 
         public int currentIndex;
@@ -105,9 +112,12 @@ namespace FerramAerospaceResearch
             node.AddValue("minPhysTicksPerUpdate", voxelSettings.minPhysTicksPerUpdate);
             node.AddValue("index", settings.index);
 
-            FARGUI.FARFlightGUI.StabilityAugmentation.OnSave(node);
-
-            base.OnSave(node);
+            ConfigNode flightGUINode = new ConfigNode("FlightGUISettings");
+            for(int i = 0; i < flightGUISettings.Count; i++)
+            {
+                flightGUINode.AddNode(flightGUISettings[i]);
+            }
+            node.AddNode(flightGUINode);
         }
 
         public override void OnLoad(ConfigNode node)
@@ -154,9 +164,12 @@ namespace FerramAerospaceResearch
             }
             currentIndex = index;
 
-            FARGUI.FARFlightGUI.StabilityAugmentation.OnLoad(node);
-
-            base.OnLoad(node);
+            flightGUISettings = new List<ConfigNode>();
+            if(node.HasNode("FlightGUISettings"))
+            {
+                foreach (ConfigNode flightGUINode in node.GetNode("FlightGUISettings").nodes)
+                    flightGUISettings.Add(flightGUINode);
+            }
         }
 
         private void GeneratePresets()

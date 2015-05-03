@@ -35,6 +35,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
  */
 
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using ferram4;
 
@@ -60,12 +61,14 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             _vessel = vessel;
             _vessel.OnAutopilotUpdate += OnAutoPilotUpdate;
             systemDropdown = new GUIDropDown<int>(systemLabel, new int[] { 0, 1, 2, 3, 4, 5 }, 0);
+            LoadSettings();
         }
 
-        ~StabilityAugmentation()
+        public void SaveAndDestroy()
         {
             if ((object)_vessel != null)
                 _vessel.OnAutopilotUpdate -= OnAutoPilotUpdate;
+            SaveSettings();
         }
 
         public void UpdatePhysicsInfo(VesselFlightInfo info)
@@ -237,20 +240,30 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             return state;
         }
 
-        public static void OnLoad(ConfigNode node)
+        public void LoadSettings()
         {
+            List<ConfigNode> flightGUISettings = FARSettingsScenarioModule.FlightGUISettings;
+
+            ConfigNode node = null;
+            for (int i = 0; i < flightGUISettings.Count; i++)
+                if (flightGUISettings[i].name == "StabilityAugmentationSettings")
+                {
+                    node = flightGUISettings[i];
+                    break;
+                }
+
             if(systems == null)
                 systems = new ControlSystem[5];
 
-            bool loadedSystems = false;
-            for(int i = 0; i < systems.Length; i++)
+
+            if (node != null)
             {
-                string nodeName = "ControlSys" + i;
-                if (node.HasNode(nodeName))
-                    loadedSystems |= TryLoadSystem(node.GetNode(nodeName), i);
-            }
-            if(loadedSystems)
-            {
+                for (int i = 0; i < systems.Length; i++)
+                {
+                    string nodeName = "ControlSys" + i;
+                    if (node.HasNode(nodeName))
+                        TryLoadSystem(node.GetNode(nodeName), i);
+                }
                 if (node.HasValue("aoALowLim"))
                     double.TryParse(node.GetValue("aoALowLim"), out aoALowLim);
                 if (node.HasValue("aoAHighLim"))
@@ -326,8 +339,27 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             return sysExists;
         }
 
-        public static void OnSave(ConfigNode node)
+        public void SaveSettings()
         {
+            List<ConfigNode> flightGUISettings = FARSettingsScenarioModule.FlightGUISettings;
+            if (flightGUISettings == null)
+            {
+                Debug.LogError("Could not save Stability Augmentation Settings because settings config list was null");
+            }
+            ConfigNode node = null;
+            for (int i = 0; i < flightGUISettings.Count; i++)
+                if (flightGUISettings[i].name == "StabilityAugmentationSettings")
+                {
+                    node = flightGUISettings[i];
+                    break;
+                }
+
+            if (node == null)
+            {
+                node = new ConfigNode("StabilityAugmentationSettings");
+                flightGUISettings.Add(node);
+            }
+
             for (int i = 0; i < systems.Length; i++)
             {
                 node.AddNode(BuildSystemNode(i));
