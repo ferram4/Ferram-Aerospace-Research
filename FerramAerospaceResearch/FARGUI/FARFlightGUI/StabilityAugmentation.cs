@@ -359,6 +359,8 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 node = new ConfigNode("StabilityAugmentationSettings");
                 flightGUISettings.Add(node);
             }
+            else
+                node.ClearData();
 
             for (int i = 0; i < systems.Length; i++)
             {

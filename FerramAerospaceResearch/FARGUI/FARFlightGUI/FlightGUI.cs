@@ -78,6 +78,14 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         GUIDropDown<int> settingsWindow;
 
+        void Awake()
+        {
+            if (vesselFlightGUI == null)
+            {
+                vesselFlightGUI = new Dictionary<Vessel, FlightGUI>();
+            }
+        }
+
         void Start()
         {
             _vessel = GetComponent<Vessel>();
@@ -90,10 +98,6 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             settingsWindow = new GUIDropDown<int>(new string[3]{"Flt Data","Stab Aug", "Air Spd"}, new int[3]{0,1,2}, 0);
             //boxStyle.padding = new RectOffset(4, 4, 4, 4);
 
-            if (vesselFlightGUI == null)
-            {
-                vesselFlightGUI = new Dictionary<Vessel, FlightGUI>();
-            }
             vesselFlightGUI.Add(_vessel, this);
 
             this.enabled = true;
@@ -105,10 +109,13 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
             if(_vessel == FlightGlobals.ActiveVessel)
                 LoadConfigs();
+
+            GameEvents.onGamePause.Add(SaveData);
         }
 
         void OnDestroy()
         {
+            GameEvents.onGamePause.Remove(SaveData);
             SaveConfigs();
             if (_vessel)
             {
@@ -129,6 +136,13 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
             if (blizzyFlightGUIButton != null)
                 blizzyFlightGUIButton.Destroy();
+        }
+
+        void SaveData()
+        {
+            SaveConfigs();
+            _airSpeedGUI.SaveSettings();
+            _stabilityAugmentation.SaveSettings();
         }
 
         //Receives message from FARVesselAero through _vessel on the recalc being completed

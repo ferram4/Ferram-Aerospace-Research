@@ -202,7 +202,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
         }
 
-        void SaveSettings()
+        public void SaveSettings()
         {
             List<ConfigNode> flightGUISettings = FARSettingsScenarioModule.FlightGUISettings;
             if(flightGUISettings == null)
