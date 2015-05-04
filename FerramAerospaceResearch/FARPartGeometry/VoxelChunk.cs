@@ -164,10 +164,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
                         DebugVisualVoxel vx;
                         //if(voxelPoints[i,j,k] != null)
-                        PartSizePair pair= voxelPoints[i + 8 * j + 64 * k];
+                        PartSizePair pair = voxelPoints[i + 8 * j + 64 * k];
                         if ((object)pair.part != null)
                         {
-                            vx = new DebugVisualVoxel(vesselLocalToWorldMatrix.MultiplyPoint3x4(lowerCorner + new Vector3d(i, j, k) * size), size * 0.5f * pair.size);
+                            double elementSize = pair.size;
+                            if (elementSize > 1)
+                                elementSize = 1;
+
+                            elementSize *= size * 0.5f;
+                            vx = new DebugVisualVoxel(vesselLocalToWorldMatrix.MultiplyPoint3x4(lowerCorner + new Vector3d(i, j, k) * size), elementSize);
                             visualVoxels[i, j, k] = vx;
                         }
                     }
