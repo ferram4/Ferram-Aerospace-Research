@@ -246,7 +246,7 @@ namespace ferram4
         {
             // Compute the actual center ourselves once per frame
             // Feed the precomputed values to the vanilla indicator
-            CoLMarker.pos = FerramAerospaceResearch.FARAeroComponents.EditorAeroCenter.VesselRootLocalAeroCenter;      //hacking the old stuff to work with the new
+            CoLMarker.pos = FerramAerospaceResearch.FARGUI.FAREditorGUI.EditorAeroCenter.VesselRootLocalAeroCenter;      //hacking the old stuff to work with the new
             CoLMarker.pos = EditorLogic.RootPart.partTransform.localToWorldMatrix.MultiplyPoint3x4(CoLMarker.pos);
             CoLMarker.dir = Vector3.zero;
             CoLMarker.lift = 1;

@@ -83,6 +83,8 @@ namespace FerramAerospaceResearch
         private const double UNDERWATER_DENSITY_FACTOR_MINUS_ONE = 814.51020408163265306122448979592;
         //Standard Reynolds number for transition from laminar to turbulent flow
         private const double TRANSITION_REYNOLDS_NUMBER = 5e5;
+        //Multiplier to skin friction due to surface roughness; approximately a 50% increase in drag
+        private const double ROUGHNESS_SKIN_FRICTION_MULTIPLIER = 1.5;
 
         public static void SaveCustomAeroDataToConfig()
         {
@@ -639,31 +641,11 @@ namespace FerramAerospaceResearch
 
             double Re = CalculateReynoldsNumber(density, lengthScale, vel, machNumber, temp, gamma);
 
-            if (Re < TRANSITION_REYNOLDS_NUMBER)
-            {
-                double invSqrtRe = 1 / Math.Sqrt(Re);
-                double lamCf = 1.328 * invSqrtRe;
-
-                double rarefiedGasVal = machNumber / Re;
-                if(rarefiedGasVal > 0.01)
-                {
-                    return lamCf + (0.25 - lamCf) * (rarefiedGasVal - 0.01) / (0.99 + rarefiedGasVal);
-                }
-                return lamCf;
-            }
-
-            double transitionFraction = TRANSITION_REYNOLDS_NUMBER / Re;
-
-            double laminarCf = 1.328 / Math.Sqrt(TRANSITION_REYNOLDS_NUMBER);
-            double turbulentCfInLaminar = 0.074 / Math.Pow(TRANSITION_REYNOLDS_NUMBER, 0.2);
-            double turbulentCf = 0.074 / Math.Pow(Re, 0.2);
-
-            return turbulentCf - transitionFraction * (turbulentCfInLaminar - laminarCf);
+            return SkinFrictionDrag(Re, machNumber);
         }
 
         public static double SkinFrictionDrag(double reynoldsNumber, double machNumber)
         {
-
             if (reynoldsNumber < TRANSITION_REYNOLDS_NUMBER)
             {
                 double invSqrtRe = 1 / Math.Sqrt(reynoldsNumber);
@@ -672,9 +654,9 @@ namespace FerramAerospaceResearch
                 double rarefiedGasVal = machNumber / reynoldsNumber;
                 if (rarefiedGasVal > 0.01)
                 {
-                    return lamCf + (0.25 - lamCf) * (rarefiedGasVal - 0.01) / (0.99 + rarefiedGasVal);
+                    return (lamCf + (0.25 - lamCf) * (rarefiedGasVal - 0.01) / (0.99 + rarefiedGasVal)) * ROUGHNESS_SKIN_FRICTION_MULTIPLIER;
                 }
-                return lamCf;
+                return lamCf * ROUGHNESS_SKIN_FRICTION_MULTIPLIER;
             }
 
             double transitionFraction = TRANSITION_REYNOLDS_NUMBER / reynoldsNumber;
@@ -683,7 +665,7 @@ namespace FerramAerospaceResearch
             double turbulentCfInLaminar = 0.074 / Math.Pow(TRANSITION_REYNOLDS_NUMBER, 0.2);
             double turbulentCf = 0.074 / Math.Pow(reynoldsNumber, 0.2);
 
-            return turbulentCf - transitionFraction * (turbulentCfInLaminar - laminarCf);
+            return (turbulentCf - transitionFraction * (turbulentCfInLaminar - laminarCf)) * ROUGHNESS_SKIN_FRICTION_MULTIPLIER;
         }
 
         public static void UpdateCurrentActiveBody(CelestialBody body)

@@ -298,8 +298,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 centroid = module.part.partTransform.localToWorldMatrix.MultiplyPoint3x4(data2.centroidPartSpace);
                 center.AddForce(centroid, forceVector * data2.dragFactor);
-                center.AddTorque(torqueVector * data2.dragFactor);
             }
+            center.AddTorque(torqueVector);
         }
 
         public void FlightCalculateAeroForces(float atmDensity, float machNumber, float reynoldsPerUnitLength, float skinFrictionDrag)

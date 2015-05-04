@@ -89,7 +89,7 @@ namespace ferram4
         {
             double size = nforce.magnitude;
             force += nforce;
-            torque += Vector3d.Cross(npos, nforce);
+            //torque += Vector3d.Cross(npos, nforce);
             pos += npos * size;
             amount += size;
         }
