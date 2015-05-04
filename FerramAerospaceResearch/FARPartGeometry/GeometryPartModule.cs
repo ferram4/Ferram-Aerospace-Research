@@ -190,6 +190,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
         private void SetupIGeometryUpdaters()
         {
             geometryUpdaters = new List<IGeometryUpdater>();
+            if(part is CompoundPart)
+            {
+                CompoundPartGeoUpdater compoundUpdate = new CompoundPartGeoUpdater((CompoundPart)part, this);
+                geometryUpdaters.Add(compoundUpdate);
+            }
             if(part.Modules.Contains("ModuleProceduralFairing"))
             {
                 ModuleProceduralFairing[] fairings = part.GetComponents<ModuleProceduralFairing>();

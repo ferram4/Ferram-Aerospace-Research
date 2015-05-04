@@ -96,7 +96,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         [KSPField(isPersistant = true, guiActive = false, guiName = "Chute temp", guiFormat = "0.00", guiUnits = "°C")]
         public float currentTemp = 20;
         [KSPField(guiActive = false, guiName = "Max temp", guiFormat = "0.00", guiUnits = "°C")]
-        public float chuteMaxTemp = (float)(maxTemp + absoluteZero);
+        public float chuteDisplayMaxTemp = (float)(maxTemp + absoluteZero);
         #endregion
 
         #region Propreties
@@ -929,8 +929,6 @@ namespace FerramAerospaceResearch.RealChuteLite
                 if (parachute != null) { this.part.RemoveModule(parachute); }
                 if (this.deployAltitude <= 500) { this.deployAltitude += 200; }
             }
-            if (chuteMaxTemp > 550)
-                chuteMaxTemp = (float)(maxTemp + absoluteZero);      //ferram4: a method to deal with completely insane maxTemps on stock parts; accepts temps up to ~ that of Kevlar before activating
         }
 
         public override string GetInfo()
