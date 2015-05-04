@@ -169,7 +169,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
 
             double areaForStress = projectedArea.totalArea / 6;
-            if (areaForStress <= 0.1)
+            if (areaForStress <= 0.1 || part.Modules.Contains("RealChuteFAR"))
             {
                 partForceMaxY = double.MaxValue;
                 partForceMaxXZ = double.MaxValue;
