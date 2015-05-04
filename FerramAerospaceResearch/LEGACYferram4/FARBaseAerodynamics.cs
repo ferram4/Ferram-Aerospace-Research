@@ -42,7 +42,7 @@ using FerramAerospaceResearch;
 
 namespace ferram4
 {
-    public abstract class FARBaseAerodynamics : FARPartModule, ILiftProvider
+    public class FARBaseAerodynamics : FARPartModule, ILiftProvider
     {
         [KSPField(isPersistant = false, guiActive = false)]
         public double Cl;
@@ -86,9 +86,9 @@ namespace ferram4
                 part_transform = part.partTransform;
         }
 
-        public override void Start()
+        public override void Initialization()
         {
-            base.Start();
+            base.Initialization();
         }
 
 /*        public virtual void LateUpdate()

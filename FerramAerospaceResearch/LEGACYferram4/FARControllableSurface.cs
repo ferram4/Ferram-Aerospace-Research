@@ -90,39 +90,32 @@ namespace ferram4
 
 //        protected int MovableSectionFlip = 1;
 
-        [UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.Editor, stepIncrement = 5f)]
-        [KSPField(guiName = "Pitch %", isPersistant = true, guiActiveEditor = true, guiActive = false)]
+        [KSPField(guiName = "Pitch %", isPersistant = true, guiActiveEditor = true, guiActive = false), UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.Editor, stepIncrement = 5f)]
         public float pitchaxis = 100.0f;
 
-		[UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.Editor, stepIncrement = 5f)]
-		[KSPField(guiName = "Yaw %", isPersistant = true, guiActiveEditor = true, guiActive = false)]
+		[KSPField(guiName = "Yaw %", isPersistant = true, guiActiveEditor = true, guiActive = false), UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.Editor, stepIncrement = 5f)]
 		public float yawaxis = 100.0f;
 
-		[UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.Editor, stepIncrement = 5f)]
-		[KSPField(guiName = "Roll %", isPersistant = true, guiActiveEditor = true, guiActive = false)]
+		[KSPField(guiName = "Roll %", isPersistant = true, guiActiveEditor = true, guiActive = false), UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.Editor, stepIncrement = 5f)]
         public float rollaxis = 100.0f;
 
-		[UI_FloatRange(maxValue = 200.0f, minValue = -200f, scene = UI_Scene.Editor, stepIncrement = 5f)]
-		[KSPField(guiName = "AoA %", isPersistant = true, guiActiveEditor = true, guiActive = false)]
+
+        [KSPField(guiName = "AoA %", isPersistant = true, guiActiveEditor = true, guiActive = false), UI_FloatRange(maxValue = 200.0f, minValue = -200f, scene = UI_Scene.Editor, stepIncrement = 5f)]
 		public float pitchaxisDueToAoA = 0.0f;
 
-        [UI_FloatRange(maxValue = 40, minValue = -40, scene = UI_Scene.Editor, stepIncrement = 0.5f)]
-        [KSPField(guiName = "Ctrl Dflct", isPersistant = true)]
+        [KSPField(guiName = "Ctrl Dflct", isPersistant = true), UI_FloatRange(maxValue = 40, minValue = -40, scene = UI_Scene.Editor, stepIncrement = 0.5f)]
         public float maxdeflect = 15;
 
-        [UI_Toggle(enabledText = "Active", scene = UI_Scene.Editor, disabledText = "Inactive")]
-        [KSPField(guiName = "Flap", isPersistant = true, guiActiveEditor = true, guiActive = false)]
+        [KSPField(guiName = "Flap", isPersistant = true, guiActiveEditor = true, guiActive = false), UI_Toggle(enabledText = "Active", scene = UI_Scene.Editor, disabledText = "Inactive")]
         public bool isFlap;
 
-        [UI_Toggle(enabledText = "Active", scene = UI_Scene.Editor, disabledText = "Inactive")]
-        [KSPField(guiName = "Spoiler", isPersistant = true, guiActiveEditor = true, guiActive = false)]
+        [KSPField(guiName = "Spoiler", isPersistant = true, guiActiveEditor = true, guiActive = false), UI_Toggle(enabledText = "Active", scene = UI_Scene.Editor, disabledText = "Inactive")]
         public bool isSpoiler;
 
         [KSPField(isPersistant = true, guiName = "Flap setting")]
         public int flapDeflectionLevel = 2;
 
-        [UI_FloatRange(maxValue = 85, minValue = -85, scene = UI_Scene.Editor, stepIncrement = 0.5f)]
-        [KSPField(guiName = "Flp/splr Dflct", isPersistant = true)]
+        [KSPField(guiName = "Flp/splr Dflct", isPersistant = true), UI_FloatRange(maxValue = 85, minValue = -85, scene = UI_Scene.Editor, stepIncrement = 0.5f)]
         public float maxdeflectFlap = 15; 
         
         protected double PitchLocation = 0;
@@ -208,9 +201,9 @@ namespace ferram4
             Events["DeflectMore"].active = isFlap && flapDeflectionLevel < 3;
             Events["DeflectLess"].active = isFlap && flapDeflectionLevel > 0;
         }
-        public override void Start()
+        public override void Initialization()
         {
-            base.Start();
+            base.Initialization();
             if (part.Modules.Contains("ModuleControlSurface"))
             {
                 part.RemoveModule(part.Modules["ModuleControlSurface"]);
@@ -245,8 +238,8 @@ namespace ferram4
                     }
             }
 
-            if (HighLogic.LoadedSceneIsEditor)
-                FixAllUIRanges();
+            //if (HighLogic.LoadedSceneIsEditor)        //should be unneeded now
+            //    FixAllUIRanges();
         }
 
         public override void FixedUpdate()

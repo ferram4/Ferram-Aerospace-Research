@@ -55,7 +55,7 @@ namespace ferram4
         [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
         public float curWingMass = 1;
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Mass/Strength Multiplier", guiFormat = "0.##"), UI_FloatRange(minValue = 0.1f, maxValue = 2.0f, stepIncrement = 0.01f)]
+        [KSPField(guiName = "Mass-Strength Multiplier %", isPersistant = true, guiActiveEditor = true, guiActive = false), UI_FloatRange(maxValue = 2.0f, minValue = 0.05f, scene = UI_Scene.Editor, stepIncrement = 0.05f)]
         public float massMultiplier = 1.0f;
 
         public float oldMassMultiplier = -1f;
@@ -358,9 +358,9 @@ namespace ferram4
 
         #region Initialization
 
-        public override void Start()
+        public override void Initialization()
         {
-            base.Start();
+            base.Initialization();
             StartInitialization();
             if(HighLogic.LoadedSceneIsEditor)
             {
@@ -618,7 +618,6 @@ namespace ferram4
                 GetRefAreaChildren();
                 UpdateMassToAccountForArea();
             }
-            
         }
 
         public void OnWingAttach()

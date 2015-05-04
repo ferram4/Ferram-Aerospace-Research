@@ -60,7 +60,12 @@ namespace ferram4
                 OnVesselPartsChange();
         }
 
-        public virtual void Start()
+        public void Start()
+        {
+            Initialization();
+        }
+
+        public virtual void Initialization()
         {
             if (!CompatibilityChecker.IsAllCompatible())
             {
