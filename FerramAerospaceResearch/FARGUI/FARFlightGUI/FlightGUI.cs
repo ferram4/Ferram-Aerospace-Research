@@ -110,10 +110,14 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             if(_vessel == FlightGlobals.ActiveVessel)
                 LoadConfigs();
 
+            GameEvents.onShowUI.Add(ShowUI);
+            GameEvents.onHideUI.Add(HideUI);
         }
 
         void OnDestroy()
         {
+            GameEvents.onShowUI.Remove(ShowUI);
+            GameEvents.onHideUI.Remove(HideUI);
             SaveConfigs();
             if (_vessel)
             {
