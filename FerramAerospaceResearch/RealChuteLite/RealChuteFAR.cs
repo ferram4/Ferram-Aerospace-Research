@@ -929,6 +929,8 @@ namespace FerramAerospaceResearch.RealChuteLite
                 if (parachute != null) { this.part.RemoveModule(parachute); }
                 if (this.deployAltitude <= 500) { this.deployAltitude += 200; }
             }
+            if (chuteMaxTemp > 550)
+                chuteMaxTemp = (float)(maxTemp + absoluteZero);      //ferram4: a method to deal with completely insane maxTemps on stock parts; accepts temps up to ~ that of Kevlar before activating
         }
 
         public override string GetInfo()
