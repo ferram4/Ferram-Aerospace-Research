@@ -300,9 +300,18 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 Part p = _currentAeroModules[i].part;
                 if (!p)
                     continue;
-                ferram4.FARWingAerodynamicModel w = p.GetComponent<ferram4.FARWingAerodynamicModel>();
-                if (w)
-                    w.NUFAR_ClearAreaExposedFactor();
+                if (p.Modules.Contains("FARWingAerodynamicModel"))
+                {
+                    ferram4.FARWingAerodynamicModel w = (ferram4.FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
+                    if (w)
+                        w.NUFAR_ClearAreaExposedFactor();
+                }
+                else if(p.Modules.Contains("FARControllableSurface"))
+                {
+                    ferram4.FARWingAerodynamicModel w = (ferram4.FARWingAerodynamicModel)p.Modules["FARControllableSurface"];
+                    if (w)
+                        w.NUFAR_ClearAreaExposedFactor();
+                }
             }
 
             for (int i = 0; i < _currentAeroSections.Count; i++)
@@ -316,9 +325,19 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 Part p = _currentAeroModules[i].part;
                 if (!p)
                     continue;
-                ferram4.FARWingAerodynamicModel w = p.GetComponent<ferram4.FARWingAerodynamicModel>();
-                if (w)
-                    w.NUFAR_SetExposedAreaFactor();
+                if (p.Modules.Contains("FARWingAerodynamicModel"))
+                {
+                    ferram4.FARWingAerodynamicModel w = (ferram4.FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
+                    if (w)
+                        w.NUFAR_SetExposedAreaFactor();
+                }
+                else if (p.Modules.Contains("FARControllableSurface"))
+                {
+                    ferram4.FARWingAerodynamicModel w = (ferram4.FARWingAerodynamicModel)p.Modules["FARControllableSurface"];
+                    if (w)
+                        w.NUFAR_SetExposedAreaFactor();
+                }
+
             }
         }
 
@@ -976,16 +995,16 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     xRefVector = _vehicleMainAxis;
                 else
                 {
-                    xRefVector = (Vector3)(_vehicleCrossSection[index - 1].centroid - _vehicleCrossSection[index + 1].centroid).normalized;
+                    xRefVector = (Vector3)(_vehicleCrossSection[index - 1].centroid - _vehicleCrossSection[index + 1].centroid);
                     Vector3 offMainAxisVec = Vector3.ProjectOnPlane(xRefVector, _vehicleMainAxis);
                     float tanAoA = offMainAxisVec.magnitude / (2f * (float)_sectionThickness);
                     if (tanAoA > 0.17632698070846497347109038686862f)
                     {
                         offMainAxisVec.Normalize();
-                        offMainAxisVec *= 0.17632698070846497347109038686862f;
+                        offMainAxisVec *= 0.17632698070846497347109038686862f;      //max acceptable is 10 degrees
                         xRefVector = _vehicleMainAxis + offMainAxisVec;
-                        xRefVector.Normalize();
                     }
+                    xRefVector.Normalize();
                 }
 
 

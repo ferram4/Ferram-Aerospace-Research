@@ -75,6 +75,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         List<FARWingAerodynamicModel> _wingAerodynamicModel = new List<FARWingAerodynamicModel>();
         Stopwatch voxelWatch = new Stopwatch();
 
+        int prevPartCount = 0;
+
         EditorSimManager _simManager;
 
         InstantConditionSim _instantSim;
@@ -253,7 +255,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         }
 
 
-        private void LEGACY_UpdateWingAeroModels()
+        private void LEGACY_UpdateWingAeroModels(bool updateWingInteractions)
         {
             List<Part> partsList = EditorLogic.SortedShipList;
             _wingAerodynamicModel.Clear();
@@ -264,13 +266,15 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                     if (p.Modules.Contains("FARWingAerodynamicModel"))
                     {
                         FARWingAerodynamicModel w = (FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
-                        w.EditorUpdateWingInteractions();
+                        if(updateWingInteractions)
+                            w.EditorUpdateWingInteractions();
                         _wingAerodynamicModel.Add(w);
                     }
                     else if (p.Modules.Contains("FARControllableSurface"))
                     {
                         FARControllableSurface c = (FARControllableSurface)p.Modules["FARControllableSurface"];
-                        c.EditorUpdateWingInteractions();
+                        if(updateWingInteractions)
+                            c.EditorUpdateWingInteractions();
                         _wingAerodynamicModel.Add(c);
                     }
             }
@@ -284,7 +288,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             {
                 if (_vehicleAero.CalculationCompleted)
                 {
-                    LEGACY_UpdateWingAeroModels();
+                    LEGACY_UpdateWingAeroModels(EditorLogic.SortedShipList.Count == prevPartCount);
+                    prevPartCount = EditorLogic.SortedShipList.Count;
 
                     voxelWatch.Stop();
                     UnityEngine.Debug.Log("Voxelization Time (ms): " + voxelWatch.ElapsedMilliseconds);

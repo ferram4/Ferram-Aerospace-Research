@@ -48,9 +48,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
         public int[] triangles;
         public Transform meshTransform;
         public Matrix4x4 thisToVesselMatrix;
+        public Matrix4x4 meshLocalToWorld;
         public Bounds bounds;
+        private GeometryPartModule module;
 
-        public GeometryMesh(Vector3[] untransformedVerts, int[] triangles, Bounds meshBounds, Transform meshTransform, Matrix4x4 worldToVesselMatrix)
+        public GeometryMesh(Vector3[] untransformedVerts, int[] triangles, Bounds meshBounds, Transform meshTransform, Matrix4x4 worldToVesselMatrix, GeometryPartModule module)
         {
             vertices = new Vector3[untransformedVerts.Length];
             this.thisToVesselMatrix = worldToVesselMatrix * meshTransform.localToWorldMatrix;
@@ -67,15 +69,24 @@ namespace FerramAerospaceResearch.FARPartGeometry
             size.z = Math.Abs(size.z);
 
             bounds = TransformBounds(meshBounds, thisToVesselMatrix);
+
+            this.module = module;
         }
 
-        public bool TryTransformBasis(Matrix4x4 newThisToVesselMatrix)
+        public bool TrySetThisToVesselMatrixForTransform()
         {
             if (meshTransform == null)
                 return false;
 
+            meshLocalToWorld = meshTransform.localToWorldMatrix;
+            return true;
+        }
+
+        public void TransformBasis(Matrix4x4 newThisToVesselMatrix)
+        {
+
             Matrix4x4 tempMatrix = thisToVesselMatrix.inverse;
-            thisToVesselMatrix = newThisToVesselMatrix * meshTransform.localToWorldMatrix;
+            thisToVesselMatrix = newThisToVesselMatrix * meshLocalToWorld;
 
             tempMatrix = thisToVesselMatrix *  tempMatrix;
 
@@ -83,8 +94,28 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             for (int i = 0; i < vertices.Length; i++)
                 vertices[i] = tempMatrix.MultiplyPoint3x4(vertices[i]);
+        }
 
-            return true;
+        public void MultithreadTransformBasis(object newThisToVesselMatrixObj)
+        {
+            try
+            {
+                Matrix4x4 tempMatrix = thisToVesselMatrix.inverse;
+                thisToVesselMatrix = (Matrix4x4)newThisToVesselMatrixObj * meshLocalToWorld;
+
+                tempMatrix = thisToVesselMatrix * tempMatrix;
+
+                bounds = TransformBounds(bounds, tempMatrix);
+
+                for (int i = 0; i < vertices.Length; i++)
+                    vertices[i] = tempMatrix.MultiplyPoint3x4(vertices[i]);
+
+                module.DecrementMeshesToUpdate();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
         }
 
         private Bounds TransformBounds(Bounds oldBounds, Matrix4x4 matrix)

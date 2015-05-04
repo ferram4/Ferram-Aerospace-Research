@@ -277,6 +277,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
              if(_currentGeoModules.Count > geoModulesReady)
              {
+                 _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
                  _updateQueued = true;
                  return;
              }

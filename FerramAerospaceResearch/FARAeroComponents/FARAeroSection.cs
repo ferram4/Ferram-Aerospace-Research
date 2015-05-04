@@ -213,7 +213,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
 
             double nForce = 0;
-            if (machNumber < 6)
                 nForce = cosHalfAoA * sin2AoA * potentialFlowNormalForce * Math.Sign(cosAoA);  //potential flow normal force
             if (nForce < 0)     //potential flow is not significant over the rear face of things
                 nForce = 0;
@@ -340,7 +339,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
 
                 double nForce = 0;
-                if(machNumber < 6)
                     nForce = potentialFlowNormalForce * Math.Sign(cosAoA) * cosHalfAoA * sin2AoA;  //potential flow normal force
                 if (nForce < 0)     //potential flow is not significant over the rear face of things
                     nForce = 0;

@@ -1996,12 +1996,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             }
                             //Only other situation is that it is an inactive point, in which case we do nothing here, because it is already taken care of
                         }
-                        else if (pt.mark != SweepPlanePoint.MarkingType.VoxelShell || pt.mark != SweepPlanePoint.MarkingType.VoxelShellPreviouslyInterior)  //only run this if it's not already labeled as part of a voxel shell
+                        else if (pt.mark != SweepPlanePoint.MarkingType.VoxelShell && pt.mark != SweepPlanePoint.MarkingType.VoxelShellPreviouslyInterior)  //only run this if it's not already labeled as part of a voxel shell
                         {  //Make sure the point is labeled as a voxel shell if there is already a part there
                             inactiveInteriorPts.Remove(pt);
                             pt.mark = SweepPlanePoint.MarkingType.VoxelShellPreviouslyInterior;     //this marks that this point was once part of the voxel shell
                             pt.part = p;
-                            pt.jLastInactive = lastJ;
+                            pt.jLastInactive = j;
                         }
                     }
                 }

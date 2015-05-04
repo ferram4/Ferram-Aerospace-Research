@@ -36,6 +36,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
 using UnityEngine;
 using KSP;
 using FerramAerospaceResearch.FARPartGeometry.GeometryModification;
@@ -56,12 +57,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
         private List<AnimationState> animStates;
         private List<float> animStateTime;
 
+        private bool _started = false;
         private bool _ready = false;
         public bool Ready
         {
-            get { return _ready; }
+            get { return _ready && _started; }
         }
         private int _sendUpdateTick = 0;
+        private int meshesToUpdate = 0;
 
         [SerializeField]
         bool forceUseColliders;
@@ -87,12 +90,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         void FixedUpdate()
         {
-            if (!_ready && ((HighLogic.LoadedSceneIsFlight && FlightGlobals.ready) ||       //this is done because it takes a frame for colliders to be set up in the editor
-                HighLogic.LoadedSceneIsEditor && ApplicationLauncher.Ready))                //waiting prevents changes in physics in flight or in predictions because the voxel switches to colliders rather than meshes
+            if (!_started && ((HighLogic.LoadedSceneIsFlight && FlightGlobals.ready) ||       //this is done because it takes a frame for colliders to be set up in the editor
+            HighLogic.LoadedSceneIsEditor && ApplicationLauncher.Ready))                //waiting prevents changes in physics in flight or in predictions because the voxel switches to colliders rather than meshes
             {
                 RebuildAllMeshData();
-                _ready = true;
+                _started = true;
             }
+            if(!_ready && meshesToUpdate == 0)
+                _ready = true;
+            
 
             if (animStates != null && animStates.Count > 0)
                 CheckAnimations();
@@ -133,12 +139,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
             for (int i = 0; i < meshTransforms.Count; i++)
             {
                 MeshData m = geometryMeshes[i];
-                GeometryMesh geoMesh = new GeometryMesh(m.vertices, m.triangles, m.bounds, meshTransforms[i], worldToVesselMatrix);
+                GeometryMesh geoMesh = new GeometryMesh(m.vertices, m.triangles, m.bounds, meshTransforms[i], worldToVesselMatrix, this);
                 meshDataList.Add(geoMesh);
             }
             //UpdateTransformMatrixList(worldToVesselMatrix);
             overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
-            _ready = true;
         }
 
         private void GetAnimations()
@@ -342,16 +347,36 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public void UpdateTransformMatrixList(Matrix4x4 worldToVesselMatrix)
         {
+            _ready = false;
             if(meshDataList != null)
-                for (int i = 0; i < meshDataList.Count; i++)
+                for (int i = 0; i < meshDataList.Count; ++i)
                 {
-                    if (!meshDataList[i].TryTransformBasis(worldToVesselMatrix))
+                    GeometryMesh mesh = meshDataList[i];
+                    if (mesh.TrySetThisToVesselMatrixForTransform())
+                    {
+                        lock (this)
+                            ++meshesToUpdate;
+                        ThreadPool.QueueUserWorkItem(mesh.MultithreadTransformBasis, worldToVesselMatrix);
+                    }
+                    else
+                    {
+                        meshDataList.RemoveAt(i);
+                        --i;
+                    }
+                    /*if (!meshDataList[i].TryTransformBasis(worldToVesselMatrix))
                     {
                         meshDataList.RemoveAt(i);
                         i--;
-                    }
+                    }*/
                 }
         }
+
+        internal void DecrementMeshesToUpdate()
+        {
+            lock (this)
+                --meshesToUpdate;
+        }
+
         #endregion
 
         private List<MeshData> CreateMeshListFromTransforms(ref List<Transform> meshTransforms)
