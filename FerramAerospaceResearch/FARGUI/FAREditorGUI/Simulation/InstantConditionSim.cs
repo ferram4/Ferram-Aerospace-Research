@@ -49,8 +49,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
         List<FARAeroPartModule> _currentAeroModules;
         List<FARWingAerodynamicModel> _wingAerodynamicModel;
 
-        double _maxCrossSectionFromBody;
-        double _bodyLength;
+        public double _maxCrossSectionFromBody;
+        public double _bodyLength;
 
         public bool Ready
         {

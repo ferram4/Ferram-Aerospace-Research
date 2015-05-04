@@ -242,13 +242,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 xForce += cosSqrAoA * xForceAoA0;
                 float momentFactor;
                 if (machNumber > 6)
-                    momentFactor = hypersonicMomentForward * 0.4f;
+                    momentFactor = hypersonicMomentForward * 0.6f;
                 else if (machNumber < 0.6)
                     momentFactor = 0.6f * hypersonicMomentBackward;
                 else
                 {
                     float tmp = (-0.185185185f * machNumber + 1.11111111111f);
-                    momentFactor = tmp * hypersonicMomentBackward * 0.6f + (1 - tmp) * hypersonicMomentForward * 0.4f;
+                    momentFactor = tmp * hypersonicMomentBackward * 0.6f + (1 - tmp) * hypersonicMomentForward * 0.6f;
                 }
                 //if (machNumber < 1.5)
                 //    momentFactor += hypersonicMomentBackward * (0.5f - machNumber * 0.33333333333333333333333333333333f) * 0.2f;
@@ -260,13 +260,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 xForce += cosSqrAoA * xForceAoA180;
                 float momentFactor;     //negative to deal with the ref vector facing the opposite direction, causing the moment vector to point in the opposite direction
                 if (machNumber > 6)
-                    momentFactor = hypersonicMomentBackward * 0.4f;
+                    momentFactor = hypersonicMomentBackward * 0.6f;
                 else if (machNumber < 0.6)
                     momentFactor = 0.6f * hypersonicMomentForward;
                 else
                 {
                     float tmp = (-0.185185185f * machNumber + 1.11111111111f);
-                    momentFactor = tmp * hypersonicMomentForward * 0.6f + (1 - tmp) * hypersonicMomentBackward * 0.4f;
+                    momentFactor = tmp * hypersonicMomentForward * 0.6f + (1 - tmp) * hypersonicMomentBackward * 0.6f;
                 }
                 //if (machNumber < 1.5)
                 //    momentFactor += hypersonicMomentForward * (0.5f - machNumber * 0.33333333333333333333333333333333f) * 0.2f;
@@ -369,13 +369,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     xForce += cosSqrAoA * xForceAoA0;
                     float momentFactor;
                     if (machNumber > 6)
-                        momentFactor = hypersonicMomentForward * 0.4f;
+                        momentFactor = hypersonicMomentForward * 0.6f;
                     else if (machNumber < 0.6)
                         momentFactor = 0.6f * hypersonicMomentBackward;
                     else
                     {
                         float tmp = (-0.185185185f * machNumber + 1.11111111111f);
-                        momentFactor = tmp * hypersonicMomentBackward * 0.6f + (1 - tmp) * hypersonicMomentForward * 0.4f;
+                        momentFactor = tmp * hypersonicMomentBackward * 0.6f + (1 - tmp) * hypersonicMomentForward * 0.6f;
                     }
                     //if (machNumber < 1.5)
                     //    momentFactor += hypersonicMomentBackward * (0.5f - machNumber * 0.33333333333333333333333333333333f) * 0.2f;
@@ -388,13 +388,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     xForce += cosSqrAoA * xForceAoA180;
                     float momentFactor;     //negative to deal with the ref vector facing the opposite direction, causing the moment vector to point in the opposite direction
                     if (machNumber > 6)
-                        momentFactor = hypersonicMomentBackward * 0.4f;
+                        momentFactor = hypersonicMomentBackward * 0.6f;
                     else if (machNumber < 0.6)
                         momentFactor = 0.6f * hypersonicMomentForward;
                     else
                     {
                         float tmp = (-0.185185185f * machNumber + 1.11111111111f);
-                        momentFactor = tmp * hypersonicMomentForward * 0.6f + (1 - tmp) * hypersonicMomentBackward * 0.4f;
+                        momentFactor = tmp * hypersonicMomentForward * 0.6f + (1 - tmp) * hypersonicMomentBackward * 0.6f;
                     }
                     //if (machNumber < 1.5)
                     //    momentFactor += hypersonicMomentForward * (0.5f - machNumber * 0.33333333333333333333333333333333f) * 0.2f;

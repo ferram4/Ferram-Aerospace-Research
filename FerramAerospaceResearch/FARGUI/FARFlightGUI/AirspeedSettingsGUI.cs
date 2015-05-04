@@ -107,11 +107,6 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             //            SaveAirSpeedPos.y = AirSpeedPos.y;
         }
 
-        public void SaveAndDestroy()
-        {
-            SaveSettings();
-        }
-
         public void ChangeSurfVelocity()
         {
             if (FlightGlobals.ActiveVessel != _vessel)

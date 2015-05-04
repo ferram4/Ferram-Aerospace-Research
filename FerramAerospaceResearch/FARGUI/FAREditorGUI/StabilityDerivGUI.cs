@@ -104,20 +104,22 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 altitudeDouble *= 1000;
 
 
-                double temp = FlightGlobals.getExternalTemperature((float)altitudeDouble, body);
-                double rho = FARAeroUtil.GetCurrentDensity(body, altitudeDouble, false);
-                if (rho > 0)
+                double temp = body.GetTemperature(altitudeDouble);
+                double pressure = body.GetPressure(altitudeDouble);
+                if (pressure > 0)
                 {
                     //double temp = Convert.ToSingle(atm_temp_str);
                     double machDouble = Convert.ToSingle(machNumber);
                     machDouble = FARMathUtil.Clamp(machDouble, 0.001, float.PositiveInfinity);
 
-                    double sspeed = Math.Sqrt(FARAeroUtil.currentBodyVisc[0] * Math.Max(0.1, temp + 273.15));
+                    double density = body.GetDensity(pressure, temp);
+
+                    double sspeed = body.GetSpeedOfSound(pressure, density);
                     double vel = sspeed * machDouble;
 
                     //UpdateControlSettings();
 
-                    double q = vel * vel * rho * 0.5f;
+                    double q = vel * vel * density * 0.5f;
 
                     stabDerivOutput = simManager.StabDerivCalculator.CalculateStabilityDerivs(vel, q, machDouble, 0, 0, 0, _flapSettingDropdown.ActiveSelection, spoilersDeployed, body, altitudeDouble);
                     simManager.vehicleData = stabDerivOutput;

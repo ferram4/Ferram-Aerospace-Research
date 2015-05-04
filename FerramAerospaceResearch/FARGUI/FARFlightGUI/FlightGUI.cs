@@ -121,12 +121,13 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
             _physicsCalcs = null;
 
+            _flightDataGUI.SaveSettings();
             _flightDataGUI = null;
 
             _stabilityAugmentation.SaveAndDestroy();
             _stabilityAugmentation = null;
 
-            _airSpeedGUI.SaveAndDestroy();
+            _airSpeedGUI.SaveSettings();
             _airSpeedGUI = null;
 
             _flightStatusGUI = null;
@@ -143,6 +144,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 SaveConfigs();
                 _airSpeedGUI.SaveSettings();
                 _stabilityAugmentation.SaveSettings();
+                _flightDataGUI.SaveSettings();
             }
         }
         public static void SaveActiveData()

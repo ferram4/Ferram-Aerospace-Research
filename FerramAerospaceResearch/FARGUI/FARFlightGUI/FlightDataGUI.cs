@@ -50,7 +50,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             "Dyn Pres",
             "Aero Forces",
             "Coeffs + Ref Area",
-            "L//D and V*L//D", 
+            "L/D and V*L/D", 
             "Engine + Intake",
             "Range + Endurance",
             "BC and Term Vel"
@@ -60,6 +60,12 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         string labelString, dataString;
         GUIStyle buttonStyle;
         GUIStyle boxStyle;
+
+        public FlightDataGUI()
+        {
+            LoadSettings();
+        }
+
         public void UpdateInfoParameters(VesselFlightInfo info)
         {
             infoParameters = info;
@@ -248,6 +254,57 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
 
             return change;
+        }
+
+        public void SaveSettings()
+        {
+            List<ConfigNode> flightGUISettings = FARSettingsScenarioModule.FlightGUISettings;
+            if (flightGUISettings == null)
+            {
+                Debug.LogError("Could not save Flight Data Settings because settings config list was null");
+            }
+            ConfigNode node = null;
+            for (int i = 0; i < flightGUISettings.Count; i++)
+                if (flightGUISettings[i].name == "FlightDataSettings")
+                {
+                    node = flightGUISettings[i];
+                    break;
+                }
+
+            if (node == null)
+            {
+                node = new ConfigNode("FlightDataSettings");
+                flightGUISettings.Add(node);
+            }
+            node.ClearData();
+
+            for (int i = 0; i < activeFlightDataSections.Length; i++)
+            {
+                node.AddValue("section" + i + "active", activeFlightDataSections[i]);
+            }
+        }
+
+        void LoadSettings()
+        {
+            List<ConfigNode> flightGUISettings = FARSettingsScenarioModule.FlightGUISettings;
+
+            ConfigNode node = null;
+            for (int i = 0; i < flightGUISettings.Count; i++)
+                if (flightGUISettings[i].name == "FlightDataSettings")
+                {
+                    node = flightGUISettings[i];
+                    break;
+                }
+
+            if (node != null)
+            {
+                for(int i = 0; i < activeFlightDataSections.Length; i++)
+                {
+                    bool tmp = true;
+                    if (bool.TryParse(node.GetValue("section" + i + "active"), out tmp))
+                        activeFlightDataSections[i] = tmp;
+                }
+            }
         }
     }
 }

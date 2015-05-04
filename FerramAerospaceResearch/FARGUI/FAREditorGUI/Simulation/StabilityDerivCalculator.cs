@@ -105,8 +105,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             }
             if (area == 0)
             {
-                area = 1;
-                MAC = 1;
+                area = _instantCondition._maxCrossSectionFromBody;
+                MAC = _instantCondition._bodyLength;
                 b = 1;
             }
             MAC /= area;
