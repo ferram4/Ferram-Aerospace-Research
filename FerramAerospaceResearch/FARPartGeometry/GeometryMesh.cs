@@ -77,8 +77,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             if (meshTransform == null)
                 return false;
-
-            meshLocalToWorld = meshTransform.localToWorldMatrix;
+            lock(this)
+                meshLocalToWorld = meshTransform.localToWorldMatrix;
             return true;
         }
 
@@ -101,8 +101,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             try
             {
                 Matrix4x4 tempMatrix = thisToVesselMatrix.inverse;
-                thisToVesselMatrix = (Matrix4x4)newThisToVesselMatrixObj * meshLocalToWorld;
-
+                lock (this)
+                {
+                    thisToVesselMatrix = (Matrix4x4)newThisToVesselMatrixObj * meshLocalToWorld;
+                }
                 tempMatrix = thisToVesselMatrix * tempMatrix;
 
                 bounds = TransformBounds(bounds, tempMatrix);

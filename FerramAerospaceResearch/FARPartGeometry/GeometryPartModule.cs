@@ -348,20 +348,23 @@ namespace FerramAerospaceResearch.FARPartGeometry
         public void UpdateTransformMatrixList(Matrix4x4 worldToVesselMatrix)
         {
             _ready = false;
-            if(meshDataList != null)
+            if (meshDataList != null)
+            {
+                meshesToUpdate = meshDataList.Count;
                 for (int i = 0; i < meshDataList.Count; ++i)
                 {
                     GeometryMesh mesh = meshDataList[i];
                     if (mesh.TrySetThisToVesselMatrixForTransform())
                     {
-                        lock (this)
-                            ++meshesToUpdate;
                         ThreadPool.QueueUserWorkItem(mesh.MultithreadTransformBasis, worldToVesselMatrix);
+                        //mesh.TransformBasis(worldToVesselMatrix);
                     }
                     else
                     {
                         meshDataList.RemoveAt(i);
                         --i;
+                        lock (this)
+                            --meshesToUpdate;
                     }
                     /*if (!meshDataList[i].TryTransformBasis(worldToVesselMatrix))
                     {
@@ -369,6 +372,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         i--;
                     }*/
                 }
+            }
         }
 
         internal void DecrementMeshesToUpdate()
