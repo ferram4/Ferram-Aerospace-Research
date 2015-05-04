@@ -957,7 +957,7 @@ namespace ferram4
             double p4 = PMExpansionCalculation(2 * halfAngle, M3) * p3;
 
             //Debug.Log(p1 + " " + p2 + " " + p3 + " " + p4);
-            pRatio = (p3 + p4) - (p1 + p2);
+            pRatio = ((p3 + p4) - (p1 + p2)) * 0.5;
 
             return pRatio;
         }

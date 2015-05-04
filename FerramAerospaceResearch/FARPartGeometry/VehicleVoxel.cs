@@ -43,8 +43,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
 {
     public class VehicleVoxel
     {
-        const int MAX_CHUNKS_IN_QUEUE = 1000;
-        const int MAX_SWEEP_PLANES_IN_QUEUE = 8;
+        const int MAX_CHUNKS_IN_QUEUE = 1500;
+        const int MAX_SWEEP_PLANES_IN_QUEUE = 4;
         static Stack<VoxelChunk> clearedChunks = new Stack<VoxelChunk>();
         static Stack<SweepPlanePoint[,]> clearedPlanes;
 
@@ -1476,7 +1476,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 for (int j = lowerJ; j <= upperJ; j++)
                     for (int k = lowerK; k <= upperK; k++)
                     {
-                        SetVoxelSection(i, j, k, part);
+                        SetVoxelSection(i, j, k, part, 0.25f);
                     }
         }
 
@@ -1583,7 +1583,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (p1TestPt.magnitude <= RC || p2TestPt.magnitude <= RC || p3TestPt.magnitude <= RC)
                     {
 
-                        SetVoxelSection(i, j, k, part, ((float)(i - iFloat) * signW + 0.5f) * 0.25f);
+                        SetVoxelSection(i, j, k, part, ((float)(i - iFloat) * signW + 0.5f));
                         continue;
                     }
 
@@ -1592,7 +1592,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt))
                     {
 
-                        SetVoxelSection(i, j, k, part, ((float)(i - iFloat) * signW + 0.5f) * 0.5f);
+                        SetVoxelSection(i, j, k, part, ((float)(i - iFloat) * signW + 0.5f) );
 
                     }
                 }
@@ -1684,7 +1684,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                     if (p1TestPt.magnitude <= RC || p2TestPt.magnitude <= RC || p3TestPt.magnitude <= RC)
                     {
-                        SetVoxelSection(i, j, k, part, ((float)(j - jFloat) * signW + 0.5f * 0.25f));
+                        SetVoxelSection(i, j, k, part, ((float)(j - jFloat) * signW + 0.5f));
                         continue;
                     }
 
@@ -1692,7 +1692,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         IsWithinDistanceFromSide(p1p3, p1TestPt) ||
                         IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt))
                     {
-                        SetVoxelSection(i, j, k, part, ((float)(j - jFloat) * signW + 0.5f * 0.5f));
+                        SetVoxelSection(i, j, k, part, ((float)(j - jFloat) * signW + 0.5f));
                     }
                 }
         }
@@ -1781,7 +1781,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     Vector3 p3TestPt = pt - vert3Proj;
                     if (p1TestPt.magnitude <= RC || p2TestPt.magnitude <= RC || p3TestPt.magnitude <= RC)
                     {
-                        SetVoxelSection(i, j, k, part, ((float)(k - kFloat) * signW + 0.5f) * 0.25f);
+                        SetVoxelSection(i, j, k, part, ((float)(k - kFloat) * signW + 0.5f));
                         continue;
                     }
 
@@ -1789,7 +1789,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         IsWithinDistanceFromSide(p1p3, p1TestPt)||
                         IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt))
                     {
-                        SetVoxelSection(i, j, k, part, ((float)(k - kFloat) * signW + 0.5f) * 0.5f);
+                        SetVoxelSection(i, j, k, part, ((float)(k - kFloat) * signW + 0.5f));
                     }
                 }
         }
@@ -1918,12 +1918,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (increasingJ)
                 for (int j = lowJ; j < highJ; j++) //Iterate from back of vehicle to front
                 {
-                    SolidifyLoop(j, plane, activePts, inactiveInteriorPts, neighboringSweepPlanePts);
+                    SolidifyLoop(j, j - 1, plane, activePts, inactiveInteriorPts, neighboringSweepPlanePts);
                 }
             else
                 for (int j = highJ - 1; j >= lowJ; j--) //Iterate from front of vehicle to back
                 {
-                    SolidifyLoop(j, plane, activePts, inactiveInteriorPts, neighboringSweepPlanePts);
+                    SolidifyLoop(j, j + 1, plane, activePts, inactiveInteriorPts, neighboringSweepPlanePts);
                 }
 
             //Cleanup
@@ -1964,7 +1964,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
         }
 
-        private unsafe void SolidifyLoop(int j, SweepPlanePoint[,] sweepPlane, List<SweepPlanePoint> activePts, HashSet<SweepPlanePoint> inactiveInteriorPts, SweepPlanePoint[] neighboringSweepPlanePts)
+        private unsafe void SolidifyLoop(int j, int lastJ, SweepPlanePoint[,] sweepPlane, List<SweepPlanePoint> activePts, HashSet<SweepPlanePoint> inactiveInteriorPts, SweepPlanePoint[] neighboringSweepPlanePts)
         {
             for (int i = 0; i < xCellLength; i++) //Iterate across the cross-section plane to add voxel shell and mark active interior points
                 for (int k = 0; k < zCellLength; k++)
@@ -1982,19 +1982,26 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     }
                     else 
                     {
-                        if ((object)p == null) //If there is a pt there, but no part listed, this is an interior pt or a the cross-section is shrinking
+                        if ((object)p == null) //If there is a pt there, but no part listed, this is an interior pt or the cross-section is shrinking
                         {
                             if (pt.mark == SweepPlanePoint.MarkingType.VoxelShell) //label it as active so that it can be determined if it is interior or not once all the points have been updated
                             {
                                 activePts.Add(pt); //And add it to the list of active interior pts
                                 pt.mark = SweepPlanePoint.MarkingType.Active;
                             }
+                            else if (pt.mark == SweepPlanePoint.MarkingType.VoxelShellPreviouslyInterior) //if this shell was previously interior, we need to know so that we can set it to the correct active
+                            {
+                                activePts.Add(pt); //And add it to the list of active interior pts
+                                pt.mark = SweepPlanePoint.MarkingType.ActivePassingThroughInternalShell;
+                            }
+                            //Only other situation is that it is an inactive point, in which case we do nothing here, because it is already taken care of
                         }
-                        else
-                        { //Make sure the point is labeled as a voxel shell if there is already a part there
+                        else if (pt.mark != SweepPlanePoint.MarkingType.VoxelShell || pt.mark != SweepPlanePoint.MarkingType.VoxelShellPreviouslyInterior)  //only run this if it's not already labeled as part of a voxel shell
+                        {  //Make sure the point is labeled as a voxel shell if there is already a part there
                             inactiveInteriorPts.Remove(pt);
-                            pt.mark = SweepPlanePoint.MarkingType.VoxelShell;
+                            pt.mark = SweepPlanePoint.MarkingType.VoxelShellPreviouslyInterior;     //this marks that this point was once part of the voxel shell
                             pt.part = p;
+                            pt.jLastInactive = lastJ;
                         }
                     }
                 }
@@ -2044,6 +2051,17 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
                 else
                 { //If it's surrounded by other points, it's inactive; add it to that list
+                    if (activeInteriorPt.mark == SweepPlanePoint.MarkingType.ActivePassingThroughInternalShell)
+                    {
+                        if (activeInteriorPt.jLastInactive < j)
+                            for (int mJ = activeInteriorPt.jLastInactive; mJ < j; mJ++)
+                                SetVoxelSectionNoLock(activeInteriorPt.i, mJ, activeInteriorPt.k, activeInteriorPt.part);       //used to make sure that internal part boundaries for cargo bays don't result in dips in cross-section
+                        else
+                            for (int mJ = lastJ; mJ <= activeInteriorPt.jLastInactive; mJ++)
+                                SetVoxelSectionNoLock(activeInteriorPt.i, mJ, activeInteriorPt.k, activeInteriorPt.part);       //used to make sure that internal part boundaries for cargo bays don't result in dips in cross-section
+
+                    }
+
                     activeInteriorPt.mark = SweepPlanePoint.MarkingType.InactiveInterior;
                     inactiveInteriorPts.Add(activeInteriorPt);
                 }
@@ -2060,6 +2078,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             public Part part;
             public int i, k;
+            public int jLastInactive;
 
             public MarkingType mark = MarkingType.VoxelShell;
 
@@ -2073,7 +2092,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
             public enum MarkingType
             {
                 VoxelShell,
+                VoxelShellPreviouslyInterior,
                 Active,
+                ActivePassingThroughInternalShell,
                 InactiveInterior,
                 Clear
             }

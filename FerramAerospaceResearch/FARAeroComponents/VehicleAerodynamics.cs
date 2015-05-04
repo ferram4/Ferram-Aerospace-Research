@@ -285,6 +285,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 Debug.LogException(e);
             }
+            finally
+            {
+                voxelizing = false;
+            }
         }
 
         #endregion

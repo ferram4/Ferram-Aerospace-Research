@@ -178,6 +178,12 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             if (blizzyEditorGUIButton != null)
                 blizzyEditorGUIButton.Destroy();
+
+            _stabDerivLinSim = null;
+            _instantSim = null;
+            _areaRulingOverlay = null;
+            _editorGraph = null;
+            _stabDeriv = null;
         }
 
         #region EditorEvents

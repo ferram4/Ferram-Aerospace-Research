@@ -76,6 +76,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
             GetAnimations();
         }
 
+        void OnDestroy()
+        {
+            meshDataList = null;
+            geometryUpdaters = null;
+            crossSectionAdjusters = null;
+            animStates = null;
+            animStateTime = null;
+        }
+
         void FixedUpdate()
         {
             if (!_ready && ((HighLogic.LoadedSceneIsFlight && FlightGlobals.ready) ||       //this is done because it takes a frame for colliders to be set up in the editor

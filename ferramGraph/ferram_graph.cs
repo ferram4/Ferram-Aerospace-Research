@@ -30,7 +30,7 @@ using UnityEngine;
 
 namespace ferram4
 {
-    public class ferramGraph
+    public class ferramGraph : IDisposable
     {
         class ferramGraphLine
         {
@@ -717,6 +717,15 @@ namespace ferram4
             GUILayout.Space(bottomofarea);
             GUILayout.EndScrollView();
 
+        }
+
+        public void Dispose()
+        {
+            foreach (KeyValuePair<string, ferramGraphLine> pair in allLines)
+            {
+                pair.Value.ClearTextures();
+            }
+            allLines = null;
         }
 
     }

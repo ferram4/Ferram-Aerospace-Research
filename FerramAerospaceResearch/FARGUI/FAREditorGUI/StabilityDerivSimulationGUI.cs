@@ -44,7 +44,7 @@ using ferram4;
 
 namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 {
-    class StabilityDerivSimulationGUI
+    class StabilityDerivSimulationGUI : IDisposable
     {
 
         private SimMode simMode = 0;
@@ -77,6 +77,12 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             _graph.horizontalLabel = "time";
             _graph.verticalLabel = "params";
             _graph.Update();
+        }
+
+        public void Dispose()
+        {
+            simManager = null;
+            _graph = null;
         }
 
         public void Display()

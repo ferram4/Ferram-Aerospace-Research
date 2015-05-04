@@ -45,7 +45,7 @@ using ferram4;
 
 namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 {
-    class StaticAnalysisGraphGUI
+    class StaticAnalysisGraphGUI : IDisposable
     {
         ferramGraph _graph = new ferramGraph(400, 350);
 
@@ -86,6 +86,15 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             _graph.horizontalLabel = "Angle of Attack, degrees";
             _graph.verticalLabel = "Cl\nCd\nCm\nL/D / 10";
             _graph.Update();
+        }
+
+        public void Dispose()
+        {
+            aoASweepInputs = machSweepInputs = null;
+            flapSettingDropdown = null;
+            bodySettingDropdown = null;
+            simManager = null;
+            _graph = null;
         }
 
         public void Display()
