@@ -175,12 +175,12 @@ namespace FerramAerospaceResearch
                 double a3pb_over4 = (3 * a + b) * 0.25;
 
                 if (a3pb_over4 > b)
-                    if (s <= a3pb_over4 && s >= b)
+                    if (s < a3pb_over4 && s > b)
                         condition1 = false;
                     else
                         condition1 = true;
                 else
-                    if (s >= a3pb_over4 && s <= b)
+                    if (s > a3pb_over4 && s < b)
                         condition1 = false;
                     else
                         condition1 = true;
