@@ -126,9 +126,13 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             double betaDot = input.betaDot * Math.PI / 180;
             double phiDot = input.phiDot * Math.PI / 180;
 
-            Vector3d AngVel = (phiDot - sinAlpha * betaDot) * forward + (cosPhi * alphaDot + cosAlpha * sinPhi * betaDot) * right + (sinPhi * alphaDot - cosAlpha * cosPhi * betaDot) * up;
+            Vector3d AngVel = (phiDot - sinAlpha * betaDot) * forward;
+            AngVel += (cosPhi * alphaDot + cosAlpha * sinPhi * betaDot) * right;
+            AngVel += (sinPhi * alphaDot - cosAlpha * cosPhi * betaDot) * up;
 
-            Vector3d velocity = forward * cosAlpha * cosBeta + right * (sinPhi * cosAlpha * cosBeta + cosPhi * sinBeta) - up * cosPhi * (sinAlpha * cosBeta + sinBeta);
+            Vector3d velocity = forward * cosAlpha * cosBeta;
+            velocity += right * (sinPhi * cosAlpha * cosBeta + cosPhi * sinBeta);
+            velocity += -up * cosPhi * (sinAlpha * cosBeta + sinBeta);
 
             velocity.Normalize();
 
@@ -150,6 +154,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
                 if (clear)
                     w.EditorClClear(reset_stall);
 
+                w.ComputeForceEditor(velocity.normalized, input.machNumber);
                 //w.ComputeForceEditor(velocity, input.machNumber);     //do this just to get the AC right
                 Vector3d relPos = w.GetAerodynamicCenter() - CoM;
 

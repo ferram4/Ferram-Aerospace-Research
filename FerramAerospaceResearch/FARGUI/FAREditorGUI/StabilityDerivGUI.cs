@@ -186,7 +186,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             StabilityLabel("Zδe: ", stabDerivOutput.stabDerivs[12], " m/s²", "Change in Z-direction acceleration with respect to pitch control input; should be negative", 160, 0);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            StabilityLabel("Xw: ", stabDerivOutput.stabDerivs[4], " s⁻¹", "Change in X-direction acceleration with respect to Z-direction velocity; should be positive", 160, 1);
+            StabilityLabel("Xw: ", stabDerivOutput.stabDerivs[4], " s⁻¹", "Change in X-direction acceleration with respect to Z-direction velocity; sign unimportant", 160, 0);
             StabilityLabel("Xu: ", stabDerivOutput.stabDerivs[7], " s⁻¹", "Change in X-direction acceleration with respect to X-direction velocity; should be negative", 160, -1);
             StabilityLabel("Xq: ", stabDerivOutput.stabDerivs[10], " m/s", "Change in X-direction acceleration with respect to pitch-up rate; sign unimportant", 160, 0);
             StabilityLabel("Xδe: ", stabDerivOutput.stabDerivs[13], " m/s²", "Change in X-direction acceleration with respect to pitch control input; sign unimportant", 160, 0);

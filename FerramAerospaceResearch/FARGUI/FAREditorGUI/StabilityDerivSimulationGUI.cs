@@ -69,8 +69,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         {
             this.simManager = simManager;
 
-            lonConditions = new InitialConditions(new string[] { "0", "0", "0", "0" }, new string[] { "u", "w", "q", "θ" }, new double[]{1, 1, Math.PI/180, Math.PI/180}, "0.01", "10");
-            latConditions = new InitialConditions(new string[] { "0", "0", "0", "0" }, new string[] { "β", "r", "p", "φ" }, new double[]{Math.PI/180, Math.PI/180, Math.PI/180, Math.PI/180}, "0.01", "10");
+            lonConditions = new InitialConditions(new string[] { "0", "0", "0", "0" }, new string[] { "w", "u", "q", "θ" }, new double[]{1, 1, Math.PI/180, Math.PI/180}, "0.01", "10");
+            latConditions = new InitialConditions(new string[] { "0", "0", "0", "0" }, new string[] { "β", "p", "", "φ" }, new double[]{Math.PI/180, Math.PI/180, Math.PI/180, Math.PI/180}, "0.01", "10");
 
             _graph.SetBoundaries(0, 10, 0, 2);
             _graph.SetGridScaleUsingValues(1, 0.25);
@@ -140,7 +140,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             StabilityLabel("Zδe: ", vehicleData.stabDerivs[12], " m/s²", "Change in Z-direction acceleration with respect to pitch control input; should be negative", 160, -1);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            StabilityLabel("Xw: ", vehicleData.stabDerivs[4], " s⁻¹", "Change in X-direction acceleration with respect to Z-direction velocity; should be positive", 160, 1);
+            StabilityLabel("Xw: ", vehicleData.stabDerivs[4], " s⁻¹", "Change in X-direction acceleration with respect to Z-direction velocity; sign unimportant", 160, 0);
             StabilityLabel("Xu: ", vehicleData.stabDerivs[7], " s⁻¹", "Change in X-direction acceleration with respect to X-direction velocity; should be negative", 160, -1);
             StabilityLabel("Xq: ", vehicleData.stabDerivs[10], " m/s", "Change in X-direction acceleration with respect to pitch-up rate; sign unimportant", 160, 0);
             StabilityLabel("Xδe: ", vehicleData.stabDerivs[13], " m/s²", "Change in X-direction acceleration with respect to pitch control input; sign unimportant", 160, 0);
@@ -230,7 +230,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 else
                     data = simManager.StabDerivLinearSim.RunTransientSimLateral(vehicleData, Convert.ToDouble(inits.maxTime), Convert.ToDouble(inits.dt), initCond);
 
-                UpdateGraph(data, "time", "params", 0, Convert.ToDouble(inits.dt));
+                UpdateGraph(data, "time", "params", 0, Convert.ToDouble(inits.maxTime));
             }
             GUILayout.EndHorizontal();
         }
@@ -276,6 +276,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 minBounds = Math.Min(minBounds, data.yValues[i].Min());
                 maxBounds = Math.Max(maxBounds, data.yValues[i].Max());
             }
+            minBounds *= 2;
+            maxBounds *= 2;
 
             // To allow switching between two graph setups to observe differences,
             // use both the current and the previous shown graph to estimate scale
@@ -297,7 +299,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             _graph.Update();
         }
 
-        struct InitialConditions
+        class InitialConditions
         {
             public string[] inits;
             public string[] names;
