@@ -118,9 +118,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             stabDerivOutput.MAC = MAC;
             stabDerivOutput.area = area;
 
-            for (int i = 0; i < FARAeroUtil.CurEditorParts.Count; i++)
+            for (int i = 0; i < partsList.Count; i++)
             {
-                Part p = FARAeroUtil.CurEditorParts[i];
+                Part p = partsList[i];
 
                 if (p == null || FARAeroUtil.IsNonphysical(p))
                     continue;
@@ -195,12 +195,12 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             //Longitudinal Mess
             _instantCondition.SetState(machNumber, neededCl, CoM, 0, input.flaps, input.spoilers);
 
-            alpha = FARMathUtil.BrentsMethod(_instantCondition.FunctionIterateForAlpha, -5d, 20d, 0.001, 100);
-
+            alpha = FARMathUtil.BrentsMethod(_instantCondition.FunctionIterateForAlpha, -30d, 30d, 0.001, 500);
+            input.alpha = alpha;
             nominalOutput = _instantCondition.iterationOutput;
             //alpha_str = (alpha * Mathf.PI / 180).ToString();
 
-            input.alpha = (alpha + 0.1);
+            input.alpha = (alpha + 2);
 
             _instantCondition.GetClCdCmSteady(input, out pertOutput, true, true);
 
@@ -211,11 +211,11 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             if (Math.Abs((nominalOutput.Cl - neededCl) / neededCl) > 0.1)
                 stabDerivOutput.stableAoAState = ((nominalOutput.Cl > neededCl) ? "<" : ">");
 
-            //Debug.Log("Cl needed: " + neededCl + ", AoA: " + alpha + ", Cl: " + nominalOutput.Cl + ", Cd: " + stable_Cd);
+            Debug.Log("Cl needed: " + neededCl + ", AoA: " + alpha + ", Cl: " + nominalOutput.Cl + ", Cd: " + nominalOutput.Cd);
 
-            pertOutput.Cl = (pertOutput.Cl - nominalOutput.Cl) / 0.1 * FARMathUtil.rad2deg;                   //vert vel derivs
-            pertOutput.Cd = (pertOutput.Cd - nominalOutput.Cd) / 0.1 * FARMathUtil.rad2deg;
-            pertOutput.Cm = (pertOutput.Cm - nominalOutput.Cm) / 0.1 * FARMathUtil.rad2deg;
+            pertOutput.Cl = (pertOutput.Cl - nominalOutput.Cl) / (2 * FARMathUtil.deg2rad);                   //vert vel derivs
+            pertOutput.Cd = (pertOutput.Cd - nominalOutput.Cd) / (2 * FARMathUtil.deg2rad);
+            pertOutput.Cm = (pertOutput.Cm - nominalOutput.Cm) / (2 * FARMathUtil.deg2rad);
 
             pertOutput.Cl += nominalOutput.Cd;
             pertOutput.Cd -= nominalOutput.Cl;
@@ -224,18 +224,18 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             pertOutput.Cd *= -q * area / (mass * u0);
             pertOutput.Cm *= q * area * MAC / (Iy * u0);
 
-            stabDerivOutput.stabDerivs[3] = pertOutput.Cl;
-            stabDerivOutput.stabDerivs[4] = pertOutput.Cd;
-            stabDerivOutput.stabDerivs[5] = pertOutput.Cm;
+            stabDerivOutput.stabDerivs[3] = pertOutput.Cl;  //Zw
+            stabDerivOutput.stabDerivs[4] = pertOutput.Cd;  //Xw
+            stabDerivOutput.stabDerivs[5] = pertOutput.Cm;  //Mw
 
-            input.alpha = alpha * FARMathUtil.deg2rad;
-            input.machNumber = machNumber + 0.01;
+            input.alpha = alpha;
+            input.machNumber = machNumber + 0.05;
 
             _instantCondition.GetClCdCmSteady(input, out pertOutput, true, false);
 
-            pertOutput.Cl = (pertOutput.Cl - nominalOutput.Cl) / 0.01 * machNumber;                   //fwd vel derivs
-            pertOutput.Cd = (pertOutput.Cd - nominalOutput.Cd) / 0.01 * machNumber;
-            pertOutput.Cm = (pertOutput.Cm - nominalOutput.Cm) / 0.01 * machNumber;
+            pertOutput.Cl = (pertOutput.Cl - nominalOutput.Cl) / 0.05 * machNumber;                   //fwd vel derivs
+            pertOutput.Cd = (pertOutput.Cd - nominalOutput.Cd) / 0.05 * machNumber;
+            pertOutput.Cm = (pertOutput.Cm - nominalOutput.Cm) / 0.05 * machNumber;
 
             pertOutput.Cl += 2 * nominalOutput.Cl;
             pertOutput.Cd += 2 * nominalOutput.Cd;
@@ -244,9 +244,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             pertOutput.Cd *= -q * area / (mass * u0);
             pertOutput.Cm *= q * area * MAC / (u0 * Iy);
 
-            stabDerivOutput.stabDerivs[6] = pertOutput.Cl;
-            stabDerivOutput.stabDerivs[7] = pertOutput.Cd;
-            stabDerivOutput.stabDerivs[8] = pertOutput.Cm;
+            stabDerivOutput.stabDerivs[6] = pertOutput.Cl;  //Zu
+            stabDerivOutput.stabDerivs[7] = pertOutput.Cd;  //Xu
+            stabDerivOutput.stabDerivs[8] = pertOutput.Cm;  //Mu
 
             input.machNumber = machNumber;
 
@@ -264,9 +264,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             pertOutput.Cd *= q * area * MAC / (2 * u0 * mass);
             pertOutput.Cm *= q * area * MAC * MAC / (2 * u0 * Iy);
 
-            stabDerivOutput.stabDerivs[9] = pertOutput.Cl;
-            stabDerivOutput.stabDerivs[10] = pertOutput.Cd;
-            stabDerivOutput.stabDerivs[11] = pertOutput.Cm;
+            stabDerivOutput.stabDerivs[9] = pertOutput.Cl;  //Zq
+            stabDerivOutput.stabDerivs[10] = pertOutput.Cd; //Xq
+            stabDerivOutput.stabDerivs[11] = pertOutput.Cm; //Mq
 
             input.alphaDot = 0;
             input.pitchValue = 0.1;
@@ -281,33 +281,33 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             pertOutput.Cd *= q * area / mass;
             pertOutput.Cm *= q * area * MAC / Iy;
 
-            stabDerivOutput.stabDerivs[12] = pertOutput.Cl;
-            stabDerivOutput.stabDerivs[13] = pertOutput.Cd;
-            stabDerivOutput.stabDerivs[14] = pertOutput.Cm;
+            stabDerivOutput.stabDerivs[12] = pertOutput.Cl; //Ze
+            stabDerivOutput.stabDerivs[13] = pertOutput.Cd; //Xe
+            stabDerivOutput.stabDerivs[14] = pertOutput.Cm; //Me
 
             //Lateral Mess
 
             input.pitchValue = 0;
-            input.beta = (beta + 0.1);
+            input.beta = (beta + 2);
 
             _instantCondition.GetClCdCmSteady(input, out pertOutput, true, false);
-            pertOutput.Cy = (pertOutput.Cy - nominalOutput.Cy) / 0.1 * FARMathUtil.rad2deg;                   //sideslip angle derivs
-            pertOutput.Cn = (pertOutput.Cn - nominalOutput.Cn) / 0.1 * FARMathUtil.rad2deg;
-            pertOutput.C_roll = (pertOutput.C_roll - nominalOutput.C_roll) / 0.1 * FARMathUtil.rad2deg;
+            pertOutput.Cy = (pertOutput.Cy - nominalOutput.Cy) / (2 * FARMathUtil.deg2rad);                   //sideslip angle derivs
+            pertOutput.Cn = (pertOutput.Cn - nominalOutput.Cn) / (2 * FARMathUtil.deg2rad);
+            pertOutput.C_roll = (pertOutput.C_roll - nominalOutput.C_roll) / (2 * FARMathUtil.deg2rad);
 
             pertOutput.Cy *= q * area / mass;
             pertOutput.Cn *= q * area * b / Iz;
             pertOutput.C_roll *= q * area * b / Ix;
 
-            stabDerivOutput.stabDerivs[15] = pertOutput.Cy;
-            stabDerivOutput.stabDerivs[17] = pertOutput.Cn;
-            stabDerivOutput.stabDerivs[16] = pertOutput.C_roll;
+            stabDerivOutput.stabDerivs[15] = pertOutput.Cy;     //Yb
+            stabDerivOutput.stabDerivs[17] = pertOutput.Cn;     //Nb
+            stabDerivOutput.stabDerivs[16] = pertOutput.C_roll; //Lb
 
             input.beta = beta;
 
             _instantCondition.GetClCdCmSteady(input, out pertOutput, true, true);
 
-            input.phiDot = 0.05;
+            input.phiDot = -0.05;
 
             _instantCondition.GetClCdCmSteady(input, out pertOutput, true, false);
            
@@ -319,16 +319,16 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             pertOutput.Cn *= q * area * b * b / (2 * Iz * u0);
             pertOutput.C_roll *= q * area * b * b / (2 * Ix * u0);
 
-            stabDerivOutput.stabDerivs[18] = pertOutput.Cy;
-            stabDerivOutput.stabDerivs[20] = pertOutput.Cn;
-            stabDerivOutput.stabDerivs[19] = pertOutput.C_roll;
+            stabDerivOutput.stabDerivs[18] = pertOutput.Cy;     //Yp
+            stabDerivOutput.stabDerivs[20] = pertOutput.Cn;     //Np
+            stabDerivOutput.stabDerivs[19] = pertOutput.C_roll; //Lp
 
 
             input.phiDot = 0;
 
             _instantCondition.GetClCdCmSteady(input, out pertOutput, true, true);
 
-            input.betaDot = 0.05;
+            input.betaDot = -0.05;
 
             _instantCondition.GetClCdCmSteady(input, out pertOutput, true, false); pertOutput.Cy = (pertOutput.Cy - nominalOutput.Cy) / 0.05f;                   //yaw rate derivs
             pertOutput.Cn = (pertOutput.Cn - nominalOutput.Cn) / 0.05f;
@@ -338,9 +338,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             pertOutput.Cn *= q * area * b * b / (2 * Iz * u0);
             pertOutput.C_roll *= q * area * b * b / (2 * Ix * u0);
 
-            stabDerivOutput.stabDerivs[21] = pertOutput.Cy;
-            stabDerivOutput.stabDerivs[23] = pertOutput.Cn;
-            stabDerivOutput.stabDerivs[22] = pertOutput.C_roll;
+            stabDerivOutput.stabDerivs[21] = pertOutput.Cy;     //Yr
+            stabDerivOutput.stabDerivs[23] = pertOutput.Cn;     //Nr
+            stabDerivOutput.stabDerivs[22] = pertOutput.C_roll; //Lr
 
             return stabDerivOutput;
         }

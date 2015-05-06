@@ -204,10 +204,10 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             A.PrintToConsole();                //We should have an array that looks like this:
 
             /*             i --------------->
-             *       j  [ Z w , Z u , Z q ,  0 ]
-             *       |  [ X w , X u , X q , -g ]
-             *       |  [ M w , M u , M q ,  0 ]
-             *      \ / [  0  ,  0  ,  1  ,  0 ]
+             *       j  [ Z w , Z u , Z q  + u,  0 ]
+             *       |  [ X w , X u , X q     , -g ]
+             *       |  [ M w , M u , M q     ,  0 ]
+             *      \ / [  0  ,  0  ,  1      ,  0 ]
              *       V                              //And one that looks like this:
              *                              
              *          [ Z e ]

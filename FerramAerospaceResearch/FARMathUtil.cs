@@ -128,6 +128,7 @@ namespace FerramAerospaceResearch
 
         public static double BrentsMethod(Func<double, double> function, double a, double b, double epsilon = 0.001, int maxIter = int.MaxValue)
         {
+            double delta = 0.1;
             double fa, fb;
             fa = function(a);
             fb = function(b);
@@ -148,13 +149,13 @@ namespace FerramAerospaceResearch
 
             double c = a, d = a, fc = function(c);
 
-            double s = 0, fs = 10; 
+            double s = b, fs = fb; 
 
             bool flag = true;
             int iter = 0;
             while(fs != 0 && Math.Abs(a - b) > epsilon && iter < maxIter)
             {
-                if(fa != fc && fb != fc)    //inverse quadratic interpolation
+                if((fa - fc) > double.Epsilon && (fb - fc) > double.Epsilon)    //inverse quadratic interpolation
                 {
                     s = a * fc * fb / ((fa - fb) * (fa - fc));
                     s += b * fc * fa / ((fb - fa) * (fb - fc));
@@ -200,14 +201,14 @@ namespace FerramAerospaceResearch
 
                 bool condition4;
 
-                if (flag && b_c < epsilon)
+                if (flag && b_c < delta)
                     condition4 = true;
                 else
                     condition4 = false;
 
                 bool conditon5;
 
-                if (!flag && c_d < epsilon)
+                if (!flag && c_d < delta)
                     conditon5 = true;
                 else
                     conditon5 = false;

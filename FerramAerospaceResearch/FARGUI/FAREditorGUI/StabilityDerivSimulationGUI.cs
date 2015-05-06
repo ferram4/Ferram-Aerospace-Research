@@ -98,12 +98,12 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             if (simMode == SimMode.LONG)
             {
                 LongitudinalGUI(vehicleData);
-                DataInput(lonConditions, vehicleData);
+                DataInput(lonConditions, vehicleData, true);
             }
             else
             {
                 LateralGUI(vehicleData);
-                DataInput(latConditions, vehicleData);
+                DataInput(latConditions, vehicleData, false);
             }
             GUIStyle BackgroundStyle = new GUIStyle(GUI.skin.box);
             BackgroundStyle.hover = BackgroundStyle.active = BackgroundStyle.normal;
@@ -193,7 +193,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         }
 
-        private void DataInput(InitialConditions inits, StabilityDerivOutput vehicleData)
+        private void DataInput(InitialConditions inits, StabilityDerivOutput vehicleData, bool longitudinal)
         {
             GUILayout.BeginHorizontal();
             for (int i = 0; i < inits.inits.Length; i++)
@@ -224,7 +224,11 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 }
 
 
-                GraphData data = simManager.StabDerivLinearSim.RunTransientSimLateral(vehicleData, Convert.ToDouble(inits.maxTime), Convert.ToDouble(inits.dt), initCond);
+                GraphData data;
+                if(longitudinal)
+                    data = simManager.StabDerivLinearSim.RunTransientSimLongitudinal(vehicleData, Convert.ToDouble(inits.maxTime), Convert.ToDouble(inits.dt), initCond);
+                else
+                    data = simManager.StabDerivLinearSim.RunTransientSimLateral(vehicleData, Convert.ToDouble(inits.maxTime), Convert.ToDouble(inits.dt), initCond);
 
                 UpdateGraph(data, "time", "params", 0, Convert.ToDouble(inits.dt));
             }

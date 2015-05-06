@@ -128,7 +128,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
 
             Vector3d AngVel = (phiDot - sinAlpha * betaDot) * forward + (cosPhi * alphaDot + cosAlpha * sinPhi * betaDot) * right + (sinPhi * alphaDot - cosAlpha * cosPhi * betaDot) * up;
 
-            Vector3d velocity = forward * cosAlpha * cosBeta + right * (sinPhi * cosAlpha * cosBeta - cosPhi * sinBeta) - up * cosPhi * (sinAlpha * cosBeta - sinBeta);
+            Vector3d velocity = forward * cosAlpha * cosBeta + right * (sinPhi * cosAlpha * cosBeta + cosPhi * sinBeta) - up * cosPhi * (sinAlpha * cosBeta + sinBeta);
 
             velocity.Normalize();
 
@@ -161,13 +161,13 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
                 Vector3d force = w.ComputeForceEditor(vel.normalized, input.machNumber) * 1000;
 
                 output.Cl += -Vector3d.Dot(force, liftVector);
-                output.Cy += -Vector3d.Dot(force, sideways);
+                output.Cy += Vector3d.Dot(force, sideways);
                 output.Cd += -Vector3d.Dot(force, velocity);
 
                 Vector3d moment = -Vector3d.Cross(relPos, force);
 
                 output.Cm += Vector3d.Dot(moment, sideways);
-                output.Cn += -Vector3d.Dot(moment, liftVector);
+                output.Cn += Vector3d.Dot(moment, liftVector);
                 output.C_roll += Vector3d.Dot(moment, velocity);
 
                 //w.ComputeClCdEditor(vel.normalized, input.machNumber);
@@ -193,13 +193,13 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             Vector3d centerForce = center.force * 1000;
 
             output.Cl += -Vector3d.Dot(centerForce, liftVector);
-            output.Cy += -Vector3d.Dot(centerForce, sideways);
+            output.Cy += Vector3d.Dot(centerForce, sideways);
             output.Cd += -Vector3d.Dot(centerForce, velocity);
 
             Vector3d centerMoment = -Vector3d.Cross(center.GetPos() - CoM, centerForce) + center.torque;
 
             output.Cm += Vector3d.Dot(centerMoment, sideways);
-            output.Cn += -Vector3d.Dot(centerMoment, liftVector);
+            output.Cn += Vector3d.Dot(centerMoment, liftVector);
             output.C_roll += Vector3d.Dot(centerMoment, velocity);
             
 

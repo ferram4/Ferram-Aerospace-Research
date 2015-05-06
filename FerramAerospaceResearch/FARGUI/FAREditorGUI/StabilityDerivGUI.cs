@@ -210,7 +210,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             GUILayout.BeginVertical(BackgroundStyle);
             GUILayout.BeginHorizontal();
             StabilityLabel("Yβ: ", stabDerivOutput.stabDerivs[15], " m/s²", "Change in Y-direction acceleration with respect to sideslip angle β; should be negative", 160, -1);
-            StabilityLabel("Yp: ", stabDerivOutput.stabDerivs[18], " m/s", "Change in Y-direction acceleration with respect to roll-right rate; should be negative", 160, -1);
+            StabilityLabel("Yp: ", stabDerivOutput.stabDerivs[18], " m/s", "Change in Y-direction acceleration with respect to roll-right rate; sign unimportant", 160, 0);
             StabilityLabel("Yr: ", stabDerivOutput.stabDerivs[21], " m/s", "Change in Y-direction acceleration with respect to yaw-right rate; should be positive", 160, 1);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
