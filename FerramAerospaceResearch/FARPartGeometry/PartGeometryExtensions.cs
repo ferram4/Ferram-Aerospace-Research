@@ -330,7 +330,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 if (Transform.Contains(t))
                     continue;
-                if (!t.gameObject.activeSelf)
+                if (!t.gameObject.activeInHierarchy)
                 {
                     Transform.Add(t);
                     continue;

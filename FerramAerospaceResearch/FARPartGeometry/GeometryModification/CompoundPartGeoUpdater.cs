@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using UnityEngine;
 
 namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 {
@@ -9,30 +7,35 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
     {
         CompoundPart part;
         GeometryPartModule geoModule;
-        bool attached;
+        CompoundPart.AttachState lastAttachState;
+        Part lastTarget;
 
         public CompoundPartGeoUpdater(CompoundPart part, GeometryPartModule geoModule)
         {
             this.part = part;
             this.geoModule = geoModule;
-            attached = part.isAttached;
+            lastAttachState = part.attachState;
+            lastTarget = part.target;
         }
 
         public void EditorGeometryUpdate()
         {
-            if (attached != part.isAttached)
-            {
-                geoModule.RebuildAllMeshData();
-                attached = !attached;
-            }
+            CompoundPartGeoUpdate();
         }
 
         public void FlightGeometryUpdate()
         {
-            if (attached != part.isAttached)
+            CompoundPartGeoUpdate();
+        }
+
+        private void CompoundPartGeoUpdate()
+        {
+            if (lastAttachState != part.attachState || lastTarget != part.target || !EditorLogic.SortedShipList.Contains(part.target))
             {
+                Debug.Log("Updating compound part");
                 geoModule.RebuildAllMeshData();
-                attached = !attached;
+                lastAttachState = part.attachState;
+                lastTarget = part.target;
             }
         }
     }

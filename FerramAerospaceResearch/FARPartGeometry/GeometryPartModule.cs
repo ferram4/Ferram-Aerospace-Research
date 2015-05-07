@@ -405,6 +405,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 foreach (Transform t in meshTransforms)
                 {
+
                     MeshCollider mc = t.GetComponent<MeshCollider>();
 
                     if (mc != null)
@@ -477,10 +478,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 ModuleJettison[] jettisons = part.GetComponents<ModuleJettison>();
                 foreach (ModuleJettison j in jettisons)
                 {
-                    if (j.isJettisoned || j.jettisonTransform == null || !j.jettisonTransform.gameObject.activeSelf)
+                    if (j.isJettisoned || j.jettisonTransform == null)
                         continue;
 
                     Transform t = j.jettisonTransform;
+                    if (t.gameObject.activeInHierarchy == false)
+                        continue;
+                    
                     MeshFilter mf = t.GetComponent<MeshFilter>();
 
                     if (mf == null)
