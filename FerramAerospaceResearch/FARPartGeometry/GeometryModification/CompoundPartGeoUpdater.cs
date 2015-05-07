@@ -20,17 +20,17 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
         public void EditorGeometryUpdate()
         {
-            CompoundPartGeoUpdate();
+            if (lastAttachState != part.attachState || lastTarget != part.target || !EditorLogic.SortedShipList.Contains(part.target))
+            {
+                geoModule.RebuildAllMeshData();
+                lastAttachState = part.attachState;
+                lastTarget = part.target;
+            }
         }
 
         public void FlightGeometryUpdate()
         {
-            CompoundPartGeoUpdate();
-        }
-
-        private void CompoundPartGeoUpdate()
-        {
-            if (lastAttachState != part.attachState || lastTarget != part.target || !EditorLogic.SortedShipList.Contains(part.target))
+            if (lastAttachState != part.attachState || lastTarget != part.target || !part.vessel.parts.Contains(part.target))
             {
                 geoModule.RebuildAllMeshData();
                 lastAttachState = part.attachState;

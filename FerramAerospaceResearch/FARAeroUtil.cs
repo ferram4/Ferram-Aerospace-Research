@@ -84,7 +84,7 @@ namespace FerramAerospaceResearch
         //Standard Reynolds number for transition from laminar to turbulent flow
         private const double TRANSITION_REYNOLDS_NUMBER = 5e5;
         //Multiplier to skin friction due to surface roughness; approximately a 50% increase in drag
-        private const double ROUGHNESS_SKIN_FRICTION_MULTIPLIER = 1.5;
+        private const double ROUGHNESS_SKIN_FRICTION_MULTIPLIER = 1;
 
         public static void SaveCustomAeroDataToConfig()
         {

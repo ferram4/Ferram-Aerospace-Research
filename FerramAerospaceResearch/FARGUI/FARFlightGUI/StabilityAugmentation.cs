@@ -60,20 +60,20 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         public StabilityAugmentation(Vessel vessel)
         {
             _vessel = vessel;
-            _vessel.OnAutopilotUpdate += OnAutoPilotUpdate;
             systemDropdown = new GUIDropDown<int>(systemLabel, new int[] { 0, 1, 2, 3, 4, 5 }, 0);
             LoadSettings();
             systemInstances = new ControlSystem[systemTemplates.Length];
 
-            for(int i = 0; i < systemInstances.Length; i++)
+            for (int i = 0; i < systemInstances.Length; i++)
             {
                 systemInstances[i] = new ControlSystem(systemTemplates[i]);
             }
+            _vessel.OnAutopilotUpdate += OnAutoPilotUpdate;
         }
 
         public void SaveAndDestroy()
         {
-            if ((object)_vessel != null)
+            if (_vessel != null)
                 _vessel.OnAutopilotUpdate -= OnAutoPilotUpdate;
             SaveSettings();
         }
@@ -91,9 +91,9 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
             }
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
-            for (int i = 0; i < systemTemplates.Length; i++)
+            for (int i = 0; i < systemInstances.Length; i++)
             {
-                systemTemplates[i].active = GUILayout.Toggle(systemTemplates[i].active, systemLabel[i], buttonStyle, GUILayout.MinWidth(30), GUILayout.ExpandWidth(true));
+                systemInstances[i].active = GUILayout.Toggle(systemInstances[i].active, systemLabel[i], buttonStyle, GUILayout.MinWidth(30), GUILayout.ExpandWidth(true));
             }
             GUILayout.EndHorizontal();
         }
@@ -160,7 +160,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 }
             }
             else
-                sys.lastError = 0;
+                sys.errorIntegral = 0;
             sys = systemInstances[1];
             if (sys.active)
             {
@@ -180,7 +180,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
             }
             else
-                sys.lastError = 0;
+                sys.errorIntegral = 0;
             sys = systemInstances[2];
             if (sys.active)
             {
@@ -200,7 +200,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
             }
             else
-                sys.lastError = 0;
+                sys.errorIntegral = 0;
             sys = systemInstances[3];
             if (sys.active)
             {
@@ -214,7 +214,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 }
             }
             else
-                sys.lastError = 0;
+                sys.errorIntegral = 0;
             sys = systemInstances[4];
             if (sys.active)
             {
@@ -366,23 +366,25 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 }
 
             if (this._vessel == FlightGlobals.ActiveVessel)
+            {
                 systemTemplates = systemInstances;
 
-            if (node == null)
-            {
-                node = new ConfigNode("StabilityAugmentationSettings");
-                flightGUISettings.Add(node);
-            }
-            else
-                node.ClearData();
+                if (node == null)
+                {
+                    node = new ConfigNode("StabilityAugmentationSettings");
+                    flightGUISettings.Add(node);
+                }
+                else
+                    node.ClearData();
 
-            for (int i = 0; i < systemTemplates.Length; i++)
-            {
-                node.AddNode(BuildSystemNode(i));
+                for (int i = 0; i < systemTemplates.Length; i++)
+                {
+                    node.AddNode(BuildSystemNode(i));
+                }
+                node.AddValue("aoALowLim", aoALowLim);
+                node.AddValue("aoAHighLim", aoAHighLim);
+                node.AddValue("scalingDynPres", scalingDynPres);
             }
-            node.AddValue("aoALowLim", aoALowLim);
-            node.AddValue("aoAHighLim", aoAHighLim);
-            node.AddValue("scalingDynPres", scalingDynPres);
         }
 
         public static ConfigNode BuildSystemNode(int index)
@@ -420,6 +422,9 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 this.kP = sys.kP;
                 this.kD = sys.kD;
                 this.kI = sys.kI;
+
+                this.lastError = 0;
+                this.errorIntegral = 0;
             }
 
             public ControlSystem() { }

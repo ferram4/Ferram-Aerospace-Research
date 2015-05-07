@@ -177,8 +177,6 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         #region PhysicsAndOrientationBlock
         void FixedUpdate()
         {
-            Vector3d velVectorNorm = _vessel.srf_velocity.normalized;
-
             infoParameters = _physicsCalcs.UpdatePhysicsParameters();
 
             _stabilityAugmentation.UpdatePhysicsInfo(infoParameters);
