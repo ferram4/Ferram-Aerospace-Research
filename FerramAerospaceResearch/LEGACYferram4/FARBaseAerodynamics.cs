@@ -201,7 +201,7 @@ namespace ferram4
             // Clear state when preparing CoL computation
         }
 
-        protected virtual Vector3d PrecomputeCenterOfLift(Vector3d velocity, double MachNumber, FARCenterQuery center)
+        public virtual Vector3d PrecomputeCenterOfLift(Vector3d velocity, double MachNumber, double density, FARCenterQuery center)
         {
             return Vector3d.zero;
         }
@@ -220,7 +220,7 @@ namespace ferram4
             return parts;
         }
 
-        public static void PrecomputeGlobalCenterOfLift(FARCenterQuery lift, FARCenterQuery dummy, Vector3 vel)
+        public static void PrecomputeGlobalCenterOfLift(FARCenterQuery lift, FARCenterQuery dummy, Vector3 vel, double density)
         {
             /* Center of lift is the location where the derivative of
                the total torque provided by aerodynamic forces relative to
@@ -237,9 +237,9 @@ namespace ferram4
 
             // run computations twice to let things like flap interactions settle
             foreach (var ba in parts)
-                ba.PrecomputeCenterOfLift(vel, 0, dummy);
+                ba.PrecomputeCenterOfLift(vel, 0, density, dummy);
             foreach (var ba in parts)
-                ba.PrecomputeCenterOfLift(vel, 0, lift);
+                ba.PrecomputeCenterOfLift(vel, 0, density, lift);
         }
 
         public void OnCenterOfLiftQuery(CenterOfLiftQuery CoLMarker)

@@ -66,6 +66,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
         private int _sendUpdateTick = 0;
         private int meshesToUpdate = 0;
 
+        private float currentScaleFactor = 1;
+
         [SerializeField]
         bool forceUseColliders;
         [SerializeField]
@@ -554,7 +556,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (meshDataList == null)
                 return;
 
-            Rescale(factor.relative.linear * Vector3.one);
+            Rescale(factor.absolute.linear / currentScaleFactor * Vector3.one);
         }
 
         public void RC_Rescale(Vector3 relativeRescaleFactor)
@@ -569,6 +571,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 transformMatrix = vessel.rootPart.partTransform.worldToLocalMatrix * transformMatrix;
             else
                 transformMatrix = EditorLogic.RootPart.partTransform.worldToLocalMatrix * transformMatrix;
+
+            currentScaleFactor *= relativeRescaleFactor.x;
 
             UpdateTransformMatrixList(transformMatrix);
         }

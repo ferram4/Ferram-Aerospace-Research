@@ -602,6 +602,12 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                     ModuleAdvancedLandingGear l = (ModuleAdvancedLandingGear)p.Modules["ModuleAdvancedLandingGear"];
                     l.startDeployed = gearToggle;
                 }
+                if(p.Modules.Contains("FSWheel"))
+                {
+                    PartModule m = p.Modules["FSWheel"];
+                    MethodInfo method = m.GetType().GetMethod("animate", BindingFlags.Instance | BindingFlags.NonPublic);
+                    method.Invoke(m, gearToggle ? new object[] { "Deploy" } : new object[] { "Retract" });
+                }
             }
             gearToggle = !gearToggle;
         }

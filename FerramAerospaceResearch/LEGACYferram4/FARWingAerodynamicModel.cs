@@ -63,6 +63,8 @@ namespace ferram4
         [KSPField(isPersistant = false)]
         public double MAC;
 
+        public double MAC_actual;
+
         [KSPField(isPersistant = false)]
         public double e;
 
@@ -82,6 +84,8 @@ namespace ferram4
 
         [KSPField(isPersistant = false)]
         public double b_2;        //span
+
+        public double b_2_actual;        //span
 
         [KSPField(isPersistant = false)]
         public double MidChordSweep;
@@ -243,24 +247,24 @@ namespace ferram4
 
         #region Editor Functions
 
-        public Vector3d ComputeForceEditor(Vector3d velocityVector, double M)
+        public Vector3d ComputeForceEditor(Vector3d velocityVector, double M, double density)
         {
             velocityEditor = velocityVector;
 
             rho = 1;
 
             double AoA = CalculateAoA(velocityVector);
-            return CalculateForces(velocityVector, M, AoA);
+            return CalculateForces(velocityVector, M, AoA, density);
         }
         
-        public void ComputeClCdEditor(Vector3d velocityVector, double M)
+        public void ComputeClCdEditor(Vector3d velocityVector, double M, double density)
         {
             velocityEditor = velocityVector;
 
             rho = 1;
 
             double AoA = CalculateAoA(velocityVector);
-            CalculateForces(velocityVector, M, AoA);
+            CalculateForces(velocityVector, M, AoA, density);
         }
 
         protected override void ResetCenterOfLift()
@@ -269,13 +273,13 @@ namespace ferram4
             stall = 0;
         }
 
-        protected override Vector3d PrecomputeCenterOfLift(Vector3d velocity, double MachNumber, FARCenterQuery center)
+        public override Vector3d PrecomputeCenterOfLift(Vector3d velocity, double MachNumber, double density, FARCenterQuery center)
         {
             try
             {
                 double AoA = CalculateAoA(velocity);
 
-                Vector3d force = CalculateForces(velocity, MachNumber, AoA);
+                Vector3d force = CalculateForces(velocity, MachNumber, AoA, density);
                 center.AddForce(AerodynamicCenter, force);
 
                 return force;
@@ -309,10 +313,10 @@ namespace ferram4
             Vector3d WC = rootMidChordOffsetFromOrig;
             if (nonSideAttach <= 0)
             {
-                WC += -b_2 / 3 * (1 + TaperRatio * 2) / (1 + TaperRatio) * (Vector3d.right * srfAttachNegative + Vector3d.up * Math.Tan(MidChordSweep * FARMathUtil.deg2rad));
+                WC += -b_2_actual / 3 * (1 + TaperRatio * 2) / (1 + TaperRatio) * (Vector3d.right * srfAttachNegative + Vector3d.up * Math.Tan(MidChordSweep * FARMathUtil.deg2rad));
             }
             else
-                WC += (-MAC * 0.7) * Vector3d.up;
+                WC += (-MAC_actual * 0.7) * Vector3d.up;
 
             localWingCentroid = WC;
         }
@@ -405,12 +409,12 @@ namespace ferram4
 
         public void MathAndFunctionInitialization()
         {
-            S = b_2 * MAC;
+            S = b_2_actual * MAC_actual;
 
             if (part.srfAttachNode.originalOrientation.x < 0)
                 srfAttachNegative = -1;
 
-            transformed_AR = 2 * b_2 / MAC;
+            transformed_AR = 2 * b_2_actual / MAC_actual;
 
             MidChordSweepSideways = (1 - TaperRatio) / (1 + TaperRatio);
 
@@ -494,7 +498,7 @@ namespace ferram4
                     {
                         double AoA = CalculateAoA(velocity);
                         double failureForceScaling = FARAeroUtil.GetFailureForceScaling(vessel);
-                        Vector3d force = DoCalculateForces(velocity, machNumber, AoA, failureForceScaling);
+                        Vector3d force = DoCalculateForces(velocity, machNumber, AoA, rho, failureForceScaling);
 
                         worldSpaceForce = force;
 
@@ -515,19 +519,19 @@ namespace ferram4
             }
         }
 
-        public Vector3d CalculateForces(Vector3d velocity, double MachNumber, double AoA)
+        public Vector3d CalculateForces(Vector3d velocity, double MachNumber, double AoA, double rho)
         {
             CurWingCentroid = WingCentroid();
 
-            return DoCalculateForces(velocity, MachNumber, AoA);
+            return DoCalculateForces(velocity, MachNumber, AoA, rho);
         }
 
-        private Vector3d DoCalculateForces(Vector3d velocity, double MachNumber, double AoA)
+        private Vector3d DoCalculateForces(Vector3d velocity, double MachNumber, double AoA, double rho)
         {
-            return DoCalculateForces(velocity, MachNumber, AoA, 1);
+            return DoCalculateForces(velocity, MachNumber, AoA, rho, 1);
         }
 
-        private Vector3d DoCalculateForces(Vector3d velocity, double MachNumber, double AoA, double failureForceScaling)
+        private Vector3d DoCalculateForces(Vector3d velocity, double MachNumber, double AoA, double rho, double failureForceScaling)
         {
             //This calculates the angle of attack, adjusting the part's orientation for any deflection
             //CalculateAoA();
@@ -871,7 +875,7 @@ namespace ferram4
 
             //AC shift due to stall
             if (stall > 0)
-                ACShiftVec -= 0.75 / criticalCl * MAC * Math.Abs(Cl) * stall * ParallelInPlane * CosAoA;
+                ACShiftVec -= 0.75 / criticalCl * MAC_actual * Math.Abs(Cl) * stall * ParallelInPlane * CosAoA;
 
             Cl -= Cl * stall * 0.769;
             Cd += Cd * stall * 3;
@@ -1068,8 +1072,8 @@ namespace ferram4
             CosPartAngle *= CosPartAngle;
             double SinPartAngle2 = FARMathUtil.Clamp(1 - CosPartAngle, 0, 1);               //Get the squared values for the angles
 
-            effective_b_2 = Math.Max(b_2 * CosPartAngle, MAC * SinPartAngle2);
-            effective_MAC = MAC * CosPartAngle + b_2 * SinPartAngle2;
+            effective_b_2 = Math.Max(b_2_actual * CosPartAngle, MAC_actual * SinPartAngle2);
+            effective_MAC = MAC_actual * CosPartAngle + b_2_actual * SinPartAngle2;
             transformed_AR = 2 * effective_b_2 / effective_MAC;
 
             sweepHalfChord = Math.Sqrt(Math.Max(1 - sweepHalfChord * sweepHalfChord, 0)) / sweepHalfChord;  //convert to tangent
@@ -1251,9 +1255,9 @@ namespace ferram4
         {
             base.OnLoad(node);
             if (node.HasValue("b_2"))
-                double.TryParse(node.GetValue("b_2"), out b_2);
+                double.TryParse(node.GetValue("b_2"), out b_2_actual);
             if (node.HasValue("MAC"))
-                double.TryParse(node.GetValue("MAC"), out MAC);
+                double.TryParse(node.GetValue("MAC"), out MAC_actual);
             if (node.HasValue("TaperRatio"))
                 double.TryParse(node.GetValue("TaperRatio"), out TaperRatio);
             if (node.HasValue("nonSideAttach"))
@@ -1264,8 +1268,8 @@ namespace ferram4
 
         public void OnRescale(TweakScale.ScalingFactor factor)
         {
-            b_2 *= factor.relative.linear;
-            MAC *= factor.relative.linear;
+            b_2_actual = factor.absolute.linear * b_2;
+            MAC_actual = factor.absolute.linear * MAC;
 
             StartInitialization();
         }

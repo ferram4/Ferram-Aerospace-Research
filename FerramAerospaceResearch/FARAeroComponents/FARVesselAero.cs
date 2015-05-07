@@ -77,6 +77,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         List<FARAeroPartModule> _currentAeroModules;
         List<FARAeroPartModule> _unusedAeroModules;
         List<FARAeroSection> _currentAeroSections;
+        List<FARWingAerodynamicModel> _legacyWingModels;
 
         int _updateRateLimiter = 20;
         bool _updateQueued = true;
@@ -130,7 +131,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         {
             if (_vehicleAero.CalculationCompleted)
             {
-                _vehicleAero.GetNewAeroData(out _currentAeroModules, out _unusedAeroModules, out _currentAeroSections);                
+                _vehicleAero.GetNewAeroData(out _currentAeroModules, out _unusedAeroModules, out _currentAeroSections, out _legacyWingModels);                
 
                 _vessel.SendMessage("UpdateAeroModules", _currentAeroModules);
 
@@ -187,6 +188,38 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
             else if (_updateQueued)
                 VesselUpdate(_recalcGeoModules);
+        }
+
+        public void SimulateAeroProperties(out Vector3 aeroForce, out Vector3 aeroTorque, Vector3 velocityWorldVector, double altitude)
+        {
+            FARCenterQuery center = new FARCenterQuery();
+
+            float pressure;
+            float density;
+            float temperature;
+            float speedOfSound;
+
+            CelestialBody body = _vessel.mainBody;      //Calculate main gas properties
+            pressure = (float)body.GetPressure(altitude);
+            temperature = (float)body.GetTemperature(altitude);
+            density = (float)body.GetDensity(pressure, temperature);
+            speedOfSound = (float)body.GetSpeedOfSound(pressure, density);
+
+            float velocityMag = velocityWorldVector.magnitude;
+            float machNumber = velocityMag / speedOfSound;
+            float reynoldsNumber = (float)FARAeroUtil.CalculateReynoldsNumber(density, Length, velocityMag, machNumber, temperature, body.atmosphereAdiabaticIndex);
+
+            float reynoldsPerLength = reynoldsNumber / (float)Length;
+            float skinFriction = (float)FARAeroUtil.SkinFrictionDrag(reynoldsNumber, machNumber);
+
+            for(int i = 0; i < _currentAeroSections.Count; i++)
+                _currentAeroSections[i].PredictionCalculateAeroForces(density, machNumber, reynoldsPerLength, skinFriction, velocityWorldVector, center);
+
+            for (int i = 0; i < _legacyWingModels.Count; i++)
+                _legacyWingModels[i].PrecomputeCenterOfLift(velocityWorldVector, machNumber, density, center);
+
+            aeroForce = center.force;
+            aeroTorque = center.TorqueAt(_vessel.CoM);
         }
 
         private void TriggerIGeometryUpdaters()

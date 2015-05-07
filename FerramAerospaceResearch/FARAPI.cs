@@ -35,12 +35,16 @@ Copyright 2014, Michael Ferrara, aka Ferram4
  */
 
 using System;
+using UnityEngine;
 using FerramAerospaceResearch.FARGUI.FARFlightGUI;
+using FerramAerospaceResearch.FARAeroComponents;
 
 namespace FerramAerospaceResearch
 {
     public static class FARAPI
     {
+
+        #region CurrentFlightInfo
         public static FlightGUI VesselFlightInfo(Vessel v)
         {
             FlightGUI gui = null;
@@ -188,5 +192,39 @@ namespace FerramAerospaceResearch
             else
                 return gui.InfoParameters.stallFraction;
         }
+
+#endregion
+
+        #region AeroPredictions
+
+        /// <summary>
+        /// Calculates the forces and torque on a vessel at a given condition at the CoM
+        /// </summary>
+        /// <param name="vessel">Vessel in question</param>
+        /// <param name="aeroForce">Total aerodynamic force at CoM, in kN</param>
+        /// <param name="aeroTorque">Total aerodynamic torque at CoM, in kN * m</param>
+        /// <param name="velocityWorldVector">Velocity vector in worldspace relative to the atmosphere for CURRENT vessel orientation, m/s</param>
+        /// <param name="density">Atm density at that location, kg/m^3</param>
+        /// <param name="machNumber">Mach number at that location</param>
+        public static void CalculateVesselAeroForces(Vessel vessel, out Vector3 aeroForce, out Vector3 aeroTorque, Vector3 velocityWorldVector, double altitude)
+        {
+            aeroForce = aeroTorque = Vector3.zero;
+            if (vessel == null)
+            {
+                Debug.LogError("FAR API Error: attempted to simulate aerodynamics of null vessel");
+                return;
+            }
+
+            FARVesselAero vesselAero = vessel.GetComponent<FARVesselAero>();
+
+            if(vesselAero == null)
+            {
+                Debug.LogError("FAR API Error: vessel does not have FARVesselAero aerocomponent for simulation");
+                return;
+            }
+
+            vesselAero.SimulateAeroProperties(out aeroForce, out aeroTorque, velocityWorldVector, altitude);
+        }
+        #endregion
     }
 }

@@ -154,7 +154,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
                 if (clear)
                     w.EditorClClear(reset_stall);
 
-                w.ComputeForceEditor(velocity.normalized, input.machNumber);
+                w.ComputeForceEditor(velocity.normalized, input.machNumber, 1);
                 //w.ComputeForceEditor(velocity, input.machNumber);     //do this just to get the AC right
                 Vector3d relPos = w.GetAerodynamicCenter() - CoM;
 
@@ -163,7 +163,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
                 if (w is FARControllableSurface)
                     (w as FARControllableSurface).SetControlStateEditor(CoM, vel, (float)input.pitchValue, 0, 0, input.flaps, input.spoilers);
 
-                Vector3d force = w.ComputeForceEditor(vel.normalized, input.machNumber) * 1000;
+                Vector3d force = w.ComputeForceEditor(vel.normalized, input.machNumber, 1) * 1000;
 
                 output.Cl += -Vector3d.Dot(force, liftVector);
                 output.Cy += Vector3d.Dot(force, sideways);
@@ -192,7 +192,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             FARCenterQuery center = new FARCenterQuery();
             for (int i = 0; i < _currentAeroSections.Count; i++)
             {
-                _currentAeroSections[i].EditorCalculateAeroForces(1, (float)input.machNumber, 10000, 0.005f, velocity.normalized, center);
+                _currentAeroSections[i].PredictionCalculateAeroForces(1, (float)input.machNumber, 10000, 0.005f, velocity.normalized, center);
             }
 
             Vector3d centerForce = center.force * 1000;

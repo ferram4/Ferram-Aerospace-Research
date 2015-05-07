@@ -176,8 +176,8 @@ namespace ferram4
         /// <param name="isSmallSrf">If a part should be considered a small attachable surface, like an aileron, elevator, etc; used to calculate nearby wings properly</param>
         public void UpdateWingInteraction(List<Part> VesselPartList, bool isSmallSrf)
         {
-            float flt_MAC = (float)parentWingModule.MAC;
-            float flt_b_2 = (float)parentWingModule.b_2;
+            float flt_MAC = (float)parentWingModule.MAC_actual;
+            float flt_b_2 = (float)parentWingModule.b_2_actual;
             float flt_TaperRatio = (float)parentWingModule.TaperRatio;
             float flt_MidChordSweep = (float)parentWingModule.MidChordSweep;
 

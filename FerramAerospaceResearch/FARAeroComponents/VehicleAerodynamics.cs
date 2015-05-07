@@ -106,6 +106,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
         List<FARAeroSection> _currentAeroSections;
         List<FARAeroSection> _newAeroSections;
 
+        List<ferram4.FARWingAerodynamicModel> _legacyWingModels = new List<ferram4.FARWingAerodynamicModel>();
+
         int validSectionCount;
         int firstSection;
 
@@ -116,7 +118,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         //Used by other classes to update their aeroModule and aeroSection lists
         //When these functions fire, all the data that was once restricted to the voxelization thread is passed over to the main unity thread
 
-        public void GetNewAeroData(out List<FARAeroPartModule> aeroModules, out List<FARAeroPartModule> unusedAeroModules, out List<FARAeroSection> aeroSections)
+        public void GetNewAeroData(out List<FARAeroPartModule> aeroModules, out List<FARAeroPartModule> unusedAeroModules, out List<FARAeroSection> aeroSections, out List<ferram4.FARWingAerodynamicModel> legacyWingModel)
         {
             _calculationCompleted = false;
             aeroModules = _currentAeroModules = _newAeroModules;
@@ -125,7 +127,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             unusedAeroModules = _currentUnusedAeroModules = _newUnusedAeroModules;
 
-            LEGACY_UpdateWingAerodynamicModels();
+
+            legacyWingModel = LEGACY_UpdateWingAerodynamicModels();
         }
 
         public void GetNewAeroData(out List<FARAeroPartModule> aeroModules, out List<FARAeroSection> aeroSections)
@@ -138,6 +141,47 @@ namespace FerramAerospaceResearch.FARAeroComponents
             LEGACY_UpdateWingAerodynamicModels();
         }
 
+        private List<ferram4.FARWingAerodynamicModel> LEGACY_UpdateWingAerodynamicModels()
+        {
+            _legacyWingModels.Clear();
+            for (int i = 0; i < _currentAeroModules.Count; i++)
+            {
+                Part p = _currentAeroModules[i].part;
+                if (!p)
+                    continue;
+                if (p.Modules.Contains("FARWingAerodynamicModel"))
+                {
+                    ferram4.FARWingAerodynamicModel w = (ferram4.FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
+                    if (w)
+                    {
+                        w.NUFAR_ClearAreaExposedFactor();
+                        _legacyWingModels.Add(w);
+                    }
+                }
+                else if (p.Modules.Contains("FARControllableSurface"))
+                {
+                    ferram4.FARWingAerodynamicModel w = (ferram4.FARWingAerodynamicModel)p.Modules["FARControllableSurface"];
+                    if (w)
+                    {
+                        w.NUFAR_ClearAreaExposedFactor();
+                        _legacyWingModels.Add(w);
+                    }
+                }
+            }
+
+            for (int i = 0; i < _currentAeroSections.Count; i++)
+            {
+                FARAeroSection sect = _currentAeroSections[i];
+                sect.LEGACY_SetLiftForFARWingAerodynamicModel();
+            }
+
+            for (int i = 0; i < _legacyWingModels.Count; i++)
+            {
+                ferram4.FARWingAerodynamicModel w = _legacyWingModels[i];
+                w.NUFAR_SetExposedAreaFactor();
+            }
+            return _legacyWingModels;
+        }
         #endregion
 
         #region GetFunctions
@@ -293,53 +337,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         #endregion
 
-        private void LEGACY_UpdateWingAerodynamicModels()
-        {
-            for (int i = 0; i < _currentAeroModules.Count; i++)
-            {
-                Part p = _currentAeroModules[i].part;
-                if (!p)
-                    continue;
-                if (p.Modules.Contains("FARWingAerodynamicModel"))
-                {
-                    ferram4.FARWingAerodynamicModel w = (ferram4.FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
-                    if (w)
-                        w.NUFAR_ClearAreaExposedFactor();
-                }
-                else if(p.Modules.Contains("FARControllableSurface"))
-                {
-                    ferram4.FARWingAerodynamicModel w = (ferram4.FARWingAerodynamicModel)p.Modules["FARControllableSurface"];
-                    if (w)
-                        w.NUFAR_ClearAreaExposedFactor();
-                }
-            }
-
-            for (int i = 0; i < _currentAeroSections.Count; i++)
-            {
-                FARAeroSection sect = _currentAeroSections[i];
-                sect.LEGACY_SetLiftForFARWingAerodynamicModel();
-            }
-
-            for (int i = 0; i < _currentAeroModules.Count; i++)
-            {
-                Part p = _currentAeroModules[i].part;
-                if (!p)
-                    continue;
-                if (p.Modules.Contains("FARWingAerodynamicModel"))
-                {
-                    ferram4.FARWingAerodynamicModel w = (ferram4.FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
-                    if (w)
-                        w.NUFAR_SetExposedAreaFactor();
-                }
-                else if (p.Modules.Contains("FARControllableSurface"))
-                {
-                    ferram4.FARWingAerodynamicModel w = (ferram4.FARWingAerodynamicModel)p.Modules["FARControllableSurface"];
-                    if (w)
-                        w.NUFAR_SetExposedAreaFactor();
-                }
-
-            }
-        }
 
         private Vector3 CalculateVehicleMainAxis()
         {
@@ -1085,7 +1082,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             for (int i = 0; i < _newAeroSections.Count; i++)
             {
                 FARAeroSection a = _newAeroSections[i];
-                a.EditorCalculateAeroForces(2f, 1f, 50000f, 0.005f, worldMainAxis, center);
+                a.PredictionCalculateAeroForces(2f, 1f, 50000f, 0.005f, worldMainAxis, center);
             }
 
             _sonicDragArea = Vector3.Dot(center.force, worldMainAxis) * -1000;
