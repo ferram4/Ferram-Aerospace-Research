@@ -134,6 +134,12 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 if ((object)w != null)
                     totalAeroForceVector += w.worldSpaceForce;
             }
+
+            for(int i = 0; i < _vessel.parts.Count; i++)
+            {
+                Part p = _vessel.parts[i];
+                totalAeroForceVector += p.dragVector * p.dragScalar;
+            }
         }
 
         private void CalculateForceBreakdown(Vector3d velVectorNorm, Vector3d velVector)

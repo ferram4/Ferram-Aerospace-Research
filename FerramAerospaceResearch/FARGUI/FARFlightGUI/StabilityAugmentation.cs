@@ -44,9 +44,10 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
     class StabilityAugmentation
     {
         Vessel _vessel;
-        static ControlSystem[] systems;
-        string[] systemLabel = new string[] { "Roll", "Yaw", "Pitch", "AoA", "DPCR" };
-        string[] systemLabelLong = new string[] { "Roll System", "Yaw System", "Pitch System", "AoA Limiter", "Dynamic Pressure Control Reduction" };
+        static string[] systemLabel = new string[] { "Roll", "Yaw", "Pitch", "AoA", "DPCR" };
+        static string[] systemLabelLong = new string[] { "Roll System", "Yaw System", "Pitch System", "AoA Limiter", "Dynamic Pressure Control Reduction" };
+        static ControlSystem[] systemTemplates;
+        ControlSystem[] systemInstances;
 
         static double aoALowLim, aoAHighLim;
         static double scalingDynPres;
@@ -62,6 +63,12 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             _vessel.OnAutopilotUpdate += OnAutoPilotUpdate;
             systemDropdown = new GUIDropDown<int>(systemLabel, new int[] { 0, 1, 2, 3, 4, 5 }, 0);
             LoadSettings();
+            systemInstances = new ControlSystem[systemTemplates.Length];
+
+            for(int i = 0; i < systemInstances.Length; i++)
+            {
+                systemInstances[i] = new ControlSystem(systemTemplates[i]);
+            }
         }
 
         public void SaveAndDestroy()
@@ -84,9 +91,9 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
             }
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
-            for (int i = 0; i < systems.Length; i++)
+            for (int i = 0; i < systemTemplates.Length; i++)
             {
-                systems[i].active = GUILayout.Toggle(systems[i].active, systemLabel[i], buttonStyle, GUILayout.MinWidth(30), GUILayout.ExpandWidth(true));
+                systemTemplates[i].active = GUILayout.Toggle(systemTemplates[i].active, systemLabel[i], buttonStyle, GUILayout.MinWidth(30), GUILayout.ExpandWidth(true));
             }
             GUILayout.EndHorizontal();
         }
@@ -100,7 +107,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             systemDropdown.GUIDropDownDisplay(GUILayout.Width(120));
             int selectedItem = systemDropdown.ActiveSelection;
 
-            ControlSystem sys = systems[selectedItem];
+            ControlSystem sys = systemInstances[selectedItem];
             GUILayout.BeginVertical(boxStyle);
             if (selectedItem != 4)
             {
@@ -125,7 +132,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         private void OnAutoPilotUpdate(FlightCtrlState state)
         {
-            ControlSystem sys = systems[0];     //wing leveler
+            ControlSystem sys = systemInstances[0];     //wing leveler
             if (sys.active)
             {
                 double phi = info.rollAngle - sys.zeroPoint;
@@ -154,7 +161,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
             else
                 sys.lastError = 0;
-            sys = systems[1];
+            sys = systemInstances[1];
             if (sys.active)
             {
                 double beta = -(info.sideslipAngle - sys.zeroPoint) * FARMathUtil.deg2rad;
@@ -174,7 +181,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
             else
                 sys.lastError = 0;
-            sys = systems[2];
+            sys = systemInstances[2];
             if (sys.active)
             {
                 double pitch = (info.aoA - sys.zeroPoint) * FARMathUtil.deg2rad;
@@ -194,7 +201,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
             else
                 sys.lastError = 0;
-            sys = systems[3];
+            sys = systemInstances[3];
             if (sys.active)
             {
                 if (info.aoA > aoAHighLim)
@@ -208,7 +215,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
             else
                 sys.lastError = 0;
-            sys = systems[4];
+            sys = systemInstances[4];
             if (sys.active)
             {
                 double scalingFactor = scalingDynPres / info.dynPres;
@@ -251,17 +258,17 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                     break;
                 }
 
-            if (systems == null)
+            if (systemTemplates == null)
             {
-                systems = new ControlSystem[5];
-                for (int i = 0; i < systems.Length; i++)
-                    systems[i] = new ControlSystem();
+                systemTemplates = new ControlSystem[5];
+                for (int i = 0; i < systemTemplates.Length; i++)
+                    systemTemplates[i] = new ControlSystem();
 
 
 
                 if (node != null)
                 {
-                    for (int i = 0; i < systems.Length; i++)
+                    for (int i = 0; i < systemTemplates.Length; i++)
                     {
                         string nodeName = "ControlSys" + i;
                         if (node.HasNode(nodeName))
@@ -289,21 +296,21 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             sys.kD = 1;
             sys.kI = 0.5;
 
-            systems[0] = sys;
+            systemTemplates[0] = sys;
 
             //Yaw system
             sys.kP = 0;
             sys.kD = 1;
             sys.kI = 0;
 
-            systems[1] = sys;
+            systemTemplates[1] = sys;
 
             //Pitch system
             sys.kP = 0;
             sys.kD = 1;
             sys.kI = 0;
 
-            systems[2] = sys;
+            systemTemplates[2] = sys;
 
             //AoA system
             sys.kP = 0.25;
@@ -313,7 +320,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             aoALowLim = -10;
             aoAHighLim = 20;
 
-            systems[3] = sys;
+            systemTemplates[3] = sys;
 
             scalingDynPres = 20;
         }
@@ -321,7 +328,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         public static bool TryLoadSystem(ConfigNode systemNode, int index)
         {
             bool sysExists = false;
-            ControlSystem sys = systems[index];
+            ControlSystem sys = systemTemplates[index];
 
             if (systemNode.HasValue("active"))
             {
@@ -339,7 +346,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             if (systemNode.HasValue("kI"))
                 double.TryParse(systemNode.GetValue("kI"), out sys.kI);
 
-            systems[index] = sys;
+            systemTemplates[index] = sys;
             return sysExists;
         }
 
@@ -358,6 +365,9 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                     break;
                 }
 
+            if (this._vessel == FlightGlobals.ActiveVessel)
+                systemTemplates = systemInstances;
+
             if (node == null)
             {
                 node = new ConfigNode("StabilityAugmentationSettings");
@@ -366,7 +376,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             else
                 node.ClearData();
 
-            for (int i = 0; i < systems.Length; i++)
+            for (int i = 0; i < systemTemplates.Length; i++)
             {
                 node.AddNode(BuildSystemNode(i));
             }
@@ -377,7 +387,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         public static ConfigNode BuildSystemNode(int index)
         {
-            ControlSystem sys = systems[index];
+            ControlSystem sys = systemTemplates[index];
 
             ConfigNode node = new ConfigNode("ControlSys" + index);
             node.AddValue("active", sys.active);
@@ -402,6 +412,17 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
             public double lastError;
             public double errorIntegral;
+
+            public ControlSystem(ControlSystem sys)
+            {
+                this.active = sys.active;
+                this.zeroPoint = sys.zeroPoint;
+                this.kP = sys.kP;
+                this.kD = sys.kD;
+                this.kI = sys.kI;
+            }
+
+            public ControlSystem() { }
         }
     }
 }

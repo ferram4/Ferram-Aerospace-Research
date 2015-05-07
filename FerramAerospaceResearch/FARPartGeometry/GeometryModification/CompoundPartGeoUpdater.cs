@@ -32,7 +32,6 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
         {
             if (lastAttachState != part.attachState || lastTarget != part.target || !EditorLogic.SortedShipList.Contains(part.target))
             {
-                Debug.Log("Updating compound part");
                 geoModule.RebuildAllMeshData();
                 lastAttachState = part.attachState;
                 lastTarget = part.target;

@@ -775,7 +775,7 @@ namespace ferram4
             if (double.IsNaN(beta) || beta < 0.66332495807107996982298654733414)
                 beta = 0.66332495807107996982298654733414;
 
-            double TanSweep = Math.Tan(FARMathUtil.Clamp(Math.Acos(cosSweepAngle), 0, Math.PI * 0.5));
+            double TanSweep = Math.Sqrt(FARMathUtil.Clamp(1 - cosSweepAngle * cosSweepAngle, 0, 1)) / cosSweepAngle;//Math.Tan(FARMathUtil.Clamp(Math.Acos(cosSweepAngle), 0, Math.PI * 0.5));
             double beta_TanSweep = beta / TanSweep;
 
 
@@ -789,7 +789,8 @@ namespace ferram4
             if (MachNumber <= 0.8)
             {
                 double Cn = liftslope;
-                Cl = Cn * Math.Sin(2 * AoA) * 0.5;
+                //Cl = Cn * Math.Sin(2 * AoA) * 0.5;
+                Cl = Cn * 2 * CosAoA * Math.Sqrt(FARMathUtil.Clamp(1 - CosAoA * CosAoA, 0, 1)) * 0.5 * Math.Sign(AoA);
 
                 Cl += ClIncrementFromRear;
                 if (Math.Abs(Cl) > Math.Abs(ACweight))
@@ -833,7 +834,8 @@ namespace ferram4
                 supScale *= -4.6296296296296296296296296296296;
 
                 double Cn = liftslope;
-                Cl = Cn * Math.Sin(2 * AoA) * 0.5;
+                //Cl = Cn * Math.Sin(2 * AoA) * 0.5;
+                Cl = Cn * 2 * CosAoA * Math.Sqrt(FARMathUtil.Clamp(1 - CosAoA * CosAoA, 0, 1)) * 0.5 * Math.Sign(AoA);
 
                 if (MachNumber <= 1)
                 {
