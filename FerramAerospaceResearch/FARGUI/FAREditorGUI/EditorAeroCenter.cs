@@ -103,9 +103,12 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             Vector3 pos = rootPartTrans.position;
 
+            Vector3 avgForcePos = Vector3.zero;
+
             Vector3 force0, moment0;
             force0 = aeroSection.force;
             moment0 = aeroSection.TorqueAt(pos);
+            avgForcePos += aeroSection.GetPos();
 
             //aeroSection.force = -aeroSection.force;
             //aeroSection.torque = -aeroSection.torque;
@@ -125,6 +128,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             Vector3 force1, moment1;
             force1 = aeroSection.force;
             moment1 = aeroSection.TorqueAt(pos);
+            avgForcePos += aeroSection.GetPos();
 
             aeroSection.ClearAll();
 
@@ -141,6 +145,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             Vector3 force2, moment2;
             force2 = aeroSection.force;
             moment2 = aeroSection.TorqueAt(pos);
+            avgForcePos += aeroSection.GetPos();
 
             aeroSection.ClearAll();
 
@@ -157,6 +162,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             Vector3 force3, moment3;
             force3 = aeroSection.force;
             moment3 = aeroSection.TorqueAt(pos);
+            avgForcePos += aeroSection.GetPos();
 
             aeroSection.ClearAll();
             
@@ -195,6 +201,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             //Debug.Log(M2 + " " + M0 + " " + N2 + " " + N0);
 
             vesselRootLocalAeroCenter = Vector3.up * (float)x_ac;// +rootPartTrans.forward * (float)z_ac;
+            avgForcePos *= 0.25f;
+            avgForcePos = rootPartTrans.worldToLocalMatrix.MultiplyPoint3x4(avgForcePos);
+            vesselRootLocalAeroCenter += Vector3.ProjectOnPlane(avgForcePos, Vector3.up);
             //vesselRootLocalAeroCenter = aeroSection.GetPos();
             //vesselRootLocalAeroCenter = rootPartTrans.worldToLocalMatrix.MultiplyPoint3x4(vesselRootLocalAeroCenter + rootPartTrans.position);
         }
