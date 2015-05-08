@@ -135,7 +135,7 @@ namespace FerramAerospaceResearch
 
         public static double BrentsMethod(Func<double, double> function, double a, double b, double epsilon = 0.001, int maxIter = int.MaxValue)
         {
-            double delta = 0.1;
+            double delta = epsilon * 100;
             double fa, fb;
             fa = function(a);
             fb = function(b);
@@ -208,14 +208,14 @@ namespace FerramAerospaceResearch
 
                 bool condition4;
 
-                if (flag && b_c < delta)
+                if (flag && b_c <= delta)
                     condition4 = true;
                 else
                     condition4 = false;
 
                 bool conditon5;
 
-                if (!flag && c_d < delta)
+                if (!flag && c_d <= delta)
                     conditon5 = true;
                 else
                     conditon5 = false;
