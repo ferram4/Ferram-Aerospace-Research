@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-Ferram Aerospace Research v0.14.7
-=======
 Ferram Aerospace Research v0.15 "Euler"
->>>>>>> 89b2865ff34b6d3d23d7e6860f7820d7aa80af02
 =========================
 Aerodynamics model for Kerbal Space Program
 
