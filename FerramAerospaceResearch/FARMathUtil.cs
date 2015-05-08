@@ -1,98 +1,57 @@
 ﻿/*
-Ferram Aerospace Research v0.14.7
-Copyright 2014, Michael Ferrara, aka Ferram4
+Ferram Aerospace Research v0.15 "Euler"
+=========================
+Aerodynamics model for Kerbal Space Program
 
-    This file is part of Ferram Aerospace Research.
+Copyright 2015, Michael Ferrara, aka Ferram4
 
-    Ferram Aerospace Research is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+   This file is part of Ferram Aerospace Research.
 
-    Ferram Aerospace Research is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+   Ferram Aerospace Research is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
 
-    You should have received a copy of the GNU General Public License
-    along with Ferram Aerospace Research.  If not, see <http://www.gnu.org/licenses/>.
+   Ferram Aerospace Research is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    Serious thanks:		a.g., for tons of bugfixes and code-refactorings
-            			Taverius, for correcting a ton of incorrect values
-            			sarbian, for refactoring code for working with MechJeb, and the Module Manager 1.5 updates
-            			ialdabaoth (who is awesome), who originally created Module Manager
-                        Regex, for adding RPM support
-            			Duxwing, for copy editing the readme
- * 
- * Kerbal Engineer Redux created by Cybutek, Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
- *      Referenced for starting point for fixing the "editor click-through-GUI" bug
- *
- * Part.cfg changes powered by sarbian & ialdabaoth's ModuleManager plugin; used with permission
- *	http://forum.kerbalspaceprogram.com/threads/55219
- *
- * Toolbar integration powered by blizzy78's Toolbar plugin; used with permission
- *	http://forum.kerbalspaceprogram.com/threads/60863
+   You should have received a copy of the GNU General Public License
+   along with Ferram Aerospace Research.  If not, see <http://www.gnu.org/licenses/>.
+
+   Serious thanks:		a.g., for tons of bugfixes and code-refactorings   
+				stupid_chris, for the RealChuteLite implementation
+            			Taverius, for correcting a ton of incorrect values  
+				Tetryds, for finding lots of bugs and issues and not letting me get away with them, and work on example crafts
+            			sarbian, for refactoring code for working with MechJeb, and the Module Manager updates  
+            			ialdabaoth (who is awesome), who originally created Module Manager  
+                        	Regex, for adding RPM support  
+				DaMichel, for some ferramGraph updates and some control surface-related features  
+            			Duxwing, for copy editing the readme  
+   
+   CompatibilityChecker by Majiir, BSD 2-clause http://opensource.org/licenses/BSD-2-Clause
+
+   Part.cfg changes powered by sarbian & ialdabaoth's ModuleManager plugin; used with permission  
+	http://forum.kerbalspaceprogram.com/threads/55219
+
+   ModularFLightIntegrator by Sarbian, Starwaster and Ferram4, MIT: http://opensource.org/licenses/MIT
+	http://forum.kerbalspaceprogram.com/threads/118088
+
+   Toolbar integration powered by blizzy78's Toolbar plugin; used with permission  
+	http://forum.kerbalspaceprogram.com/threads/60863
  */
 
-
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
-namespace ferram4
+namespace FerramAerospaceResearch
 {
-    public unsafe static class FARMathUtil
+    public static class FARMathUtil
     {
-        private static FloatCurve fastSin = null;
-        public static double deg2rad = Math.PI / 180;
-        public static double rad2deg = 180 / Math.PI;
+        public const double rad2deg = 180d / Math.PI;
+        public const double deg2rad = Math.PI / 180d;
 
-        public static float FastSin(float angle)
-        {
-            float input = angle;
-            if (fastSin == null)
-            {
-                MonoBehaviour.print("Fast Sine Curve Initialized");
-                fastSin = new FloatCurve();
-                for (int i = 0; i <= 36; i++)
-                {
-                    float time = Mathf.PI * i / 72;
-                    float value = Mathf.Sin(time);
-                    float deriv = Mathf.Cos(time);
-                    fastSin.Add(time, value, deriv, deriv);
-                }
-            }
-            while (input <= 0)
-                input += 2 * Mathf.PI;
-            while (input > 2 * Mathf.PI)
-                input -= 2 * Mathf.PI;
-
-            if (input < Mathf.PI * 0.5f)
-                return fastSin.Evaluate(input);
-            else if (input < Mathf.PI)
-                return fastSin.Evaluate(Mathf.PI - input);
-            else if (input < 1.5f * Mathf.PI)
-                return -fastSin.Evaluate(input - Mathf.PI);
-            else
-                return -fastSin.Evaluate(2 * Mathf.PI - input);
-        }
-
-        public static float FastCos(float angle)
-        {
-            return FastSin(angle + Mathf.PI * 0.5f);
-        }
-
-        public static float FastTan(float angle)
-        {
-            float input = angle;
-
-            float tan = FastSin(input) / FastCos(input);
-
-            return tan;
-
-        }
 
         public static double Lerp(double x1, double x2, double y1, double y2, double x)
         {
@@ -176,11 +135,12 @@ namespace ferram4
 
         public static double BrentsMethod(Func<double, double> function, double a, double b, double epsilon = 0.001, int maxIter = int.MaxValue)
         {
+            double delta = 0.1;
             double fa, fb;
             fa = function(a);
             fb = function(b);
 
-            if (fa * fb > 0)
+            if (fa * fb >= 0)
                 return 0;
 
             if(Math.Abs(fa) < Math.Abs(fb))
@@ -196,13 +156,13 @@ namespace ferram4
 
             double c = a, d = a, fc = function(c);
 
-            double s = 0, fs = 10; 
+            double s = b, fs = fb; 
 
             bool flag = true;
             int iter = 0;
             while(fs != 0 && Math.Abs(a - b) > epsilon && iter < maxIter)
             {
-                if(fa != fc && fb != fc)
+                if((fa - fc) > double.Epsilon && (fb - fc) > double.Epsilon)    //inverse quadratic interpolation
                 {
                     s = a * fc * fb / ((fa - fb) * (fa - fc));
                     s += b * fc * fa / ((fb - fa) * (fb - fc));
@@ -210,18 +170,57 @@ namespace ferram4
                 }
                 else
                 {
-                    s = (b - a) / (fb - fa);
+                    s = (b - a) / (fb - fa);    //secant method
                     s *= fb;
                     s = b - s;
                 }
 
-                double b_s = b - s, b_c = b-c, c_d = c - d;
+                double b_s = Math.Abs(b - s), b_c = Math.Abs(b-c), c_d = Math.Abs(c - d);
 
-                if ((b_s) * ((3 * a + b) * 0.25 - s) < 0 ||
-                    flag && Math.Abs(b_s) >= Math.Abs(b_c) * 0.5 ||
-                    !flag && Math.Abs(b_s) >= Math.Abs(c_d) * 0.5 ||
-                    flag && Math.Abs(b_c) < epsilon ||
-                    !flag && Math.Abs(c_d) < epsilon)
+                //Conditions for bisection method
+                bool condition1;
+                double a3pb_over4 = (3 * a + b) * 0.25;
+
+                if (a3pb_over4 > b)
+                    if (s < a3pb_over4 && s > b)
+                        condition1 = false;
+                    else
+                        condition1 = true;
+                else
+                    if (s > a3pb_over4 && s < b)
+                        condition1 = false;
+                    else
+                        condition1 = true;
+
+                bool condition2;
+
+                if (flag && b_s >= b_c * 0.5)
+                    condition2 = true;
+                else
+                    condition2 = false;
+
+                bool condition3;
+
+                if (!flag && b_s >= c_d * 0.5)
+                    condition3 = true;
+                else
+                    condition3 = false;
+
+                bool condition4;
+
+                if (flag && b_c < delta)
+                    condition4 = true;
+                else
+                    condition4 = false;
+
+                bool conditon5;
+
+                if (!flag && c_d < delta)
+                    conditon5 = true;
+                else
+                    conditon5 = false;
+
+                if (condition1 || condition2 || condition3 || condition4 || conditon5)
                 {
                     s = a + b;
                     s *= 0.5;
@@ -233,6 +232,7 @@ namespace ferram4
                 fs = function(s);
                 d = c;
                 c = b;
+
                 if (fa * fs < 0)
                 {
                     b = s;

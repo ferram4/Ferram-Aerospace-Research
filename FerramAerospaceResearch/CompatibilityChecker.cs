@@ -33,7 +33,7 @@ using UnityEngine;
 /*-----------------------------------------*\
 |   SUBSTITUTE YOUR MOD'S NAMESPACE HERE.   |
 \*-----------------------------------------*/
-namespace ferram4
+namespace FerramAerospaceResearch
 {
 
     /**
@@ -65,7 +65,7 @@ namespace ferram4
             // Even if you don't lock down functionality, you should return true if your users
             // can expect a future update to be available.
             //
-            return Versioning.version_minor == 90;
+            return Versioning.version_minor == 0 && Versioning.version_major == 1;
 
             /*-----------------------------------------------*\
             | IMPLEMENTERS SHOULD NOT EDIT BEYOND THIS POINT! |

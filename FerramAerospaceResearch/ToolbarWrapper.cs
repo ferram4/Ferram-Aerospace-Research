@@ -32,7 +32,7 @@ using UnityEngine;
 
 
 // TODO: Change to your plugin's namespace here.
-namespace ferram4 {
+namespace FerramAerospaceResearch {
 
 
 
