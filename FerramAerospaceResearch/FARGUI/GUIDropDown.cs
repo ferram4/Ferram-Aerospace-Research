@@ -42,105 +42,168 @@ using UnityEngine;
 
 namespace FerramAerospaceResearch.FARGUI
 {
-    class GUIDropDown<T>
+    public class GUIDropDown<T>
     {
-        int selectedOption;
-        bool listActive = false;
-        bool hasActivated = false;
-        Vector2 scroll;
+        private int selectedOption;
+        private bool isActive = false;
+        private bool toggleBtnState = false;
+        private Vector2 scrollPos;
 
-        string[] optionStrings;
-        T[] options;
+        private string[] stringOptions;
+        private T[] typeOptions;
 
-        T activeSelection;
         public T ActiveSelection
         {
-            get { return activeSelection; }
+            get { return typeOptions[selectedOption]; }
         }
 
-        static GUIStyle listStyle;
-        static GUIStyle buttonStyle;
-        static FARGUIDropDownDisplay displayObject;
+        private static GUIStyle listStyle;
+        private static GUIStyle toggleBtnStyle;
+        private static GUIStyle dropdownItemStyle;
+        private static GUIStyle selectedItemStyle;
 
         public GUIDropDown(string[] stringOptions, T[] typeOptions) : this(stringOptions, typeOptions, 0) { }
 
         public GUIDropDown(string[] stringOptions, T[] typeOptions, int defaultOption)
         {
-            optionStrings = stringOptions;
-            options = typeOptions;
+            this.stringOptions = stringOptions;
+            this.typeOptions = typeOptions;
 
             selectedOption = defaultOption;
-            activeSelection = typeOptions[selectedOption];
+        }
 
-            if(displayObject == null)
+        public void GUIDropDownDisplay(params GUILayoutOption[] guiOptions)
+        {
+            InitStyles();
+
+            FARGUIDropDownDisplay display = FARGUIDropDownDisplay.Instance;
+            toggleBtnState = GUILayout.Toggle(toggleBtnState, stringOptions[selectedOption], toggleBtnStyle, guiOptions);
+
+            // Calcuate absolute regions for the button and dropdown list, this only works when
+            // Event.current.type == EventType.Repaint
+            Vector2 relativePos = GUIUtility.GUIToScreenPoint(new Vector2(0, 0));
+            Rect btnRect = GUILayoutUtility.GetLastRect();
+            btnRect.x += relativePos.x;
+            btnRect.y += relativePos.y;
+            Rect dropdownRect = new Rect(btnRect.x, btnRect.y + btnRect.height, btnRect.width, 150);
+
+            if (!isActive && toggleBtnState && Event.current.type == EventType.Repaint)
             {
-                GameObject o = new GameObject();
-
-                o.AddComponent<FARGUIDropDownDisplay>();
-                displayObject = o.GetComponent<FARGUIDropDownDisplay>();
+                // User activated the dropdown
+                ShowList(btnRect, dropdownRect);
+            }
+            else if (isActive && (!toggleBtnState || !display.ContainsMouse()))
+            {
+                // User deactivated the downdown or moved the mouse cursor away
+                HideList();
             }
         }
 
-        public void GUIDropDownDisplay(params GUILayoutOption[] GUIOptions)
+        private void InitStyles()
         {
-            if (GUILayout.Button(optionStrings[selectedOption], GUIOptions))
-            {
-                listActive = true;
-            }
             if (listStyle == null)
             {
                 listStyle = new GUIStyle(GUI.skin.window);
                 listStyle.padding = new RectOffset(1, 1, 1, 1);
             }
-            if (buttonStyle == null)
+            if (toggleBtnStyle == null)
             {
-                buttonStyle = new GUIStyle(GUI.skin.button);
-                buttonStyle.padding = new RectOffset(0, 0, 0, 0);
+                toggleBtnStyle = new GUIStyle(GUI.skin.button);
+                toggleBtnStyle.normal.textColor
+                    = toggleBtnStyle.focused.textColor
+                    = Color.white;
+                toggleBtnStyle.hover.textColor
+                    = toggleBtnStyle.active.textColor
+                    = toggleBtnStyle.onActive.textColor
+                    = Color.yellow;
+                toggleBtnStyle.onNormal.textColor
+                    = toggleBtnStyle.onFocused.textColor
+                    = toggleBtnStyle.onHover.textColor
+                    = Color.green;
             }
-            if (listActive && !hasActivated)
+            if (dropdownItemStyle == null)
             {
-                Vector3 upperLeft = GUIUtils.GetMousePos();
-                displayObject.ActivateDisplay(this.GetHashCode(), new Rect(upperLeft.x - 5, upperLeft.y - 5, 100, 150), ListDisplay, listStyle, GUIOptions);
-                hasActivated = true;
-                InputLockManager.SetControlLock(ControlTypes.All, "DropdownScrollLock");
+                dropdownItemStyle = new GUIStyle(GUI.skin.button);
+                dropdownItemStyle.padding = new RectOffset(2, 2, 2, 2);
+                dropdownItemStyle.margin.top = 1;
+                dropdownItemStyle.margin.bottom = 1;
             }
-            if (hasActivated)
-                if (!displayObject.displayRect.Contains(GUIUtils.GetMousePos()))
-                {
-                    listActive = false;
-                    hasActivated = false;
-                    displayObject.DisableDisplay();
-                    InputLockManager.RemoveControlLock("DropdownScrollLock");
-                }
+            if (selectedItemStyle == null)
+            {
+                selectedItemStyle = new GUIStyle(GUI.skin.button);
+                selectedItemStyle.padding = new RectOffset(2, 2, 2, 2);
+                selectedItemStyle.margin.top = 1;
+                selectedItemStyle.margin.bottom = 1;
+                selectedItemStyle.normal.textColor
+                    = selectedItemStyle.focused.textColor
+                    = selectedItemStyle.hover.textColor
+                    = selectedItemStyle.active.textColor
+                    = selectedItemStyle.onActive.textColor
+                    = selectedItemStyle.onNormal.textColor
+                    = selectedItemStyle.onFocused.textColor
+                    = selectedItemStyle.onHover.textColor
+                    = XKCDColors.KSPNotSoGoodOrange;
+            }
         }
 
-        private void ListDisplay(int id)
+        private void ShowList(Rect btnRect, Rect dropdownRect)
         {
-            scroll = GUILayout.BeginScrollView(scroll, listStyle);
-            for (int i = 0; i < optionStrings.Length; i++)
+            if (!isActive)
             {
-                if (GUILayout.Button(optionStrings[i], buttonStyle, GUILayout.Height(20)))
+                toggleBtnState = isActive = true;
+                FARGUIDropDownDisplay.Instance.ActivateDisplay(this.GetHashCode(), btnRect, dropdownRect, OnDisplayList, listStyle);
+                InputLockManager.SetControlLock(ControlTypes.All, "DropdownScrollLock");
+            }
+        }
+
+        private void HideList()
+        {
+            if (isActive)
+            {
+                toggleBtnState = isActive = false;
+                FARGUIDropDownDisplay.Instance.DisableDisplay();
+                InputLockManager.RemoveControlLock("DropdownScrollLock");
+            }
+        }
+
+        private void OnDisplayList(int id)
+        {
+            GUI.BringWindowToFront(id);
+            scrollPos = GUILayout.BeginScrollView(scrollPos, listStyle);
+            for (int i = 0; i < stringOptions.Length; i++)
+            {
+                // Highlight the selected item
+                GUIStyle tmpStyle = (selectedOption == i) ? selectedItemStyle : dropdownItemStyle;
+                if (GUILayout.Button(stringOptions[i], tmpStyle))
                 {
-                    Debug.Log("Selected " + optionStrings[i]);
+                    Debug.Log("Selected " + stringOptions[i]);
                     selectedOption = i;
-                    activeSelection = options[i];
-                    listActive = false;
-                    hasActivated = false;
-                    displayObject.DisableDisplay();
-                    InputLockManager.RemoveControlLock("DropdownScrollLock");
+                    HideList();
                 }
             }
             GUILayout.EndScrollView();
         }
     }
 
+    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
     public class FARGUIDropDownDisplay : MonoBehaviour
     {
-        public Rect displayRect;
-        int windowID;
-        GUI.WindowFunction windowFunction;
-        GUIStyle listStyle;
-        GUILayoutOption[] GUIOptions;
+        private static FARGUIDropDownDisplay instance;
+        public static FARGUIDropDownDisplay Instance
+        {
+            get { return instance; }
+        }
+
+        private Rect btnRect;
+        private Rect displayRect;
+        private int windowId;
+        private GUI.WindowFunction windowFunction;
+        private GUIStyle listStyle;
+
+        private void Awake()
+        {
+            instance = this;
+        }
 
         private void Start()
         {
@@ -151,25 +214,31 @@ namespace FerramAerospaceResearch.FARGUI
 
         private void OnGUI()
         {
+            GUI.skin = HighLogic.Skin;
             if (windowFunction != null)
             {
-                displayRect = GUILayout.Window(windowID, displayRect, windowFunction, "", listStyle, GUIOptions);
+                displayRect = GUILayout.Window(windowId, displayRect, windowFunction, "", listStyle, GUILayout.Height(0));
             }
         }
 
-        public void ActivateDisplay(int id, Rect rect, GUI.WindowFunction window, GUIStyle style, params GUILayoutOption[] GUIOptions)
+        public bool ContainsMouse()
         {
-            windowID = id;
-            displayRect = rect;
-            windowFunction = window;
-            listStyle = style;
-            this.GUIOptions = GUIOptions;
+            return btnRect.Contains(GUIUtils.GetMousePos()) ||
+                   displayRect.Contains(GUIUtils.GetMousePos());
+        }
+
+        public void ActivateDisplay(int id, Rect btnRect, Rect rect, GUI.WindowFunction func, GUIStyle style)
+        {
+            this.windowId = id;
+            this.btnRect = btnRect;
+            this.displayRect = rect;
+            this.windowFunction = func;
+            this.listStyle = style;
         }
 
         public void DisableDisplay()
         {
             windowFunction = null;
-
         }
     }
 }

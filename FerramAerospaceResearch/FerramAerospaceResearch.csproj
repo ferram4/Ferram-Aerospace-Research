@@ -88,7 +88,7 @@
     <Compile Include="LEGACYferram4\FARBaseAerodynamics.cs" />
     <Compile Include="LEGACYferram4\FARCenterQuery.cs" />
     <Compile Include="LEGACYferram4\FARControllableSurface.cs" />
-    <Compile Include="FARGUI\FAREditorGUI\EditorColors.cs" />
+    <Compile Include="FARGUI\GUIColors.cs" />
     <Compile Include="FARGUI\FAREditorGUI\Simulation\EditorSimManager.cs" />
     <Compile Include="FARGUI\FAREditorGUI\Simulation\EquationSystem.cs" />
     <Compile Include="FARGUI\FAREditorGUI\Simulation\RungeKutta.cs" />
