@@ -2,23 +2,6 @@ Ferram Aerospace Research v0.15 "Euler"
 =========================
 Aerodynamics model for Kerbal Space Program
 
-Copyright 2015, Michael Ferrara, aka Ferram4
-
-   This file is part of Ferram Aerospace Research.
-
-   Ferram Aerospace Research is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
-
-   Ferram Aerospace Research is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with Ferram Aerospace Research.  If not, see <http://www.gnu.org/licenses/>.
-
    Serious thanks:		a.g., for tons of bugfixes and code-refactorings   
 				stupid_chris, for the RealChuteLite implementation
             			Taverius, for correcting a ton of incorrect values  
