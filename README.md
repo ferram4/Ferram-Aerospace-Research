@@ -84,7 +84,7 @@ CHANGELOG
 0.15V------------------------------------  
 
 Compatibility with KSP 1.0, 1.0.1, and 1.0.2
-Upgraded to MM 2.6.2
+Upgraded to MM 2.6.3
 Introduction of ModularFlightIntegrator for interfacing with KSP drag / heating systems without interference with other mods
 
 Replaced previous part-based drag model with new vessel-centered, voxel-powered model:  
