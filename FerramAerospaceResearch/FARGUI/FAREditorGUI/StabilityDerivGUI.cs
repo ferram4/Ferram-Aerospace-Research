@@ -53,7 +53,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         StabilityDerivOutput stabDerivOutput;
 
         string altitude = "0";
-        string machNumber = "0.2";
+        string machNumber = "0.35";
         bool spoilersDeployed = false;
 
         EditorSimManager simManager;
