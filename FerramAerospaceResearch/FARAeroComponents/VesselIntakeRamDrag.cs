@@ -8,18 +8,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
     //This attempts some manner of handling ram drag at various speeds
     class VesselIntakeRamDrag
     {
-        static FloatCurve intakeRamDragMach;
+        const float AVG_NOZZLE_VEL_RELATIVE_TO_FREESTREAM = 0.25f;       //assume value approximately for turbojets
+        const float AVG_NOZZLE_VEL_FACTOR = AVG_NOZZLE_VEL_RELATIVE_TO_FREESTREAM * (1 - AVG_NOZZLE_VEL_RELATIVE_TO_FREESTREAM);
 
         List<FARAeroPartModule> _aeroModulesWithIntakes = new List<FARAeroPartModule>();
         List<ModuleResourceIntake> _intakeModules = new List<ModuleResourceIntake>();
         List<Transform> _intakeTransforms = new List<Transform>();
         List<ModuleEngines> _airBreathingEngines = new List<ModuleEngines>();
-
-        public VesselIntakeRamDrag()
-        {
-            if ((object)intakeRamDragMach == null)
-                GenerateIntakeRamDragCurve();
-        }
 
         public void UpdateAeroData(List<FARAeroPartModule> allUsedAeroModules, List<FARAeroPartModule> allUnusedAeroModules)
         {
@@ -31,6 +26,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             for(int i = 0; i < allUsedAeroModules.Count; i++)       //get all exposed intakes and engines
             {
                 FARAeroPartModule aeroModule = allUsedAeroModules[i];
+                if (aeroModule == null)
+                    continue;
                 Part p = aeroModule.part;
 
                 if(p.Modules.Contains("ModuleResourceIntake"))
@@ -70,7 +67,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             for(int i = 0; i < allUnusedAeroModules.Count; i++)     //get all covered airbreathing Engines
             {
-                Part p = allUsedAeroModules[i].part;
+                FARAeroPartModule aeroModule = allUnusedAeroModules[i];
+                if (aeroModule == null)
+                    continue;
+                Part p = aeroModule.part;
                 if (p.Modules.Contains("ModuleEngines"))
                 {
                     ModuleEngines engines = (ModuleEngines)p.Modules["ModuleEngines"];
@@ -116,7 +116,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
             currentThrottle /= (float)_airBreathingEngines.Count;
 
-            float currentRamDrag = intakeRamDragMach.Evaluate(machNumber);
+            float currentRamDrag = RamDragPerArea(machNumber);
             currentRamDrag *= 1f - currentThrottle;
 
             return currentRamDrag;
@@ -144,14 +144,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
         }
 
-        private void GenerateIntakeRamDragCurve()
+        private float RamDragPerArea(float machNumber)
         {
-            intakeRamDragMach = new FloatCurve();
+            float drag = machNumber * machNumber;
+            ++drag;
+            drag = 2f / drag;
+            drag *= AVG_NOZZLE_VEL_FACTOR;  //drag based on the nozzle
 
-            intakeRamDragMach.Add(0f, 1f, 0f, 0f);
-            intakeRamDragMach.Add(0.75f, 1.01f, 0f, 0f);
-            intakeRamDragMach.Add(1f, 2.1f, 0f, 0f);
-            intakeRamDragMach.Add(2f, 2f, 0f, 0f);
+            drag += 0.1f;           //drag based on inlet
+                                    //assuming inlet and nozzle area are equal
+            
+            return drag;
         }
     }
 }

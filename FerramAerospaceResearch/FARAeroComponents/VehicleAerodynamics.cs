@@ -154,6 +154,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     ferram4.FARWingAerodynamicModel w = (ferram4.FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
                     if (w)
                     {
+                        w.isShielded = false;
                         w.NUFAR_ClearAreaExposedFactor();
                         _legacyWingModels.Add(w);
                     }
@@ -163,6 +164,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     ferram4.FARWingAerodynamicModel w = (ferram4.FARWingAerodynamicModel)p.Modules["FARControllableSurface"];
                     if (w)
                     {
+                        w.isShielded = false;
                         w.NUFAR_ClearAreaExposedFactor();
                         _legacyWingModels.Add(w);
                     }
@@ -352,7 +354,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (m != null)
                 {
                     Bounds b = m.part.GetPartOverallLocalMeshBound();
-                    Vector3 vec = m.part.partTransform.up;
+                    Vector3 vec = Vector3.zero;// = m.part.partTransform.up;
                     Part p = m.part;
                     if(p.Modules.Contains("ModuleResourceIntake"))      //intakes are probably pointing in the direction we're gonna be going in
                     {
@@ -361,7 +363,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         if ((object)intakeTrans != null)
                             vec = intakeTrans.forward;
                     }
-                    if (p.Modules.Contains("FARWingAerodynamicModel"))      //aggregate wings for later calc...
+                    else if (p.Modules.Contains("FARWingAerodynamicModel"))      //aggregate wings for later calc...
                     {
                         ferram4.FARWingAerodynamicModel wing = (ferram4.FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
                         wings.Add(wing);
@@ -370,7 +372,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         wingCount += S;
                         continue;       //and don't add them to the axis calc
                     }
-                    if (p.Modules.Contains("FARControllableSurface"))      //aggregate control surfaces as well
+                    else if (p.Modules.Contains("FARControllableSurface"))      //aggregate control surfaces as well
                     {
                         ferram4.FARWingAerodynamicModel wing = (ferram4.FARControllableSurface)p.Modules["FARControllableSurface"];
                         wings.Add(wing);
@@ -379,12 +381,26 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         wingCount += S;
                         continue;
                     }
+                    else
+                    {
+                        Vector3 size = b.size;
+                        if (size.x > size.y && size.x > size.z && Math.Abs(size.y - size.z) < size.x * 0.05f)
+                            vec = new Vector3(1, 0, 0);
+                        else if (size.y > size.x && size.y > size.z && Math.Abs(size.x - size.z) < size.y * 0.05f)
+                            vec = new Vector3(0, 1, 0);
+                        else if (size.z > size.x && size.z > size.y && Math.Abs(size.x - size.y) < size.z * 0.05f)
+                            vec = new Vector3(0, 0, 1);
+                        else
+                            vec = Vector3.up;
+
+                        vec = p.partTransform.localToWorldMatrix.MultiplyVector(vec);
+                    }
                     vec = _worldToLocalMatrix.MultiplyVector(vec);
                     vec.x = Math.Abs(vec.x);
                     vec.y = Math.Abs(vec.y);
                     vec.z = Math.Abs(vec.z);
 
-                    axis += vec * b.size.x * b.size.y * b.size.z;    //scale part influence by approximate size
+                    axis += vec * p.mass;    //scale part influence by approximate size
                 }
             }
 
@@ -399,9 +415,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 S *= S * S;
                 S = Math.Sqrt(S);       //scale by 3/2 to balance with volume basis for other ones
                 Transform t = wing.transform;
-                wingAxis += Vector3.Cross((t.position - avgWingPos).normalized, t.forward * (float)S);
+
+                Vector3 addWingAxis = -Vector3.Cross((t.position - avgWingPos).normalized, t.forward * wing.srfAttachNegative * (float)S);
+                addWingAxis = _worldToLocalMatrix.MultiplyVector(addWingAxis);
+
+                wingAxis += addWingAxis;
             }
-            wingAxis = _worldToLocalMatrix.MultiplyVector(wingAxis);
 
             float axisMag = axis.magnitude;
             float wingMag = wingAxis.magnitude;

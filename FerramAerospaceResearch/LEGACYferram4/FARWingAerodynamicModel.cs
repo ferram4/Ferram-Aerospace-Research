@@ -134,7 +134,7 @@ namespace ferram4
 
         FARWingInteraction wingInteraction;
 
-        private short srfAttachNegative = 1;
+        public short srfAttachNegative = 1;
 
         private FARWingAerodynamicModel parentWing = null;
         private bool updateMassNextFrame = false;
