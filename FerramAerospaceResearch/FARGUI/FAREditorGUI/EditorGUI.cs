@@ -129,10 +129,10 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             _stabDeriv = new StabilityDerivGUI(_simManager, flapSettingDropDown, celestialBodyDropdown);
             _stabDerivLinSim = new StabilityDerivSimulationGUI(_simManager);
 
-            Color crossSection = EditorColors.GetColor(3);
+            Color crossSection = GUIColors.GetColor(3);
             crossSection.a = 0.8f;
 
-            Color crossSectionDeriv = EditorColors.GetColor(2);
+            Color crossSectionDeriv = GUIColors.GetColor(2);
             crossSectionDeriv.a = 0.8f;
 
             _areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.7f), crossSection, crossSectionDeriv, 10, 5);
@@ -207,10 +207,10 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         public static void ResetEditor()
         {
-            Color crossSection = EditorColors.GetColor(3);
+            Color crossSection = GUIColors.GetColor(3);
             crossSection.a = 0.8f;
 
-            Color crossSectionDeriv = EditorColors.GetColor(2);
+            Color crossSectionDeriv = GUIColors.GetColor(2);
             crossSectionDeriv.a = 0.8f;
             instance._areaRulingOverlay.RestartOverlay();
             //instance._areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.7f), crossSection, crossSectionDeriv, 10, 5);

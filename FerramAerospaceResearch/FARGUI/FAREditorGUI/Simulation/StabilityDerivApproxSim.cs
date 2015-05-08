@@ -135,19 +135,19 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
 
             double[] yVal = transSolve.GetSolution(0);
             ScaleAndClampValues(yVal, 180 / Math.PI, 50);
-            lines.AddData(yVal, EditorColors.GetColor(3), "β", true);
+            lines.AddData(yVal, GUIColors.GetColor(3), "β", true);
 
             yVal = transSolve.GetSolution(1);
             ScaleAndClampValues(yVal, 180 / Math.PI, 50);
-            lines.AddData(yVal, EditorColors.GetColor(2), "p", true);
+            lines.AddData(yVal, GUIColors.GetColor(2), "p", true);
 
             yVal = transSolve.GetSolution(2);
             ScaleAndClampValues(yVal, 180 / Math.PI, 50);
-            lines.AddData(yVal, EditorColors.GetColor(1), "r", true);
+            lines.AddData(yVal, GUIColors.GetColor(1), "r", true);
 
             yVal = transSolve.GetSolution(3);
             ScaleAndClampValues(yVal, 180 / Math.PI, 50);
-            lines.AddData(yVal, EditorColors.GetColor(0), "φ", true);
+            lines.AddData(yVal, GUIColors.GetColor(0), "φ", true);
 
             /*graph.SetBoundaries(0, endTime, -10, 10);
             graph.SetGridScaleUsingValues(1, 5);
@@ -226,19 +226,19 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
 
             double[] yVal = transSolve.GetSolution(0);
             ScaleAndClampValues(yVal, 1, 50);
-            lines.AddData(yVal, EditorColors.GetColor(3), "w", true);
+            lines.AddData(yVal, GUIColors.GetColor(3), "w", true);
 
             yVal = transSolve.GetSolution(1);
             ScaleAndClampValues(yVal, 1, 50);
-            lines.AddData(yVal, EditorColors.GetColor(2), "u", true);
+            lines.AddData(yVal, GUIColors.GetColor(2), "u", true);
 
             yVal = transSolve.GetSolution(2);
             ScaleAndClampValues(yVal, 180 / Math.PI, 50);
-            lines.AddData(yVal, EditorColors.GetColor(1), "q", true);
+            lines.AddData(yVal, GUIColors.GetColor(1), "q", true);
 
             yVal = transSolve.GetSolution(3);
             ScaleAndClampValues(yVal, 180 / Math.PI, 50);
-            lines.AddData(yVal, EditorColors.GetColor(0), "θ", true);
+            lines.AddData(yVal, GUIColors.GetColor(0), "θ", true);
 
             /*graph.SetBoundaries(0, endTime, -10, 10);
             graph.SetGridScaleUsingValues(1, 5);

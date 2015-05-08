@@ -378,7 +378,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if (PhysicsGlobals.AeroForceDisplay)
             {
                 if (liftArrow == null)
-                    liftArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldLiftArrow, worldLiftArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale, Color.cyan, true);
+                    liftArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldLiftArrow, worldLiftArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale, FARGUI.GUIColors.GetColor(0), true);
                 else
                 {
                     liftArrow.Direction = worldLiftArrow;
@@ -386,7 +386,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
 
                 if (dragArrow == null)
-                    dragArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldDragArrow, worldDragArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale, Color.red, true);
+                    dragArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldDragArrow, worldDragArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale, FARGUI.GUIColors.GetColor(1), true);
                 else
                 {
                     dragArrow.Direction = worldDragArrow;
@@ -394,7 +394,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
 
                 if (momentArrow == null)
-                    momentArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldSpaceTorque, worldSpaceTorque.magnitude * PhysicsGlobals.AeroForceDisplayScale, Color.yellow, true);
+                    momentArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldSpaceTorque, worldSpaceTorque.magnitude * PhysicsGlobals.AeroForceDisplayScale, FARGUI.GUIColors.GetColor(2), true);
                 else
                 {
                     momentArrow.Direction = -worldSpaceTorque;

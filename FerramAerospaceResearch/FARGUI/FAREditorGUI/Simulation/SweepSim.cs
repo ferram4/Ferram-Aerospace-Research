@@ -83,10 +83,10 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
 
             GraphData data = new GraphData();
             data.xValues = AlphaValues;
-            data.AddData(ClValues, EditorColors.GetColor(0), "Cl", true);
-            data.AddData(CdValues, EditorColors.GetColor(1), "Cd", true);
-            data.AddData(CmValues, EditorColors.GetColor(2), "Cm", true);
-            data.AddData(LDValues, EditorColors.GetColor(3), "L/D", true);
+            data.AddData(ClValues, GUIColors.GetColor(0), "Cl", true);
+            data.AddData(CdValues, GUIColors.GetColor(1), "Cd", true);
+            data.AddData(CmValues, GUIColors.GetColor(2), "Cm", true);
+            data.AddData(LDValues, GUIColors.GetColor(3), "L/D", true);
 
             return data;
         }
@@ -147,17 +147,17 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
 
             GraphData data = new GraphData();
             data.xValues = AlphaValues;
-            data.AddData(ClValues2, EditorColors.GetColor(0) * 0.5f, "Cl2", false);
-            data.AddData(ClValues, EditorColors.GetColor(0), "Cl", true);
+            data.AddData(ClValues2, GUIColors.GetColor(0) * 0.5f, "Cl2", false);
+            data.AddData(ClValues, GUIColors.GetColor(0), "Cl", true);
 
-            data.AddData(CdValues2, EditorColors.GetColor(1) * 0.5f, "Cd2", false);
-            data.AddData(CdValues, EditorColors.GetColor(1), "Cd", true);
+            data.AddData(CdValues2, GUIColors.GetColor(1) * 0.5f, "Cd2", false);
+            data.AddData(CdValues, GUIColors.GetColor(1), "Cd", true);
 
-            data.AddData(CmValues2, EditorColors.GetColor(2) * 0.5f, "Cm2", false);
-            data.AddData(CmValues, EditorColors.GetColor(2), "Cm", true);
+            data.AddData(CmValues2, GUIColors.GetColor(2) * 0.5f, "Cm2", false);
+            data.AddData(CmValues, GUIColors.GetColor(2), "Cm", true);
 
-            data.AddData(LDValues2, EditorColors.GetColor(3) * 0.5f, "L/D2", false);
-            data.AddData(LDValues, EditorColors.GetColor(3), "L/D", true);
+            data.AddData(LDValues2, GUIColors.GetColor(3) * 0.5f, "L/D2", false);
+            data.AddData(LDValues, GUIColors.GetColor(3), "L/D", true);
 
 
             return data;

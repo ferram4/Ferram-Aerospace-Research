@@ -1281,7 +1281,7 @@ namespace ferram4
             if (PhysicsGlobals.AeroForceDisplay)
             {
                 if (liftArrow == null)
-                    liftArrow = ArrowPointer.Create(part_transform, localWingCentroid, lift, lift.magnitude * PhysicsGlobals.AeroForceDisplayScale, Color.cyan, true);
+                    liftArrow = ArrowPointer.Create(part_transform, localWingCentroid, lift, lift.magnitude * PhysicsGlobals.AeroForceDisplayScale, FerramAerospaceResearch.FARGUI.GUIColors.GetColor(0), true);
                 else
                 {
                     liftArrow.Direction = lift;
@@ -1289,7 +1289,7 @@ namespace ferram4
                 }
 
                 if (dragArrow == null)
-                    dragArrow = ArrowPointer.Create(part_transform, localWingCentroid, drag, drag.magnitude * PhysicsGlobals.AeroForceDisplayScale, Color.red, true);
+                    dragArrow = ArrowPointer.Create(part_transform, localWingCentroid, drag, drag.magnitude * PhysicsGlobals.AeroForceDisplayScale, FerramAerospaceResearch.FARGUI.GUIColors.GetColor(1), true);
                 else
                 {
                     dragArrow.Direction = drag;

@@ -40,7 +40,6 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 using KSP;
 using FerramAerospaceResearch.FARGUI;
-using FerramAerospaceResearch.FARGUI.FAREditorGUI;
 using ferram4;
 
 namespace FerramAerospaceResearch
@@ -106,7 +105,7 @@ namespace FerramAerospaceResearch
             else
                 GameEvents.onGUIApplicationLauncherReady.Add(OnGUIAppLauncherReady);
 
-           // GameEvents.onGameSceneLoadRequested.Add(SaveConfigs);
+            GameEvents.onGameStateSave.Add(SaveConfigs);
         }
 
         void OnGUIAppLauncherReady()
@@ -383,33 +382,23 @@ namespace FerramAerospaceResearch
             GUILayout.Label("Editor GUI Graph Colors");
 
 
-            Color tmpColor = EditorColors.Instance[0];
+            Color tmpColor = GUIColors.Instance[0];
             ChangeColor("Cl", ref tmpColor, ref cLTexture);
-            EditorColors.Instance[0] = tmpColor;
+            GUIColors.Instance[0] = tmpColor;
 
-            tmpColor = EditorColors.Instance[1];
+            tmpColor = GUIColors.Instance[1];
             ChangeColor("Cd", ref tmpColor, ref cDTexture);
-            EditorColors.Instance[1] = tmpColor;
+            GUIColors.Instance[1] = tmpColor;
 
-            tmpColor = EditorColors.Instance[2];
+            tmpColor = GUIColors.Instance[2];
             ChangeColor("Cm", ref tmpColor, ref cMTexture);
-            EditorColors.Instance[2] = tmpColor;
+            GUIColors.Instance[2] = tmpColor;
 
-            tmpColor = EditorColors.Instance[3];
+            tmpColor = GUIColors.Instance[3];
             ChangeColor("L_D", ref tmpColor, ref l_DTexture);
-            EditorColors.Instance[3] = tmpColor;
-
-            GUILayout.EndVertical();
-            GUILayout.BeginVertical();
-            FARSettingsScenarioModule.Instance.DisplaySelection();
-
+            GUIColors.Instance[3] = tmpColor;
 
             FARActionGroupConfiguration.DrawGUI();
-
-            GUILayout.EndVertical();
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            GUILayout.BeginVertical();
             GUILayout.Label("Other Options"); // DaMichel: put it above the toolbar toggle
             FARDebugValues.aeroFailureExplosions = GUILayout.Toggle(FARDebugValues.aeroFailureExplosions, "Aero Failures Create Explosions", thisStyle);
             if (ToolbarManager.ToolbarAvailable)
@@ -437,7 +426,14 @@ namespace FerramAerospaceResearch
                 }
             }
             GUILayout.EndVertical();
+            GUILayout.BeginVertical();
+            FARSettingsScenarioModule.Instance.DisplaySelection();
+
+
+
+            GUILayout.EndVertical();
             GUILayout.EndHorizontal();
+
         }
 
         private void ChangeColor(string colorTitle, ref Color input, ref Texture2D texture)
@@ -497,24 +493,24 @@ namespace FerramAerospaceResearch
             FARAeroUtil.LoadAeroDataFromConfig();
             FARActionGroupConfiguration.LoadConfiguration();
 
-            Color tmpColor = EditorColors.Instance[0];
+            Color tmpColor = GUIColors.Instance[0];
             ReColorTexture(ref tmpColor, ref cLTexture);
-            EditorColors.Instance[0] = tmpColor;
+            GUIColors.Instance[0] = tmpColor;
 
-            tmpColor = EditorColors.Instance[1];
+            tmpColor = GUIColors.Instance[1];
             ReColorTexture(ref tmpColor, ref cDTexture);
-            EditorColors.Instance[1] = tmpColor;
+            GUIColors.Instance[1] = tmpColor;
 
-            tmpColor = EditorColors.Instance[2];
+            tmpColor = GUIColors.Instance[2];
             ReColorTexture(ref tmpColor, ref cMTexture);
-            EditorColors.Instance[2] = tmpColor;
+            GUIColors.Instance[2] = tmpColor;
 
-            tmpColor = EditorColors.Instance[3];
+            tmpColor = GUIColors.Instance[3];
             ReColorTexture(ref tmpColor, ref l_DTexture);
-            EditorColors.Instance[3] = tmpColor;
+            GUIColors.Instance[3] = tmpColor;
         }
 
-        public static void SaveConfigs(GameScenes scene)
+        public static void SaveConfigs(ConfigNode node)
         {
             SaveConfigs();
         }
@@ -531,6 +527,7 @@ namespace FerramAerospaceResearch
             FARAeroUtil.SaveCustomAeroDataToConfig();
             FARAeroStress.SaveCustomStressTemplates();
             FARActionGroupConfiguration.SaveConfigruration();
+            GUIColors.Instance.SaveColors();
             config.save();
         }
         void OnDestroy()

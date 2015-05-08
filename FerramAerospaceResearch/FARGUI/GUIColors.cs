@@ -36,26 +36,27 @@ Copyright 2014, Michael Ferrara, aka Ferram4
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 
-namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
+namespace FerramAerospaceResearch.FARGUI
 {
-    class EditorColors
+    class GUIColors
     {
         List<Color> colors = null;
 
-        static EditorColors _instance = null;
-        public static EditorColors Instance
+        static GUIColors _instance = null;
+        public static GUIColors Instance
         {
             get
             {
                 if (_instance == null)
-                    _instance = new EditorColors(); 
+                    _instance = new GUIColors(); 
                 return _instance;
             }
         }
 
-        EditorColors()
+        GUIColors()
         {
             LoadColors();
         }
@@ -65,13 +66,13 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             get
             {
                 if (_instance == null)
-                    _instance = new EditorColors(); 
+                    _instance = new GUIColors(); 
                 return _instance.colors[index];
             }
             set
             {
                 if (_instance == null)
-                    _instance = new EditorColors(); 
+                    _instance = new GUIColors(); 
                 _instance.colors[index] = value;
             }
         }
@@ -79,7 +80,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         public static Color GetColor(int index)
         {
             if (_instance == null)
-                _instance = new EditorColors();
+                _instance = new GUIColors();
 
             return _instance.colors[index];
         }
@@ -102,7 +103,19 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 if (node.HasValue("L_DColor"))
                     colors.Add(ReadColor(node.GetValue("L_DColor")));
             }
-            Debug.Log(colors.Count + " colors");
+        }
+
+        public void SaveColors()
+        {
+            ConfigNode node = new ConfigNode("@FARGUIColors[default]:FOR[FerramAerospaceResearch]");
+            node.AddValue("%ClColor", SaveColor(colors[0]));
+            node.AddValue("%CdColor", SaveColor(colors[1]));
+            node.AddValue("%CmColor", SaveColor(colors[2]));
+            node.AddValue("%L_DColor", SaveColor(colors[3]));
+
+            ConfigNode saveNode = new ConfigNode();
+            saveNode.AddNode(node);
+            saveNode.Save(KSPUtil.ApplicationRootPath.Replace("\\", "/") + "GameData/FerramAerospaceResearch/CustomFARGUIColors.cfg");
         }
 
         private Color ReadColor(string input)
@@ -136,6 +149,20 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             }
 
             return color;
+        }
+
+        private string SaveColor(Color color)
+        {
+            StringBuilder builder = new StringBuilder();
+
+            //Should return string in format of color.r, color.g, color.b
+            builder.Append(color.r);
+            builder.Append(",");
+            builder.Append(color.g);
+            builder.Append(",");
+            builder.Append(color.b);
+
+            return builder.ToString();
         }
     }
 }
