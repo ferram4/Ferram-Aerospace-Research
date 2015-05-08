@@ -117,6 +117,8 @@ Extensive reorganizing of source to reduce spaghetti and improve maintainability
 Modifications to Firehound and Colibri to function with new flight model  
 Addition of Blitzableiter and SkyEye example crafts  
 
+A 1.5x increase to all stock gimbal ranges  
+
 0.14.7V------------------------------------  
 Features:  
 Raised stalled-wing drag up to proper maximum levels  
