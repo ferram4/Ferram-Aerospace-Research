@@ -71,26 +71,26 @@ Upgraded to MM 2.6.3
 Introduction of ModularFlightIntegrator for interfacing with KSP drag / heating systems without interference with other mods
 
 Replaced previous part-based drag model with new vessel-centered, voxel-powered model:  
-	Generates voxel model of vehicle using part meshes, accounting for part clipping  
-	Drag is calculated for vehicle as a whole, rather than linear combination of parts  
-	Payload fairings and cargo bays are emergent from code and do not require special treatment with configs  
-	Area ruling of vehicles is accounted for; unsmooth area distributions will result in very high drag at and above Mach 1  
-	Body lift accounts for vehicle shape in determining potential and viscous flow contributions  
-	Areas exposed to outside used for stock heating calculations  
+	* Generates voxel model of vehicle using part meshes, accounting for part clipping  
+	* Drag is calculated for vehicle as a whole, rather than linear combination of parts  
+	* Payload fairings and cargo bays are emergent from code and do not require special treatment with configs  
+	* Area ruling of vehicles is accounted for; unsmooth area distributions will result in very high drag at and above Mach 1  
+	* Body lift accounts for vehicle shape in determining potential and viscous flow contributions  
+	* Areas exposed to outside used for stock heating calculations  
 
 Performance optimizations in legacy wing model  
 Jet engine windmilling drag accounted for at intakes  
 
 Editor GUI improvements including:  
-	Greater clarity in AoA / Mach sweep tab  
-	Stability deriv GUI math modified for improved accuracy  
-	Stability deriv simulation tweaked to fix some minor issues in displaying and calculating response  
-	Addition of a Transonic Design tab that displays cross-section distribution and drag at Mach 1 for area ruling purposes  
+	* Greater clarity in AoA / Mach sweep tab  
+	* Stability deriv GUI math modified for improved accuracy  
+	* Stability deriv simulation tweaked to fix some minor issues in displaying and calculating response  
+	* Addition of a Transonic Design tab that displays cross-section distribution and drag at Mach 1 for area ruling purposes  
 
 Parachute methods have been replaced with RealChuteLite implementation by stupid_chris:  
-	Less severe parachute deployment  
-	Parachutes melt / break in high Mach number flows  
-	No interference with RealChute  
+	* Less severe parachute deployment  
+	* Parachutes melt / break in high Mach number flows  
+	* No interference with RealChute  
 
 Changes to FARAPI to get information faster  
 	
