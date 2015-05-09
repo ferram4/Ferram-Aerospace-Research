@@ -918,7 +918,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 else
                     potentialFlowNormalForce = (float)(nextArea - prevArea) * 0.5f;      //calcualted from area change
 
-                float areaChangeMax = (float)Math.Min(nextArea, prevArea) * 0.1f;
+                float areaChangeMax = (float)Math.Min(Math.Min(nextArea, prevArea) * 0.1, _length * 0.01);
 
                 float sonicBaseDrag = 0.21f;
 
@@ -971,8 +971,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     xForcePressureAoA0.Add((float)criticalMachNumber, (hypersonicDragForward * 0.4f) * lowFinenessRatioSubsonicFactor, 0f, 0f);    //hypersonic drag used as a proxy for effects due to flow separation
                     xForcePressureAoA180.Add((float)criticalMachNumber, (sonicBaseDrag * 0.25f - hypersonicDragBackward * 0.4f) * lowFinenessRatioSubsonicFactor, 0f, 0f);
 
-                    sonicAoA0Drag = sonicWaveDrag +hypersonicDragForward * 0.4f;
-                    sonicAoA180Drag = -sonicWaveDrag + sonicBaseDrag -hypersonicDragBackward * 0.2f + sonicBaseDrag;
+                    sonicAoA0Drag = sonicWaveDrag +hypersonicDragForward * 0.2f;
+                    sonicAoA180Drag = -sonicWaveDrag + sonicBaseDrag -hypersonicDragBackward * 0.2f;
                     //xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.1f, 0f, 0f);     //positive is force forward; negative is force backward
                     //xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.1f + sonicBaseDrag, 0f, 0f);
                 }
@@ -981,7 +981,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     xForcePressureAoA0.Add((float)criticalMachNumber, (-sonicBaseDrag * 0.25f + hypersonicDragForward * 0.4f) * lowFinenessRatioSubsonicFactor, 0f, 0f);
                     xForcePressureAoA180.Add((float)criticalMachNumber, (-hypersonicDragBackward * 0.4f) * lowFinenessRatioSubsonicFactor, 0f, 0f);
 
-                    sonicAoA0Drag = sonicWaveDrag - sonicBaseDrag + hypersonicDragForward * 0.2f - sonicBaseDrag;
+                    sonicAoA0Drag = sonicWaveDrag - sonicBaseDrag + hypersonicDragForward * 0.2f;
                     sonicAoA180Drag = -sonicWaveDrag - hypersonicDragBackward * 0.2f;
 
                     //xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.1f - sonicBaseDrag, 0f, 0f);     //positive is force forward; negative is force backward
