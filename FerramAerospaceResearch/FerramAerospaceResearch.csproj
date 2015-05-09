@@ -68,6 +68,7 @@
     <Compile Include="FARGUI\FARFlightGUI\AirspeedSettingsGUI.cs" />
     <Compile Include="FARGUI\FARFlightGUI\FlightStatusGUI.cs" />
     <Compile Include="FARGUI\FARFlightGUI\FlightDataGUI.cs" />
+    <Compile Include="FARGUI\FARFlightGUI\InternalSpeedFAR.cs" />
     <Compile Include="FARGUI\FARFlightGUI\StabilityAugmentation.cs" />
     <Compile Include="FARGUI\FARFlightGUI\VesselFlightInfo.cs" />
     <Compile Include="FARGUI\FARFlightGUI\PhysicsCalcs.cs" />

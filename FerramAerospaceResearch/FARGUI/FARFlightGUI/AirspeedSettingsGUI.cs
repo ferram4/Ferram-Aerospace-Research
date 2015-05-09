@@ -49,44 +49,6 @@ using UnityEngine;
 
 namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 {
-    /* DaMichel: I implemented this replacement class for the stock IVA speedometer.
-     * It just fetches the FAR AirspeedSettingsGUI of the current vessel to take the 
-     *  speed string from there. ModuleManager takes care of adjusting the IVA prop
-     * (Squad/Props/ledPanelSpeed/prop.cfg) to use this class instead of InternalSpeed.
-     */
-    public class InternalSpeedFAR : InternalSpeed
-    {
-        private string[] shortCaptions = {
-            "Srf.: ",
-            "IAS: ",
-            "EAS: ",
-            "Mach: "
-        };
-
-        public override void OnUpdate()
-        {
-            FlightGUI flightGUI = FlightGUI.vesselFlightGUI[vessel];
-            if (flightGUI != null)
-            {
-                AirspeedSettingsGUI airspeedSettingsGUI = flightGUI.airSpeedGUI;
-                if (airspeedSettingsGUI != null)
-                {
-                    string value;
-                    AirspeedSettingsGUI.SurfaceVelMode mode;
-
-                    if (airspeedSettingsGUI.GetVelocityDisplayString(out value, out mode))
-                    {
-                        this.textObject.text.Text = shortCaptions[(int)mode] + value;
-                        return; // we are done here
-                    }
-                }
-            }
-            // if FAR velocity display is not ready or not used -> fall back to stock behaviour
-            base.OnUpdate();  
-        }
-    };
-
-
     public class AirspeedSettingsGUI
     {   
         Vessel _vessel;
