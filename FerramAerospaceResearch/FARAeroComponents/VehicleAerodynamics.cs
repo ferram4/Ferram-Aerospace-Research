@@ -351,12 +351,49 @@ namespace FerramAerospaceResearch.FARAeroComponents
         private Vector3 CalculateVehicleMainAxis()
         {
             Vector3 axis = Vector3.zero;
+            HashSet<Part> accountedForParts = new HashSet<Part>();
 
-            List<ferram4.FARWingAerodynamicModel> wings = new List<ferram4.FARWingAerodynamicModel>();
-            Vector3 avgWingPos = Vector3.zero;
-            float wingCount = 0;
+            for(int i = 0; i < _currentGeoModules.Count; i++)
+            {
+                Part p = _currentGeoModules[i].part;
+                Vector3 candVector = p.partTransform.up;
+                if (p.Modules.Contains("ModuleResourceIntake"))      //intakes are probably pointing in the direction we're gonna be going in
+                {
+                    ModuleResourceIntake intake = (ModuleResourceIntake)p.Modules["ModuleResourceIntake"];
+                    Transform intakeTrans = p.FindModelTransform(intake.intakeTransformName);
+                    if ((object)intakeTrans != null)
+                        candVector = intakeTrans.forward;
+                }
+                for(int j = 0; j < p.symmetryCounterparts.Count; j++)
+                {
+                    Part q = p.symmetryCounterparts[j];
+                    if (q.Modules.Contains("ModuleResourceIntake"))      //intakes are probably pointing in the direction we're gonna be going in
+                    {
+                        ModuleResourceIntake intake = (ModuleResourceIntake)q.Modules["ModuleResourceIntake"];
+                        Transform intakeTrans = q.FindModelTransform(intake.intakeTransformName);
+                        if ((object)intakeTrans != null)
+                            candVector += intakeTrans.forward;
+                    }
+                    else
+                        candVector += q.partTransform.up;
 
-            for (int i = 0; i < _currentGeoModules.Count; i++)      //get axis by averaging all parts up vectors
+                    candVector = _worldToLocalMatrix.MultiplyVector(candVector);
+                    candVector.x = Math.Abs(candVector.x);
+                    candVector.y = Math.Abs(candVector.y);
+                    candVector.z = Math.Abs(candVector.z);
+
+                    axis += candVector * p.mass * (1 + p.symmetryCounterparts.Count);    //scale part influence by approximate size
+                }
+            }
+
+
+            //List<ferram4.FARWingAerodynamicModel> wings = new List<ferram4.FARWingAerodynamicModel>();
+            //Vector3 avgWingPos = Vector3.zero;
+            //float wingCount = 0;
+
+
+
+            /*for (int i = 0; i < _currentGeoModules.Count; i++)      //get axis by averaging all parts up vectors
             {
                 GeometryPartModule m = _currentGeoModules[i];
                 if (m != null)
@@ -367,7 +404,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if(p.Modules.Contains("ModuleResourceIntake"))      //intakes are probably pointing in the direction we're gonna be going in
                     {
                         ModuleResourceIntake intake = (ModuleResourceIntake)p.Modules["ModuleResourceIntake"];
-                        Transform intakeTrans = m.part.FindModelTransform(intake.intakeTransformName);
+                        Transform intakeTrans = p.FindModelTransform(intake.intakeTransformName);
                         if ((object)intakeTrans != null)
                             vec = intakeTrans.forward;
                     }
@@ -424,7 +461,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 S = Math.Sqrt(S);       //scale by 3/2 to balance with volume basis for other ones
                 Transform t = wing.transform;
 
-                Vector3 addWingAxis = -Vector3.Cross((t.position - avgWingPos).normalized, t.forward * wing.srfAttachNegative * (float)S);
+                Vector3 addWingAxis = -Vector3.Cross((t.position - avgWingPos).normalized, t.forward * (float)S);
                 addWingAxis = _worldToLocalMatrix.MultiplyVector(addWingAxis);
 
                 wingAxis += addWingAxis;
@@ -437,7 +474,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             wingAxis.Normalize();
 
             if (Math.Abs(Vector3.Dot(axis, wingAxis)) < 0.8 && axisMag < 2 * wingMag)
-                axis = wingAxis;
+                axis = wingAxis;*/
 
             float dotProdX, dotProdY, dotProdZ;
 
