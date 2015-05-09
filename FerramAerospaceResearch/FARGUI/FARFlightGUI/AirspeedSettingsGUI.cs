@@ -46,12 +46,50 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+
 namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 {
-    class AirspeedSettingsGUI
+    /* DaMichel: I implemented this replacement class for the stock IVA speedometer.
+     * It just fetches the FAR AirspeedSettingsGUI of the current vessel to take the 
+     *  speed string from there. ModuleManager takes care of adjusting the IVA prop
+     * (Squad/Props/ledPanelSpeed/prop.cfg) to use this class instead of InternalSpeed.
+     */
+    public class InternalSpeedFAR : InternalSpeed
     {
-        Vessel _vessel;
+        private string[] shortCaptions = {
+            "Srf.: ",
+            "IAS: ",
+            "EAS: ",
+            "Mach: "
+        };
 
+        public override void OnUpdate()
+        {
+            FlightGUI flightGUI = FlightGUI.vesselFlightGUI[vessel];
+            if (flightGUI != null)
+            {
+                AirspeedSettingsGUI airspeedSettingsGUI = flightGUI.airSpeedGUI;
+                if (airspeedSettingsGUI != null)
+                {
+                    string value;
+                    AirspeedSettingsGUI.SurfaceVelMode mode;
+
+                    if (airspeedSettingsGUI.GetVelocityDisplayString(out value, out mode))
+                    {
+                        this.textObject.text.Text = shortCaptions[(int)mode] + value;
+                        return; // we are done here
+                    }
+                }
+            }
+            // if FAR velocity display is not ready or not used -> fall back to stock behaviour
+            base.OnUpdate();  
+        }
+    };
+
+
+    public class AirspeedSettingsGUI
+    {   
+        Vessel _vessel;
         GUIStyle buttonStyle;
 
         public AirspeedSettingsGUI(Vessel vessel)
@@ -94,8 +132,9 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         SurfaceVelMode velMode = SurfaceVelMode.TAS;
         SurfaceVelUnit unitMode = SurfaceVelUnit.M_S;
-
-        private List<InternalSpeed> speedometers = null;
+        // DaMichel: cache the velocity display string for retrieval in GetVelocityDisplayString
+        string velString;
+        bool active; // Have we actually generated the string?
 
         public void AirSpeedSettings()
         {
@@ -110,30 +149,30 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             velMode = (SurfaceVelMode)GUILayout.SelectionGrid((int)velMode, surfModel_str, 1, buttonStyle);
             unitMode = (SurfaceVelUnit)GUILayout.SelectionGrid((int)unitMode, surfUnit_str, 1, buttonStyle);
             GUILayout.EndHorizontal();
-
             //            SaveAirSpeedPos.x = AirSpeedPos.x;
             //            SaveAirSpeedPos.y = AirSpeedPos.y;
         }
 
+        public bool GetVelocityDisplayString(out string value_out, out SurfaceVelMode mode_out)
+        {
+            value_out = velString;
+            mode_out = velMode;
+            return active;
+        }
+
         public void ChangeSurfVelocity()
         {
+            active = false;
+            //DaMichel: Avoid conflict between multiple vessels in physics range. We only want to show the speed of the active vessel.
             if (FlightGlobals.ActiveVessel != _vessel)
-            {
-                if (speedometers != null)
-                    speedometers = null;
                 return;
-            }
             //DaMichel: Keep our fingers off of this also if there is no atmosphere (staticPressure <= 0)
             if (FlightUIController.speedDisplayMode != FlightUIController.SpeedDisplayModes.Surface || _vessel.atmDensity <= 0)
                 return;
-            FlightUIController UI = FlightUIController.fetch;
 
-            if (UI.spdCaption == null || UI.speed == null)
-                return;
-
-            string speedometerCaption = "Surf: ";
             double unitConversion = 1;
             string unitString = "m/s";
+            string caption;
             if (unitMode == SurfaceVelUnit.KNOTS)
             {
                 unitConversion = 1.943844492440604768413343347219;
@@ -151,58 +190,38 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
             if (velMode == SurfaceVelMode.TAS)
             {
-                UI.spdCaption.text = "Surface";
-                UI.speed.text = (_vessel.srfSpeed * unitConversion).ToString("F1") + unitString;
+                caption = "Surface";
+                velString = (_vessel.srfSpeed * unitConversion).ToString("F1") + unitString;
             }
             else
             {
                 if (velMode == SurfaceVelMode.IAS)
                 {
-                    UI.spdCaption.text = "IAS";
-                    speedometerCaption = "IAS: ";
+                    caption = "IAS";
                     double densityRatio = (FARAeroUtil.GetCurrentDensity(_vessel.mainBody, _vessel.altitude, false) * 1.225);
                     double pressureRatio = FARAeroUtil.StagnationPressureCalc(_vessel.mach);
-                    UI.speed.text = (_vessel.srfSpeed * Math.Sqrt(densityRatio) * pressureRatio * unitConversion).ToString("F1") + unitString;
+                    velString = (_vessel.srfSpeed * Math.Sqrt(densityRatio) * pressureRatio * unitConversion).ToString("F1") + unitString;
                 }
                 else if (velMode == SurfaceVelMode.EAS)
                 {
-                    UI.spdCaption.text = "EAS";
-                    speedometerCaption = "EAS: ";
+                    caption = "EAS";
                     double densityRatio = (FARAeroUtil.GetCurrentDensity(_vessel.mainBody, _vessel.altitude, false) * 1.225);
-                    UI.speed.text = (_vessel.srfSpeed * Math.Sqrt(densityRatio) * unitConversion).ToString("F1") + unitString;
+                    velString = (_vessel.srfSpeed * Math.Sqrt(densityRatio) * unitConversion).ToString("F1") + unitString;
                 }
                 else// if (velMode == SurfaceVelMode.MACH)
                 {
-                    UI.spdCaption.text = "Mach";
-                    speedometerCaption = "Mach: ";
-                    UI.speed.text = _vessel.mach.ToString("F3");
+                    caption = "Mach";
+                    velString = _vessel.mach.ToString("F3");
                 }
             }
-            /* DaMichel: cache references to current IVA speedometers.
-             * IVA stuff is reallocated whenever you switch between vessels. So i see
-             * little point in storing the list of speedometers permanently. It just has
-             * to be freshly cached whenever something changes. */
-            if (FlightGlobals.ready)
-            {
-                if (speedometers == null)
-                {
-                    speedometers = new List<InternalSpeed>();
-                    for (int i = 0; i < _vessel.parts.Count; ++i)
-                    {
-                        Part p = _vessel.parts[i];
-                        if (p && p.internalModel)
-                        {
-                            speedometers.AddRange(p.internalModel.GetComponentsInChildren<InternalSpeed>());
-                        }
-                    }
-                    //Debug.Log("FAR: Got new references to speedometers"); // check if it is really only executed when vessel change
-                }
-                string text = speedometerCaption + UI.speed.text;
-                for (int i = 0; i < speedometers.Count; ++i)
-                {
-                    speedometers[i].textObject.text.Text = text; // replace with FAR velocity readout
-                }
-            }
+            active = true;
+
+            FlightUIController UI = FlightUIController.fetch;
+            if (UI.spdCaption == null || UI.speed == null)
+                return;
+
+            UI.spdCaption.text = caption;
+            UI.speed.text = velString;
         }
 
         public void SaveSettings()
