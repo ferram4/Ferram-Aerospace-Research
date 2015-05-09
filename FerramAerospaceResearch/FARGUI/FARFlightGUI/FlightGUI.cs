@@ -77,6 +77,10 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         StabilityAugmentation _stabilityAugmentation;
         FlightDataGUI _flightDataGUI;
         AirspeedSettingsGUI _airSpeedGUI;
+        public AirspeedSettingsGUI airSpeedGUI
+        {
+            get { return _airSpeedGUI; }
+        }
 
         bool showFlightDataWindow = false;
         bool showSettingsWindow = false;
