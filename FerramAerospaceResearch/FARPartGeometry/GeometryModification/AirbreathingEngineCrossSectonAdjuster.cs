@@ -52,7 +52,8 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
     {
         Vector3 vehicleBasisForwardVector;
         double exitArea;
-        Matrix4x4 thisToWorldMatrix;
+        Matrix4x4 thisToVesselMatrix;
+        Matrix4x4 meshLocalToWorld;
 
         ModuleEngines engine;
         public ModuleEngines EngineModule
@@ -65,18 +66,20 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
             return part;
         }
 
+
         public AirbreathingEngineCrossSectonAdjuster(ModuleEngines engine, Matrix4x4 worldToVesselMatrix)
         {
-            vehicleBasisForwardVector = Vector3.zero;
-            for (int i = 0; i < engine.thrustTransforms.Count; i++)
-                vehicleBasisForwardVector += engine.thrustTransforms[i].forward;
+            vehicleBasisForwardVector = Vector3.forward;
+            //for (int i = 0; i < engine.thrustTransforms.Count; i++)
+            //    vehicleBasisForwardVector += engine.thrustTransforms[i].forward;
 
-            vehicleBasisForwardVector = worldToVesselMatrix.MultiplyVector(vehicleBasisForwardVector);
+            thisToVesselMatrix = worldToVesselMatrix * engine.thrustTransforms[0].localToWorldMatrix;
+
+            vehicleBasisForwardVector = thisToVesselMatrix.MultiplyVector(vehicleBasisForwardVector);
 
             vehicleBasisForwardVector.Normalize();
             vehicleBasisForwardVector *= -1f;
 
-            thisToWorldMatrix = worldToVesselMatrix.inverse;
 
             this.engine = engine;
             this.part = engine.part;
@@ -92,6 +95,7 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
         public double AreaRemovedFromCrossSection(Vector3 vehicleAxis)
         {
             double dot = Vector3.Dot(vehicleAxis, vehicleBasisForwardVector);
+            Debug.Log("engine dot" + dot);
             if (dot > 0.9)
                 return exitArea;
             else
@@ -105,13 +109,23 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
         public void TransformBasis(Matrix4x4 matrix)
         {
-            vehicleBasisForwardVector = Vector3.zero;
-            for (int i = 0; i < engine.thrustTransforms.Count; i++)
-                vehicleBasisForwardVector = engine.thrustTransforms[i].forward;
+            Matrix4x4 tempMatrix = thisToVesselMatrix.inverse;
+            thisToVesselMatrix = matrix * meshLocalToWorld;
 
-            vehicleBasisForwardVector = matrix.MultiplyVector(vehicleBasisForwardVector);
+            tempMatrix = thisToVesselMatrix * tempMatrix;
 
-            thisToWorldMatrix = matrix.inverse;
+            vehicleBasisForwardVector.Normalize();
+            vehicleBasisForwardVector = tempMatrix.MultiplyVector(vehicleBasisForwardVector);
+        }
+
+        public double GetCrossSectionAreaOffset()
+        {
+            return exitArea;
+        }
+
+        public void SetThisToVesselMatrixForTransform()
+        {
+            meshLocalToWorld = engine.thrustTransforms[0].localToWorldMatrix;
         }
     }
 }

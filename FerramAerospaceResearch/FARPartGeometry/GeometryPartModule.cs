@@ -86,7 +86,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             //RebuildAllMeshData();
             SetupIGeometryUpdaters();
-            //SetupICrossSectionAdjusters();
+            SetupICrossSectionAdjusters();
             GetAnimations();
         }
 
@@ -266,7 +266,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
                         AirbreathingEngineCrossSectonAdjuster engineAdjuster = new AirbreathingEngineCrossSectonAdjuster(engines, worldToVesselMatrix);
                         crossSectionAdjusters.Add(engineAdjuster);
-                        Debug.Log("added engine");
                         break;
                     }
                 }
@@ -387,6 +386,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         meshDataList.RemoveAt(i);
                         i--;
                     }*/
+                }
+            }
+            if(crossSectionAdjusters != null)
+            {
+                for(int i = 0; i < crossSectionAdjusters.Count; i++)
+                {
+                    crossSectionAdjusters[i].SetThisToVesselMatrixForTransform();
                 }
             }
         }

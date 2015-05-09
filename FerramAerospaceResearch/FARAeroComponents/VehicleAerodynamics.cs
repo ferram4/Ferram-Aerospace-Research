@@ -393,99 +393,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
             }
 
-
-            //List<ferram4.FARWingAerodynamicModel> wings = new List<ferram4.FARWingAerodynamicModel>();
-            //Vector3 avgWingPos = Vector3.zero;
-            //float wingCount = 0;
-
-
-
-            /*for (int i = 0; i < _currentGeoModules.Count; i++)      //get axis by averaging all parts up vectors
-            {
-                GeometryPartModule m = _currentGeoModules[i];
-                if (m != null)
-                {
-                    Bounds b = m.part.GetPartOverallLocalMeshBound();
-                    Vector3 vec = Vector3.zero;// = m.part.partTransform.up;
-                    Part p = m.part;
-                    if(p.Modules.Contains("ModuleResourceIntake"))      //intakes are probably pointing in the direction we're gonna be going in
-                    {
-                        ModuleResourceIntake intake = (ModuleResourceIntake)p.Modules["ModuleResourceIntake"];
-                        Transform intakeTrans = p.FindModelTransform(intake.intakeTransformName);
-                        if ((object)intakeTrans != null)
-                            vec = intakeTrans.forward;
-                    }
-                    else if (p.Modules.Contains("FARWingAerodynamicModel"))      //aggregate wings for later calc...
-                    {
-                        ferram4.FARWingAerodynamicModel wing = (ferram4.FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
-                        wings.Add(wing);
-                        float S = (float)wing.S;
-                        avgWingPos += p.transform.position * S;
-                        wingCount += S;
-                        continue;       //and don't add them to the axis calc
-                    }
-                    else if (p.Modules.Contains("FARControllableSurface"))      //aggregate control surfaces as well
-                    {
-                        ferram4.FARWingAerodynamicModel wing = (ferram4.FARControllableSurface)p.Modules["FARControllableSurface"];
-                        wings.Add(wing);
-                        float S = (float)wing.S;
-                        avgWingPos += p.transform.position * S;
-                        wingCount += S;
-                        continue;
-                    }
-                    else
-                    {
-                        Vector3 size = b.size;
-                        if (size.x > size.y && size.x > size.z && Math.Abs(size.y - size.z) < size.x * 0.05f)
-                            vec = new Vector3(1, 0, 0);
-                        else if (size.y > size.x && size.y > size.z && Math.Abs(size.x - size.z) < size.y * 0.05f)
-                            vec = new Vector3(0, 1, 0);
-                        else if (size.z > size.x && size.z > size.y && Math.Abs(size.x - size.y) < size.z * 0.05f)
-                            vec = new Vector3(0, 0, 1);
-                        else
-                            vec = Vector3.up;
-
-                        vec = p.partTransform.localToWorldMatrix.MultiplyVector(vec);
-                    }
-                    vec = _worldToLocalMatrix.MultiplyVector(vec);
-                    vec.x = Math.Abs(vec.x);
-                    vec.y = Math.Abs(vec.y);
-                    vec.z = Math.Abs(vec.z);
-
-                    axis += vec * p.mass;    //scale part influence by approximate size
-                }
-            }
-
-            avgWingPos /= wingCount;
-
-            Vector3 wingAxis = Vector3.zero;
-
-            for (int i = 0; i < wings.Count; i++)
-            {
-                ferram4.FARWingAerodynamicModel wing = wings[i];
-                double S = wing.S;
-                S *= S * S;
-                S = Math.Sqrt(S);       //scale by 3/2 to balance with volume basis for other ones
-                Transform t = wing.transform;
-
-                Vector3 addWingAxis = -Vector3.Cross((t.position - avgWingPos).normalized, t.forward * (float)S);
-                addWingAxis = _worldToLocalMatrix.MultiplyVector(addWingAxis);
-
-                wingAxis += addWingAxis;
-            }
-
-            float axisMag = axis.magnitude;
-            float wingMag = wingAxis.magnitude;
-
-            axis.Normalize();   //normalize axis for later calcs
-            wingAxis.Normalize();
-
-            if (Math.Abs(Vector3.Dot(axis, wingAxis)) < 0.8 && axisMag < 2 * wingMag)
-                axis = wingAxis;*/
-
             float dotProdX, dotProdY, dotProdZ;
-
-            //axis = _worldToLocalMatrix.MultiplyVector(axis);
 
             dotProdX = Math.Abs(Vector3.Dot(axis, Vector3.right));
             dotProdY = Math.Abs(Vector3.Dot(axis, Vector3.up));
@@ -702,12 +610,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
         }
 
-        /*void AdjustCrossSectionForAirDucting(VoxelCrossSection[] vehicleCrossSection, List<GeometryPartModule> geometryModules)
+        unsafe void AdjustCrossSectionForAirDucting(VoxelCrossSection[] vehicleCrossSection, List<GeometryPartModule> geometryModules)
         {
             List<ICrossSectionAdjuster> forwardFacingAdjustments, rearwardFacingAdjustments;
             forwardFacingAdjustments = new List<ICrossSectionAdjuster>();
             rearwardFacingAdjustments = new List<ICrossSectionAdjuster>();
 
+            double* areaAdjustment = stackalloc double[vehicleCrossSection.Length];
 
             for (int i = 0; i < geometryModules.Count; i++)
             {
@@ -715,11 +624,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 g.GetICrossSectionAdjusters(forwardFacingAdjustments, rearwardFacingAdjustments, _worldToLocalMatrix, _vehicleMainAxis);
             }
 
+            Debug.Log("forward Count" + forwardFacingAdjustments.Count);
+            Debug.Log("rearward Count" + rearwardFacingAdjustments.Count);
 
             double intakeArea = 0;
             double totalEngineThrust = 0;
 
-            for (int i = 0; i < forwardFacingAdjustments.Count; i++)
+            for (int i = 0; i < forwardFacingAdjustments.Count; i++)    //get all forward facing engines / intakes
             {
                 ICrossSectionAdjuster adjuster = forwardFacingAdjustments[i];
                 if (adjuster is AirbreathingEngineCrossSectonAdjuster)
@@ -728,10 +639,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     intakeArea += adjuster.AreaRemovedFromCrossSection();
             }
 
-            if (intakeArea > 0 && totalEngineThrust > 0)
+            Dictionary<Part, double> adjusterAreaPerVoxelDict = new Dictionary<Part, double>();
+            Dictionary<Part, ICrossSectionAdjuster> adjusterPartDict = new Dictionary<Part, ICrossSectionAdjuster>();
+            if (intakeArea > 0 && totalEngineThrust > 0)        //if they exist, go through the calculations
             {
-
-                double engineAreaPerUnitThrust = intakeArea / totalEngineThrust;
+                Debug.Log("intakes and engines for forward");
+                double engineAreaPerUnitThrust = intakeArea / totalEngineThrust;        //figure how much intake area per thrust so that it can be divided up per engine
 
                 for (int i = 0; i < forwardFacingAdjustments.Count; i++)
                 {
@@ -743,13 +656,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     }
                 }
 
-                /*double forwardAreaDiff = 0;
-                for(int i = 0; i < forwardFacingAdjustments.Count; i++)
-                {
-                    forwardAreaDiff += forwardFacingAdjustments[i].AreaRemovedFromCrossSection(_vehicleMainAxis);
-                }
-
-                Dictionary<Part, double> adjusterAreaPerVoxelDict = new Dictionary<Part, double>();
 
                 for (int i = 0; i < vehicleCrossSection.Length; i++)
                 {
@@ -770,29 +676,33 @@ namespace FerramAerospaceResearch.FARAeroComponents
                                 adjusterAreaPerVoxelDict[p] = val.crossSectionalAreaCount;
                         }
                     }
-
                 }
+
 
                 for (int i = 0; i < forwardFacingAdjustments.Count; i++)
                 {
                     ICrossSectionAdjuster adjuster = forwardFacingAdjustments[i];
                     double area = adjuster.AreaRemovedFromCrossSection();
                     double tmp = adjusterAreaPerVoxelDict[adjuster.GetPart()];
+
                     adjusterAreaPerVoxelDict[adjuster.GetPart()] = area / tmp;
+                    adjusterPartDict.Add(adjuster.GetPart(), adjuster);
                 }
 
                 Dictionary<Part, double> partActiveAreaRemoved = new Dictionary<Part, double>();
 
+                double lastArea = 0;
+
                 for (int i = 0; i < vehicleCrossSection.Length; i++)
                 {
-                    double area = vehicleCrossSection[i].area;
+                    double area = 0;
                     foreach (KeyValuePair<Part, VoxelCrossSection.SideAreaValues> partAreaPair in vehicleCrossSection[i].partSideAreaValues)
                     {
                         double areaPerVoxel;
                         Part p = partAreaPair.Key;
                         if (adjusterAreaPerVoxelDict.TryGetValue(p, out areaPerVoxel))
                         {
-                            double areaRemoved = areaPerVoxel * partAreaPair.Value.crossSectionalAreaCount;
+                            double areaRemoved = areaPerVoxel * partAreaPair.Value.crossSectionalAreaCount - adjusterPartDict[p].GetCrossSectionAreaOffset();
                             double currentVal;
 
                             if (partActiveAreaRemoved.TryGetValue(p, out currentVal))
@@ -807,12 +717,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     foreach (KeyValuePair<Part, double> partAreaRemovedPair in partActiveAreaRemoved)
                         area -= partAreaRemovedPair.Value;
 
-
-                    vehicleCrossSection[i].area = Math.Max(0.25 * vehicleCrossSection[i].area, area);
+                    lastArea = area;
+                    areaAdjustment[i] += area;
+                    //vehicleCrossSection[i].area = Math.Max(0.25 * vehicleCrossSection[i].area, area);
                 }
             }
-            /*
-            intakeArea = 0;
+            
+            /*intakeArea = 0;
             totalEngineThrust = 0;
 
             for (int i = 0; i < rearwardFacingAdjustments.Count; i++)
@@ -823,6 +734,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (adjuster is IntakeCrossSectionAdjuster)
                     intakeArea += adjuster.AreaRemovedFromCrossSection();
             }
+            adjusterAreaPerVoxelDict.Clear();
+            adjusterPartDict.Clear();
+
             if (intakeArea > 0 && totalEngineThrust > 0)
             {
 
@@ -837,7 +751,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     }
                 }
 
-                Dictionary<Part, double> adjusterAreaPerVoxelDict = new Dictionary<Part, double>();
                 
                 for (int i = 0; i < vehicleCrossSection.Length; i++)
                 {
@@ -859,26 +772,28 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         }
                     }
                 }
+
                 for (int i = 0; i < rearwardFacingAdjustments.Count; i++)
                 {
                     ICrossSectionAdjuster adjuster = rearwardFacingAdjustments[i];
                     double area = adjuster.AreaRemovedFromCrossSection();
                     double tmp = adjusterAreaPerVoxelDict[adjuster.GetPart()];
                     adjusterAreaPerVoxelDict[adjuster.GetPart()] = area / tmp;
+                    adjusterPartDict.Add(adjuster.GetPart(), adjuster);
                 }
 
                 Dictionary<Part, double> partActiveAreaRemoved = new Dictionary<Part, double>();
 
                 for (int i = vehicleCrossSection.Length - 1; i >= 0; i--)
                 {
-                    double area = vehicleCrossSection[i].area;
+                    double area = 0;
                     foreach (KeyValuePair<Part, VoxelCrossSection.SideAreaValues> partAreaPair in vehicleCrossSection[i].partSideAreaValues)
                     {
                         double areaPerVoxel;
                         Part p = partAreaPair.Key;
                         if (adjusterAreaPerVoxelDict.TryGetValue(p, out areaPerVoxel))
                         {
-                            double areaRemoved = areaPerVoxel * partAreaPair.Value.crossSectionalAreaCount;
+                            double areaRemoved = areaPerVoxel * partAreaPair.Value.crossSectionalAreaCount - adjusterPartDict[p].GetCrossSectionAreaOffset();
                             double currentVal;
 
                             if (partActiveAreaRemoved.TryGetValue(p, out currentVal))
@@ -894,10 +809,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         area -= partAreaRemovedPair.Value;
 
 
-                    vehicleCrossSection[i].area = Math.Max(0.25 * vehicleCrossSection[i].area, area);
+                    areaAdjustment[i] += area;
                 }
+            }*/
+            for(int i = 0; i < vehicleCrossSection.Length; i++)
+            {
+                double areaUnchanged = vehicleCrossSection[i].area;
+                double areaChanged = areaUnchanged + areaAdjustment[i];
+                vehicleCrossSection[i].area = Math.Max(0.15 * areaUnchanged, areaChanged);
+
             }
-        }*/
+        }
 
         #region Aerodynamics Calculations
 

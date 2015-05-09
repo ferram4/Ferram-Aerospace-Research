@@ -56,5 +56,9 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
         double AreaRemovedFromCrossSection();
 
         void TransformBasis(Matrix4x4 transform);
+
+        double GetCrossSectionAreaOffset();
+
+        void SetThisToVesselMatrixForTransform();
     }
 }

@@ -49,11 +49,13 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 {
     class IntakeCrossSectionAdjuster : ICrossSectionAdjuster
     {
-        const double INTAKE_AREA_SCALAR = 75;
+        const double INTAKE_AREA_SCALAR = 100;
 
         Vector3 vehicleBasisForwardVector;
         double intakeArea;
-        Matrix4x4 thisToWorldMatrix;
+        Matrix4x4 thisToVesselMatrix;
+        Matrix4x4 meshLocalToWorld;
+        Transform intakeTrans;
 
         ModuleResourceIntake intake;
         public ModuleResourceIntake IntakeModule
@@ -68,15 +70,15 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
         public IntakeCrossSectionAdjuster(ModuleResourceIntake intake, Matrix4x4 worldToVesselMatrix)
         {
-            Transform intakeTrans = intake.part.FindModelTransform(intake.intakeTransformName);
-            if ((object)intakeTrans != null)
-                vehicleBasisForwardVector = intakeTrans.forward;
+            intakeTrans = intake.part.FindModelTransform(intake.intakeTransformName);
+            vehicleBasisForwardVector = Vector3.forward;//intakeTrans.forward;
 
-            vehicleBasisForwardVector = worldToVesselMatrix.MultiplyVector(vehicleBasisForwardVector);
+
+            thisToVesselMatrix = worldToVesselMatrix * intakeTrans.localToWorldMatrix;
+
+            vehicleBasisForwardVector = thisToVesselMatrix.MultiplyVector(vehicleBasisForwardVector);
 
             intakeArea = INTAKE_AREA_SCALAR * intake.area;
-
-            thisToWorldMatrix = worldToVesselMatrix.inverse;
 
             this.intake = intake;
             this.part = intake.part;
@@ -85,6 +87,7 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
         public double AreaRemovedFromCrossSection(Vector3 vehicleAxis)
         {
             double dot = Vector3.Dot(vehicleAxis, vehicleBasisForwardVector);
+            Debug.Log("intake dot" + dot);
             if (dot > 0.9)
                 return intakeArea;
             else
@@ -99,15 +102,20 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
         public void TransformBasis(Matrix4x4 matrix)
         {
-            //Matrix4x4 tempMatrix = matrix * thisToWorldMatrix;
+            Matrix4x4 tempMatrix = thisToVesselMatrix.inverse;
+            thisToVesselMatrix = matrix * meshLocalToWorld;
 
-            Transform intakeTrans = intake.part.FindModelTransform(intake.intakeTransformName);
-            if ((object)intakeTrans != null)
-                vehicleBasisForwardVector = intakeTrans.forward;
+            tempMatrix = thisToVesselMatrix * tempMatrix;
 
-            vehicleBasisForwardVector = matrix.MultiplyVector(vehicleBasisForwardVector);
+            vehicleBasisForwardVector = tempMatrix.MultiplyVector(vehicleBasisForwardVector);
 
-            thisToWorldMatrix = matrix.inverse;
+        }
+
+        public double GetCrossSectionAreaOffset() { return 0; }
+
+        public void SetThisToVesselMatrixForTransform()
+        {
+            meshLocalToWorld = intakeTrans.localToWorldMatrix;
         }
     }
 }
