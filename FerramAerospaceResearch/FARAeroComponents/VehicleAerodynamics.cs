@@ -363,6 +363,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if ((object)intakeTrans != null)
                         candVector = intakeTrans.forward;
                 }
+                else if (p.Modules.Contains("FARWingAerodynamicModel") || p.Modules.Contains("FARControllableSurface"))      //aggregate wings for later calc...
+                {
+                    candVector += p.partTransform.right;        //add the other vector component in the plane of the wing
+                }
                 for(int j = 0; j < p.symmetryCounterparts.Count; j++)
                 {
                     Part q = p.symmetryCounterparts[j];
@@ -372,6 +376,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         Transform intakeTrans = q.FindModelTransform(intake.intakeTransformName);
                         if ((object)intakeTrans != null)
                             candVector += intakeTrans.forward;
+                    }
+                    else if (q.Modules.Contains("FARWingAerodynamicModel") || q.Modules.Contains("FARControllableSurface"))      //aggregate wings for later calc...
+                    {
+                        candVector += q.partTransform.right;        //add the other vector component in the plane of the wing
                     }
                     else
                         candVector += q.partTransform.up;
@@ -499,7 +507,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         }
 
         //Smooths out area and area 2nd deriv distributions to deal with noise in the representation
-        void GaussianSmoothCrossSections(VoxelCrossSection[] vehicleCrossSection, double stdDevCutoff, double lengthPercentFactor, double sectionThickness, double length, int frontIndex, int backIndex, int areaSmoothingIterations, int derivSmoothingIterations)
+        unsafe void GaussianSmoothCrossSections(VoxelCrossSection[] vehicleCrossSection, double stdDevCutoff, double lengthPercentFactor, double sectionThickness, double length, int frontIndex, int backIndex, int areaSmoothingIterations, int derivSmoothingIterations)
         {
             double stdDev = length * lengthPercentFactor;
             int numVals = (int)Math.Ceiling(stdDevCutoff * stdDev / sectionThickness);
@@ -507,14 +515,19 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if (numVals <= 1)
                 return;
 
-            double[] gaussianFactors = new double[numVals];
+            double* gaussianFactors = stackalloc double[numVals];
+            double* prevUncorrectedVals = stackalloc double[numVals];
+            double* futureUncorrectedVals = stackalloc double[numVals - 1];
+
+
+/*            double[] gaussianFactors = new double[numVals];
             double[] prevUncorrectedVals = new double[numVals];
-            double[] futureUncorrectedVals = new double[numVals - 1];
+            double[] futureUncorrectedVals = new double[numVals - 1];*/
 
             double invVariance = 1 / (stdDev * stdDev);
 
             //calculate Gaussian factors for each of the points that will be hit
-            for(int i = 0; i < gaussianFactors.Length; i++)
+            for (int i = 0; i < numVals; i++)
             {
                 double factor = (i * sectionThickness);
                 factor *= factor;
@@ -523,7 +536,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             //then sum them up...
             double sum = 0;
-            for (int i = 0; i < gaussianFactors.Length; i++)
+            for (int i = 0; i < numVals; i++)
                 if (i == 0)
                     sum += gaussianFactors[i];
                 else
@@ -531,7 +544,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             double invSum = 1 / sum;    //and then use that to normalize the factors
 
-            for (int i = 0; i < gaussianFactors.Length; i++)
+            for (int i = 0; i < numVals; i++)
             {
                 gaussianFactors[i] *= invSum;
             }
@@ -541,12 +554,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
             //first smooth the area itself.  This has a greater effect on the 2nd deriv due to the effect of noise on derivatives
             for (int j = 0; j < areaSmoothingIterations; j++)
             {
-                for (int i = 0; i < prevUncorrectedVals.Length; i++)
+                for (int i = 0; i < numVals; i++)
                     prevUncorrectedVals[i] = 0;     //set all the vals to 0 to prevent screwups between iterations
 
                 for (int i = frontIndex; i <= backIndex; i++)       //area smoothing pass
                 {
-                    for (int k = prevUncorrectedVals.Length - 1; k > 0; k--)
+                    for (int k = numVals - 1; k > 0; k--)
                     {
                         prevUncorrectedVals[k] = prevUncorrectedVals[k - 1];        //shift prev vals down
                     }
@@ -554,7 +567,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     prevUncorrectedVals[0] = curValue;       //and set the central value
 
 
-                    for (int k = 0; k < futureUncorrectedVals.Length; k++)          //update future vals
+                    for (int k = 0; k < numVals - 1; k++)          //update future vals
                     {
                         if (i + k < backIndex)
                             futureUncorrectedVals[k] = vehicleCrossSection[i + k + 1].area;
@@ -564,8 +577,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     curValue = 0;       //zero for coming calculations...
 
                     double borderScaling = 1;      //factor to correct for the 0s lurking at the borders of the curve...
-                    
-                    for (int k = 0; k < prevUncorrectedVals.Length; k++)
+
+                    for (int k = 0; k < numVals; k++)
                     {
                         double val = prevUncorrectedVals[k];
                         double gaussianFactor = gaussianFactors[k];
@@ -574,7 +587,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         if (val == 0)
                             borderScaling -= gaussianFactor;
                     }
-                    for (int k = 0; k < futureUncorrectedVals.Length; k++)
+                    for (int k = 0; k < numVals - 1; k++)
                     {
                         double val = futureUncorrectedVals[k];
                         double gaussianFactor = gaussianFactors[k + 1];
@@ -639,12 +652,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
             //and now smooth the derivs
             for (int j = 0; j < derivSmoothingIterations; j++)
             {
-                for (int i = 0; i < prevUncorrectedVals.Length; i++)
+                for (int i = 0; i < numVals; i++)
                     prevUncorrectedVals[i] = 0;     //set all the vals to 0 to prevent screwups between iterations
 
                 for (int i = frontIndex; i <= backIndex; i++)       //deriv smoothing pass
                 {
-                    for (int k = prevUncorrectedVals.Length - 1; k > 0; k--)
+                    for (int k = numVals - 1; k > 0; k--)
                     {
                         prevUncorrectedVals[k] = prevUncorrectedVals[k - 1];        //shift prev vals down
                     }
@@ -652,7 +665,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     prevUncorrectedVals[0] = curValue;       //and set the central value
 
 
-                    for (int k = 0; k < futureUncorrectedVals.Length; k++)          //update future vals
+                    for (int k = 0; k < numVals - 1; k++)          //update future vals
                     {
                         if (i + k < backIndex)
                             futureUncorrectedVals[k] = vehicleCrossSection[i + k + 1].secondAreaDeriv;
@@ -663,7 +676,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                     double borderScaling = 1;      //factor to correct for the 0s lurking at the borders of the curve...
 
-                    for (int k = 0; k < prevUncorrectedVals.Length; k++)
+                    for (int k = 0; k < numVals; k++)
                     {
                         double val = prevUncorrectedVals[k];
                         double gaussianFactor = gaussianFactors[k];
@@ -672,7 +685,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         if (val == 0)
                             borderScaling -= gaussianFactor;
                     }
-                    for (int k = 0; k < futureUncorrectedVals.Length; k++)
+                    for (int k = 0; k < numVals - 1; k++)
                     {
                         double val = futureUncorrectedVals[k];
                         double gaussianFactor = gaussianFactors[k + 1];
