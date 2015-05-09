@@ -174,6 +174,15 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (!intake.intakeEnabled)
                     continue;
 
+                Transform transform = _intakeTransforms[i];
+                if(transform == null)
+                {
+                    _intakeModules.RemoveAt(i);
+                    _intakeTransforms.RemoveAt(i);
+                    _aeroModulesWithIntakes.RemoveAt(i);
+                    --i;
+                    continue;
+                }
 
                 float cosAoA = Vector3.Dot(_intakeTransforms[i].forward, vesselVelNorm);
                 if (cosAoA < 0)

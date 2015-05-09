@@ -351,7 +351,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
         private Vector3 CalculateVehicleMainAxis()
         {
             Vector3 axis = Vector3.zero;
-            HashSet<Part> accountedForParts = new HashSet<Part>();
 
             for(int i = 0; i < _currentGeoModules.Count; i++)
             {
@@ -382,7 +381,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     candVector.y = Math.Abs(candVector.y);
                     candVector.z = Math.Abs(candVector.z);
 
-                    axis += candVector * p.mass * (1 + p.symmetryCounterparts.Count);    //scale part influence by approximate size
+                    axis += candVector * p.mass;    //scale part influence by approximate size
                 }
             }
 
