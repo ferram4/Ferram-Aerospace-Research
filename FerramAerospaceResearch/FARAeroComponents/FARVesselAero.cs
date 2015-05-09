@@ -356,7 +356,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
         private int VoxelCountFromType()
         {
             if (_vType == VesselType.Debris || _vType == VesselType.Unknown)
-                return FARSettingsScenarioModule.VoxelSettings.numVoxelsDebrisVessel;
+            {
+                if (_vessel.parts.Count >= 2)
+                    return FARSettingsScenarioModule.VoxelSettings.numVoxelsDebrisVessel;
+                else
+                    return 200;
+            }
             else
                 return FARSettingsScenarioModule.VoxelSettings.numVoxelsControllableVessel;
         }

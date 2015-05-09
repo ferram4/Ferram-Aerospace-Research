@@ -504,6 +504,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
             double stdDev = length * lengthPercentFactor;
             int numVals = (int)Math.Ceiling(stdDevCutoff * stdDev / sectionThickness);
 
+            if (numVals <= 1)
+                return;
+
             double[] gaussianFactors = new double[numVals];
             double[] prevUncorrectedVals = new double[numVals];
             double[] futureUncorrectedVals = new double[numVals - 1];
