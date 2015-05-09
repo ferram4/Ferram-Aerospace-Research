@@ -51,7 +51,10 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
     class AirbreathingEngineCrossSectonAdjuster : ICrossSectionAdjuster
     {
         Vector3 vehicleBasisForwardVector;
+
         double exitArea;
+        double areaCount;
+
         Matrix4x4 thisToVesselMatrix;
         Matrix4x4 meshLocalToWorld;
 
@@ -89,13 +92,12 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
         public void CalculateExitArea(double areaPerUnitThrust)
         {
-            exitArea = -areaPerUnitThrust * engine.maxThrust;       //we make this negative to account for it leaving through this direction
+            exitArea = areaPerUnitThrust * engine.maxThrust;       //we make this negative to account for it leaving through this direction
         }
 
         public double AreaRemovedFromCrossSection(Vector3 vehicleAxis)
         {
             double dot = Vector3.Dot(vehicleAxis, vehicleBasisForwardVector);
-            Debug.Log("engine dot" + dot);
             if (dot > 0.9)
                 return exitArea;
             else
@@ -107,6 +109,13 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
             return exitArea;
         }
 
+        public void SetCrossSectionAreaCountOffset(double count)
+        {
+            areaCount = count;
+        }
+
+        public double GetCrossSectionAreaCountOffset() { return areaCount; }
+        
         public void TransformBasis(Matrix4x4 matrix)
         {
             Matrix4x4 tempMatrix = thisToVesselMatrix.inverse;
@@ -118,10 +127,6 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
             vehicleBasisForwardVector = tempMatrix.MultiplyVector(vehicleBasisForwardVector);
         }
 
-        public double GetCrossSectionAreaOffset()
-        {
-            return exitArea;
-        }
 
         public void SetThisToVesselMatrixForTransform()
         {

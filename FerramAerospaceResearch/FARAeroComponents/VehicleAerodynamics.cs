@@ -352,9 +352,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
         {
             Vector3 axis = Vector3.zero;
 
-            for(int i = 0; i < _currentGeoModules.Count; i++)
+            for (int i = 0; i < _vehiclePartList.Count; i++)
             {
-                Part p = _currentGeoModules[i].part;
+                Part p = _vehiclePartList[i];
+
+                if (p == null)
+                    continue;
+
                 Vector3 candVector = p.partTransform.up;
                 if (p.Modules.Contains("ModuleResourceIntake"))      //intakes are probably pointing in the direction we're gonna be going in
                 {
@@ -367,9 +371,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     candVector += p.partTransform.right;        //add the other vector component in the plane of the wing
                 }
-                for(int j = 0; j < p.symmetryCounterparts.Count; j++)
+                for (int j = 0; j < p.symmetryCounterparts.Count; j++)
                 {
                     Part q = p.symmetryCounterparts[j];
+
+                    if (q == null)
+                        continue;
+
                     if (q.Modules.Contains("ModuleResourceIntake"))      //intakes are probably pointing in the direction we're gonna be going in
                     {
                         ModuleResourceIntake intake = (ModuleResourceIntake)q.Modules["ModuleResourceIntake"];
@@ -383,14 +391,14 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     }
                     else
                         candVector += q.partTransform.up;
-
-                    candVector = _worldToLocalMatrix.MultiplyVector(candVector);
-                    candVector.x = Math.Abs(candVector.x);
-                    candVector.y = Math.Abs(candVector.y);
-                    candVector.z = Math.Abs(candVector.z);
-
-                    axis += candVector * p.mass;    //scale part influence by approximate size
                 }
+
+                candVector = _worldToLocalMatrix.MultiplyVector(candVector);
+                candVector.x = Math.Abs(candVector.x);
+                candVector.y = Math.Abs(candVector.y);
+                candVector.z = Math.Abs(candVector.z);
+
+                axis += candVector * p.mass;    //scale part influence by approximate size
             }
 
             float dotProdX, dotProdY, dotProdZ;
@@ -624,9 +632,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 g.GetICrossSectionAdjusters(forwardFacingAdjustments, rearwardFacingAdjustments, _worldToLocalMatrix, _vehicleMainAxis);
             }
 
-            Debug.Log("forward Count" + forwardFacingAdjustments.Count);
-            Debug.Log("rearward Count" + rearwardFacingAdjustments.Count);
-
             double intakeArea = 0;
             double totalEngineThrust = 0;
 
@@ -643,7 +648,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
             Dictionary<Part, ICrossSectionAdjuster> adjusterPartDict = new Dictionary<Part, ICrossSectionAdjuster>();
             if (intakeArea > 0 && totalEngineThrust > 0)        //if they exist, go through the calculations
             {
-                Debug.Log("intakes and engines for forward");
                 double engineAreaPerUnitThrust = intakeArea / totalEngineThrust;        //figure how much intake area per thrust so that it can be divided up per engine
 
                 for (int i = 0; i < forwardFacingAdjustments.Count; i++)
@@ -685,13 +689,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     double area = adjuster.AreaRemovedFromCrossSection();
                     double tmp = adjusterAreaPerVoxelDict[adjuster.GetPart()];
 
+                    adjuster.SetCrossSectionAreaCountOffset(tmp);
                     adjusterAreaPerVoxelDict[adjuster.GetPart()] = area / tmp;
                     adjusterPartDict.Add(adjuster.GetPart(), adjuster);
                 }
 
-                Dictionary<Part, double> partActiveAreaRemoved = new Dictionary<Part, double>();
-
-                double lastArea = 0;
+                Dictionary<Part, int> partCrossSectionIndexDict = new Dictionary<Part, int>();
+                List<CrossSectionAdjustData> partAdjustmentList = new List<CrossSectionAdjustData>();
 
                 for (int i = 0; i < vehicleCrossSection.Length; i++)
                 {
@@ -702,22 +706,46 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         Part p = partAreaPair.Key;
                         if (adjusterAreaPerVoxelDict.TryGetValue(p, out areaPerVoxel))
                         {
-                            double areaRemoved = areaPerVoxel * partAreaPair.Value.crossSectionalAreaCount - adjusterPartDict[p].GetCrossSectionAreaOffset();
-                            double currentVal;
+                            double areaRemoved = areaPerVoxel * (partAreaPair.Value.crossSectionalAreaCount - adjusterPartDict[p].GetCrossSectionAreaCountOffset());
+                            int currentIndex;
 
-                            if (partActiveAreaRemoved.TryGetValue(p, out currentVal))
+                            if (partCrossSectionIndexDict.TryGetValue(p, out currentIndex))
                             {
+                                CrossSectionAdjustData currentData = partAdjustmentList[currentIndex];
+                                double currentVal = currentData.activeAreaRemoved;
+                                currentData.lastIndex = i;
+                                currentData.counter++;
                                 if (Math.Abs(areaRemoved) > Math.Abs(currentVal))
-                                    partActiveAreaRemoved[p] = areaRemoved;
+                                {
+                                    currentData.activeAreaRemoved = areaRemoved;
+                                }
+                                partAdjustmentList[currentIndex] = currentData;
                             }
                             else
-                                partActiveAreaRemoved[p] = areaRemoved;
+                            {
+                                partCrossSectionIndexDict[p] = partAdjustmentList.Count;
+                                partAdjustmentList.Add(new CrossSectionAdjustData(areaRemoved, i));
+                            }
                         }
                     }
-                    foreach (KeyValuePair<Part, double> partAreaRemovedPair in partActiveAreaRemoved)
-                        area -= partAreaRemovedPair.Value;
 
-                    lastArea = area;
+                    foreach (KeyValuePair<Part, int> partIndexPair in partCrossSectionIndexDict)
+                    {
+                        CrossSectionAdjustData data = partAdjustmentList[partIndexPair.Value];
+                        if(data.lastIndex < i - 2 && data.lastIndex != -1)
+                        {
+                            data.lastIndex = -1;
+                            data.activeAreaRemoved = adjusterPartDict[partIndexPair.Key].AreaRemovedFromCrossSection();
+
+                            if (adjusterPartDict[partIndexPair.Key].GetCrossSectionAreaCountOffset() != 0)
+                                data.activeAreaRemoved *= -1;
+
+                            partAdjustmentList[partIndexPair.Value] = data;
+                            Debug.Log(partIndexPair.Key.partInfo.title + " " + data.counter);
+                        }
+                        area -= data.activeAreaRemoved;
+
+                    }
                     areaAdjustment[i] += area;
                     //vehicleCrossSection[i].area = Math.Max(0.25 * vehicleCrossSection[i].area, area);
                 }
@@ -815,7 +843,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
             for(int i = 0; i < vehicleCrossSection.Length; i++)
             {
                 double areaUnchanged = vehicleCrossSection[i].area;
-                double areaChanged = areaUnchanged + areaAdjustment[i];
+                double areaChanged = areaAdjustment[i];
+                if (areaChanged > 0)
+                    areaChanged = 0;
+                areaChanged += areaUnchanged;
+
                 vehicleCrossSection[i].area = Math.Max(0.15 * areaUnchanged, areaChanged);
 
             }
@@ -1290,6 +1322,18 @@ namespace FerramAerospaceResearch.FARAeroComponents
             return value;
         }
 
+        struct CrossSectionAdjustData
+        {
+            public double activeAreaRemoved;
+            public int lastIndex;
+            public int counter;
 
+            public CrossSectionAdjustData(double activeAreaRemoved, int lastIndex)
+            {
+                this.activeAreaRemoved = activeAreaRemoved;
+                this.lastIndex = lastIndex;
+                counter = 0;
+            }
+        }
     }
 }

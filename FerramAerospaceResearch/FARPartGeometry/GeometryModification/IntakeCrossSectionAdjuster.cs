@@ -87,7 +87,6 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
         public double AreaRemovedFromCrossSection(Vector3 vehicleAxis)
         {
             double dot = Vector3.Dot(vehicleAxis, vehicleBasisForwardVector);
-            Debug.Log("intake dot" + dot);
             if (dot > 0.9)
                 return intakeArea;
             else
@@ -99,7 +98,9 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
             return intakeArea;
         }
 
-
+        public void SetCrossSectionAreaCountOffset(double count) { }
+        public double GetCrossSectionAreaCountOffset() { return 0; }
+        
         public void TransformBasis(Matrix4x4 matrix)
         {
             Matrix4x4 tempMatrix = thisToVesselMatrix.inverse;
@@ -111,7 +112,6 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
         }
 
-        public double GetCrossSectionAreaOffset() { return 0; }
 
         public void SetThisToVesselMatrixForTransform()
         {

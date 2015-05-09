@@ -52,13 +52,15 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
         Part GetPart();
 
         double AreaRemovedFromCrossSection(Vector3 orientationVector);
-
         double AreaRemovedFromCrossSection();
 
+        void SetCrossSectionAreaCountOffset(double count);
+        double GetCrossSectionAreaCountOffset();
+        
         void TransformBasis(Matrix4x4 transform);
 
-        double GetCrossSectionAreaOffset();
 
         void SetThisToVesselMatrixForTransform();
+
     }
 }
