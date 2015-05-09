@@ -51,7 +51,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 {
     public class VehicleVoxel
     {
-        const int MAX_CHUNKS_IN_QUEUE = 1500;
+        const int MAX_CHUNKS_IN_QUEUE = 4500;
         const int MAX_SWEEP_PLANES_IN_QUEUE = 4;
         static Stack<VoxelChunk> clearedChunks = new Stack<VoxelChunk>();
         static Stack<SweepPlanePoint[,]> clearedPlanes;
@@ -294,21 +294,25 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public void RecycleVoxelChunks()
         {
-            for(int i = 0; i < xLength; i++)
-                for(int j = 0; j < yLength; j++)
-                    for(int k = 0; k < zLength; k++)
-                    {
-                        VoxelChunk chunk = voxelChunks[i, j, k];
-                        if(chunk == null)
-                            continue;
+            lock (clearedChunks)
+            {
+                for (int i = 0; i < xLength; i++)
+                    for (int j = 0; j < yLength; j++)
+                        for (int k = 0; k < zLength; k++)
+                        {
+                            VoxelChunk chunk = voxelChunks[i, j, k];
+                            if (chunk == null)
+                                continue;
 
-                        chunk.ClearChunk();
+                            chunk.ClearChunk();
 
-                        if (clearedChunks.Count < MAX_CHUNKS_IN_QUEUE)
-                            clearedChunks.Push(chunk);
-                        else
-                            return;
-                    }
+                            if (clearedChunks.Count < MAX_CHUNKS_IN_QUEUE)
+                                clearedChunks.Push(chunk);
+                            else
+                                return;
+
+                        }
+            }
         }
 
         public unsafe void CrossSectionData(VoxelCrossSection[] crossSections, Vector3 orientationVector, out int frontIndex, out int backIndex, out double sectionThickness, out double maxCrossSectionArea)
