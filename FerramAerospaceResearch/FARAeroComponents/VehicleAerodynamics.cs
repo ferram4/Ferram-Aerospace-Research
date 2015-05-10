@@ -351,13 +351,16 @@ namespace FerramAerospaceResearch.FARAeroComponents
         private Vector3 CalculateVehicleMainAxis()
         {
             Vector3 axis = Vector3.zero;
+            HashSet<Part> hitParts = new HashSet<Part>();
 
             for (int i = 0; i < _vehiclePartList.Count; i++)
             {
                 Part p = _vehiclePartList[i];
 
-                if (p == null)
+                if (p == null || hitParts.Contains(p))
                     continue;
+
+                hitParts.Add(p);
 
                 Vector3 candVector = p.partTransform.up;
                 if (p.Modules.Contains("ModuleResourceIntake"))      //intakes are probably pointing in the direction we're gonna be going in
@@ -375,8 +378,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     Part q = p.symmetryCounterparts[j];
 
-                    if (q == null)
+                    if (q == null || hitParts.Contains(q))
                         continue;
+
+                    hitParts.Add(q);
 
                     if (q.Modules.Contains("ModuleResourceIntake"))      //intakes are probably pointing in the direction we're gonna be going in
                     {
@@ -398,7 +403,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 candVector.y = Math.Abs(candVector.y);
                 candVector.z = Math.Abs(candVector.z);
 
-                axis += candVector * p.mass;    //scale part influence by approximate size
+                axis += candVector * p.mass * (1 + p.symmetryCounterparts.Count);    //scale part influence by approximate size
             }
 
             float dotProdX, dotProdY, dotProdZ;

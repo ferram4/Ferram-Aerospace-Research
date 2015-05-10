@@ -153,6 +153,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             GameEvents.onEditorRedo.Add(ResetEditorEvent);
             GameEvents.onEditorShipModified.Add(ResetEditorEvent);
             GameEvents.onEditorLoad.Add(ResetEditorEvent);
+
             GameEvents.onGUIEngineersReportReady.Add(AddDesignConcerns);
             GameEvents.onGUIEngineersReportDestroy.Add(RemoveDesignConcerns);
 
@@ -181,6 +182,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             GameEvents.onEditorRedo.Remove(ResetEditorEvent);
             GameEvents.onEditorShipModified.Remove(ResetEditorEvent);
             GameEvents.onEditorLoad.Remove(ResetEditorEvent);
+
             GameEvents.onGUIEngineersReportReady.Remove(AddDesignConcerns);
             GameEvents.onGUIEngineersReportDestroy.Remove(AddDesignConcerns);
 
@@ -204,6 +206,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 List<Part> partsList = EditorLogic.SortedShipList;
                 for (int i = 0; i < partsList.Count; i++)
                     UpdateGeometryModule(partsList[i]);
+                
             }
 
             RequestUpdateVoxel();
@@ -360,16 +363,19 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             for (int i = 0; i < partList.Count; i++)
             {
                 Part p = partList[i];
-                GeometryPartModule g = p.GetComponent<GeometryPartModule>();
-                if (g != null)
+                if (p.Modules.Contains("GeometryPartModule"))
                 {
-                    if(g.Ready)
-                        _currentGeometryModules.Add(g);
-                    else
+                    GeometryPartModule g = (GeometryPartModule)p.Modules["GeometryPartModule"];
+                    if (g != null)
                     {
-                        _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
-                        _updateQueued = true;
-                        return;
+                        if (g.Ready)
+                            _currentGeometryModules.Add(g);
+                        else
+                        {
+                            _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
+                            _updateQueued = true;
+                            return;
+                        }
                     }
                 }
 

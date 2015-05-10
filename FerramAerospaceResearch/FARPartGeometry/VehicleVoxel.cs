@@ -51,11 +51,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
 {
     public class VehicleVoxel
     {
-        const int MAX_CHUNKS_IN_QUEUE = 4500;
+        static int MAX_CHUNKS_IN_QUEUE = 4500;
         const int MAX_SWEEP_PLANES_IN_QUEUE = 4;
         static Stack<VoxelChunk> clearedChunks = new Stack<VoxelChunk>();
         static Stack<SweepPlanePoint[,]> clearedPlanes;
 
+        static int MAX_CHUNKS_ALLOWED = 0;
+        static int chunksInUse = 0;
+        
         double elementSize;
         public double ElementSize
         {
@@ -96,12 +99,28 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public VehicleVoxel(List<Part> partList, List<GeometryPartModule> geoModules, int elementCount, bool multiThreaded = true, bool solidify = true)
         {
-            if(clearedPlanes == null)
+            lock (clearedChunks)
             {
-                clearedPlanes = new Stack<SweepPlanePoint[,]>();
-                for (int i = 0; i < MAX_SWEEP_PLANES_IN_QUEUE; i++)
-                    clearedPlanes.Push(new SweepPlanePoint[1, 1]);
+                if (clearedPlanes == null)
+                {
+                    clearedPlanes = new Stack<SweepPlanePoint[,]>();
+                    for (int i = 0; i < MAX_SWEEP_PLANES_IN_QUEUE; i++)
+                        clearedPlanes.Push(new SweepPlanePoint[1, 1]);
+
+
+                }
+                if (MAX_CHUNKS_ALLOWED == 0)
+                {
+                    MAX_CHUNKS_IN_QUEUE = (int)Math.Ceiling(FARSettingsScenarioModule.VoxelSettings.numVoxelsControllableVessel * 0.01875);      //1.2 / 64
+                    MAX_CHUNKS_ALLOWED = (int)Math.Ceiling(1.5 * MAX_CHUNKS_IN_QUEUE);
+
+                    Debug.Log(MAX_CHUNKS_IN_QUEUE + " " + MAX_CHUNKS_ALLOWED);
+
+                    for (int i = 0; i < MAX_CHUNKS_IN_QUEUE; i++)
+                        clearedChunks.Push(new VoxelChunk(0, Vector3.zero, 0, 0, 0));
+                }
             }
+
             Vector3d min = new Vector3d(double.PositiveInfinity, double.PositiveInfinity, double.PositiveInfinity);
             Vector3d max = new Vector3d(double.NegativeInfinity, double.NegativeInfinity, double.NegativeInfinity);
 
@@ -142,6 +161,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
             yLength = (int)Math.Ceiling(size.y * tmp) + 1;
             zLength = (int)Math.Ceiling(size.z * tmp) + 1;
 
+            lock (clearedChunks)
+            {
+                while (chunksInUse >= MAX_CHUNKS_ALLOWED)
+                    Monitor.Wait(clearedChunks);
+
+                chunksInUse += xLength * yLength * zLength;
+            }
+
+
             xCellLength = xLength * 8;
             yCellLength = yLength * 8;
             zCellLength = zLength * 8;
@@ -160,6 +188,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             lowerRightCorner = center - extents;    //This places the center of the voxel at the center of the vehicle to achieve maximum symmetry
 
             voxelChunks = new VoxelChunk[xLength, yLength, zLength];
+
 
             BuildVoxel(geoModules, multiThreaded, solidify);
         }
@@ -312,6 +341,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                 return;
 
                         }
+                chunksInUse -= xLength * yLength * zLength;
+                Monitor.Pulse(clearedChunks);
             }
         }
 
@@ -1307,7 +1338,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
            
             //Debug.Log(i.ToString() + ", " + j.ToString() + ", " + k.ToString() + ", " + part.partInfo.title);
 
-            section.SetVoxelPointGlobalIndexNoLock(i, j, k, part);
+            section.SetVoxelPointGlobalIndex(i + j * 8 + k * 64, part);
         }
         
         private unsafe void SetVoxelSection(int i, int j, int k, Part part, float size = 1)
@@ -1344,7 +1375,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             //Debug.Log(i.ToString() + ", " + j.ToString() + ", " + k.ToString() + ", " + part.partInfo.title);
 
-            section.SetVoxelPointGlobalIndex(i, j, k, part, size);
+            section.SetVoxelPointGlobalIndex(i + j * 8 + k * 64, part, size);
         }
 
         private unsafe VoxelChunk GetVoxelChunk(int i, int j, int k)
@@ -1380,7 +1411,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (section == null)
                 return false;
 
-            return section.VoxelPointExistsGlobalIndex(i, j, k);
+            return section.VoxelPointExistsGlobalIndex(i + j * 8 + k * 64);
         }
         
         private unsafe Part GetPartAtVoxelPos(int i, int j, int k)
@@ -1400,12 +1431,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (section == null)
                 return null;
 
-            return section.GetVoxelPartGlobalIndex(i, j, k);
+            return section.GetVoxelPartGlobalIndex(i + j * 8 + k * 64);
         }
 
         private unsafe Part GetPartAtVoxelPos(int i, int j, int k, ref VoxelChunk section)
         {
-            return section.GetVoxelPartGlobalIndex(i, j, k);
+            return section.GetVoxelPartGlobalIndex(i + j * 8 + k * 64);
         }
 
         private void UpdateFromMesh(object stuff)

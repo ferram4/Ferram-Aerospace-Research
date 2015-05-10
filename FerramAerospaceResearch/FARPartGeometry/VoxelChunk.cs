@@ -91,6 +91,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
         }
 
         //Use when certian that locking is unnecessary
+        public unsafe void SetVoxelPointGlobalIndexNoLock(int zeroBaseIndex, Part p, float size = 1)
+        {
+            zeroBaseIndex -= offset;
+            voxelPoints[zeroBaseIndex].part = p;
+            voxelPoints[zeroBaseIndex].size += size;
+        }
+        
         public unsafe void SetVoxelPointGlobalIndexNoLock(int i, int j, int k, Part p, float size = 1)
         {
             int index = i + 8 * j + 64 * k - offset;
@@ -98,6 +105,16 @@ namespace FerramAerospaceResearch.FARPartGeometry
             voxelPoints[index].size += size;
         }
         //Sets point and ensures that includedParts includes p
+        public unsafe void SetVoxelPointGlobalIndex(int zeroBaseIndex, Part p, float size = 1)
+        {
+            lock (voxelPoints)
+            {
+                zeroBaseIndex -= offset;
+                voxelPoints[zeroBaseIndex].part = p;
+                voxelPoints[zeroBaseIndex].size += size;
+            }
+        }
+
         public unsafe void SetVoxelPointGlobalIndex(int i, int j, int k, Part p, float size = 1)
         {
             lock (voxelPoints)
