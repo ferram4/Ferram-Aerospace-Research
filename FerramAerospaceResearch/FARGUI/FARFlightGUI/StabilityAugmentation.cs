@@ -140,6 +140,9 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         private void OnAutoPilotUpdate(FlightCtrlState state)
         {
+            if (_vessel.srfSpeed < 5)
+                return;
+
             ControlSystem sys = systemInstances[0];     //wing leveler
             if (sys.active)
             {
