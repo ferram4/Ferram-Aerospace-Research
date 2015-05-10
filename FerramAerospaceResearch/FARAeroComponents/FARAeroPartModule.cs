@@ -401,12 +401,15 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     dragArrow.Length = worldDragArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale;
                 }
 
-                if (momentArrow == null)
-                    momentArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldSpaceTorque, worldSpaceTorque.magnitude * PhysicsGlobals.AeroForceDisplayScale, FARGUI.GUIColors.GetColor(2), true);
-                else
+                if (FARDebugValues.showMomentArrows)
                 {
-                    momentArrow.Direction = -worldSpaceTorque;
-                    momentArrow.Length = worldSpaceTorque.magnitude * PhysicsGlobals.AeroForceDisplayScale;
+                    if (momentArrow == null)
+                        momentArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldSpaceTorque, worldSpaceTorque.magnitude * PhysicsGlobals.AeroForceDisplayScale, FARGUI.GUIColors.GetColor(2), true);
+                    else
+                    {
+                        momentArrow.Direction = -worldSpaceTorque;
+                        momentArrow.Length = worldSpaceTorque.magnitude * PhysicsGlobals.AeroForceDisplayScale;
+                    }
                 }
             }
             else

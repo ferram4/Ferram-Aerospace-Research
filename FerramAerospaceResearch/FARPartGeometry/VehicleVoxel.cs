@@ -97,7 +97,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             get { return yCellLength + xCellLength + zCellLength; }
         }
 
-        public VehicleVoxel(List<Part> partList, List<GeometryPartModule> geoModules, int elementCount, bool multiThreaded = true, bool solidify = true)
+        public static void VoxelSetup()
         {
             lock (clearedChunks)
             {
@@ -120,7 +120,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         clearedChunks.Push(new VoxelChunk(0, Vector3.zero, 0, 0, 0));
                 }
             }
+        }
 
+        public VehicleVoxel(List<Part> partList, List<GeometryPartModule> geoModules, int elementCount, bool multiThreaded = true, bool solidify = true)
+        {
             Vector3d min = new Vector3d(double.PositiveInfinity, double.PositiveInfinity, double.PositiveInfinity);
             Vector3d max = new Vector3d(double.NegativeInfinity, double.NegativeInfinity, double.NegativeInfinity);
 

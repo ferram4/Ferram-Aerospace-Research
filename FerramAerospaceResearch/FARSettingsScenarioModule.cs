@@ -49,6 +49,7 @@ using UnityEngine;
 using KSP;
 using FerramAerospaceResearch.FARGUI;
 using FerramAerospaceResearch.FARGUI.FAREditorGUI;
+using FerramAerospaceResearch.FARPartGeometry;
 using ferram4;
 
 namespace FerramAerospaceResearch
@@ -104,6 +105,10 @@ namespace FerramAerospaceResearch
 
             if (newGame)
                 PopupDialog.SpawnPopupDialog("Ferram Aerospace Research", "Welcome to KSP with FAR!\n\r\n\rThings will be much harder from here on out; the FAR button in the top-right corner will bring you to difficulty settings if you ever decide to change them.  Have fun!", "OK", false, HighLogic.Skin);
+
+            Debug.Log("FAR Vehicle Voxel Setup started");
+            VehicleVoxel.VoxelSetup();
+            Debug.Log("FAR Vehicle Voxel Setup complete");
 
             newGame = false;
         }

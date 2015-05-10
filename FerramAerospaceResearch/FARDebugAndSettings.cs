@@ -59,6 +59,7 @@ namespace FerramAerospaceResearch
         private IButton FARDebugButtonBlizzy = null;
         private ApplicationLauncherButton FARDebugButtonStock = null;
         private bool debugMenu = false;
+        private bool eventAdded = false;
         private bool inputLocked = false;
         private Rect debugWinPos = new Rect(50, 50, 700, 250);
         private static Texture2D cLTexture = new Texture2D(25, 15);
@@ -113,7 +114,6 @@ namespace FerramAerospaceResearch
             else
                 GameEvents.onGUIApplicationLauncherReady.Add(OnGUIAppLauncherReady);
 
-            GameEvents.onGameStateSave.Add(SaveConfigs);
         }
 
         void OnGUIAppLauncherReady()
@@ -149,7 +149,21 @@ namespace FerramAerospaceResearch
         public void OnGUI()
         {
             if (HighLogic.LoadedScene != GameScenes.SPACECENTER)
+            {
                 debugMenu = false;
+                if (inputLocked)
+                {
+                    InputLockManager.RemoveControlLock("FARDebugLock");
+                    inputLocked = false;
+                }
+                return;
+            }
+
+            if(!eventAdded)
+            {
+                eventAdded = true;
+                GameEvents.onGameStateSave.Add(SaveConfigs);
+            }
 
             GUI.skin = HighLogic.Skin;
             if (debugMenu)
@@ -410,6 +424,7 @@ namespace FerramAerospaceResearch
             FARActionGroupConfiguration.DrawGUI();
             GUILayout.Label("Other Options"); // DaMichel: put it above the toolbar toggle
             FARDebugValues.aeroFailureExplosions = GUILayout.Toggle(FARDebugValues.aeroFailureExplosions, "Aero Failures Create Explosions", thisStyle);
+            FARDebugValues.showMomentArrows = GUILayout.Toggle(FARDebugValues.showMomentArrows, "Show Torque Arrows in Aero Overlay", thisStyle);
             if (ToolbarManager.ToolbarAvailable)
             {
                 FARDebugValues.useBlizzyToolbar = GUILayout.Toggle(FARDebugValues.useBlizzyToolbar, "Use Blizzy78 Toolbar instead of Stock AppManager", thisStyle);
@@ -494,6 +509,7 @@ namespace FerramAerospaceResearch
             config = KSP.IO.PluginConfiguration.CreateForType<FARSettingsScenarioModule>();
             config.load();
             FARDebugValues.allowStructuralFailures = Convert.ToBoolean(config.GetValue("allowStructuralFailures", "true"));
+            FARDebugValues.showMomentArrows = Convert.ToBoolean(config.GetValue("showMomentArrows", "false"));
 
             FARDebugValues.useBlizzyToolbar = Convert.ToBoolean(config.GetValue("useBlizzyToolbar", "false"));
             FARDebugValues.aeroFailureExplosions = Convert.ToBoolean(config.GetValue("aeroFailureExplosions", "true"));
@@ -527,6 +543,7 @@ namespace FerramAerospaceResearch
         public static void SaveConfigs()
         {
             config.SetValue("allowStructuralFailures", FARDebugValues.allowStructuralFailures.ToString());
+            config.SetValue("showMomentArrows", FARDebugValues.showMomentArrows.ToString());
 
             config.SetValue("useBlizzyToolbar", FARDebugValues.useBlizzyToolbar.ToString());
             config.SetValue("aeroFailureExplosions", FARDebugValues.aeroFailureExplosions.ToString());
@@ -557,6 +574,7 @@ namespace FerramAerospaceResearch
     {
         //Right-click menu options
         public static bool allowStructuralFailures = true;
+        public static bool showMomentArrows = false;
 
         public static bool useBlizzyToolbar = false;
         public static bool aeroFailureExplosions = true;
