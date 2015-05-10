@@ -238,7 +238,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 else
                     data = simManager.StabDerivLinearSim.RunTransientSimLateral(vehicleData, Convert.ToDouble(inits.maxTime), Convert.ToDouble(inits.dt), initCond);
 
-                UpdateGraph(data, "time", "params", 0, Convert.ToDouble(inits.maxTime));
+                UpdateGraph(data, "time", "params", 0, Convert.ToDouble(inits.maxTime), 50);
             }
             GUILayout.EndHorizontal();
         }
@@ -274,7 +274,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             GUI.Box(tooltipRect, GUI.tooltip, toolTipStyle);
         }
 
-        private void UpdateGraph(GraphData data, string horizontalLabel, string verticalLabel, double lowerBound, double upperBound)
+        private void UpdateGraph(GraphData data, string horizontalLabel, string verticalLabel, double lowerXBound, double upperXBound, double clampYBounds)
         {
             double minBounds = double.PositiveInfinity;
             double maxBounds = double.NegativeInfinity;
@@ -287,6 +287,11 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             minBounds *= 2;
             maxBounds *= 2;
 
+            if (minBounds < -clampYBounds)
+                minBounds = -clampYBounds;
+            if (maxBounds > clampYBounds)
+                maxBounds = clampYBounds;
+
             // To allow switching between two graph setups to observe differences,
             // use both the current and the previous shown graph to estimate scale
 
@@ -294,7 +299,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             double realMax = Math.Max(Math.Ceiling(maxBounds), 0.25);
 
             _graph.Clear();
-            _graph.SetBoundaries(lowerBound, upperBound, realMin, realMax);
+            _graph.SetBoundaries(lowerXBound, upperXBound, realMin, realMax);
             _graph.SetGridScaleUsingValues(5, 0.5);
 
             for (int i = 0; i < data.yValues.Count; i++)

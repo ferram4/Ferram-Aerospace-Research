@@ -99,7 +99,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 vel_fuzz = -0.02f * Vector3.forward;
             }
 
-            Vector3 vel = (vel_base - 2 * vel_fuzz).normalized;
+            Vector3 vel = (vel_base - vel_fuzz).normalized;
 
             for(int i = 0; i < _currentAeroSections.Count; i++)
             {
@@ -123,7 +123,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             aeroSection.ClearAll();
 
-            vel = (vel_base - vel_fuzz).normalized;
+            vel = (vel_base + vel_fuzz).normalized;
 
             for (int i = 0; i < _currentAeroSections.Count; i++)
             {
@@ -140,80 +140,26 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             aeroSection.ClearAll();
 
-            vel = (vel_base + vel_fuzz).normalized;
+            avgForcePos *= 0.5f;
 
-            for (int i = 0; i < _currentAeroSections.Count; i++)
-            {
-                FARAeroSection section = _currentAeroSections[i];
-                section.PredictionCalculateAeroForces(1, 3, 100000, 0.005f, vel, aeroSection);
-            }
+            Vector3 deltaForce = force1 - force0;
+            Vector3 deltaMoment = moment1 - moment0;
 
-            FARBaseAerodynamics.PrecomputeGlobalCenterOfLift(aeroSection, dummy, vel, 1);
+            Vector3 deltaForcePerp = Vector3.ProjectOnPlane(deltaForce, vel_base);
+            float deltaForcePerpMag = deltaForcePerp.magnitude;
 
-            Vector3 force2, moment2;
-            force2 = aeroSection.force;
-            moment2 = aeroSection.TorqueAt(pos);
-            avgForcePos += aeroSection.GetPos();
+            Vector3 deltaForcePerpNorm = deltaForcePerp / deltaForcePerpMag;
 
-            aeroSection.ClearAll();
+            Vector3 deltaMomentPerp = deltaMoment - Vector3.Dot(deltaMoment, deltaForcePerpNorm) * deltaForcePerpNorm - Vector3.Project(deltaMoment, vel_base);
 
-            vel = (vel_base + 2 * vel_fuzz).normalized;
+            float dist = deltaMomentPerp.magnitude / deltaForcePerpMag;
 
-            for (int i = 0; i < _currentAeroSections.Count; i++)
-            {
-                FARAeroSection section = _currentAeroSections[i];
-                section.PredictionCalculateAeroForces(1, 3, 100000, 0.005f, vel, aeroSection);
-            }
-
-            FARBaseAerodynamics.PrecomputeGlobalCenterOfLift(aeroSection, dummy, vel, 1);
-
-            Vector3 force3, moment3;
-            force3 = aeroSection.force;
-            moment3 = aeroSection.TorqueAt(pos);
-            avgForcePos += aeroSection.GetPos();
-
-            aeroSection.ClearAll();
-            
-            /*vel = vel_base.normalized;
-
-            for (int i = 0; i < _currentAeroSections.Count; i++)
-            {
-                FARAeroSection section = _currentAeroSections[i];
-                section.EditorCalculateAeroForces(1, 3, 100000, 0.005f, vel, aeroSection);
-            }
-
-
-            FARBaseAerodynamics.PrecomputeGlobalCenterOfLift(aeroSection, dummy, vel);
-
-            Vector3 force1, moment1;
-            force1 = aeroSection.force;
-            moment1 = aeroSection.TorqueAt(Vector3.zero);*/
-
-
-            double N0, N1, N2, N3;
-            double M0, M1, M2, M3;
-
-            N0 = Vector3.Dot(-rootPartTrans.forward, force0);
-            N1 = Vector3.Dot(-rootPartTrans.forward, force1);
-            N2 = Vector3.Dot(-rootPartTrans.forward, force2);
-            N3 = Vector3.Dot(-rootPartTrans.forward, force3);
-
-            M0 = Vector3.Dot(-rootPartTrans.right, moment0);
-            M1 = Vector3.Dot(-rootPartTrans.right, moment1);
-            M2 = Vector3.Dot(-rootPartTrans.right, moment2);
-            M3 = Vector3.Dot(-rootPartTrans.right, moment3);
-
-            double x_ac = (M0 - M3 + 8 * (M2 - M1)) / (N0 - N3 + 8 * (N2 - N1));
-            //double y_ac = pos.x;
-            //double z_ac = (M2 - M0) / (X2 - X0);
-            //Debug.Log(M2 + " " + M0 + " " + N2 + " " + N0);
-
-            vesselRootLocalAeroCenter = Vector3.up * (float)x_ac;// +rootPartTrans.forward * (float)z_ac;
-            avgForcePos *= 0.25f;
-            avgForcePos = rootPartTrans.worldToLocalMatrix.MultiplyPoint3x4(avgForcePos);
-            vesselRootLocalAeroCenter += Vector3.ProjectOnPlane(avgForcePos, Vector3.up);
+            vesselRootLocalAeroCenter = -vel_base * dist;
+            //vesselRootLocalAeroCenter += avgForcePos;
+            //avgForcePos = rootPartTrans.worldToLocalMatrix.MultiplyPoint3x4(avgForcePos);
+            //vesselRootLocalAeroCenter += Vector3.ProjectOnPlane(avgForcePos, Vector3.up);
             //vesselRootLocalAeroCenter = aeroSection.GetPos();
-            //vesselRootLocalAeroCenter = rootPartTrans.worldToLocalMatrix.MultiplyPoint3x4(vesselRootLocalAeroCenter + rootPartTrans.position);
+            vesselRootLocalAeroCenter = rootPartTrans.worldToLocalMatrix.MultiplyVector(vesselRootLocalAeroCenter);
         }
     }
 }
