@@ -73,7 +73,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             get { return _ready && _started; }
         }
         private int _sendUpdateTick = 0;
-        private int meshesToUpdate = 0;
+        private int _meshesToUpdate = 0;
 
         private float currentScaleFactor = 1;
 
@@ -107,9 +107,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 RebuildAllMeshData();
                 _started = true;
             }
-            if(!_ready && meshesToUpdate == 0)
+            if(!_ready && _meshesToUpdate == 0)
                 _ready = true;
-            
 
             if (animStates != null && animStates.Count > 0)
                 CheckAnimations();
@@ -365,7 +364,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             _ready = false;
             if (meshDataList != null)
             {
-                meshesToUpdate = meshDataList.Count;
+                _meshesToUpdate = meshDataList.Count;
                 for (int i = 0; i < meshDataList.Count; ++i)
                 {
                     GeometryMesh mesh = meshDataList[i];
@@ -379,7 +378,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         meshDataList.RemoveAt(i);
                         --i;
                         lock (this)
-                            --meshesToUpdate;
+                            --_meshesToUpdate;
                     }
                     /*if (!meshDataList[i].TryTransformBasis(worldToVesselMatrix))
                     {
@@ -400,7 +399,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         internal void DecrementMeshesToUpdate()
         {
             lock (this)
-                --meshesToUpdate;
+                --_meshesToUpdate;
         }
 
         #endregion
