@@ -49,16 +49,34 @@ using FerramAerospaceResearch.FARAeroComponents;
 
 namespace FerramAerospaceResearch
 {
-    public static class FARAPI
+    public partial class FARAPI
     {
+        private static FARAPI instance;
+        private static FARAPI Instance
+        {
+            get
+            {
+                if (instance == null)
+                    instance = new FARAPI();
+                return instance;
+            }
+        }
+
+
 
         #region CurrentFlightInfo
-        public static FlightGUI VesselFlightInfo(Vessel v)
+
+        private FlightGUI GetFlightInfo(Vessel v)
         {
             FlightGUI gui = null;
             FlightGUI.vesselFlightGUI.TryGetValue(v, out gui);
 
             return gui;
+        }
+
+        public static FlightGUI VesselFlightInfo(Vessel v)
+        {
+            return Instance.GetFlightInfo(v);
         }
 
         public static double ActiveVesselDynPres()
@@ -205,6 +223,26 @@ namespace FerramAerospaceResearch
 
         #region AeroPredictions
 
+        private void InstanceCalcVesselAeroForces(Vessel vessel, out Vector3 aeroForce, out Vector3 aeroTorque, Vector3 velocityWorldVector, double altitude)
+        {
+            aeroForce = aeroTorque = Vector3.zero;
+            if (vessel == null)
+            {
+                Debug.LogError("FAR API Error: attempted to simulate aerodynamics of null vessel");
+                return;
+            }
+
+            FARVesselAero vesselAero = vessel.GetComponent<FARVesselAero>();
+
+            if (vesselAero == null)
+            {
+                Debug.LogError("FAR API Error: vessel does not have FARVesselAero aerocomponent for simulation");
+                return;
+            }
+
+            vesselAero.SimulateAeroProperties(out aeroForce, out aeroTorque, velocityWorldVector, altitude);
+        }
+        
         /// <summary>
         /// Calculates the forces and torque on a vessel at a given condition at the CoM
         /// </summary>
@@ -216,22 +254,7 @@ namespace FerramAerospaceResearch
         /// <param name="machNumber">Mach number at that location</param>
         public static void CalculateVesselAeroForces(Vessel vessel, out Vector3 aeroForce, out Vector3 aeroTorque, Vector3 velocityWorldVector, double altitude)
         {
-            aeroForce = aeroTorque = Vector3.zero;
-            if (vessel == null)
-            {
-                Debug.LogError("FAR API Error: attempted to simulate aerodynamics of null vessel");
-                return;
-            }
-
-            FARVesselAero vesselAero = vessel.GetComponent<FARVesselAero>();
-
-            if(vesselAero == null)
-            {
-                Debug.LogError("FAR API Error: vessel does not have FARVesselAero aerocomponent for simulation");
-                return;
-            }
-
-            vesselAero.SimulateAeroProperties(out aeroForce, out aeroTorque, velocityWorldVector, altitude);
+            Instance.InstanceCalcVesselAeroForces(vessel, out aeroForce, out aeroTorque, velocityWorldVector, altitude);
         }
         #endregion
     }
