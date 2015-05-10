@@ -100,6 +100,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
             _vessel = gameObject.GetComponent<Vessel>();
             this.enabled = true;
 
+            if(_vessel.rootPart.Modules.Contains("KerbalEVA"))
+            {
+                this.enabled = false;
+                return;
+            }
+
             _currentGeoModules = new List<GeometryPartModule>();
             for (int i = 0; i < _vessel.parts.Count; i++)
             {
