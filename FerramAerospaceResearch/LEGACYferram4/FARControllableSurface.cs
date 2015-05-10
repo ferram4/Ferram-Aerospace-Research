@@ -144,7 +144,7 @@ namespace ferram4
         public static double timeConstant = 0.25;
         public static double timeConstantFlap = 10;
         public static double timeConstantSpoiler = 0.75;
-        private bool brake = false;
+        public bool brake = false;
         private bool justStarted = false;
 
         private Transform lastReferenceTransform = null;

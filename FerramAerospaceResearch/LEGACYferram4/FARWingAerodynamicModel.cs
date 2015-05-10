@@ -524,6 +524,19 @@ namespace ferram4
                 }
 
             }
+            else
+            {
+                if ((object)liftArrow != null)
+                {
+                    UnityEngine.Object.Destroy(liftArrow);
+                    liftArrow = null;
+                }
+                if ((object)dragArrow != null)
+                {
+                    UnityEngine.Object.Destroy(dragArrow);
+                    dragArrow = null;
+                }
+            }
         }
 
         public Vector3d CalculateForces(Vector3d velocity, double MachNumber, double AoA, double rho)
