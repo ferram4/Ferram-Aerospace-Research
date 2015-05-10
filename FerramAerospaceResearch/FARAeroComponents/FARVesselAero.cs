@@ -55,7 +55,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
     public class FARVesselAero : VesselModule
     {
         Vessel _vessel;
-        VesselType _vType;
         int _voxelCount;
 
         public double Length
@@ -145,10 +144,18 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 _vessel.SendMessage("UpdateAeroModules", _currentAeroModules);
 
                 for (int i = 0; i < _unusedAeroModules.Count; i++)
-                    _unusedAeroModules[i].SetShielded(true);
+                {
+                    FARAeroPartModule a = _unusedAeroModules[i];
+                    a.SetShielded(true);
+                    Debug.Log(a.part.partInfo.title + " shielded");
+                }
 
                 for (int i = 0; i < _currentAeroModules.Count; i++)
-                    _currentAeroModules[i].SetShielded(false);
+                {
+                    FARAeroPartModule a = _currentAeroModules[i];
+                    a.SetShielded(false);
+                    Debug.Log(a.part.partInfo.title + " unshielded");
+                }
 
                 _vesselIntakeRamDrag.UpdateAeroData(_currentAeroModules, _unusedAeroModules);
             } 
@@ -277,7 +284,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if (_updateRateLimiter > FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate)
                 _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
             _updateQueued = true;
-            _recalcGeoModules = recalcGeoModules;
+            _recalcGeoModules |= recalcGeoModules;
         }
 
          public void VesselUpdate(bool recalcGeoModules)
@@ -311,7 +318,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
              {
                  _currentGeoModules = new List<GeometryPartModule>();
                  geoModulesReady = 0;
-                 for (int i = 0; i < _vessel.parts.Count; i++)
+                 for (int i = 0; i < _vessel.Parts.Count; i++)
                  {
                      Part p = _vessel.parts[i];
                      GeometryPartModule g = p.GetComponent<GeometryPartModule>();
@@ -338,10 +345,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
              TriggerIGeometryUpdaters();
 
-             _vType = _vessel.vesselType;
-
              _voxelCount = VoxelCountFromType();
-             if(!_vehicleAero.TryVoxelUpdate(_vessel.rootPart.partTransform.worldToLocalMatrix, _vessel.rootPart.partTransform.localToWorldMatrix, _voxelCount, _vessel.parts, _currentGeoModules, !setup))
+             if (!_vehicleAero.TryVoxelUpdate(_vessel.transform.worldToLocalMatrix, _vessel.transform.localToWorldMatrix, _voxelCount, _vessel.Parts, _currentGeoModules, !setup))
              {
                  _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
                  _updateQueued = true;
@@ -355,7 +360,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         //TODO: have this grab from a config file
         private int VoxelCountFromType()
         {
-            if (_vType == VesselType.Debris || _vType == VesselType.Unknown)
+            if (!_vessel.isCommandable)
             {
                 if (_vessel.parts.Count >= 2)
                     return FARSettingsScenarioModule.VoxelSettings.numVoxelsDebrisVessel;

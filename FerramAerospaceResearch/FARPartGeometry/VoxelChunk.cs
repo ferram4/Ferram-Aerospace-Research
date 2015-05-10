@@ -90,6 +90,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
         }
 
+        //Use when locking is unnecessary and only to change size, not part
+        public unsafe void SetVoxelPointGlobalIndexNoLock(int zeroBaseIndex, float size = 1)
+        {
+            zeroBaseIndex -= offset;
+            //voxelPoints[zeroBaseIndex].part = p;
+            voxelPoints[zeroBaseIndex].size += size;
+        }
+        
         //Use when certian that locking is unnecessary
         public unsafe void SetVoxelPointGlobalIndexNoLock(int zeroBaseIndex, Part p, float size = 1)
         {

@@ -52,7 +52,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
     public class VehicleVoxel
     {
         static int MAX_CHUNKS_IN_QUEUE = 4500;
-        const int MAX_SWEEP_PLANES_IN_QUEUE = 4;
+        const int MAX_SWEEP_PLANES_IN_QUEUE = 8;
         static Stack<VoxelChunk> clearedChunks = new Stack<VoxelChunk>();
         static Stack<SweepPlanePoint[,]> clearedPlanes;
 
@@ -1309,6 +1309,41 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     }
         }
 
+        //Only use to change size, not part
+        private unsafe void SetVoxelSectionNoLock(int i, int j, int k, float size = 1)
+        {
+            int iSec, jSec, kSec;
+            //Find the voxel section that this point points to
+
+            iSec = i >> 3;
+            jSec = j >> 3;
+            kSec = k >> 3;
+
+            VoxelChunk section;
+
+            section = voxelChunks[iSec, jSec, kSec];
+            if (section == null)
+            {
+                lock (clearedChunks)
+                {
+                    if (clearedChunks.Count > 0)
+                    {
+                        section = clearedChunks.Pop();
+                    }
+                }
+                if (section == null)
+                    section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
+                else
+                    section.SetChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
+
+                voxelChunks[iSec, jSec, kSec] = section;
+            }
+
+            //Debug.Log(i.ToString() + ", " + j.ToString() + ", " + k.ToString() + ", " + part.partInfo.title);
+
+            section.SetVoxelPointGlobalIndexNoLock(i + j * 8 + k * 64, size);
+        }
+        
         //Use when guaranteed that you will not attempt to write to the same section simultaneously
         private unsafe void SetVoxelSectionNoLock(int i, int j, int k, Part part)
         {
@@ -1341,7 +1376,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
            
             //Debug.Log(i.ToString() + ", " + j.ToString() + ", " + k.ToString() + ", " + part.partInfo.title);
 
-            section.SetVoxelPointGlobalIndex(i + j * 8 + k * 64, part);
+            section.SetVoxelPointGlobalIndexNoLock(i + j * 8 + k * 64, part);
         }
         
         private unsafe void SetVoxelSection(int i, int j, int k, Part part, float size = 1)
@@ -2101,10 +2136,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
                         if (activeInteriorPt.jLastInactive < j)
                             for (int mJ = activeInteriorPt.jLastInactive; mJ < j; mJ++)
-                                SetVoxelSectionNoLock(activeInteriorPt.i, mJ, activeInteriorPt.k, activeInteriorPt.part);       //used to make sure that internal part boundaries for cargo bays don't result in dips in cross-section
+                                SetVoxelSectionNoLock(activeInteriorPt.i, mJ, activeInteriorPt.k);       //used to make sure that internal part boundaries for cargo bays don't result in dips in cross-section
                         else
                             for (int mJ = lastJ; mJ <= activeInteriorPt.jLastInactive; mJ++)
-                                SetVoxelSectionNoLock(activeInteriorPt.i, mJ, activeInteriorPt.k, activeInteriorPt.part);       //used to make sure that internal part boundaries for cargo bays don't result in dips in cross-section
+                                SetVoxelSectionNoLock(activeInteriorPt.i, mJ, activeInteriorPt.k);       //used to make sure that internal part boundaries for cargo bays don't result in dips in cross-section
 
                     }
 

@@ -470,8 +470,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 gaussianFactors[i] *= invSum;
             }
 
-
-
             //first smooth the area itself.  This has a greater effect on the 2nd deriv due to the effect of noise on derivatives
             for (int j = 0; j < areaSmoothingIterations; j++)
             {
@@ -535,7 +533,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 double areaSecondDeriv;
 
-                if(i - frontIndex < 2)     //N5 forward difference for frontIndex
+                if(i - frontIndex < 3)     //N5 forward difference for frontIndex
                 {
                     areaM2 = vehicleCrossSection[i].area;
                     area0 = vehicleCrossSection[i + 2].area;
@@ -544,7 +542,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     areaSecondDeriv = (areaM2 + areaP2) - 2 * area0;
                     areaSecondDeriv *= denom * 4;
                 }
-                else if (backIndex - i < 2) //N5 backward difference for backIndex
+                else if (backIndex - i < 3) //N5 backward difference for backIndex
                 {
                     areaM2 = vehicleCrossSection[i - 4].area;
                     area0 = vehicleCrossSection[i - 2].area;
