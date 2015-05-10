@@ -95,6 +95,7 @@ namespace ferram4
                 part_transform = vessel.vesselTransform;
             if(HighLogic.LoadedSceneIsEditor)
                 part_transform = part.partTransform;
+
         }
 
         public override void Initialization()

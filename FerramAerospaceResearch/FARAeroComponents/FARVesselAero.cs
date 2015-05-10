@@ -147,14 +147,14 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     FARAeroPartModule a = _unusedAeroModules[i];
                     a.SetShielded(true);
-                    Debug.Log(a.part.partInfo.title + " shielded");
+                    //Debug.Log(a.part.partInfo.title + " shielded");
                 }
 
                 for (int i = 0; i < _currentAeroModules.Count; i++)
                 {
                     FARAeroPartModule a = _currentAeroModules[i];
                     a.SetShielded(false);
-                    Debug.Log(a.part.partInfo.title + " unshielded");
+                    //Debug.Log(a.part.partInfo.title + " unshielded");
                 }
 
                 _vesselIntakeRamDrag.UpdateAeroData(_currentAeroModules, _unusedAeroModules);

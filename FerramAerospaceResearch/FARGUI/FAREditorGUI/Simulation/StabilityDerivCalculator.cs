@@ -102,6 +102,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
                 FARWingAerodynamicModel w = p.GetComponent<FARWingAerodynamicModel>();
                 if (w != null)
                 {
+                    if (w.isShielded)
+                        continue;
+
                     area += w.S;
                     MAC += w.GetMAC() * w.S;
                     b += w.Getb_2() * w.S;

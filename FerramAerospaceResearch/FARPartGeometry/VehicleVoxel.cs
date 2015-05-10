@@ -111,7 +111,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
                 if (MAX_CHUNKS_ALLOWED == 0)
                 {
-                    MAX_CHUNKS_IN_QUEUE = (int)Math.Ceiling(FARSettingsScenarioModule.VoxelSettings.numVoxelsControllableVessel * 0.01875);      //1.2 / 64
+                    MAX_CHUNKS_IN_QUEUE = (int)Math.Ceiling(FARSettingsScenarioModule.VoxelSettings.numVoxelsControllableVessel * 0.03125);      //2 / 64
                     MAX_CHUNKS_ALLOWED = (int)Math.Ceiling(1.5 * MAX_CHUNKS_IN_QUEUE);
 
                     Debug.Log(MAX_CHUNKS_IN_QUEUE + " " + MAX_CHUNKS_ALLOWED);
@@ -2041,6 +2041,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
                         pt.part = null;
                         pt.mark = SweepPlanePoint.MarkingType.Clear;
+                        pt.jLastInactive = 0;
                     }
                 }
         }
@@ -2073,7 +2074,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             else if (pt.mark == SweepPlanePoint.MarkingType.VoxelShellPreviouslyInterior) //if this shell was previously interior, we need to know so that we can set it to the correct active
                             {
                                 activePts.Add(pt); //And add it to the list of active interior pts
-                                pt.mark = SweepPlanePoint.MarkingType.ActivePassingThroughInternalShell;
+                                pt.mark = SweepPlanePoint.MarkingType.ActivePassedThroughInternalShell;
                             }
                             //Only other situation is that it is an inactive point, in which case we do nothing here, because it is already taken care of
                         }
@@ -2132,7 +2133,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
                 else
                 { //If it's surrounded by other points, it's inactive; add it to that list
-                    if (activeInteriorPt.mark == SweepPlanePoint.MarkingType.ActivePassingThroughInternalShell)
+                    if (activeInteriorPt.mark == SweepPlanePoint.MarkingType.ActivePassedThroughInternalShell)
                     {
                         if (activeInteriorPt.jLastInactive < j)
                             for (int mJ = activeInteriorPt.jLastInactive; mJ < j; mJ++)
@@ -2175,7 +2176,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 VoxelShell,
                 VoxelShellPreviouslyInterior,
                 Active,
-                ActivePassingThroughInternalShell,
+                ActivePassedThroughInternalShell,
                 InactiveInterior,
                 Clear
             }
