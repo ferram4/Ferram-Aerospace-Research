@@ -159,8 +159,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             //avgForcePos = rootPartTrans.worldToLocalMatrix.MultiplyPoint3x4(avgForcePos);
             //vesselRootLocalAeroCenter += Vector3.ProjectOnPlane(avgForcePos, Vector3.up);
             //vesselRootLocalAeroCenter = aeroSection.GetPos();
-            vesselRootLocalAeroCenter = rootPartTrans.worldToLocalMatrix.MultiplyVector(vesselRootLocalAeroCenter);
             vesselRootLocalAeroCenter += Vector3.ProjectOnPlane(avgForcePos - rootPartTrans.position, vesselRootLocalAeroCenter);
+            vesselRootLocalAeroCenter = rootPartTrans.worldToLocalMatrix.MultiplyVector(vesselRootLocalAeroCenter);
         }
     }
 }
