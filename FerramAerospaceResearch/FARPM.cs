@@ -1,5 +1,5 @@
 /*
-Ferram Aerospace Research v0.15 "Euler"
+Ferram Aerospace Research v0.15.1 "Fanno"
 =========================
 Aerodynamics model for Kerbal Space Program
 

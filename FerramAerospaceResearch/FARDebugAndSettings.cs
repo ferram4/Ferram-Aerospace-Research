@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15 "Euler"
+Ferram Aerospace Research v0.15.1 "Fanno"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -59,7 +59,6 @@ namespace FerramAerospaceResearch
         private IButton FARDebugButtonBlizzy = null;
         private ApplicationLauncherButton FARDebugButtonStock = null;
         private bool debugMenu = false;
-        private bool eventAdded = false;
         private bool inputLocked = false;
         private Rect debugWinPos = new Rect(50, 50, 700, 250);
         private static Texture2D cLTexture = new Texture2D(25, 15);
@@ -157,12 +156,6 @@ namespace FerramAerospaceResearch
                     inputLocked = false;
                 }
                 return;
-            }
-
-            if(!eventAdded)
-            {
-                eventAdded = true;
-                GameEvents.onGameStateSave.Add(SaveConfigs);
             }
 
             GUI.skin = HighLogic.Skin;
@@ -533,11 +526,6 @@ namespace FerramAerospaceResearch
             tmpColor = GUIColors.Instance[3];
             ReColorTexture(ref tmpColor, ref l_DTexture);
             GUIColors.Instance[3] = tmpColor;
-        }
-
-        public static void SaveConfigs(ConfigNode node)
-        {
-            SaveConfigs();
         }
 
         public static void SaveConfigs()

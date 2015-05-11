@@ -65,7 +65,7 @@ namespace FerramAerospaceResearch
             // Even if you don't lock down functionality, you should return true if your users
             // can expect a future update to be available.
             //
-            return Versioning.version_minor == 0 && Versioning.version_major == 1;
+            return Versioning.version_minor == 0 && Versioning.version_major == 1 && Versioning.Revision > 0;
 
             /*-----------------------------------------------*\
             | IMPLEMENTERS SHOULD NOT EDIT BEYOND THIS POINT! |

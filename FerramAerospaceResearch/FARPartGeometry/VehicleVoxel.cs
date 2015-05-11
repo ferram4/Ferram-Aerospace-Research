@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15 "Euler"
+Ferram Aerospace Research v0.15.1 "Fanno"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -111,7 +111,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
                 if (MAX_CHUNKS_ALLOWED == 0)
                 {
-                    MAX_CHUNKS_IN_QUEUE = (int)Math.Ceiling(FARSettingsScenarioModule.VoxelSettings.numVoxelsControllableVessel * 0.03125);      //2 / 64
+                    MAX_CHUNKS_IN_QUEUE = (int)Math.Ceiling(FARSettingsScenarioModule.VoxelSettings.numVoxelsControllableVessel * 0.034375);      //2.2 / 64
                     MAX_CHUNKS_ALLOWED = (int)Math.Ceiling(1.5 * MAX_CHUNKS_IN_QUEUE);
 
                     Debug.Log(MAX_CHUNKS_IN_QUEUE + " " + MAX_CHUNKS_ALLOWED);

@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15 "Euler"
+Ferram Aerospace Research v0.15.1 "Fanno"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -133,6 +133,8 @@ namespace FerramAerospaceResearch
                 flightGUINode.AddNode(flightGUISettings[i]);
             }
             node.AddNode(flightGUINode);
+
+            FARDebugAndSettings.SaveConfigs();
         }
 
         public override void OnLoad(ConfigNode node)
@@ -187,6 +189,8 @@ namespace FerramAerospaceResearch
                 foreach (ConfigNode flightGUINode in node.GetNode("FlightGUISettings").nodes)
                     flightGUISettings.Add(flightGUINode);
             }
+
+            FARDebugAndSettings.LoadConfigs();
         }
 
         private void GeneratePresets()
