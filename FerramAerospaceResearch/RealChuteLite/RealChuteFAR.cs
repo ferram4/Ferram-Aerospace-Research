@@ -577,7 +577,7 @@ namespace FerramAerospaceResearch.RealChuteLite
             this.part.DragCubes.SetCubeWeight("PACKED", 0);
             this.part.DragCubes.SetCubeWeight("RCDEPLOYED", 1);
             Fields["currentTemp"].guiActive = true;
-            Fields["chuteMaxTemp"].guiActive = true;
+            Fields["chuteDisplayMaxTemp"].guiActive = true;
         }
 
         //Parachute deployment
@@ -601,7 +601,7 @@ namespace FerramAerospaceResearch.RealChuteLite
             this.currentTemp = (float)(startTemp + absoluteZero);
             this.chuteTemperature = startTemp;
             Fields["currentTemp"].guiActive = false;
-            Fields["chuteMaxTemp"].guiActive = false;
+            Fields["chuteDisplayMaxTemp"].guiActive = false;
             SetRepack();
         }
 

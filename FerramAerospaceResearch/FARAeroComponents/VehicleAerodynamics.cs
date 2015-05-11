@@ -305,6 +305,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 visualizing = false;
 
+                voxelizing = true;
                 ThreadPool.QueueUserWorkItem(CreateVoxel, updateGeometryPartModules);
                 Monitor.Exit(this);
                 return true;
@@ -316,11 +317,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
         //And this actually creates the voxel and then begins the aero properties determination
         private void CreateVoxel(object updateGeometryPartModules)
         {
-            try
+            lock (this)
             {
-                lock (this)
+                try
                 {
-                    voxelizing = true;
 
                     _voxel = new VehicleVoxel(_vehiclePartList, _currentGeoModules, _voxelCount);
                     if (_vehicleCrossSection.Length < _voxel.MaxArrayLength)
@@ -332,16 +332,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     CalculateVesselAeroProperties();
                     _calculationCompleted = true;
 
+                    //                    voxelizing = false;
+                }
+
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
+                finally
+                {
                     voxelizing = false;
                 }
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
-            finally
-            {
-                voxelizing = false;
             }
         }
 
