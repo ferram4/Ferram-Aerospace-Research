@@ -1484,7 +1484,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 VoxelShellParams data = (VoxelShellParams)stuff;
                 Part part = data.part;
                 GeometryMesh mesh = data.mesh;
-                UpdateFromMesh(mesh, part);
+                lock(mesh)
+                    UpdateFromMesh(mesh, part);
             }
             catch (Exception e)
             {
@@ -1653,7 +1654,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (u >= 0 && v >= 0 && u + v <= 1)
                     {
                         float floatLoc = (float)(i - iFloat) * signW + 0.5f;
-                        byte location = (byte)(floatLoc * 15);
+                        byte location = (byte)Math.Round(floatLoc * 255);
                         VoxelOrientationPlane plane;
                         if(signW > 0)
                             plane = VoxelOrientationPlane.X_UP;
@@ -1673,7 +1674,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
 
                         float floatLoc = (float)(i - iFloat) * signW + 0.5f;
-                        byte location = (byte)(floatLoc * 15);
+                        byte location = (byte)Math.Round(floatLoc * 255);
                         VoxelOrientationPlane plane;
                         if (signW > 0)
                             plane = VoxelOrientationPlane.X_UP;
@@ -1690,7 +1691,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
 
                         float floatLoc = (float)(i - iFloat) * signW + 0.5f;
-                        byte location = (byte)(floatLoc * 15);
+                        byte location = (byte)Math.Round(floatLoc * 255);
                         VoxelOrientationPlane plane;
                         if (signW > 0)
                             plane = VoxelOrientationPlane.X_UP;
@@ -1778,7 +1779,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (u >= 0 && v >= 0 && u + v <= 1)
                     {
                         float floatLoc = (float)(j - jFloat) * signW + 0.5f;
-                        byte location = (byte)(floatLoc * 15);
+                        byte location = (byte)Math.Round(floatLoc * 255);
                         VoxelOrientationPlane plane;
                         if (signW > 0)
                             plane = VoxelOrientationPlane.Y_UP;
@@ -1798,7 +1799,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (p1TestPt.magnitude <= RC || p2TestPt.magnitude <= RC || p3TestPt.magnitude <= RC)
                     {
                         float floatLoc = (float)(j - jFloat) * signW + 0.5f;
-                        byte location = (byte)(floatLoc * 15);
+                        byte location = (byte)Math.Round(floatLoc * 255);
                         VoxelOrientationPlane plane;
                         if (signW > 0)
                             plane = VoxelOrientationPlane.Y_UP;
@@ -1814,7 +1815,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt))
                     {
                         float floatLoc = (float)(j - jFloat) * signW + 0.5f;
-                        byte location = (byte)(floatLoc * 15);
+                        byte location = (byte)Math.Round(floatLoc * 255);
                         VoxelOrientationPlane plane;
                         if (signW > 0)
                             plane = VoxelOrientationPlane.Y_UP;
@@ -1900,7 +1901,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (u >= 0 && v >= 0 && u + v <= 1)
                     {
                         float floatLoc = (float)(k - kFloat) * signW + 0.5f;
-                        byte location = (byte)(floatLoc * 15);
+                        byte location = (byte)Math.Round(floatLoc * 255);
                         VoxelOrientationPlane plane;
                         if (signW > 0)
                             plane = VoxelOrientationPlane.Z_UP;
@@ -1919,7 +1920,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (p1TestPt.magnitude <= RC || p2TestPt.magnitude <= RC || p3TestPt.magnitude <= RC)
                     {
                         float floatLoc = (float)(k - kFloat) * signW + 0.5f;
-                        byte location = (byte)(floatLoc * 15);
+                        byte location = (byte)Math.Round(floatLoc * 255);
                         VoxelOrientationPlane plane;
                         if (signW > 0)
                             plane = VoxelOrientationPlane.Z_UP;
@@ -1935,7 +1936,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt))
                     {
                         float floatLoc = (float)(k - kFloat) * signW + 0.5f;
-                        byte location = (byte)(floatLoc * 15);
+                        byte location = (byte)Math.Round(floatLoc * 255);
                         VoxelOrientationPlane plane;
                         if (signW > 0)
                             plane = VoxelOrientationPlane.Z_UP;
@@ -2111,9 +2112,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     SweepPlanePoint pt = sweepPlane[i, k];
                     if(pt != null)
                     {
-                        pt.part = null;
-                        pt.mark = SweepPlanePoint.MarkingType.Clear;
-                        pt.jLastInactive = 0;
+                        pt.Clear();
                     }
                 }
         }
@@ -2149,6 +2148,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                 pt.mark = SweepPlanePoint.MarkingType.ActivePassedThroughInternalShell;
                             }
                             //Only other situation is that it is an inactive point, in which case we do nothing here, because it is already taken care of
+                        }
+                        else if (pt.mark == SweepPlanePoint.MarkingType.Clear)
+                        {
+                            pt.mark = SweepPlanePoint.MarkingType.VoxelShell;
+                            pt.part = p;
                         }
                         else if (pt.mark != SweepPlanePoint.MarkingType.VoxelShell && pt.mark != SweepPlanePoint.MarkingType.VoxelShellPreviouslyInterior)  //only run this if it's not already labeled as part of a voxel shell
                         {  //Make sure the point is labeled as a voxel shell if there is already a part there
@@ -2235,6 +2239,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
             public int jLastInactive;
 
             public MarkingType mark = MarkingType.VoxelShell;
+
+            public void Clear()
+            {
+                jLastInactive = 0;
+                mark = MarkingType.Clear;
+                part = null;
+            }
 
             public SweepPlanePoint(Part part, int i, int k)
             {

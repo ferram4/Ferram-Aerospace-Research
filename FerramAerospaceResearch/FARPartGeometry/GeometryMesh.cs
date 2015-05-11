@@ -106,25 +106,27 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public void MultithreadTransformBasis(object newThisToVesselMatrixObj)
         {
-            try
+            lock (this)
             {
-                Matrix4x4 tempMatrix = thisToVesselMatrix.inverse;
-                lock (this)
+                try
                 {
+                    Matrix4x4 tempMatrix = thisToVesselMatrix.inverse;
+
                     thisToVesselMatrix = (Matrix4x4)newThisToVesselMatrixObj * meshLocalToWorld;
+
+                    tempMatrix = thisToVesselMatrix * tempMatrix;
+
+                    bounds = TransformBounds(bounds, tempMatrix);
+
+                    for (int i = 0; i < vertices.Length; i++)
+                        vertices[i] = tempMatrix.MultiplyPoint3x4(vertices[i]);
+
+                    module.DecrementMeshesToUpdate();
                 }
-                tempMatrix = thisToVesselMatrix * tempMatrix;
-
-                bounds = TransformBounds(bounds, tempMatrix);
-
-                for (int i = 0; i < vertices.Length; i++)
-                    vertices[i] = tempMatrix.MultiplyPoint3x4(vertices[i]);
-
-                module.DecrementMeshesToUpdate();
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
             }
         }
 
