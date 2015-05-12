@@ -1597,6 +1597,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
             p1p2 = vert2Proj - vert1Proj;
             p1p3 = vert3Proj - vert1Proj;
 
+            int signW = -Math.Sign(Vector3.Cross(p1p2, p1p3).x);
+
             double dot12_12, dot12_13, dot13_13;
             dot12_12 = p1p2.z * p1p2.z + p1p2.y * p1p2.y;
             dot12_13 = p1p2.z * p1p3.z + p1p2.y * p1p3.y;
@@ -1627,8 +1629,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             lowK = Math.Max(lowK, 0);
             highJ = Math.Min(highJ, yCellLength - 1);
             highK = Math.Min(highK, zCellLength - 1);*/
-
-            int signW = Math.Sign(indexPlane.w);
 
             for (int j = lowJ; j <= highJ; j++)
                 for (int k = lowK; k <= highK; k++)
@@ -1681,7 +1681,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
 
                         double floatLoc = (i - iFloat) * signW + 0.5;
-                        floatLoc *= 255d;
+                        floatLoc *= 255d * 0.25d;
 
                         if (floatLoc > 255)
                             floatLoc = 255;
@@ -1705,7 +1705,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
 
                         double floatLoc = (i - iFloat) * signW + 0.5;
-                        floatLoc *= 255d;
+                        floatLoc *= 255d * 0.5d;
 
                         if (floatLoc > 255)
                             floatLoc = 255;
@@ -1741,6 +1741,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
             p1p2 = vert2Proj - vert1Proj;
             p1p3 = vert3Proj - vert1Proj;
 
+            int signW = -Math.Sign(Vector3.Cross(p1p2, p1p3).y);
+            
             double dot12_12, dot12_13, dot13_13;
             dot12_12 = p1p2.x * p1p2.x + p1p2.z * p1p2.z;
             dot12_13 = p1p2.x * p1p3.x + p1p2.z * p1p3.z;
@@ -1773,7 +1775,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             highI = Math.Min(highI, xCellLength - 1);
             highK = Math.Min(highK, zCellLength - 1);*/
 
-            int signW = Math.Sign(indexPlane.w);
 
             for (int i = lowI; i <= highI; i++)
                 for (int k = lowK; k <= highK; k++)
@@ -1827,7 +1828,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (p1TestPt.magnitude <= RC || p2TestPt.magnitude <= RC || p3TestPt.magnitude <= RC)
                     {
                         double floatLoc = (j - jFloat) * signW + 0.5;
-                        floatLoc *= 255d;
+                        floatLoc *= 255d * 0.25d;
 
                         if (floatLoc > 255)
                             floatLoc = 255;
@@ -1850,7 +1851,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt))
                     {
                         double floatLoc = (j - jFloat) * signW + 0.5;
-                        floatLoc *= 255d;
+                        floatLoc *= 255d * 0.5d;
 
                         if (floatLoc > 255)
                             floatLoc = 255;
@@ -1884,6 +1885,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
             p1p2 = vert2Proj - vert1Proj;
             p1p3 = vert3Proj - vert1Proj;
 
+            int signW = -Math.Sign(Vector3.Cross(p1p2, p1p3).z);
+            
             double dot12_12, dot12_13, dot13_13;
             dot12_12 = p1p2.x * p1p2.x + p1p2.y * p1p2.y;
             dot12_13 = p1p2.x * p1p3.x + p1p2.y * p1p3.y;
@@ -1916,7 +1919,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             highJ = Math.Min(highJ, yCellLength - 1);
             highI = Math.Min(highI, xCellLength - 1);*/
 
-            int signW = Math.Sign(indexPlane.w);
 
             for (int i = lowI; i <= highI; i++)
                 for (int j = lowJ; j <= highJ; j++)
@@ -1969,7 +1971,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (p1TestPt.magnitude <= RC || p2TestPt.magnitude <= RC || p3TestPt.magnitude <= RC)
                     {
                         double floatLoc = (k - kFloat) * signW + 0.5;
-                        floatLoc *= 255d;
+                        floatLoc *= 255d * 0.25d;
 
                         if (floatLoc > 255)
                             floatLoc = 255;
@@ -1992,7 +1994,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt))
                     {
                         double floatLoc = (k - kFloat) * signW + 0.5;
-                        floatLoc *= 255d;
+                        floatLoc *= 255d * 0.5d;
 
                         if (floatLoc > 255)
                             floatLoc = 255;

@@ -334,12 +334,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
     enum VoxelOrientationPlane
     {
-        X_UP,
-        X_DOWN,
-        Y_UP,
-        Y_DOWN,
-        Z_UP,
-        Z_DOWN,
-        FILL_VOXEL
+        X_UP = 1,
+        X_DOWN = 2,
+        Y_UP = 4,
+        Y_DOWN = 8,
+        Z_UP = 16,
+        Z_DOWN = 32,
+        FILL_VOXEL = 64
     }
 }
