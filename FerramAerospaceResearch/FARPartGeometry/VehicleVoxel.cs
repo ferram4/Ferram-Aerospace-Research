@@ -1653,8 +1653,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                     if (u >= 0 && v >= 0 && u + v <= 1)
                     {
-                        float floatLoc = (float)(i - iFloat) * signW + 0.5f;
-                        byte location = (byte)Math.Round(floatLoc * 255);
+                        double floatLoc = (i - iFloat) * signW + 0.5;
+                        floatLoc *= 255d;
+
+                        if (floatLoc > 255)
+                            floatLoc = 255;
+                        if (floatLoc < 0)
+                            floatLoc = 0;
+
+                        byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
                         if(signW > 0)
                             plane = VoxelOrientationPlane.X_UP;
@@ -1673,8 +1680,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (p1TestPt.magnitude <= RC || p2TestPt.magnitude <= RC || p3TestPt.magnitude <= RC)
                     {
 
-                        float floatLoc = (float)(i - iFloat) * signW + 0.5f;
-                        byte location = (byte)Math.Round(floatLoc * 255);
+                        double floatLoc = (i - iFloat) * signW + 0.5;
+                        floatLoc *= 255d;
+
+                        if (floatLoc > 255)
+                            floatLoc = 255;
+                        if (floatLoc < 0)
+                            floatLoc = 0;
+
+                        byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
                         if (signW > 0)
                             plane = VoxelOrientationPlane.X_UP;
@@ -1690,8 +1704,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt))
                     {
 
-                        float floatLoc = (float)(i - iFloat) * signW + 0.5f;
-                        byte location = (byte)Math.Round(floatLoc * 255);
+                        double floatLoc = (i - iFloat) * signW + 0.5;
+                        floatLoc *= 255d;
+
+                        if (floatLoc > 255)
+                            floatLoc = 255;
+                        if (floatLoc < 0)
+                            floatLoc = 0;
+
+                        byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
                         if (signW > 0)
                             plane = VoxelOrientationPlane.X_UP;
@@ -1778,8 +1799,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                     if (u >= 0 && v >= 0 && u + v <= 1)
                     {
-                        float floatLoc = (float)(j - jFloat) * signW + 0.5f;
-                        byte location = (byte)Math.Round(floatLoc * 255);
+                        double floatLoc = (j - jFloat) * signW + 0.5;
+                        floatLoc *= 255d;
+
+                        if (floatLoc > 255)
+                            floatLoc = 255;
+                        if (floatLoc < 0)
+                            floatLoc = 0;
+
+                        byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
                         if (signW > 0)
                             plane = VoxelOrientationPlane.Y_UP;
@@ -1798,8 +1826,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                     if (p1TestPt.magnitude <= RC || p2TestPt.magnitude <= RC || p3TestPt.magnitude <= RC)
                     {
-                        float floatLoc = (float)(j - jFloat) * signW + 0.5f;
-                        byte location = (byte)Math.Round(floatLoc * 255);
+                        double floatLoc = (j - jFloat) * signW + 0.5;
+                        floatLoc *= 255d;
+
+                        if (floatLoc > 255)
+                            floatLoc = 255;
+                        if (floatLoc < 0)
+                            floatLoc = 0;
+
+                        byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
                         if (signW > 0)
                             plane = VoxelOrientationPlane.Y_UP;
@@ -1814,8 +1849,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         IsWithinDistanceFromSide(p1p3, p1TestPt) ||
                         IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt))
                     {
-                        float floatLoc = (float)(j - jFloat) * signW + 0.5f;
-                        byte location = (byte)Math.Round(floatLoc * 255);
+                        double floatLoc = (j - jFloat) * signW + 0.5;
+                        floatLoc *= 255d;
+
+                        if (floatLoc > 255)
+                            floatLoc = 255;
+                        if (floatLoc < 0)
+                            floatLoc = 0;
+
+                        byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
                         if (signW > 0)
                             plane = VoxelOrientationPlane.Y_UP;
@@ -1900,8 +1942,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                     if (u >= 0 && v >= 0 && u + v <= 1)
                     {
-                        float floatLoc = (float)(k - kFloat) * signW + 0.5f;
-                        byte location = (byte)Math.Round(floatLoc * 255);
+                        double floatLoc = (k - kFloat) * signW + 0.5;
+                        floatLoc *= 255d;
+
+                        if (floatLoc > 255)
+                            floatLoc = 255;
+                        if (floatLoc < 0)
+                            floatLoc = 0;
+
+                        byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
                         if (signW > 0)
                             plane = VoxelOrientationPlane.Z_UP;
@@ -1919,8 +1968,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     Vector3 p3TestPt = pt - vert3Proj;
                     if (p1TestPt.magnitude <= RC || p2TestPt.magnitude <= RC || p3TestPt.magnitude <= RC)
                     {
-                        float floatLoc = (float)(k - kFloat) * signW + 0.5f;
-                        byte location = (byte)Math.Round(floatLoc * 255);
+                        double floatLoc = (k - kFloat) * signW + 0.5;
+                        floatLoc *= 255d;
+
+                        if (floatLoc > 255)
+                            floatLoc = 255;
+                        if (floatLoc < 0)
+                            floatLoc = 0;
+
+                        byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
                         if (signW > 0)
                             plane = VoxelOrientationPlane.Z_UP;
@@ -1935,8 +1991,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         IsWithinDistanceFromSide(p1p3, p1TestPt)||
                         IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt))
                     {
-                        float floatLoc = (float)(k - kFloat) * signW + 0.5f;
-                        byte location = (byte)Math.Round(floatLoc * 255);
+                        double floatLoc = (k - kFloat) * signW + 0.5;
+                        floatLoc *= 255d;
+
+                        if (floatLoc > 255)
+                            floatLoc = 255;
+                        if (floatLoc < 0)
+                            floatLoc = 0;
+
+                        byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
                         if (signW > 0)
                             plane = VoxelOrientationPlane.Z_UP;
