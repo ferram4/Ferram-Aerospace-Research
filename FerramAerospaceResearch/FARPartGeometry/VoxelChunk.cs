@@ -68,6 +68,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
             //voxelPoints = new Part[512];
             //voxelSize = new float[512];
             voxelPoints = new PartSizePair[512];
+            for (int i = 0; i < voxelPoints.Length; i++)
+                voxelPoints[i] = new PartSizePair();
+
             this.lowerCorner = lowerCorner;
         }
 
@@ -228,7 +231,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         //    ClearVisualVoxels();
         //}
 
-        public struct PartSizePair
+        public class PartSizePair
         {
             const float AREA_SCALING = 1f / (255f * 255f * 255f);
             const int LENGTH_OF_VOXEL = 255;
@@ -284,6 +287,27 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 return size;
             }
 
+            public void SetFilledSides(VoxelOrientationPlane filledPlanes)
+            {
+                if ((filledPlanes & VoxelOrientationPlane.X_UP) == VoxelOrientationPlane.X_UP)
+                    xPlaneUp = LENGTH_OF_VOXEL;
+
+                if ((filledPlanes & VoxelOrientationPlane.X_DOWN) == VoxelOrientationPlane.X_DOWN)
+                    xPlaneDown = LENGTH_OF_VOXEL;
+
+                if ((filledPlanes & VoxelOrientationPlane.Y_UP) == VoxelOrientationPlane.Y_UP)
+                    yPlaneUp = LENGTH_OF_VOXEL;
+
+                if ((filledPlanes & VoxelOrientationPlane.Y_DOWN) == VoxelOrientationPlane.Y_DOWN)
+                    yPlaneDown = LENGTH_OF_VOXEL;
+
+                if ((filledPlanes & VoxelOrientationPlane.Z_UP) == VoxelOrientationPlane.Z_UP)
+                    zPlaneUp = LENGTH_OF_VOXEL;
+
+                if ((filledPlanes & VoxelOrientationPlane.Z_DOWN) == VoxelOrientationPlane.Z_DOWN)
+                    zPlaneDown = LENGTH_OF_VOXEL;
+            }
+
             public void SetPlaneLocation(VoxelOrientationPlane plane, byte location)
             {
                 switch(plane)
@@ -332,8 +356,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
         }
     }
 
+    [Flags]
     enum VoxelOrientationPlane
     {
+        NONE = 0,
         X_UP = 1,
         X_DOWN = 2,
         Y_UP = 4,

@@ -349,7 +349,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
         }
 
-        public unsafe void CrossSectionData(VoxelCrossSection[] crossSections, Vector3 orientationVector, out int frontIndex, out int backIndex, out double sectionThickness, out double maxCrossSectionArea)
+        public void CrossSectionData(VoxelCrossSection[] crossSections, Vector3 orientationVector, out int frontIndex, out int backIndex, out double sectionThickness, out double maxCrossSectionArea)
         {
             //TODO: Look into setting better limits for iterating over sweep plane to improve off-axis performance
 
@@ -487,6 +487,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                                         if ((object)pair.part != null)
                                         {
+                                            DetermineIfPartGetsForcesAndAreas(partSideAreas, pair, i, j, k);
+                                            
                                             double size = pair.GetSize();
                                             if (size > 1.0)
                                                 size = 1.0;
@@ -501,7 +503,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                             i_xy += location.x * location.y * size;
                                             i_yy += location.y * location.y * size;
 
-                                            DetermineIfPartGetsForcesAndAreas(partSideAreas, pair.part, i, j, k);
                                         }
                                     }
                                 }
@@ -561,6 +562,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                                         if ((object)pair.part != null)
                                         {
+                                            DetermineIfPartGetsForcesAndAreas(partSideAreas, pair, i, j, k);
+                                            
                                             double size = pair.GetSize();
                                             if (size > 1.0)
                                                 size = 1.0;
@@ -575,7 +578,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                             i_xy += location.x * location.y * size;
                                             i_yy += location.y * location.y * size;
 
-                                            DetermineIfPartGetsForcesAndAreas(partSideAreas, pair.part, i, j, k);
                                         }
                                     }
                                 }
@@ -747,6 +749,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                                         if ((object)pair.part != null)
                                         {
+                                            DetermineIfPartGetsForcesAndAreas(partSideAreas, pair, i, j, k);
+
                                             double size = pair.GetSize();
                                             if (size > 1.0)
                                                 size = 1.0;
@@ -761,7 +765,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                             i_xy += location.x * location.y * size;
                                             i_yy += location.y * location.y * size;
 
-                                            DetermineIfPartGetsForcesAndAreas(partSideAreas, pair.part, i, j, k);
                                         }
                                     }
                                 }
@@ -823,6 +826,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                                         if ((object)pair.part != null)
                                         {
+                                            DetermineIfPartGetsForcesAndAreas(partSideAreas, pair, i, j, k);
+                                            
                                             double size = pair.GetSize();
                                             if (size > 1.0)
                                                 size = 1.0;
@@ -837,7 +842,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                             i_xy += location.x * location.y * size;
                                             i_yy += location.y * location.y * size;
 
-                                            DetermineIfPartGetsForcesAndAreas(partSideAreas, pair.part, i, j, k);
                                         }
                                     }
                                 }
@@ -1014,6 +1018,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                                         if ((object)pair.part != null)
                                         {
+                                            DetermineIfPartGetsForcesAndAreas(partSideAreas, pair, i, j, k);
+
                                             double size = pair.GetSize();
                                             if (size > 1.0)
                                                 size = 1.0;
@@ -1028,7 +1034,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                             i_xy += location.x * location.y * size;
                                             i_yy += location.y * location.y * size;
 
-                                            DetermineIfPartGetsForcesAndAreas(partSideAreas, pair.part, i, j, k);
                                         }
                                     }
                                 }
@@ -1089,6 +1094,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                                         if ((object)pair.part != null)
                                         {
+                                            DetermineIfPartGetsForcesAndAreas(partSideAreas, pair, i, j, k);
+
                                             double size = pair.GetSize();
                                             if (size > 1.0)
                                                 size = 1.0;
@@ -1102,7 +1109,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                             i_xy += location.x * location.y * size;
                                             i_yy += location.y * location.y * size;
 
-                                            DetermineIfPartGetsForcesAndAreas(partSideAreas, pair.part, i, j, k);
                                         }
                                     }
                                 }
@@ -1211,10 +1217,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
             
         }
 
-        private unsafe void DetermineIfPartGetsForcesAndAreas(Dictionary<Part, VoxelCrossSection.SideAreaValues> partSideAreas, Part p, int i, int j, int k)
+        private void DetermineIfPartGetsForcesAndAreas(Dictionary<Part, VoxelCrossSection.SideAreaValues> partSideAreas, VoxelChunk.PartSizePair voxel, int i, int j, int k)
         {
             VoxelCrossSection.SideAreaValues areas;
+            VoxelOrientationPlane filledPlanes = VoxelOrientationPlane.NONE;
             bool partGetsForces = true;
+
+            Part p = voxel.part;
+
             if (!partSideAreas.TryGetValue(p, out areas))
             {
                 areas = new VoxelCrossSection.SideAreaValues();
@@ -1226,41 +1236,61 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 areas.exposedAreaCount++;
                 partGetsForces = true;
             }
+            else
+                filledPlanes |= VoxelOrientationPlane.X_UP;
+
             if (i - 1 < 0 || (object)GetPartAtVoxelPos(i - 1, j, k) == null)
             {
                 areas.iN += elementSize * elementSize;
                 areas.exposedAreaCount++;
                 partGetsForces = true;
             }
+            else
+                filledPlanes |= VoxelOrientationPlane.X_DOWN;
+
             if (j + 1 >= yCellLength || (object)GetPartAtVoxelPos(i, j + 1, k) == null)
             {
                 areas.jP += elementSize * elementSize;
                 areas.exposedAreaCount++;
                 partGetsForces = true;
             }
+            else
+                filledPlanes |= VoxelOrientationPlane.Y_UP;
+
             if (j - 1 < 0 || (object)GetPartAtVoxelPos(i, j - 1, k) == null)
             {
                 areas.jN += elementSize * elementSize;
                 areas.exposedAreaCount++;
                 partGetsForces = true;
             }
+            else
+                filledPlanes |= VoxelOrientationPlane.Y_DOWN;
+
             if (k + 1 >= zCellLength || (object)GetPartAtVoxelPos(i, j, k + 1) == null)
             {
                 areas.kP += elementSize * elementSize;
                 areas.exposedAreaCount++;
                 partGetsForces = true;
             }
+            else
+                filledPlanes |= VoxelOrientationPlane.Z_UP;
+
             if (k - 1 < 0 || (object)GetPartAtVoxelPos(i, j, k - 1) == null)
             {
                 areas.kN += elementSize * elementSize;
                 areas.exposedAreaCount++;
                 partGetsForces = true;
             }
+            else
+                filledPlanes |= VoxelOrientationPlane.Z_DOWN;
+
             if (partGetsForces)
             {
                 areas.crossSectionalAreaCount++;
                 partSideAreas[p] = areas;
             }
+
+            voxel.SetFilledSides(filledPlanes);
         }
 
         private double TanPrincipalAxisAngle(double Ixx, double Iyy, double Ixy)
@@ -1310,7 +1340,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         }
 
         //Only use to change size, not part
-        private unsafe void SetVoxelPointNoLock(int i, int j, int k)
+        private void SetVoxelPointNoLock(int i, int j, int k)
         {
             int iSec, jSec, kSec;
             //Find the voxel section that this point points to
@@ -1345,7 +1375,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         }
         
         //Use when guaranteed that you will not attempt to write to the same section simultaneously
-        private unsafe void SetVoxelPointNoLock(int i, int j, int k, Part part)
+        private void SetVoxelPointNoLock(int i, int j, int k, Part part)
         {
             int iSec, jSec, kSec;
             //Find the voxel section that this point points to
@@ -1379,7 +1409,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             section.SetVoxelPointGlobalIndexNoLock(i + j * 8 + k * 64, part);
         }
 
-        private unsafe void SetVoxelPoint(int i, int j, int k, Part part, VoxelOrientationPlane plane, byte location)
+        private void SetVoxelPoint(int i, int j, int k, Part part, VoxelOrientationPlane plane, byte location)
         {
             int iSec, jSec, kSec;
             //Find the voxel section that this point points to
@@ -1416,7 +1446,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             section.SetVoxelPointGlobalIndex(i + j * 8 + k * 64, part, plane, location);
         }
 
-        private unsafe VoxelChunk GetVoxelChunk(int i, int j, int k)
+        private VoxelChunk GetVoxelChunk(int i, int j, int k)
         {
             int iSec, jSec, kSec;
             //Find the voxel section that this point points to
@@ -1432,7 +1462,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             return section;
         }
 
-        private unsafe bool VoxelPointExistsAtPos(int i, int j, int k)
+        private bool VoxelPointExistsAtPos(int i, int j, int k)
         {
             int iSec, jSec, kSec;
             //Find the voxel section that this point points to
@@ -1452,7 +1482,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             return section.VoxelPointExistsGlobalIndex(i + j * 8 + k * 64);
         }
         
-        private unsafe Part GetPartAtVoxelPos(int i, int j, int k)
+        private Part GetPartAtVoxelPos(int i, int j, int k)
         {
             int iSec, jSec, kSec;
             //Find the voxel section that this point points to
@@ -1472,7 +1502,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             return section.GetVoxelPartGlobalIndex(i + j * 8 + k * 64);
         }
 
-        private unsafe Part GetPartAtVoxelPos(int i, int j, int k, ref VoxelChunk section)
+        private Part GetPartAtVoxelPos(int i, int j, int k, ref VoxelChunk section)
         {
             return section.GetVoxelPartGlobalIndex(i + j * 8 + k * 64);
         }
@@ -1492,7 +1522,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 Debug.LogException(e);
             }
         }
-        private unsafe void UpdateFromMesh(GeometryMesh mesh, Part part)
+        private void UpdateFromMesh(GeometryMesh mesh, Part part)
         {
             if (mesh.bounds.size.x < elementSize && mesh.bounds.size.y < elementSize && mesh.bounds.size.z < elementSize)
             {
@@ -1663,7 +1693,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if(signW > 0)
+                        if (signW < 0)
                             plane = VoxelOrientationPlane.X_UP;
                         else
                             plane = VoxelOrientationPlane.X_DOWN;
@@ -1690,7 +1720,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW > 0)
+                        if (signW < 0)
                             plane = VoxelOrientationPlane.X_UP;
                         else
                             plane = VoxelOrientationPlane.X_DOWN;
@@ -1714,7 +1744,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW > 0)
+                        if (signW < 0)
                             plane = VoxelOrientationPlane.X_UP;
                         else
                             plane = VoxelOrientationPlane.X_DOWN;
@@ -1810,7 +1840,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW > 0)
+                        if (signW < 0)
                             plane = VoxelOrientationPlane.Y_UP;
                         else
                             plane = VoxelOrientationPlane.Y_DOWN;
@@ -1837,7 +1867,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW > 0)
+                        if (signW < 0)
                             plane = VoxelOrientationPlane.Y_UP;
                         else
                             plane = VoxelOrientationPlane.Y_DOWN;
@@ -1860,7 +1890,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW > 0)
+                        if (signW < 0)
                             plane = VoxelOrientationPlane.Y_UP;
                         else
                             plane = VoxelOrientationPlane.Y_DOWN;
@@ -1954,7 +1984,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW > 0)
+                        if (signW < 0)
                             plane = VoxelOrientationPlane.Z_UP;
                         else
                             plane = VoxelOrientationPlane.Z_DOWN;
@@ -1980,7 +2010,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW > 0)
+                        if (signW < 0)
                             plane = VoxelOrientationPlane.Z_UP;
                         else
                             plane = VoxelOrientationPlane.Z_DOWN;
@@ -2003,7 +2033,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW > 0)
+                        if (signW < 0)
                             plane = VoxelOrientationPlane.Z_UP;
                         else
                             plane = VoxelOrientationPlane.Z_DOWN;
@@ -2097,7 +2127,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             return newPlane;
         }
 
-        private unsafe void SolidifyVoxel(object uncastData)
+        private void SolidifyVoxel(object uncastData)
         {
             VoxelSolidParams parameters = (VoxelSolidParams)uncastData;
             try
@@ -2110,7 +2140,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
         }
         
-        private unsafe void SolidifyVoxel(int lowJ, int highJ, bool increasingJ)
+        private void SolidifyVoxel(int lowJ, int highJ, bool increasingJ)
         {
             SweepPlanePoint[,] plane;
             lock (clearedPlanes)
@@ -2165,7 +2195,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
         }
 
-        private unsafe void CleanSweepPlane(SweepPlanePoint[,] sweepPlane)
+        private void CleanSweepPlane(SweepPlanePoint[,] sweepPlane)
         {
             int lengthX, lengthZ;
             lengthX = sweepPlane.GetLength(0);
@@ -2182,7 +2212,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
         }
 
-        private unsafe void SolidifyLoop(int j, int lastJ, SweepPlanePoint[,] sweepPlane, List<SweepPlanePoint> activePts, HashSet<SweepPlanePoint> inactiveInteriorPts, SweepPlanePoint[] neighboringSweepPlanePts)
+        private void SolidifyLoop(int j, int lastJ, SweepPlanePoint[,] sweepPlane, List<SweepPlanePoint> activePts, HashSet<SweepPlanePoint> inactiveInteriorPts, SweepPlanePoint[] neighboringSweepPlanePts)
         {
             for (int i = 0; i < xCellLength; i++) //Iterate across the cross-section plane to add voxel shell and mark active interior points
                 for (int k = 0; k < zCellLength; k++)
