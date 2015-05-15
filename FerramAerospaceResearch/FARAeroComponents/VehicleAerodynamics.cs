@@ -350,6 +350,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
                 finally
                 {
+                    if (HighLogic.LoadedSceneIsFlight && _voxel != null)
+                    {
+                        _voxel.CleanupVoxel();
+                        _voxel = null;
+                    }
                     voxelizing = false;
                 }
             }
@@ -1150,12 +1155,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
 
             _sonicDragArea = Vector3.Dot(center.force, worldMainAxis) * -1000;
-
-            if (HighLogic.LoadedSceneIsFlight)
-            {
-                _voxel.CleanupVoxel();
-                _voxel = null;
-            }
         }
 
         private double CalculateHypersonicMoment(double lowArea, double highArea, double sectionThickness)

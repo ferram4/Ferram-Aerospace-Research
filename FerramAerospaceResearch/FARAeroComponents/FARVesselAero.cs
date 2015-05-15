@@ -167,42 +167,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             } 
             
             if (FlightGlobals.ready && _currentAeroSections != null)
-            {
-                float atmDensity = (float)_vessel.atmDensity;
-
-                if (atmDensity <= 0)
-                    return;
-
-                machNumber = _vessel.mach;
-                reynoldsNumber = FARAeroUtil.CalculateReynoldsNumber(_vessel.atmDensity, Length, _vessel.srfSpeed, machNumber, FlightGlobals.getExternalTemperature((float)_vessel.altitude, _vessel.mainBody), _vessel.mainBody.atmosphereAdiabaticIndex);
-                float skinFrictionDragCoefficient = (float)FARAeroUtil.SkinFrictionDrag(reynoldsNumber, machNumber);
-
-                Vector3 frameVel = Krakensbane.GetFrameVelocityV3f();
-
-                for (int i = 0; i < _currentAeroModules.Count; i++)
-                {
-                    FARAeroPartModule m = _currentAeroModules[i];
-                    if (m != null)
-                        m.UpdateVelocityAndAngVelocity(frameVel);
-                    else
-                    {
-                        _currentAeroModules.RemoveAt(i);
-                        i--;
-                    }
-                }
-                
-                for (int i = 0; i < _currentAeroSections.Count; i++)
-                    _currentAeroSections[i].FlightCalculateAeroForces(atmDensity, (float)machNumber, (float)(reynoldsNumber / Length), skinFrictionDragCoefficient);
-
-                _vesselIntakeRamDrag.ApplyIntakeRamDrag((float)machNumber, _vessel.srf_velocity.normalized, (float)_vessel.dynamicPressurekPa);
-
-                for (int i = 0; i < _currentAeroModules.Count; i++)
-                {
-                    FARAeroPartModule m = _currentAeroModules[i];
-                    if ((object)m != null)
-                        m.ApplyForces();
-                }
-            }
+                CalculateAndApplyVesselAeroProperties();
 
             if (_currentGeoModules.Count > geoModulesReady)
             {
@@ -214,6 +179,44 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
             else if (_updateQueued)
                 VesselUpdate(_recalcGeoModules);
+        }
+
+        private void CalculateAndApplyVesselAeroProperties()
+        {
+            float atmDensity = (float)_vessel.atmDensity;
+
+            if (atmDensity <= 0)
+                return;
+
+            machNumber = _vessel.mach;
+            reynoldsNumber = FARAeroUtil.CalculateReynoldsNumber(_vessel.atmDensity, Length, _vessel.srfSpeed, machNumber, FlightGlobals.getExternalTemperature((float)_vessel.altitude, _vessel.mainBody), _vessel.mainBody.atmosphereAdiabaticIndex);
+            float skinFrictionDragCoefficient = (float)FARAeroUtil.SkinFrictionDrag(reynoldsNumber, machNumber);
+
+            Vector3 frameVel = Krakensbane.GetFrameVelocityV3f();
+
+            for (int i = 0; i < _currentAeroModules.Count; i++)
+            {
+                FARAeroPartModule m = _currentAeroModules[i];
+                if (m != null)
+                    m.UpdateVelocityAndAngVelocity(frameVel);
+                else
+                {
+                    _currentAeroModules.RemoveAt(i);
+                    i--;
+                }
+            }
+
+            for (int i = 0; i < _currentAeroSections.Count; i++)
+                _currentAeroSections[i].FlightCalculateAeroForces(atmDensity, (float)machNumber, (float)(reynoldsNumber / Length), skinFrictionDragCoefficient);
+
+            _vesselIntakeRamDrag.ApplyIntakeRamDrag((float)machNumber, _vessel.srf_velocity.normalized, (float)_vessel.dynamicPressurekPa);
+
+            for (int i = 0; i < _currentAeroModules.Count; i++)
+            {
+                FARAeroPartModule m = _currentAeroModules[i];
+                if ((object)m != null)
+                    m.ApplyForces();
+            }
         }
 
         public void SimulateAeroProperties(out Vector3 aeroForce, out Vector3 aeroTorque, Vector3 velocityWorldVector, double altitude)
