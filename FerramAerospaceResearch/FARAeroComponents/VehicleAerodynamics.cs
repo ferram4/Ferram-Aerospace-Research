@@ -271,46 +271,48 @@ namespace FerramAerospaceResearch.FARAeroComponents
         //This function will attempt to voxelize the vessel, as long as it isn't being voxelized currently all data that is on the Unity thread should be processed here before being passed to the other threads
         public bool TryVoxelUpdate(Matrix4x4 worldToLocalMatrix, Matrix4x4 localToWorldMatrix, int voxelCount, List<Part> vehiclePartList, List<GeometryPartModule> currentGeoModules, bool updateGeometryPartModules = true)
         {
+            bool returnVal = false;
             if (Monitor.TryEnter(this))
             {
                 try
                 {
                     if (voxelizing)
                     {
-                        Monitor.Exit(this);
-                        return false;
+                        returnVal = false;
                     }
-                    _voxelCount = voxelCount;
-
-                    this._worldToLocalMatrix = worldToLocalMatrix;
-                    this._localToWorldMatrix = localToWorldMatrix;
-                    this._vehiclePartList = vehiclePartList;
-                    this._currentGeoModules = currentGeoModules;
-
-                    _partWorldToLocalMatrix.Clear();
-
-                    for (int i = 0; i < _currentGeoModules.Count; i++)
+                    else
                     {
-                        GeometryPartModule g = _currentGeoModules[i];
-                        _partWorldToLocalMatrix.Add(g.part, new PartTransformInfo(g.part.partTransform));
-                        if (updateGeometryPartModules)
-                            g.UpdateTransformMatrixList(_worldToLocalMatrix);
-                    }
+                        _voxelCount = voxelCount;
 
-                    this._vehicleMainAxis = CalculateVehicleMainAxis();
+                        this._worldToLocalMatrix = worldToLocalMatrix;
+                        this._localToWorldMatrix = localToWorldMatrix;
+                        this._vehiclePartList = vehiclePartList;
+                        this._currentGeoModules = currentGeoModules;
 
-                    if (_voxel != null)
-                    {
+                        _partWorldToLocalMatrix.Clear();
+
+                        for (int i = 0; i < _currentGeoModules.Count; i++)
+                        {
+                            GeometryPartModule g = _currentGeoModules[i];
+                            _partWorldToLocalMatrix.Add(g.part, new PartTransformInfo(g.part.partTransform));
+                            if (updateGeometryPartModules)
+                                g.UpdateTransformMatrixList(_worldToLocalMatrix);
+                        }
+
+                        this._vehicleMainAxis = CalculateVehicleMainAxis();
+
+                        if (_voxel != null)
+                        {
+                            visualizing = false;
+                            _voxel.CleanupVoxel();
+                        }
+
                         visualizing = false;
-                        _voxel.CleanupVoxel();
+
+                        voxelizing = true;
+                        ThreadPool.QueueUserWorkItem(CreateVoxel, updateGeometryPartModules);
+                        returnVal = true;
                     }
-
-                    visualizing = false;
-
-                    voxelizing = true;
-                    ThreadPool.QueueUserWorkItem(CreateVoxel, updateGeometryPartModules);
-                    Monitor.Exit(this);
-                    return true;
                 }
                 finally
                 {
@@ -318,7 +320,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
             }
             
-            return false;
+            return returnVal;
         }
 
         //And this actually creates the voxel and then begins the aero properties determination
