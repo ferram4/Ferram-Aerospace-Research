@@ -110,8 +110,15 @@ namespace FerramAerospaceResearch
             VehicleVoxel.VoxelSetup();
             Debug.Log("FAR Vehicle Voxel Setup complete");
 
+            GameEvents.onGameStateSave.Add(OnSave);
             newGame = false;
         }
+
+        void OnDestroy()
+        {
+            GameEvents.onGameStateSave.Remove(OnSave);
+        }
+
         public override void OnSave(ConfigNode node)
         {
             Debug.Log("saved");

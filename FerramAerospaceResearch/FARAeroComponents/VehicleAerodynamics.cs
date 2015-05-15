@@ -273,45 +273,52 @@ namespace FerramAerospaceResearch.FARAeroComponents
         {
             if (Monitor.TryEnter(this))
             {
-                if (voxelizing)
+                try
+                {
+                    if (voxelizing)
+                    {
+                        Monitor.Exit(this);
+                        return false;
+                    }
+                    _voxelCount = voxelCount;
+
+                    this._worldToLocalMatrix = worldToLocalMatrix;
+                    this._localToWorldMatrix = localToWorldMatrix;
+                    this._vehiclePartList = vehiclePartList;
+                    this._currentGeoModules = currentGeoModules;
+
+                    _partWorldToLocalMatrix.Clear();
+
+                    for (int i = 0; i < _currentGeoModules.Count; i++)
+                    {
+                        GeometryPartModule g = _currentGeoModules[i];
+                        _partWorldToLocalMatrix.Add(g.part, new PartTransformInfo(g.part.partTransform));
+                        if (updateGeometryPartModules)
+                            g.UpdateTransformMatrixList(_worldToLocalMatrix);
+                    }
+
+                    this._vehicleMainAxis = CalculateVehicleMainAxis();
+
+                    if (_voxel != null)
+                    {
+                        visualizing = false;
+                        _voxel.CleanupVoxel();
+                    }
+
+                    visualizing = false;
+
+                    voxelizing = true;
+                    ThreadPool.QueueUserWorkItem(CreateVoxel, updateGeometryPartModules);
+                    Monitor.Exit(this);
+                    return true;
+                }
+                finally
                 {
                     Monitor.Exit(this);
-                    return false;
                 }
-                _voxelCount = voxelCount;
-
-                this._worldToLocalMatrix = worldToLocalMatrix;
-                this._localToWorldMatrix = localToWorldMatrix;
-                this._vehiclePartList = vehiclePartList;
-                this._currentGeoModules = currentGeoModules;
-
-                _partWorldToLocalMatrix.Clear();
-
-                for (int i = 0; i < _currentGeoModules.Count; i++)
-                {
-                    GeometryPartModule g = _currentGeoModules[i];
-                    _partWorldToLocalMatrix.Add(g.part, new PartTransformInfo(g.part.partTransform));
-                    if (updateGeometryPartModules)
-                        g.UpdateTransformMatrixList(_worldToLocalMatrix);
-                }
-
-                this._vehicleMainAxis = CalculateVehicleMainAxis();
-
-                if (_voxel != null)
-                {
-                    visualizing = false;
-                    _voxel.CleanupVoxel();
-                }
-
-                visualizing = false;
-
-                voxelizing = true;
-                ThreadPool.QueueUserWorkItem(CreateVoxel, updateGeometryPartModules);
-                Monitor.Exit(this);
-                return true;
             }
-            else
-                return false;
+            
+            return false;
         }
 
         //And this actually creates the voxel and then begins the aero properties determination
@@ -352,6 +359,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         private Vector3 CalculateVehicleMainAxis()
         {
             Vector3 axis = Vector3.zero;
+            Vector3 notAxis = Vector3.zero;
             HashSet<Part> hitParts = new HashSet<Part>();
 
             for (int i = 0; i < _vehiclePartList.Count; i++)
@@ -373,7 +381,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
                 else if (p.Modules.Contains("FARWingAerodynamicModel") || p.Modules.Contains("FARControllableSurface"))      //aggregate wings for later calc...
                 {
-                    candVector += p.partTransform.right;        //add the other vector component in the plane of the wing
+                    Vector3 notCandVector =  _worldToLocalMatrix.MultiplyVector(p.partTransform.forward);
+                    notCandVector.x = Math.Abs(notCandVector.x);
+                    notCandVector.y = Math.Abs(notCandVector.y);
+                    notCandVector.z = Math.Abs(notCandVector.z);
+                    notAxis += notCandVector;
                 }
                 for (int j = 0; j < p.symmetryCounterparts.Count; j++)
                 {
@@ -393,7 +405,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     }
                     else if (q.Modules.Contains("FARWingAerodynamicModel") || q.Modules.Contains("FARControllableSurface"))      //aggregate wings for later calc...
                     {
-                        candVector += q.partTransform.right;        //add the other vector component in the plane of the wing
+                        Vector3 notCandVector = _worldToLocalMatrix.MultiplyVector(p.partTransform.forward);
+                        notCandVector.x = Math.Abs(notCandVector.x);
+                        notCandVector.y = Math.Abs(notCandVector.y);
+                        notCandVector.z = Math.Abs(notCandVector.z);
+                        notAxis += notCandVector;
                     }
                     else
                         candVector += q.partTransform.up;
@@ -406,6 +422,15 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 axis += candVector * p.mass * (1 + p.symmetryCounterparts.Count);    //scale part influence by approximate size
             }
+            float perpTest = Math.Abs(Vector3.Dot(axis, notAxis));
+
+            if (perpTest > 0.3)
+            {
+                axis = Vector3.Cross(axis, notAxis);
+                axis = Vector3.Cross(axis, notAxis);        //this shoudl result in an axis perpendicular to notAxis
+                //axis.Normalize();
+            }
+
 
             float dotProdX, dotProdY, dotProdZ;
 
