@@ -161,7 +161,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
             if (useWingArea)
                 vesselInfo.refArea = wingArea;
-            else if (_vesselAero)
+            else if (_vesselAero && _vesselAero.enabled)
                 vesselInfo.refArea = _vesselAero.MaxCrossSectionArea;
             else
                 vesselInfo.refArea = 1;
