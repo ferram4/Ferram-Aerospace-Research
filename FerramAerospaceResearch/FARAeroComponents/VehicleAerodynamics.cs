@@ -301,13 +301,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                         this._vehicleMainAxis = CalculateVehicleMainAxis();
 
+                        visualizing = false;
+
                         if (_voxel != null)
                         {
-                            visualizing = false;
                             _voxel.CleanupVoxel();
                         }
-
-                        visualizing = false;
 
                         voxelizing = true;
                         ThreadPool.QueueUserWorkItem(CreateVoxel, updateGeometryPartModules);

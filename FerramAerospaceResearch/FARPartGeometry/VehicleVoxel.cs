@@ -167,7 +167,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             lock (clearedChunks)
             {
                 while (chunksInUse >= MAX_CHUNKS_ALLOWED)
+                {
+                    Debug.Log("Voxel waiting for chunks to be freed");
                     Monitor.Wait(clearedChunks);
+                }
 
                 chunksInUse += xLength * yLength * zLength;
             }
