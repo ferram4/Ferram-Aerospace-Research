@@ -168,7 +168,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 while (chunksInUse >= MAX_CHUNKS_ALLOWED)
                 {
-                    Debug.Log("Voxel waiting for chunks to be freed");
+                    Debug.Log("Voxel waiting for chunks to be released");
                     Monitor.Wait(clearedChunks);
                 }
 
@@ -331,25 +331,29 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             lock (clearedChunks)
             {
-                for (int i = 0; i < xLength; i++)
-                    for (int j = 0; j < yLength; j++)
-                        for (int k = 0; k < zLength; k++)
-                        {
-                            VoxelChunk chunk = voxelChunks[i, j, k];
-                            if (chunk == null)
-                                continue;
-
-                            chunk.ClearChunk();
-
-                            if (clearedChunks.Count < MAX_CHUNKS_IN_QUEUE)
-                                clearedChunks.Push(chunk);
-                            else
-                                return;
-
-                        }
+                RecycleChunksFromArray();
                 chunksInUse -= xLength * yLength * zLength;
                 Monitor.Pulse(clearedChunks);
             }
+        }
+
+        private void RecycleChunksFromArray()
+        {
+            for (int i = 0; i < xLength; i++)
+                for (int j = 0; j < yLength; j++)
+                    for (int k = 0; k < zLength; k++)
+                    {
+                        VoxelChunk chunk = voxelChunks[i, j, k];
+                        if (chunk == null)
+                            continue;
+
+                        chunk.ClearChunk();
+
+                        if (clearedChunks.Count < MAX_CHUNKS_IN_QUEUE)
+                            clearedChunks.Push(chunk);
+                        else
+                            return;
+                    }
         }
 
         public void CrossSectionData(VoxelCrossSection[] crossSections, Vector3 orientationVector, out int frontIndex, out int backIndex, out double sectionThickness, out double maxCrossSectionArea)
