@@ -168,19 +168,28 @@ namespace ferram4
         public void NUFAR_SetExposedAreaFactor()
         {
             List<Part> counterparts = part.symmetryCounterparts;
+            double counterpartsCount = 1; 
             double sum = NUFAR_areaExposedFactor;
 
             for (int i = 0; i < counterparts.Count; i++)
             {
-                FARWingAerodynamicModel model = counterparts[i].GetComponent<FARWingAerodynamicModel>();
+                Part p = counterparts[i];
+                if (p == null)
+                    continue;
+                FARWingAerodynamicModel model = p.GetComponent<FARWingAerodynamicModel>();
+                ++counterpartsCount;
                 sum += model.NUFAR_areaExposedFactor;
             }
 
-            sum /= (counterparts.Count + 1);
+            sum /= (counterpartsCount + 1);
             NUFAR_areaExposedFactor = sum;
             for (int i = 0; i < counterparts.Count; i++)
             {
-                FARWingAerodynamicModel model = counterparts[i].GetComponent<FARWingAerodynamicModel>();
+                Part p = counterparts[i];
+                if (p == null)
+                    continue;
+                FARWingAerodynamicModel model = p.GetComponent<FARWingAerodynamicModel>();
+
                 model.NUFAR_areaExposedFactor = sum;
             }
 
