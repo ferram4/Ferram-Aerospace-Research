@@ -403,6 +403,37 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         #endregion
 
+        private MeshData GetColliderMeshData(Transform t)
+        {
+            MeshCollider mc = t.GetComponent<MeshCollider>();
+            if (mc != null)
+            {
+                Mesh m = mc.sharedMesh;
+                return new MeshData(m.vertices, m.triangles, m.bounds);
+            }
+            else
+            {
+                BoxCollider bc = t.GetComponent<BoxCollider>();
+                if (bc != null)
+                {
+                    return CreateBoxMeshFromBoxCollider(bc.size, bc.center);
+                }
+            }
+            return null;
+        }
+
+        private MeshData GetVisibleMeshData(Transform t)
+        {
+            Mesh m = null;
+            MeshFilter mf = t.GetComponent<MeshFilter>();
+            if (mf != null)
+            {
+                m = mf.sharedMesh;
+                return new MeshData(m.vertices, m.triangles, m.bounds);
+            }
+            return null;
+        }
+
         private List<MeshData> CreateMeshListFromTransforms(ref List<Transform> meshTransforms)
         {
             List<MeshData> meshList = new List<MeshData>();
@@ -418,44 +449,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 foreach (Transform t in meshTransforms)
                 {
+                    MeshData md = GetColliderMeshData(t);
+                    if (md == null)
+                        continue;
 
-                    MeshCollider mc = t.GetComponent<MeshCollider>();
-
-                    if (mc != null)
-                    {
-                        MeshFilter mf = t.GetComponent<MeshFilter>();
-                        Mesh m;
-                        if (mf != null)
-                        {
-
-                            m = mf.sharedMesh;
-
-                            if (m != null)
-                            {
-                                meshList.Add(new MeshData(m.vertices, m.triangles, m.bounds));
-                                validTransformList.Add(t);
-                            }
-                        }
-                        m = null;
-                        m = mc.sharedMesh;
-
-                        if (m == null)
-                            continue;
-
-                        meshList.Add(new MeshData(m.vertices, m.triangles, m.bounds));
-                        validTransformList.Add(t);
-                        cantUseColliders = false;
-                    }
-                    else
-                    {
-                        BoxCollider bc = t.GetComponent<BoxCollider>();
-                        if (bc == null)
-                            continue;
-
-                        meshList.Add(CreateBoxMeshFromBoxCollider(bc.size, bc.center));
-                        validTransformList.Add(t);
-                        cantUseColliders = false;
-                    }
+                    meshList.Add(md);
+                    validTransformList.Add(t);
+                    cantUseColliders = false;
                 }
             }
 
@@ -464,25 +464,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 foreach (Transform t in meshTransforms)
                 {
-                    //MeshCollider mc = t.GetComponent<MeshCollider>();
-
-                    //if (mc != null)
-                    //{
-                    //    continue;
-                    //}
-                    //else
-                    //{
-                    MeshFilter mf = t.GetComponent<MeshFilter>();
-                    if (mf == null)
-                        continue;
-                    Mesh m = mf.sharedMesh;
-
-                    if (m == null)
+                    MeshData md = GetVisibleMeshData(t);
+                    if (md == null)
                         continue;
 
-                    meshList.Add(new MeshData(m.vertices, m.triangles, m.bounds));
+                    meshList.Add(md);
                     validTransformList.Add(t);
-                    //}
                 }
             }
 
@@ -498,16 +485,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (t.gameObject.activeInHierarchy == false)
                         continue;
                     
-                    MeshFilter mf = t.GetComponent<MeshFilter>();
-
-                    if (mf == null)
-                        continue;
-                    Mesh m = mf.sharedMesh;
-
-                    if (m == null)
+                    MeshData md = GetVisibleMeshData(t);
+                    if (md == null)
                         continue;
 
-                    meshList.Add(new MeshData(m.vertices, m.triangles, m.bounds));
+                    meshList.Add(md);
                     validTransformList.Add(t);
                 }
             }
