@@ -431,6 +431,16 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 m = mf.sharedMesh;
                 return new MeshData(m.vertices, m.triangles, m.bounds);
             }
+            else
+            {
+                SkinnedMeshRenderer smr = t.GetComponent<SkinnedMeshRenderer>();
+                if (smr != null)
+                {
+                    m = new Mesh();
+                    smr.BakeMesh(m);
+                    return new MeshData(m.vertices, m.triangles, m.bounds);
+                }
+            }
             return null;
         }
 

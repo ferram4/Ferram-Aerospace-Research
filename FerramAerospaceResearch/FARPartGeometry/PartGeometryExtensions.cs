@@ -71,7 +71,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 Matrix4x4 matrix = worldToBasisMatrix * t.localToWorldMatrix;
 
                 MeshCollider mc = t.GetComponent<MeshCollider>();
-                Mesh m;
+                Mesh m = null;
                 if (mc != null)
                 {
                     m = mc.sharedMesh;
@@ -80,9 +80,19 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
 
                 MeshFilter mf = t.GetComponent<MeshFilter>();
-                if (mf == null)
-                    continue;
-                m = mf.sharedMesh;
+                if (mf != null)
+                {
+                    m = mf.sharedMesh;
+                }
+                else
+                {
+                    SkinnedMeshRenderer smr = t.GetComponent<SkinnedMeshRenderer>();
+                    if (smr != null)
+                    {
+                        m = new Mesh();
+                        smr.BakeMesh(m);
+                    }
+                }
 
                 if (m == null)
                     continue;
