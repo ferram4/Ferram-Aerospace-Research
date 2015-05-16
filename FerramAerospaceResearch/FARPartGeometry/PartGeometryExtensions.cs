@@ -94,124 +94,28 @@ namespace FerramAerospaceResearch.FARPartGeometry
             return bounds;
         }
 
+        static void TransformedPointBounds(Matrix4x4 matrix, Vector3 center, float extX, float extY, float extZ, ref Vector3 lower, ref Vector3 upper)
+        {
+            Vector3 boundPt = new Vector3 (center.x + extX, center.y + extY, center.z + extZ);
+            boundPt = matrix.MultiplyPoint3x4(boundPt);
+            lower = Vector3.Min (lower, boundPt);
+            upper = Vector3.Max (upper, boundPt);
+        }
+
         private static void EncapsulateBounds(ref Vector3 lower, ref Vector3 upper, Matrix4x4 matrix, Mesh mesh)
         {
             Vector3 center, extents;
             center = mesh.bounds.center;//matrix.MultiplyPoint3x4(m.bounds.center);
             extents = mesh.bounds.extents;//matrix.MultiplyVector(m.bounds.size);
 
-            /*size.x = Math.Abs(size.x);
-            size.y = Math.Abs(size.y);
-            size.z = Math.Abs(size.z);*/
-
-
-            Vector3 boundPt;
-            boundPt = center + extents;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-
-            lower.x = Math.Min(lower.x, boundPt.x);
-            lower.y = Math.Min(lower.y, boundPt.y);
-            lower.z = Math.Min(lower.z, boundPt.z);
-
-            upper.x = Math.Max(upper.x, boundPt.x);
-            upper.y = Math.Max(upper.y, boundPt.y);
-            upper.z = Math.Max(upper.z, boundPt.z);
-            //bounds.Encapsulate(boundPt);
-
-            boundPt = center - extents;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-            //bounds.Encapsulate(boundPt);
-            lower.x = Math.Min(lower.x, boundPt.x);
-            lower.y = Math.Min(lower.y, boundPt.y);
-            lower.z = Math.Min(lower.z, boundPt.z);
-
-            upper.x = Math.Max(upper.x, boundPt.x);
-            upper.y = Math.Max(upper.y, boundPt.y);
-            upper.z = Math.Max(upper.z, boundPt.z);
-
-            boundPt = center;
-            boundPt.x += extents.x;
-            boundPt.y += extents.y;
-            boundPt.z -= extents.z;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-            //bounds.Encapsulate(boundPt);
-            lower.x = Math.Min(lower.x, boundPt.x);
-            lower.y = Math.Min(lower.y, boundPt.y);
-            lower.z = Math.Min(lower.z, boundPt.z);
-
-            upper.x = Math.Max(upper.x, boundPt.x);
-            upper.y = Math.Max(upper.y, boundPt.y);
-            upper.z = Math.Max(upper.z, boundPt.z);
-
-            boundPt = center;
-            boundPt.x += extents.x;
-            boundPt.y -= extents.y;
-            boundPt.z += extents.z;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-            //bounds.Encapsulate(boundPt);
-            lower.x = Math.Min(lower.x, boundPt.x);
-            lower.y = Math.Min(lower.y, boundPt.y);
-            lower.z = Math.Min(lower.z, boundPt.z);
-
-            upper.x = Math.Max(upper.x, boundPt.x);
-            upper.y = Math.Max(upper.y, boundPt.y);
-            upper.z = Math.Max(upper.z, boundPt.z);
-
-            boundPt = center;
-            boundPt.x -= extents.x;
-            boundPt.y += extents.y;
-            boundPt.z += extents.z;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-            //bounds.Encapsulate(boundPt);
-            lower.x = Math.Min(lower.x, boundPt.x);
-            lower.y = Math.Min(lower.y, boundPt.y);
-            lower.z = Math.Min(lower.z, boundPt.z);
-
-            upper.x = Math.Max(upper.x, boundPt.x);
-            upper.y = Math.Max(upper.y, boundPt.y);
-            upper.z = Math.Max(upper.z, boundPt.z);
-
-            boundPt = center;
-            boundPt.x -= extents.x;
-            boundPt.y -= extents.y;
-            boundPt.z += extents.z;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-            //bounds.Encapsulate(boundPt);
-            lower.x = Math.Min(lower.x, boundPt.x);
-            lower.y = Math.Min(lower.y, boundPt.y);
-            lower.z = Math.Min(lower.z, boundPt.z);
-
-            upper.x = Math.Max(upper.x, boundPt.x);
-            upper.y = Math.Max(upper.y, boundPt.y);
-            upper.z = Math.Max(upper.z, boundPt.z);
-
-            boundPt = center;
-            boundPt.x -= extents.x;
-            boundPt.y += extents.y;
-            boundPt.z -= extents.z;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-            //bounds.Encapsulate(boundPt);
-            lower.x = Math.Min(lower.x, boundPt.x);
-            lower.y = Math.Min(lower.y, boundPt.y);
-            lower.z = Math.Min(lower.z, boundPt.z);
-
-            upper.x = Math.Max(upper.x, boundPt.x);
-            upper.y = Math.Max(upper.y, boundPt.y);
-            upper.z = Math.Max(upper.z, boundPt.z);
-
-            boundPt = center;
-            boundPt.x += extents.x;
-            boundPt.y -= extents.y;
-            boundPt.z -= extents.z;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-            //bounds.Encapsulate(boundPt);
-            lower.x = Math.Min(lower.x, boundPt.x);
-            lower.y = Math.Min(lower.y, boundPt.y);
-            lower.z = Math.Min(lower.z, boundPt.z);
-
-            upper.x = Math.Max(upper.x, boundPt.x);
-            upper.y = Math.Max(upper.y, boundPt.y);
-            upper.z = Math.Max(upper.z, boundPt.z);
+            TransformedPointBounds(matrix, center, +extents.x, +extents.y, +extents.z, ref lower, ref upper);
+            TransformedPointBounds(matrix, center, +extents.x, +extents.y, -extents.z, ref lower, ref upper);
+            TransformedPointBounds(matrix, center, +extents.x, -extents.y, -extents.z, ref lower, ref upper);
+            TransformedPointBounds(matrix, center, +extents.x, -extents.y, +extents.z, ref lower, ref upper);
+            TransformedPointBounds(matrix, center, -extents.x, -extents.y, +extents.z, ref lower, ref upper);
+            TransformedPointBounds(matrix, center, -extents.x, -extents.y, -extents.z, ref lower, ref upper);
+            TransformedPointBounds(matrix, center, -extents.x, +extents.y, -extents.z, ref lower, ref upper);
+            TransformedPointBounds(matrix, center, -extents.x, +extents.y, +extents.z, ref lower, ref upper);
         }
 
         public static Bounds GetPartColliderBoundsInBasis(this Part part, Matrix4x4 worldToBasisMatrix, int excessiveVerts = 2500)
