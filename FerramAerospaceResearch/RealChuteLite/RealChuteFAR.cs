@@ -743,7 +743,7 @@ namespace FerramAerospaceResearch.RealChuteLite
                 double terrainAlt = this.vessel.pqsAltitude;
                 if (!this.vessel.mainBody.ocean || terrainAlt > 0) { this.trueAlt -= terrainAlt; }
             }
-            this.atmPressure = FlightGlobals.getStaticPressure(this.ASL, this.vessel.mainBody);
+            this.atmPressure = FlightGlobals.getStaticPressure(this.ASL, this.vessel.mainBody) * PhysicsGlobals.KpaToAtmospheres;
             this.atmDensity = FARAeroUtil.GetCurrentDensity(this.vessel.mainBody, this.ASL, false);
             Vector3 velocity = this.part.Rigidbody.velocity + Krakensbane.GetFrameVelocityV3f();
             this.sqrSpeed = velocity.sqrMagnitude;
