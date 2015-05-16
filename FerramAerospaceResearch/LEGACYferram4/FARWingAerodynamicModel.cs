@@ -286,7 +286,7 @@ namespace ferram4
             {
                 double AoA = CalculateAoA(velocity);
 
-                Vector3d force = CalculateForces(velocity, MachNumber, AoA, density);
+                Vector3d force = CalculateForces(velocity, MachNumber, AoA, density, double.PositiveInfinity);
                 center.AddForce(AerodynamicCenter, force);
 
                 return force;
@@ -539,16 +539,19 @@ namespace ferram4
             }
         }
 
+        //This version also updates the wing centroid
         public Vector3d CalculateForces(Vector3d velocity, double MachNumber, double AoA, double rho)
         {
             CurWingCentroid = WingCentroid();
 
-            return DoCalculateForces(velocity, MachNumber, AoA, rho);
+            return DoCalculateForces(velocity, MachNumber, AoA, rho, 1);
         }
 
-        private Vector3d DoCalculateForces(Vector3d velocity, double MachNumber, double AoA, double rho)
+        public Vector3d CalculateForces(Vector3d velocity, double MachNumber, double AoA, double rho, double failureForceScaling)
         {
-            return DoCalculateForces(velocity, MachNumber, AoA, rho, 1);
+            CurWingCentroid = WingCentroid();
+
+            return DoCalculateForces(velocity, MachNumber, AoA, rho, failureForceScaling);
         }
 
         private Vector3d DoCalculateForces(Vector3d velocity, double MachNumber, double AoA, double rho, double failureForceScaling)
