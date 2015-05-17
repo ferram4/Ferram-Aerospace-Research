@@ -116,7 +116,7 @@ namespace FerramAerospaceResearch
 
         void OnDestroy()
         {
-            GamePersistence.SaveGame("persistent", HighLogic.SaveFolder, SaveMode.APPEND);
+            //GamePersistence.SaveGame("persistent", HighLogic.SaveFolder, SaveMode.OVERWRITE);
             //GameEvents.onGameStateSave.Remove(OnSave);
         }
 
