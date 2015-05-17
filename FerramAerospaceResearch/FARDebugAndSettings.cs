@@ -97,7 +97,7 @@ namespace FerramAerospaceResearch
         {
             FARAeroStress.LoadStressTemplates();
             FARAeroUtil.LoadAeroDataFromConfig();
-            LoadConfigs();
+            //LoadConfigs();
             GameObject.DontDestroyOnLoad(this);
 
             debugMenu = false;
@@ -497,15 +497,31 @@ namespace FerramAerospaceResearch
             texture.Apply();
         }
 
-        public static void LoadConfigs()
+        public static void LoadConfigs(ConfigNode node)
         {
             config = KSP.IO.PluginConfiguration.CreateForType<FARSettingsScenarioModule>();
             config.load();
-            FARDebugValues.allowStructuralFailures = Convert.ToBoolean(config.GetValue("allowStructuralFailures", "true"));
-            FARDebugValues.showMomentArrows = Convert.ToBoolean(config.GetValue("showMomentArrows", "false"));
 
-            FARDebugValues.useBlizzyToolbar = Convert.ToBoolean(config.GetValue("useBlizzyToolbar", "false"));
-            FARDebugValues.aeroFailureExplosions = Convert.ToBoolean(config.GetValue("aeroFailureExplosions", "true"));
+            bool tmp;
+            if (node.HasValue("allowStructuralFailures") && bool.TryParse(node.GetValue("allowStructuralFailures"), out tmp))
+                FARDebugValues.allowStructuralFailures = tmp;
+            else
+                FARDebugValues.allowStructuralFailures = true;
+
+            if (node.HasValue("showMomentArrows") && bool.TryParse(node.GetValue("showMomentArrows"), out tmp))
+                FARDebugValues.showMomentArrows = tmp;
+            else
+                FARDebugValues.showMomentArrows = false;
+
+            if (node.HasValue("useBlizzyToolbar") && bool.TryParse(node.GetValue("useBlizzyToolbar"), out tmp))
+                FARDebugValues.useBlizzyToolbar = tmp;
+            else
+                FARDebugValues.useBlizzyToolbar = false;
+
+            if (node.HasValue("aeroFailureExplosions") && bool.TryParse(node.GetValue("aeroFailureExplosions"), out tmp))
+                FARDebugValues.aeroFailureExplosions = tmp;
+            else
+                FARDebugValues.aeroFailureExplosions = true;
 
             FARAeroStress.LoadStressTemplates();
             FARAeroUtil.LoadAeroDataFromConfig();
@@ -528,15 +544,12 @@ namespace FerramAerospaceResearch
             GUIColors.Instance[3] = tmpColor;
         }
 
-        public static void SaveConfigs()
+        public static void SaveConfigs(ConfigNode node)
         {
-            config.SetValue("allowStructuralFailures", FARDebugValues.allowStructuralFailures.ToString());
-            config.SetValue("showMomentArrows", FARDebugValues.showMomentArrows.ToString());
-
-            config.SetValue("useBlizzyToolbar", FARDebugValues.useBlizzyToolbar.ToString());
-            config.SetValue("aeroFailureExplosions", FARDebugValues.aeroFailureExplosions.ToString());
-
-            FARDebugValues.useBlizzyToolbar &= ToolbarManager.ToolbarAvailable;
+            node.AddValue("allowStructuralFailures", FARDebugValues.allowStructuralFailures);
+            node.AddValue("showMomentArrows", FARDebugValues.showMomentArrows);
+            node.AddValue("useBlizzyToolbar", FARDebugValues.useBlizzyToolbar & ToolbarManager.ToolbarAvailable);
+            node.AddValue("aeroFailureExplosions", FARDebugValues.aeroFailureExplosions);
 
             FARAeroUtil.SaveCustomAeroDataToConfig();
             FARAeroStress.SaveCustomStressTemplates();
@@ -549,7 +562,7 @@ namespace FerramAerospaceResearch
             if (!CompatibilityChecker.IsAllCompatible())
                 return;
 
-            SaveConfigs();
+            //SaveConfigs();
             GameEvents.onGUIApplicationLauncherReady.Remove(OnGUIAppLauncherReady);
             if (FARDebugButtonStock != null)
                 ApplicationLauncher.Instance.RemoveModApplication(FARDebugButtonStock);

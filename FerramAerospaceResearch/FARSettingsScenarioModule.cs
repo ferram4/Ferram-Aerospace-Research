@@ -110,14 +110,14 @@ namespace FerramAerospaceResearch
             VehicleVoxel.VoxelSetup();
             Debug.Log("FAR Vehicle Voxel Setup complete");
 
-            GameEvents.onGameStateSave.Add(OnSave);
+            //GameEvents.onGameStateSave.Add(OnSave);
             newGame = false;
         }
 
         void OnDestroy()
         {
             GamePersistence.SaveGame("persistent", HighLogic.SaveFolder, SaveMode.APPEND);
-            GameEvents.onGameStateSave.Remove(OnSave);
+            //GameEvents.onGameStateSave.Remove(OnSave);
         }
 
         public override void OnSave(ConfigNode node)
@@ -142,7 +142,7 @@ namespace FerramAerospaceResearch
             }
             node.AddNode(flightGUINode);
 
-            FARDebugAndSettings.SaveConfigs();
+            FARDebugAndSettings.SaveConfigs(node);
         }
 
         public override void OnLoad(ConfigNode node)
@@ -198,7 +198,7 @@ namespace FerramAerospaceResearch
                     flightGUISettings.Add(flightGUINode);
             }
 
-            FARDebugAndSettings.LoadConfigs();
+            FARDebugAndSettings.LoadConfigs(node);
         }
 
         private void GeneratePresets()
