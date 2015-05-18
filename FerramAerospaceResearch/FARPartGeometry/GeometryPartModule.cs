@@ -305,6 +305,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         #region voxelUpdates
         private void CheckAnimations()
         {
+            bool updateShape = false;
             if (_sendUpdateTick > 30)
             {
                 _sendUpdateTick = 0;
@@ -318,16 +319,18 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     //    UpdateShapeWithAnims(); //event to update voxel, with rate limiter for computer's sanity and error reduction
                     //    break;
                     //}
-                    if (prevNormTime != state.time)       //if the anim is not playing, but it was, also send the event to be sure that we closed
+                    if (Math.Abs(prevNormTime - state.time) > float.Epsilon * 2f)       //if the anim is not playing, but it was, also send the event to be sure that we closed
                     {
                         animStateTime[i] = state.time;
-                        UpdateShapeWithAnims(); //event to update voxel, with rate limiter for computer's sanity and error reduction
-                        break;
+                        updateShape = true;
                     }
                 }
             }
             else
                 ++_sendUpdateTick;
+
+            if(updateShape)
+                UpdateShapeWithAnims(); //event to update voxel, with rate limiter for computer's sanity and error reduction
         }
 
         private void UpdateShapeWithAnims()
