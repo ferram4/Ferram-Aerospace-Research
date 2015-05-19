@@ -385,14 +385,15 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if ((object)intakeTrans != null)
                         candVector = intakeTrans.forward;
                 }
-                /*else if (p.Modules.Contains("FARWingAerodynamicModel") || p.Modules.Contains("FARControllableSurface"))      //aggregate wings for later calc...
+                else if (p.Modules.Contains("FARWingAerodynamicModel") || p.Modules.Contains("FARControllableSurface"))      //aggregate wings for later calc...
                 {
-                    Vector3 notCandVector =  _worldToLocalMatrix.MultiplyVector(p.partTransform.forward);
+                    continue;
+                /*    Vector3 notCandVector =  _worldToLocalMatrix.MultiplyVector(p.partTransform.forward);
                     notCandVector.x = Math.Abs(notCandVector.x);
                     notCandVector.y = Math.Abs(notCandVector.y);
                     notCandVector.z = Math.Abs(notCandVector.z);
-                    notAxis += notCandVector;
-                }*/
+                    notAxis += notCandVector;*/
+                }
                 for (int j = 0; j < p.symmetryCounterparts.Count; j++)
                 {
                     Part q = p.symmetryCounterparts[j];
