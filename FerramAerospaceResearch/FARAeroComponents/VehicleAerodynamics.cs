@@ -365,7 +365,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         private Vector3 CalculateVehicleMainAxis()
         {
             Vector3 axis = Vector3.zero;
-            Vector3 notAxis = Vector3.zero;
+            //Vector3 notAxis = Vector3.zero;
             HashSet<Part> hitParts = new HashSet<Part>();
 
             for (int i = 0; i < _vehiclePartList.Count; i++)
@@ -385,14 +385,14 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if ((object)intakeTrans != null)
                         candVector = intakeTrans.forward;
                 }
-                else if (p.Modules.Contains("FARWingAerodynamicModel") || p.Modules.Contains("FARControllableSurface"))      //aggregate wings for later calc...
+                /*else if (p.Modules.Contains("FARWingAerodynamicModel") || p.Modules.Contains("FARControllableSurface"))      //aggregate wings for later calc...
                 {
                     Vector3 notCandVector =  _worldToLocalMatrix.MultiplyVector(p.partTransform.forward);
                     notCandVector.x = Math.Abs(notCandVector.x);
                     notCandVector.y = Math.Abs(notCandVector.y);
                     notCandVector.z = Math.Abs(notCandVector.z);
                     notAxis += notCandVector;
-                }
+                }*/
                 for (int j = 0; j < p.symmetryCounterparts.Count; j++)
                 {
                     Part q = p.symmetryCounterparts[j];
@@ -409,14 +409,14 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         if ((object)intakeTrans != null)
                             candVector += intakeTrans.forward;
                     }
-                    else if (q.Modules.Contains("FARWingAerodynamicModel") || q.Modules.Contains("FARControllableSurface"))      //aggregate wings for later calc...
+                    /*else if (q.Modules.Contains("FARWingAerodynamicModel") || q.Modules.Contains("FARControllableSurface"))      //aggregate wings for later calc...
                     {
                         Vector3 notCandVector = _worldToLocalMatrix.MultiplyVector(p.partTransform.forward);
                         notCandVector.x = Math.Abs(notCandVector.x);
                         notCandVector.y = Math.Abs(notCandVector.y);
                         notCandVector.z = Math.Abs(notCandVector.z);
                         notAxis += notCandVector;
-                    }
+                    }*/
                     else
                         candVector += q.partTransform.up;
                 }
@@ -428,14 +428,14 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 axis += candVector * p.mass * (1 + p.symmetryCounterparts.Count);    //scale part influence by approximate size
             }
-            float perpTest = Math.Abs(Vector3.Dot(axis, notAxis));
+            /*float perpTest = Math.Abs(Vector3.Dot(axis, notAxis));
 
             if (perpTest > 0.3)
             {
                 axis = Vector3.Cross(axis, notAxis);
                 axis = Vector3.Cross(axis, notAxis);        //this shoudl result in an axis perpendicular to notAxis
                 //axis.Normalize();
-            }
+            }*/
 
 
             float dotProdX, dotProdY, dotProdZ;

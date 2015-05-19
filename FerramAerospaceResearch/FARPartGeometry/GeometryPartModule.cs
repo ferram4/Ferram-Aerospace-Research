@@ -411,8 +411,17 @@ namespace FerramAerospaceResearch.FARPartGeometry
             MeshCollider mc = t.GetComponent<MeshCollider>();
             if (mc != null)
             {
-                Mesh m = mc.sharedMesh;
-                return new MeshData(m.vertices, m.triangles, m.bounds);
+                //Mesh m = mc.sharedMesh;       //we can't used mc.sharedMesh because it does not contain all the triangles or verts for some reason
+                                                //must instead get the mesh filter and use its shared mesh
+
+                MeshFilter mf = t.GetComponent<MeshFilter>();
+                if (mf != null)
+                {
+                    Mesh m = mf.sharedMesh;
+
+                    if (m != null)
+                        return new MeshData(m.vertices, m.triangles, m.bounds);
+                }
             }
             else
             {
@@ -441,7 +450,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 {
                     m = new Mesh();
                     smr.BakeMesh(m);
-                    return new MeshData(m.vertices, m.triangles, m.bounds);
+                    MeshData md = new MeshData(m.vertices, m.triangles, m.bounds);
+
+                    UnityEngine.Object.Destroy(m);      //ensure that no memory is left over
+                    return md;
                 }
             }
             return null;
