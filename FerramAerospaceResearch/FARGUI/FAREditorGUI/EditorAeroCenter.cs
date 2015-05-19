@@ -85,6 +85,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             aeroSection = new FARCenterQuery();
             dummy = new FARCenterQuery();
 
+            if((object)EditorLogic.RootPart == null)
+                return;
+
             Vector3 vel_base, vel_fuzz;
 
             Transform rootPartTrans = EditorLogic.RootPart.partTransform;
@@ -109,7 +112,16 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             FARBaseAerodynamics.PrecomputeGlobalCenterOfLift(aeroSection, dummy, vel, 1);
 
-            Vector3 pos = rootPartTrans.position;
+            Vector3 pos = Vector3.zero;//rootPartTrans.position;
+            float mass = 0;
+            for(int i = 0; i < EditorLogic.SortedShipList.Count; i++)
+            {
+                Part p = EditorLogic.SortedShipList[i];
+                float tmpMass = p.mass + p.GetResourceMass();
+                mass += tmpMass;
+                pos += p.partTransform.position * tmpMass;
+            }
+            pos /= mass;
 
             Vector3 avgForcePos = Vector3.zero;
 
@@ -159,8 +171,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             //avgForcePos = rootPartTrans.worldToLocalMatrix.MultiplyPoint3x4(avgForcePos);
             //vesselRootLocalAeroCenter += Vector3.ProjectOnPlane(avgForcePos, Vector3.up);
             //vesselRootLocalAeroCenter = aeroSection.GetPos();
-            vesselRootLocalAeroCenter += Vector3.ProjectOnPlane(avgForcePos - rootPartTrans.position, vesselRootLocalAeroCenter);
-            vesselRootLocalAeroCenter = rootPartTrans.worldToLocalMatrix.MultiplyVector(vesselRootLocalAeroCenter);
+            vesselRootLocalAeroCenter += Vector3.ProjectOnPlane(avgForcePos - pos, vesselRootLocalAeroCenter) + pos;
+            vesselRootLocalAeroCenter = rootPartTrans.worldToLocalMatrix.MultiplyPoint3x4(vesselRootLocalAeroCenter);
         }
     }
 }

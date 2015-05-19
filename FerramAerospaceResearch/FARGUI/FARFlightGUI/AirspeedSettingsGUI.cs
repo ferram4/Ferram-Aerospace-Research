@@ -160,14 +160,14 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 if (velMode == SurfaceVelMode.IAS)
                 {
                     caption = "IAS";
-                    double densityRatio = (FARAeroUtil.GetCurrentDensity(_vessel.mainBody, _vessel.altitude, false) * 1.225);
+                    double densityRatio = (FARAeroUtil.GetCurrentDensity(_vessel.mainBody, _vessel.altitude, false) / 1.225);
                     double pressureRatio = FARAeroUtil.StagnationPressureCalc(_vessel.mach);
                     velString = (_vessel.srfSpeed * Math.Sqrt(densityRatio) * pressureRatio * unitConversion).ToString("F1") + unitString;
                 }
                 else if (velMode == SurfaceVelMode.EAS)
                 {
                     caption = "EAS";
-                    double densityRatio = (FARAeroUtil.GetCurrentDensity(_vessel.mainBody, _vessel.altitude, false) * 1.225);
+                    double densityRatio = (FARAeroUtil.GetCurrentDensity(_vessel.mainBody, _vessel.altitude, false) / 1.225);
                     velString = (_vessel.srfSpeed * Math.Sqrt(densityRatio) * unitConversion).ToString("F1") + unitString;
                 }
                 else// if (velMode == SurfaceVelMode.MACH)
