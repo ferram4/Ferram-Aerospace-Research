@@ -67,6 +67,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         double invElementSize;
 
         VoxelChunk[, ,] voxelChunks;
+        HashSet<Part> overridingParts;
         int xLength, yLength, zLength;
         int xCellLength, yCellLength, zCellLength;
         int threadsQueued = 0;
@@ -117,7 +118,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     Debug.Log(MAX_CHUNKS_IN_QUEUE + " " + MAX_CHUNKS_ALLOWED);
 
                     for (int i = 0; i < MAX_CHUNKS_IN_QUEUE; i++)
-                        clearedChunks.Push(new VoxelChunk(0, Vector3.zero, 0, 0, 0));
+                        clearedChunks.Push(new VoxelChunk(0, Vector3.zero, 0, 0, 0, null));
                 }
             }
         }
@@ -126,6 +127,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             Vector3d min = new Vector3d(double.PositiveInfinity, double.PositiveInfinity, double.PositiveInfinity);
             Vector3d max = new Vector3d(double.NegativeInfinity, double.NegativeInfinity, double.NegativeInfinity);
+
+            overridingParts = new HashSet<Part>();
 
             for (int i = 0; i < geoModules.Count; i++)
             {
@@ -143,6 +146,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     max.y = Math.Max(max.y, maxBounds.y);
                     max.z = Math.Max(max.z, maxBounds.z);
                 }
+                if (m.part && (m.part.Modules.Contains("FARControllableSurface")))
+                    overridingParts.Add(m.part);
             }
 
             Vector3d size = max - min;
@@ -1369,9 +1374,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     }
                 }
                 if (section == null)
-                    section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
+                    section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8, overridingParts);
                 else
-                    section.SetChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
+                    section.SetChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8, overridingParts);
 
                 voxelChunks[iSec, jSec, kSec] = section;
             }
@@ -1404,9 +1409,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     }
                 }
                 if (section == null)
-                    section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
+                    section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8, overridingParts);
                 else
-                    section.SetChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
+                    section.SetChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8, overridingParts);
 
                 voxelChunks[iSec, jSec, kSec] = section;
             }
@@ -1440,9 +1445,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         }
                     }
                     if (section == null)
-                        section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
+                        section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8, overridingParts);
                     else
-                        section.SetChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8);
+                        section.SetChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8, overridingParts);
 
                     voxelChunks[iSec, jSec, kSec] = section;
                 }

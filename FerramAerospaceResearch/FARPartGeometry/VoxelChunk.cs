@@ -55,13 +55,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
         //private float[] voxelSize = null;
         private PartSizePair[] voxelPoints = null;
         private DebugVisualVoxel[, ,] visualVoxels = null;
+        private HashSet<Part> overridingParts;
 
         double size;
         Vector3d lowerCorner;
         //int iOffset, jOffset, kOffset;
         int offset;
 
-        public VoxelChunk(double size, Vector3d lowerCorner, int iOffset, int jOffset, int kOffset)
+        public VoxelChunk(double size, Vector3d lowerCorner, int iOffset, int jOffset, int kOffset, HashSet<Part> overridingParts)
         {
             this.size = size;
             offset = iOffset + 8 * jOffset + 64 * kOffset;
@@ -72,13 +73,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 voxelPoints[i] = new PartSizePair();
 
             this.lowerCorner = lowerCorner;
+            this.overridingParts = overridingParts;
         }
 
-        public void SetChunk(double size, Vector3d lowerCorner, int iOffset, int jOffset, int kOffset)
+        public void SetChunk(double size, Vector3d lowerCorner, int iOffset, int jOffset, int kOffset, HashSet<Part> overridingParts)
         {
             this.size = size;
             offset = iOffset + 8 * jOffset + 64 * kOffset;
             this.lowerCorner = lowerCorner;
+            this.overridingParts = overridingParts;
         }
 
         public void ClearChunk()
@@ -88,7 +91,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
             lowerCorner = Vector3d.zero;
             for (int i = 0; i < voxelPoints.Length; i++)
                 voxelPoints[i].Clear();
-            
+
+            overridingParts = null;
         }
 
         //Use when locking is unnecessary and only to change size, not part
@@ -103,15 +107,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
         public unsafe void SetVoxelPointGlobalIndexNoLock(int zeroBaseIndex, Part p, VoxelOrientationPlane plane = VoxelOrientationPlane.FILL_VOXEL, byte location = 255)
         {
             zeroBaseIndex -= offset;
-            voxelPoints[zeroBaseIndex].part = p;
-            voxelPoints[zeroBaseIndex].SetPlaneLocation(plane, location);
+            SetPart(p, zeroBaseIndex, plane, location);
         }
 
         public unsafe void SetVoxelPointGlobalIndexNoLock(int i, int j, int k, Part p, VoxelOrientationPlane plane = VoxelOrientationPlane.FILL_VOXEL, byte location = 255)
         {
             int index = i + 8 * j + 64 * k - offset;
-            voxelPoints[index].part = p;
-            voxelPoints[index].SetPlaneLocation(plane, location);
+            SetPart(p, index, plane, location);
         }
         //Sets point and ensures that includedParts includes p
         public unsafe void SetVoxelPointGlobalIndex(int zeroBaseIndex, Part p, VoxelOrientationPlane plane = VoxelOrientationPlane.FILL_VOXEL, byte location = 255)
@@ -119,8 +121,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             lock (voxelPoints)
             {
                 zeroBaseIndex -= offset;
-                voxelPoints[zeroBaseIndex].part = p;
-                voxelPoints[zeroBaseIndex].SetPlaneLocation(plane, location);
+                SetPart(p, zeroBaseIndex, plane, location);
             }
         }
 
@@ -129,9 +130,17 @@ namespace FerramAerospaceResearch.FARPartGeometry
             lock (voxelPoints)
             {
                 int index = i + 8 * j + 64 * k - offset;
-                voxelPoints[index].part = p;
-                voxelPoints[index].SetPlaneLocation(plane, location);
+                SetPart(p, index, plane, location);
             }
+        }
+
+        unsafe void SetPart(Part p, int index, VoxelOrientationPlane plane, byte location)
+        {
+            Part currentPart = voxelPoints[index].part;
+            if((object)currentPart == null || !overridingParts.Contains(currentPart))
+                voxelPoints[index].part = p;
+
+            voxelPoints[index].SetPlaneLocation(plane, location);
         }
 
         public unsafe bool VoxelPointExistsLocalIndex(int zeroBaseIndex)

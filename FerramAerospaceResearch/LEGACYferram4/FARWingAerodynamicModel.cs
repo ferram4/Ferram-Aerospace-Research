@@ -46,6 +46,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using FerramAerospaceResearch;
+using FerramAerospaceResearch.FARAeroComponents;
 
 /// <summary>
 /// This calculates the lift and drag on a wing in the atmosphere
@@ -154,15 +155,21 @@ namespace ferram4
         public Vector3 worldSpaceForce;
 
         protected double NUFAR_areaExposedFactor = 0;
+        protected double NUFAR_totalExposedAreaFactor = 0;
 
-        public void NUFAR_ClearAreaExposedFactor()
+        public void NUFAR_ClearExposedAreaFactor()
         {
             NUFAR_areaExposedFactor = 0;
+            NUFAR_totalExposedAreaFactor = 0;
         }
 
-        public void NUFAR_IncrementAreaExposedFactor(double minExposedArea)
+        public void NUFAR_CalculateExposedAreaFactor()
         {
-            NUFAR_areaExposedFactor += minExposedArea;
+            FARAeroPartModule a = (FARAeroPartModule)part.Modules["FARAeroPartModule"];
+
+            NUFAR_areaExposedFactor = Math.Min(a.ProjectedAreas.kN, a.ProjectedAreas.kP);
+            NUFAR_totalExposedAreaFactor = Math.Max(a.ProjectedAreas.kN, a.ProjectedAreas.kP);
+
         }
 
         public void NUFAR_SetExposedAreaFactor()
@@ -170,6 +177,7 @@ namespace ferram4
             List<Part> counterparts = part.symmetryCounterparts;
             double counterpartsCount = 1; 
             double sum = NUFAR_areaExposedFactor;
+            double totalExposedSum = NUFAR_totalExposedAreaFactor;
 
             for (int i = 0; i < counterparts.Count; i++)
             {
@@ -179,10 +187,15 @@ namespace ferram4
                 FARWingAerodynamicModel model = p.GetComponent<FARWingAerodynamicModel>();
                 ++counterpartsCount;
                 sum += model.NUFAR_areaExposedFactor;
+                totalExposedSum += model.NUFAR_totalExposedAreaFactor;
             }
+            double tmp = 1 / (counterpartsCount + 1);
+            sum *= tmp;
+            totalExposedSum *= tmp;
 
-            sum /= (counterpartsCount + 1);
             NUFAR_areaExposedFactor = sum;
+            NUFAR_totalExposedAreaFactor = totalExposedSum;
+
             for (int i = 0; i < counterparts.Count; i++)
             {
                 Part p = counterparts[i];
@@ -191,6 +204,7 @@ namespace ferram4
                 FARWingAerodynamicModel model = p.GetComponent<FARWingAerodynamicModel>();
 
                 model.NUFAR_areaExposedFactor = sum;
+                model.NUFAR_totalExposedAreaFactor = totalExposedSum;
             }
 
             if (NUFAR_areaExposedFactor < 0.1 * S)

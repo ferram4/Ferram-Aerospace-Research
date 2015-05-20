@@ -286,7 +286,7 @@ namespace ferram4
 
         void CheckShielded()
         {
-            if (NUFAR_areaExposedFactor < 0.1 * S && NUFAR_areaExposedFactor != 0)
+            if (NUFAR_areaExposedFactor < 0.1 * S && NUFAR_totalExposedAreaFactor != 0)
             {
                 if (Math.Abs(AoAoffset) > 5)
                     isShielded = false;

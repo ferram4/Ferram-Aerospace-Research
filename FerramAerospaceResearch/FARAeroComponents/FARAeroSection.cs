@@ -76,7 +76,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             public Vector3 xRefVectorPartSpace;
             public Vector3 nRefVectorPartSpace;
             public float dragFactor;    //sum of these should add up to 1
-            public float iP, iN, jP, jN, kP, kN;    //part local x, y, and z areas for heating
+            //public float iP, iN, jP, jN, kP, kN;    //part local x, y, and z areas for heating
         }
 
         public FARAeroSection(FloatCurve xForcePressureAoA0, FloatCurve xForcePressureAoA180, FloatCurve xForceSkinFriction,
@@ -135,12 +135,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 transformMatrix = transformMatrix * vesselToWorldMatrix;
 
-                IncrementAreas(ref data, (float)values.iP * Vector3.right, transformMatrix);
+                /*IncrementAreas(ref data, (float)values.iP * Vector3.right, transformMatrix);
                 IncrementAreas(ref data, (float)values.iN * -Vector3.right, transformMatrix);
                 IncrementAreas(ref data, (float)values.jP * Vector3.up, transformMatrix);
                 IncrementAreas(ref data, (float)values.jN * -Vector3.up, transformMatrix);
                 IncrementAreas(ref data, (float)values.kP * Vector3.forward, transformMatrix);
-                IncrementAreas(ref data, (float)values.kN * -Vector3.forward, transformMatrix);
+                IncrementAreas(ref data, (float)values.kN * -Vector3.forward, transformMatrix);*/
                 
                 partData.Add(data);
             }
@@ -149,7 +149,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 GenerateCrossFlowDragCurve();
         }
 
-        private void IncrementAreas(ref PartData data, Vector3 vector, Matrix4x4 transformMatrix)
+        /*private void IncrementAreas(ref PartData data, Vector3 vector, Matrix4x4 transformMatrix)
         {
             vector = transformMatrix.MultiplyVector(vector);
 
@@ -185,7 +185,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 double minShownArea = Math.Min(data.kN, data.kP);
                 w.NUFAR_IncrementAreaExposedFactor(minShownArea);
             }
-        }
+        }*/
 
         public void PredictionCalculateAeroForces(float atmDensity, float machNumber, float reynoldsPerUnitLength, float skinFrictionDrag, Vector3 vel, ferram4.FARCenterQuery center)
         {

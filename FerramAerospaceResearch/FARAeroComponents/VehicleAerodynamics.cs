@@ -163,7 +163,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if (w)
                     {
                         w.isShielded = false;
-                        w.NUFAR_ClearAreaExposedFactor();
+                        w.NUFAR_ClearExposedAreaFactor();
                         _legacyWingModels.Add(w);
                     }
                 }
@@ -173,17 +173,23 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if (w)
                     {
                         w.isShielded = false;
-                        w.NUFAR_ClearAreaExposedFactor();
+                        w.NUFAR_ClearExposedAreaFactor();
                         _legacyWingModels.Add(w);
                     }
                 }
             }
 
-            for (int i = 0; i < _currentAeroSections.Count; i++)
+            /*for (int i = 0; i < _currentAeroSections.Count; i++)
             {
                 FARAeroSection sect = _currentAeroSections[i];
                 sect.LEGACY_SetLiftForFARWingAerodynamicModel();
-            }
+            }*/
+
+            for (int i = 0; i < _legacyWingModels.Count; i++)
+            {
+                ferram4.FARWingAerodynamicModel w = _legacyWingModels[i];
+                w.NUFAR_CalculateExposedAreaFactor();
+            } 
 
             for (int i = 0; i < _legacyWingModels.Count; i++)
             {
