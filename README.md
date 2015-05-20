@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.15.1 "Fanno"
+Ferram Aerospace Research v0.15.2 "Ferri"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -64,6 +64,21 @@ Set all the other winglet/control surface values to zero
 
 CHANGELOG
 =======================================================
+
+0.15.2V "Ferri"------------------------------------  
+
+Improved voxelization accuracy  
+Changed CoL code again to try and make it more useful  
+Cleaned up some unnecessary calculations  
+
+Fixed voxelization breaking after many voxelization events; this fixes no-drag situations  
+Fixed deployed spoilers not producing drag if mounted flush with vehicle  
+Fixed some main axis issues  
+Fixed improper heating area for atmospheric heat  
+
+Fixed interaction with KIS breaking things  
+Fixed some data not saving  
+Fixed exceptions during EVA  
 
 0.15.1V "Fanno"------------------------------------  
 
