@@ -148,7 +148,7 @@ namespace FerramAerospaceResearch
         public override void OnLoad(ConfigNode node)
         {
             GeneratePresets();
-            int index = 2;
+            int index = 4;
             if (node.HasValue("newGame"))
                 newGame = bool.Parse(node.GetValue("newGame"));
 
@@ -222,7 +222,11 @@ namespace FerramAerospaceResearch
             presets.Add(tmp);
             presetNames.Add("High Drag, Moderate Area Ruling");
 
-            tmp = new FARDifficultyAndExactnessSettings(1, 0.010, 1, 1, 4);
+            tmp = new FARDifficultyAndExactnessSettings(1, 0.015, 2, 1, 4);
+            presets.Add(tmp);
+            presetNames.Add("Full Drag, Moderate Area Ruling"); 
+            
+            tmp = new FARDifficultyAndExactnessSettings(1, 0.010, 1, 1, 5);
             presets.Add(tmp);
             presetNames.Add("Full Drag, Strict Area Ruling");
         }
@@ -262,7 +266,7 @@ namespace FerramAerospaceResearch
                 if (currentIndex >= 0)
                     currentIndex = -1;
                 else
-                    currentIndex = 2;
+                    currentIndex = 4;
             }
             GUILayout.EndHorizontal();
             GUILayout.Label("Voxel Detail Settings; increasing these will improve accuracy at the cost of performance");
