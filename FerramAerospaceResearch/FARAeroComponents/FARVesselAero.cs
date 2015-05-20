@@ -114,7 +114,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 p.minimum_drag = 0;
                 p.angularDrag = 0;
 
-                p.dragModel = Part.DragModel.NONE;
+                /*p.dragModel = Part.DragModel.NONE;
                 p.dragReferenceVector = Vector3.zero;
                 p.dragScalar = 0;
                 p.dragVector = Vector3.zero;
@@ -124,7 +124,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 p.dragVectorSqrMag = 0;
 
                 p.bodyLiftMultiplier = 0;
-                p.bodyLiftScalar = 0;
+                p.bodyLiftScalar = 0;*/
 
                 GeometryPartModule g = p.GetComponent<GeometryPartModule>();
                 if((object)g != null)

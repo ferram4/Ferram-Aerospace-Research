@@ -82,7 +82,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         double CalculateAreaRadiative(ModularFlightIntegrator fi, Part part, FARAeroPartModule aeroModule)
         {
-            double dragCubeExposed = fi.BaseFICalculateAreaExposed(part);
+            //double dragCubeExposed = fi.BaseFICalculateAreaExposed(part);
             if ((object)aeroModule == null)
                 return fi.BaseFICalculateAreaRadiative(part);
             else
