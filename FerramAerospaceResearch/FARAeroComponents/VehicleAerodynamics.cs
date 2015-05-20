@@ -463,7 +463,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             //Otherwise, now we need to use axis, since it's obviously not close to anything else
 
 
-            return axis;
+            return axis.normalized;
         }
 
         //Smooths out area and area 2nd deriv distributions to deal with noise in the representation
