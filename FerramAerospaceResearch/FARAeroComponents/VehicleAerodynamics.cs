@@ -1019,7 +1019,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     xForcePressureAoA0.Add((float)criticalMachNumber, (hypersonicDragForward * 0.4f) * lowFinenessRatioSubsonicFactor, 0f, 0f);    //hypersonic drag used as a proxy for effects due to flow separation
                     xForcePressureAoA180.Add((float)criticalMachNumber, (sonicBaseDrag * 0.25f - hypersonicDragBackward * 0.4f) * lowFinenessRatioSubsonicFactor, 0f, 0f);
 
-                    sonicAoA0Drag = sonicWaveDrag +hypersonicDragForward * 0.2f;
+                    sonicAoA0Drag = sonicWaveDrag + hypersonicDragForward * 0.2f;
                     sonicAoA180Drag = -sonicWaveDrag + sonicBaseDrag -hypersonicDragBackward * 0.2f;
                     //xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.1f, 0f, 0f);     //positive is force forward; negative is force backward
                     //xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.1f + sonicBaseDrag, 0f, 0f);
@@ -1193,12 +1193,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
             r1 = Math.Sqrt(lowArea / Math.PI);
             r2 = Math.Sqrt(highArea / Math.PI);
 
-            double radDiffSq = r2 - r1;
-            radDiffSq *= radDiffSq;
+            double radDiff = r2 - r1;
+            double radDiffSq = radDiff * radDiff;
 
             double drag = sectionThickness * sectionThickness + radDiffSq;
             drag = 2d * Math.PI / drag;
-            drag *= radDiffSq * radDiffSq;
+            drag *= radDiff * radDiffSq * (r1 + r2);
 
             return -drag;        //force is negative 
         }
