@@ -422,6 +422,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (m != null)
                         return new MeshData(m.vertices, m.triangles, m.bounds);
                 }
+                else
+                {
+                    Mesh m = mc.sharedMesh;
+
+                    if (m != null)
+                        return new MeshData(m.vertices, m.triangles, m.bounds);
+                }
             }
             else
             {
