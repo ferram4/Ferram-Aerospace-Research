@@ -156,20 +156,22 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
                 if (!(w && w.part))
                     continue;
 
-                if (w.isShielded)
-                    continue;
+                w.ComputeForceEditor(velocity.normalized, input.machNumber, 2);
 
                 if (clear)
                     w.EditorClClear(reset_stall);
 
-                w.ComputeForceEditor(velocity.normalized, input.machNumber, 2);
-                //w.ComputeForceEditor(velocity, input.machNumber);     //do this just to get the AC right
                 Vector3d relPos = w.GetAerodynamicCenter() - CoM;
 
                 Vector3d vel = velocity + Vector3d.Cross(AngVel, relPos);
 
                 if (w is FARControllableSurface)
                     (w as FARControllableSurface).SetControlStateEditor(CoM, vel, (float)input.pitchValue, 0, 0, input.flaps, input.spoilers);
+                else if (w.isShielded)
+                    continue;
+
+
+                //w.ComputeForceEditor(velocity, input.machNumber);     //do this just to get the AC right
 
                 Vector3d force = w.ComputeForceEditor(vel.normalized, input.machNumber, 2) * 1000;
 

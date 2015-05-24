@@ -130,6 +130,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             overridingParts = new HashSet<Part>();
 
+            //Determine bounds and "overriding parts" from geoModules
             for (int i = 0; i < geoModules.Count; i++)
             {
                 GeometryPartModule m = geoModules[i];
@@ -152,9 +153,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             Vector3d size = max - min;
 
-            double voxelVolume = size.x * size.y * size.z;
+            double voxelVolume = size.x * size.y * size.z;  //from bounds, get voxel volume
 
-            if (double.IsInfinity(voxelVolume))
+            if (double.IsInfinity(voxelVolume))     //...if something broke, get out of here
             {
                 Debug.LogError("Voxel Volume was infinity; ending voxelization");
                 return;
@@ -169,7 +170,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             yLength = (int)Math.Ceiling(size.y * tmp) + 1;
             zLength = (int)Math.Ceiling(size.z * tmp) + 1;
 
-            lock (clearedChunks)
+            lock (clearedChunks)        //make sure that we can actually voxelize without breaking the memory limits
             {
                 while (chunksInUse >= MAX_CHUNKS_ALLOWED)
                 {
@@ -1533,17 +1534,20 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 Debug.LogException(e);
             }
+            finally
+            {
+                lock (_locker)
+                {
+                    threadsQueued--;
+                    Monitor.Pulse(_locker);
+                } 
+            }
         }
         private void UpdateFromMesh(GeometryMesh mesh, Part part)
         {
             if (mesh.bounds.size.x < elementSize && mesh.bounds.size.y < elementSize && mesh.bounds.size.z < elementSize)
             {
                 CalculateVoxelShellFromTinyMesh(mesh.bounds.min, mesh.bounds.max, part);
-                lock (_locker)
-                {
-                    threadsQueued--;
-                    Monitor.Pulse(_locker);
-                } 
                 return;
             }
 
@@ -1562,12 +1566,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 vert3 = mesh.vertices[mesh.triangles[a + 2]];
 
                 CalculateVoxelShellForTriangle(vert1, vert2, vert3, part);
-            }
-
-            lock (_locker)
-            {
-                threadsQueued--;
-                Monitor.Pulse(_locker);
             }
         }
 
@@ -2150,6 +2148,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 Debug.LogException(e);
             }
+            finally
+            {
+                lock (_locker)
+                {
+                    threadsQueued--;
+                    Monitor.Pulse(_locker);
+                }
+            }
         }
         
         private void SolidifyVoxel(int lowJ, int highJ, bool increasingJ)
@@ -2163,47 +2169,44 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 plane = clearedPlanes.Pop();
             }
 
-
-
-            int xLength = plane.GetLength(0);
-            int zLength = plane.GetLength(1);
-            if (xLength < xCellLength || zLength < zCellLength)
-                plane = new SweepPlanePoint[Math.Max(xCellLength, xLength), Math.Max(zCellLength, zLength)];
-                
-            
-            //SweepPlanePoint[,] sweepPlane = new SweepPlanePoint[xCellLength, zCellLength];
-            List<SweepPlanePoint> activePts = new List<SweepPlanePoint>();
-            HashSet<SweepPlanePoint> inactiveInteriorPts = new HashSet<SweepPlanePoint>();
-            SweepPlanePoint[] neighboringSweepPlanePts = new SweepPlanePoint[4];
-
-            if (increasingJ)
-                for (int j = lowJ; j < highJ; j++) //Iterate from back of vehicle to front
-                {
-                    SolidifyLoop(j, j - 1, plane, activePts, inactiveInteriorPts, neighboringSweepPlanePts);
-                }
-            else
-                for (int j = highJ - 1; j >= lowJ; j--) //Iterate from front of vehicle to back
-                {
-                    SolidifyLoop(j, j + 1, plane, activePts, inactiveInteriorPts, neighboringSweepPlanePts);
-                }
-
-            //Cleanup
-            //sweepPlane = null;
-            activePts = null;
-            inactiveInteriorPts = null;
-            neighboringSweepPlanePts = null;
-            CleanSweepPlane(plane);
-
-            lock(clearedPlanes)
+            try
             {
-                clearedPlanes.Push(plane);
-                Monitor.Pulse(clearedPlanes);
+                int xLength = plane.GetLength(0);
+                int zLength = plane.GetLength(1);
+                if (xLength < xCellLength || zLength < zCellLength)
+                    plane = new SweepPlanePoint[Math.Max(xCellLength, xLength), Math.Max(zCellLength, zLength)];
+
+
+                //SweepPlanePoint[,] sweepPlane = new SweepPlanePoint[xCellLength, zCellLength];
+                List<SweepPlanePoint> activePts = new List<SweepPlanePoint>();
+                HashSet<SweepPlanePoint> inactiveInteriorPts = new HashSet<SweepPlanePoint>();
+                SweepPlanePoint[] neighboringSweepPlanePts = new SweepPlanePoint[4];
+
+                if (increasingJ)
+                    for (int j = lowJ; j < highJ; j++) //Iterate from back of vehicle to front
+                    {
+                        SolidifyLoop(j, j - 1, plane, activePts, inactiveInteriorPts, neighboringSweepPlanePts);
+                    }
+                else
+                    for (int j = highJ - 1; j >= lowJ; j--) //Iterate from front of vehicle to back
+                    {
+                        SolidifyLoop(j, j + 1, plane, activePts, inactiveInteriorPts, neighboringSweepPlanePts);
+                    }
+
+                //Cleanup
+                //sweepPlane = null;
+                activePts = null;
+                inactiveInteriorPts = null;
+                neighboringSweepPlanePts = null;
+                CleanSweepPlane(plane);
             }
-            
-            lock (_locker)
+            finally
             {
-                threadsQueued--;
-                Monitor.Pulse(_locker);
+                lock (clearedPlanes)
+                {
+                    clearedPlanes.Push(plane);
+                    Monitor.Pulse(clearedPlanes);
+                }
             }
         }
 

@@ -278,16 +278,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
         public bool TryVoxelUpdate(Matrix4x4 worldToLocalMatrix, Matrix4x4 localToWorldMatrix, int voxelCount, List<Part> vehiclePartList, List<GeometryPartModule> currentGeoModules, bool updateGeometryPartModules = true)
         {
             bool returnVal = false;
-            if (Monitor.TryEnter(this))
+            if (Monitor.TryEnter(this))         //only continue if the voxelizing thread has not locked this object
             {
                 try
                 {
-                    if (voxelizing)
-                    {
+                    if (voxelizing)             //set to true when this function ends; only continue to voxelizing if the voxelization thread has not been queued
+                    {                           //this should catch conditions where this function is called again before the voxelization thread starts
                         returnVal = false;
                     }
                     else
                     {
+                        //Bunch of voxel setup data
                         _voxelCount = voxelCount;
 
                         this._worldToLocalMatrix = worldToLocalMatrix;
@@ -307,6 +308,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                         this._vehicleMainAxis = CalculateVehicleMainAxis();
 
+                        //If the voxel still exists, cleanup everything so we can continue;
                         visualizing = false;
 
                         if (_voxel != null)
@@ -314,8 +316,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                             _voxel.CleanupVoxel();
                         }
 
+                        //set flag so that this function can't run again before voxelizing completes and queue voxelizing thread
                         voxelizing = true;
-                        ThreadPool.QueueUserWorkItem(CreateVoxel, updateGeometryPartModules);
+                        ThreadPool.QueueUserWorkItem(CreateVoxel);
                         returnVal = true;
                     }
                 }
@@ -329,13 +332,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
         }
 
         //And this actually creates the voxel and then begins the aero properties determination
-        private void CreateVoxel(object updateGeometryPartModules)
+        private void CreateVoxel(object nullObj)
         {
-            lock (this)
+            lock (this)     //lock this object to prevent race with main thread
             {
                 try
                 {
-
+                    //Actually voxelize it
                     _voxel = new VehicleVoxel(_vehiclePartList, _currentGeoModules, _voxelCount);
                     if (_vehicleCrossSection.Length < _voxel.MaxArrayLength)
                         _vehicleCrossSection = _voxel.EmptyCrossSectionArray;
@@ -355,11 +358,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
                 finally
                 {
+                    //Always, when we finish up, if we're in flight, cleanup the voxel
                     if (HighLogic.LoadedSceneIsFlight && _voxel != null)
                     {
                         _voxel.CleanupVoxel();
                         _voxel = null;
                     }
+                    //And unset the flag so that the main thread can queue it again
                     voxelizing = false;
                 }
             }
