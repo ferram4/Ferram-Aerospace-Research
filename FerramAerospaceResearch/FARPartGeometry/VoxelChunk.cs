@@ -137,10 +137,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
         unsafe void SetPart(Part p, int index, VoxelOrientationPlane plane, byte location)
         {
             Part currentPart = voxelPoints[index].part;
-            if((object)currentPart == null || !overridingParts.Contains(currentPart))
+            //if we update the plane location with this, then we can consider replacing the part here.  Otherwise, we don't
+            if(voxelPoints[index].SetPlaneLocation(plane, location) && ((object)currentPart == null || !overridingParts.Contains(currentPart)))
                 voxelPoints[index].part = p;
 
-            voxelPoints[index].SetPlaneLocation(plane, location);
         }
 
         public unsafe bool VoxelPointExistsLocalIndex(int zeroBaseIndex)
@@ -317,38 +317,58 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     zPlaneDown = LENGTH_OF_VOXEL;
             }
 
-            public void SetPlaneLocation(VoxelOrientationPlane plane, byte location)
+            //Will return true if the location is updated
+            public bool SetPlaneLocation(VoxelOrientationPlane plane, byte location)
             {
-                switch(plane)
+                bool returnVal = false;
+                switch (plane)
                 {
                     case VoxelOrientationPlane.X_UP:
                         if (location > xPlaneUp)
+                        {
                             xPlaneUp = location;
+                            returnVal = true;
+                        }
                         break;
 
                     case VoxelOrientationPlane.X_DOWN:
                         if (location > xPlaneDown)
+                        {
                             xPlaneDown = location;
+                            returnVal = true;
+                        }
                         break;
 
                     case VoxelOrientationPlane.Y_UP:
                         if (location > yPlaneUp)
+                        {
                             yPlaneUp = location;
+                            returnVal = true;
+                        }
                         break;
 
                     case VoxelOrientationPlane.Y_DOWN:
                         if (location > yPlaneDown)
+                        {
                             yPlaneDown = location;
+                            returnVal = true;
+                        }
                         break;
 
                     case VoxelOrientationPlane.Z_UP:
                         if (location > zPlaneUp)
+                        {
                             zPlaneUp = location;
+                            returnVal = true;
+                        }
                         break;
 
                     case VoxelOrientationPlane.Z_DOWN:
                         if (location > zPlaneDown)
+                        {
                             zPlaneDown = location;
+                            returnVal = true;
+                        }
                         break;
 
                     case VoxelOrientationPlane.FILL_VOXEL:
@@ -361,6 +381,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         zPlaneDown = location;
                         break;
                 }
+
+                return returnVal;
             }
         }
     }
