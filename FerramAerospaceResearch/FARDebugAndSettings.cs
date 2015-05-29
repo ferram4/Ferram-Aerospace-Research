@@ -295,7 +295,7 @@ namespace FerramAerospaceResearch
             if (removeIndex >= 0)
             {
                 FARAeroStress.StressTemplates.RemoveAt(removeIndex);
-                if (aeroStressIndex == removeIndex)
+                if (aeroStressIndex == removeIndex && removeIndex > 0)
                     aeroStressIndex--;
 
                 removeIndex = -1;
