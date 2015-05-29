@@ -149,7 +149,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             for (int i = 0; i < meshTransforms.Count; i++)
             {
                 MeshData m = geometryMeshes[i];
-                GeometryMesh geoMesh = new GeometryMesh(m.vertices, m.triangles, m.bounds, meshTransforms[i], worldToVesselMatrix, this);
+                GeometryMesh geoMesh = new GeometryMesh(m, meshTransforms[i], worldToVesselMatrix, this);
                 meshDataList.Add(geoMesh);
             }
             //UpdateTransformMatrixList(worldToVesselMatrix);
@@ -418,16 +418,16 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 if (mf != null)
                 {
                     Mesh m = mf.sharedMesh;
-
+                    
                     if (m != null)
-                        return new MeshData(m.vertices, m.triangles, m.bounds);
+                        return new MeshData(m.vertices, m.triangles, m.bounds, t.localScale);
                 }
                 else
                 {
                     Mesh m = mc.sharedMesh;
-
+                    
                     if (m != null)
-                        return new MeshData(m.vertices, m.triangles, m.bounds);
+                        return new MeshData(m.vertices, m.triangles, m.bounds, t.localScale);
                 }
             }
             else
@@ -448,7 +448,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (mf != null)
             {
                 m = mf.sharedMesh;
-                return new MeshData(m.vertices, m.triangles, m.bounds);
+                return new MeshData(m.vertices, m.triangles, m.bounds, t.localScale);
             }
             else
             {
@@ -457,7 +457,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 {
                     m = new Mesh();
                     smr.BakeMesh(m);
-                    MeshData md = new MeshData(m.vertices, m.triangles, m.bounds);
+                    MeshData md = new MeshData(m.vertices, m.triangles, m.bounds, t.localScale);
 
                     UnityEngine.Object.Destroy(m);      //ensure that no memory is left over
                     return md;
@@ -577,7 +577,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Tris.Add(20); Tris.Add(21); Tris.Add(22);
             Tris.Add(22); Tris.Add(23); Tris.Add(20);
 
-            MeshData mesh = new MeshData(Verts.ToArray(), Tris.ToArray(), new Bounds(center, size));
+            MeshData mesh = new MeshData(Verts.ToArray(), Tris.ToArray(), new Bounds(center, size), Vector3.one);
 
             return mesh;
         }

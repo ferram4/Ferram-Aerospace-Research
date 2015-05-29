@@ -60,14 +60,21 @@ namespace FerramAerospaceResearch.FARPartGeometry
         public Bounds bounds;
         private GeometryPartModule module;
 
-        public GeometryMesh(Vector3[] untransformedVerts, int[] triangles, Bounds meshBounds, Transform meshTransform, Matrix4x4 worldToVesselMatrix, GeometryPartModule module)
+        public int invertXYZ;
+
+        public GeometryMesh(MeshData meshData, Transform meshTransform, Matrix4x4 worldToVesselMatrix, GeometryPartModule module)
         {
+            Vector3[] untransformedVerts = meshData.vertices;
+            int[] triangles = meshData.triangles;
+            Bounds meshBounds = meshData.bounds;
+            Vector3 localScale = meshData.localScale;
+
             vertices = new Vector3[untransformedVerts.Length];
             this.thisToVesselMatrix = worldToVesselMatrix * meshTransform.localToWorldMatrix;
 
             for (int i = 0; i < vertices.Length; i++)
                 vertices[i] = thisToVesselMatrix.MultiplyPoint3x4(untransformedVerts[i]);
-            
+
             this.triangles = triangles;
             this.meshTransform = meshTransform;
 
@@ -79,6 +86,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
             bounds = TransformBounds(meshBounds, thisToVesselMatrix);
 
             this.module = module;
+
+            if (localScale.x * localScale.y * localScale.z > 0)
+                invertXYZ = 1;
+            else
+                invertXYZ = -1;
         }
 
         public bool TrySetThisToVesselMatrixForTransform()

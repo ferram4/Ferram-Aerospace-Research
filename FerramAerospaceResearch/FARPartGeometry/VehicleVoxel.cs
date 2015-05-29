@@ -1565,7 +1565,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 vert2 = mesh.vertices[mesh.triangles[a + 1]];
                 vert3 = mesh.vertices[mesh.triangles[a + 2]];
 
-                CalculateVoxelShellForTriangle(vert1, vert2, vert3, part);
+                CalculateVoxelShellForTriangle(vert1, vert2, vert3, part, mesh.invertXYZ);
             }
         }
 
@@ -1602,7 +1602,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     }
         }
 
-        private void CalculateVoxelShellForTriangle(Vector3 vert1, Vector3 vert2, Vector3 vert3, Part part)
+        private void CalculateVoxelShellForTriangle(Vector3 vert1, Vector3 vert2, Vector3 vert3, Part part, int invertXYZ)
         {
             //Vector4 plane = CalculateEquationOfPlane(vert1, vert2, vert3);
             Vector4 indexPlane = CalculateEquationOfPlaneInIndices(vert1, vert2, vert3);
@@ -1615,14 +1615,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
             //Vector4 indexPlane = TransformPlaneToIndices(plane);
 
             if (x > y && x > z)
-                VoxelShellTrianglePerpX(indexPlane, vert1, vert2, vert3, part);
+                VoxelShellTrianglePerpX(indexPlane, vert1, vert2, vert3, part, invertXYZ);
             else if(y > x && y > z)
-                VoxelShellTrianglePerpY(indexPlane, vert1, vert2, vert3, part);
+                VoxelShellTrianglePerpY(indexPlane, vert1, vert2, vert3, part, invertXYZ);
             else
-                VoxelShellTrianglePerpZ(indexPlane, vert1, vert2, vert3, part);
+                VoxelShellTrianglePerpZ(indexPlane, vert1, vert2, vert3, part, invertXYZ);
         }
 
-        private void VoxelShellTrianglePerpX(Vector4 indexPlane, Vector3 vert1, Vector3 vert2, Vector3 vert3, Part part)
+        private void VoxelShellTrianglePerpX(Vector4 indexPlane, Vector3 vert1, Vector3 vert2, Vector3 vert3, Part part, int invertTri)
         {
             Vector3 vert1Proj, vert2Proj, vert3Proj;
             vert1Proj = (vert1 - lowerRightCorner) * invElementSize;
@@ -1703,7 +1703,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW < 0)
+                        if (signW * invertTri < 0)
                             plane = VoxelOrientationPlane.X_UP;
                         else
                             plane = VoxelOrientationPlane.X_DOWN;
@@ -1730,7 +1730,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW < 0)
+                        if (signW * invertTri < 0)
                             plane = VoxelOrientationPlane.X_UP;
                         else
                             plane = VoxelOrientationPlane.X_DOWN;
@@ -1754,7 +1754,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW < 0)
+                        if (signW * invertTri < 0)
                             plane = VoxelOrientationPlane.X_UP;
                         else
                             plane = VoxelOrientationPlane.X_DOWN;
@@ -1765,7 +1765,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
         }
 
-        private void VoxelShellTrianglePerpY(Vector4 indexPlane, Vector3 vert1, Vector3 vert2, Vector3 vert3, Part part)
+        private void VoxelShellTrianglePerpY(Vector4 indexPlane, Vector3 vert1, Vector3 vert2, Vector3 vert3, Part part, int invertTri)
         {
             Vector3 vert1Proj, vert2Proj, vert3Proj;
             vert1Proj = (vert1 - lowerRightCorner) * invElementSize;
@@ -1850,7 +1850,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW < 0)
+                        if (signW * invertTri < 0)
                             plane = VoxelOrientationPlane.Y_UP;
                         else
                             plane = VoxelOrientationPlane.Y_DOWN;
@@ -1877,7 +1877,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW < 0)
+                        if (signW * invertTri < 0)
                             plane = VoxelOrientationPlane.Y_UP;
                         else
                             plane = VoxelOrientationPlane.Y_DOWN;
@@ -1900,7 +1900,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW < 0)
+                        if (signW * invertTri < 0)
                             plane = VoxelOrientationPlane.Y_UP;
                         else
                             plane = VoxelOrientationPlane.Y_DOWN;
@@ -1910,7 +1910,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
         }
 
-        private void VoxelShellTrianglePerpZ(Vector4 indexPlane, Vector3 vert1, Vector3 vert2, Vector3 vert3, Part part)
+        private void VoxelShellTrianglePerpZ(Vector4 indexPlane, Vector3 vert1, Vector3 vert2, Vector3 vert3, Part part, int invertTri)
         {
             Vector3 vert1Proj, vert2Proj, vert3Proj;
             vert1Proj = (vert1 - lowerRightCorner) * invElementSize;
@@ -1994,7 +1994,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW < 0)
+                        if (signW * invertTri < 0)
                             plane = VoxelOrientationPlane.Z_UP;
                         else
                             plane = VoxelOrientationPlane.Z_DOWN;
@@ -2020,7 +2020,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW < 0)
+                        if (signW * invertTri < 0)
                             plane = VoxelOrientationPlane.Z_UP;
                         else
                             plane = VoxelOrientationPlane.Z_DOWN;
@@ -2043,7 +2043,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW < 0)
+                        if (signW * invertTri < 0)
                             plane = VoxelOrientationPlane.Z_UP;
                         else
                             plane = VoxelOrientationPlane.Z_DOWN;
@@ -2198,10 +2198,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 activePts = null;
                 inactiveInteriorPts = null;
                 neighboringSweepPlanePts = null;
-                CleanSweepPlane(plane);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
             }
             finally
             {
+                CleanSweepPlane(plane);
                 lock (clearedPlanes)
                 {
                     clearedPlanes.Push(plane);

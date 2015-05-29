@@ -138,7 +138,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             Part currentPart = voxelPoints[index].part;
             //if we update the plane location with this, then we can consider replacing the part here.  Otherwise, we don't
-            if(voxelPoints[index].SetPlaneLocation(plane, location) && ((object)currentPart == null || !overridingParts.Contains(currentPart)))
+            bool largerThanLast = voxelPoints[index].SetPlaneLocation(plane, location);
+            if ((object)currentPart == null || (largerThanLast && !overridingParts.Contains(currentPart)))
                 voxelPoints[index].part = p;
 
         }
