@@ -62,6 +62,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
             get { return _vehicleAero.Length; }
         }
 
+		public bool isValid
+		{
+			get { return enabled && _vehicleAero != null; }
+		}
+
         public double MaxCrossSectionArea
         {
             get { return _vehicleAero.MaxCrossSectionArea; }
@@ -143,6 +148,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         private void FixedUpdate()
         {
+            if (_vehicleAero == null)
+                return;
             if (_vehicleAero.CalculationCompleted)
             {
                 _vehicleAero.GetNewAeroData(out _currentAeroModules, out _unusedAeroModules, out _currentAeroSections, out _legacyWingModels);                
