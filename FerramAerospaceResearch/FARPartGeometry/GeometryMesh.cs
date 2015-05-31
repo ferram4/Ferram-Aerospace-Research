@@ -67,7 +67,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Vector3[] untransformedVerts = meshData.vertices;
             int[] triangles = meshData.triangles;
             Bounds meshBounds = meshData.bounds;
-            Vector3 localScale = meshData.localScale;
 
             vertices = new Vector3[untransformedVerts.Length];
             this.thisToVesselMatrix = worldToVesselMatrix * meshTransform.localToWorldMatrix;
@@ -86,8 +85,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
             bounds = TransformBounds(meshBounds, thisToVesselMatrix);
 
             this.module = module;
-
-            if (localScale.x * localScale.y * localScale.z > 0)
+            
+            if (!module.part.isMirrored)
                 invertXYZ = 1;
             else
                 invertXYZ = -1;
