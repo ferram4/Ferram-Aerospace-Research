@@ -731,6 +731,14 @@ namespace FerramAerospaceResearch.RealChuteLite
             this.repack.guiActiveUnfocused = this.canRepack;
         }
 
+        public override void OnActive ()
+        {
+            if (!this.staged)
+            {
+                ActivateRC ();
+            }
+        }
+
         private void FixedUpdate()
         {
             //Flight values
