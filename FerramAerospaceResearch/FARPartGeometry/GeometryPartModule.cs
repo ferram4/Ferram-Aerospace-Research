@@ -319,8 +319,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     //    UpdateShapeWithAnims(); //event to update voxel, with rate limiter for computer's sanity and error reduction
                     //    break;
                     //}
-                    if (Math.Abs(prevNormTime - state.time) > float.Epsilon * 2f)       //if the anim is not playing, but it was, also send the event to be sure that we closed
+                    if (Math.Abs(prevNormTime - state.time) > 10E-5)       //if the anim is not playing, but it was, also send the event to be sure that we closed
                     {
+                        //Debug.Log(state.time);
                         animStateTime[i] = state.time;
                         updateShape = true;
                     }
