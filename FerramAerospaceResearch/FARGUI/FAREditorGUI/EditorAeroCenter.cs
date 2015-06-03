@@ -164,14 +164,17 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             Vector3 deltaMomentPerp = deltaMoment - Vector3.Dot(deltaMoment, deltaForcePerpNorm) * deltaForcePerpNorm - Vector3.Project(deltaMoment, vel_base);
 
-            float dist = deltaMomentPerp.magnitude / deltaForcePerpMag;
+            //float dist = deltaMomentPerp.magnitude / deltaForcePerpMag;
+            //vesselRootLocalAeroCenter = vel_base * dist;
 
-            vesselRootLocalAeroCenter = -vel_base * dist;
+            vesselRootLocalAeroCenter = deltaMomentPerp.magnitude / deltaForcePerpMag * vel_base * Math.Sign(Vector3.Dot(Vector3.Cross(deltaForce, deltaMoment), vel_base));
+
+            //Debug.Log(dist + " " + deltaMomentPerp.magnitude + " " + deltaForcePerpMag);
             //vesselRootLocalAeroCenter += avgForcePos;
             //avgForcePos = rootPartTrans.worldToLocalMatrix.MultiplyPoint3x4(avgForcePos);
             //vesselRootLocalAeroCenter += Vector3.ProjectOnPlane(avgForcePos, Vector3.up);
             //vesselRootLocalAeroCenter = aeroSection.GetPos();
-            vesselRootLocalAeroCenter += Vector3.ProjectOnPlane(avgForcePos - pos, vesselRootLocalAeroCenter) + pos;
+            vesselRootLocalAeroCenter += pos;//Vector3.ProjectOnPlane(avgForcePos - pos, vesselRootLocalAeroCenter) + pos;
             vesselRootLocalAeroCenter = rootPartTrans.worldToLocalMatrix.MultiplyPoint3x4(vesselRootLocalAeroCenter);
         }
     }

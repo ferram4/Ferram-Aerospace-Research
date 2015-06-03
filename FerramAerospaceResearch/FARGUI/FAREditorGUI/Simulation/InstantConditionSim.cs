@@ -211,7 +211,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             output.Cy += Vector3d.Dot(centerForce, sideways);
             output.Cd += -Vector3d.Dot(centerForce, velocity);
 
-            Vector3d centerMoment = -Vector3d.Cross(center.GetPos() - CoM, centerForce) + center.torque;
+            Vector3d centerMoment = -center.TorqueAt(CoM) * 1000;
 
             output.Cm += Vector3d.Dot(centerMoment, sideways);
             output.Cn += Vector3d.Dot(centerMoment, liftVector);

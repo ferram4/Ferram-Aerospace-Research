@@ -96,7 +96,7 @@ namespace ferram4
         {
             double size = nforce.magnitude;
             force += nforce;
-            //torque += Vector3d.Cross(npos, nforce);
+            torque += Vector3d.Cross(npos, nforce);
             pos += npos * size;
             amount += size;
         }
@@ -132,7 +132,7 @@ namespace ferram4
         // Compensating torque at different origin.
         public Vector3d TorqueAt(Vector3d origin)
         {
-            return torque - Vector3d.Cross(origin - GetPos(), force);
+            return torque - Vector3d.Cross(origin, force);
         }
 
         // Returns a point that requires minimal residual torque
