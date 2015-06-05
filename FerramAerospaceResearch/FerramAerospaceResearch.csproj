@@ -80,6 +80,7 @@
     <Compile Include="FARPartGeometry\PartTransformInfo.cs" />
     <Compile Include="FARSettingsScenarioModule.cs" />
     <Compile Include="FARThreading\ThreadSafeDebugLogger.cs" />
+    <Compile Include="FARThreading\VoxelizationThreadpool.cs" />
     <Compile Include="LEGACYferram4\FARAction.cs" />
     <Compile Include="FARGUI\FAREditorGUI\EditorAeroCenter.cs" />
     <Compile Include="FARAeroComponents\FARAeroPartModule.cs" />

@@ -44,57 +44,75 @@ Copyright 2015, Michael Ferrara, aka Ferram4
 
 using System;
 using System.Collections.Generic;
-using UnityEngine;
+using System.Threading;
 
 namespace FerramAerospaceResearch.FARThreading
 {
-    [KSPAddon(KSPAddon.Startup.Instantly, true)]
-    class ThreadSafeDebugLogger : MonoBehaviour
+    //This class only exists to ensure that the ThreadPool is not choked with requests to start running voxels, which will deadlock the entire voxelization process when the MaxThread limit is reached because they will be unable to start up their various worker threads
+    class VoxelizationThreadpool
     {
-        static ThreadSafeDebugLogger _instance;
-        public static ThreadSafeDebugLogger Instance
+        static VoxelizationThreadpool _instance;
+        public static VoxelizationThreadpool Instance
         {
-            get { return _instance; }
-        }
-
-        List<Exception> _exceptionsThrown;
-        List<string> _debugMessages;
-
-        void Awake()
-        {
-            _instance = this;
-            _exceptionsThrown = new List<Exception>();
-            _debugMessages = new List<string>();
-            GameObject.DontDestroyOnLoad(this.gameObject);
-        }
-
-        void Update()
-        {
-            if (_exceptionsThrown.Count > 0)
+            get
             {
-                for (int i = 0; i < _exceptionsThrown.Count; i++)
-                    Debug.LogException(_exceptionsThrown[i]);
+                if (_instance == null)
+                    _instance = new VoxelizationThreadpool();
 
-                _exceptionsThrown.Clear();
+                return _instance;
             }
-            if (_debugMessages.Count > 0)
+        }
+
+        Thread[] _threads;
+        Queue<Action> queuedVoxelizations;
+        const int THREAD_COUNT = 8;
+
+        VoxelizationThreadpool()
+        {
+            _threads = new Thread[THREAD_COUNT];
+            for (int i = 0; i < _threads.Length; i++)
             {
-                for (int i = 0; i < _debugMessages.Count; i++)
-                    Debug.Log(_debugMessages[i]);
-
-                _debugMessages.Clear();
+                _threads[i] = new Thread(ExecuteQueuedVoxelization);
+                //_threads[i].IsBackground = true;
+                _threads[i].Start();
             }
-
+            queuedVoxelizations = new Queue<Action>();
         }
 
-        public void RegisterMessage(string s)
+        ~VoxelizationThreadpool()
         {
-            _debugMessages.Add(s);
+            for (int i = 0; i < _threads.Length; i++)
+            {
+                QueueVoxelization(null);        //this will pass a null action to each thread, ending it
+            }
         }
-        
-        public void RegisterException(Exception e)
+
+        void ExecuteQueuedVoxelization()
         {
-            _exceptionsThrown.Add(e);
+            while (true)
+            {
+                Action task;
+                lock (this)
+                {
+                    while (queuedVoxelizations.Count == 0)
+                        Monitor.Wait(this);
+
+                    task = queuedVoxelizations.Dequeue();
+                }
+                if (task != null)
+                    task();
+                else
+                    break;
+            }
+        }
+
+        public void QueueVoxelization(Action voxelAction)
+        {
+            lock (this)
+            {
+                queuedVoxelizations.Enqueue(voxelAction);
+                Monitor.Pulse(this);
+            }
         }
     }
 }

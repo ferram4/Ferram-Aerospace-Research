@@ -57,6 +57,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
     {
         VehicleVoxel _voxel = null;
         VoxelCrossSection[] _vehicleCrossSection = new VoxelCrossSection[1];
+        Thread voxelizationThread = null;
+
         int _voxelCount;
 
         double _length = 0;
@@ -284,7 +286,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 try
                 {
                     if (voxelizing)             //set to true when this function ends; only continue to voxelizing if the voxelization thread has not been queued
-                    {                           //this should catch conditions where this function is called again before the voxelization thread starts
+                    {                                               //this should catch conditions where this function is called again before the voxelization thread starts
                         returnVal = false;
                     }
                     else
@@ -319,7 +321,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                         //set flag so that this function can't run again before voxelizing completes and queue voxelizing thread
                         voxelizing = true;
-                        ThreadPool.QueueUserWorkItem(CreateVoxel);
+                        VoxelizationThreadpool.Instance.QueueVoxelization(CreateVoxel);
                         returnVal = true;
                     }
                 }
@@ -333,7 +335,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         }
 
         //And this actually creates the voxel and then begins the aero properties determination
-        private void CreateVoxel(object nullObj)
+        private void CreateVoxel()
         {
             lock (this)     //lock this object to prevent race with main thread
             {
