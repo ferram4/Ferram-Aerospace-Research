@@ -47,6 +47,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using UnityEngine;
+using FerramAerospaceResearch.FARThreading;
 using FerramAerospaceResearch.FARPartGeometry;
 using FerramAerospaceResearch.FARPartGeometry.GeometryModification;
 
@@ -354,7 +355,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 catch (Exception e)
                 {
-                    Debug.LogException(e);
+                    ThreadSafeDebugLogger.Instance.RegisterException(e);
                 }
                 finally
                 {

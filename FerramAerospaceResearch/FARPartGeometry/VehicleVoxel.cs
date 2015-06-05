@@ -46,6 +46,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
+using FerramAerospaceResearch.FARThreading;
 
 namespace FerramAerospaceResearch.FARPartGeometry
 {
@@ -201,8 +202,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             voxelChunks = new VoxelChunk[xLength, yLength, zLength];
 
-
-            BuildVoxel(geoModules, multiThreaded, solidify);
+            try
+            {
+                BuildVoxel(geoModules, multiThreaded, solidify);
+            }
+            catch (Exception e)
+            {
+                ThreadSafeDebugLogger.Instance.RegisterException(e);
+            }
         }
 
         /*public VehicleVoxel(List<Part> partList, List<GeometryPartModule> geoModules, double elementSize, Vector3 lowerRightCorner, bool multiThreaded = true, bool solidify = true)
@@ -1532,7 +1539,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
             catch (Exception e)
             {
-                Debug.LogException(e);
+                ThreadSafeDebugLogger.Instance.RegisterException(e);
             }
             finally
             {
@@ -2146,7 +2153,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
             catch (Exception e)
             {
-                Debug.LogException(e);
+                ThreadSafeDebugLogger.Instance.RegisterException(e);
             }
             finally
             {
@@ -2201,7 +2208,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
             catch (Exception e)
             {
-                Debug.LogException(e);
+                ThreadSafeDebugLogger.Instance.RegisterException(e);
             }
             finally
             {
