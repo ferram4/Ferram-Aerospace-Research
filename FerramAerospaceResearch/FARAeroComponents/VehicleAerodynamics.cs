@@ -281,56 +281,53 @@ namespace FerramAerospaceResearch.FARAeroComponents
         public bool TryVoxelUpdate(Matrix4x4 worldToLocalMatrix, Matrix4x4 localToWorldMatrix, int voxelCount, List<Part> vehiclePartList, List<GeometryPartModule> currentGeoModules, bool updateGeometryPartModules = true)
         {
             bool returnVal = false;
-            if (Monitor.TryEnter(this))         //only continue if the voxelizing thread has not locked this object
+            if (voxelizing)             //set to true when this function ends; only continue to voxelizing if the voxelization thread has not been queued
+            {                                               //this should catch conditions where this function is called again before the voxelization thread starts
+                returnVal = false;
+            }
+            else if (Monitor.TryEnter(this))         //only continue if the voxelizing thread has not locked this object
             {
                 try
                 {
-                    if (voxelizing)             //set to true when this function ends; only continue to voxelizing if the voxelization thread has not been queued
-                    {                                               //this should catch conditions where this function is called again before the voxelization thread starts
-                        returnVal = false;
-                    }
-                    else
+                    //Bunch of voxel setup data
+                    _voxelCount = voxelCount;
+
+                    this._worldToLocalMatrix = worldToLocalMatrix;
+                    this._localToWorldMatrix = localToWorldMatrix;
+                    this._vehiclePartList = vehiclePartList;
+                    this._currentGeoModules = currentGeoModules;
+
+                    _partWorldToLocalMatrix.Clear();
+
+                    for (int i = 0; i < _currentGeoModules.Count; i++)
                     {
-                        //Bunch of voxel setup data
-                        _voxelCount = voxelCount;
-
-                        this._worldToLocalMatrix = worldToLocalMatrix;
-                        this._localToWorldMatrix = localToWorldMatrix;
-                        this._vehiclePartList = vehiclePartList;
-                        this._currentGeoModules = currentGeoModules;
-
-                        _partWorldToLocalMatrix.Clear();
-
-                        for (int i = 0; i < _currentGeoModules.Count; i++)
-                        {
-                            GeometryPartModule g = _currentGeoModules[i];
-                            _partWorldToLocalMatrix.Add(g.part, new PartTransformInfo(g.part.partTransform));
-                            if (updateGeometryPartModules)
-                                g.UpdateTransformMatrixList(_worldToLocalMatrix);
-                        }
-
-                        this._vehicleMainAxis = CalculateVehicleMainAxis();
-
-                        //If the voxel still exists, cleanup everything so we can continue;
-                        visualizing = false;
-
-                        if (_voxel != null)
-                        {
-                            _voxel.CleanupVoxel();
-                        }
-
-                        //set flag so that this function can't run again before voxelizing completes and queue voxelizing thread
-                        voxelizing = true;
-                        VoxelizationThreadpool.Instance.QueueVoxelization(CreateVoxel);
-                        returnVal = true;
+                        GeometryPartModule g = _currentGeoModules[i];
+                        _partWorldToLocalMatrix.Add(g.part, new PartTransformInfo(g.part.partTransform));
+                        if (updateGeometryPartModules)
+                            g.UpdateTransformMatrixList(_worldToLocalMatrix);
                     }
+
+                    this._vehicleMainAxis = CalculateVehicleMainAxis();
+
+                    //If the voxel still exists, cleanup everything so we can continue;
+                    visualizing = false;
+
+                    if (_voxel != null)
+                    {
+                        _voxel.CleanupVoxel();
+                    }
+
+                    //set flag so that this function can't run again before voxelizing completes and queue voxelizing thread
+                    voxelizing = true;
+                    VoxelizationThreadpool.Instance.QueueVoxelization(CreateVoxel);
+                    returnVal = true;
                 }
                 finally
                 {
                     Monitor.Exit(this);
                 }
             }
-            
+
             return returnVal;
         }
 

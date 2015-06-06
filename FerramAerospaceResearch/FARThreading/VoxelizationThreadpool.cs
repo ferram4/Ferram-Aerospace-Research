@@ -70,13 +70,14 @@ namespace FerramAerospaceResearch.FARThreading
         VoxelizationThreadpool()
         {
             _threads = new Thread[THREAD_COUNT];
+            queuedVoxelizations = new Queue<Action>();
             for (int i = 0; i < _threads.Length; i++)
             {
                 _threads[i] = new Thread(ExecuteQueuedVoxelization);
                 //_threads[i].IsBackground = true;
                 _threads[i].Start();
             }
-            queuedVoxelizations = new Queue<Action>();
+            ThreadSafeDebugLogger.Instance.RegisterMessage("Threads created...");
         }
 
         ~VoxelizationThreadpool()
@@ -95,7 +96,9 @@ namespace FerramAerospaceResearch.FARThreading
                 lock (this)
                 {
                     while (queuedVoxelizations.Count == 0)
+                    {
                         Monitor.Wait(this);
+                    }
 
                     task = queuedVoxelizations.Dequeue();
                 }

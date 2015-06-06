@@ -175,7 +175,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 while (chunksInUse >= MAX_CHUNKS_ALLOWED)
                 {
-                    Debug.Log("Voxel waiting for chunks to be released");
+                    ThreadSafeDebugLogger.Instance.RegisterMessage("Voxel waiting for chunks to be released");
                     Monitor.Wait(clearedChunks);
                 }
 
