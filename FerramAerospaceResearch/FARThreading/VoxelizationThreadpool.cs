@@ -77,7 +77,6 @@ namespace FerramAerospaceResearch.FARThreading
                 //_threads[i].IsBackground = true;
                 _threads[i].Start();
             }
-            ThreadSafeDebugLogger.Instance.RegisterMessage("Threads created...");
         }
 
         ~VoxelizationThreadpool()
