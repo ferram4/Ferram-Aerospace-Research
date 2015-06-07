@@ -67,6 +67,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public Dictionary<Part, SideAreaValues> partSideAreaValues;
 
+        public double cpSonicForward, cpSonicBackward;    //pressure coefficients calculated for this section near Mach 1 when sweeping forward and backward through the voxel
+
         public class SideAreaValues
         {
             public double iP, iN, jP, jN, kP, kN;

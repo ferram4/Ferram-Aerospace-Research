@@ -55,9 +55,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
 {
     class VehicleAerodynamics
     {
+        static double[] indexSqrt = new double[1];
+
         VehicleVoxel _voxel = null;
         VoxelCrossSection[] _vehicleCrossSection = new VoxelCrossSection[1];
-        Thread voxelizationThread = null;
 
         int _voxelCount;
 
@@ -124,6 +125,15 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         bool visualizing = false;
         bool voxelizing = false;
+
+        private double[] GenerateIndexSqrtLookup(int numStations)
+        {
+            double[] indexSqrt = new double[numStations];
+            for (int i = 0; i < numStations; i++)
+                indexSqrt[i] = Math.Sqrt(i);
+
+            return indexSqrt;
+        }
 
         #region UpdateAeroData
         //Used by other classes to update their aeroModule and aeroSection lists
@@ -915,6 +925,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             GaussianSmoothCrossSections(_vehicleCrossSection, 3, FARSettingsScenarioModule.Settings.gaussianVehicleLengthFractionForSmoothing, _sectionThickness, _length, front, back, FARSettingsScenarioModule.Settings.numAreaSmoothingPasses, FARSettingsScenarioModule.Settings.numDerivSmoothingPasses);
 
+            CalculateSonicPressure(_vehicleCrossSection, front, back, _sectionThickness, _maxCrossSectionArea);
+
             validSectionCount = numSections;
             firstSection = front;
             double invMaxRadFactor = 1f / Math.Sqrt(_maxCrossSectionArea / Math.PI);
@@ -1007,8 +1019,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 xForceSkinFriction.Add(1f, (float)(surfaceArea * viscousDragFactor), 0, 0);   //transonic visc drag
                 xForceSkinFriction.Add(2f, (float)surfaceArea, 0, 0);                     //above Mach 1.4, visc is purely surface drag, no pressure-related components simulated
 
-                float sonicWaveDrag = (float)CalculateTransonicWaveDrag(i, index, numSections, front, _sectionThickness, Math.Min(_maxCrossSectionArea * 2, curArea * 16));//Math.Min(maxCrossSectionArea * 0.1, curArea * 0.25));
-                sonicWaveDrag *= (float)FARSettingsScenarioModule.Settings.fractionTransonicDrag;     //this is just to account for the higher drag being felt due to the inherent blockiness of the model being used and noise introduced by the limited control over shape and through voxelization
+                //float sonicWaveDrag = (float)CalculateTransonicWaveDrag(i, index, numSections, front, _sectionThickness, Math.Min(_maxCrossSectionArea * 2, curArea * 16));//Math.Min(maxCrossSectionArea * 0.1, curArea * 0.25));
+                //sonicWaveDrag *= (float)FARSettingsScenarioModule.Settings.fractionTransonicDrag;     //this is just to account for the higher drag being felt due to the inherent blockiness of the model being used and noise introduced by the limited control over shape and through voxelization
                 float hypersonicDragForward = (float)CalculateHypersonicDrag(prevArea, curArea, _sectionThickness);
                 float hypersonicDragBackward = (float)CalculateHypersonicDrag(nextArea, curArea, _sectionThickness);
 
@@ -1024,32 +1036,35 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     xForcePressureAoA0.Add((float)criticalMachNumber, (hypersonicDragForward * 0.4f) * lowFinenessRatioSubsonicFactor, 0f, 0f);    //hypersonic drag used as a proxy for effects due to flow separation
                     xForcePressureAoA180.Add((float)criticalMachNumber, (sonicBaseDrag * 0.25f - hypersonicDragBackward * 0.4f) * lowFinenessRatioSubsonicFactor, 0f, 0f);
 
-                    sonicAoA0Drag = sonicWaveDrag + hypersonicDragForward * 0.2f;
-                    sonicAoA180Drag = -sonicWaveDrag + sonicBaseDrag -hypersonicDragBackward * 0.2f;
-                    //xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.1f, 0f, 0f);     //positive is force forward; negative is force backward
-                    //xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.1f + sonicBaseDrag, 0f, 0f);
+                    sonicAoA0Drag = -(float)((_vehicleCrossSection[index].cpSonicForward + _vehicleCrossSection[index - 1].cpSonicForward) * 0.5 * (curArea - prevArea)) + hypersonicDragForward * 0.2f;
+                    sonicAoA180Drag = -(float)((_vehicleCrossSection[index].cpSonicBackward + _vehicleCrossSection[index + 1].cpSonicBackward) * 0.5 * (curArea - nextArea)) + sonicBaseDrag - hypersonicDragBackward * 0.2f;
+
+                    //sonicAoA0Drag = sonicWaveDrag + hypersonicDragForward * 0.2f;
+                    //sonicAoA180Drag = -sonicWaveDrag + sonicBaseDrag -hypersonicDragBackward * 0.2f;
                 }
                 else if (sonicBaseDrag < 0)
                 {
                     xForcePressureAoA0.Add((float)criticalMachNumber, (-sonicBaseDrag * 0.25f + hypersonicDragForward * 0.4f) * lowFinenessRatioSubsonicFactor, 0f, 0f);
                     xForcePressureAoA180.Add((float)criticalMachNumber, (-hypersonicDragBackward * 0.4f) * lowFinenessRatioSubsonicFactor, 0f, 0f);
 
-                    sonicAoA0Drag = sonicWaveDrag - sonicBaseDrag + hypersonicDragForward * 0.2f;
-                    sonicAoA180Drag = -sonicWaveDrag - hypersonicDragBackward * 0.2f;
+                    sonicAoA0Drag = -(float)((_vehicleCrossSection[index].cpSonicForward + _vehicleCrossSection[index - 1].cpSonicForward) * 0.5 * (curArea - prevArea)) - sonicBaseDrag + hypersonicDragForward * 0.2f;
+                    sonicAoA180Drag = -(float)((_vehicleCrossSection[index].cpSonicBackward + _vehicleCrossSection[index + 1].cpSonicBackward) * 0.5 * (curArea - nextArea)) - hypersonicDragBackward * 0.2f;
 
-                    //xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.1f - sonicBaseDrag, 0f, 0f);     //positive is force forward; negative is force backward
-                    //xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.1f, 0f, 0f);
+                    //sonicAoA0Drag = sonicWaveDrag - sonicBaseDrag + hypersonicDragForward * 0.2f;
+                    //sonicAoA180Drag = -sonicWaveDrag - hypersonicDragBackward * 0.2f;
+
                 }
                 else
                 {
                     xForcePressureAoA0.Add((float)criticalMachNumber, (hypersonicDragForward * 0.4f) * lowFinenessRatioSubsonicFactor, 0f, 0f);
                     xForcePressureAoA180.Add((float)criticalMachNumber, (-hypersonicDragBackward * 0.4f) * lowFinenessRatioSubsonicFactor, 0f, 0f);
 
-                    sonicAoA0Drag = sonicWaveDrag + hypersonicDragForward * 0.2f;
-                    sonicAoA180Drag = -sonicWaveDrag - hypersonicDragBackward * 0.2f;
+                    sonicAoA0Drag = -(float)((_vehicleCrossSection[index].cpSonicForward + _vehicleCrossSection[index - 1].cpSonicForward) * 0.5 * (curArea - prevArea)) + hypersonicDragForward * 0.2f;
+                    sonicAoA180Drag = -(float)((_vehicleCrossSection[index].cpSonicBackward + _vehicleCrossSection[index + 1].cpSonicBackward) * 0.5 * (curArea - nextArea)) - hypersonicDragBackward * 0.2f;
 
-                    //xForcePressureAoA0.Add(1f, sonicWaveDrag + hypersonicDragForward * 0.1f, 0f, 0f);     //positive is force forward; negative is force backward
-                    //xForcePressureAoA180.Add(1f, -sonicWaveDrag - hypersonicDragBackward * 0.1f, 0f, 0f);
+                    //sonicAoA0Drag = sonicWaveDrag + hypersonicDragForward * 0.2f;
+                    //sonicAoA180Drag = -sonicWaveDrag - hypersonicDragBackward * 0.2f;
+
                 }
                 float diffSonicHyperAoA0 = Math.Abs(sonicAoA0Drag) - Math.Abs(hypersonicDragForward);
                 float diffSonicHyperAoA180 = Math.Abs(sonicAoA180Drag) - Math.Abs(hypersonicDragBackward);
@@ -1187,6 +1202,89 @@ namespace FerramAerospaceResearch.FARAeroComponents
             moment /= sectionThickness * sectionThickness + radDiffSq;
 
             return -moment * sectionThickness;
+        }
+
+        private void CalculateSonicPressure(VoxelCrossSection[] vehicleCrossSection, int front, int back, double sectionThickness, double maxCrossSection)
+        {
+            if (vehicleCrossSection.Length > indexSqrt.Length)
+                indexSqrt = GenerateIndexSqrtLookup(vehicleCrossSection.Length);
+
+            for (int i = front + 1; i < back; i++)
+                vehicleCrossSection[i].cpSonicForward = CalculateCpLinearForward(vehicleCrossSection, i, front, Math.Sqrt(1.2 * 1.2 - 1), sectionThickness, maxCrossSection);
+
+            for (int i = back - 1; i > front; i--)
+                vehicleCrossSection[i].cpSonicBackward = CalculateCpLinearBackward(vehicleCrossSection, i, back, Math.Sqrt(1.2 * 1.2 - 1), sectionThickness, maxCrossSection);
+        }
+
+        //Taken from Appendix A of NASA TR R-213
+        private double CalculateCpLinearForward(VoxelCrossSection[] vehicleCrossSection, int index, int front, double beta, double sectionThickness, double maxCrossSection)
+        {
+            double cP = 0;
+
+            double cutoff = Math.Min(maxCrossSection * 0.1, vehicleCrossSection[index].area * 0.25);
+
+            double tmp1, tmp2;
+            tmp1 = Math.Sqrt(index);
+            for (int i = front; i <= index; i++)
+            {
+                double tmp;
+                //tmp2 = Math.Sqrt(tmp);
+                tmp2 = indexSqrt[index - i];
+                tmp = tmp1 - tmp2;
+                tmp1 = tmp2;
+
+                tmp *= MathClampAbs(vehicleCrossSection[i].secondAreaDeriv, cutoff);
+                cP += tmp;
+            }
+
+            cP *= -0.5 * Math.Sqrt(0.5 * sectionThickness / (beta * Math.Sqrt(Math.PI * vehicleCrossSection[index].area)));
+
+            cP = AdjustVelForFinitePressure(cP);
+            cP *= -2;
+
+            return cP;
+        }
+
+        private double CalculateCpLinearBackward(VoxelCrossSection[] vehicleCrossSection, int index, int back, double beta, double sectionThickness, double maxCrossSection)
+        {
+            double cP = 0;
+
+            double cutoff = Math.Min(maxCrossSection * 0.1, vehicleCrossSection[index].area * 0.25);
+
+            double tmp1, tmp2;
+            tmp1 = Math.Sqrt(index);
+            for (int i = back; i >= index; i--)
+            {
+                double tmp;
+                //tmp2 = Math.Sqrt(tmp);
+                tmp2 = indexSqrt[i - index];
+                tmp = tmp1 - tmp2;
+                tmp1 = tmp2;
+
+                tmp *= MathClampAbs(vehicleCrossSection[i].secondAreaDeriv, cutoff);
+                cP += tmp;
+            }
+
+            cP *= -0.5 * Math.Sqrt(0.5 * sectionThickness / (beta * Math.Sqrt(Math.PI * vehicleCrossSection[index].area)));
+
+            cP = AdjustVelForFinitePressure(cP);
+            cP *= -2;
+
+            return cP;
+        }
+
+        private double AdjustVelForFinitePressure(double vel)
+        {
+            if (vel > 0)
+                return vel;
+
+            double newVel = 1.0 - vel;
+            newVel *= newVel;
+            newVel = 2.0 * newVel / (1.0 + newVel);
+
+            newVel = 1.0 - newVel;
+
+            return newVel;
         }
 
         private double CalculateHypersonicDrag(double lowArea, double highArea, double sectionThickness)
