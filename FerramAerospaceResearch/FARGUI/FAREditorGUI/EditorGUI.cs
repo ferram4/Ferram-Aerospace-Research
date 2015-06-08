@@ -406,6 +406,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         {
             double[] areas = _vehicleAero.GetCrossSectionAreas();
             double[] secondDerivAreas = _vehicleAero.GetCrossSection2ndAreaDerivs();
+            double[] pressureCoeff = _vehicleAero.GetPressureCoeffs();
 
             double sectionThickness = _vehicleAero.SectionThickness;
             double offset = _vehicleAero.FirstSectionXOffset();
@@ -423,7 +424,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 xAxis[i] = (xAxis.Length - i - 1) * sectionThickness + offset;
             }
 
-            _areaRulingOverlay.UpdateAeroData(_vehicleAero.VoxelAxisToLocalCoordMatrix(), xAxis, areas, secondDerivAreas, maxValue);
+            _areaRulingOverlay.UpdateAeroData(_vehicleAero.VoxelAxisToLocalCoordMatrix(), xAxis, areas, secondDerivAreas, pressureCoeff, maxValue);
         }
         #endregion
 

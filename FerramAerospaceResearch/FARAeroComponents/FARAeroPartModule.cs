@@ -300,6 +300,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     partTransform = part.partTransform;
                 else
                     return;
+            if (part == null)
+                return;
 
             Matrix4x4 matrix = partTransform.worldToLocalMatrix;
             Rigidbody rb = part.Rigidbody;

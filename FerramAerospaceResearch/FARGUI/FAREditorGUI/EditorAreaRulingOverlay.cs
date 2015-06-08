@@ -55,6 +55,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         //List<VectorLine> _markingLines;
         LineRenderer _areaRenderer;
         LineRenderer _derivRenderer;
+        LineRenderer _coeffRenderer;
         List<LineRenderer> _markingRenderers;
 
         Color _axisColor;
@@ -103,6 +104,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             _areaRenderer = CreateNewRenderer(_crossSectionColor, 0.1f, _rendererMaterial);
             _derivRenderer = CreateNewRenderer(_derivColor, 0.1f, _rendererMaterial);
+            _coeffRenderer = CreateNewRenderer(Color.cyan, 0.1f, _rendererMaterial);
 
             _markingRenderers = new List<LineRenderer>();
             _markingRenderers.Add(CreateNewRenderer(_axisColor, 0.1f, _rendererMaterial));
@@ -110,11 +112,13 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         private void Cleanup()
         {
-          if (_areaRenderer)
+            if (_areaRenderer)
                 GameObject.Destroy(_areaRenderer.gameObject);
             if (_derivRenderer)
                 GameObject.Destroy(_derivRenderer.gameObject);
-            if(_markingRenderers != null)
+            if (_coeffRenderer)
+                GameObject.Destroy(_coeffRenderer.gameObject);
+            if (_markingRenderers != null)
                 for (int i = 0; i < _markingRenderers.Count; i++)
                 {
                     if (_markingRenderers[i])
@@ -156,6 +160,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             _areaRenderer.enabled = !_areaRenderer.enabled;
             _derivRenderer.enabled = !_derivRenderer.enabled;
+            _coeffRenderer.enabled = !_coeffRenderer.enabled;
 
             for (int i = 0; i < _markingRenderers.Count; i++)
             {
@@ -175,6 +180,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             _areaRenderer.enabled = visible;
             _derivRenderer.enabled = visible;
+            _coeffRenderer.enabled = visible;
+
             for (int i = 0; i < _markingRenderers.Count; i++)
             {
                 _markingRenderers[i].enabled = visible;
@@ -196,7 +203,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 Vector.DrawLine3D(_markingLines[i], lineTransform);
         }*/
 
-        public void UpdateAeroData(Matrix4x4 voxelLocalToWorldMatrix, double[] xCoords, double[] yCoordsCrossSection, double[] yCoordsDeriv, double maxValue)
+        public void UpdateAeroData(Matrix4x4 voxelLocalToWorldMatrix, double[] xCoords, double[] yCoordsCrossSection, double[] yCoordsDeriv, double[] yCoordsPressureCoeffs, double maxValue)
         {
             _numGridLines = (int)Math.Ceiling(maxValue / _yAxisGridScale);       //add one to account for the xAxis
             double gridScale = _yScaleMaxDistance / (double)_numGridLines;
@@ -235,6 +242,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             UpdateRenderer(_areaRenderer, voxelLocalToWorldMatrix, xCoords, yCoordsCrossSection, scalingFactor);
             UpdateRenderer(_derivRenderer, voxelLocalToWorldMatrix, xCoords, yCoordsDeriv, scalingFactor);
+            UpdateRenderer(_coeffRenderer, voxelLocalToWorldMatrix, xCoords, yCoordsPressureCoeffs, 10);
 
             while (_markingRenderers.Count <= _numGridLines)
             {
