@@ -593,8 +593,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
 
             CalculateCrossSectionSecondDerivs(vehicleCrossSection, numVals, frontIndex, backIndex, sectionThickness);
-            /*//2nd derivs must be recalculated now using the adjusted areas
-            double denom = sectionThickness;
+            //2nd derivs must be recalculated now using the adjusted areas
+            /*double denom = sectionThickness;
             denom *= denom;
             denom = 0.0625 / denom;
 
@@ -702,30 +702,36 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             M = oneSidedFilterLength;
             N = M * 2 + 1;
-            int[] sK = new int[M];
-            double[] areas = new double[N];
+            int* sK = stackalloc int[M + 1];
+            //double* areas = stackalloc double[N + 2];
 
-            for (int i = 0; i < sK.Length; i++)
+            for (int i = 0; i <= M; i++)
                 sK[i] = CalculateSk(i, M, N);
 
             double denom = Math.Pow(2, N - 3);
-            denom *= SectionThickness * sectionThickness;
+            denom *= sectionThickness * sectionThickness;
             denom = 1 / denom;
 
             for(int i = frontIndex; i <= backIndex; i++)
             {
-                for (int k = 0; k < areas.Length; k++)
-                {
-                    if (k + i - M >= frontIndex && k + i - M <= backIndex)
-                        areas[k] = vehicleCrossSection[i + k - M].area;
-                    else
-                        areas[k] = 0;
-                }
-                double secondDeriv = sK[0] * areas[M];
 
-                for (int k = 1; k < sK.Length; k++)
+                double secondDeriv = sK[0] * vehicleCrossSection[i].area;
+
+                for (int k = 1; k <= M; k++)
                 {
-                    secondDeriv += sK[k] * (areas[M + k] + areas[M - k]);
+                    double forwardArea, backwardArea;
+
+                    if (i + k <= backIndex)
+                        forwardArea = vehicleCrossSection[i + k].area;
+                    else
+                        forwardArea = vehicleCrossSection[backIndex].area;
+
+                    if (i - k >= frontIndex)
+                        backwardArea = vehicleCrossSection[i - k].area;
+                    else
+                        backwardArea = vehicleCrossSection[frontIndex].area;
+
+                    secondDeriv += sK[k] * (forwardArea + backwardArea);
                 }
 
                 vehicleCrossSection[i].secondAreaDeriv = secondDeriv * denom;
@@ -1126,7 +1132,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     xForcePressureAoA180.Add((float)criticalMachNumber, (sonicBaseDrag * 0.25f - hypersonicDragBackward * 0.4f) * lowFinenessRatioSubsonicFactor, 0f, 0f);
 
                     sonicAoA0Drag = -(float)(cPSonicForward * (curArea - prevArea)) + hypersonicDragForward * 0.2f;
-                    sonicAoA180Drag = -(float)(cPSonicBackward * (curArea - nextArea)) + sonicBaseDrag - hypersonicDragBackward * 0.2f;
+                    sonicAoA180Drag = (float)(cPSonicBackward * (curArea - nextArea)) + sonicBaseDrag - hypersonicDragBackward * 0.2f;
 
                     //sonicAoA0Drag = sonicWaveDrag + hypersonicDragForward * 0.2f;
                     //sonicAoA180Drag = -sonicWaveDrag + sonicBaseDrag -hypersonicDragBackward * 0.2f;
@@ -1137,7 +1143,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     xForcePressureAoA180.Add((float)criticalMachNumber, (-hypersonicDragBackward * 0.4f) * lowFinenessRatioSubsonicFactor, 0f, 0f);
 
                     sonicAoA0Drag = -(float)(cPSonicForward * (curArea - prevArea)) - sonicBaseDrag + hypersonicDragForward * 0.2f;
-                    sonicAoA180Drag = -(float)(cPSonicBackward * (curArea - nextArea)) - hypersonicDragBackward * 0.2f;
+                    sonicAoA180Drag = (float)(cPSonicBackward * (curArea - nextArea)) - hypersonicDragBackward * 0.2f;
 
                     //sonicAoA0Drag = sonicWaveDrag - sonicBaseDrag + hypersonicDragForward * 0.2f;
                     //sonicAoA180Drag = -sonicWaveDrag - hypersonicDragBackward * 0.2f;
@@ -1149,7 +1155,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     xForcePressureAoA180.Add((float)criticalMachNumber, (-hypersonicDragBackward * 0.4f) * lowFinenessRatioSubsonicFactor, 0f, 0f);
 
                     sonicAoA0Drag = -(float)(cPSonicForward * (curArea - prevArea)) + hypersonicDragForward * 0.2f;
-                    sonicAoA180Drag = -(float)(cPSonicBackward * (curArea - nextArea)) - hypersonicDragBackward * 0.2f;
+                    sonicAoA180Drag = (float)(cPSonicBackward * (curArea - nextArea)) - hypersonicDragBackward * 0.2f;
 
                     //sonicAoA0Drag = sonicWaveDrag + hypersonicDragForward * 0.2f;
                     //sonicAoA180Drag = -sonicWaveDrag - hypersonicDragBackward * 0.2f;
@@ -1303,11 +1309,40 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (vehicleCrossSection.Length > indexSqrt.Length)
                     indexSqrt = GenerateIndexSqrtLookup(vehicleCrossSection.Length);
 
-            for (int i = front + 1; i < back; i++)
-                vehicleCrossSection[i].cpSonicForward = CalculateCpLinearForward(vehicleCrossSection, i, front, Math.Sqrt(1.2 * 1.2 - 1), sectionThickness, maxCrossSection);
+            double machTest = 1.2;
+            double beta = Math.Sqrt(machTest * machTest - 1);
 
-            for (int i = back - 1; i > front; i--)
-                vehicleCrossSection[i].cpSonicBackward = CalculateCpLinearBackward(vehicleCrossSection, i, back, Math.Sqrt(1.2 * 1.2 - 1), sectionThickness, maxCrossSection);
+            double noseAreaSlope = (vehicleCrossSection[front].area) / sectionThickness;
+
+            for (int i = front; i <= back; i++)
+            {
+                double cP = CalculateCpLinearForward(vehicleCrossSection, i, front, beta, sectionThickness, maxCrossSection);
+                //cP += CalculateCpNoseDiscont(i - front, noseAreaSlope, sectionThickness);
+
+                cP *= -0.5;
+                cP = AdjustVelForFinitePressure(cP);
+                cP *= -2;
+                if (cP < 0)
+                    cP = AdjustCpForNonlinearEffects(cP, beta, machTest);
+
+                vehicleCrossSection[i].cpSonicForward = cP;
+            }
+
+            noseAreaSlope = (vehicleCrossSection[back].area) / sectionThickness;
+
+            for (int i = back; i >= front; i--)
+            {
+                double cP = CalculateCpLinearBackward(vehicleCrossSection, i, back, beta, sectionThickness, maxCrossSection);
+                //cP += CalculateCpNoseDiscont(back - i, noseAreaSlope, sectionThickness);
+
+                cP *= -0.5;
+                cP = AdjustVelForFinitePressure(cP);
+                cP *= -2;
+                if (cP < 0)
+                    cP = AdjustCpForNonlinearEffects(cP, beta, machTest);
+
+                vehicleCrossSection[i].cpSonicBackward = cP;
+            }
         }
 
         //Taken from Appendix A of NASA TR R-213
@@ -1319,7 +1354,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             double tmp1, tmp2;
             tmp1 = Math.Sqrt(index);
-            for (int i = front; i <= index; i++)
+            for (int i = front - 1; i <= index; i++)
             {
                 double tmp;
                 //tmp2 = Math.Sqrt(tmp);
@@ -1327,17 +1362,15 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 tmp = tmp1 - tmp2;
                 tmp1 = tmp2;
 
-                tmp *= MathClampAbs(vehicleCrossSection[i].secondAreaDeriv, cutoff);
+                if (i >= 0)
+                    tmp *= MathClampAbs(vehicleCrossSection[i].secondAreaDeriv, cutoff);
+                else
+                    tmp *= 0;
+
                 cP += tmp;
             }
 
-            cP *= -0.5 * Math.Sqrt(0.5 * sectionThickness / (beta * Math.Sqrt(Math.PI * vehicleCrossSection[index].area)));
-
-            cP = AdjustVelForFinitePressure(cP);
-            cP *= -2;
-
-            if (cP < 0)
-                cP = AdjustCpForNonlinearEffects(cP, beta, 1.2);
+            cP *= Math.Sqrt(0.5 * sectionThickness / (beta * Math.Sqrt(Math.PI * vehicleCrossSection[index].area)));
             
             return cP;
         }
@@ -1358,19 +1391,25 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 tmp = tmp1 - tmp2;
                 tmp1 = tmp2;
 
-                tmp *= MathClampAbs(vehicleCrossSection[i].secondAreaDeriv, cutoff);
+                if (i < vehicleCrossSection.Length)
+                    tmp *= MathClampAbs(vehicleCrossSection[i].secondAreaDeriv, cutoff);
+                else
+                    tmp *= 0; 
+                
                 cP += tmp;
             }
 
-            cP *= -0.5 * Math.Sqrt(0.5 * sectionThickness / (beta * Math.Sqrt(Math.PI * vehicleCrossSection[index].area)));
-
-            cP = AdjustVelForFinitePressure(cP);
-            cP *= -2;
-
-            if(cP < 0)
-                cP = AdjustCpForNonlinearEffects(cP, beta, 1.2);
+            cP *= Math.Sqrt(0.5 * sectionThickness / (beta * Math.Sqrt(Math.PI * vehicleCrossSection[index].area)));
 
             return cP;
+        }
+
+        private double CalculateCpNoseDiscont(int index, double noseAreaSlope, double sectionThickness)
+        {
+            double cP_noseDiscont = index * sectionThickness * Math.PI;
+            cP_noseDiscont = (noseAreaSlope) / cP_noseDiscont;
+
+            return cP_noseDiscont;
         }
 
         private double AdjustVelForFinitePressure(double vel)
