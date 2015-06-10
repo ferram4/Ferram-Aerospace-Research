@@ -489,7 +489,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             {
                 CrossSectionAnalysisGUI();
                 DebugVisualizationGUI();
-                guiRect.height = useKSPSkin ? 300 : 200;
+                guiRect.height = useKSPSkin ? 310 : 210;
             }
 
             GUI.DragWindow();
@@ -505,25 +505,33 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         {
             GUILayout.BeginHorizontal();
             GUILayout.Label("Transonic Area Ruling Analysis", GUILayout.Width(350));
-            if (GUILayout.Button("Toggle Cross-Section Area Curves", GUILayout.Width(350)))
-                _areaRulingOverlay.ToggleVisibility();
             GUILayout.EndHorizontal();
 
             GUIStyle BackgroundStyle = new GUIStyle(GUI.skin.box);
             BackgroundStyle.hover = BackgroundStyle.active = BackgroundStyle.normal;
 
             GUILayout.BeginHorizontal();
-            GUILayout.BeginVertical(BackgroundStyle, GUILayout.Width(350));
+            GUILayout.BeginVertical(BackgroundStyle, GUILayout.Width(350), GUILayout.ExpandHeight(true));
             GUILayout.Label("Max Cross-Section Area: " + _vehicleAero.MaxCrossSectionArea.ToString("G6") + " m²");
             GUILayout.Label("Mach 1 Wave Drag-Area: " + _vehicleAero.SonicDragArea.ToString("G6") + " m²");
             GUILayout.Label("Critical Mach Number: " + _vehicleAero.CriticalMach.ToString("G6"));
-            GUILayout.Label("\n\r\n\r");
             GUILayout.EndVertical();
 
-            GUILayout.BeginVertical(BackgroundStyle);
-            GUILayout.Label("Minimal wave drag is achieved by maintaining a\n\rsmooth, minimal curvature cross-section curve.\n\r");
-            GUILayout.Label("Green: cross-sectional area.");
-            GUILayout.Label("Yellow: curvature cross-sectional area curve.");
+            GUILayout.BeginVertical(BackgroundStyle, GUILayout.ExpandHeight(true));
+            GUILayout.Label("Minimal wave drag is achieved by maintaining a\n\rsmooth, minimal curvature cross-section curve.");
+            bool areaVisible  = _areaRulingOverlay.IsVisible(EditorAreaRulingOverlay.OverlayType.AREA);
+            bool derivVisible = _areaRulingOverlay.IsVisible(EditorAreaRulingOverlay.OverlayType.DERIV);
+            bool coeffVisible = _areaRulingOverlay.IsVisible(EditorAreaRulingOverlay.OverlayType.COEFF);
+
+            if (GUILayout.Toggle(areaVisible, "Show cross-sectional area curve (green)") != areaVisible)
+                _areaRulingOverlay.SetVisibility(EditorAreaRulingOverlay.OverlayType.AREA, !areaVisible);
+
+            if (GUILayout.Toggle(derivVisible, "Show curvature cross-sectional area curve (yellow)") != derivVisible)
+                _areaRulingOverlay.SetVisibility(EditorAreaRulingOverlay.OverlayType.DERIV, !derivVisible);
+
+            if (GUILayout.Toggle(coeffVisible, "Show pressure coefficient curve (blue)") != coeffVisible) // FIXME: reword?
+                _areaRulingOverlay.SetVisibility(EditorAreaRulingOverlay.OverlayType.COEFF, !coeffVisible);
+
             GUILayout.Label("Minimize curvature to minimize wave drag");
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();

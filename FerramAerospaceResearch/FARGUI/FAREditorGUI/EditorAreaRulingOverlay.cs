@@ -58,6 +58,13 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         LineRenderer _coeffRenderer;
         List<LineRenderer> _markingRenderers;
 
+        public enum OverlayType
+        {
+            AREA,
+            DERIV,
+            COEFF
+        }
+
         Color _axisColor;
         Color _crossSectionColor;
         Color _derivColor;
@@ -67,8 +74,6 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         static Material _rendererMaterial;
 
-        bool display = false;
-        
         public EditorAreaRulingOverlay(Color axisColor, Color crossSectionColor, Color derivColor, double yScaleMaxDistance, double yAxisGridScale)
         {
             _axisColor = axisColor;
@@ -132,13 +137,12 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         {
             Cleanup();
             Initialize();
-            SetVisibility(display);
         }
 
         LineRenderer CreateNewRenderer(Color color, float width, Material material)
         {
             GameObject o = new GameObject();
-            
+
             LineRenderer renderer = o.gameObject.AddComponent<LineRenderer>();
 
             renderer.useWorldSpace = false;
@@ -151,40 +155,48 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             return renderer;
         }
 
-        public void ToggleVisibility()
+        public bool IsVisible(OverlayType type)
         {
-            display = !display;
-            
-            if (!_areaRenderer)
-                RestartOverlay();
-
-            _areaRenderer.enabled = !_areaRenderer.enabled;
-            _derivRenderer.enabled = !_derivRenderer.enabled;
-            _coeffRenderer.enabled = !_coeffRenderer.enabled;
-
-            for (int i = 0; i < _markingRenderers.Count; i++)
+            switch (type)
             {
-                LineRenderer marking = _markingRenderers[i];
-                marking.enabled = !marking.enabled;
-                if (i > _numGridLines)
-                    _markingRenderers[i].enabled = false;
+                case OverlayType.AREA:
+                    return (_areaRenderer != null) ? _areaRenderer.enabled : false;
+                case OverlayType.DERIV:
+                    return (_derivRenderer != null) ? _derivRenderer.enabled : false;
+                case OverlayType.COEFF:
+                    return (_coeffRenderer != null) ? _coeffRenderer.enabled : false;
+                default:
+                    return false;
             }
         }
 
-        public void SetVisibility(bool visible)
+        public bool AnyVisible()
         {
-            display = visible;
-            
+            return _areaRenderer && (_areaRenderer.enabled || _derivRenderer.enabled || _coeffRenderer.enabled);
+        }
+
+        public void SetVisibility(OverlayType type, bool visible)
+        {
             if (!_areaRenderer)
                 RestartOverlay();
 
-            _areaRenderer.enabled = visible;
-            _derivRenderer.enabled = visible;
-            _coeffRenderer.enabled = visible;
+            switch (type)
+            {
+                case OverlayType.AREA:
+                    _areaRenderer.enabled = visible;
+                    break;
+                case OverlayType.DERIV:
+                    _derivRenderer.enabled = visible;
+                    break;
+                case OverlayType.COEFF:
+                     _coeffRenderer.enabled = visible;
+                    break;
+            }
 
+            bool anyVisible = AnyVisible();
             for (int i = 0; i < _markingRenderers.Count; i++)
             {
-                _markingRenderers[i].enabled = visible;
+                _markingRenderers[i].enabled = anyVisible;
                 if (i > _numGridLines)
                     _markingRenderers[i].enabled = false;
             }
