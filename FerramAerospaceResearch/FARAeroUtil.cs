@@ -153,8 +153,7 @@ namespace FerramAerospaceResearch
                 FARAeroUtil.bodyAtmosphereConfiguration = new Dictionary<int, double[]>();
                 foreach (ConfigNode bodyProperties in node.GetNodes("BodyAtmosphericData"))
                 {
-                    if (bodyProperties == null || !bodyProperties.HasValue("index") || !bodyProperties.HasValue("specHeatRatio")
-                        || !bodyProperties.HasValue("gasMolecularWeight") || !bodyProperties.HasValue("viscosityAtReferenceTemp")
+                    if (bodyProperties == null || !bodyProperties.HasValue("index") || !bodyProperties.HasValue("viscosityAtReferenceTemp")
                         || !bodyProperties.HasValue("referenceTemp"))
                         continue;
 

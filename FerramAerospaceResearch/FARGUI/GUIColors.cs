@@ -96,7 +96,7 @@ namespace FerramAerospaceResearch.FARGUI
         public void LoadColors()
         {
             colors = new List<Color>();
-
+            Debug.Log("Loading FAR GUI Colors");
             foreach (ConfigNode node in GameDatabase.Instance.GetConfigNodes("FARGUIColors"))
             {
                 if (node.HasValue("ClColor"))

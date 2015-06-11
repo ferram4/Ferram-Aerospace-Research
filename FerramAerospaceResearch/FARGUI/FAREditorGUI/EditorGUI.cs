@@ -529,7 +529,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             if (GUILayout.Toggle(derivVisible, "Show curvature cross-sectional area curve (yellow)") != derivVisible)
                 _areaRulingOverlay.SetVisibility(EditorAreaRulingOverlay.OverlayType.DERIV, !derivVisible);
 
-            if (GUILayout.Toggle(coeffVisible, "Show pressure coefficient curve (blue)") != coeffVisible) // FIXME: reword?
+            if (GUILayout.Toggle(coeffVisible, "Show avg pressure coefficient curve (blue)") != coeffVisible)
                 _areaRulingOverlay.SetVisibility(EditorAreaRulingOverlay.OverlayType.COEFF, !coeffVisible);
 
             GUILayout.Label("Minimize curvature to minimize wave drag");
