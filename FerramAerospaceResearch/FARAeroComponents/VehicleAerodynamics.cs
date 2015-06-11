@@ -1128,8 +1128,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 if (sonicBaseDrag > 0)      //occurs with increase in area; force applied at 180 AoA
                 {
-                    xForcePressureAoA0.Add((float)criticalMachNumber, (hypersonicDragForward * 0.4f) * lowFinenessRatioSubsonicFactor, 0f, 0f);    //hypersonic drag used as a proxy for effects due to flow separation
-                    xForcePressureAoA180.Add((float)criticalMachNumber, (sonicBaseDrag * 0.25f - hypersonicDragBackward * 0.4f) * lowFinenessRatioSubsonicFactor, 0f, 0f);
+                    xForcePressureAoA0.Add((float)criticalMachNumber, (hypersonicDragForward * 0.15f) * lowFinenessRatioSubsonicFactor, 0f, 0f);    //hypersonic drag used as a proxy for effects due to flow separation
+                    xForcePressureAoA180.Add((float)criticalMachNumber, (sonicBaseDrag * 0.25f - hypersonicDragBackward * 0.15f) * lowFinenessRatioSubsonicFactor, 0f, 0f);
 
                     sonicAoA0Drag = -(float)(cPSonicForward * (curArea - prevArea)) + hypersonicDragForward * 0.2f;
                     sonicAoA180Drag = (float)(cPSonicBackward * (curArea - nextArea)) + sonicBaseDrag - hypersonicDragBackward * 0.2f;
@@ -1139,8 +1139,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
                 else if (sonicBaseDrag < 0)
                 {
-                    xForcePressureAoA0.Add((float)criticalMachNumber, (-sonicBaseDrag * 0.25f + hypersonicDragForward * 0.4f) * lowFinenessRatioSubsonicFactor, 0f, 0f);
-                    xForcePressureAoA180.Add((float)criticalMachNumber, (-hypersonicDragBackward * 0.4f) * lowFinenessRatioSubsonicFactor, 0f, 0f);
+                    xForcePressureAoA0.Add((float)criticalMachNumber, (-sonicBaseDrag * 0.25f + hypersonicDragForward * 0.15f) * lowFinenessRatioSubsonicFactor, 0f, 0f);
+                    xForcePressureAoA180.Add((float)criticalMachNumber, (-hypersonicDragBackward * 0.15f) * lowFinenessRatioSubsonicFactor, 0f, 0f);
 
                     sonicAoA0Drag = -(float)(cPSonicForward * (curArea - prevArea)) - sonicBaseDrag + hypersonicDragForward * 0.2f;
                     sonicAoA180Drag = (float)(cPSonicBackward * (curArea - nextArea)) - hypersonicDragBackward * 0.2f;
@@ -1151,8 +1151,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
                 else
                 {
-                    xForcePressureAoA0.Add((float)criticalMachNumber, (hypersonicDragForward * 0.4f) * lowFinenessRatioSubsonicFactor, 0f, 0f);
-                    xForcePressureAoA180.Add((float)criticalMachNumber, (-hypersonicDragBackward * 0.4f) * lowFinenessRatioSubsonicFactor, 0f, 0f);
+                    xForcePressureAoA0.Add((float)criticalMachNumber, (hypersonicDragForward * 0.15f) * lowFinenessRatioSubsonicFactor, 0f, 0f);
+                    xForcePressureAoA180.Add((float)criticalMachNumber, (-hypersonicDragBackward * 0.15f) * lowFinenessRatioSubsonicFactor, 0f, 0f);
 
                     sonicAoA0Drag = -(float)(cPSonicForward * (curArea - prevArea)) + hypersonicDragForward * 0.2f;
                     sonicAoA180Drag = (float)(cPSonicBackward * (curArea - nextArea)) - hypersonicDragBackward * 0.2f;
