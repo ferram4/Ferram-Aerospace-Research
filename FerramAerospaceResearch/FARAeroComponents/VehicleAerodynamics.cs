@@ -127,6 +127,15 @@ namespace FerramAerospaceResearch.FARAeroComponents
         bool visualizing = false;
         bool voxelizing = false;
 
+        ~VehicleAerodynamics()
+        {
+            if (_voxel != null)
+            {
+                _voxel.CleanupVoxel();
+                _voxel = null;
+            }
+        }
+
         private double[] GenerateIndexSqrtLookup(int numStations)
         {
             double[] indexSqrt = new double[numStations];
