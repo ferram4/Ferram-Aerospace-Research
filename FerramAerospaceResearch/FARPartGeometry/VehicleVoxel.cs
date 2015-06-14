@@ -115,6 +115,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                 if (MAX_CHUNKS_IN_QUEUE != chunksForQueue)
                 {
+                    clearedChunks.Clear();
                     MAX_CHUNKS_IN_QUEUE = chunksForQueue;
                     MAX_CHUNKS_ALLOWED = (int)Math.Ceiling(1.5 * MAX_CHUNKS_IN_QUEUE);
 
