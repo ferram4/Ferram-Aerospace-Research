@@ -661,7 +661,7 @@ namespace ferram4
                 effectiveUpstreamb_2 += wingModule.Getb_2() * wingInfluenceFactor;
                 effectiveUpstreamArea += wingModule.S * wingInfluenceFactor;
 
-                effectiveUpstreamLiftSlope += wingModule.GetLiftSlope() * wingInfluenceFactor;
+                effectiveUpstreamLiftSlope += wingModule.GetRawLiftSlope() * wingInfluenceFactor;
                 effectiveUpstreamStall += wingModule.GetStall() * wingInfluenceFactor;
                 effectiveUpstreamCosSweepAngle += wingModule.GetCosSweepAngle() * wingInfluenceFactor;
                 effectiveUpstreamAoAMax += wingModule.rawAoAmax * wingInfluenceFactor;

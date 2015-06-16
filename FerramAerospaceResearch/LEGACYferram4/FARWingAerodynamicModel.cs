@@ -119,6 +119,7 @@ namespace ferram4
         [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = false, guiFormat = "F3", guiUnits = "kN")]
         public float liftForceWing;
 
+        private double rawLiftSlope = 0;
         private double liftslope = 0;
         protected double zeroLiftCdIncrement = 0;
 
@@ -259,9 +260,9 @@ namespace ferram4
             return liftDirection;
         }
 
-        public double GetLiftSlope()
+        public double GetRawLiftSlope()
         {
-            return liftslope;
+            return rawLiftSlope;
         }
 
         public double GetCosSweepAngle()
@@ -747,7 +748,7 @@ namespace ferram4
             rawAoAmax = CalculateAoAmax(MachNumber);
             double effectiveUpstreamInfluence = 0;
 
-
+            liftslope = rawLiftSlope;
             wingInteraction.UpdateOrientationForInteraction(ParallelInPlaneLocal);
             wingInteraction.CalculateEffectsOfUpstreamWing(AoA, MachNumber, ParallelInPlaneLocal, ref ACweight, ref ACshift, ref ClIncrementFromRear);
             effectiveUpstreamInfluence = wingInteraction.EffectiveUpstreamInfluence;
@@ -812,7 +813,7 @@ namespace ferram4
 
             minStall = 0;
 
-            liftslope = CalculateSubsonicLiftSlope(MachNumber);// / AoA;     //Prandtl lifting Line
+            rawLiftSlope = CalculateSubsonicLiftSlope(MachNumber);// / AoA;     //Prandtl lifting Line
 
 
             double ACshift = 0, ACweight = 0;
