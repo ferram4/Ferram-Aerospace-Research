@@ -642,6 +642,7 @@ namespace ferram4
 
         private void UpdateUpstreamValuesFromWingModules(List<FARWingAerodynamicModel> wingModules, List<double> associatedInfluences, double directionalInfluence, double thisWingAoA)
         {
+            directionalInfluence = Math.Abs(directionalInfluence);
             for (int i = 0; i < wingModules.Count; i++)
             {
                 FARWingAerodynamicModel wingModule = wingModules[i];
@@ -663,7 +664,7 @@ namespace ferram4
                 effectiveUpstreamLiftSlope += wingModule.GetLiftSlope() * wingInfluenceFactor;
                 effectiveUpstreamStall += wingModule.GetStall() * wingInfluenceFactor;
                 effectiveUpstreamCosSweepAngle += wingModule.GetCosSweepAngle() * wingInfluenceFactor;
-                effectiveUpstreamAoAMax += wingModule.AoAmax * wingInfluenceFactor;
+                effectiveUpstreamAoAMax += wingModule.rawAoAmax * wingInfluenceFactor;
                 effectiveUpstreamCd0 += wingModule.GetCd0() * wingInfluenceFactor;
                 effectiveUpstreamInfluence += wingInfluenceFactor;
 

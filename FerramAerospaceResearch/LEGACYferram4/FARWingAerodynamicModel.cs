@@ -58,7 +58,8 @@ namespace ferram4
 {
     public class FARWingAerodynamicModel : FARBaseAerodynamics, TweakScale.IRescalable<FARWingAerodynamicModel>, ILiftProvider
     {
-        public double AoAmax = 15;
+        public double rawAoAmax = 15;
+        private double AoAmax = 15;
 
         [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
         public float curWingMass = 1;
@@ -743,7 +744,7 @@ namespace ferram4
             ACweight = 0;
             ClIncrementFromRear = 0;
 
-            AoAmax = 0;
+            rawAoAmax = CalculateAoAmax(MachNumber);
             double effectiveUpstreamInfluence = 0;
 
 
@@ -762,7 +763,7 @@ namespace ferram4
                 cosSweepAngle *= (1 - effectiveUpstreamInfluence);
                 cosSweepAngle += wingInteraction.EffectiveUpstreamCosSweepAngle;
             }
-            AoAmax += CalculateAoAmax(MachNumber);
+            AoAmax += rawAoAmax;
         }
 
         #endregion
