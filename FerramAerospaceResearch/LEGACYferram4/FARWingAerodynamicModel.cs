@@ -757,12 +757,17 @@ namespace ferram4
             {
                 effectiveUpstreamInfluence = wingInteraction.EffectiveUpstreamInfluence;
 
-                AoAmax = wingInteraction.EffectiveUpstreamAoAMax;
+                AoAmax = wingInteraction.EffectiveUpstreamAoAMax * effectiveUpstreamInfluence;
                 liftslope *= (1 - effectiveUpstreamInfluence);
                 liftslope += wingInteraction.EffectiveUpstreamLiftSlope;
 
                 cosSweepAngle *= (1 - effectiveUpstreamInfluence);
                 cosSweepAngle += wingInteraction.EffectiveUpstreamCosSweepAngle;
+            }
+            else
+            {
+                liftslope = rawLiftSlope;
+                AoAmax = 0;
             }
             AoAmax += rawAoAmax;
         }
@@ -1088,12 +1093,12 @@ namespace ferram4
         {
             double StallAngle;
             if (MachNumber < 0.8)
-                StallAngle = criticalCl / liftslope;
+                StallAngle = criticalCl / rawLiftSlope;
             else if (MachNumber > 1.4)
                 StallAngle = 1.0471975511965977461542144610932;     //60 degrees in radians
             else
             {
-                double tmp = criticalCl / liftslope;
+                double tmp = criticalCl / rawLiftSlope;
                 StallAngle = (MachNumber - 0.8) * (1.0471975511965977461542144610932 - tmp) * 1.6666666666666666666666666666667 + tmp;
             }
 
