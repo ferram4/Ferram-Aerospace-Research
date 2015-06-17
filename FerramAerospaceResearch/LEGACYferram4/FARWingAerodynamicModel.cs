@@ -191,7 +191,7 @@ namespace ferram4
                 sum += model.NUFAR_areaExposedFactor;
                 totalExposedSum += model.NUFAR_totalExposedAreaFactor;
             }
-            double tmp = 1 / (counterpartsCount + 1);
+            double tmp = 1 / (counterpartsCount);
             sum *= tmp;
             totalExposedSum *= tmp;
 
@@ -209,11 +209,14 @@ namespace ferram4
                 model.NUFAR_totalExposedAreaFactor = totalExposedSum;
             }
 
+        }
+
+        public void NUFAR_UpdateShieldingStateFromAreaFactor()
+        {
             if (NUFAR_areaExposedFactor < 0.1 * S)
                 isShielded = true;
             else
             {
-                //NUFAR_areaExposedFactor = 1;
                 isShielded = false;
             }
         }

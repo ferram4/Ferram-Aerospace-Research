@@ -219,6 +219,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 ferram4.FARWingAerodynamicModel w = _legacyWingModels[i];
                 w.NUFAR_SetExposedAreaFactor();
             }
+            for (int i = 0; i < _legacyWingModels.Count; i++)
+            {
+                ferram4.FARWingAerodynamicModel w = _legacyWingModels[i];
+                w.NUFAR_UpdateShieldingStateFromAreaFactor();
+            } 
             return _legacyWingModels;
         }
         #endregion
