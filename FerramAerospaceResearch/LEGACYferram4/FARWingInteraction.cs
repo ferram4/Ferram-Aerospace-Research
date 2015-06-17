@@ -654,6 +654,8 @@ namespace ferram4
                     i--;
                     continue;
                 }
+                if (wingModule.isShielded)
+                    continue;
 
                 double tmp = Vector3.Dot(wingModule.transform.forward, parentWingModule.transform.forward);
 
