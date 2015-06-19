@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.2 "Ferri"
+Ferram Aerospace Research v0.15.3 "Froude"
 =========================
 Aerodynamics model for Kerbal Space Program
 
