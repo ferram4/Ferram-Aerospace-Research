@@ -1,20 +1,25 @@
 {
-  "NAME": "Ferram Aerospace Research",
-  "URL": "https://raw.githubusercontent.com/ferram4/Ferram-Aerospace-Research/master/GameData/FerramAerospaceResearch/FAR.version",
-  "VERSION": {
-    "MAJOR": 0,
-    "MINOR": 15,
-    "PATCH": 2,
-    "BUILD": 0
+  "NAME"     : "Ferram Aerospace Research",
+  "DOWNLOAD" : "https://github.com/ferram4/Ferram-Aerospace-Research/releases"
+  "URL"      : "https://raw.githubusercontent.com/ferram4/Ferram-Aerospace-Research/master/GameData/FerramAerospaceResearch/FAR.version",
+  "GITHUB" : {
+    "USERNAME"   : "ferram4",
+    "REPOSITORY" : "Ferram-Aerospace-Research"
   },
-  "KSP_VERSION_MIN: {
-    "MAJOR": 1,
-    "MINOR": 0,
-    "PATCH": 1
-  }
-  "KSP_VERSION": {
-    "MAJOR": 1,
-    "MINOR": 0,
-    "PATCH": 2
+  "VERSION" : {
+    "MAJOR" : 0,
+    "MINOR" : 15,
+    "PATCH" : 2,
+    "BUILD" : 0
+  },
+  "KSP_VERSION_MIN" : {
+    "MAJOR" : 1,
+    "MINOR" : 0,
+    "PATCH" : 1
+  },
+  "KSP_VERSION_MAX" : {
+    "MAJOR" : 1,
+    "MINOR" : 0,
+    "PATCH" : 2
   }
 }
