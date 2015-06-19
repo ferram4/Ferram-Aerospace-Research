@@ -67,6 +67,7 @@ CHANGELOG
 
 0.15.3V "Froude"------------------------------------  
 
+Update to MM 2.6.5 for greater nyan nyan  
 Allow display of pressure coefficient (under assumption of axisymmetric flow) over the vehicle  
 Tweak subsonic drag to be lower for slender shapes  
 
