@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.3 "Froude"
+Ferram Aerospace Research v0.15.3.1 "Garabedian"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -615,7 +615,7 @@ namespace ferram4
 
             double skinFrictionDrag;
             if(HighLogic.LoadedSceneIsFlight)
-                skinFrictionDrag = FARAeroUtil.SkinFrictionDrag(rho, effective_MAC, v_scalar, MachNumber, part.externalTemperature, vessel.mainBody.atmosphereAdiabaticIndex);
+                skinFrictionDrag = FARAeroUtil.SkinFrictionDrag(rho, effective_MAC, v_scalar, MachNumber, FlightGlobals.getExternalTemperature((float)vessel.altitude, vessel.mainBody), vessel.mainBody.atmosphereAdiabaticIndex);
             else
                 skinFrictionDrag = 0.005;
 

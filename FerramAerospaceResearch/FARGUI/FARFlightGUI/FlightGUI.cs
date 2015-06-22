@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.3 "Froude"
+Ferram Aerospace Research v0.15.3.1 "Garabedian"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -233,7 +233,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
             if (_vessel == FlightGlobals.ActiveVessel && showGUI && showAllGUI)
             {
-                mainGuiRect = GUILayout.Window(this.GetHashCode(), mainGuiRect, MainFlightGUIWindow, "FAR, v0.15.3 'Froude'", GUILayout.MinWidth(230));
+                mainGuiRect = GUILayout.Window(this.GetHashCode(), mainGuiRect, MainFlightGUIWindow, "FAR, v0.15.3.1 'Froude'", GUILayout.MinWidth(230));
                 GUIUtils.ClampToScreen(mainGuiRect);
 
                 if (showFlightDataWindow)

@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.15.3 "Froude"
+Ferram Aerospace Research v0.15.3.1 "Garabedian"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -64,6 +64,11 @@ Set all the other winglet/control surface values to zero
 
 CHANGELOG
 =======================================================
+
+0.15.3.1V "Garabedian"------------------------------------  
+
+Compatibility with KSP v1.0.3 and thermal changes  
+Fix one last error with voxelization breaking due to reverts
 
 0.15.3V "Froude"------------------------------------  
 
