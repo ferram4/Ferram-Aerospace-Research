@@ -184,6 +184,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                 chunksInUse += xLength * yLength * zLength;
             }
+            //ThreadSafeDebugLogger.Instance.RegisterMessage(chunksInUse + " voxel chunks in use.");
 
 
             xCellLength = xLength * 8;
