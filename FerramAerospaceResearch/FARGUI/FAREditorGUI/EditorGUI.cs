@@ -196,6 +196,10 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             _areaRulingOverlay = null;
             _editorGraph = null;
             _stabDeriv = null;
+
+            if(_vehicleAero != null)
+                _vehicleAero.ForceCleanup();
+            _vehicleAero = null;
         }
 
         #region EditorEvents
