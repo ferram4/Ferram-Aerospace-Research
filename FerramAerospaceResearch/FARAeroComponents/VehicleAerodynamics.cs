@@ -450,7 +450,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if ((object)intakeTrans != null)
                         candVector = intakeTrans.forward;
                 }
-                else if (p.Modules.Contains("FARWingAerodynamicModel") || p.Modules.Contains("FARControllableSurface"))      //aggregate wings for later calc...
+                else if (((FARPartGeometry.GeometryPartModule)p.Modules["GeometryPartModule"]).IgnoreForMainAxis || p.Modules.Contains("FARWingAerodynamicModel") || p.Modules.Contains("FARControllableSurface"))      //aggregate wings for later calc...
                 {
                     continue;
                 /*    Vector3 notCandVector =  _worldToLocalMatrix.MultiplyVector(p.partTransform.forward);

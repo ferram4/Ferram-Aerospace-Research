@@ -81,6 +81,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
         bool forceUseColliders;
         [SerializeField]
         bool forceUseMeshes;
+        [SerializeField]
+        bool ignoreForMainAxis;
+
+        public bool IgnoreForMainAxis
+        {
+            get { return ignoreForMainAxis; }
+        }
 
         void Start()
         {
@@ -620,6 +627,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (node.HasValue("forceUseMeshes"))
             {
                 bool.TryParse(node.GetValue("forceUseMeshes"), out forceUseMeshes);
+                _ready = false;
+            }
+            if(node.HasValue("ignoreForMainAxis"))
+            {
+                bool.TryParse(node.GetValue("ignoreForMainAxis"), out ignoreForMainAxis);
                 _ready = false;
             }
         }
