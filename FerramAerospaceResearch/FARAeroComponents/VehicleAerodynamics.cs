@@ -439,6 +439,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 if (p == null || hitParts.Contains(p))
                     continue;
+                GeometryPartModule geoModule = p.Modules["GeometryPartModule"] as GeometryPartModule; // Could be null if a launch clamp
 
                 hitParts.Add(p);
 
@@ -450,7 +451,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if ((object)intakeTrans != null)
                         candVector = intakeTrans.forward;
                 }
-                else if (((FARPartGeometry.GeometryPartModule)p.Modules["GeometryPartModule"]).IgnoreForMainAxis || p.Modules.Contains("FARWingAerodynamicModel") || p.Modules.Contains("FARControllableSurface"))      //aggregate wings for later calc...
+                else if (geoModule == null || geoModule.IgnoreForMainAxis || p.Modules.Contains("FARWingAerodynamicModel") || p.Modules.Contains("FARControllableSurface"))      //aggregate wings for later calc...
                 {
                     continue;
                 /*    Vector3 notCandVector =  _worldToLocalMatrix.MultiplyVector(p.partTransform.forward);
