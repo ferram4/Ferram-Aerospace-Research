@@ -629,23 +629,23 @@ namespace FerramAerospaceResearch
             return tempRatio;
         }
 
-        public static double CalculateReynoldsNumber(double density, double lengthScale, double vel, double machNumber, double temp, double gamma)
+        public static double CalculateReynoldsNumber(double density, double lengthScale, double vel, double machNumber, double externalTemp, double gamma)
         {
             if (lengthScale == 0)
                 return 0;
 
-            double refTemp = temp * ReferenceTemperatureRatio(machNumber, 0.843, gamma);
+            double refTemp = externalTemp * ReferenceTemperatureRatio(machNumber, 0.843, gamma);
             double visc = CalculateCurrentViscosity(refTemp);
             double Re = lengthScale * density * vel / visc;
             return Re;
         }
 
-        public static double SkinFrictionDrag(double density, double lengthScale, double vel, double machNumber, double temp, double gamma)
+        public static double SkinFrictionDrag(double density, double lengthScale, double vel, double machNumber, double externalTemp, double gamma)
         {
             if (lengthScale == 0)
                 return 0;
 
-            double Re = CalculateReynoldsNumber(density, lengthScale, vel, machNumber, temp, gamma);
+            double Re = CalculateReynoldsNumber(density, lengthScale, vel, machNumber, externalTemp, gamma);
 
             return SkinFrictionDrag(Re, machNumber);
         }

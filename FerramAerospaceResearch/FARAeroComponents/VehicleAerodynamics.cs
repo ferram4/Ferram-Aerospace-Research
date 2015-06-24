@@ -812,6 +812,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 double engineAreaPerUnitThrust = intakeArea / totalEngineThrust;        //figure how much intake area per thrust so that it can be divided up per engine
 
+                //calculate exit area, assuming that all area has to go somewhere; we'll adjust this later to make more sense
                 for (int i = 0; i < forwardFacingAdjustments.Count; i++)
                 {
                     ICrossSectionAdjuster adjuster = forwardFacingAdjustments[i];
@@ -822,19 +823,23 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     }
                 }
 
-
+                //sweep through entire vehicle
                 for (int i = 0; i < vehicleCrossSection.Length; i++)
                 {
+                    //and all the intakes / engines
                     for (int j = 0; j < forwardFacingAdjustments.Count; j++)
                     {
                         ICrossSectionAdjuster adjuster = forwardFacingAdjustments[j];
                         VoxelCrossSection.SideAreaValues val;
                         Part p = adjuster.GetPart();
+
+                        //see if you can find that in this section
                         if (vehicleCrossSection[i].partSideAreaValues.TryGetValue(p, out val))
                         {
                             double currentVal;
                             if (adjusterAreaPerVoxelDict.TryGetValue(p, out currentVal))
                             {
+                                //and see if the area of it in this section is the largest value
                                 if (val.crossSectionalAreaCount > currentVal)
                                     adjusterAreaPerVoxelDict[p] = val.crossSectionalAreaCount;
                             }
@@ -844,7 +849,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     }
                 }
 
+                //so now we have the max cross-section voxel count of each of these
 
+                //so then sweep through and transform that into intake area per voxel count for smoothness of the shape
                 for (int i = 0; i < forwardFacingAdjustments.Count; i++)
                 {
                     ICrossSectionAdjuster adjuster = forwardFacingAdjustments[i];
@@ -903,7 +910,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                                 data.activeAreaRemoved *= -1;
 
                             partAdjustmentList[partIndexPair.Value] = data;
-                            Debug.Log(partIndexPair.Key.partInfo.title + " " + data.counter);
+                            //ThreadSafeDebugLogger.Instance.RegisterMessage(partIndexPair.Key.partInfo.title + " " + data.counter);
                         }
                         area -= data.activeAreaRemoved;
 
@@ -1026,7 +1033,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             numSections = back - front;
             _length = _sectionThickness * numSections;
 
-            //AdjustCrossSectionForAirDucting(_vehicleCrossSection, _currentGeoModules);
+            AdjustCrossSectionForAirDucting(_vehicleCrossSection, _currentGeoModules);
 
             GaussianSmoothCrossSections(_vehicleCrossSection, 3, FARSettingsScenarioModule.Settings.gaussianVehicleLengthFractionForSmoothing, _sectionThickness, _length, front, back, FARSettingsScenarioModule.Settings.numAreaSmoothingPasses, FARSettingsScenarioModule.Settings.numDerivSmoothingPasses);
 

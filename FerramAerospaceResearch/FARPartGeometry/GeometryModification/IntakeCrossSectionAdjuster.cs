@@ -56,6 +56,7 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
         Matrix4x4 thisToVesselMatrix;
         Matrix4x4 meshLocalToWorld;
         Transform intakeTrans;
+        AttachNode frontNode;
 
         ModuleResourceIntake intake;
         public ModuleResourceIntake IntakeModule
@@ -70,9 +71,18 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
         public IntakeCrossSectionAdjuster(ModuleResourceIntake intake, Matrix4x4 worldToVesselMatrix)
         {
-            intakeTrans = intake.part.FindModelTransform(intake.intakeTransformName);
+            this.part = intake.part;
+            this.intake = intake;
+
+            intakeTrans = part.FindModelTransform(intake.intakeTransformName);
             vehicleBasisForwardVector = Vector3.forward;//intakeTrans.forward;
 
+            foreach(AttachNode node in part.attachNodes)
+                if(node.nodeType == AttachNode.NodeType.Stack && Vector3.Dot(node.position, (part.transform.worldToLocalMatrix * intakeTrans.localToWorldMatrix).MultiplyVector(Vector3.forward)) > 0)
+                {
+                    frontNode = node;
+                    break;
+                }
 
             thisToVesselMatrix = worldToVesselMatrix * intakeTrans.localToWorldMatrix;
 
@@ -80,8 +90,6 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
             intakeArea = INTAKE_AREA_SCALAR * intake.area;
 
-            this.intake = intake;
-            this.part = intake.part;
         }
 
         public double AreaRemovedFromCrossSection(Vector3 vehicleAxis)
@@ -95,7 +103,10 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
         public double AreaRemovedFromCrossSection()
         {
-            return intakeArea;
+            if (frontNode == null || frontNode.attachedPart == null)
+                return intakeArea;
+            else
+                return 0;
         }
 
         public void SetCrossSectionAreaCountOffset(double count) { }
