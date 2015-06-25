@@ -95,6 +95,12 @@ namespace FerramAerospaceResearch
 
         void Start()
         {
+            if (CompatibilityChecker.IsAllCompatible())
+            {
+                this.enabled = false;
+                return;
+            }
+
             FARAeroStress.LoadStressTemplates();
             FARAeroUtil.LoadAeroDataFromConfig();
             //LoadConfigs();

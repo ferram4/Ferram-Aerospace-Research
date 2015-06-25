@@ -43,6 +43,7 @@ Copyright 2015, Michael Ferrara, aka Ferram4
  */
 
 using System;
+using System.Reflection;
 using UnityEngine;
 
 namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
@@ -58,27 +59,52 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
         Transform intakeTrans;
         AttachNode frontNode;
 
-        ModuleResourceIntake intake;
-        public ModuleResourceIntake IntakeModule
-        {
-            get { return intake; }
-        }
+        //ModuleResourceIntake intake;
+        //public ModuleResourceIntake IntakeModule
+        //{
+        //    get { return intake; }
+        //}
         Part part;
         public Part GetPart()
         {
             return part;
         }
 
-        public IntakeCrossSectionAdjuster(ModuleResourceIntake intake, Matrix4x4 worldToVesselMatrix)
+        public IntakeCrossSectionAdjuster(PartModule intake, Matrix4x4 worldToVesselMatrix)
         {
             this.part = intake.part;
-            this.intake = intake;
+            //ModuleResourceIntake intake = intake;
 
-            intakeTrans = part.FindModelTransform(intake.intakeTransformName);
+            Type intakeType = intake.GetType();
+            intakeTrans = (Transform)intakeType.GetField("intakeTransform").GetValue(intake);
+
             vehicleBasisForwardVector = Vector3.forward;//intakeTrans.forward;
 
             foreach(AttachNode node in part.attachNodes)
                 if(node.nodeType == AttachNode.NodeType.Stack && Vector3.Dot(node.position, (part.transform.worldToLocalMatrix * intakeTrans.localToWorldMatrix).MultiplyVector(Vector3.forward)) > 0)
+                {
+                    frontNode = node;
+                    break;
+                }
+
+            thisToVesselMatrix = worldToVesselMatrix * intakeTrans.localToWorldMatrix;
+
+            vehicleBasisForwardVector = thisToVesselMatrix.MultiplyVector(vehicleBasisForwardVector);
+
+            intakeArea = (float)intakeType.GetField("Area").GetValue(intake);
+
+        }
+
+        public IntakeCrossSectionAdjuster(ModuleResourceIntake intake, Matrix4x4 worldToVesselMatrix)
+        {
+            this.part = intake.part;
+            //ModuleResourceIntake intake = intake;
+
+            intakeTrans = part.FindModelTransform(intake.intakeTransformName);
+            vehicleBasisForwardVector = Vector3.forward;//intakeTrans.forward;
+
+            foreach (AttachNode node in part.attachNodes)
+                if (node.nodeType == AttachNode.NodeType.Stack && Vector3.Dot(node.position, (part.transform.worldToLocalMatrix * intakeTrans.localToWorldMatrix).MultiplyVector(Vector3.forward)) > 0)
                 {
                     frontNode = node;
                     break;

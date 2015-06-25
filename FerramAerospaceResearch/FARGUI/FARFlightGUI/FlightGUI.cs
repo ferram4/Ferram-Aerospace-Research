@@ -100,6 +100,12 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         void Start()
         {
+            if (CompatibilityChecker.IsAllCompatible())
+            {
+                this.enabled = false;
+                return;
+            }
+
             _vessel = GetComponent<Vessel>();
             _vesselAero = GetComponent<FARVesselAero>();
             _physicsCalcs = new PhysicsCalcs(_vessel, _vesselAero);

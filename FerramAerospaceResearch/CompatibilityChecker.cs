@@ -191,7 +191,7 @@ namespace FerramAerospaceResearch
         }
 
         public static bool IsWin64()
-        {
+        {            
             return (IntPtr.Size == 8) && (Environment.OSVersion.Platform == PlatformID.Win32NT);
         }
 

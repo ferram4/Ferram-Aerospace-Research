@@ -118,10 +118,13 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         void Start()
         {
-            if (instance == null)
+            if (CompatibilityChecker.IsAllCompatible() && instance == null)
                 instance = this;
             else
+            {
                 GameObject.Destroy(this);
+                return;
+            }
 
             _vehicleAero = new VehicleAerodynamics();
 

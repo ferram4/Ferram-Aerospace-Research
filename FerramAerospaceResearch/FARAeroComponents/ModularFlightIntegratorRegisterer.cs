@@ -54,9 +54,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
     {
         void Start()
         {
-            Debug.Log("FAR Modular Flight Integrator function registration started");
-            ModularFlightIntegrator.RegisterUpdateAerodynamicsOverride(UpdateAerodynamics);
-            Debug.Log("FAR Modular Flight Integrator function registration complete");
+            if (CompatibilityChecker.IsAllCompatible())
+            {
+                Debug.Log("FAR Modular Flight Integrator function registration started");
+                ModularFlightIntegrator.RegisterUpdateAerodynamicsOverride(UpdateAerodynamics);
+                Debug.Log("FAR Modular Flight Integrator function registration complete");
+            }
             GameObject.Destroy(this);
         }
 

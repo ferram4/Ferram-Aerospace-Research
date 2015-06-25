@@ -102,6 +102,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         private void Start()
         {
+            if (CompatibilityChecker.IsAllCompatible())
+            {
+                this.enabled = false;
+                return;
+            }
+
             _vessel = gameObject.GetComponent<Vessel>();
             this.enabled = true;
 
