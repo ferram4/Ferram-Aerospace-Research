@@ -91,7 +91,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         void Start()
         {
-            if (CompatibilityChecker.IsAllCompatible())
+            if (!CompatibilityChecker.IsAllCompatible())
             {
                 this.enabled = false;
                 return;
@@ -281,11 +281,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     }
                 }
             }
-            if (part.Modules.Contains("ModuleEnginesAJEJet"))       //hard-coded support for AJE; TODO: separate out for more configurable compatibility on 3rd-party end
+            /*if (part.Modules.Contains("ModuleEnginesAJEJet"))       //hard-coded support for AJE; TODO: separate out for more configurable compatibility on 3rd-party end
             {
                 AirbreathingEngineCrossSectonAdjuster engineAdjuster = new AirbreathingEngineCrossSectonAdjuster((ModuleEngines)part.Modules["ModuleEnginesAJEJet"], worldToVesselMatrix);
                 crossSectionAdjusters.Add(engineAdjuster);
-            }
+            }*/
             if (part.Modules.Contains("ModuleResourceIntake"))
             {
                 ModuleResourceIntake intake = (ModuleResourceIntake)part.Modules["ModuleResourceIntake"];
@@ -293,11 +293,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 IntakeCrossSectionAdjuster intakeAdjuster = new IntakeCrossSectionAdjuster(intake, worldToVesselMatrix);
                 crossSectionAdjusters.Add(intakeAdjuster);
             }
-            if(part.Modules.Contains("AJEInlet"))
+            /*if(part.Modules.Contains("AJEInlet"))
             {
                 IntakeCrossSectionAdjuster intakeAdjuster = new IntakeCrossSectionAdjuster(part.Modules["AJEInlet"], worldToVesselMatrix);
                 crossSectionAdjusters.Add(intakeAdjuster);
-            }
+            }*/
         }
 
         public void RunIGeometryUpdaters()

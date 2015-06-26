@@ -100,7 +100,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         void Start()
         {
-            if (CompatibilityChecker.IsAllCompatible())
+            if (!CompatibilityChecker.IsAllCompatible())
             {
                 this.enabled = false;
                 return;

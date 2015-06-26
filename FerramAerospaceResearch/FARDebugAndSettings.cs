@@ -95,7 +95,7 @@ namespace FerramAerospaceResearch
 
         void Start()
         {
-            if (CompatibilityChecker.IsAllCompatible())
+            if (!CompatibilityChecker.IsAllCompatible())
             {
                 this.enabled = false;
                 return;
