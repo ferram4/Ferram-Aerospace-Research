@@ -76,7 +76,7 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
             //ModuleResourceIntake intake = intake;
 
             Type intakeType = intake.GetType();
-            intakeTrans = (Transform)intakeType.GetField("intakeTransform").GetValue(intake);
+            intakeTrans = (Transform)intakeType.GetField("intakeTransform", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(intake);
 
             vehicleBasisForwardVector = Vector3.forward;//intakeTrans.forward;
 
