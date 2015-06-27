@@ -727,20 +727,26 @@ namespace FerramAerospaceResearch.FARAeroComponents
             int M, N;
 
             if (oneSidedFilterLength < 2)
+            {
                 oneSidedFilterLength = 2;
+                ThreadSafeDebugLogger.Instance.RegisterMessage("Needed to adjust filter length up");
+            }
 
             M = oneSidedFilterLength;
             N = M * 2 + 1;
-            int* sK = stackalloc int[M + 1];
+            long* sK = stackalloc long[M + 1];
             //double* areas = stackalloc double[N + 2];
 
             for (int i = 0; i <= M; i++)
+            {
                 sK[i] = CalculateSk(i, M, N);
+            }
 
             double denom = Math.Pow(2, N - 3);
             denom *= sectionThickness * sectionThickness;
             denom = 1 / denom;
 
+            ThreadSafeDebugLogger.Instance.RegisterMessage("Calculating 2nd area derivs");
             for(int i = frontIndex; i <= backIndex; i++)
             {
 
@@ -767,13 +773,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
         }
 
-        int CalculateSk(int k, int M, int N)
+        long CalculateSk(long k, int M, int N)
         {
             if (k > M)
                 return 0;
             if (k == M)
                 return 1;
-            int val = (2 * N - 10) * CalculateSk(k + 1, M, N);
+            long val = (2 * N - 10) * CalculateSk(k + 1, M, N);
             val -= (N + 2 * k + 3) * CalculateSk(k + 2, M, N);
             val /= (N - 2 * k - 1);
 
