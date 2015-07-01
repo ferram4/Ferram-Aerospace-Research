@@ -126,6 +126,10 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         private void CalculateTotalAeroForce()
         {
             totalAeroForceVector = Vector3.zero;
+
+            if (_vessel.dynamicPressurekPa <= 0.00001)
+                return;
+
             if (_currentAeroModules != null)
             {
                 for (int i = 0; i < _currentAeroModules.Count; i++)
@@ -146,19 +150,12 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             for(int i = 0; i < _vessel.parts.Count; i++)
             {
                 Part p = _vessel.parts[i];
-                totalAeroForceVector += p.dragVector * p.dragScalar;
+                totalAeroForceVector += -p.dragVectorDir * p.dragScalar; // dragVectorDir is actually the velocity vector direction
             }
         }
 
         private void CalculateForceBreakdown(Vector3d velVectorNorm, Vector3d velVector)
         {
-            vesselInfo.dragForce = -Vector3d.Dot(totalAeroForceVector, velVectorNorm);     //reverse along vel normal will be drag
-
-            Vector3d remainderVector = totalAeroForceVector + velVectorNorm * vesselInfo.dragForce;
-
-            vesselInfo.liftForce = -Vector3d.Dot(remainderVector, _vessel.ReferenceTransform.forward);     //forward points down for the vessel, so reverse along that will be lift
-            vesselInfo.sideForce = Vector3d.Dot(remainderVector, _vessel.ReferenceTransform.right);        //and the side force
-
             if (useWingArea)
                 vesselInfo.refArea = wingArea;
             else if (_vesselAero && _vesselAero.isValid)
@@ -167,6 +164,21 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 vesselInfo.refArea = 1;
 
             vesselInfo.dynPres = _vessel.dynamicPressurekPa;
+
+            if (_vessel.dynamicPressurekPa <= 0.00001)
+            {
+                vesselInfo.dragForce = vesselInfo.liftForce = vesselInfo.sideForce = 0;
+                vesselInfo.dragCoeff = vesselInfo.liftCoeff = vesselInfo.sideCoeff = 0;
+                vesselInfo.liftToDragRatio = 0;
+                return;
+            }
+
+            vesselInfo.dragForce = -Vector3d.Dot(totalAeroForceVector, velVectorNorm);     //reverse along vel normal will be drag
+
+            Vector3d remainderVector = totalAeroForceVector + velVectorNorm * vesselInfo.dragForce;
+
+            vesselInfo.liftForce = -Vector3d.Dot(remainderVector, _vessel.ReferenceTransform.forward);     //forward points down for the vessel, so reverse along that will be lift
+            vesselInfo.sideForce = Vector3d.Dot(remainderVector, _vessel.ReferenceTransform.right);        //and the side force
 
             double invAndDynPresArea = vesselInfo.refArea;
             invAndDynPresArea *= vesselInfo.dynPres;
@@ -259,10 +271,19 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                     }
                 }
             }
-            vesselInfo.tSFC = totalThrust / totalThrust_Isp;    //first, calculate inv Isp
-            vesselInfo.tSFC *= 3600;   //then, convert from 1/s to 1/hr
 
-            vesselInfo.intakeAirFrac = airAvailableVol / airDemandVol;
+            if (totalThrust > 0)
+            {
+                vesselInfo.tSFC = totalThrust / totalThrust_Isp;    //first, calculate inv Isp
+                vesselInfo.tSFC *= 3600;   //then, convert from 1/s to 1/hr
+            }
+            else
+                vesselInfo.tSFC = 0;
+
+            if (airDemandVol != 0)
+                vesselInfo.intakeAirFrac = airAvailableVol / airDemandVol;
+            else
+                vesselInfo.intakeAirFrac = double.PositiveInfinity;
 
             vesselInfo.specExcessPower = totalThrust - vesselInfo.dragForce;
             vesselInfo.specExcessPower *= vesselSpeed / vesselInfo.fullMass;
@@ -303,6 +324,13 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         private void CalculateBallisticCoefficientAndTermVel()
         {
+            if (vesselInfo.dragCoeff == 0)
+            {
+                vesselInfo.ballisticCoeff = 0;
+                vesselInfo.termVelEst = 0;
+                return;
+            }
+
             double geeForce = FlightGlobals.getGeeForceAtPosition(_vessel.CoM).magnitude;
 
             vesselInfo.ballisticCoeff = vesselInfo.fullMass / (vesselInfo.dragCoeff * vesselInfo.refArea) * 1000;

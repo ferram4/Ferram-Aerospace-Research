@@ -199,7 +199,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
             float atmDensity = (float)_vessel.atmDensity;
 
             if (atmDensity <= 0)
+            {
+                machNumber = 0;
+                reynoldsNumber = 0;
                 return;
+            }
 
             machNumber = _vessel.mach;
             reynoldsNumber = FARAeroUtil.CalculateReynoldsNumber(_vessel.atmDensity, Length, _vessel.srfSpeed, machNumber, FlightGlobals.getExternalTemperature((float)_vessel.altitude, _vessel.mainBody), _vessel.mainBody.atmosphereAdiabaticIndex);
