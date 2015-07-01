@@ -84,6 +84,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
         [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = false, guiFormat = "F3", guiUnits = "kN")]
         public float liftForce;
 
+        //[KSPField(isPersistant = false, guiActive = true)]
+        //public double expSkinArea;
+
+        //[KSPField(isPersistant = false, guiActive = true)]
+        //public double expSkinFrac;
+
         private Transform partTransform;
 
         public ProjectedArea ProjectedAreas
@@ -275,6 +281,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             partLocalForce = Vector3.zero;
             partLocalTorque = Vector3.zero;
+
+            //expSkinArea = part.skinExposedArea;
+            //expSkinFrac = part.skinExposedAreaFrac;
         }
 
         public void AddLocalForce(Vector3 partLocalForce, Vector3 partLocalLocation)

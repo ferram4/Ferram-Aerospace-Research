@@ -54,17 +54,27 @@ namespace FerramAerospaceResearch.FARAeroComponents
     {
         void Start()
         {
-            if (CompatibilityChecker.IsAllCompatible())
-            {
-                Debug.Log("FAR Modular Flight Integrator function registration started");
-                ModularFlightIntegrator.RegisterUpdateAerodynamicsOverride(UpdateAerodynamics);
-                Debug.Log("FAR Modular Flight Integrator function registration complete");
-            }
+            Debug.Log("FAR Modular Flight Integrator function registration started");
+            ModularFlightIntegrator.RegisterUpdateAerodynamicsOverride(UpdateAerodynamics);
+            ModularFlightIntegrator.RegisterUpdateThermodynamicsPre(UpdateThermodynamicsPre);
+            Debug.Log("FAR Modular Flight Integrator function registration complete");
             GameObject.Destroy(this);
         }
 
+        void UpdateThermodynamicsPre(ModularFlightIntegrator fi)
+        {
+            for (int i = 0; i < fi.PartThermalDataCount; i++)
+            {
+                Part part = fi.partThermalDataList[i].part;
+                FARAeroPartModule aeroModule = part.GetComponent<FARAeroPartModule>();
+
+                part.radiativeArea = CalculateAreaRadiative(fi, part, aeroModule);
+                part.exposedArea = part.machNumber > 0 ? CalculateAreaExposed(fi, part, aeroModule) : 0;
+            }
+        }
+
         void UpdateAerodynamics(ModularFlightIntegrator fi, Part part)
-        {            
+        {
             if (part.Modules.Contains("ModuleAeroSurface") || part.Modules.Contains("KerbalEVA"))     //FIXME Proper model for airbrakes
             {
                 fi.BaseFIUpdateAerodynamics(part);
@@ -76,11 +86,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (rb)
                     part.DragCubes.SetDrag(-part.partTransform.worldToLocalMatrix.MultiplyVector(rb.velocity + Krakensbane.GetFrameVelocityV3f()).normalized, (float)part.machNumber);
             }
-
-            FARAeroPartModule aeroModule = part.GetComponent<FARAeroPartModule>();
-
-            part.radiativeArea = CalculateAreaRadiative(fi, part, aeroModule);
-            part.exposedArea = CalculateAreaExposed(fi, part, aeroModule);
         }
 
         double CalculateAreaRadiative(ModularFlightIntegrator fi, Part part, FARAeroPartModule aeroModule)
