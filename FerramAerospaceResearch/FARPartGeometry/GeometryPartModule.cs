@@ -124,6 +124,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             if (animStates != null && animStates.Count > 0)
                 CheckAnimations();
+
+            //Debug.Log("Geo PM: " + vessel.CoM + " " + Planetarium.GetUniversalTime());
         }
 
         public void ClearMeshData()
@@ -312,6 +314,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public void GetICrossSectionAdjusters(List<ICrossSectionAdjuster> forwardFacing, List<ICrossSectionAdjuster> rearwardFacing, Matrix4x4 basis, Vector3 vehicleMainAxis)
         {
+            if (crossSectionAdjusters == null)
+                return;
+
             for(int i = 0; i < crossSectionAdjusters.Count;i++)
             {
                 ICrossSectionAdjuster adjuster = crossSectionAdjusters[i];

@@ -474,6 +474,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             if (GUILayout.Button("Toggle Gear"))
                 ToggleGear();
             GUILayout.EndVertical();
+            if (GUILayout.Button("Force Update"))
+                RequestUpdateVoxel();
 
             GUILayout.EndHorizontal();
             //GUILayout.EndHorizontal();

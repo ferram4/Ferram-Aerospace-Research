@@ -731,6 +731,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 oneSidedFilterLength = 2;
                 ThreadSafeDebugLogger.Instance.RegisterMessage("Needed to adjust filter length up");
             }
+            else if (oneSidedFilterLength > 40)
+            {
+                oneSidedFilterLength = 40;
+                ThreadSafeDebugLogger.Instance.RegisterMessage("Reducing filter length to prevent overflow");
+            }
 
             M = oneSidedFilterLength;
             N = M * 2 + 1;

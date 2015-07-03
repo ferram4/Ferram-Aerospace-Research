@@ -66,11 +66,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
             for (int i = 0; i < fi.PartThermalDataCount; i++)
             {
                 Part part = fi.partThermalDataList[i].part;
-                FARAeroPartModule aeroModule = part.GetComponent<FARAeroPartModule>();
+                PartModule module = part.Modules["FARAeroPartModule"];
+
+                if((object)module == null)
+                    continue;
+
+                FARAeroPartModule aeroModule = (FARAeroPartModule)module;
 
                 part.radiativeArea = CalculateAreaRadiative(fi, part, aeroModule);
                 part.exposedArea = part.machNumber > 0 ? CalculateAreaExposed(fi, part, aeroModule) : 0;
             }
+            //Debug.Log("MFI: " + fi.CoM + " " + Planetarium.GetUniversalTime());
         }
 
         void UpdateAerodynamics(ModularFlightIntegrator fi, Part part)
@@ -86,6 +92,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (rb)
                     part.DragCubes.SetDrag(-part.partTransform.worldToLocalMatrix.MultiplyVector(rb.velocity + Krakensbane.GetFrameVelocityV3f()).normalized, (float)part.machNumber);
             }
+
         }
 
         double CalculateAreaRadiative(ModularFlightIntegrator fi, Part part, FARAeroPartModule aeroModule)
