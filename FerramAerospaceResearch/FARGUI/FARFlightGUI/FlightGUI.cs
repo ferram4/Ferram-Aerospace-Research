@@ -116,7 +116,10 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             settingsWindow = new GUIDropDown<int>(new string[3]{"Flt Data","Stab Aug", "Air Spd"}, new int[3]{0,1,2}, 0);
             //boxStyle.padding = new RectOffset(4, 4, 4, 4);
 
-            vesselFlightGUI.Add(_vessel, this);
+            if (vesselFlightGUI.ContainsKey(_vessel))
+                vesselFlightGUI[_vessel] = this;
+            else
+                vesselFlightGUI.Add(_vessel, this);
 
             this.enabled = true;
 
@@ -198,6 +201,9 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         #region PhysicsAndOrientationBlock
         void FixedUpdate()
         {
+            if (_physicsCalcs == null)
+                return;
+
             infoParameters = _physicsCalcs.UpdatePhysicsParameters();
 
             _stabilityAugmentation.UpdatePhysicsInfo(infoParameters);
