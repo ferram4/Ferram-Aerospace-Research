@@ -60,6 +60,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         VehicleVoxel _voxel = null;
         VoxelCrossSection[] _vehicleCrossSection = new VoxelCrossSection[1];
+        double[] _ductedAreaAdjustment = new double[1];
 
         int _voxelCount;
 
@@ -791,13 +792,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
             return val;
         }
 
-        unsafe void AdjustCrossSectionForAirDucting(VoxelCrossSection[] vehicleCrossSection, List<GeometryPartModule> geometryModules)
+        unsafe void AdjustCrossSectionForAirDucting(VoxelCrossSection[] vehicleCrossSection, List<GeometryPartModule> geometryModules, int front, int back)
         {
             List<ICrossSectionAdjuster> forwardFacingAdjustments, rearwardFacingAdjustments;
             forwardFacingAdjustments = new List<ICrossSectionAdjuster>();
             rearwardFacingAdjustments = new List<ICrossSectionAdjuster>();
 
-            double* areaAdjustment = stackalloc double[vehicleCrossSection.Length];
+            //double* areaAdjustment = stackalloc double[vehicleCrossSection.Length];
 
             for (int i = 0; i < geometryModules.Count; i++)
             {
@@ -806,37 +807,40 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
 
             double intakeArea = 0;
-            double totalEngineThrust = 0;
+            double engineExitArea = 0;
 
             for (int i = 0; i < forwardFacingAdjustments.Count; i++)    //get all forward facing engines / intakes
             {
                 ICrossSectionAdjuster adjuster = forwardFacingAdjustments[i];
                 if (adjuster is AirbreathingEngineCrossSectonAdjuster)
-                    totalEngineThrust += ((AirbreathingEngineCrossSectonAdjuster)adjuster).EngineModule.maxThrust;
+                    engineExitArea -= adjuster.AreaRemovedFromCrossSection();
                 if (adjuster is IntakeCrossSectionAdjuster)
                     intakeArea += adjuster.AreaRemovedFromCrossSection();
             }
 
+            for (int i = 0; i < rearwardFacingAdjustments.Count; i++)    //get all rearward facing engines / intakes
+            {
+                ICrossSectionAdjuster adjuster = rearwardFacingAdjustments[i];
+                if (adjuster is AirbreathingEngineCrossSectonAdjuster)
+                    engineExitArea += adjuster.AreaRemovedFromCrossSection();
+                if (adjuster is IntakeCrossSectionAdjuster)
+                    intakeArea -= adjuster.AreaRemovedFromCrossSection();
+            }
+
             Dictionary<Part, double> adjusterAreaPerVoxelDict = new Dictionary<Part, double>();
             Dictionary<Part, ICrossSectionAdjuster> adjusterPartDict = new Dictionary<Part, ICrossSectionAdjuster>();
-            if (intakeArea > 0 && totalEngineThrust > 0)        //if they exist, go through the calculations
+            if (intakeArea != 0 && engineExitArea != 0)        //if they exist, go through the calculations
             {
-                double engineAreaPerUnitThrust = intakeArea / totalEngineThrust;        //figure how much intake area per thrust so that it can be divided up per engine
+                if (_ductedAreaAdjustment.Length != vehicleCrossSection.Length)
+                    _ductedAreaAdjustment = new double[vehicleCrossSection.Length];
 
-                //calculate exit area, assuming that all area has to go somewhere; we'll adjust this later to make more sense
-                for (int i = 0; i < forwardFacingAdjustments.Count; i++)
-                {
-                    ICrossSectionAdjuster adjuster = forwardFacingAdjustments[i];
-                    if (adjuster is AirbreathingEngineCrossSectonAdjuster)
-                    {
-                        AirbreathingEngineCrossSectonAdjuster engineAdjuster = (AirbreathingEngineCrossSectonAdjuster)adjuster;
-                        engineAdjuster.CalculateExitArea(engineAreaPerUnitThrust);
-                    }
-                }
+
+                int frontMostIndex = -1, backMostIndex = -1;
 
                 //sweep through entire vehicle
                 for (int i = 0; i < vehicleCrossSection.Length; i++)
                 {
+                    double ductedArea = 0;
                     //and all the intakes / engines
                     for (int j = 0; j < forwardFacingAdjustments.Count; j++)
                     {
@@ -847,7 +851,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         //see if you can find that in this section
                         if (vehicleCrossSection[i].partSideAreaValues.TryGetValue(p, out val))
                         {
-                            double currentVal;
+                            if (adjuster.AreaRemovedFromCrossSection() > 0)
+                                ductedArea += val.crossSectionalAreaCount;
+                            else
+                                ductedArea -= val.crossSectionalAreaCount;
+                            /*double currentVal;
                             if (adjusterAreaPerVoxelDict.TryGetValue(p, out currentVal))
                             {
                                 //and see if the area of it in this section is the largest value
@@ -855,12 +863,106 @@ namespace FerramAerospaceResearch.FARAeroComponents
                                     adjusterAreaPerVoxelDict[p] = val.crossSectionalAreaCount;
                             }
                             else
-                                adjusterAreaPerVoxelDict[p] = val.crossSectionalAreaCount;
+                                adjusterAreaPerVoxelDict[p] = val.crossSectionalAreaCount;*/
                         }
                     }
+                    for (int j = 0; j < rearwardFacingAdjustments.Count; j++)
+                    {
+                        ICrossSectionAdjuster adjuster = rearwardFacingAdjustments[j];
+                        VoxelCrossSection.SideAreaValues val;
+                        Part p = adjuster.GetPart();
+
+                        //see if you can find that in this section
+                        if (vehicleCrossSection[i].partSideAreaValues.TryGetValue(p, out val))
+                        {
+                            if (adjuster.AreaRemovedFromCrossSection() < 0)
+                                ductedArea += val.crossSectionalAreaCount;
+                            else
+                                ductedArea -= val.crossSectionalAreaCount;
+                        }
+                    }
+                    ductedArea *= _voxelElementSize * _voxelElementSize;
+
+                    if (ductedArea != 0)
+                        if (frontMostIndex < 0)
+                            frontMostIndex = i;
+                        else
+                            backMostIndex = i;
+
+                    _ductedAreaAdjustment[i] = ductedArea;
                 }
 
-                //so now we have the max cross-section voxel count of each of these
+                double tmpArea = _ductedAreaAdjustment[0];
+
+                for (int i = 1; i < _ductedAreaAdjustment.Length; i++)
+                {
+                    double areaAdjustment = _ductedAreaAdjustment[i];
+                    double prevAreaAdjustment = tmpArea;
+
+                    tmpArea = areaAdjustment;       //store for next iteration
+
+                    if (areaAdjustment > 0 && prevAreaAdjustment > 0)
+                        _ductedAreaAdjustment[i] = areaAdjustment - prevAreaAdjustment;     //this transforms this into a change in area, but only for increases (intakes)
+                        
+                }
+
+                tmpArea = _ductedAreaAdjustment[_ductedAreaAdjustment.Length - 1];
+
+                for (int i = _ductedAreaAdjustment.Length - 2; i >= 0; i--)
+                {
+                    double areaAdjustment = _ductedAreaAdjustment[i];
+                    double prevAreaAdjustment = tmpArea;
+
+                    tmpArea = areaAdjustment;       //store for next iteration
+
+                    if (areaAdjustment < 0 && prevAreaAdjustment < 0)
+                        _ductedAreaAdjustment[i] = areaAdjustment - prevAreaAdjustment;     //this transforms this into a change in area, but only for decreases (engines)
+
+                } 
+                
+                for (int i = _ductedAreaAdjustment.Length - 1; i >= 0; i--)
+                {
+                    double areaAdjustment = 0;
+                    for (int j = 0; j <= i; j++)
+                        areaAdjustment += _ductedAreaAdjustment[j];
+
+                    _ductedAreaAdjustment[i] = areaAdjustment;
+                    ThreadSafeDebugLogger.Instance.RegisterMessage(areaAdjustment.ToString());
+                }
+
+                double endIndexArea = _ductedAreaAdjustment[_ductedAreaAdjustment.Length - 1];
+
+                double areaSlope, areaOffset;
+                areaSlope = -endIndexArea / (double)(backMostIndex - frontMostIndex);
+
+                if (endIndexArea > 0)
+                {
+                    areaOffset = -areaSlope * frontMostIndex;
+                }
+                else
+                {
+                    areaOffset = -areaSlope * frontMostIndex + endIndexArea;
+                }
+
+                for (int i = frontMostIndex; i <= backMostIndex; i++)
+                {
+                    _ductedAreaAdjustment[i] += (areaSlope * i) + areaOffset;
+                }
+
+                //put upper limit on area lost
+                for (int i = 0; i < vehicleCrossSection.Length; i++)
+                {
+                    double areaUnchanged = vehicleCrossSection[i].area;
+                    double areaChanged = -_ductedAreaAdjustment[i];
+                    if (areaChanged > 0)
+                        areaChanged = 0;
+                    areaChanged += areaUnchanged;
+
+                    vehicleCrossSection[i].area = Math.Max(0.15 * areaUnchanged, areaChanged);
+
+                }
+                
+                /*//so now we have the max cross-section voxel count of each of these
 
                 //so then sweep through and transform that into intake area per voxel count for smoothness of the shape
                 for (int i = 0; i < forwardFacingAdjustments.Count; i++)
@@ -928,108 +1030,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     }
                     areaAdjustment[i] += area;
                     //vehicleCrossSection[i].area = Math.Max(0.25 * vehicleCrossSection[i].area, area);
-                }
-            }
-            
-            /*intakeArea = 0;
-            totalEngineThrust = 0;
-
-            for (int i = 0; i < rearwardFacingAdjustments.Count; i++)
-            {
-                ICrossSectionAdjuster adjuster = rearwardFacingAdjustments[i];
-                if (adjuster is AirbreathingEngineCrossSectonAdjuster)
-                    totalEngineThrust += ((AirbreathingEngineCrossSectonAdjuster)adjuster).EngineModule.maxThrust;
-                if (adjuster is IntakeCrossSectionAdjuster)
-                    intakeArea += adjuster.AreaRemovedFromCrossSection();
-            }
-            adjusterAreaPerVoxelDict.Clear();
-            adjusterPartDict.Clear();
-
-            if (intakeArea > 0 && totalEngineThrust > 0)
-            {
-
-                double engineAreaPerUnitThrust = intakeArea / totalEngineThrust;
-                for (int i = 0; i < rearwardFacingAdjustments.Count; i++)
-                {
-                    ICrossSectionAdjuster adjuster = rearwardFacingAdjustments[i];
-                    if (adjuster is AirbreathingEngineCrossSectonAdjuster)
-                    {
-                        AirbreathingEngineCrossSectonAdjuster engineAdjuster = (AirbreathingEngineCrossSectonAdjuster)adjuster;
-                        engineAdjuster.CalculateExitArea(engineAreaPerUnitThrust);
-                    }
-                }
-
-                
-                for (int i = 0; i < vehicleCrossSection.Length; i++)
-                {
-                    for (int j = 0; j < rearwardFacingAdjustments.Count; j++)
-                    {
-                        ICrossSectionAdjuster adjuster = rearwardFacingAdjustments[j];
-                        VoxelCrossSection.SideAreaValues val;
-                        Part p = adjuster.GetPart();
-                        if (vehicleCrossSection[i].partSideAreaValues.TryGetValue(p, out val))
-                        {
-                            double currentVal;
-                            if (adjusterAreaPerVoxelDict.TryGetValue(p, out currentVal))
-                            {
-                                if (val.crossSectionalAreaCount > currentVal)
-                                    adjusterAreaPerVoxelDict[p] = val.crossSectionalAreaCount;
-                            }
-                            else
-                                adjusterAreaPerVoxelDict[p] = val.crossSectionalAreaCount;
-                        }
-                    }
-                }
-
-                for (int i = 0; i < rearwardFacingAdjustments.Count; i++)
-                {
-                    ICrossSectionAdjuster adjuster = rearwardFacingAdjustments[i];
-                    double area = adjuster.AreaRemovedFromCrossSection();
-                    double tmp = adjusterAreaPerVoxelDict[adjuster.GetPart()];
-                    adjusterAreaPerVoxelDict[adjuster.GetPart()] = area / tmp;
-                    adjusterPartDict.Add(adjuster.GetPart(), adjuster);
-                }
-
-                Dictionary<Part, double> partActiveAreaRemoved = new Dictionary<Part, double>();
-
-                for (int i = vehicleCrossSection.Length - 1; i >= 0; i--)
-                {
-                    double area = 0;
-                    foreach (KeyValuePair<Part, VoxelCrossSection.SideAreaValues> partAreaPair in vehicleCrossSection[i].partSideAreaValues)
-                    {
-                        double areaPerVoxel;
-                        Part p = partAreaPair.Key;
-                        if (adjusterAreaPerVoxelDict.TryGetValue(p, out areaPerVoxel))
-                        {
-                            double areaRemoved = areaPerVoxel * partAreaPair.Value.crossSectionalAreaCount - adjusterPartDict[p].GetCrossSectionAreaOffset();
-                            double currentVal;
-
-                            if (partActiveAreaRemoved.TryGetValue(p, out currentVal))
-                            {
-                                if (Math.Abs(areaRemoved) > Math.Abs(currentVal))
-                                    partActiveAreaRemoved[p] = areaRemoved;
-                            }
-                            else
-                                partActiveAreaRemoved[p] = areaRemoved;
-                        }
-                    }
-                    foreach (KeyValuePair<Part, double> partAreaRemovedPair in partActiveAreaRemoved)
-                        area -= partAreaRemovedPair.Value;
-
-
-                    areaAdjustment[i] += area;
-                }
-            }*/
-            for(int i = 0; i < vehicleCrossSection.Length; i++)
-            {
-                double areaUnchanged = vehicleCrossSection[i].area;
-                double areaChanged = areaAdjustment[i];
-                if (areaChanged > 0)
-                    areaChanged = 0;
-                areaChanged += areaUnchanged;
-
-                vehicleCrossSection[i].area = Math.Max(0.15 * areaUnchanged, areaChanged);
-
+                }*/
             }
         }
 
@@ -1044,7 +1045,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             numSections = back - front;
             _length = _sectionThickness * numSections;
 
-            AdjustCrossSectionForAirDucting(_vehicleCrossSection, _currentGeoModules);
+            AdjustCrossSectionForAirDucting(_vehicleCrossSection, _currentGeoModules, front, back);
 
             GaussianSmoothCrossSections(_vehicleCrossSection, 3, FARSettingsScenarioModule.Settings.gaussianVehicleLengthFractionForSmoothing, _sectionThickness, _length, front, back, FARSettingsScenarioModule.Settings.numAreaSmoothingPasses, FARSettingsScenarioModule.Settings.numDerivSmoothingPasses);
 

@@ -151,7 +151,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     max.y = Math.Max(max.y, maxBounds.y);
                     max.z = Math.Max(max.z, maxBounds.z);
                 }
-                if (m.part && (m.part.Modules.Contains("FARControllableSurface")))
+                if (CheckPartForOverridingPartList(m))
                     overridingParts.Add(m.part);
             }
 
@@ -279,6 +279,20 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             BuildVoxel(geoModules, multiThreaded, solidify);
         }*/
+
+        private bool CheckPartForOverridingPartList(GeometryPartModule g)
+        {
+            if (g.part == null)
+                return false;
+
+            PartModuleList modules = g.part.Modules;
+            bool returnVal = false;
+
+            returnVal |= modules.Contains("FARControllableSurface");
+            returnVal |= g.HasCrossSectionAdjusters;
+
+            return returnVal;
+        }
 
         private void BuildVoxel(List<GeometryPartModule> geoModules, bool multiThreaded, bool solidify)
         {

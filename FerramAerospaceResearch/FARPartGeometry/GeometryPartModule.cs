@@ -62,6 +62,19 @@ namespace FerramAerospaceResearch.FARPartGeometry
         public List<GeometryMesh> meshDataList;
         private List<IGeometryUpdater> geometryUpdaters;
         private List<ICrossSectionAdjuster> crossSectionAdjusters;
+        public bool HasCrossSectionAdjusters
+        {
+            get
+            {
+                if (crossSectionAdjusters == null)
+                    return false;
+
+                if (crossSectionAdjusters.Count > 0)
+                    return true;
+
+                return false;
+            }
+        }
 
         private List<AnimationState> animStates;
         private List<float> animStateTime;

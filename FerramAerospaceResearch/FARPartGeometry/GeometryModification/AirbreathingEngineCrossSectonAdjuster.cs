@@ -87,12 +87,13 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
             this.engine = engine;
             this.part = engine.part;
 
-            exitArea = -2;
-        }
+            Bounds partBounds = part.GetPartColliderBoundsInBasis(Matrix4x4.identity);
+            exitArea = partBounds.extents.x + partBounds.extents.z;
+            exitArea *= 0.5;
+            exitArea *= exitArea;
+            exitArea *= Math.PI;
 
-        public void CalculateExitArea(double areaPerUnitThrust)
-        {
-            exitArea = areaPerUnitThrust * engine.maxThrust;       //we make this negative to account for it leaving through this direction
+            exitArea *= -1;     //make this negative to note that it is a removal of area 
         }
 
         public double AreaRemovedFromCrossSection(Vector3 vehicleAxis)
