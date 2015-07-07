@@ -881,7 +881,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                                 ductedArea -= val.crossSectionalAreaCount;
                         }
                     }
-                    ductedArea *= _voxelElementSize * _voxelElementSize;
+                    ductedArea *= _voxelElementSize * _voxelElementSize * 0.75;
 
                     if (ductedArea != 0)
                         if (frontMostIndex < 0)
@@ -902,7 +902,16 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     tmpArea = areaAdjustment;       //store for next iteration
 
                     if (areaAdjustment > 0 && prevAreaAdjustment > 0)
-                        _ductedAreaAdjustment[i] = areaAdjustment - prevAreaAdjustment;     //this transforms this into a change in area, but only for increases (intakes)
+                    {
+                        double areaChange = areaAdjustment - prevAreaAdjustment;
+                        if (areaChange > 0)
+                            _ductedAreaAdjustment[i] = areaChange;     //this transforms this into a change in area, but only for increases (intakes)
+                        else
+                        {
+                            tmpArea = prevAreaAdjustment;
+                            _ductedAreaAdjustment[i] = 0;
+                        }
+                    }
                         
                 }
 
@@ -916,8 +925,16 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     tmpArea = areaAdjustment;       //store for next iteration
 
                     if (areaAdjustment < 0 && prevAreaAdjustment < 0)
-                        _ductedAreaAdjustment[i] = areaAdjustment - prevAreaAdjustment;     //this transforms this into a change in area, but only for decreases (engines)
-
+                    {
+                        double areaChange = areaAdjustment - prevAreaAdjustment;
+                        if (areaChange < 0)
+                            _ductedAreaAdjustment[i] = areaChange;     //this transforms this into a change in area, but only for decreases (engines)
+                        else
+                        {
+                            tmpArea = prevAreaAdjustment;
+                            _ductedAreaAdjustment[i] = 0;
+                        }
+                    }
                 } 
                 
                 for (int i = _ductedAreaAdjustment.Length - 1; i >= 0; i--)
@@ -927,10 +944,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         areaAdjustment += _ductedAreaAdjustment[j];
 
                     _ductedAreaAdjustment[i] = areaAdjustment;
-                    ThreadSafeDebugLogger.Instance.RegisterMessage(areaAdjustment.ToString());
+                    //ThreadSafeDebugLogger.Instance.RegisterMessage(areaAdjustment.ToString());
                 }
 
-                double endIndexArea = _ductedAreaAdjustment[_ductedAreaAdjustment.Length - 1];
+                double endIndexArea = 0;// _ductedAreaAdjustment[_ductedAreaAdjustment.Length - 1];
 
                 double areaSlope, areaOffset;
                 areaSlope = -endIndexArea / (double)(backMostIndex - frontMostIndex);
@@ -958,6 +975,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         areaChanged = 0;
                     areaChanged += areaUnchanged;
 
+                    ThreadSafeDebugLogger.Instance.RegisterMessage(areaChanged.ToString());
                     vehicleCrossSection[i].area = Math.Max(0.15 * areaUnchanged, areaChanged);
 
                 }
