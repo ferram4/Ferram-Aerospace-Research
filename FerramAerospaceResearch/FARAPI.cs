@@ -219,6 +219,9 @@ namespace FerramAerospaceResearch
                 return gui.InfoParameters.stallFraction;
         }
 
+        /// <summary>
+        /// Increases flap deflection level for all control surfaces on this vessel, up to max setting of 3
+        /// </summary>
         public static void VesselIncreaseFlapDeflection(Vessel v)
         {
             for(int i = 0; i < v.parts.Count; i++)
@@ -232,6 +235,9 @@ namespace FerramAerospaceResearch
             }
         }
 
+        /// <summary>
+        /// Decreases flap deflection level for all control surfaces on this vessel, down to min setting of 0
+        /// </summary>
         public static void VesselDecreaseFlapDeflection(Vessel v)
         {
             for(int i = 0; i < v.parts.Count; i++)
@@ -243,6 +249,62 @@ namespace FerramAerospaceResearch
                     surface.SetDeflection(surface.flapDeflectionLevel - 1);
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns flap setting for this vessel
+        /// </summary>
+        /// <param name="v"></param>
+        /// <returns>Flap setting; 0 - 3 indicates no to full flap deflections; -1 indicates lack of any control surface parts</returns>
+        public static int VesselFlapSetting(Vessel v)
+        {
+            for (int i = 0; i < v.parts.Count; i++)
+            {
+                Part p = v.parts[i];
+                if (p.Modules.Contains("FARControllableSurface"))
+                {
+                    ferram4.FARControllableSurface surface = (ferram4.FARControllableSurface)p.Modules["FARControllableSurface"];
+                    return surface.flapDeflectionLevel;
+                }
+            }
+
+            return -1;
+        }
+        
+        /// <summary>
+        /// Sets spoilers to a certain value on this vessel
+        /// </summary>
+        public static void VesselSetSpoilers(Vessel v, bool spoilerActive)
+        {
+            for(int i = 0; i < v.parts.Count; i++)
+            {
+                Part p = v.parts[i];
+                if(p.Modules.Contains("FARControllableSurface"))
+                {
+                    ferram4.FARControllableSurface surface = (ferram4.FARControllableSurface)p.Modules["FARControllableSurface"];
+                    surface.brake = spoilerActive;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns spoiler setting for this vessel
+        /// </summary>
+        /// <param name="v"></param>
+        /// <returns>Spoiler setting; true indicates active spoilers, false indicates inactive or no spoilers in existence</returns>
+        public static bool VesselSpoilerSetting(Vessel v)
+        {
+            for (int i = 0; i < v.parts.Count; i++)
+            {
+                Part p = v.parts[i];
+                if (p.Modules.Contains("FARControllableSurface"))
+                {
+                    ferram4.FARControllableSurface surface = (ferram4.FARControllableSurface)p.Modules["FARControllableSurface"];
+                    return surface.brake;
+                }
+            }
+
+            return false;
         }
         
         #endregion
