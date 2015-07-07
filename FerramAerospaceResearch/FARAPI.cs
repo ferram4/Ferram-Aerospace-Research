@@ -219,7 +219,33 @@ namespace FerramAerospaceResearch
                 return gui.InfoParameters.stallFraction;
         }
 
-#endregion
+        public static void VesselIncreaseFlapDeflection(Vessel v)
+        {
+            for(int i = 0; i < v.parts.Count; i++)
+            {
+                Part p = v.parts[i];
+                if(p.Modules.Contains("FARControllableSurface"))
+                {
+                    ferram4.FARControllableSurface surface = (ferram4.FARControllableSurface)p.Modules["FARControllableSurface"];
+                    surface.SetDeflection(surface.flapDeflectionLevel + 1);
+                }
+            }
+        }
+
+        public static void VesselDecreaseFlapDeflection(Vessel v)
+        {
+            for(int i = 0; i < v.parts.Count; i++)
+            {
+                Part p = v.parts[i];
+                if (p.Modules.Contains("FARControllableSurface"))
+                {
+                    ferram4.FARControllableSurface surface = (ferram4.FARControllableSurface)p.Modules["FARControllableSurface"];
+                    surface.SetDeflection(surface.flapDeflectionLevel - 1);
+                }
+            }
+        }
+        
+        #endregion
 
         #region AeroPredictions
 

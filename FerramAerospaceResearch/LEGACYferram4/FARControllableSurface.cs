@@ -197,7 +197,7 @@ namespace ferram4
             }
         }
 
-        private void SetDeflection(int newstate)
+        public void SetDeflection(int newstate)
         {
             flapDeflectionLevel = Math.Max(0, Math.Min(3, newstate));
             UpdateEvents();
