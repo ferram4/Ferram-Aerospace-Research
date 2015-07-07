@@ -55,13 +55,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
         void Start()
         {
             Debug.Log("FAR Modular Flight Integrator function registration started");
-            ModularFlightIntegrator.RegisterUpdateAerodynamicsOverride(UpdateAerodynamics);
-            ModularFlightIntegrator.RegisterUpdateThermodynamicsPre(UpdateThermodynamicsPre);
+            ModularFI.ModularFlightIntegrator.RegisterUpdateAerodynamicsOverride(UpdateAerodynamics);
+            ModularFI.ModularFlightIntegrator.RegisterUpdateThermodynamicsPre(UpdateThermodynamicsPre);
             Debug.Log("FAR Modular Flight Integrator function registration complete");
             GameObject.Destroy(this);
         }
 
-        void UpdateThermodynamicsPre(ModularFlightIntegrator fi)
+        void UpdateThermodynamicsPre(ModularFI.ModularFlightIntegrator fi)
         {
             for (int i = 0; i < fi.PartThermalDataCount; i++)
             {
@@ -79,7 +79,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             //Debug.Log("MFI: " + fi.CoM + " " + Planetarium.GetUniversalTime());
         }
 
-        void UpdateAerodynamics(ModularFlightIntegrator fi, Part part)
+        void UpdateAerodynamics(ModularFI.ModularFlightIntegrator fi, Part part)
         {
             if (part.Modules.Contains("ModuleAeroSurface") || part.Modules.Contains("KerbalEVA"))     //FIXME Proper model for airbrakes
             {
@@ -95,7 +95,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         }
 
-        double CalculateAreaRadiative(ModularFlightIntegrator fi, Part part, FARAeroPartModule aeroModule)
+        double CalculateAreaRadiative(ModularFI.ModularFlightIntegrator fi, Part part, FARAeroPartModule aeroModule)
         {
             //double dragCubeExposed = fi.BaseFICalculateAreaExposed(part);
             if ((object)aeroModule == null)
@@ -106,7 +106,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
         }
 
-        double CalculateAreaExposed(ModularFlightIntegrator fi, Part part, FARAeroPartModule aeroModule)
+        double CalculateAreaExposed(ModularFI.ModularFlightIntegrator fi, Part part, FARAeroPartModule aeroModule)
         {
             double dragCubeExposed = fi.BaseFICalculateAreaExposed(part);
             if (aeroModule == null)

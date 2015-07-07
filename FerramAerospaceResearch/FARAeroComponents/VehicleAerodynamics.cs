@@ -840,7 +840,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 //sweep through entire vehicle
                 for (int i = 0; i < vehicleCrossSection.Length; i++)
                 {
-                    double ductedArea = 0;
+                    double ductedArea = 0;      //area based on the voxel size
+                    double actualArea = 0;      //area based on intake and engine data
+
                     //and all the intakes / engines
                     for (int j = 0; j < forwardFacingAdjustments.Count; j++)
                     {
@@ -852,9 +854,15 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         if (vehicleCrossSection[i].partSideAreaValues.TryGetValue(p, out val))
                         {
                             if (adjuster.AreaRemovedFromCrossSection() > 0)
+                            {
+                                actualArea += adjuster.AreaRemovedFromCrossSection();
                                 ductedArea += val.crossSectionalAreaCount;
+                            }
                             else
+                            {
+                                actualArea -= adjuster.AreaRemovedFromCrossSection();
                                 ductedArea -= val.crossSectionalAreaCount;
+                            }
                             /*double currentVal;
                             if (adjusterAreaPerVoxelDict.TryGetValue(p, out currentVal))
                             {
@@ -876,12 +884,21 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         if (vehicleCrossSection[i].partSideAreaValues.TryGetValue(p, out val))
                         {
                             if (adjuster.AreaRemovedFromCrossSection() < 0)
+                            {
+                                actualArea += adjuster.AreaRemovedFromCrossSection();
                                 ductedArea += val.crossSectionalAreaCount;
+                            }
                             else
+                            {
+                                actualArea -= adjuster.AreaRemovedFromCrossSection();
                                 ductedArea -= val.crossSectionalAreaCount;
+                            }
                         }
                     }
                     ductedArea *= _voxelElementSize * _voxelElementSize * 0.75;
+
+                    if (Math.Abs(actualArea) < Math.Abs(ductedArea))
+                        ductedArea = actualArea;
 
                     if (ductedArea != 0)
                         if (frontMostIndex < 0)
