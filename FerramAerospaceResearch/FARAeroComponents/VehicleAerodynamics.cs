@@ -440,7 +440,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 if (p == null || hitParts.Contains(p))
                     continue;
-                GeometryPartModule geoModule = p.Modules["GeometryPartModule"] as GeometryPartModule; // Could be null if a launch clamp
+
+                GeometryPartModule geoModule = null;
+
+                if (p.Modules.Contains("GeometryPartModule"))
+                    geoModule = (GeometryPartModule)p.Modules["GeometryPartModule"]; // Could be left null if a launch clamp
 
                 hitParts.Add(p);
 
