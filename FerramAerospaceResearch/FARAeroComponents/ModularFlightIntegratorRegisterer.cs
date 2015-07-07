@@ -66,10 +66,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
             for (int i = 0; i < fi.PartThermalDataCount; i++)
             {
                 Part part = fi.partThermalDataList[i].part;
-                PartModule module = part.Modules["FARAeroPartModule"];
-
-                if((object)module == null)
+                if (!part.Modules.Contains("FARAeroPartModule"))
                     continue;
+
+                PartModule module = part.Modules["FARAeroPartModule"];
 
                 FARAeroPartModule aeroModule = (FARAeroPartModule)module;
 

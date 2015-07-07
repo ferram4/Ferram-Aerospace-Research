@@ -992,7 +992,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         areaChanged = 0;
                     areaChanged += areaUnchanged;
 
-                    ThreadSafeDebugLogger.Instance.RegisterMessage(areaChanged.ToString());
+                    //ThreadSafeDebugLogger.Instance.RegisterMessage(areaChanged.ToString());
                     vehicleCrossSection[i].area = Math.Max(0.15 * areaUnchanged, areaChanged);
 
                 }
