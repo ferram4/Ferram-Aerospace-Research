@@ -615,7 +615,7 @@ namespace ferram4
 
             double skinFrictionDrag;
             if(HighLogic.LoadedSceneIsFlight)
-                skinFrictionDrag = FARAeroUtil.SkinFrictionDrag(rho, effective_MAC, v_scalar, MachNumber, FlightGlobals.getExternalTemperature((float)vessel.altitude, vessel.mainBody), vessel.mainBody.atmosphereAdiabaticIndex);
+                skinFrictionDrag = FARAeroUtil.SkinFrictionDrag(rho, effective_MAC, v_scalar, MachNumber, vessel.externalTemperature, vessel.mainBody.atmosphereAdiabaticIndex);
             else
                 skinFrictionDrag = 0.005;
 
@@ -846,8 +846,8 @@ namespace ferram4
             {
                 double Cn = liftslope;
                 //Cl = Cn * Math.Sin(2 * AoA) * 0.5;
-                double tmpAoAScaling = Math.Sqrt(FARMathUtil.Clamp(1 - CosAoA * CosAoA, 0, 1)) * 0.5 * Math.Sign(AoA);
-                Cl = Cn * 2 * CosAoA;
+                double tmpAoAScaling = Math.Sqrt(FARMathUtil.Clamp(1 - CosAoA * CosAoA, 0, 1)) * 0.5;
+                Cl = Cn * 2 * CosAoA * Math.Sign(AoA);
 
                 Cl += ClIncrementFromRear;
                 Cl *= tmpAoAScaling;
@@ -893,8 +893,8 @@ namespace ferram4
 
                 double Cn = liftslope;
                 //Cl = Cn * Math.Sin(2 * AoA) * 0.5;
-                double tmpAoAScaling = Math.Sqrt(FARMathUtil.Clamp(1 - CosAoA * CosAoA, 0, 1)) * 0.5 * Math.Sign(AoA);
-                Cl = Cn * 2 * CosAoA * tmpAoAScaling;
+                double tmpAoAScaling = Math.Sqrt(FARMathUtil.Clamp(1 - CosAoA * CosAoA, 0, 1));
+                Cl = Cn * 2 * CosAoA * tmpAoAScaling * Math.Sign(AoA);
 
                 if (MachNumber <= 1)
                 {
