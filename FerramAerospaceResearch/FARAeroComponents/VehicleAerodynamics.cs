@@ -845,7 +845,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 for (int i = 0; i < vehicleCrossSection.Length; i++)
                 {
                     double ductedArea = 0;      //area based on the voxel size
-                    double actualArea = 0;      //area based on intake and engine data
+                    //double actualArea = 0;      //area based on intake and engine data
 
                     //and all the intakes / engines
                     for (int j = 0; j < forwardFacingAdjustments.Count; j++)
@@ -859,12 +859,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         {
                             if (adjuster.AreaRemovedFromCrossSection() > 0)
                             {
-                                actualArea += adjuster.AreaRemovedFromCrossSection();
+                                //actualArea += adjuster.AreaRemovedFromCrossSection();
                                 ductedArea += val.crossSectionalAreaCount;
                             }
                             else
                             {
-                                actualArea -= adjuster.AreaRemovedFromCrossSection();
+                                //actualArea -= adjuster.AreaRemovedFromCrossSection();
                                 ductedArea -= val.crossSectionalAreaCount;
                             }
                             /*double currentVal;
@@ -889,20 +889,20 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         {
                             if (adjuster.AreaRemovedFromCrossSection() < 0)
                             {
-                                actualArea += adjuster.AreaRemovedFromCrossSection();
+                                //actualArea += adjuster.AreaRemovedFromCrossSection();
                                 ductedArea += val.crossSectionalAreaCount;
                             }
                             else
                             {
-                                actualArea -= adjuster.AreaRemovedFromCrossSection();
+                                //actualArea -= adjuster.AreaRemovedFromCrossSection();
                                 ductedArea -= val.crossSectionalAreaCount;
                             }
                         }
                     }
                     ductedArea *= _voxelElementSize * _voxelElementSize * 0.75;
 
-                    if (Math.Abs(actualArea) < Math.Abs(ductedArea))
-                        ductedArea = actualArea;
+                    //if (Math.Abs(actualArea) < Math.Abs(ductedArea))
+                    //    ductedArea = actualArea;
 
                     if (ductedArea != 0)
                         if (frontMostIndex < 0)
@@ -965,22 +965,16 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         areaAdjustment += _ductedAreaAdjustment[j];
 
                     _ductedAreaAdjustment[i] = areaAdjustment;
-                    //ThreadSafeDebugLogger.Instance.RegisterMessage(areaAdjustment.ToString());
+                    ThreadSafeDebugLogger.Instance.RegisterMessage(areaAdjustment.ToString());
                 }
 
-                double endIndexArea = 0;// _ductedAreaAdjustment[_ductedAreaAdjustment.Length - 1];
+                double endIndexArea = _ductedAreaAdjustment[backMostIndex];
+                double beginningIndexArea = _ductedAreaAdjustment[frontMostIndex];
 
                 double areaSlope, areaOffset;
-                areaSlope = -endIndexArea / (double)(backMostIndex - frontMostIndex);
+                areaSlope = -(endIndexArea - beginningIndexArea) / (double)(backMostIndex - frontMostIndex);
 
-                if (endIndexArea > 0)
-                {
-                    areaOffset = -areaSlope * frontMostIndex;
-                }
-                else
-                {
-                    areaOffset = -areaSlope * frontMostIndex + endIndexArea;
-                }
+                areaOffset = -areaSlope * frontMostIndex;
 
                 for (int i = frontMostIndex; i <= backMostIndex; i++)
                 {

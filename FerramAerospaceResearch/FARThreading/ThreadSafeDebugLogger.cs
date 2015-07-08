@@ -77,12 +77,17 @@ namespace FerramAerospaceResearch.FARThreading
 
                 _exceptionsThrown.Clear();
             }
+
+
             if (_debugMessages.Count > 0)
             {
+                System.Text.StringBuilder sB = new System.Text.StringBuilder();
                 for (int i = 0; i < _debugMessages.Count; i++)
-                    Debug.Log(_debugMessages[i]);
+                    sB.AppendLine(_debugMessages[i]);
 
                 _debugMessages.Clear();
+
+                Debug.Log(sB.ToString());
             }
 
         }
