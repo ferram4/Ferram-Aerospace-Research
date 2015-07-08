@@ -352,6 +352,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 for (int i = 0; i < animStates.Count; i++)
                 {
                     AnimationState state = animStates[i];
+                    if(state == null)
+                    {
+                        animStates.RemoveAt(i);
+                        animStateTime.RemoveAt(i);
+                        --i;
+                    }
                     float prevNormTime = animStateTime[i];
 
                     //if (state.speed != 0)     //if the animation is playing, send the event
