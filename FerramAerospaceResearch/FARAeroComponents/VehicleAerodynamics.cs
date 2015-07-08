@@ -1159,7 +1159,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 else if (potentialFlowNormalForce < -areaChangeMax)
                     potentialFlowNormalForce = -areaChangeMax;
                 else
-                    sonicBaseDrag *= Math.Abs(potentialFlowNormalForce / areaChangeMax);      //some scaling for small changes in cross-section
+                    if(areaChangeMax != 0)
+                        sonicBaseDrag *= Math.Abs(potentialFlowNormalForce / areaChangeMax);      //some scaling for small changes in cross-section
 
                 double flatnessRatio = _vehicleCrossSection[index].flatnessRatio;
                 if (flatnessRatio >= 1)
@@ -1531,6 +1532,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
         double cPPrandtlMeyerExpansion(double machNumber, double nuFreestream, double deflectionAngle)
         {
             double nu = nuFreestream - deflectionAngle;
+
+            if (nu > 180 / (130.45 * Math.PI))
+                nu = 180 / (130.45 * Math.PI);
 
             double effectiveFactor = nu / 130.45 * 180 / Math.PI;
             if (effectiveFactor < 0)

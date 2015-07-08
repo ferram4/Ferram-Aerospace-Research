@@ -325,7 +325,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 switch (plane)
                 {
                     case VoxelOrientationPlane.X_UP:
-                        if (location > xPlaneUp)
+                        if (location >= xPlaneUp)
                         {
                             xPlaneUp = location;
                             returnVal = true;
@@ -333,7 +333,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         break;
 
                     case VoxelOrientationPlane.X_DOWN:
-                        if (location > xPlaneDown)
+                        if (location >= xPlaneDown)
                         {
                             xPlaneDown = location;
                             returnVal = true;
@@ -341,7 +341,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         break;
 
                     case VoxelOrientationPlane.Y_UP:
-                        if (location > yPlaneUp)
+                        if (location >= yPlaneUp)
                         {
                             yPlaneUp = location;
                             returnVal = true;
@@ -349,7 +349,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         break;
 
                     case VoxelOrientationPlane.Y_DOWN:
-                        if (location > yPlaneDown)
+                        if (location >= yPlaneDown)
                         {
                             yPlaneDown = location;
                             returnVal = true;
@@ -357,7 +357,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         break;
 
                     case VoxelOrientationPlane.Z_UP:
-                        if (location > zPlaneUp)
+                        if (location >= zPlaneUp)
                         {
                             zPlaneUp = location;
                             returnVal = true;
@@ -365,7 +365,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         break;
 
                     case VoxelOrientationPlane.Z_DOWN:
-                        if (location > zPlaneDown)
+                        if (location >= zPlaneDown)
                         {
                             zPlaneDown = location;
                             returnVal = true;
