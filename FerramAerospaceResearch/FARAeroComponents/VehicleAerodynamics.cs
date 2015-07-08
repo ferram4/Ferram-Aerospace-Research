@@ -965,7 +965,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         areaAdjustment += _ductedAreaAdjustment[j];
 
                     _ductedAreaAdjustment[i] = areaAdjustment;
-                    ThreadSafeDebugLogger.Instance.RegisterMessage(areaAdjustment.ToString());
+                    //ThreadSafeDebugLogger.Instance.RegisterMessage(areaAdjustment.ToString());
                 }
 
                 double endIndexArea = _ductedAreaAdjustment[backMostIndex];
@@ -1162,8 +1162,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 else
                     sonicBaseDrag *= (float)flatnessRatio;
 
-                sonicBaseDrag = Math.Abs(sonicBaseDrag);
-
                 Dictionary<Part, VoxelCrossSection.SideAreaValues> includedPartsAndAreas = _vehicleCrossSection[index].partSideAreaValues;
 
                 double surfaceArea = 0;
@@ -1181,7 +1179,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 //float sonicWaveDrag = (float)CalculateTransonicWaveDrag(i, index, numSections, front, _sectionThickness, Math.Min(_maxCrossSectionArea * 2, curArea * 16));//Math.Min(maxCrossSectionArea * 0.1, curArea * 0.25));
                 //sonicWaveDrag *= (float)FARSettingsScenarioModule.Settings.fractionTransonicDrag;     //this is just to account for the higher drag being felt due to the inherent blockiness of the model being used and noise introduced by the limited control over shape and through voxelization
-                float hypersonicDragForward = (float)CalculateHypersonicDrag(prevArea, curArea, _sectionThickness);
+                float hypersonicDragForward = (float)CalculateHypersonicDrag(prevArea, curArea, _sectionThickness);     //negative forces
                 float hypersonicDragBackward = (float)CalculateHypersonicDrag(nextArea, curArea, _sectionThickness);
 
                 float hypersonicDragForwardFrac = 0, hypersonicDragBackwardFrac = 0;
@@ -1228,10 +1226,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
                 else if (sonicBaseDrag < 0)
                 {
-                    xForcePressureAoA0.Add((float)criticalMachNumber, (-sonicBaseDrag * 0.25f + hypersonicDragForward * 0.4f * hypersonicDragForwardFrac) * lowFinenessRatioSubsonicFactor, 0f, 0f);
+                    xForcePressureAoA0.Add((float)criticalMachNumber, (sonicBaseDrag * 0.25f + hypersonicDragForward * 0.4f * hypersonicDragForwardFrac) * lowFinenessRatioSubsonicFactor, 0f, 0f);
                     xForcePressureAoA180.Add((float)criticalMachNumber, (-hypersonicDragBackward * 0.4f * hypersonicDragBackwardFrac) * lowFinenessRatioSubsonicFactor, 0f, 0f);
 
-                    sonicAoA0Drag = -(float)(cPSonicForward * (curArea - prevArea)) - sonicBaseDrag + hypersonicDragForward * 0.2f;
+                    sonicAoA0Drag = -(float)(cPSonicForward * (curArea - prevArea)) + sonicBaseDrag + hypersonicDragForward * 0.2f;
                     sonicAoA180Drag = (float)(cPSonicBackward * (curArea - nextArea)) - hypersonicDragBackward * 0.2f;
 
                     //sonicAoA0Drag = sonicWaveDrag - sonicBaseDrag + hypersonicDragForward * 0.2f;
