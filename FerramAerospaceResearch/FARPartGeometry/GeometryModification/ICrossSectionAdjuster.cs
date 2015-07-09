@@ -62,5 +62,6 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
         void SetThisToVesselMatrixForTransform();
 
+        void UpdateArea();
     }
 }

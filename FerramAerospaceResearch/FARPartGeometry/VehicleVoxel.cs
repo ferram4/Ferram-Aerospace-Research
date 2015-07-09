@@ -155,6 +155,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     overridingParts.Add(m.part);
             }
 
+
+
             Vector3d size = max - min;
 
             double voxelVolume = size.x * size.y * size.z;  //from bounds, get voxel volume
@@ -289,7 +291,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             bool returnVal = false;
 
             returnVal |= modules.Contains("FARControllableSurface");
-            returnVal |= g.HasCrossSectionAdjusters;
+            if(g.HasCrossSectionAdjusters)
+            {
+                returnVal |= g.MaxCrossSectionAdjusterArea > 0;
+            }
 
             return returnVal;
         }

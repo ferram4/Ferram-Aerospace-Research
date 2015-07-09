@@ -54,6 +54,7 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
         Vector3 vehicleBasisForwardVector;
         double intakeArea;
+
         Matrix4x4 thisToVesselMatrix;
         Matrix4x4 meshLocalToWorld;
         Transform intakeTrans;
@@ -92,7 +93,6 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
             vehicleBasisForwardVector = thisToVesselMatrix.MultiplyVector(vehicleBasisForwardVector);
 
             intakeArea = (float)intakeType.GetField("Area").GetValue(intake);
-
         }
 
         public IntakeCrossSectionAdjuster(ModuleResourceIntake intake, Matrix4x4 worldToVesselMatrix)
@@ -153,6 +153,16 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
         public void SetThisToVesselMatrixForTransform()
         {
             meshLocalToWorld = intakeTrans.localToWorldMatrix;
+        }
+
+        public void UpdateArea()
+        {
+            foreach (AttachNode node in part.attachNodes)
+                if (node.nodeType == AttachNode.NodeType.Stack && Vector3.Dot(node.position, (part.transform.worldToLocalMatrix * intakeTrans.localToWorldMatrix).MultiplyVector(Vector3.forward)) > 0)
+                {
+                    frontNode = node;
+                    break;
+                }
         }
     }
 }

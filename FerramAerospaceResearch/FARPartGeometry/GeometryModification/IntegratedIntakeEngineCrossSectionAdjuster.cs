@@ -149,5 +149,7 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
         {
             meshLocalToWorld = intakeTrans.localToWorldMatrix;
         }
+
+        public void UpdateArea() { }
     }
 }

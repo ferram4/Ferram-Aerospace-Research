@@ -76,6 +76,26 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
         }
 
+        public double MaxCrossSectionAdjusterArea
+        {
+            get
+            {
+                if (crossSectionAdjusters == null)
+                    return 0;
+
+                double value = 0;
+
+                for(int i = 0; i < crossSectionAdjusters.Count; i++)
+                {
+                    double tmp = Math.Abs(crossSectionAdjusters[i].AreaRemovedFromCrossSection());
+                    if (tmp > value)
+                        value = tmp;
+                }
+
+                return value;
+            }
+        }
+
         private List<AnimationState> animStates;
         private List<float> animStateTime;
 
@@ -386,7 +406,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             for(int i = 0; i < crossSectionAdjusters.Count;i++)
             {
                 ICrossSectionAdjuster adjuster = crossSectionAdjusters[i];
-                adjuster.TransformBasis(basis);
+                //adjuster.TransformBasis(basis);
 
                 if (adjuster.AreaRemovedFromCrossSection(vehicleMainAxis) != 0)
                     forwardFacing.Add(adjuster);
@@ -492,7 +512,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 for(int i = 0; i < crossSectionAdjusters.Count; i++)
                 {
-                    crossSectionAdjusters[i].SetThisToVesselMatrixForTransform();
+                    ICrossSectionAdjuster adjuster = crossSectionAdjusters[i];
+                    adjuster.SetThisToVesselMatrixForTransform();
+                    adjuster.TransformBasis(worldToVesselMatrix);
+                    adjuster.UpdateArea();
                 }
             }
             overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
