@@ -268,21 +268,74 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 worldToVesselMatrix = EditorLogic.RootPart.partTransform.worldToLocalMatrix;
             } 
             crossSectionAdjusters = new List<ICrossSectionAdjuster>();
-            if(part.Modules.Contains("ModuleEngines"))
+
+            string intakeType = "", engineType = "";
+
+            if (part.Modules.Contains("ModuleEngines"))
+                engineType = "ModuleEngines";
+            else if (part.Modules.Contains("ModuleEnginesFX"))
+                engineType = "ModuleEnginesFX";
+            else if (part.Modules.Contains("ModuleEnginesAJEJet"))       //hard-coded support for AJE; TODO: separate out for more configurable compatibility on 3rd-party end
+                engineType = "ModuleEnginesAJEJet";
+
+
+            if (part.Modules.Contains("ModuleResourceIntake"))
+                intakeType = "ModuleResourceIntake";
+            else if (part.Modules.Contains("AJEInlet"))
+                intakeType = "AJEInlet";
+
+            if (intakeType != "" && engineType != "")
             {
-                ModuleEngines engines = (ModuleEngines)part.Modules["ModuleEngines"];
-                for(int i = 0; i < engines.propellants.Count; i++)
-                {
-                    Propellant p = engines.propellants[i];
-                    if (p.name == "IntakeAir")
-                    {
-                        AirbreathingEngineCrossSectonAdjuster engineAdjuster = new AirbreathingEngineCrossSectonAdjuster(engines, worldToVesselMatrix);
-                        crossSectionAdjusters.Add(engineAdjuster);
-                        break;
-                    }
-                }
+                IntegratedIntakeEngineCrossSectionAdjuster intakeAdjuster = new IntegratedIntakeEngineCrossSectionAdjuster(part.Modules[intakeType], worldToVesselMatrix);
+                crossSectionAdjusters.Add(intakeAdjuster);
+                return;
             }
-            if (part.Modules.Contains("ModuleEnginesFX"))
+            if(intakeType != "")
+            {
+                PartModule module = part.Modules[intakeType];
+
+                if (module is ModuleResourceIntake)
+                {
+                    ModuleResourceIntake intake = (ModuleResourceIntake)module;
+
+                    IntakeCrossSectionAdjuster intakeAdjuster = new IntakeCrossSectionAdjuster(intake, worldToVesselMatrix);
+                    crossSectionAdjusters.Add(intakeAdjuster);
+                }
+                else
+                {
+                    IntakeCrossSectionAdjuster intakeAdjuster = new IntakeCrossSectionAdjuster(module, worldToVesselMatrix);
+                    crossSectionAdjusters.Add(intakeAdjuster);
+                }
+
+                return;
+            }
+            if (engineType != "")
+            {
+                ModuleEngines engines = (ModuleEngines)part.Modules[engineType];
+                bool airBreather = false;
+
+                if (engineType == "ModuleEnginesAJEJet")
+                    airBreather = true;
+                else
+                    for(int i = 0; i < engines.propellants.Count; i++)
+                    {
+                        Propellant p = engines.propellants[i];
+                        if (p.name == "IntakeAir")
+                        {
+                            airBreather = true;
+                            break;
+                        }
+
+                    }
+
+                if (airBreather)
+                {
+                    AirbreathingEngineCrossSectonAdjuster engineAdjuster = new AirbreathingEngineCrossSectonAdjuster(engines, worldToVesselMatrix);
+                    crossSectionAdjusters.Add(engineAdjuster);
+                }
+                return;
+            }
+            /*if (part.Modules.Contains("ModuleEnginesFX"))
             {
                 ModuleEnginesFX engines = (ModuleEnginesFX)part.Modules["ModuleEnginesFX"];
                 for (int i = 0; i < engines.propellants.Count; i++)
@@ -312,7 +365,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 IntakeCrossSectionAdjuster intakeAdjuster = new IntakeCrossSectionAdjuster(part.Modules["AJEInlet"], worldToVesselMatrix);
                 crossSectionAdjusters.Add(intakeAdjuster);
-            }
+            }*/
         }
 
         public void RunIGeometryUpdaters()

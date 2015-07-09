@@ -77,6 +77,7 @@
     <Compile Include="FARPartGeometry\GeometryModification\CompoundPartGeoUpdater.cs" />
     <Compile Include="FARPartGeometry\GeometryModification\ICrossSectionAdjuster.cs" />
     <Compile Include="FARPartGeometry\GeometryModification\IntakeCrossSectionAdjuster.cs" />
+    <Compile Include="FARPartGeometry\GeometryModification\IntegratedIntakeEngineCrossSectionAdjuster.cs" />
     <Compile Include="FARPartGeometry\PartTransformInfo.cs" />
     <Compile Include="FARSettingsScenarioModule.cs" />
     <Compile Include="FARThreading\ThreadSafeDebugLogger.cs" />
