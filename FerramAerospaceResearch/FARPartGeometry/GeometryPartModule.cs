@@ -291,18 +291,18 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             string intakeType = "", engineType = "";
 
-            if (part.Modules.Contains("ModuleEngines"))
+            if (part.Modules.Contains("ModuleEnginesAJEJet"))       //hard-coded support for AJE; TODO: separate out for more configurable compatibility on 3rd-party end
+                engineType = "ModuleEnginesAJEJet";
+            else if (part.Modules.Contains("ModuleEngines"))
                 engineType = "ModuleEngines";
             else if (part.Modules.Contains("ModuleEnginesFX"))
                 engineType = "ModuleEnginesFX";
-            else if (part.Modules.Contains("ModuleEnginesAJEJet"))       //hard-coded support for AJE; TODO: separate out for more configurable compatibility on 3rd-party end
-                engineType = "ModuleEnginesAJEJet";
 
 
-            if (part.Modules.Contains("ModuleResourceIntake"))
-                intakeType = "ModuleResourceIntake";
-            else if (part.Modules.Contains("AJEInlet"))
+            if (part.Modules.Contains("AJEInlet"))
                 intakeType = "AJEInlet";
+            else if (part.Modules.Contains("ModuleResourceIntake"))
+                intakeType = "ModuleResourceIntake";
 
             if (intakeType != "" && engineType != "")
             {
