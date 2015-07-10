@@ -172,9 +172,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             double tmp = 0.125 * invElementSize;
 
-            xLength = (int)Math.Ceiling(size.x * tmp) + 1;
-            yLength = (int)Math.Ceiling(size.y * tmp) + 1;
-            zLength = (int)Math.Ceiling(size.z * tmp) + 1;
+            xLength = (int)Math.Ceiling(size.x * tmp) + 2;
+            yLength = (int)Math.Ceiling(size.y * tmp) + 2;
+            zLength = (int)Math.Ceiling(size.z * tmp) + 2;
 
             lock (clearedChunks)        //make sure that we can actually voxelize without breaking the memory limits
             {
