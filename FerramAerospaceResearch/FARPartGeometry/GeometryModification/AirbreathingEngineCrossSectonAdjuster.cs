@@ -53,7 +53,7 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
         Vector3 vehicleBasisForwardVector;
 
         double exitArea;
-        double areaCount;
+        int sign = 1;
 
         Matrix4x4 thisToVesselMatrix;
         Matrix4x4 meshLocalToWorld;
@@ -107,15 +107,15 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
         public double AreaRemovedFromCrossSection()
         {
-            return exitArea;
+            return exitArea * sign;
         }
 
-        public void SetCrossSectionAreaCountOffset(double count)
+        public void SetForwardBackwardNoFlowDirection(int sign)
         {
-            areaCount = count;
+            this.sign = sign;
         }
 
-        public double GetCrossSectionAreaCountOffset() { return areaCount; }
+        public int GetForwardBackwardNoFlowSign() { return sign; }
         
         public void TransformBasis(Matrix4x4 matrix)
         {

@@ -153,7 +153,7 @@ namespace FerramAerospaceResearch
                 FARAeroUtil.bodyAtmosphereConfiguration = new Dictionary<int, double[]>();
                 foreach (ConfigNode bodyProperties in node.GetNodes("BodyAtmosphericData"))
                 {
-                    if (bodyProperties == null || !bodyProperties.HasValue("index") || !bodyProperties.HasValue("viscosityAtReferenceTemp")
+                    if (bodyProperties == null || !(bodyProperties.HasValue("index") || bodyProperties.HasValue("name")) || !bodyProperties.HasValue("viscosityAtReferenceTemp")
                         || !bodyProperties.HasValue("referenceTemp"))
                         continue;
 
@@ -166,8 +166,22 @@ namespace FerramAerospaceResearch
                     double.TryParse(bodyProperties.GetValue("referenceTemp"), out tmp);
 
                     Rgamma_and_gamma[1] = tmp;
-                    int index;
-                    int.TryParse(bodyProperties.GetValue("index"), out index);
+                    int index = -1;
+
+                    if(bodyProperties.HasValue("name"))
+                    {
+                        string name = bodyProperties.GetValue("name");
+
+                        foreach(CelestialBody body in FlightGlobals.Bodies)
+                            if(body.bodyName == name)
+                            {
+                                index = body.flightGlobalsIndex;
+                                break;
+                            }
+                    }
+                    
+                    if(index < 0)
+                        int.TryParse(bodyProperties.GetValue("index"), out index);
 
                     FARAeroUtil.bodyAtmosphereConfiguration.Add(index, Rgamma_and_gamma);
                 }

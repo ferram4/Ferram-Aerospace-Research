@@ -187,7 +187,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Matrix4x4 worldToVesselMatrix;
             if (HighLogic.LoadedSceneIsFlight)
             {
-                worldToVesselMatrix = vessel.transform.worldToLocalMatrix;
+                worldToVesselMatrix = vessel.vesselTransform.worldToLocalMatrix;
             }
             else
             {
@@ -281,7 +281,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Matrix4x4 worldToVesselMatrix;
             if (HighLogic.LoadedSceneIsFlight)
             {
-                worldToVesselMatrix = vessel.transform.worldToLocalMatrix;
+                worldToVesselMatrix = vessel.vesselTransform.worldToLocalMatrix;
             }
             else
             {
@@ -398,7 +398,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     geometryUpdaters[i].FlightGeometryUpdate();
         }
 
-        public void GetICrossSectionAdjusters(List<ICrossSectionAdjuster> forwardFacing, List<ICrossSectionAdjuster> rearwardFacing, Matrix4x4 basis, Vector3 vehicleMainAxis)
+        public void GetICrossSectionAdjusters(List<ICrossSectionAdjuster> activeAdjusters, Matrix4x4 basis, Vector3 vehicleMainAxis)
         {
             if (crossSectionAdjusters == null)
                 return;
@@ -409,9 +409,17 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 //adjuster.TransformBasis(basis);
 
                 if (adjuster.AreaRemovedFromCrossSection(vehicleMainAxis) != 0)
-                    forwardFacing.Add(adjuster);
+                {
+                    adjuster.SetForwardBackwardNoFlowDirection(1);
+                    activeAdjusters.Add(adjuster);
+                }
                 else if (adjuster.AreaRemovedFromCrossSection(-vehicleMainAxis) != 0)
-                    rearwardFacing.Add(adjuster);
+                {
+                    adjuster.SetForwardBackwardNoFlowDirection(-1);
+                    activeAdjusters.Add(adjuster);
+                }
+                else
+                    adjuster.SetForwardBackwardNoFlowDirection(0);
             }
         }
 
@@ -457,7 +465,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             Matrix4x4 transformMatrix;
             if (HighLogic.LoadedSceneIsFlight)
-                transformMatrix = vessel.transform.worldToLocalMatrix;
+                transformMatrix = vessel.vesselTransform.worldToLocalMatrix;
             else
                 transformMatrix = EditorLogic.RootPart.partTransform.worldToLocalMatrix;
 
@@ -722,7 +730,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             Matrix4x4 transformMatrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, relativeRescaleFactor);
             if (HighLogic.LoadedSceneIsFlight)
-                transformMatrix = vessel.transform.worldToLocalMatrix * transformMatrix;
+                transformMatrix = vessel.vesselTransform.worldToLocalMatrix * transformMatrix;
             else
                 transformMatrix = EditorLogic.RootPart.partTransform.worldToLocalMatrix * transformMatrix;
 

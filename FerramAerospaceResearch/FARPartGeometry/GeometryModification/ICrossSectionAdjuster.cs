@@ -54,8 +54,8 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
         double AreaRemovedFromCrossSection(Vector3 orientationVector);
         double AreaRemovedFromCrossSection();
 
-        void SetCrossSectionAreaCountOffset(double count);
-        double GetCrossSectionAreaCountOffset();
+        void SetForwardBackwardNoFlowDirection(int sign);
+        int GetForwardBackwardNoFlowSign();
         
         void TransformBasis(Matrix4x4 transform);
 

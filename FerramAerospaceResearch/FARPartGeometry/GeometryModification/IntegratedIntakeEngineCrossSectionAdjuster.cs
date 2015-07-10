@@ -54,6 +54,8 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
         Vector3 vehicleBasisForwardVector;
         double intakeArea;
+        int sign = 1;
+
         Matrix4x4 thisToVesselMatrix;
         Matrix4x4 meshLocalToWorld;
         Transform intakeTrans;
@@ -125,13 +127,17 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
         public double AreaRemovedFromCrossSection()
         {
             if (frontNode == null || frontNode.attachedPart == null)
-                return intakeArea;
+                return intakeArea * sign;
             else
                 return 0;
         }
 
-        public void SetCrossSectionAreaCountOffset(double count) { }
-        public double GetCrossSectionAreaCountOffset() { return 0; }
+        public void SetForwardBackwardNoFlowDirection(int sign)
+        {
+            this.sign = sign;
+        }
+
+        public int GetForwardBackwardNoFlowSign() { return sign; }
         
         public void TransformBasis(Matrix4x4 matrix)
         {

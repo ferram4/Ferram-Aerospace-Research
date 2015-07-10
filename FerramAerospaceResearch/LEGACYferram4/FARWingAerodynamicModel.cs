@@ -233,7 +233,7 @@ namespace ferram4
         
             double ClUpwards = 1;
             if (HighLogic.LoadedSceneIsFlight)
-                ClUpwards = Vector3.Dot(liftDirection, -vessel.transform.forward);
+                ClUpwards = Vector3.Dot(liftDirection, -vessel.vesselTransform.forward);
             ClUpwards *= Cl;
 
             return ClUpwards;
