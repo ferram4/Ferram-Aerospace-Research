@@ -468,14 +468,12 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         void OverallSelectionGUI(int windowId)
         {
-            GUILayout.BeginHorizontal();
+            GUILayout.BeginHorizontal(GUILayout.Width(500));
             currentMode = (FAREditorMode)GUILayout.SelectionGrid((int)currentMode, FAReditorMode_str, 4);
             GUILayout.BeginVertical();
-            if (GUILayout.Button("Toggle Gear"))
+            if (GUILayout.Button(gearToggle ? "Lower Gear" : "Raise Gear"))
                 ToggleGear();
             GUILayout.EndVertical();
-            if (GUILayout.Button("Force Update"))
-                RequestUpdateVoxel();
 
             GUILayout.EndHorizontal();
             //GUILayout.EndHorizontal();
@@ -498,7 +496,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             {
                 CrossSectionAnalysisGUI();
                 DebugVisualizationGUI();
-                guiRect.height = useKSPSkin ? 310 : 210;
+                guiRect.height = useKSPSkin ? 330 : 220;
             }
 
             GUI.DragWindow();
@@ -527,7 +525,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical(BackgroundStyle, GUILayout.ExpandHeight(true));
-            GUILayout.Label("Minimal wave drag is achieved by maintaining a\n\rsmooth, minimal curvature cross-section curve.");
+            GUILayout.Label("Minimal wave drag is achieved by maintaining a\n\rsmooth, minimal curvature cross-section curve, including the\n\reffects of intake -> engine ducting.");
             bool areaVisible  = _areaRulingOverlay.IsVisible(EditorAreaRulingOverlay.OverlayType.AREA);
             bool derivVisible = _areaRulingOverlay.IsVisible(EditorAreaRulingOverlay.OverlayType.DERIV);
             bool coeffVisible = _areaRulingOverlay.IsVisible(EditorAreaRulingOverlay.OverlayType.COEFF);
@@ -634,9 +632,15 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                     ModuleAdvancedLandingGear l = (ModuleAdvancedLandingGear)p.Modules["ModuleAdvancedLandingGear"];
                     l.startDeployed = gearToggle;
                 }
-                if(p.Modules.Contains("FSWheel"))
+                if(p.Modules.Contains("FSwheel"))
                 {
-                    PartModule m = p.Modules["FSWheel"];
+                    PartModule m = p.Modules["FSwheel"];
+                    MethodInfo method = m.GetType().GetMethod("animate", BindingFlags.Instance | BindingFlags.NonPublic);
+                    method.Invoke(m, gearToggle ? new object[] { "Deploy" } : new object[] { "Retract" });
+                }
+                if (p.Modules.Contains("FSBDwheel"))
+                {
+                    PartModule m = p.Modules["FSBDwheel"];
                     MethodInfo method = m.GetType().GetMethod("animate", BindingFlags.Instance | BindingFlags.NonPublic);
                     method.Invoke(m, gearToggle ? new object[] { "Deploy" } : new object[] { "Retract" });
                 }
