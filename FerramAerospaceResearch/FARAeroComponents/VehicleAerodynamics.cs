@@ -797,7 +797,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             return val;
         }
 
-        unsafe void AdjustCrossSectionForAirDucting(VoxelCrossSection[] vehicleCrossSection, List<GeometryPartModule> geometryModules, int front, int back)
+        unsafe void AdjustCrossSectionForAirDucting(VoxelCrossSection[] vehicleCrossSection, List<GeometryPartModule> geometryModules, int front, int back, ref double maxCrossSectionArea)
         {
             List<ICrossSectionAdjuster> activeAdjusters;
             activeAdjusters = new List<ICrossSectionAdjuster>();
@@ -1004,6 +1004,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     currentArea = _ductedAreaAdjustment[index];
                 }
 
+                maxCrossSectionArea = 0;
                 //put upper limit on area lost
                 for (int i = 0; i < vehicleCrossSection.Length; i++)
                 {
@@ -1014,7 +1015,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     areaChanged += areaUnchanged;
 
                     //ThreadSafeDebugLogger.Instance.RegisterMessage(areaChanged.ToString());
-                    vehicleCrossSection[i].area = Math.Max(0.15 * areaUnchanged, areaChanged);
+                    double tmpTotalArea = Math.Max(0.15 * areaUnchanged, areaChanged);
+                    if (tmpTotalArea > maxCrossSectionArea)
+                        maxCrossSectionArea = tmpTotalArea;
+
+                    vehicleCrossSection[i].area = tmpTotalArea;
 
                 }
                 
@@ -1032,7 +1037,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             numSections = back - front;
             _length = _sectionThickness * numSections;
 
-            AdjustCrossSectionForAirDucting(_vehicleCrossSection, _currentGeoModules, front, back);
+            AdjustCrossSectionForAirDucting(_vehicleCrossSection, _currentGeoModules, front, back, ref _maxCrossSectionArea);
 
             GaussianSmoothCrossSections(_vehicleCrossSection, 3, FARSettingsScenarioModule.Settings.gaussianVehicleLengthFractionForSmoothing, _sectionThickness, _length, front, back, FARSettingsScenarioModule.Settings.numAreaSmoothingPasses, FARSettingsScenarioModule.Settings.numDerivSmoothingPasses);
 
