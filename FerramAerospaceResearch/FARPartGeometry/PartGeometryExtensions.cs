@@ -244,6 +244,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     Transform.AddRange(p.FindModelComponents<Transform>(transformString));
                 }
             }
+            if(p.Modules.Contains("USI_ModuleWarpEngine"))      //come up with more proper solution
+            {
+                Transform.AddRange(p.FindModelComponents<Transform>("Torus_001"));
+                Transform.AddRange(p.FindModelComponents<Transform>("EditorWarpBubble"));
+            }
             foreach (Transform t in p.FindModelComponents<Transform>())
             {
                 if (Transform.Contains(t))
