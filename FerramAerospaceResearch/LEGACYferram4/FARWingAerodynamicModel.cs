@@ -846,11 +846,12 @@ namespace ferram4
             {
                 double Cn = liftslope;
                 //Cl = Cn * Math.Sin(2 * AoA) * 0.5;
-                double tmpAoAScaling = Math.Sqrt(FARMathUtil.Clamp(1 - CosAoA * CosAoA, 0, 1)) * 0.5;
-                Cl = Cn * 2 * CosAoA * Math.Sign(AoA);
+                double sinAoA = Math.Sqrt(FARMathUtil.Clamp(1 - CosAoA * CosAoA, 0, 1));
+                Cl = Cn * CosAoA * Math.Sign(AoA);
 
                 Cl += ClIncrementFromRear;
-                Cl *= tmpAoAScaling;
+                Cl *= sinAoA;
+
                 if (Math.Abs(Cl) > Math.Abs(ACweight))
                     ACshift *= FARMathUtil.Clamp(Math.Abs(ACweight / Cl), 0, 1);
                 Cd = (Cl * Cl / piARe);     //Drag due to 3D effects on wing and base constant
@@ -893,12 +894,12 @@ namespace ferram4
 
                 double Cn = liftslope;
                 //Cl = Cn * Math.Sin(2 * AoA) * 0.5;
-                double tmpAoAScaling = Math.Sqrt(FARMathUtil.Clamp(1 - CosAoA * CosAoA, 0, 1));
-                Cl = Cn * 2 * CosAoA * tmpAoAScaling * Math.Sign(AoA);
+                double sinAoA = Math.Sqrt(FARMathUtil.Clamp(1 - CosAoA * CosAoA, 0, 1));
+                Cl = Cn * CosAoA * sinAoA * Math.Sign(AoA);
 
                 if (MachNumber <= 1)
                 {
-                    Cl += ClIncrementFromRear * tmpAoAScaling;
+                    Cl += ClIncrementFromRear * sinAoA;
                     if (Math.Abs(Cl) > Math.Abs(ACweight))
                         ACshift *= FARMathUtil.Clamp(Math.Abs(ACweight / Cl), 0, 1);
                 }

@@ -780,7 +780,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
 
                 vehicleCrossSection[i].secondAreaDeriv = secondDeriv * denom;
-                ThreadSafeDebugLogger.Instance.RegisterMessage(vehicleCrossSection[i].secondAreaDeriv.ToString());
+                //ThreadSafeDebugLogger.Instance.RegisterMessage(vehicleCrossSection[i].secondAreaDeriv.ToString());
             }
         }
 
