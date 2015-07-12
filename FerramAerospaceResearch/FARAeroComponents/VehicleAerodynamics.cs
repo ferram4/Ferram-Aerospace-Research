@@ -627,51 +627,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
 
             CalculateCrossSectionSecondDerivs(vehicleCrossSection, numVals, frontIndex, backIndex, sectionThickness);
-            //2nd derivs must be recalculated now using the adjusted areas
-            /*double denom = sectionThickness;
-            denom *= denom;
-            denom = 0.0625 / denom;
-
-            for (int i = frontIndex; i <= backIndex; i++)       //calculate 2nd derivs, raw
-            {
-                double areaM3, areaM2, areaM1, area0, areaP1, areaP2, areaP3;
-
-                double areaSecondDeriv;
-
-                if(i - frontIndex < 3)     //N5 forward difference for frontIndex
-                {
-                    areaM2 = vehicleCrossSection[i].area;
-                    area0 = vehicleCrossSection[i + 2].area;
-                    areaP2 = vehicleCrossSection[i + 4].area;
-
-                    areaSecondDeriv = (areaM2 + areaP2) - 2 * area0;
-                    areaSecondDeriv *= denom * 4;
-                }
-                else if (backIndex - i < 3) //N5 backward difference for backIndex
-                {
-                    areaM2 = vehicleCrossSection[i - 4].area;
-                    area0 = vehicleCrossSection[i - 2].area;
-                    areaP2 = vehicleCrossSection[i].area;
-
-                    areaSecondDeriv = (areaM2 + areaP2) - 2 * area0;
-                    areaSecondDeriv *= denom * 4;
-                }
-                else                     //N7 central difference for all others
-                {
-                    areaM3 = vehicleCrossSection[i - 3].area;
-                    areaM2 = vehicleCrossSection[i - 2].area;
-                    areaM1 = vehicleCrossSection[i - 1].area;
-                    area0 = vehicleCrossSection[i].area;
-                    areaP1 = vehicleCrossSection[i + 1].area;
-                    areaP2 = vehicleCrossSection[i + 2].area;
-                    areaP3 = vehicleCrossSection[i + 3].area;
-
-                    areaSecondDeriv = (areaM3 + areaP3) + 2 * (areaM2 + areaP2) - (areaM1 + areaP1) - 4 * area0;
-                    areaSecondDeriv *= denom;
-                }
-
-                vehicleCrossSection[i].secondAreaDeriv = areaSecondDeriv;
-            }*/
 
             //and now smooth the derivs
             for (int j = 0; j < derivSmoothingIterations; j++)
@@ -937,7 +892,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         areaAdjustment += _ductedAreaAdjustment[j];
 
                     _ductedAreaAdjustment[i] = areaAdjustment;
-                    ThreadSafeDebugLogger.Instance.RegisterMessage(areaAdjustment.ToString());
+                    //ThreadSafeDebugLogger.Instance.RegisterMessage(areaAdjustment.ToString());
                 }
 
                 for (int i = 0; i < vehicleCrossSection.Length; i++)
