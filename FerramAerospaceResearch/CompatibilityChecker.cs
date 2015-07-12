@@ -190,9 +190,10 @@ namespace FerramAerospaceResearch
             }
         }
 
+        internal static IntPtr intPtr = new IntPtr(long.MaxValue);
         public static bool IsWin64()
-        {            
-            return (IntPtr.Size == 8) && (Environment.OSVersion.Platform == PlatformID.Win32NT);
+        {
+            return (intPtr.ToInt64() == long.MaxValue) && (Environment.OSVersion.Platform == PlatformID.Win32NT);
         }
 
         public static bool IsAllCompatible()

@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.15.3.1 "Garabedian"
+Ferram Aerospace Research v0.15.4 "Glauert"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -64,6 +64,36 @@ Set all the other winglet/control surface values to zero
 
 CHANGELOG
 =======================================================
+
+0.15.4V "Glauert"------------------------------------  
+
+Update to MM 2.6.6  
+Update to MFI 1.1.1, fixes gimbaling bug below 750 m/s on short vehicles  
+Update win64 check code to MM method  
+
+Added internal ducted area feature:  
+	* Area ducted through a vehicle from intakes to airbreathing engines will be removed from cross-section  
+	* Adjusts area ruling to properly model air that flows through the vehicle as opposed to around it  
+	* Does not count for airflow through switch-backing or reversing ducts; no benefits for intakes that feed upstream engines  
+	* Supports stock intake part + airbreathing engine part setups, AJE intake part + airbreathing engine part setups, and combined intake + engine part setups  
+
+Slight improvement to Flight Data readouts from mjn33  
+Toggle gear button now states "Raise" or "Lower" gear for clarity  
+
+Fixed serious issue where exposed area was not updated for thermal calculations  
+Fixed some blunt shapes having NaN drag in the transonic regime  
+Fixed some blunt, thin-plate shapes having negative drag in the transonic regime  
+Fixed serious issue where long, skinny vehicles would have incorrect 2nd derivatives and incorrect transonic drag as a result  
+Fixed NRE with Launch Clamps  
+Fixed NRE with animations that are removed from a part (for whatever reason)  
+
+Cleaned up unused values from FARAeroData.cfg  
+Added support for planets to be identified by planet name, not just index; combining these in a FARAeroData MM patch is likely to cause overwrites, don't do it  
+Added ability to read and set flap and spoiler states from FARAPI  
+Fixed Firespitter gear not responding to Toggle Gear button  
+Added support for adjustable landing gear in Toggle Gear button  
+Stopgap fix to unintended voxelization of USI Warp Drive bubbles  
+
 
 0.15.3.1V "Garabedian"------------------------------------  
 
