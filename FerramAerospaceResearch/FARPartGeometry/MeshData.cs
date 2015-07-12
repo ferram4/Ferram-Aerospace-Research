@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.3.1 "Garabedian"
+Ferram Aerospace Research v0.15.4 "Glauert"
 =========================
 Aerodynamics model for Kerbal Space Program
 
