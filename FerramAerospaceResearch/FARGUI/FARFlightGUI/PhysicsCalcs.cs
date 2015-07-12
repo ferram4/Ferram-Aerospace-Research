@@ -267,6 +267,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                         if (intake.intakeEnabled)
                         {
                             airAvailableVol += intake.airFlow * intakeAirDensity / invDeltaTime;
+                            vesselInfo.fullMass -= p.Resources["IntakeAir"].amount * intakeAirDensity;
                         }
                     }
                 }
