@@ -374,7 +374,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (vessel)
                 {
                     vessel.SendMessage("AerodynamicFailureStatus");
-                    FlightLogger.eventLog.Add("[" + FARMathUtil.FormatTime(vessel.missionTime) + "] " + part.partInfo.title + " failed due to aerodynamic stresses.");
+                    string msg = String.Format("[{0:D2}:{1:D2}:{2:D2}] {3} failed due to aerodynamic stresses.", FlightLogger.met_hours, FlightLogger.met_mins, FlightLogger.met_secs, part.partInfo.title);
+                    FlightLogger.eventLog.Add(msg); 
                     if (FARDebugValues.aeroFailureExplosions)
                     {
                         FXMonger.Explode(part, partTransform.position, (float)projectedArea.totalArea * 0.0005f);
