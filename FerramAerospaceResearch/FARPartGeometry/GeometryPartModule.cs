@@ -306,8 +306,20 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             if (intakeType != "" && engineType != "")
             {
-                IntegratedIntakeEngineCrossSectionAdjuster intakeAdjuster = new IntegratedIntakeEngineCrossSectionAdjuster(part.Modules[intakeType], worldToVesselMatrix);
-                crossSectionAdjusters.Add(intakeAdjuster);
+                PartModule module = part.Modules[intakeType];
+
+                if (module is ModuleResourceIntake)
+                {
+                    ModuleResourceIntake intake = (ModuleResourceIntake)module;
+
+                    IntegratedIntakeEngineCrossSectionAdjuster intakeAdjuster = new IntegratedIntakeEngineCrossSectionAdjuster(intake, worldToVesselMatrix);
+                    crossSectionAdjusters.Add(intakeAdjuster);
+                }
+                else
+                {
+                    IntegratedIntakeEngineCrossSectionAdjuster intakeAdjuster = new IntegratedIntakeEngineCrossSectionAdjuster(module, worldToVesselMatrix);
+                    crossSectionAdjusters.Add(intakeAdjuster);
+                }
                 return;
             }
             if(intakeType != "")

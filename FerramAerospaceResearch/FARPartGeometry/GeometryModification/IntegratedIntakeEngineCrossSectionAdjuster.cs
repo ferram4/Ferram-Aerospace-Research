@@ -77,7 +77,10 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
             vehicleBasisForwardVector = Vector3.forward;//intakeTrans.forward;
 
-            foreach(AttachNode node in part.attachNodes)
+            if (intakeTrans == null)
+                intakeTrans = intake.part.partTransform;
+
+            foreach (AttachNode node in part.attachNodes)
                 if(node.nodeType == AttachNode.NodeType.Stack && Vector3.Dot(node.position, (part.transform.worldToLocalMatrix * intakeTrans.localToWorldMatrix).MultiplyVector(Vector3.forward)) > 0)
                 {
                     frontNode = node;
@@ -99,6 +102,9 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
             intakeTrans = part.FindModelTransform(intake.intakeTransformName);
             vehicleBasisForwardVector = Vector3.forward;//intakeTrans.forward;
+
+            if (intakeTrans == null)
+                intakeTrans = intake.part.partTransform;
 
             foreach (AttachNode node in part.attachNodes)
                 if (node.nodeType == AttachNode.NodeType.Stack && Vector3.Dot(node.position, (part.transform.worldToLocalMatrix * intakeTrans.localToWorldMatrix).MultiplyVector(Vector3.forward)) > 0)
