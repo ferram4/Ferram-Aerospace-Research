@@ -316,7 +316,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         #region AppLauncher
 
-        private void ClearBlizzyToolbarButton(GameScenes scene)
+        private static void ClearBlizzyToolbarButton(GameScenes scene)
         {
             blizzyFlightGUIButton.Destroy();
             blizzyFlightGUIButton = null;
