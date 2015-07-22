@@ -164,8 +164,8 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             _flightStatusGUI = null;
             settingsWindow = null;
 
-            if (blizzyFlightGUIButton != null)
-                blizzyFlightGUIButton.Destroy();
+            //if (blizzyFlightGUIButton != null)
+            //    blizzyFlightGUIButton.Destroy();
         }
 
         public void SaveData()
