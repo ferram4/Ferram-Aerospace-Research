@@ -158,7 +158,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 currentThrottle += _airBreathingEngines[i].currentThrottle;
             }
-            currentThrottle /= (float)_airBreathingEngines.Count;
+            currentThrottle /= Math.Max((float)_airBreathingEngines.Count, 1);
 
             float currentRamDrag = RamDragPerArea(machNumber);
             currentRamDrag *= 1f - currentThrottle;
