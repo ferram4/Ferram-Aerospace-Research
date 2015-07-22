@@ -124,7 +124,10 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             this.enabled = true;
 
             if (FARDebugValues.useBlizzyToolbar)
+            {
                 GenerateBlizzyToolbarButton();
+                GameEvents.onGameSceneLoadRequested.Add(ClearBlizzyToolbarButton);
+            }
             else
                 OnGUIAppLauncherReady();
 
@@ -312,6 +315,13 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         #endregion
 
         #region AppLauncher
+
+        private void ClearBlizzyToolbarButton(GameScenes scene)
+        {
+            blizzyFlightGUIButton.Destroy();
+            blizzyFlightGUIButton = null;
+            GameEvents.onGameSceneLoadRequested.Remove(ClearBlizzyToolbarButton);
+        }
 
         private void GenerateBlizzyToolbarButton()
         {
