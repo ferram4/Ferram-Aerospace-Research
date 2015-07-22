@@ -74,7 +74,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 FARAeroPartModule aeroModule = (FARAeroPartModule)module;
 
                 part.radiativeArea = CalculateAreaRadiative(fi, part, aeroModule);
-                part.exposedArea = part.machNumber > 0 ? CalculateAreaExposed(fi, part, aeroModule) : 0;
+                part.exposedArea = part.machNumber > 0 ? CalculateAreaExposed(fi, part, aeroModule) : part.radiativeArea;
             }
             //Debug.Log("MFI: " + fi.CoM + " " + Planetarium.GetUniversalTime());
         }
