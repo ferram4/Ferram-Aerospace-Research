@@ -67,78 +67,56 @@ namespace FerramAerospaceResearch.FARAeroComponents
             _intakeTransforms.Clear();
             _airBreathingEngines.Clear();
 
-            for(int i = 0; i < allUsedAeroModules.Count; i++)       //get all exposed intakes and engines
+            HashSet<string> intakeResourceNames = new HashSet<string>();
+
+
+            for (int i = 0; i < allUsedAeroModules.Count; i++)       //get all exposed intakes
             {
                 FARAeroPartModule aeroModule = allUsedAeroModules[i];
                 if (aeroModule == null)
                     continue;
                 Part p = aeroModule.part;
 
-                if(p.Modules.Contains("ModuleResourceIntake"))
+                for (int j = 0; j < p.Modules.Count; j++)
                 {
-                    ModuleResourceIntake intake = (ModuleResourceIntake)p.Modules["ModuleResourceIntake"];
-                    _aeroModulesWithIntakes.Add(aeroModule);
-                    _intakeModules.Add(intake);
-                    _intakeTransforms.Add(p.FindModelTransform(intake.intakeTransformName));
-                }
-                if(p.Modules.Contains("ModuleEngines"))
-                {
-                    ModuleEngines engines = (ModuleEngines)p.Modules["ModuleEngines"];
-                    for (int j = 0; j < engines.propellants.Count; j++)
+                    PartModule m = p.Modules[j];
+                    if (m is ModuleResourceIntake)
                     {
-                        Propellant prop = engines.propellants[j];
-                        if (prop.name == "IntakeAir")
-                        {
-                            _airBreathingEngines.Add(engines);
-                            break;
-                        }
-                    }
-                }
-                if (p.Modules.Contains("ModuleEnginesFX"))
-                {
-                    ModuleEnginesFX engines = (ModuleEnginesFX)p.Modules["ModuleEnginesFX"];
-                    for (int j = 0; j < engines.propellants.Count; j++)
-                    {
-                        Propellant prop = engines.propellants[j];
-                        if (prop.name == "IntakeAir")
-                        {
-                            _airBreathingEngines.Add(engines);
-                            break;
-                        }
+                        ModuleResourceIntake intake = (ModuleResourceIntake)m;
+                        _aeroModulesWithIntakes.Add(aeroModule);
+                        _intakeModules.Add(intake);
+                        _intakeTransforms.Add(p.FindModelTransform(intake.intakeTransformName));
+                        if (!intakeResourceNames.Contains(intake.resourceName))
+                            intakeResourceNames.Add(intake.resourceName);
                     }
                 }
             }
 
-            for(int i = 0; i < allUnusedAeroModules.Count; i++)     //get all covered airbreathing Engines
+
+            for (int i = 0; i < allUsedAeroModules.Count; i++)       //get all exposed engines
             {
-                FARAeroPartModule aeroModule = allUnusedAeroModules[i];
+                FARAeroPartModule aeroModule = allUsedAeroModules[i];
                 if (aeroModule == null)
                     continue;
                 Part p = aeroModule.part;
-                if (p.Modules.Contains("ModuleEngines"))
+
+                for (int j = 0; j < p.Modules.Count; j++)
                 {
-                    ModuleEngines engines = (ModuleEngines)p.Modules["ModuleEngines"];
-                    for (int j = 0; j < engines.propellants.Count; j++)
+                    PartModule m = p.Modules[j];
+
+                    if (m is ModuleEngines)
                     {
-                        Propellant prop = engines.propellants[j];
-                        if (prop.name == "IntakeAir")
+                        ModuleEngines e = (ModuleEngines)m;
+                        for (int k = 0; k < e.propellants.Count; k++)
                         {
-                            _airBreathingEngines.Add(engines);
-                            break;
+                            Propellant prop = e.propellants[k];
+                            if (intakeResourceNames.Contains(prop.name))
+                            {
+                                _airBreathingEngines.Add(e);
+                                break;
+                            }
                         }
-                    }
-                }
-                if (p.Modules.Contains("ModuleEnginesFX"))
-                {
-                    ModuleEnginesFX engines = (ModuleEnginesFX)p.Modules["ModuleEnginesFX"];
-                    for (int j = 0; j < engines.propellants.Count; j++)
-                    {
-                        Propellant prop = engines.propellants[j];
-                        if (prop.name == "IntakeAir")
-                        {
-                            _airBreathingEngines.Add(engines);
-                            break;
-                        }
+
                     }
                 }
             }
