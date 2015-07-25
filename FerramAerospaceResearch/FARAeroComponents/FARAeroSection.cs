@@ -108,8 +108,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
             for (int i = 0; i < moduleList.Count; i++)
             {
                 Part p = moduleList[i].part;
-                worldSpaceAvgPos += partWorldToLocalMatrixDict[p].worldPosition * dragFactor[i];
-                totalDragFactor += dragFactor[i];
+                if (partWorldToLocalMatrixDict.ContainsKey(p))
+                {
+                    worldSpaceAvgPos += partWorldToLocalMatrixDict[p].worldPosition * dragFactor[i];
+                    totalDragFactor += dragFactor[i];
+                }
             }
             
             worldSpaceAvgPos /= totalDragFactor;

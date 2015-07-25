@@ -1236,7 +1236,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     weighting.Add((float)pair.Value.exposedAreaCount);
                 }
                 weightingFactor = 1 / weightingFactor;
-                for (int j = 0; j < includedModules.Count; j++)
+                for (int j = 0; j < includedPartsAndAreas.Count; j++)
                 {
                     weighting[j] *= weightingFactor;
                 }
