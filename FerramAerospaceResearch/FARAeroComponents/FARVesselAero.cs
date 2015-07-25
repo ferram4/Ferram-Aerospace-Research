@@ -166,6 +166,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     FARAeroPartModule a = _unusedAeroModules[i];
                     a.SetShielded(true);
+                    a.ForceLegacyAeroUpdates();
                     //Debug.Log(a.part.partInfo.title + " shielded");
                 }
 
@@ -173,6 +174,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     FARAeroPartModule a = _currentAeroModules[i];
                     a.SetShielded(false);
+                    a.ForceLegacyAeroUpdates();
                     //Debug.Log(a.part.partInfo.title + " unshielded");
                 }
 

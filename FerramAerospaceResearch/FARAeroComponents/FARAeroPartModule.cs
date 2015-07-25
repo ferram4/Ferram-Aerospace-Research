@@ -139,6 +139,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
             part.ShieldedFromAirstream = value;
         }
 
+        public void ForceLegacyAeroUpdates()
+        {
+            if (legacyWingModel != null)
+                legacyWingModel.ForceOnVesselPartsChange();
+        }
+
 
         public void SetProjectedArea(ProjectedArea areas, Matrix4x4 vesselToWorldMatrix)
         {
