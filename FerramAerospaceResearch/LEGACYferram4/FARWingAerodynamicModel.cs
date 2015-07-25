@@ -731,16 +731,6 @@ namespace ferram4
             return Math.Asin(FARMathUtil.Clamp(PerpVelocity, -1, 1));
         }
 
-        /*protected override Color AeroVisualizationTintingCalculation()
-        {
-            if(FARControlSys.tintForStall)
-            {
-                return new Color((float)stall * 10, 0, 0, 1);
-            }
-            else
-                return base.AeroVisualizationTintingCalculation();
-        }*/
-
         #region Interactive Effects
 
         //Calculates camber and flap effects due to wing interactions

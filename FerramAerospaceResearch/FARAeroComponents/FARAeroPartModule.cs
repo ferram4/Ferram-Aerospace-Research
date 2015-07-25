@@ -49,6 +49,8 @@ using System.Text;
 using UnityEngine;
 using KSP;
 using FerramAerospaceResearch;
+using FerramAerospaceResearch.FARGUI.FARFlightGUI;
+using ferram4;
 
 namespace FerramAerospaceResearch.FARAeroComponents
 {
@@ -91,6 +93,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
         //public double expSkinFrac;
 
         private Transform partTransform;
+
+        private MaterialColorUpdater materialColorUpdater;
+        private FARWingAerodynamicModel legacyWingModel;
+        private ModuleLiftingSurface stockAeroSurfaceModule;
 
         public ProjectedArea ProjectedAreas
         {
@@ -231,6 +237,20 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 partStressMaxXZ = template.XZmaxStress;
             }
             partTransform = part.partTransform;
+
+            materialColorUpdater = new MaterialColorUpdater(partTransform, PhysicsGlobals.TemperaturePropertyID);
+            if (part.Modules.Contains("FARWingAerodynamicModel"))
+                legacyWingModel = part.Modules["FARWingAerodynamicModel"] as FARWingAerodynamicModel;
+            else if (part.Modules.Contains("FARControllableSurface"))
+                legacyWingModel = part.Modules["FARControllableSurface"] as FARWingAerodynamicModel;
+            else
+                legacyWingModel = null;
+
+            // For handling airbrakes aero visualization
+            if (part.Modules.Contains("ModuleAeroSurface"))
+                stockAeroSurfaceModule = part.Modules["ModuleAeroSurface"] as ModuleAeroSurface;
+            else
+                stockAeroSurfaceModule = null;
         }
 
         public double ProjectedAreaWorld(Vector3 normalizedDirectionVector)
@@ -257,6 +277,83 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 area -= normalizedDirectionVector.z * projectedArea.kN;
 
             return area;
+        }
+
+        public override void OnUpdate()
+        {
+            FlightGUI flightGUI;
+            AeroVisualizationGUI aeroVizGUI = null;
+            if (FlightGUI.vesselFlightGUI != null && FlightGUI.vesselFlightGUI.TryGetValue(vessel, out flightGUI))
+                aeroVizGUI = flightGUI.AeroVizGUI;
+
+            if (aeroVizGUI != null && aeroVizGUI.AnyVisualizationActive && HighLogic.LoadedSceneIsFlight && !PhysicsGlobals.ThermalColorsDebug)
+            {
+                Color tintColor = AeroVisualizationTintingCalculation(aeroVizGUI);
+                materialColorUpdater.Update(tintColor);
+            }
+        }
+
+        //Returns the tinted color if active; else it returns an alpha 0 color
+        private Color AeroVisualizationTintingCalculation(AeroVisualizationGUI aeroVizGUI)
+        {
+            // Disable tinting for low dynamic pressure to prevent flicker
+            if (vessel.dynamicPressurekPa <= 0.00001)
+                return new Color(0, 0, 0, 0);
+
+            // Stall tinting overrides Cl / Cd tinting
+            if (legacyWingModel != null && aeroVizGUI.TintForStall)
+                return new Color((float)((legacyWingModel.GetStall() * 100.0) / aeroVizGUI.FullySaturatedStall), 0f, 0f, 0.5f);
+
+            if (!aeroVizGUI.TintForCl && !aeroVizGUI.TintForCd)
+                return new Color(0, 0, 0, 0);
+
+            double visualizationCl = 0, visualizationCd = 0;
+
+            if (projectedArea.totalArea > 0.0)
+            {
+                Vector3 totalAeroForceVector = worldSpaceAeroForce;
+
+                // Combine forces from legacy wing model
+                if (legacyWingModel != null)
+                    totalAeroForceVector += legacyWingModel.worldSpaceForce;
+
+                // Combine forces from stock code
+                totalAeroForceVector += -part.dragVectorDir * part.dragScalar; // dragVectorDir is actually the velocity vector direction
+
+                // Handle airbrakes
+                if (stockAeroSurfaceModule != null)
+                    totalAeroForceVector += stockAeroSurfaceModule.dragForce;
+
+                Vector3 worldVelNorm = partTransform.localToWorldMatrix.MultiplyVector(partLocalVelNorm);
+                Vector3 worldDragArrow = Vector3.Dot(totalAeroForceVector, worldVelNorm) * worldVelNorm;
+                Vector3 worldLiftArrow = totalAeroForceVector - worldDragArrow;
+
+                double invAndDynPresArea = legacyWingModel != null ? legacyWingModel.S : projectedArea.totalArea;
+                invAndDynPresArea *= vessel.dynamicPressurekPa;
+                invAndDynPresArea = 1 / invAndDynPresArea;
+                visualizationCl = worldLiftArrow.magnitude * invAndDynPresArea;
+                visualizationCd = worldDragArrow.magnitude * invAndDynPresArea;
+            }
+
+            double fullSatCl = 0, satCl = 0, fullSatCd = 0, satCd = 0;
+
+            if (legacyWingModel != null)
+            {
+                fullSatCl = aeroVizGUI.FullySaturatedCl;
+                fullSatCd = aeroVizGUI.FullySaturatedCd;
+            }
+            else
+            {
+                fullSatCl = aeroVizGUI.FullySaturatedClBody;
+                fullSatCd = aeroVizGUI.FullySaturatedCdBody;
+            }
+
+            if (aeroVizGUI.TintForCl)
+                satCl = Math.Abs(visualizationCl / fullSatCl);
+            if (aeroVizGUI.TintForCd)
+                satCd = Math.Abs(visualizationCd / fullSatCd);
+
+            return new Color((float)satCd, 0.5f * (float)(satCl + satCd), (float)satCl, 0.5f);
         }
 
         public void ApplyForces()
