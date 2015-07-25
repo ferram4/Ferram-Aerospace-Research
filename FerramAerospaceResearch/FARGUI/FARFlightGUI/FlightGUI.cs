@@ -76,6 +76,11 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         FlightStatusGUI _flightStatusGUI;
         StabilityAugmentation _stabilityAugmentation;
         FlightDataGUI _flightDataGUI;
+        AeroVisualizationGUI _aeroVizGUI;
+        public AeroVisualizationGUI AeroVizGUI
+        {
+            get { return _aeroVizGUI; }
+        }
         AirspeedSettingsGUI _airSpeedGUI;
         public AirspeedSettingsGUI airSpeedGUI
         {
@@ -112,8 +117,9 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             _flightStatusGUI = new FlightStatusGUI();
             _stabilityAugmentation = new StabilityAugmentation(_vessel);
             _flightDataGUI = new FlightDataGUI();
+            _aeroVizGUI = new AeroVisualizationGUI();
 
-            settingsWindow = new GUIDropDown<int>(new string[3]{"Flt Data","Stab Aug", "Air Spd"}, new int[3]{0,1,2}, 0);
+            settingsWindow = new GUIDropDown<int>(new string[4]{"Flt Data","Stab Aug", "Air Spd","Aero Viz"}, new int[4]{0,1,2,3}, 0);
             //boxStyle.padding = new RectOffset(4, 4, 4, 4);
 
             if (vesselFlightGUI.ContainsKey(_vessel))
@@ -161,6 +167,9 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 _airSpeedGUI.SaveSettings();
             _airSpeedGUI = null;
 
+            if (_aeroVizGUI != null)
+                _aeroVizGUI.SaveSettings();
+
             _flightStatusGUI = null;
             settingsWindow = null;
 
@@ -176,6 +185,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 _airSpeedGUI.SaveSettings();
                 _stabilityAugmentation.SaveSettings();
                 _flightDataGUI.SaveSettings();
+                _aeroVizGUI.SaveSettings();
             }
         }
         public static void SaveActiveData()
@@ -308,6 +318,9 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                     break;
                 case 2:
                     _airSpeedGUI.AirSpeedSettings();
+                    break;
+                case 3:
+                    _aeroVizGUI.SettingsDisplay();
                     break;
             }
             GUI.DragWindow();
