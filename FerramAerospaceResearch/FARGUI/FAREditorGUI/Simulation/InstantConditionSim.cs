@@ -65,9 +65,10 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             get { return _currentAeroSections != null && _currentAeroModules != null && _wingAerodynamicModel != null; }
         }
 
-        public void UpdateAeroData(VehicleAerodynamics vehicleAero, List<FARWingAerodynamicModel> wingAerodynamicModel)
+        public void UpdateAeroData(List<FARAeroPartModule> aeroModules, List<FARAeroSection> aeroSections, VehicleAerodynamics vehicleAero, List<FARWingAerodynamicModel> wingAerodynamicModel)
         {
-            vehicleAero.GetNewAeroData(out _currentAeroModules, out _currentAeroSections);
+            _currentAeroModules = aeroModules;
+            _currentAeroSections = aeroSections;
             _wingAerodynamicModel = wingAerodynamicModel;
             _maxCrossSectionFromBody = vehicleAero.MaxCrossSectionArea;
             _bodyLength = vehicleAero.Length;

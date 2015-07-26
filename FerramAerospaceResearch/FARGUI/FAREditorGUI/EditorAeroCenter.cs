@@ -73,9 +73,10 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             instance = this;
         }
 
-        public void UpdateAeroData(VehicleAerodynamics vehicleAero)
+        public void UpdateAeroData(List<FARAeroPartModule> aeroModules, List<FARAeroSection> aeroSections)
         {
-            vehicleAero.GetNewAeroData(out _currentAeroModules, out _currentAeroSections);
+            _currentAeroModules = aeroModules;
+            _currentAeroSections = aeroSections;
             UpdateAerodynamicCenter();
         }
 

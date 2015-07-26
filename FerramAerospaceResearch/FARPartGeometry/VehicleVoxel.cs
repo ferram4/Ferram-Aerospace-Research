@@ -96,7 +96,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public int MaxArrayLength
         {
-            get { return yCellLength + xCellLength + zCellLength; }
+            get { return yCellLength; }//return yCellLength + xCellLength + zCellLength; }
         }
 
         public static void VoxelSetup()
@@ -218,70 +218,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
         }
 
-        /*public VehicleVoxel(List<Part> partList, List<GeometryPartModule> geoModules, double elementSize, Vector3 lowerRightCorner, bool multiThreaded = true, bool solidify = true)
-        {
-            if (clearedPlanes == null)
-            {
-                clearedPlanes = new Queue<SweepPlanePoint[,]>();
-                for (int i = 0; i < MAX_SWEEP_PLANES_IN_QUEUE; i++)
-                    clearedPlanes.Enqueue(new SweepPlanePoint[1, 1]);
-            }
-            Vector3d min = new Vector3d(double.PositiveInfinity, double.PositiveInfinity, double.PositiveInfinity);
-            Vector3d max = new Vector3d(double.NegativeInfinity, double.NegativeInfinity, double.NegativeInfinity);
-
-            for (int i = 0; i < geoModules.Count; i++)
-            {
-                GeometryPartModule m = geoModules[i];
-                if ((object)m != null)
-                {
-                    Vector3d minBounds = m.overallMeshBounds.min;
-                    Vector3d maxBounds = m.overallMeshBounds.max;
-
-                    min.x = Math.Min(min.x, minBounds.x);
-                    min.y = Math.Min(min.y, minBounds.y);
-                    min.z = Math.Min(min.z, minBounds.z);
-
-                    max.x = Math.Max(max.x, maxBounds.x);
-                    max.y = Math.Max(max.y, maxBounds.y);
-                    max.z = Math.Max(max.z, maxBounds.z);
-                }
-            }
-
-            Vector3d size = max - min;
-
-            double voxelVolume = size.x * size.y * size.z;
-            invElementSize = 1 / elementSize;
-
-            if (double.IsInfinity(voxelVolume))
-            {
-                Debug.LogError("Voxel Volume was infinity; ending voxelization");
-                return;
-            }
-            double tmp = 0.125 * invElementSize;
-
-            xLength = (int)Math.Ceiling(size.x * tmp) + 1;
-            yLength = (int)Math.Ceiling(size.y * tmp) + 1;
-            zLength = (int)Math.Ceiling(size.z * tmp) + 1;
-
-            xCellLength = xLength * 8;
-            yCellLength = yLength * 8;
-            zCellLength = zLength * 8;
-
-            //Debug.Log(elementSize);
-            //Debug.Log(xLength + " " + yLength + " " + zLength);
-            //Debug.Log(size);
-
-            Vector3d extents = new Vector3d(); //this will be the distance from the center to the edges of the voxel object
-            extents.x = xLength * 4 * elementSize;
-            extents.y = yLength * 4 * elementSize;
-            extents.z = zLength * 4 * elementSize;
-
-
-            voxelChunks = new VoxelChunk[xLength, yLength, zLength];
-
-            BuildVoxel(geoModules, multiThreaded, solidify);
-        }*/
-
         private bool CheckPartForOverridingPartList(GeometryPartModule g)
         {
             if (g.part == null)
@@ -319,8 +255,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         //    Monitor.Wait(_locker);
                         //threadsQueued++;
 
-                        VoxelShellParams data = new VoxelShellParams(m.part, m.meshDataList[j]);
-                        ThreadPool.QueueUserWorkItem(UpdateFromMesh, data);
+                        ThreadPool.QueueUserWorkItem(UpdateFromMesh, m.meshDataList[j]);
                         //}
                     }
                     else
@@ -332,7 +267,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 lock (_locker)
                     while (threadsQueued > 0)
                         Monitor.Wait(_locker);
-
+            
             if (solidify)
             {
                 threadsQueued = 2;
@@ -1552,26 +1487,24 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         private void UpdateFromMesh(object stuff)
         {
-            try
-            {
-                VoxelShellParams data = (VoxelShellParams)stuff;
-                Part part = data.part;
-                GeometryMesh mesh = data.mesh;
+            //try
+            //{
+                GeometryMesh mesh = (GeometryMesh)stuff;
                 lock(mesh)
-                    UpdateFromMesh(mesh, part);
-            }
-            catch (Exception e)
-            {
-                ThreadSafeDebugLogger.Instance.RegisterException(e);
-            }
-            finally
-            {
+                    UpdateFromMesh(mesh, mesh.part);
+            //}
+            //catch (Exception e)
+            //{
+            //    ThreadSafeDebugLogger.Instance.RegisterException(e);
+            //}
+            //finally
+            //{
                 lock (_locker)
                 {
                     threadsQueued--;
                     Monitor.Pulse(_locker);
                 } 
-            }
+            //}
         }
         private void UpdateFromMesh(GeometryMesh mesh, Part part)
         {
@@ -2422,18 +2355,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 this.increasingJ = increasingJ;
             }
         }
-        private struct VoxelShellParams
-        {
-            public Part part;
-            public GeometryMesh mesh;
-
-            public VoxelShellParams(Part part, GeometryMesh mesh)
-            {
-                this.part = part;
-                this.mesh = mesh;
-            }
-        }
-
         public int planeJ { get; set; }
     }
 }

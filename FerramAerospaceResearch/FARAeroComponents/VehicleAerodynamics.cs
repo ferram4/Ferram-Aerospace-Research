@@ -340,7 +340,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {                                               //this should catch conditions where this function is called again before the voxelization thread starts
                 returnVal = false;
             }
-            else if (Monitor.TryEnter(this))         //only continue if the voxelizing thread has not locked this object
+            else if (Monitor.TryEnter(this, 0))         //only continue if the voxelizing thread has not locked this object
             {
                 try
                 {

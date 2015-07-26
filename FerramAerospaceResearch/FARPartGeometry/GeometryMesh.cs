@@ -58,6 +58,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         public Matrix4x4 thisToVesselMatrix;
         public Matrix4x4 meshLocalToWorld;
         public Bounds bounds;
+        public Part part;
         private GeometryPartModule module;
 
         public int invertXYZ;
@@ -94,6 +95,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             bounds = TransformBounds(meshBounds, thisToVesselMatrix);
 
             this.module = module;
+            this.part = module.part;
             
             if (!module.part.isMirrored)
                 invertXYZ = 1;
