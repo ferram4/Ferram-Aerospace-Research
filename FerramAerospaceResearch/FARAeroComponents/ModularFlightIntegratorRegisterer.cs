@@ -73,10 +73,28 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 FARAeroPartModule aeroModule = (FARAeroPartModule)module;
 
+                double stockRadArea = fi.BaseFICalculateAreaRadiative(part);
+
                 part.radiativeArea = CalculateAreaRadiative(fi, part, aeroModule);
-                part.exposedArea = part.machNumber > 0 ? CalculateAreaExposed(fi, part, aeroModule) : part.radiativeArea;
+                part.exposedArea = part.machNumber > 0 ? CalculateAreaExposed(fi, part, aeroModule, stockRadArea) : part.radiativeArea;
+
+                if (part.radiativeArea < stockRadArea)
+                    SkinThermalMassShenanigansForShieldedParts(fi, part, stockRadArea, part.radiativeArea);     //very hacky method to deal with the fact that stock assumes that radiative area is also the skin area for the part.  This causes issues for parts that cannot radiate to the environment because they are completely enclosed
             }
             //Debug.Log("MFI: " + fi.CoM + " " + Planetarium.GetUniversalTime());
+        }
+
+        void SkinThermalMassShenanigansForShieldedParts(ModularFI.ModularFlightIntegrator fi, Part part, double stockRadArea, double calculatedArea)
+        {
+            part.thermalMass += part.skinThermalMass;   //reset overall thermalmass
+
+            part.radiativeArea = stockRadArea;          //set rad area to stock values
+            fi.SetSkinThermalMass(part);                //re-run setting skin thermal mass
+
+            part.thermalMass -= part.skinThermalMass;   //re-subtract skin thermal mass
+            part.thermalMassReciprocal = 1.0 / Math.Max(part.thermalMass, 0.001);   //reset thermalMassRecip
+
+            part.radiativeArea = calculatedArea;
         }
 
         void UpdateAerodynamics(ModularFI.ModularFlightIntegrator fi, Part part)
@@ -106,16 +124,15 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
         }
 
-        double CalculateAreaExposed(ModularFI.ModularFlightIntegrator fi, Part part, FARAeroPartModule aeroModule)
+        double CalculateAreaExposed(ModularFI.ModularFlightIntegrator fi, Part part, FARAeroPartModule aeroModule, double stockRadArea)
         {
             double dragCubeExposed = fi.BaseFICalculateAreaExposed(part);
             if (aeroModule == null)
                 return dragCubeExposed;
             else
             {
-                double cubeRadiative = fi.BaseFICalculateAreaRadiative(part);
-                if (cubeRadiative > 0)
-                    return aeroModule.ProjectedAreas.totalArea * dragCubeExposed / cubeRadiative;
+                if (stockRadArea > 0)
+                    return aeroModule.ProjectedAreas.totalArea * dragCubeExposed / stockRadArea;
                 else
                     return aeroModule.ProjectedAreas.totalArea;
             }
