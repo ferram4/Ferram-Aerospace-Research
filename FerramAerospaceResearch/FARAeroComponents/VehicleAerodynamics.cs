@@ -122,6 +122,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         List<ferram4.FARWingAerodynamicModel> _legacyWingModels = new List<ferram4.FARWingAerodynamicModel>();
 
+        List<ICrossSectionAdjuster> activeAdjusters = new List<ICrossSectionAdjuster>();
+        Dictionary<Part, double> adjusterAreaPerVoxelDict = new Dictionary<Part, double>();
+        Dictionary<Part, ICrossSectionAdjuster> adjusterPartDict = new Dictionary<Part, ICrossSectionAdjuster>();
+
         int validSectionCount;
         int firstSection;
 
@@ -754,8 +758,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         unsafe void AdjustCrossSectionForAirDucting(VoxelCrossSection[] vehicleCrossSection, List<GeometryPartModule> geometryModules, int front, int back, ref double maxCrossSectionArea)
         {
-            List<ICrossSectionAdjuster> activeAdjusters;
-            activeAdjusters = new List<ICrossSectionAdjuster>();
 
             //double* areaAdjustment = stackalloc double[vehicleCrossSection.Length];
 
@@ -777,8 +779,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     intakeArea += adjuster.AreaRemovedFromCrossSection();
             }
 
-            Dictionary<Part, double> adjusterAreaPerVoxelDict = new Dictionary<Part, double>();
-            Dictionary<Part, ICrossSectionAdjuster> adjusterPartDict = new Dictionary<Part, ICrossSectionAdjuster>();
+
             if (intakeArea != 0 && engineExitArea != 0)        //if they exist, go through the calculations
             {
                 if (_ductedAreaAdjustment.Length != vehicleCrossSection.Length)
@@ -979,6 +980,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
                 
             }
+            activeAdjusters.Clear();
+            adjusterAreaPerVoxelDict.Clear();
+            adjusterPartDict.Clear();
         }
 
         #region Aerodynamics Calculations

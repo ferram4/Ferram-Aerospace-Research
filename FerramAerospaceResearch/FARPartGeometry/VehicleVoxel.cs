@@ -237,36 +237,33 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         private void BuildVoxel(List<GeometryPartModule> geoModules, bool multiThreaded, bool solidify)
         {
-            threadsQueued = 0;
+            threadsQueued = 8;
 
-            for (int i = 0; i < geoModules.Count; i++)
-                threadsQueued += geoModules[i].meshDataList.Count;      //Doing this out here allows us to get rid of the lock, which should reduce sync costs for many meshes
+            //for (int i = 0; i < geoModules.Count; i++)
+            //    threadsQueued += geoModules[i].meshDataList.Count;      //Doing this out here allows us to get rid of the lock, which should reduce sync costs for many meshes
 
-            for (int i = 0; i < geoModules.Count; i++)       //Go through it backwards; this ensures that children (and so interior to cargo bay parts) are handled first
-            {
-                GeometryPartModule m = geoModules[i];
-                for (int j = 0; j < m.meshDataList.Count; j++)
+            if (!multiThreaded)
+                for (int i = 0; i < geoModules.Count; i++)       //Go through it backwards; this ensures that children (and so interior to cargo bay parts) are handled first
                 {
-                    if (multiThreaded)
-                    {
-                        //lock (_locker)
-                        //{
-                        //while (threadsQueued > 4)
-                        //    Monitor.Wait(_locker);
-                        //threadsQueued++;
-
-                        ThreadPool.QueueUserWorkItem(UpdateFromMesh, m.meshDataList[j]);
-                        //}
-                    }
-                    else
+                    GeometryPartModule m = geoModules[i];
+                    for (int j = 0; j < m.meshDataList.Count; j++)
                         UpdateFromMesh(m.meshDataList[j], m.part);
-                }
 
-            }
-            if (multiThreaded)
+                }
+            else
+            {
+                int count = threadsQueued;
+                for (int i = 0; i < count; i++)
+                {
+                    VoxelShellMeshParams meshParams = new VoxelShellMeshParams((geoModules.Count * i) / count, ((i + 1) * geoModules.Count) / count, geoModules);
+
+                    ThreadPool.QueueUserWorkItem(UpdateFromMesh, meshParams);
+                }
+                
                 lock (_locker)
                     while (threadsQueued > 0)
                         Monitor.Wait(_locker);
+            }
             
             if (solidify)
             {
@@ -327,6 +324,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     }
         }
 
+        #region CrossSection Calcs
         public void CrossSectionData(VoxelCrossSection[] crossSections, Vector3 orientationVector, out int frontIndex, out int backIndex, out double sectionThickness, out double maxCrossSectionArea)
         {
             //TODO: Look into setting better limits for iterating over sweep plane to improve off-axis performance
@@ -1288,6 +1286,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             //return principalAxis;
         }
+        #endregion
+
+        #region VoxelViz
 
         public void ClearVisualVoxels()
         {
@@ -1316,6 +1317,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         }
                     }
         }
+        #endregion
 
         //Only use to change size, not part
         private void SetVoxelPointNoLock(int i, int j, int k)
@@ -1485,26 +1487,35 @@ namespace FerramAerospaceResearch.FARPartGeometry
             return section.GetVoxelPartGlobalIndex(i + j * 8 + k * 64);
         }
 
-        private void UpdateFromMesh(object stuff)
+        private void UpdateFromMesh(object meshParamsObject)
         {
-            //try
-            //{
-                GeometryMesh mesh = (GeometryMesh)stuff;
-                lock(mesh)
-                    UpdateFromMesh(mesh, mesh.part);
-            //}
-            //catch (Exception e)
-            //{
-            //    ThreadSafeDebugLogger.Instance.RegisterException(e);
-            //}
-            //finally
-            //{
+            try
+            {
+                VoxelShellMeshParams meshParams = (VoxelShellMeshParams)meshParamsObject;
+                for (int i = meshParams.lowerIndex; i < meshParams.upperIndex; i++)
+                {
+                    GeometryPartModule module = meshParams.modules[i];
+                    for(int j = 0; j < module.meshDataList.Count; j++)
+                    {
+                        GeometryMesh mesh = module.meshDataList[j];
+                        lock (mesh)
+                            UpdateFromMesh(mesh, mesh.part);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                ThreadSafeDebugLogger.Instance.RegisterException(e);
+            }
+            finally
+            {
+                //ThreadSafeDebugLogger.Instance.RegisterMessage("Finished voxel shell");
                 lock (_locker)
                 {
                     threadsQueued--;
                     Monitor.Pulse(_locker);
                 } 
-            //}
+            }
         }
         private void UpdateFromMesh(GeometryMesh mesh, Part part)
         {
@@ -2355,6 +2366,19 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 this.increasingJ = increasingJ;
             }
         }
-        public int planeJ { get; set; }
+
+        private struct VoxelShellMeshParams
+        {
+            public List<GeometryPartModule> modules;
+            public int lowerIndex;
+            public int upperIndex;
+
+            public VoxelShellMeshParams(int lowerIndex, int upperIndex, List<GeometryPartModule> modules)
+            {
+                this.lowerIndex = lowerIndex;
+                this.upperIndex = upperIndex;
+                this.modules = modules;
+            }
+        }
     }
 }

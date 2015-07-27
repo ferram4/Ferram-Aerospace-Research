@@ -388,7 +388,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         }
     }
 
-    [Flags]
+    //[Flags]
     enum VoxelOrientationPlane
     {
         NONE = 0,
