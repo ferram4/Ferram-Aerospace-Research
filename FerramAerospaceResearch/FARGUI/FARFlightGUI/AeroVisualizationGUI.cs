@@ -1,5 +1,5 @@
 /*
-Ferram Aerospace Research v0.15.4 "Glauert"
+Ferram Aerospace Research v0.15.4.1 "Goldstein"
 =========================
 Aerodynamics model for Kerbal Space Program
 

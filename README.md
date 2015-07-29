@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.15.4 "Glauert"
+Ferram Aerospace Research v0.15.4.1 "Goldstein"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -64,6 +64,18 @@ Set all the other winglet/control surface values to zero
 
 CHANGELOG
 =======================================================
+
+0.15.4.1V "Goldstein"------------------------------------  
+
+Re-implementation of aero viz coloration, thanks to mjn33  
+
+Reduction in garbage produced by voxelization, prep for further garbage reductions  
+
+Fixed NaN issue with KAX electric props  
+Fixed drag-breaking NRE during rapid disintegrations  
+Fixed some issues with Blizzy Toolbar icons  
+Fixed exacerbation of stock heating bug  
+Fixed control surfaces not updating direction during staging-related CoM shifts  
 
 0.15.4V "Glauert"------------------------------------  
 
