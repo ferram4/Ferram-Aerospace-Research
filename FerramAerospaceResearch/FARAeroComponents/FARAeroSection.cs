@@ -76,7 +76,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
             public Vector3 xRefVectorPartSpace;
             public Vector3 nRefVectorPartSpace;
             public float dragFactor;    //sum of these should add up to 1
-            //public float iP, iN, jP, jN, kP, kN;    //part local x, y, and z areas for heating
         }
 
         public FARAeroSection(FloatCurve xForcePressureAoA0, FloatCurve xForcePressureAoA180, FloatCurve xForceSkinFriction,
@@ -137,13 +136,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 FARPartGeometry.VoxelCrossSection.SideAreaValues values = sideAreaValues[data.aeroModule.part];
 
                 transformMatrix = transformMatrix * vesselToWorldMatrix;
-
-                /*IncrementAreas(ref data, (float)values.iP * Vector3.right, transformMatrix);
-                IncrementAreas(ref data, (float)values.iN * -Vector3.right, transformMatrix);
-                IncrementAreas(ref data, (float)values.jP * Vector3.up, transformMatrix);
-                IncrementAreas(ref data, (float)values.jN * -Vector3.up, transformMatrix);
-                IncrementAreas(ref data, (float)values.kP * Vector3.forward, transformMatrix);
-                IncrementAreas(ref data, (float)values.kN * -Vector3.forward, transformMatrix);*/
                 
                 partData.Add(data);
             }
@@ -151,44 +143,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if (crossFlowDragMachCurve == null)
                 GenerateCrossFlowDragCurve();
         }
-
-        /*private void IncrementAreas(ref PartData data, Vector3 vector, Matrix4x4 transformMatrix)
-        {
-            vector = transformMatrix.MultiplyVector(vector);
-
-            if (vector.x >= 0)
-                data.iP += vector.x;
-            else
-                data.iN -= vector.x;
-
-            if (vector.y >= 0)
-                data.jP += vector.y;
-            else
-                data.jN -= vector.y;
-
-            if (vector.z >= 0)
-                data.kP += vector.z;
-            else
-                data.kN -= vector.z;
-        }
-
-        public void LEGACY_SetLiftForFARWingAerodynamicModel()
-        {
-            for(int i = 0; i < partData.Count; i++)
-            {
-                PartData data = partData[i];
-                Part p = data.aeroModule.part;
-                if (p == null)
-                    continue;
-
-                ferram4.FARWingAerodynamicModel w = p.GetComponent<ferram4.FARWingAerodynamicModel>();
-                if (w == null)
-                    continue;
-
-                double minShownArea = Math.Min(data.kN, data.kP);
-                w.NUFAR_IncrementAreaExposedFactor(minShownArea);
-            }
-        }*/
 
         public void PredictionCalculateAeroForces(float atmDensity, float machNumber, float reynoldsPerUnitLength, float skinFrictionDrag, Vector3 vel, ferram4.FARCenterQuery center)
         {
