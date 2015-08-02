@@ -192,7 +192,10 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             EditorLogic.fetch.Unlock("FAREdLock");
 
             if (blizzyEditorGUIButton != null)
+            {
                 blizzyEditorGUIButton.Destroy();
+                blizzyEditorGUIButton = null;
+            }
 
             _stabDerivLinSim = null;
             _instantSim = null;
