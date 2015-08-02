@@ -171,11 +171,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
         public void GetNewAeroData(out List<FARAeroPartModule> aeroModules, out List<FARAeroPartModule> unusedAeroModules, out List<FARAeroSection> aeroSections, out List<ferram4.FARWingAerodynamicModel> legacyWingModel)
         {
             _calculationCompleted = false;
+            List<FARAeroPartModule> tmpAeroModules = _currentAeroModules;
             aeroModules = _currentAeroModules = _newAeroModules;
+            _newAeroModules = tmpAeroModules;
 
+            List<FARAeroSection> tmpAeroSections = _currentAeroSections;
             aeroSections = _currentAeroSections = _newAeroSections;
+            _newAeroSections = tmpAeroSections;
 
+            tmpAeroModules = _currentUnusedAeroModules;
             unusedAeroModules = _currentUnusedAeroModules = _newUnusedAeroModules;
+            _newUnusedAeroModules = tmpAeroModules;
 
 
             legacyWingModel = LEGACY_UpdateWingAerodynamicModels();
@@ -184,9 +190,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
         public void GetNewAeroData(out List<FARAeroPartModule> aeroModules, out List<FARAeroSection> aeroSections)
         {
             _calculationCompleted = false;
+            List<FARAeroPartModule> tmpAeroModules = _currentAeroModules;
             aeroModules = _currentAeroModules = _newAeroModules;
+            _newAeroModules = tmpAeroModules;
 
+            List<FARAeroSection> tmpAeroSections = _currentAeroSections;
             aeroSections = _currentAeroSections = _newAeroSections;
+            _newAeroSections = tmpAeroSections;
+
+            tmpAeroModules = _currentUnusedAeroModules;
+            _currentUnusedAeroModules = _newUnusedAeroModules;
+            _newUnusedAeroModules = tmpAeroModules;
 
             LEGACY_UpdateWingAerodynamicModels();
         }

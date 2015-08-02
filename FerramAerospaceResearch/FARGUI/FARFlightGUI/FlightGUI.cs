@@ -132,7 +132,6 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             if (FARDebugValues.useBlizzyToolbar)
             {
                 GenerateBlizzyToolbarButton();
-                GameEvents.onGameSceneLoadRequested.Add(ClearBlizzyToolbarButton);
             }
             else
                 OnGUIAppLauncherReady();
@@ -344,6 +343,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 blizzyFlightGUIButton.TexturePath = "FerramAerospaceResearch/Textures/icon_button_blizzy";
                 blizzyFlightGUIButton.ToolTip = "FAR Flight Sys";
                 blizzyFlightGUIButton.OnClick += (e) => showGUI = !showGUI;
+                GameEvents.onGUIApplicationLauncherUnreadifying.Add(ClearBlizzyToolbarButton);
             }
         }
 
