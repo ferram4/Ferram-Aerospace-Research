@@ -64,6 +64,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         static Rect settingsGuiRect;
         static ApplicationLauncherButton flightGUIAppLauncherButton;
         static IButton blizzyFlightGUIButton;
+        static int activeFlightGUICount = 0;
         public static Dictionary<Vessel, FlightGUI> vesselFlightGUI;
 
         PhysicsCalcs _physicsCalcs;
@@ -136,6 +137,8 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             else
                 OnGUIAppLauncherReady();
 
+            activeFlightGUICount++;
+
             if(_vessel == FlightGlobals.ActiveVessel)
                 LoadConfigs();
 
@@ -172,8 +175,15 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             _flightStatusGUI = null;
             settingsWindow = null;
 
-            //if (blizzyFlightGUIButton != null)
-            //    blizzyFlightGUIButton.Destroy();
+            activeFlightGUICount--;
+
+            if (activeFlightGUICount <= 0)
+            {
+                activeFlightGUICount = 0;
+                if (blizzyFlightGUIButton != null)
+                    ClearBlizzyToolbarButton();
+            }
+            
         }
 
         public void SaveData()
@@ -328,11 +338,10 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         #region AppLauncher
 
-        private static void ClearBlizzyToolbarButton(GameScenes scene)
+        private static void ClearBlizzyToolbarButton()
         {
             blizzyFlightGUIButton.Destroy();
             blizzyFlightGUIButton = null;
-            GameEvents.onLevelWasLoaded.Remove(ClearBlizzyToolbarButton);
         }
 
         private void GenerateBlizzyToolbarButton()
@@ -343,7 +352,6 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 blizzyFlightGUIButton.TexturePath = "FerramAerospaceResearch/Textures/icon_button_blizzy";
                 blizzyFlightGUIButton.ToolTip = "FAR Flight Sys";
                 blizzyFlightGUIButton.OnClick += (e) => showGUI = !showGUI;
-                GameEvents.onLevelWasLoaded.Add(ClearBlizzyToolbarButton);
             }
         }
 
