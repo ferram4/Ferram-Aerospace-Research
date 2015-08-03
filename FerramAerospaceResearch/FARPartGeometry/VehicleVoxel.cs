@@ -237,7 +237,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         private void BuildVoxel(List<GeometryPartModule> geoModules, bool multiThreaded, bool solidify)
         {
-            threadsQueued = 8;
+            threadsQueued = Environment.ProcessorCount - 1;
 
             //for (int i = 0; i < geoModules.Count; i++)
             //    threadsQueued += geoModules[i].meshDataList.Count;      //Doing this out here allows us to get rid of the lock, which should reduce sync costs for many meshes
