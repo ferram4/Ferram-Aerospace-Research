@@ -52,6 +52,8 @@ namespace ferram4
 {
     public class FARWingInteraction
     {
+        static RaycastHitComparer _comparer = new RaycastHitComparer();
+
         private FARWingAerodynamicModel parentWingModule;
         private Part parentWingPart;
         private Vector3 rootChordMidLocal;
@@ -457,7 +459,7 @@ namespace ferram4
 
                         Collider[] colliders;
 
-                        if (farModule != null)
+                        if ((object)farModule != null)
                         {
                             colliders = farModule.PartColliders;
                             if (colliders == null)
@@ -504,7 +506,7 @@ namespace ferram4
         {
             List<RaycastHit> sortedHits = unsortedList.ToList();
 
-            sortedHits.Sort(new RaycastHitComparer());
+            sortedHits.Sort(_comparer);
 
             return sortedHits.ToArray();
         }

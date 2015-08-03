@@ -96,6 +96,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         private MaterialColorUpdater materialColorUpdater;
         private FARWingAerodynamicModel legacyWingModel;
+        public FARWingAerodynamicModel LegacyWingModel
+        {
+            get { return legacyWingModel; }
+        }
         private ModuleLiftingSurface stockAeroSurfaceModule;
 
         public ProjectedArea ProjectedAreas
@@ -131,6 +135,19 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 a.kN += b.kN;
                 a.kP += b.kP;
                 return a;
+            }
+
+            public static implicit operator ProjectedArea(FARPartGeometry.VoxelCrossSection.SideAreaValues b)
+            {
+                ProjectedArea a = new ProjectedArea();
+                a.iN = b.iN;
+                a.iP = b.iP;
+                a.jN = b.jN;
+                a.jP = b.jP;
+                a.kN = b.kN;
+                a.kP = b.kP;
+                return a;
+               
             }
         }
 

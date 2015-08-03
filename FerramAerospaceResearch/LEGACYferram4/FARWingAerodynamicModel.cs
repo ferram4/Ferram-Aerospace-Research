@@ -186,7 +186,12 @@ namespace ferram4
                 Part p = counterparts[i];
                 if (p == null)
                     continue;
-                FARWingAerodynamicModel model = p.GetComponent<FARWingAerodynamicModel>();
+                FARWingAerodynamicModel model;
+                if (this is FARControllableSurface)
+                    model = (FARWingAerodynamicModel)p.Modules["FARControllableSurface"];
+                else
+                    model = (FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
+
                 ++counterpartsCount;
                 sum += model.NUFAR_areaExposedFactor;
                 totalExposedSum += model.NUFAR_totalExposedAreaFactor;
@@ -203,7 +208,11 @@ namespace ferram4
                 Part p = counterparts[i];
                 if (p == null)
                     continue;
-                FARWingAerodynamicModel model = p.GetComponent<FARWingAerodynamicModel>();
+                FARWingAerodynamicModel model;
+                if (this is FARControllableSurface)
+                    model = (FARWingAerodynamicModel)p.Modules["FARControllableSurface"];
+                else
+                    model = (FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
 
                 model.NUFAR_areaExposedFactor = sum;
                 model.NUFAR_totalExposedAreaFactor = totalExposedSum;

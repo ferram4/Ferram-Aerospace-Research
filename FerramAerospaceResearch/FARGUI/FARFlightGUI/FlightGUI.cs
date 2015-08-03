@@ -208,9 +208,9 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         }
 
         //Receives message from FARVesselAero through _vessel on the recalc being completed
-        void UpdateAeroModules(List<FARAeroPartModule> newAeroModules)
+        public void UpdateAeroModules(List<FARAeroPartModule> newAeroModules, List<FARWingAerodynamicModel> legacyWingModels)
         {
-            _physicsCalcs.UpdateAeroModules(newAeroModules);
+            _physicsCalcs.UpdateAeroModules(newAeroModules, legacyWingModels);
         }
 
         //Receives a message from any FARWingAerodynamicModel or FARAeroPartModule that has failed to update the GUI

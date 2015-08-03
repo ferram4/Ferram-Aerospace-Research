@@ -220,7 +220,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (p.Modules.Contains("FARWingAerodynamicModel"))
                 {
                     ferram4.FARWingAerodynamicModel w = (ferram4.FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
-                    if (w)
+                    if ((object)w != null)
                     {
                         w.isShielded = false;
                         w.NUFAR_ClearExposedAreaFactor();
@@ -230,7 +230,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 else if (p.Modules.Contains("FARControllableSurface"))
                 {
                     ferram4.FARWingAerodynamicModel w = (ferram4.FARWingAerodynamicModel)p.Modules["FARControllableSurface"];
-                    if (w)
+                    if ((object)w != null)
                     {
                         w.isShielded = false;
                         w.NUFAR_ClearExposedAreaFactor();
@@ -732,7 +732,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
             denom *= sectionThickness * sectionThickness;
             denom = 1 / denom;
 
-            for (int i = frontIndex - 1; i <= backIndex + 1; i++)
+            int lowIndex, highIndex;
+            lowIndex = Math.Max(frontIndex - 1, 0);
+            highIndex = Math.Min(backIndex + 1, vehicleCrossSection.Length - 1);
+
+            for (int i = lowIndex; i <= highIndex; i++)
             {
 
                 double secondDeriv = 0;
@@ -1112,20 +1116,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 else
                     sonicBaseDrag *= (float)flatnessRatio;
 
-                Dictionary<Part, VoxelCrossSection.SideAreaValues> includedPartsAndAreas = _vehicleCrossSection[index].partSideAreaValues;
-
-                double surfaceArea = 0;
-                foreach (KeyValuePair<Part, VoxelCrossSection.SideAreaValues> pair in includedPartsAndAreas)
-                {
-                    VoxelCrossSection.SideAreaValues areas = pair.Value;
-                    surfaceArea += areas.iN + areas.iP + areas.jN + areas.jP + areas.kN + areas.kP;
-                }
-
-                float viscCrossflowDrag = (float)(Math.Sqrt(curArea / Math.PI) * _sectionThickness * 2d);
-
-                xForceSkinFriction.SetPoint(0, new Vector3d(0, (surfaceArea * viscousDragFactor), 0));   //subsonic incomp visc drag
-                xForceSkinFriction.SetPoint(1, new Vector3d(1, (surfaceArea * viscousDragFactor), 0));   //transonic visc drag
-                xForceSkinFriction.SetPoint(2, new Vector3d(2, (float)surfaceArea, 0));                     //above Mach 1.4, visc is purely surface drag, no pressure-related components simulated
 
                 //float sonicWaveDrag = (float)CalculateTransonicWaveDrag(i, index, numSections, front, _sectionThickness, Math.Min(_maxCrossSectionArea * 2, curArea * 16));//Math.Min(maxCrossSectionArea * 0.1, curArea * 0.25));
                 //sonicWaveDrag *= (float)FARSettingsScenarioModule.Settings.fractionTransonicDrag;     //this is just to account for the higher drag being felt due to the inherent blockiness of the model being used and noise introduced by the limited control over shape and through voxelization
@@ -1247,11 +1237,16 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 xRefVector = _localToWorldMatrix.MultiplyVector(xRefVector);
                 nRefVector = _localToWorldMatrix.MultiplyVector(nRefVector);
 
+                Dictionary<Part, VoxelCrossSection.SideAreaValues> includedPartsAndAreas = _vehicleCrossSection[index].partSideAreaValues;
+
                 float weightingFactor = 0;
 
-                //weight the forces applied to each part
+                double surfaceArea = 0;
                 foreach (KeyValuePair<Part, VoxelCrossSection.SideAreaValues> pair in includedPartsAndAreas)
                 {
+                    VoxelCrossSection.SideAreaValues areas = pair.Value;
+                    surfaceArea += areas.iN + areas.iP + areas.jN + areas.jP + areas.kN + areas.kP;
+
                     Part key = pair.Key;
                     if (key == null)
                         continue;
@@ -1260,22 +1255,29 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         continue;
 
                     FARAeroPartModule m = (FARAeroPartModule)key.Modules["FARAeroPartModule"];
-                    if (m != null)
+                    if ((object)m != null)
                         includedModules.Add(m);
 
                     if (_moduleAndAreas.ContainsKey(m))
-                        _moduleAndAreas[m] += pair.Value;
+                        _moduleAndAreas[m] += areas;
                     else
-                        _moduleAndAreas[m] = new FARAeroPartModule.ProjectedArea() + pair.Value;
+                        _moduleAndAreas[m] = areas;
 
                     weightingFactor += (float)pair.Value.exposedAreaCount;
                     weighting.Add((float)pair.Value.exposedAreaCount);
                 }
+
                 weightingFactor = 1 / weightingFactor;
                 for (int j = 0; j < includedPartsAndAreas.Count; j++)
                 {
                     weighting[j] *= weightingFactor;
                 }
+
+                float viscCrossflowDrag = (float)(Math.Sqrt(curArea / Math.PI) * _sectionThickness * 2d);
+
+                xForceSkinFriction.SetPoint(0, new Vector3d(0, (surfaceArea * viscousDragFactor), 0));   //subsonic incomp visc drag
+                xForceSkinFriction.SetPoint(1, new Vector3d(1, (surfaceArea * viscousDragFactor), 0));   //transonic visc drag
+                xForceSkinFriction.SetPoint(2, new Vector3d(2, (float)surfaceArea, 0));                     //above Mach 1.4, visc is purely surface drag, no pressure-related components simulated
 
                 currentSection.UpdateAeroSection(potentialFlowNormalForce, viscCrossflowDrag
                     ,viscCrossflowDrag / (float)(_sectionThickness), (float)flatnessRatio, hypersonicMomentForward, hypersonicMomentBackward,

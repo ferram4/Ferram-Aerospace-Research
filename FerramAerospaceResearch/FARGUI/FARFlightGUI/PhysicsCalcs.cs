@@ -82,19 +82,17 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
         }
 
-        public void UpdateAeroModules(List<FARAeroPartModule> newAeroModules)
+        public void UpdateAeroModules(List<FARAeroPartModule> newAeroModules, List<FARWingAerodynamicModel> legacyWingModels)
         {
             _currentAeroModules = newAeroModules;
-            _LEGACY_currentWingAeroModel.Clear();
+            _LEGACY_currentWingAeroModel = legacyWingModels;
             wingArea = 0;
             useWingArea = false;
-            for (int i = 0; i < _vessel.parts.Count; i++)
+            for (int i = 0; i < legacyWingModels.Count; i++)
             {
-                Part p = _vessel.parts[i];
-                FARWingAerodynamicModel w = p.GetComponent<FARWingAerodynamicModel>();
+                FARWingAerodynamicModel w = legacyWingModels[i];
                 if ((object)w != null)
                 {
-                    _LEGACY_currentWingAeroModel.Add(w);
                     useWingArea = true;
                     wingArea += w.S;
                 }

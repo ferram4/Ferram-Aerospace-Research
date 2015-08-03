@@ -55,6 +55,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
     public class FARVesselAero : VesselModule
     {
         Vessel _vessel;
+        FerramAerospaceResearch.FARGUI.FARFlightGUI.FlightGUI _flightGUI;
         int _voxelCount;
 
         public double Length
@@ -158,9 +159,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 return;
             if (_vehicleAero.CalculationCompleted)
             {
-                _vehicleAero.GetNewAeroData(out _currentAeroModules, out _unusedAeroModules, out _currentAeroSections, out _legacyWingModels);                
+                _vehicleAero.GetNewAeroData(out _currentAeroModules, out _unusedAeroModules, out _currentAeroSections, out _legacyWingModels);
 
-                _vessel.SendMessage("UpdateAeroModules", _currentAeroModules);
+                if ((object)_flightGUI == null)
+                    _flightGUI = _vessel.GetComponent<FerramAerospaceResearch.FARGUI.FARFlightGUI.FlightGUI>();
+
+                _flightGUI.UpdateAeroModules(_currentAeroModules, _legacyWingModels);
 
                 for (int i = 0; i < _unusedAeroModules.Count; i++)
                 {
@@ -179,7 +183,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
 
                 _vesselIntakeRamDrag.UpdateAeroData(_currentAeroModules, _unusedAeroModules);
-            } 
+            }
             
             if (FlightGlobals.ready && _currentAeroSections != null)
                 CalculateAndApplyVesselAeroProperties();
@@ -382,7 +386,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
              setup = true;
 
-             Debug.Log("Updating vessel voxel for " + _vessel.vesselName);
+             //Debug.Log("Updating vessel voxel for " + _vessel.vesselName);
          }
 
         //TODO: have this grab from a config file
