@@ -152,8 +152,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 RebuildAllMeshData();
                 _started = true;
             }
-            if(!_ready && _meshesToUpdate == 0)
+            if (!_ready && _meshesToUpdate == 0)
+            {
                 _ready = true;
+                overallMeshBounds = SetBoundsFromMeshes();
+            }
 
             if (animStates != null && animStates.Count > 0)
                 CheckAnimations();
@@ -200,7 +203,27 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 meshDataList.Add(geoMesh);
             }
             //UpdateTransformMatrixList(worldToVesselMatrix);
-            overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
+            //overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
+        }
+
+        private Bounds SetBoundsFromMeshes()
+        {
+            Vector3 upper = new Vector3(1, 1, 1) * float.NegativeInfinity, lower = new Vector3(1, 1, 1) * float.PositiveInfinity;
+            for(int i = 0; i < meshDataList.Count; i++)
+            {
+                GeometryMesh geoMesh = meshDataList[i];
+                upper.x = Math.Max(upper.x, geoMesh.bounds.max.x);
+                upper.y = Math.Max(upper.y, geoMesh.bounds.max.y);
+                upper.z = Math.Max(upper.z, geoMesh.bounds.max.z);
+
+                lower.x = Math.Min(lower.x, geoMesh.bounds.min.x);
+                lower.y = Math.Min(lower.y, geoMesh.bounds.min.y);
+                lower.z = Math.Min(lower.z, geoMesh.bounds.min.z);
+            }
+            Bounds overallBounds = new Bounds((upper + lower) * 0.5f, upper - lower);
+
+            return overallBounds;
+            
         }
 
         private void GetAnimations()
@@ -538,7 +561,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     adjuster.UpdateArea();
                 }
             }
-            overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
+            //overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
         }
 
         internal void DecrementMeshesToUpdate()
