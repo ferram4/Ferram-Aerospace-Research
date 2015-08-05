@@ -87,11 +87,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             this.triangles = triangles;
             this.meshTransform = meshTransform;
 
-            Vector3 size = thisToVesselMatrix.MultiplyVector(meshBounds.size);
-            size.x = Math.Abs(size.x);
-            size.y = Math.Abs(size.y);
-            size.z = Math.Abs(size.z);
-
             bounds = TransformBounds(meshBounds, thisToVesselMatrix);
 
             this.module = module;
@@ -173,68 +168,32 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         private Bounds TransformBounds(Bounds oldBounds, Matrix4x4 matrix)
         {
-            Bounds bounds = new Bounds();
             Vector3 center, extents;
             center = oldBounds.center;//matrix.MultiplyPoint3x4(m.bounds.center);
             extents = oldBounds.extents;//matrix.MultiplyVector(m.bounds.size);
 
-            /*size.x = Math.Abs(size.x);
-            size.y = Math.Abs(size.y);
-            size.z = Math.Abs(size.z);*/
+            Vector3 lower = Vector3.one * float.PositiveInfinity;
+            Vector3 upper = Vector3.one * float.NegativeInfinity;
 
-            Vector3 boundPt;
-            boundPt = center + extents;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-            bounds.Encapsulate(boundPt);
+            TransformedPointBounds(matrix, center, +extents.x, +extents.y, +extents.z, ref lower, ref upper);
+            TransformedPointBounds(matrix, center, +extents.x, +extents.y, -extents.z, ref lower, ref upper);
+            TransformedPointBounds(matrix, center, +extents.x, -extents.y, -extents.z, ref lower, ref upper);
+            TransformedPointBounds(matrix, center, +extents.x, -extents.y, +extents.z, ref lower, ref upper);
+            TransformedPointBounds(matrix, center, -extents.x, -extents.y, +extents.z, ref lower, ref upper);
+            TransformedPointBounds(matrix, center, -extents.x, -extents.y, -extents.z, ref lower, ref upper);
+            TransformedPointBounds(matrix, center, -extents.x, +extents.y, -extents.z, ref lower, ref upper);
+            TransformedPointBounds(matrix, center, -extents.x, +extents.y, +extents.z, ref lower, ref upper);
 
-            boundPt = center - extents;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-            bounds.Encapsulate(boundPt);
-
-            boundPt = center;
-            boundPt.x += extents.x;
-            boundPt.y += extents.y;
-            boundPt.z -= extents.z;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-            bounds.Encapsulate(boundPt);
-
-            boundPt = center;
-            boundPt.x += extents.x;
-            boundPt.y -= extents.y;
-            boundPt.z += extents.z;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-            bounds.Encapsulate(boundPt);
-
-            boundPt = center;
-            boundPt.x -= extents.x;
-            boundPt.y += extents.y;
-            boundPt.z += extents.z;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-            bounds.Encapsulate(boundPt);
-
-            boundPt = center;
-            boundPt.x -= extents.x;
-            boundPt.y -= extents.y;
-            boundPt.z += extents.z;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-            bounds.Encapsulate(boundPt);
-
-            boundPt = center;
-            boundPt.x -= extents.x;
-            boundPt.y += extents.y;
-            boundPt.z -= extents.z;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-            bounds.Encapsulate(boundPt);
-
-            boundPt = center;
-            boundPt.x += extents.x;
-            boundPt.y -= extents.y;
-            boundPt.z -= extents.z;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-
-            bounds.Encapsulate(boundPt);
-
+            Bounds bounds = new Bounds((lower + upper) * 0.5f, upper - lower);
             return bounds;
+        }
+
+        void TransformedPointBounds(Matrix4x4 matrix, Vector3 center, float extX, float extY, float extZ, ref Vector3 lower, ref Vector3 upper)
+        {
+            Vector3 boundPt = new Vector3(center.x + extX, center.y + extY, center.z + extZ);
+            boundPt = matrix.MultiplyPoint3x4(boundPt);
+            lower = Vector3.Min(lower, boundPt);
+            upper = Vector3.Max(upper, boundPt);
         }
     }
 }

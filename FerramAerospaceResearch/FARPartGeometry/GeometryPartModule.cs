@@ -106,7 +106,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             get { return _ready && _started; }
         }
         private int _sendUpdateTick = 0;
-        private int _meshesToUpdate = 0;
+        private int _meshesToUpdate = -1;
 
         private float currentScaleFactor = 1;
 
@@ -202,6 +202,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 GeometryMesh geoMesh = new GeometryMesh(m, meshTransforms[i], worldToVesselMatrix, this);
                 meshDataList.Add(geoMesh);
             }
+            _meshesToUpdate = 0;
+            _ready = false;
             //UpdateTransformMatrixList(worldToVesselMatrix);
             //overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
         }
@@ -526,6 +528,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         public void UpdateTransformMatrixList(Matrix4x4 worldToVesselMatrix)
         {
             _ready = false;
+            Debug.Log("updating transforms for " + part.partInfo.title);
             if (meshDataList != null)
             {
                 _meshesToUpdate = meshDataList.Count;
