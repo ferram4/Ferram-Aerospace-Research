@@ -156,7 +156,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public void UpdateAeroSection(float potentialFlowNormalForce, float viscCrossflowDrag, float diameter, float flatnessRatio, float hypersonicMomentForward, float hypersonicMomentBackward,
             Vector3 centroidWorldSpace, Vector3 xRefVectorWorldSpace, Vector3 nRefVectorWorldSpace, Matrix4x4 vesselToWorldMatrix, Vector3 vehicleMainAxis, List<FARAeroPartModule> moduleList,
-            Dictionary<Part, FARPartGeometry.VoxelCrossSection.SideAreaValues> sideAreaValues, List<float> dragFactor, Dictionary<Part, PartTransformInfo> partWorldToLocalMatrixDict)
+            List<float> dragFactor, Dictionary<Part, PartTransformInfo> partWorldToLocalMatrixDict)
         {
             this.potentialFlowNormalForce = potentialFlowNormalForce;                   //copy lifting body info over
             this.viscCrossflowDrag = viscCrossflowDrag;
@@ -205,8 +205,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 data.xRefVectorPartSpace = transformMatrix.MultiplyVector(xRefVectorWorldSpace);
                 data.nRefVectorPartSpace = transformMatrix.MultiplyVector(nRefVectorWorldSpace);
                 data.dragFactor = dragFactor[i];
-
-                FARPartGeometry.VoxelCrossSection.SideAreaValues values = sideAreaValues[data.aeroModule.part];
 
                 transformMatrix = transformMatrix * vesselToWorldMatrix;
 

@@ -801,7 +801,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     intakeArea += adjuster.AreaRemovedFromCrossSection();
             }
 
-
+            //ThreadSafeDebugLogger.Instance.RegisterMessage(intakeArea + " " + engineExitArea);
             if (intakeArea != 0 && engineExitArea != 0)        //if they exist, go through the calculations
             {
                 if (_ductedAreaAdjustment.Length != vehicleCrossSection.Length)
@@ -1281,7 +1281,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 currentSection.UpdateAeroSection(potentialFlowNormalForce, viscCrossflowDrag
                     ,viscCrossflowDrag / (float)(_sectionThickness), (float)flatnessRatio, hypersonicMomentForward, hypersonicMomentBackward,
-                    centroid, xRefVector, nRefVector, _localToWorldMatrix, _vehicleMainAxis, includedModules, includedPartsAndAreas, weighting, _partWorldToLocalMatrix);
+                    centroid, xRefVector, nRefVector, _localToWorldMatrix, _vehicleMainAxis, includedModules, weighting, _partWorldToLocalMatrix);
 
                 if (i < _newAeroSections.Count)
                     _newAeroSections[i] = currentSection;

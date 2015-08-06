@@ -532,7 +532,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 while (_meshesToUpdate > 0)
                     if (this == null)
-                        break;
+                        return;
 
                 _meshesToUpdate = meshDataList.Count;
                 for (int i = 0; i < meshDataList.Count; ++i)
