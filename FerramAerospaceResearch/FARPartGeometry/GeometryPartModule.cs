@@ -528,9 +528,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
         public void UpdateTransformMatrixList(Matrix4x4 worldToVesselMatrix)
         {
             _ready = false;
-            Debug.Log("updating transforms for " + part.partInfo.title);
             if (meshDataList != null)
             {
+                while (_meshesToUpdate > 0)
+                    if (this == null)
+                        break;
+
                 _meshesToUpdate = meshDataList.Count;
                 for (int i = 0; i < meshDataList.Count; ++i)
                 {

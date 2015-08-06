@@ -185,6 +185,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             TransformedPointBounds(matrix, center, -extents.x, +extents.y, +extents.z, ref lower, ref upper);
 
             Bounds bounds = new Bounds((lower + upper) * 0.5f, upper - lower);
+            //FARThreading.ThreadSafeDebugLogger.Instance.RegisterMessage("Bounds center: " + bounds.center + " extents: " + bounds.extents);
             return bounds;
         }
 

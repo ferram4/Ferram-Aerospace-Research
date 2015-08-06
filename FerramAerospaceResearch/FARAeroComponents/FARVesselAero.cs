@@ -386,7 +386,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
              setup = true;
 
-             //Debug.Log("Updating vessel voxel for " + _vessel.vesselName);
+             Debug.Log("Updating vessel voxel for " + _vessel.vesselName);
          }
 
         //TODO: have this grab from a config file
