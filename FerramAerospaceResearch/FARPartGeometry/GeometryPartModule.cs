@@ -643,6 +643,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
             List<MeshData> meshList = new List<MeshData>();
             List<Transform> validTransformList = new List<Transform>();
 
+            if (part.Modules.Contains("KerbalEVA"))
+            {
+                meshList.Add(CreateBoxMeshForKerbalEVA());
+                validTransformList.Add(part.partTransform);
+                meshTransforms = validTransformList;
+                return meshList;
+            } 
+            
             Bounds rendererBounds = this.part.GetPartOverallMeshBoundsInBasis(part.partTransform.worldToLocalMatrix);
             Bounds colliderBounds = this.part.GetPartColliderBoundsInBasis(part.partTransform.worldToLocalMatrix);
 
@@ -754,6 +762,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
             return mesh;
         }
 
+        private static MeshData CreateBoxMeshForKerbalEVA()
+        {
+            return CreateBoxMeshFromBoxCollider(new Vector3(0.5f, 0.8f, 0.5f), Vector3.zero);
+        }
+        
         public void OnRescale(TweakScale.ScalingFactor factor)
         {
             if (meshDataList == null)

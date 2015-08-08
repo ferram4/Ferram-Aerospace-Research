@@ -112,11 +112,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
             _vessel = gameObject.GetComponent<Vessel>();
             this.enabled = true;
 
-            if(_vessel.rootPart.Modules.Contains("KerbalEVA"))
-            {
-                this.enabled = false;
-                return;
-            }
+            //if(_vessel.rootPart.Modules.Contains("KerbalEVA"))
+            //{
+            //    this.enabled = false;
+            //    return;
+            //}
 
             _currentGeoModules = new List<GeometryPartModule>();
             for (int i = 0; i < _vessel.parts.Count; i++)
@@ -141,6 +141,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 GeometryPartModule g = p.GetComponent<GeometryPartModule>();
                 if((object)g != null)
                 {
+                    _currentGeoModules.Add(g);
+                }
+                else if(p.Modules.Contains("KerbalEVA"))
+                {
+                    p.AddModule("GeometryPartModule");
+                    g = p.GetComponent<GeometryPartModule>();
+                    p.AddModule("FARAeroPartModule");
                     _currentGeoModules.Add(g);
                 }
             }
@@ -340,7 +347,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                  _updateQueued = false;
              }
 
-             if (_vessel.rootPart.Modules.Contains("LaunchClamp") || _vessel.rootPart.Modules.Contains("KerbalEVA"))
+             if (_vessel.rootPart.Modules.Contains("LaunchClamp"))// || _vessel.rootPart.Modules.Contains("KerbalEVA"))
              {
                  DisableModule();
                  return;

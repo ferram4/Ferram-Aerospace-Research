@@ -478,7 +478,31 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 hitParts.Add(p);
 
-                Vector3 candVector = p.partTransform.up;
+                Vector3 tmpCandVector;
+                Vector3 candVector;
+
+                if (p.srfAttachNode != null && p.srfAttachNode.attachedPart != null)// && p.attachRules.allowSrfAttach)
+                {
+                    tmpCandVector = p.srfAttachNode.orientation;
+                    tmpCandVector = new Vector3(tmpCandVector.z, tmpCandVector.x, tmpCandVector.y);
+
+                    if (p.srfAttachNode.position.sqrMagnitude == 0 && tmpCandVector == Vector3.forward)
+                        tmpCandVector = Vector3.up;
+
+                    if (tmpCandVector.z > tmpCandVector.x && tmpCandVector.z > tmpCandVector.y)
+                        tmpCandVector = Vector3.forward;
+                    else if (tmpCandVector.y > tmpCandVector.x && tmpCandVector.y > tmpCandVector.z)
+                        tmpCandVector = Vector3.up;
+                    else
+                        tmpCandVector = Vector3.right;
+                }
+                else
+                {
+                    tmpCandVector = Vector3.up;
+                }
+
+                candVector = p.partTransform.TransformDirection(tmpCandVector);
+
                 if (p.Modules.Contains("ModuleResourceIntake"))      //intakes are probably pointing in the direction we're gonna be going in
                 {
                     ModuleResourceIntake intake = (ModuleResourceIntake)p.Modules["ModuleResourceIntake"];
@@ -520,7 +544,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         notAxis += notCandVector;
                     }*/
                     else
-                        candVector += q.partTransform.up;
+                        candVector += q.partTransform.TransformDirection(tmpCandVector);
                 }
 
                 candVector = _worldToLocalMatrix.MultiplyVector(candVector);
@@ -1135,8 +1159,23 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if(curArea - nextArea != 0)
                     hypersonicDragBackwardFrac = Math.Abs(hypersonicDragBackward * 0.5f / (float)(curArea - nextArea));
 
+                hypersonicDragForwardFrac *= hypersonicDragForwardFrac;
+                hypersonicDragBackwardFrac *= hypersonicDragBackwardFrac;
+
+                if (flatnessRatio >= 1)
+                {
+                    hypersonicDragForwardFrac /= (float)flatnessRatio;
+                    hypersonicDragBackwardFrac /= (float)flatnessRatio;
+                }
+                else
+                {
+                    hypersonicDragForwardFrac *= (float)flatnessRatio;
+                    hypersonicDragBackwardFrac *= (float)flatnessRatio;
+                } 
+                
                 float hypersonicMomentForward = (float)CalculateHypersonicMoment(prevArea, curArea, _sectionThickness);
                 float hypersonicMomentBackward = (float)CalculateHypersonicMoment(nextArea, curArea, _sectionThickness);
+
 
                 xForcePressureAoA0.SetPoint(5, new Vector3d(35, hypersonicDragForward, 0));
                 xForcePressureAoA180.SetPoint(5, new Vector3d(35, -hypersonicDragBackward, 0));
@@ -1161,8 +1200,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 if (sonicBaseDrag > 0)      //occurs with increase in area; force applied at 180 AoA
                 {
-                    xForcePressureAoA0.SetPoint(0, new Vector3d(_criticalMach, (hypersonicDragForward * 0.4f * hypersonicDragForwardFrac) * lowFinenessRatioSubsonicFactor, 0));    //hypersonic drag used as a proxy for effects due to flow separation
-                    xForcePressureAoA180.SetPoint(0, new Vector3d(_criticalMach, (sonicBaseDrag * 0.25f - hypersonicDragBackward * 0.4f * hypersonicDragBackwardFrac) * lowFinenessRatioSubsonicFactor, 0));
+                    xForcePressureAoA0.SetPoint(0, new Vector3d(_criticalMach, (0.2f * hypersonicDragForward * hypersonicDragForwardFrac + 0.2f * hypersonicDragBackward * hypersonicDragBackwardFrac) * lowFinenessRatioSubsonicFactor, 0));    //hypersonic drag used as a proxy for effects due to flow separation
+                    xForcePressureAoA180.SetPoint(0, new Vector3d(_criticalMach, (sonicBaseDrag * 0.25f - (0.2f * hypersonicDragForward * hypersonicDragForwardFrac + 0.2f * hypersonicDragBackward * hypersonicDragBackwardFrac)) * lowFinenessRatioSubsonicFactor, 0));
 
 
                     hypersonicDragBackwardFrac += 1f;       //avg fracs with 1 to get intermediate frac
@@ -1176,8 +1215,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
                 else if (sonicBaseDrag < 0)
                 {
-                    xForcePressureAoA0.SetPoint(0, new Vector3d(_criticalMach, (sonicBaseDrag * 0.25f + hypersonicDragForward * 0.4f * hypersonicDragForwardFrac) * lowFinenessRatioSubsonicFactor, 0));
-                    xForcePressureAoA180.SetPoint(0, new Vector3d(_criticalMach, (-hypersonicDragBackward * 0.4f * hypersonicDragBackwardFrac) * lowFinenessRatioSubsonicFactor, 0));
+                    xForcePressureAoA0.SetPoint(0, new Vector3d(_criticalMach, (sonicBaseDrag * 0.25f + (0.2f * hypersonicDragForward * hypersonicDragForwardFrac + 0.2f * hypersonicDragBackward * hypersonicDragBackwardFrac)) * lowFinenessRatioSubsonicFactor, 0));
+                    xForcePressureAoA180.SetPoint(0, new Vector3d(_criticalMach, -(0.2f * hypersonicDragForward * hypersonicDragForwardFrac + 0.2f * hypersonicDragBackward * hypersonicDragBackwardFrac) * lowFinenessRatioSubsonicFactor, 0));
 
                     hypersonicDragBackwardFrac += 1f;       //avg fracs with 1 to get intermediate frac
                     hypersonicDragBackwardFrac *= 0.5f;
@@ -1191,8 +1230,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
                 else
                 {
-                    xForcePressureAoA0.SetPoint(0, new Vector3d(_criticalMach, (hypersonicDragForward * 0.4f * hypersonicDragForwardFrac) * lowFinenessRatioSubsonicFactor, 0));
-                    xForcePressureAoA180.SetPoint(0, new Vector3d(_criticalMach, (-hypersonicDragBackward * 0.4f * hypersonicDragBackwardFrac) * lowFinenessRatioSubsonicFactor, 0));
+                    xForcePressureAoA0.SetPoint(0, new Vector3d(_criticalMach, (0.2f * hypersonicDragForward * hypersonicDragForwardFrac + 0.2f * hypersonicDragBackward * hypersonicDragBackwardFrac) * lowFinenessRatioSubsonicFactor, 0));
+                    xForcePressureAoA180.SetPoint(0, new Vector3d(_criticalMach, -(0.2f * hypersonicDragForward * hypersonicDragForwardFrac + 0.2f * hypersonicDragBackward * hypersonicDragBackwardFrac) * lowFinenessRatioSubsonicFactor, 0));
 
                     hypersonicDragBackwardFrac += 1f;       //avg fracs with 1 to get intermediate frac
                     hypersonicDragBackwardFrac *= 0.5f;
