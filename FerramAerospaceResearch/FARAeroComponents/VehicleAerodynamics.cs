@@ -123,18 +123,24 @@ namespace FerramAerospaceResearch.FARAeroComponents
         List<ferram4.FARWingAerodynamicModel> _legacyWingModels = new List<ferram4.FARWingAerodynamicModel>();
 
         List<ICrossSectionAdjuster> activeAdjusters = new List<ICrossSectionAdjuster>();
-        Dictionary<Part, double> adjusterAreaPerVoxelDict = new Dictionary<Part, double>();
-        Dictionary<Part, ICrossSectionAdjuster> adjusterPartDict = new Dictionary<Part, ICrossSectionAdjuster>();
+        //Dictionary<Part, double> adjusterAreaPerVoxelDict = new Dictionary<Part, double>();
+        //Dictionary<Part, ICrossSectionAdjuster> adjusterPartDict = new Dictionary<Part, ICrossSectionAdjuster>();
 
         List<FARAeroPartModule> includedModules = new List<FARAeroPartModule>();
         List<float> weighting = new List<float>();
-        static Stack<FARAeroSection> currentlyUnusedSections = new Stack<FARAeroSection>();
+        static Stack<FARAeroSection> currentlyUnusedSections;
 
         int validSectionCount;
         int firstSection;
 
         bool visualizing = false;
         bool voxelizing = false;
+
+        public VehicleAerodynamics()
+        {
+            if(currentlyUnusedSections == null)
+                currentlyUnusedSections = new Stack<FARAeroSection>();
+        }
 
         public void ForceCleanup()
         {
@@ -157,6 +163,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             _legacyWingModels = null;
 
             _vehiclePartList = null;
+
+            activeAdjusters = null;
         }
 
         private double[] GenerateIndexSqrtLookup(int numStations)
@@ -1003,8 +1011,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 
             }
             activeAdjusters.Clear();
-            adjusterAreaPerVoxelDict.Clear();
-            adjusterPartDict.Clear();
         }
 
         #region Aerodynamics Calculations
@@ -1306,10 +1312,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         FARAeroSection unusedSection = _newAeroSections[i];
                         _newAeroSections.RemoveAt(i);
 
-                        if (currentlyUnusedSections.Count < 50)
+                        if (currentlyUnusedSections.Count < 64)
                             currentlyUnusedSections.Push(unusedSection);        //if there aren't that many extra ones stored, add them to the stack to be reused
-
-                        unusedSection = null;
+                        else
+                        {
+                            unusedSection.ClearAeroSection();
+                            unusedSection = null;
+                        }
                     }
             }
             foreach (KeyValuePair<FARAeroPartModule, FARAeroPartModule.ProjectedArea> pair in _moduleAndAreas)

@@ -218,6 +218,14 @@ namespace FerramAerospaceResearch.FARAeroComponents
             xForcePressureAoA180.BakeCurve();
             xForceSkinFriction.BakeCurve();
         }
+
+        public void ClearAeroSection()
+        {
+            xForcePressureAoA0 = null;
+            xForcePressureAoA180 = null;
+            xForceSkinFriction = null;
+            partData = null;
+        }
         
         public void PredictionCalculateAeroForces(float atmDensity, float machNumber, float reynoldsPerUnitLength, float skinFrictionDrag, Vector3 vel, ferram4.FARCenterQuery center)
         {
