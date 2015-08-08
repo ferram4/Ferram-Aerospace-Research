@@ -227,9 +227,9 @@ namespace ferram4
             CompressArrayToList(nearbyWingModulesRightward, ref nearbyWingModulesRightwardList, ref nearbyWingModulesRightwardInfluence);
 
             //This part handles effects of biplanes, triplanes, etc.
-            double ClCdInterference = 1;
-            ClCdInterference *= WingInterference(parentWingPart.partTransform.forward, VesselPartList, flt_b_2);
-            ClCdInterference *= WingInterference(-parentWingPart.partTransform.forward, VesselPartList, flt_b_2);
+            double ClCdInterference = 0;
+            ClCdInterference += 0.5f * WingInterference(parentWingPart.partTransform.forward, VesselPartList, flt_b_2);
+            ClCdInterference += 0.5f * WingInterference(-parentWingPart.partTransform.forward, VesselPartList, flt_b_2);
 
             ClInterferenceFactor = ClCdInterference;
         }
