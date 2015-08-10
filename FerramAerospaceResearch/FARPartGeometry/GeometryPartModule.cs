@@ -392,37 +392,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
                 return;
             }
-            /*if (part.Modules.Contains("ModuleEnginesFX"))
-            {
-                ModuleEnginesFX engines = (ModuleEnginesFX)part.Modules["ModuleEnginesFX"];
-                for (int i = 0; i < engines.propellants.Count; i++)
-                {
-                    Propellant p = engines.propellants[i];
-                    if (p.name == "IntakeAir")
-                    {
-                        AirbreathingEngineCrossSectonAdjuster engineAdjuster = new AirbreathingEngineCrossSectonAdjuster(engines, worldToVesselMatrix);
-                        crossSectionAdjusters.Add(engineAdjuster);
-                        break;
-                    }
-                }
-            }
-            if (part.Modules.Contains("ModuleEnginesAJEJet"))       //hard-coded support for AJE; TODO: separate out for more configurable compatibility on 3rd-party end
-            {
-                AirbreathingEngineCrossSectonAdjuster engineAdjuster = new AirbreathingEngineCrossSectonAdjuster((ModuleEngines)part.Modules["ModuleEnginesAJEJet"], worldToVesselMatrix);
-                crossSectionAdjusters.Add(engineAdjuster);
-            }
-            if (part.Modules.Contains("ModuleResourceIntake"))
-            {
-                ModuleResourceIntake intake = (ModuleResourceIntake)part.Modules["ModuleResourceIntake"];
-
-                IntakeCrossSectionAdjuster intakeAdjuster = new IntakeCrossSectionAdjuster(intake, worldToVesselMatrix);
-                crossSectionAdjusters.Add(intakeAdjuster);
-            }
-            if(part.Modules.Contains("AJEInlet"))
-            {
-                IntakeCrossSectionAdjuster intakeAdjuster = new IntakeCrossSectionAdjuster(part.Modules["AJEInlet"], worldToVesselMatrix);
-                crossSectionAdjusters.Add(intakeAdjuster);
-            }*/
         }
 
         public void RunIGeometryUpdaters()
@@ -550,7 +519,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         lock (this)
                             --_meshesToUpdate;
                     }
-                    /*if (!meshDataList[i].TryTransformBasis(worldToVesselMatrix))
+                    /*if (mesh.TrySetThisToVesselMatrixForTransform())
+                    {
+                        mesh.TransformBasis(worldToVesselMatrix);
+                    }
+                    else
                     {
                         meshDataList.RemoveAt(i);
                         i--;

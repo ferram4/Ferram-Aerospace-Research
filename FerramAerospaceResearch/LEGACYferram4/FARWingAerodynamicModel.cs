@@ -1393,5 +1393,21 @@ namespace ferram4
 
         }
 
+        private void OnDestroy()
+        {
+            if ((object)liftArrow != null)
+            {
+                UnityEngine.Object.Destroy(liftArrow);
+                liftArrow = null;
+            }
+            if ((object)dragArrow != null)
+            {
+                UnityEngine.Object.Destroy(dragArrow);
+                dragArrow = null;
+            }
+            wingInteraction.Destroy();
+            wingInteraction = null;
+        }
+
     }
 }

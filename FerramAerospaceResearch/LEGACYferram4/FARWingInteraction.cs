@@ -164,6 +164,14 @@ namespace ferram4
 
         }
 
+        public void Destroy()
+        {
+            nearbyWingModulesForwardList = nearbyWingModulesBackwardList = nearbyWingModulesLeftwardList = nearbyWingModulesRightwardList = null;
+            nearbyWingModulesForwardInfluence = nearbyWingModulesBackwardInfluence = nearbyWingModulesLeftwardInfluence = nearbyWingModulesRightwardInfluence = null;
+            parentWingModule = null;
+            parentWingPart = null;
+        }
+
         /// <summary>
         /// Called when plane is stopped to get rid of old wing interaction data
         /// </summary>
