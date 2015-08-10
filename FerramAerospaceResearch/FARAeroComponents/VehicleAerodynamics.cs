@@ -484,7 +484,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (p.srfAttachNode != null && p.srfAttachNode.attachedPart != null)// && p.attachRules.allowSrfAttach)
                 {
                     tmpCandVector = p.srfAttachNode.orientation;
-                    tmpCandVector = new Vector3(tmpCandVector.z, tmpCandVector.x, tmpCandVector.y);
+                    tmpCandVector = new Vector3(0, tmpCandVector.x + tmpCandVector.z, tmpCandVector.y);
 
                     if (p.srfAttachNode.position.sqrMagnitude == 0 && tmpCandVector == Vector3.forward)
                         tmpCandVector = Vector3.up;
