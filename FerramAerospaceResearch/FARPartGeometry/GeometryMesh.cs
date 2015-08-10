@@ -149,7 +149,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                     tempMatrix = thisToVesselMatrix * tempMatrix;
 
-                    bounds = TransformBounds(bounds, tempMatrix);
+                    Vector3 low, high;
+                    low = Vector3.one * float.PositiveInfinity;
+                    high = Vector3.one * float.NegativeInfinity;
 
                     for (int i = 0; i < vertices.Length; i++)
                     {
@@ -161,7 +163,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         vert.z = tempMatrix.m20 * v.x + tempMatrix.m21 * v.y + tempMatrix.m22 * v.z + tempMatrix.m23;
 
                         vertices[i] = vert;
+                        low = Vector3.Min(low, vert);
+                        high = Vector3.Max(high, vert);
                     }
+
+                    bounds = new Bounds(0.5f * (high + low), high - low);
 
                     module.DecrementMeshesToUpdate();
                 }

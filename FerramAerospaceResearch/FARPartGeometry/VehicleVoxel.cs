@@ -138,6 +138,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
             for (int i = 0; i < geoModules.Count; i++)
             {
                 GeometryPartModule m = geoModules[i];
+                while (!m.Ready)
+                    Thread.SpinWait(5);
+
                 if ((object)m != null)
                 {
                     Vector3d minBounds = m.overallMeshBounds.min;
