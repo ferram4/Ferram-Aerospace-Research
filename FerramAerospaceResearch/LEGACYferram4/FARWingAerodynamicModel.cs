@@ -1395,12 +1395,12 @@ namespace ferram4
 
         private void OnDestroy()
         {
-            if ((object)liftArrow != null)
+            if (liftArrow != null)
             {
                 UnityEngine.Object.Destroy(liftArrow);
                 liftArrow = null;
             }
-            if ((object)dragArrow != null)
+            if (dragArrow != null)
             {
                 UnityEngine.Object.Destroy(dragArrow);
                 dragArrow = null;
