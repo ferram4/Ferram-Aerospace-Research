@@ -149,6 +149,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (!_started && ((HighLogic.LoadedSceneIsFlight && FlightGlobals.ready) ||       //this is done because it takes a frame for colliders to be set up in the editor
             HighLogic.LoadedSceneIsEditor && ApplicationLauncher.Ready))                //waiting prevents changes in physics in flight or in predictions because the voxel switches to colliders rather than meshes
             {
+
                 RebuildAllMeshData();
                 _started = true;
             }
@@ -499,7 +500,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             _ready = false;
             if (meshDataList != null)
             {
-                while (_meshesToUpdate > 0)
+                while (_meshesToUpdate > 0) //if the previous transform order hasn't been completed yet, wait here to let it
                     if (this == null)
                         return;
 

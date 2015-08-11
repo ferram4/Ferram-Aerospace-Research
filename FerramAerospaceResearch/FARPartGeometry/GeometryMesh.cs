@@ -169,11 +169,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                     bounds = new Bounds(0.5f * (high + low), high - low);
 
-                    module.DecrementMeshesToUpdate();
                 }
                 catch (Exception e)
                 {
                     Debug.LogException(e);
+                }
+                finally
+                {
+                    module.DecrementMeshesToUpdate();
                 }
             }
         }

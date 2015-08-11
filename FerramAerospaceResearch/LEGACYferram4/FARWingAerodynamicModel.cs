@@ -1405,8 +1405,11 @@ namespace ferram4
                 UnityEngine.Object.Destroy(dragArrow);
                 dragArrow = null;
             }
-            wingInteraction.Destroy();
-            wingInteraction = null;
+            if (wingInteraction != null)
+            {
+                wingInteraction.Destroy();
+                wingInteraction = null;
+            }
         }
 
     }

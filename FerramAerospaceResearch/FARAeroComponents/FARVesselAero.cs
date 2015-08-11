@@ -329,7 +329,14 @@ namespace FerramAerospaceResearch.FARAeroComponents
          public void VesselUpdate(bool recalcGeoModules)
          {
              if (_vessel == null)
+             {
                  _vessel = gameObject.GetComponent<Vessel>();
+                 if (_vessel == null)
+                 {
+                     return;
+                 }
+             }
+
              if (_vehicleAero == null)
              {
                  _vehicleAero = new VehicleAerodynamics();
@@ -346,13 +353,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
                  _updateRateLimiter = 0;
                  _updateQueued = false;
              }
-
              if (_vessel.rootPart.Modules.Contains("LaunchClamp"))// || _vessel.rootPart.Modules.Contains("KerbalEVA"))
              {
                  DisableModule();
                  return;
              }
-
              if (recalcGeoModules)
              {
                  _currentGeoModules = new List<GeometryPartModule>();
@@ -369,8 +374,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                      }
                  }
              }
-
-             if(_currentGeoModules.Count > geoModulesReady)
+             if (_currentGeoModules.Count > geoModulesReady)
              {
                  _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
                  _updateQueued = true;
@@ -393,7 +397,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
              setup = true;
 
-             //Debug.Log("Updating vessel voxel for " + _vessel.vesselName);
+             Debug.Log("Updating vessel voxel for " + _vessel.vesselName);
          }
 
         //TODO: have this grab from a config file

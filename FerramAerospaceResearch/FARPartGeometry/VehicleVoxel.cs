@@ -138,11 +138,22 @@ namespace FerramAerospaceResearch.FARPartGeometry
             for (int i = 0; i < geoModules.Count; i++)
             {
                 GeometryPartModule m = geoModules[i];
-                while (!m.Ready)
-                    Thread.SpinWait(5);
 
                 if ((object)m != null)
                 {
+                    bool cont = true;
+                    while (!m.Ready)
+                    {
+                        Thread.SpinWait(5);
+                        if (m == null)
+                        {
+                            cont = false;
+                            break;
+                        }
+                    }
+                    if (!cont)
+                        continue;
+
                     Vector3d minBounds = m.overallMeshBounds.min;
                     Vector3d maxBounds = m.overallMeshBounds.max;
 
@@ -153,9 +164,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     max.x = Math.Max(max.x, maxBounds.x);
                     max.y = Math.Max(max.y, maxBounds.y);
                     max.z = Math.Max(max.z, maxBounds.z);
+
+                    if (CheckPartForOverridingPartList(m))
+                        overridingParts.Add(m.part);
                 }
-                if (CheckPartForOverridingPartList(m))
-                    overridingParts.Add(m.part);
             }
 
 
