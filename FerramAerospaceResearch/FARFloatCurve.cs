@@ -133,8 +133,13 @@ namespace FerramAerospaceResearch
             int curIndex = centerIndex;
             //int lowIndex = 0;
             //int highIndex = sections.Length - 1;
+            int count = 0;
             while(true)
             {
+                if (count > sections.Length)
+                    throw new Exception();
+                else
+                    ++count;
                 //curIndex = (highIndex + lowIndex) / 2;
                 int check = sections[curIndex].CheckRange(x);
                 if (check > 0)       //above of this cubic's range

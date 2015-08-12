@@ -149,7 +149,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (!_started && ((HighLogic.LoadedSceneIsFlight && FlightGlobals.ready) ||       //this is done because it takes a frame for colliders to be set up in the editor
             HighLogic.LoadedSceneIsEditor && ApplicationLauncher.Ready))                //waiting prevents changes in physics in flight or in predictions because the voxel switches to colliders rather than meshes
             {
-
                 RebuildAllMeshData();
                 _started = true;
             }

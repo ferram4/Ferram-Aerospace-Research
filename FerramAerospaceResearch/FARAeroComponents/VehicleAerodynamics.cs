@@ -484,7 +484,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (p.srfAttachNode != null && p.srfAttachNode.attachedPart != null)// && p.attachRules.allowSrfAttach)
                 {
                     tmpCandVector = p.srfAttachNode.orientation;
-                    tmpCandVector = new Vector3(0, tmpCandVector.x + tmpCandVector.z, tmpCandVector.y);
+                    tmpCandVector = new Vector3(0, Math.Abs(tmpCandVector.x) + Math.Abs(tmpCandVector.z), Math.Abs(tmpCandVector.y));
 
                     if (p.srfAttachNode.position.sqrMagnitude == 0 && tmpCandVector == Vector3.forward)
                         tmpCandVector = Vector3.up;
@@ -552,7 +552,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 candVector.y = Math.Abs(candVector.y);
                 candVector.z = Math.Abs(candVector.z);
 
-                axis += candVector * p.mass * (1 + p.symmetryCounterparts.Count);    //scale part influence by approximate size
+                Vector3 size = geoModule.overallMeshBounds.size;
+
+                axis += candVector * size.x * size.y * size.z * (1 + p.symmetryCounterparts.Count);    //scale part influence by approximate size
             }
             /*float perpTest = Math.Abs(Vector3.Dot(axis, notAxis));
 

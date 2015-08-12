@@ -504,6 +504,8 @@ namespace ferram4
         {
             if(VesselPartList == null)
                 VesselPartList = GetShipPartList();
+            if (wingInteraction == null)
+                wingInteraction = new FARWingInteraction(this, part, rootMidChordOffsetFromOrig, srfAttachNegative);
 
             wingInteraction.UpdateWingInteraction(VesselPartList, nonSideAttach == 1);
         }
