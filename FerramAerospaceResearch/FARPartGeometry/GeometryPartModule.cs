@@ -181,6 +181,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if(!(HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor))
                 return;
 
+            while (_meshesToUpdate > 0) //if the previous transform order hasn't been completed yet, wait here to let it
+                if (this == null)
+                    return;
+            
             partTransform = part.partTransform;
             List<Transform> meshTransforms = part.PartModelTransformList();
             List<MeshData> geometryMeshes = CreateMeshListFromTransforms(ref meshTransforms);
@@ -202,6 +206,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 GeometryMesh geoMesh = new GeometryMesh(m, meshTransforms[i], worldToVesselMatrix, this);
                 meshDataList.Add(geoMesh);
             }
+
             _meshesToUpdate = 0;
             _ready = false;
             //UpdateTransformMatrixList(worldToVesselMatrix);
