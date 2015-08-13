@@ -60,6 +60,7 @@ namespace FerramAerospaceResearch
         {
             FARAeroStress.LoadStressTemplates();
             FARAeroUtil.LoadAeroDataFromConfig();
+            FARAnimOverrides.LoadAnimOverrides();
             //FARSettingsScenarioModule.LoadConfigs();
             this.enabled = false;
         }
