@@ -1395,8 +1395,10 @@ namespace ferram4
 
         }
 
-        private void OnDestroy()
+        protected override void OnDestroy()
         {
+            base.OnDestroy();
+
             if (liftArrow != null)
             {
                 UnityEngine.Object.Destroy(liftArrow);

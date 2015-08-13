@@ -137,7 +137,7 @@ namespace ferram4
         //{
         //    //By blanking this nothing should be saved to the craft file or the persistance file
         //}
-        private void OnDestroy()
+        protected virtual void OnDestroy()
         {
             OnVesselPartsChange = null;
             VesselPartList = null;

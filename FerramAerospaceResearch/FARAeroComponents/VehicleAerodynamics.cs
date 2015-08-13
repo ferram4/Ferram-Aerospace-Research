@@ -150,6 +150,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 _voxel = null;
             }
             _vehicleCrossSection = null;
+            _ductedAreaAdjustment = null;
 
             _currentAeroModules = null;
             _newAeroModules = null;

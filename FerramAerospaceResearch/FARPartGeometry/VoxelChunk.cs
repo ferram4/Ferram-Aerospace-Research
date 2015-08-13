@@ -57,14 +57,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
         private DebugVisualVoxel[, ,] visualVoxels = null;
         private HashSet<Part> overridingParts;
 
-        double size;
+        static double _size;
         Vector3d lowerCorner;
         //int iOffset, jOffset, kOffset;
         int offset;
 
         public VoxelChunk(double size, Vector3d lowerCorner, int iOffset, int jOffset, int kOffset, HashSet<Part> overridingParts)
         {
-            this.size = size;
+            _size = size;
             offset = iOffset + 8 * jOffset + 64 * kOffset;
             //voxelPoints = new Part[512];
             //voxelSize = new float[512];
@@ -78,7 +78,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public void SetChunk(double size, Vector3d lowerCorner, int iOffset, int jOffset, int kOffset, HashSet<Part> overridingParts)
         {
-            this.size = size;
+            _size = size;
             offset = iOffset + 8 * jOffset + 64 * kOffset;
             this.lowerCorner = lowerCorner;
             this.overridingParts = overridingParts;
@@ -86,7 +86,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public void ClearChunk()
         {
-            size = 0;
+            //_size = 0;
             offset = 0;
             lowerCorner = Vector3d.zero;
             for (int i = 0; i < voxelPoints.Length; i++)
@@ -215,8 +215,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             if (elementSize > 1)
                                 elementSize = 1;
 
-                            elementSize *= size * 0.5f;
-                            vx = new DebugVisualVoxel(vesselLocalToWorldMatrix.MultiplyPoint3x4(lowerCorner + new Vector3d(i, j, k) * size), elementSize);
+                            elementSize *= _size * 0.5f;
+                            vx = new DebugVisualVoxel(vesselLocalToWorldMatrix.MultiplyPoint3x4(lowerCorner + new Vector3d(i, j, k) * _size), elementSize);
                             visualVoxels[i, j, k] = vx;
                         }
                     }

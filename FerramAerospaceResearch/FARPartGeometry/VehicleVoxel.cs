@@ -109,6 +109,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     for (int i = 0; i < MAX_SWEEP_PLANES_IN_QUEUE; i++)
                         clearedPlanes.Push(new SweepPlanePoint[1, 1]);
 
+                    clearedPlanes.TrimExcess();
 
                 }
                 int chunksForQueue = (int)Math.Ceiling(FARSettingsScenarioModule.VoxelSettings.numVoxelsControllableVessel * 0.034375);      //2.2 / 64
@@ -120,9 +121,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     MAX_CHUNKS_ALLOWED = (int)Math.Ceiling(1.5 * MAX_CHUNKS_IN_QUEUE);
 
                     Debug.Log(MAX_CHUNKS_IN_QUEUE + " " + MAX_CHUNKS_ALLOWED);
-
                     for (int i = 0; i < MAX_CHUNKS_IN_QUEUE; i++)
                         clearedChunks.Push(new VoxelChunk(0, Vector3.zero, 0, 0, 0, null));
+
+                    clearedChunks.TrimExcess();
                 }
             }
         }

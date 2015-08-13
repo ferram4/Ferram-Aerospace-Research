@@ -134,16 +134,16 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 {
                     FARAeroPartModule m = _currentAeroModules[i];
                     if ((object)m != null)
-                        totalAeroForceVector += m.worldSpaceAeroForce;
+                        totalAeroForceVector += m.totalWorldSpaceAeroForce;
                 }
             }
 
-            for (int i = 0; i < _LEGACY_currentWingAeroModel.Count; i++)
+            /*for (int i = 0; i < _LEGACY_currentWingAeroModel.Count; i++)
             {
                 FARWingAerodynamicModel w = _LEGACY_currentWingAeroModel[i];
                 if ((object)w != null)
                     totalAeroForceVector += w.worldSpaceForce;
-            }
+            }*/
 
             for(int i = 0; i < _vessel.parts.Count; i++)
             {
