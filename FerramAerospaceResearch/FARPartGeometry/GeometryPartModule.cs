@@ -181,6 +181,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if(!(HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor))
                 return;
 
+            _ready = false;
+
             while (_meshesToUpdate > 0) //if the previous transform order hasn't been completed yet, wait here to let it
                 if (this == null)
                     return;
@@ -208,7 +210,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
 
             _meshesToUpdate = 0;
-            _ready = false;
             //UpdateTransformMatrixList(worldToVesselMatrix);
             //overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
         }
