@@ -532,6 +532,7 @@ namespace FerramAerospaceResearch
             FARAeroStress.LoadStressTemplates();
             FARAeroUtil.LoadAeroDataFromConfig();
             FARActionGroupConfiguration.LoadConfiguration();
+            FARAnimOverrides.LoadAnimOverrides();
 
             Color tmpColor = GUIColors.Instance[0];
             ReColorTexture(ref tmpColor, ref cLTexture);

@@ -254,6 +254,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         private void FindAnimStatesInModule(Animation[] animations, PartModule m, string fieldName)
         {
+            if (FARAnimOverrides.FieldNameForModule(m.moduleName) == fieldName)
+                return;
             FieldInfo field = m.GetType().GetField(fieldName);
             if (field != null)        //This handles stock and Firespitter deployment animations
             {
