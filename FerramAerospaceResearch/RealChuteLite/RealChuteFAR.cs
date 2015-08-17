@@ -36,7 +36,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         //More useful constants
         public const int maxSpares = 5;
         public const string stowed = "STOWED", predeployed = "PREDEPLOYED", deployed = "DEPLOYED", cut = "CUT";
-        public static readonly string[] cubeNames = { "STOWED", "RCDEPLOYED" };
+        public static readonly string[] cubeNames = { "STOWED", "RCDEPLOYED", "DEPLOYED", "SEMIDEPLOYED", "PACKED" };
 
         //Quick enum parsing/tostring dictionaries
         private static readonly Dictionary<DeploymentStates, string> names = new Dictionary<DeploymentStates, string>(5)
@@ -667,15 +667,31 @@ namespace FerramAerospaceResearch.RealChuteLite
         public void AssumeDragCubePosition(string name)
         {
             if (string.IsNullOrEmpty(name)) { return; }
-            this.part.FindModelTransform(this.canopyName).gameObject.SetActive(false);
-            Transform cap = this.part.FindModelTransform(this.capName);
+            EnsureAnimationSystemIsUsable();
             switch (name)
             {
+                //DaMichel: now we handle the stock behaviour, too.
+                case "PACKED": //  stock 
+                    goto case "STOWED";
                 case "STOWED":
-                    cap.gameObject.SetActive(true); break;
-                case "RCDEPLOYED":
-                    cap.gameObject.SetActive(false); break;
-
+                    parachute.gameObject.SetActive(false);
+                    cap.gameObject.SetActive(true); 
+                    break;
+                case "RCDEPLOYED": // i think this is also a semideployed state (see void PreDeploy())
+                    parachute.gameObject.SetActive(true);
+                    cap.gameObject.SetActive(false); 
+                    part.SkipToAnimationTime(this.semiDeployedAnimation, 0f, 1f); // to the end of the animation
+                    break;
+                case "DEPLOYED": //  stock 
+                    parachute.gameObject.SetActive(true);
+                    cap.gameObject.SetActive(false); 
+                    part.SkipToAnimationTime(this.fullyDeployedAnimation, 0f, 1f);  // to the end of the animation
+                    break;
+                case "SEMIDEPLOYED": //  stock 
+                    parachute.gameObject.SetActive(true);
+                    cap.gameObject.SetActive(false);
+                    part.SkipToAnimationTime(this.semiDeployedAnimation, 0f, 1f); // to the end of the animation
+                    break;
                 default:
                     break;
             }
@@ -683,7 +699,7 @@ namespace FerramAerospaceResearch.RealChuteLite
 
         //Gives DragCube names
         public string[] GetDragCubeNames()
-        {
+        {   
             return cubeNames;
         }
 
@@ -827,6 +843,24 @@ namespace FerramAerospaceResearch.RealChuteLite
         }
         #endregion
 
+        // DaMichel: functionality was in OnStart before. Now it is here so it can be used in  AssumeDragCubePosition
+        private void EnsureAnimationSystemIsUsable()
+        {
+            if (this.anim == null)
+            {
+                //I know this seems random, but trust me, it's needed, else some parachutes don't animate, because fuck you, that's why.
+                this.anim = this.part.FindModelAnimators(this.capName).FirstOrDefault();
+
+                this.cap = this.part.FindModelTransform(this.capName);
+                this.parachute = this.part.FindModelTransform(this.canopyName);
+                this.parachute.gameObject.SetActive(true);
+                this.part.InitiateAnimation(this.semiDeployedAnimation);
+                this.part.InitiateAnimation(this.fullyDeployedAnimation);
+                this.parachute.gameObject.SetActive(false);
+            }
+        }
+
+
         #region Overrides
         public override void OnStart(PartModule.StartState state)
         {
@@ -846,16 +880,7 @@ namespace FerramAerospaceResearch.RealChuteLite
 
             //Staging icon
             this.part.stagingIcon = "PARACHUTES";
-
-            //I know this seems random, but trust me, it's needed, else some parachutes don't animate, because fuck you, that's why.
-            this.anim = this.part.FindModelAnimators(this.capName).FirstOrDefault();
-
-            this.cap = this.part.FindModelTransform(this.capName);
-            this.parachute = this.part.FindModelTransform(this.canopyName);
-            this.parachute.gameObject.SetActive(true);
-            this.part.InitiateAnimation(this.semiDeployedAnimation);
-            this.part.InitiateAnimation(this.fullyDeployedAnimation);
-            this.parachute.gameObject.SetActive(false);
+            EnsureAnimationSystemIsUsable();
 
             //First initiation of the part
             if (!this.initiated)
@@ -933,8 +958,6 @@ namespace FerramAerospaceResearch.RealChuteLite
             this.part.mass = this.totalMass;
             if (HighLogic.LoadedScene == GameScenes.LOADING)
             {
-                PartModule parachute = this.part.Modules["ModuleParachute"];
-                if (parachute != null) { this.part.RemoveModule(parachute); }
                 if (this.deployAltitude <= 500) { this.deployAltitude += 200; }
             }
         }
