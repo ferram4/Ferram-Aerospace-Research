@@ -708,6 +708,8 @@ namespace ferram4
         private void UpdateMassToAccountForArea()
         {
             float supportedArea = (float)(refAreaChildren + S);
+            if ((object)parentWing != null)
+                supportedArea *= 0.66666667f;   //if any supported area has been transfered to another part, we must remove it from here
             curWingMass = supportedArea * (float)FARAeroUtil.massPerWingAreaSupported * massMultiplier;
             part.mass = curWingMass;
             oldMassMultiplier = massMultiplier;
@@ -724,7 +726,8 @@ namespace ferram4
                 if ((object)childWing == null)
                     continue;
 
-                refAreaChildren += childWing.refAreaChildren + childWing.S;
+                refAreaChildren += (childWing.refAreaChildren + childWing.S) * 0.33333333333333333333;//Take 1/3 of the area of the child wings
+                //refAreaChildren += childWing.refAreaChildren + childWing.S;
             }
 
             if ((object)parentWing != null)
