@@ -97,42 +97,42 @@ namespace ferram4
         private bool MovableOrigReady = false;
 
 //        protected int MovableSectionFlip = 1;
-        [KSPField(guiName = "Std. Ctrl", guiActiveEditor = true, guiActive = false), UI_Toggle(affectSymCounterparts = UI_Scene.All, scene = UI_Scene.Editor, disabledText = "Settings", enabledText = "Settings")]
+        [KSPField(guiName = "Std. Ctrl", guiActiveEditor = true, guiActive = true), UI_Toggle(affectSymCounterparts = UI_Scene.All, scene = UI_Scene.All, disabledText = "Settings", enabledText = "Settings")]
         bool showStdCtrl = false;
         bool prevStdCtrl = true;
 
-        [KSPField(guiName = "Pitch %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.Editor, stepIncrement = 5f)]
+        [KSPField(guiName = "Pitch %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.All, stepIncrement = 5f)]
         public float pitchaxis = 100.0f;
 
-        [KSPField(guiName = "Yaw %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.Editor, stepIncrement = 5f)]
+        [KSPField(guiName = "Yaw %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.All, stepIncrement = 5f)]
 		public float yawaxis = 100.0f;
 
-        [KSPField(guiName = "Roll %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.Editor, stepIncrement = 5f)]
+        [KSPField(guiName = "Roll %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.All, stepIncrement = 5f)]
         public float rollaxis = 100.0f;
 
-        [KSPField(guiName = "AoA %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(maxValue = 200.0f, minValue = -200f, scene = UI_Scene.Editor, stepIncrement = 5f)]
+        [KSPField(guiName = "AoA %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(maxValue = 200.0f, minValue = -200f, scene = UI_Scene.All, stepIncrement = 5f)]
 		public float pitchaxisDueToAoA = 0.0f;
 
-        [KSPField(guiName = "BrakeRudder %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.Editor, stepIncrement = 5f)]
+        [KSPField(guiName = "BrakeRudder %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.All, stepIncrement = 5f)]
         public float brakeRudder = 0.0f;
-        
-        [KSPField(guiName = "Ctrl Dflct", guiActiveEditor = false, isPersistant = true), UI_FloatRange(maxValue = 40, minValue = -40, scene = UI_Scene.Editor, stepIncrement = 0.5f)]
+
+        [KSPField(guiName = "Ctrl Dflct", guiActiveEditor = false, isPersistant = true), UI_FloatRange(maxValue = 40, minValue = -40, scene = UI_Scene.All, stepIncrement = 0.5f)]
         public float maxdeflect = 15;
 
-        [KSPField(guiName = "Flp/splr", guiActiveEditor = true, guiActive = false), UI_Toggle(affectSymCounterparts = UI_Scene.All, scene = UI_Scene.Editor, disabledText = "Settings", enabledText = "Settings")]
+        [KSPField(guiName = "Flp/splr", guiActiveEditor = true, guiActive = true), UI_Toggle(affectSymCounterparts = UI_Scene.All, scene = UI_Scene.All, disabledText = "Settings", enabledText = "Settings")]
         bool showFlpCtrl = false;
         bool prevFlpCtrl = true;
 
-        [KSPField(guiName = "Flap", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_Toggle(enabledText = "Active", scene = UI_Scene.Editor, disabledText = "Inactive")]
+        [KSPField(guiName = "Flap", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_Toggle(enabledText = "Active", scene = UI_Scene.All, disabledText = "Inactive")]
         public bool isFlap;
 
-        [KSPField(guiName = "Spoiler", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_Toggle(enabledText = "Active", scene = UI_Scene.Editor, disabledText = "Inactive")]
+        [KSPField(guiName = "Spoiler", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_Toggle(enabledText = "Active", scene = UI_Scene.All, disabledText = "Inactive")]
         public bool isSpoiler;
 
         [KSPField(isPersistant = true, guiName = "Flap setting")]
         public int flapDeflectionLevel = 2;
 
-        [KSPField(guiName = "Flp/splr Dflct", guiActiveEditor = false, isPersistant = true), UI_FloatRange(maxValue = 85, minValue = -85, scene = UI_Scene.Editor, stepIncrement = 0.5f)]
+        [KSPField(guiName = "Flp/splr Dflct", guiActiveEditor = false, isPersistant = true), UI_FloatRange(maxValue = 85, minValue = -85, scene = UI_Scene.All, stepIncrement = 0.5f)]
         public float maxdeflectFlap = 15; 
         
         protected double PitchLocation = 0;
@@ -219,6 +219,13 @@ namespace ferram4
                 Fields["pitchaxisDueToAoA"].guiActiveEditor = showStdCtrl;
                 Fields["brakeRudder"].guiActiveEditor = showStdCtrl;
                 Fields["maxdeflect"].guiActiveEditor = showStdCtrl;
+
+                Fields["pitchaxis"].guiActive = showStdCtrl;
+                Fields["yawaxis"].guiActive = showStdCtrl;
+                Fields["rollaxis"].guiActive = showStdCtrl;
+                Fields["pitchaxisDueToAoA"].guiActive = showStdCtrl;
+                Fields["brakeRudder"].guiActive = showStdCtrl;
+                Fields["maxdeflect"].guiActive = showStdCtrl;
                 prevStdCtrl = showStdCtrl;
             }
             if (showFlpCtrl != prevFlpCtrl)
@@ -226,6 +233,10 @@ namespace ferram4
                 Fields["isFlap"].guiActiveEditor = showFlpCtrl;
                 Fields["isSpoiler"].guiActiveEditor = showFlpCtrl;
                 Fields["maxdeflectFlap"].guiActiveEditor = showFlpCtrl;
+
+                Fields["isFlap"].guiActive = showFlpCtrl;
+                Fields["isSpoiler"].guiActive = showFlpCtrl;
+                Fields["maxdeflectFlap"].guiActive = showFlpCtrl;
                 prevFlpCtrl = showFlpCtrl;
             }
         }
@@ -305,8 +316,7 @@ namespace ferram4
                     DeflectionAnimation();
                 }
             }
-            else if (HighLogic.LoadedSceneIsEditor)
-                CheckFieldVisibility();
+            CheckFieldVisibility();
 
             base.FixedUpdate();
             justStarted = false;
