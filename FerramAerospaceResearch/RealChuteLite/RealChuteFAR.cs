@@ -667,7 +667,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         public void AssumeDragCubePosition(string name)
         {
             if (string.IsNullOrEmpty(name)) { return; }
-            EnsureAnimationSystemIsUsable();
+            InitializeAnimationSystem();
             switch (name)
             {
                 //DaMichel: now we handle the stock behaviour, too.
@@ -844,20 +844,17 @@ namespace FerramAerospaceResearch.RealChuteLite
         #endregion
 
         // DaMichel: functionality was in OnStart before. Now it is here so it can be used in  AssumeDragCubePosition
-        private void EnsureAnimationSystemIsUsable()
+        private void InitializeAnimationSystem()
         {
-            if (this.anim == null)
-            {
-                //I know this seems random, but trust me, it's needed, else some parachutes don't animate, because fuck you, that's why.
-                this.anim = this.part.FindModelAnimators(this.capName).FirstOrDefault();
+            //I know this seems random, but trust me, it's needed, else some parachutes don't animate, because fuck you, that's why.
+            this.anim = this.part.FindModelAnimators(this.capName).FirstOrDefault();
 
-                this.cap = this.part.FindModelTransform(this.capName);
-                this.parachute = this.part.FindModelTransform(this.canopyName);
-                this.parachute.gameObject.SetActive(true);
-                this.part.InitiateAnimation(this.semiDeployedAnimation);
-                this.part.InitiateAnimation(this.fullyDeployedAnimation);
-                this.parachute.gameObject.SetActive(false);
-            }
+            this.cap = this.part.FindModelTransform(this.capName);
+            this.parachute = this.part.FindModelTransform(this.canopyName);
+            this.parachute.gameObject.SetActive(true);
+            this.part.InitiateAnimation(this.semiDeployedAnimation); // disables animation states
+            this.part.InitiateAnimation(this.fullyDeployedAnimation);
+            this.parachute.gameObject.SetActive(false);
         }
 
 
@@ -880,7 +877,7 @@ namespace FerramAerospaceResearch.RealChuteLite
 
             //Staging icon
             this.part.stagingIcon = "PARACHUTES";
-            EnsureAnimationSystemIsUsable();
+            InitializeAnimationSystem();
 
             //First initiation of the part
             if (!this.initiated)
