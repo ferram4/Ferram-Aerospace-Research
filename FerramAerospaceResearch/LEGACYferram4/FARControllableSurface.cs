@@ -588,7 +588,7 @@ namespace ferram4
                 }
                 if (brakeRudder != 0.0)
                 {
-                    AoAdesiredControl += BrakeRudderLocation * Math.Max(0.0, BrakeRudderSide * vessel.ctrlState.yaw) * brakeRudder * 0.01;
+                    AoAdesiredControl += BrakeRudderLocation * Math.Max(0.0, BrakeRudderSide * yawaxis) * brakeRudder * 0.01;
                 }
                 AoAdesiredControl *= maxdeflect;
                 if (pitchaxisDueToAoA != 0.0)
