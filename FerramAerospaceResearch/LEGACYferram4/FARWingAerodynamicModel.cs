@@ -74,7 +74,7 @@ namespace ferram4
 
         public double MAC_actual;
 
-        [KSPField(isPersistant = false, guiActive = true)]
+        [KSPField(isPersistant = false)]
         public double e;
 
         [KSPField(isPersistant = false)]
@@ -458,11 +458,11 @@ namespace ferram4
             if (part.srfAttachNode.originalOrientation.x < 0)
                 srfAttachNegative = -1;
 
-            transformed_AR = 2 * b_2_actual / MAC_actual;
+            transformed_AR = b_2_actual / MAC_actual;
 
             MidChordSweepSideways = (1 - TaperRatio) / (1 + TaperRatio);
 
-            MidChordSweepSideways = (Math.PI * 0.5 - Math.Atan(Math.Tan(MidChordSweep * FARMathUtil.deg2rad) + MidChordSweepSideways * 2 / transformed_AR)) * MidChordSweepSideways * 0.5;
+            MidChordSweepSideways = (Math.PI * 0.5 - Math.Atan(Math.Tan(MidChordSweep * FARMathUtil.deg2rad) + MidChordSweepSideways * 4 / transformed_AR)) * MidChordSweepSideways * 0.5;
 
             double sweepHalfChord = MidChordSweep * FARMathUtil.deg2rad;
 
@@ -1145,7 +1145,7 @@ namespace ferram4
 
             effective_b_2 = Math.Max(b_2_actual * CosPartAngle, MAC_actual * SinPartAngle2);
             effective_MAC = MAC_actual * CosPartAngle + b_2_actual * SinPartAngle2;
-            transformed_AR = 2 * effective_b_2 / effective_MAC;
+            transformed_AR = effective_b_2 / effective_MAC;
 
             sweepHalfChord = Math.Sqrt(Math.Max(1 - sweepHalfChord * sweepHalfChord, 0)) / sweepHalfChord;  //convert to tangent
 

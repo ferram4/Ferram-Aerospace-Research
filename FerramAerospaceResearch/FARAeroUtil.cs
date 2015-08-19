@@ -90,8 +90,8 @@ namespace FerramAerospaceResearch
         private const double UNDERWATER_DENSITY_FACTOR_MINUS_ONE = 814.51020408163265306122448979592;
         //Standard Reynolds number for transition from laminar to turbulent flow
         private const double TRANSITION_REYNOLDS_NUMBER = 5e5;
-        //Multiplier to skin friction due to surface roughness; approximately a 50% increase in drag
-        private const double ROUGHNESS_SKIN_FRICTION_MULTIPLIER = 1;
+        //Multiplier to skin friction due to surface roughness; approximately an 8% increase in drag
+        private const double ROUGHNESS_SKIN_FRICTION_MULTIPLIER = 1.08;
 
         public static void SaveCustomAeroDataToConfig()
         {
@@ -811,8 +811,8 @@ namespace FerramAerospaceResearch
         public static double CalculateOswaldsEfficiencyNitaScholz(double AR, double CosSweepAngle, double Cd0, double taperRatio)
         {
             //model coupling between taper and sweep
-            double deltaTaper = Math.Acos(CosSweepAngle);
-            deltaTaper = ExponentialApproximation(0.0375 * deltaTaper);
+            double deltaTaper = Math.Acos(CosSweepAngle) * FARMathUtil.rad2deg;
+            deltaTaper = ExponentialApproximation(-0.0375 * deltaTaper);
             deltaTaper *= 0.45;
             deltaTaper -= 0.357;
 

@@ -1216,13 +1216,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     hypersonicDragForwardFrac += 1f;
                     hypersonicDragForwardFrac *= 0.5f;
 
-                    sonicAoA0Drag = -(float)(cPSonicForward * (curArea - prevArea)) + hypersonicDragForward * 0.325f * hypersonicDragForwardFrac;
-                    sonicAoA180Drag = (float)(cPSonicBackward * (curArea - nextArea)) + sonicBaseDrag - hypersonicDragBackward * 0.325f * hypersonicDragBackwardFrac;
+                    sonicAoA0Drag = -(float)(cPSonicForward * (curArea - prevArea)) + hypersonicDragForward * 0.3f * hypersonicDragForwardFrac;
+                    sonicAoA180Drag = (float)(cPSonicBackward * (curArea - nextArea)) + sonicBaseDrag - hypersonicDragBackward * 0.3f * hypersonicDragBackwardFrac;
                 }
                 else if (sonicBaseDrag < 0)
                 {
-                    xForcePressureAoA0.SetPoint(0, new Vector3d(_criticalMach, (sonicBaseDrag * 0.2f + (0.325f * hypersonicDragForward * hypersonicDragForwardFrac)) * lowFinenessRatioSubsonicFactor, 0));
-                    xForcePressureAoA180.SetPoint(0, new Vector3d(_criticalMach, -(0.325f * hypersonicDragBackward * hypersonicDragBackwardFrac) * lowFinenessRatioSubsonicFactor, 0));
+                    xForcePressureAoA0.SetPoint(0, new Vector3d(_criticalMach, (sonicBaseDrag * 0.2f + (0.3f * hypersonicDragForward * hypersonicDragForwardFrac)) * lowFinenessRatioSubsonicFactor, 0));
+                    xForcePressureAoA180.SetPoint(0, new Vector3d(_criticalMach, -(0.3f * hypersonicDragBackward * hypersonicDragBackwardFrac) * lowFinenessRatioSubsonicFactor, 0));
 
                     hypersonicDragBackwardFrac += 1f;       //avg fracs with 1 to get intermediate frac
                     hypersonicDragBackwardFrac *= 0.5f;
@@ -1230,14 +1230,14 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     hypersonicDragForwardFrac += 1f;
                     hypersonicDragForwardFrac *= 0.5f;
 
-                    sonicAoA0Drag = -(float)(cPSonicForward * (curArea - prevArea)) + sonicBaseDrag + hypersonicDragForward * 0.325f * hypersonicDragForwardFrac;
-                    sonicAoA180Drag = (float)(cPSonicBackward * (curArea - nextArea)) - hypersonicDragBackward * 0.325f * hypersonicDragBackwardFrac;
+                    sonicAoA0Drag = -(float)(cPSonicForward * (curArea - prevArea)) + sonicBaseDrag + hypersonicDragForward * 0.3f * hypersonicDragForwardFrac;
+                    sonicAoA180Drag = (float)(cPSonicBackward * (curArea - nextArea)) - hypersonicDragBackward * 0.3f * hypersonicDragBackwardFrac;
 
                 }
                 else
                 {
-                    xForcePressureAoA0.SetPoint(0, new Vector3d(_criticalMach, (0.325f * hypersonicDragForward * hypersonicDragForwardFrac) * lowFinenessRatioSubsonicFactor, 0));
-                    xForcePressureAoA180.SetPoint(0, new Vector3d(_criticalMach, -(0.325f * hypersonicDragBackward * hypersonicDragBackwardFrac) * lowFinenessRatioSubsonicFactor, 0));
+                    xForcePressureAoA0.SetPoint(0, new Vector3d(_criticalMach, (0.3f * hypersonicDragForward * hypersonicDragForwardFrac) * lowFinenessRatioSubsonicFactor, 0));
+                    xForcePressureAoA180.SetPoint(0, new Vector3d(_criticalMach, -(0.3f * hypersonicDragBackward * hypersonicDragBackwardFrac) * lowFinenessRatioSubsonicFactor, 0));
 
                     hypersonicDragBackwardFrac += 1f;       //avg fracs with 1 to get intermediate frac
                     hypersonicDragBackwardFrac *= 0.5f;
@@ -1245,8 +1245,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     hypersonicDragForwardFrac += 1f;
                     hypersonicDragForwardFrac *= 0.5f;
 
-                    sonicAoA0Drag = -(float)(cPSonicForward * (curArea - prevArea)) + hypersonicDragForward * 0.325f * hypersonicDragForwardFrac;
-                    sonicAoA180Drag = (float)(cPSonicBackward * (curArea - nextArea)) - hypersonicDragBackward * 0.325f * hypersonicDragBackwardFrac;
+                    sonicAoA0Drag = -(float)(cPSonicForward * (curArea - prevArea)) + hypersonicDragForward * 0.3f * hypersonicDragForwardFrac;
+                    sonicAoA180Drag = (float)(cPSonicBackward * (curArea - nextArea)) - hypersonicDragBackward * 0.3f * hypersonicDragBackwardFrac;
                 }
                 float diffSonicHyperAoA0 = Math.Abs(sonicAoA0Drag) - Math.Abs(hypersonicDragForward);
                 float diffSonicHyperAoA180 = Math.Abs(sonicAoA180Drag) - Math.Abs(hypersonicDragBackward);
