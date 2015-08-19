@@ -343,7 +343,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 // Handle airbrakes
                 if (stockAeroSurfaceModule != null)
-                    totalWorldSpaceAeroForce += stockAeroSurfaceModule.dragForce;
+                    totalWorldSpaceAeroForce += stockAeroSurfaceModule.dragForce + stockAeroSurfaceModule.liftForce;
             }
         }
 
