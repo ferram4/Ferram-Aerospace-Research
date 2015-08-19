@@ -74,7 +74,7 @@ namespace ferram4
 
         public double MAC_actual;
 
-        [KSPField(isPersistant = false)]
+        [KSPField(isPersistant = false, guiActive = true)]
         public double e;
 
         [KSPField(isPersistant = false)]
@@ -630,6 +630,9 @@ namespace ferram4
             else
                 skinFrictionDrag = 0.005;
 
+
+            skinFrictionDrag *= 1.1;    //account for thickness
+
             CalculateCoefficients(MachNumber, AoA, skinFrictionDrag);
 
 
@@ -843,7 +846,7 @@ namespace ferram4
 
             double Cd0 = CdCompressibilityZeroLiftIncrement(MachNumber, cosSweepAngle, TanSweep, beta_TanSweep, beta) + 2 * skinFrictionCoefficient;
             double CdMax = CdMaxFlatPlate(MachNumber, beta);
-            e = FARAeroUtil.CalculateOswaldsEfficiency(effective_AR, cosSweepAngle, Cd0);
+            e = FARAeroUtil.CalculateOswaldsEfficiencyNitaScholz(effective_AR, cosSweepAngle, Cd0, TaperRatio);
             piARe = effective_AR * e * Math.PI;
 
             double CosAoA = Math.Cos(AoA);

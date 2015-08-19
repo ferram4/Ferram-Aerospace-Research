@@ -752,7 +752,7 @@ namespace ferram4
             if (effective_AR_modifier < 1)
                 return (effective_AR_modifier + 1);
             else
-                return 2 * (2 - effective_AR_modifier) + 30 * (effective_AR_modifier - 1);
+                return 2 * (2 - effective_AR_modifier) + 4 * (effective_AR_modifier - 1);
         }
     }
 }

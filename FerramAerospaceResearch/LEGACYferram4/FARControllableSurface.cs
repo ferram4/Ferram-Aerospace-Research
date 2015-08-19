@@ -362,52 +362,50 @@ namespace ferram4
                     flapLocation = -(int)Math.Sign(Vector3.Dot(EditorLogic.RootPart.partTransform.forward, part.partTransform.forward));      //figure out which way is up
             }
 
-            if (pitchaxis != 0.0f || yawaxis != 0.0f || rollaxis != 0.0f || pitchaxisDueToAoA != 0.0f || HighLogic.LoadedSceneIsEditor)
+            Vector3 CoM = Vector3.zero;
+            float mass = 0;
+            for (int i = 0; i < VesselPartList.Count; i++)
             {
-                Vector3 CoM = Vector3.zero;
-                float mass = 0;
-                for (int i = 0; i < VesselPartList.Count; i++)
-                {
-                    Part p = VesselPartList[i];
+                Part p = VesselPartList[i];
 
-                    CoM += p.transform.position * p.mass;
-                    mass += p.mass;
+                CoM += p.transform.position * p.mass;
+                mass += p.mass;
 
-                }
-                CoM /= mass;
-
-                if (HighLogic.LoadedSceneIsEditor && (isFlap || isSpoiler))
-                    SetControlStateEditor(CoM, part.partTransform.up, 0, 0, 0, 0, false);
-
-                float roll2 = 0;
-                if (HighLogic.LoadedSceneIsEditor)
-                {
-                    Vector3 CoMoffset = (part.partTransform.position - CoM).normalized;
-                    PitchLocation = Vector3.Dot(part.partTransform.forward, EditorLogic.RootPart.partTransform.forward) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.RootPart.partTransform.up));
-                    YawLocation = -Vector3.Dot(part.partTransform.forward, EditorLogic.RootPart.partTransform.right) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.RootPart.partTransform.up));
-                    RollLocation = Vector3.Dot(part.partTransform.forward, EditorLogic.RootPart.partTransform.forward) * Math.Sign(Vector3.Dot(CoMoffset, -EditorLogic.RootPart.partTransform.right));
-                    roll2 = Vector3.Dot(part.partTransform.forward, EditorLogic.RootPart.partTransform.right) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.RootPart.partTransform.forward));
-                    BrakeRudderLocation = Vector3.Dot(part.partTransform.forward, EditorLogic.RootPart.partTransform.forward);
-                    BrakeRudderSide = Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.RootPart.partTransform.right)); 
-                    AoAsign = Math.Sign(Vector3.Dot(part.partTransform.up, EditorLogic.RootPart.partTransform.up));
-                }
-                else
-                {
-                    //Figures out where the ctrl surface is; this must be done after physics starts to get vessel COM
-                    Vector3 CoMoffset = (part.partTransform.position - CoM).normalized;
-                    PitchLocation = Vector3.Dot(part.partTransform.forward, vessel.ReferenceTransform.forward) * Math.Sign(Vector3.Dot(CoMoffset, vessel.ReferenceTransform.up));
-                    YawLocation = -Vector3.Dot(part.partTransform.forward, vessel.ReferenceTransform.right) * Math.Sign(Vector3.Dot(CoMoffset, vessel.ReferenceTransform.up));
-                    RollLocation = Vector3.Dot(part.partTransform.forward, vessel.ReferenceTransform.forward) * Math.Sign(Vector3.Dot(CoMoffset, -vessel.ReferenceTransform.right));
-                    roll2 = Vector3.Dot(part.partTransform.forward, vessel.ReferenceTransform.right) * Math.Sign(Vector3.Dot(CoMoffset, vessel.ReferenceTransform.forward));
-                    BrakeRudderLocation = Vector3.Dot(part.partTransform.forward, vessel.ReferenceTransform.forward);
-                    BrakeRudderSide = Mathf.Sign(Vector3.Dot(CoMoffset, vessel.ReferenceTransform.right)); 
-                    AoAsign = Math.Sign(Vector3.Dot(part.partTransform.up, vessel.ReferenceTransform.up));
-                }
-                //PitchLocation *= PitchLocation * Mathf.Sign(PitchLocation);
-                //YawLocation *= YawLocation * Mathf.Sign(YawLocation);
-                //RollLocation = RollLocation * RollLocation * Mathf.Sign(RollLocation) + roll2 * roll2 * Mathf.Sign(roll2);
-                RollLocation += roll2;
             }
+            CoM /= mass;
+
+            if (HighLogic.LoadedSceneIsEditor && (isFlap || isSpoiler))
+                SetControlStateEditor(CoM, part.partTransform.up, 0, 0, 0, 0, false);
+
+            float roll2 = 0;
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                Vector3 CoMoffset = (part.partTransform.position - CoM).normalized;
+                PitchLocation = Vector3.Dot(part.partTransform.forward, EditorLogic.RootPart.partTransform.forward) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.RootPart.partTransform.up));
+                YawLocation = -Vector3.Dot(part.partTransform.forward, EditorLogic.RootPart.partTransform.right) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.RootPart.partTransform.up));
+                RollLocation = Vector3.Dot(part.partTransform.forward, EditorLogic.RootPart.partTransform.forward) * Math.Sign(Vector3.Dot(CoMoffset, -EditorLogic.RootPart.partTransform.right));
+                roll2 = Vector3.Dot(part.partTransform.forward, EditorLogic.RootPart.partTransform.right) * Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.RootPart.partTransform.forward));
+                BrakeRudderLocation = Vector3.Dot(part.partTransform.forward, EditorLogic.RootPart.partTransform.forward);
+                BrakeRudderSide = Math.Sign(Vector3.Dot(CoMoffset, EditorLogic.RootPart.partTransform.right)); 
+                AoAsign = Math.Sign(Vector3.Dot(part.partTransform.up, EditorLogic.RootPart.partTransform.up));
+            }
+            else
+            {
+                //Figures out where the ctrl surface is; this must be done after physics starts to get vessel COM
+                Vector3 CoMoffset = (part.partTransform.position - CoM).normalized;
+                PitchLocation = Vector3.Dot(part.partTransform.forward, vessel.ReferenceTransform.forward) * Math.Sign(Vector3.Dot(CoMoffset, vessel.ReferenceTransform.up));
+                YawLocation = -Vector3.Dot(part.partTransform.forward, vessel.ReferenceTransform.right) * Math.Sign(Vector3.Dot(CoMoffset, vessel.ReferenceTransform.up));
+                RollLocation = Vector3.Dot(part.partTransform.forward, vessel.ReferenceTransform.forward) * Math.Sign(Vector3.Dot(CoMoffset, -vessel.ReferenceTransform.right));
+                roll2 = Vector3.Dot(part.partTransform.forward, vessel.ReferenceTransform.right) * Math.Sign(Vector3.Dot(CoMoffset, vessel.ReferenceTransform.forward));
+                BrakeRudderLocation = Vector3.Dot(part.partTransform.forward, vessel.ReferenceTransform.forward);
+                BrakeRudderSide = Mathf.Sign(Vector3.Dot(CoMoffset, vessel.ReferenceTransform.right)); 
+                AoAsign = Math.Sign(Vector3.Dot(part.partTransform.up, vessel.ReferenceTransform.up));
+            }
+            //PitchLocation *= PitchLocation * Mathf.Sign(PitchLocation);
+            //YawLocation *= YawLocation * Mathf.Sign(YawLocation);
+            //RollLocation = RollLocation * RollLocation * Mathf.Sign(RollLocation) + roll2 * roll2 * Mathf.Sign(roll2);
+            RollLocation += roll2;
+            
             //DaMichel: this is important to force a reset of the flap/spoiler model orientation to the desired value.
             // What apparently happens on loading a new flight scene is that first the model (obj_ctrlSrf) 
             // orientation is set correctly by DeflectionAnimation(). But then the orientations is mysteriously 
