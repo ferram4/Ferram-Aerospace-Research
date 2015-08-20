@@ -78,7 +78,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             this.simManager = simManager;
 
             lonConditions = new InitialConditions(new string[] { "0", "0", "0", "0" }, new string[] { "w", "u", "q", "θ" }, new double[]{1, 1, Math.PI/180, Math.PI/180}, "0.01", "10");
-            latConditions = new InitialConditions(new string[] { "0", "0", "0", "0" }, new string[] { "β", "p", "", "φ" }, new double[]{Math.PI/180, Math.PI/180, Math.PI/180, Math.PI/180}, "0.01", "10");
+            latConditions = new InitialConditions(new string[] { "0", "0", "0", "0" }, new string[] { "β", "p", "r", "φ" }, new double[]{Math.PI/180, Math.PI/180, Math.PI/180, Math.PI/180}, "0.01", "10");
 
             _graph.SetBoundaries(0, 10, 0, 2);
             _graph.SetGridScaleUsingValues(1, 0.25);
@@ -145,7 +145,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             StabilityLabel("Zw: ", vehicleData.stabDerivs[3], " s⁻¹", "Change in Z-direction acceleration with respect to Z-direction velocity; should be negative", 160, -1);
             StabilityLabel("Zu: ", vehicleData.stabDerivs[6], " s⁻¹", "Change in Z-direction acceleration with respect to X-direction velocity; should be negative", 160, -1);
             StabilityLabel("Zq: ", vehicleData.stabDerivs[9], " m/s", "Change in Z-direction acceleration with respect to pitch-up rate; sign unimportant", 160, 0);
-            StabilityLabel("Zδe: ", vehicleData.stabDerivs[12], " m/s²", "Change in Z-direction acceleration with respect to pitch control input; should be negative", 160, -1);
+            StabilityLabel("Zδe: ", vehicleData.stabDerivs[12], " m/s²", "Change in Z-direction acceleration with respect to pitch control input; should be negative", 160, 0);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             StabilityLabel("Xw: ", vehicleData.stabDerivs[4], " s⁻¹", "Change in X-direction acceleration with respect to Z-direction velocity; sign unimportant", 160, 0);
@@ -182,7 +182,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             GUILayout.BeginVertical(BackgroundStyle);
             GUILayout.BeginHorizontal();
             StabilityLabel("Yβ: ", vehicleData.stabDerivs[15], " m/s²", "Change in Y-direction acceleration with respect to sideslip angle β; should be negative", 160, -1);
-            StabilityLabel("Yp: ", vehicleData.stabDerivs[18], " m/s", "Change in Y-direction acceleration with respect to roll-right rate; should be negative", 160, -1);
+            StabilityLabel("Yp: ", vehicleData.stabDerivs[18], " m/s", "Change in Y-direction acceleration with respect to roll-right rate; sign unimportant", 160, 0);
             StabilityLabel("Yr: ", vehicleData.stabDerivs[21], " m/s", "Change in Y-direction acceleration with respect to yaw-right rate; should be positive", 160, 1);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
