@@ -225,18 +225,25 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             Vector3 frameVel = Krakensbane.GetFrameVelocityV3f();
 
-            for (int i = 0; i < _currentAeroModules.Count; i++)
-            {
-                FARAeroPartModule m = _currentAeroModules[i];
-                if (m != null)
-                    m.UpdateVelocityAndAngVelocity(frameVel);
-                else
+            if(_updateQueued)       //only happens if we have an voxelization scheduled, then we need to check for null
+                for (int i = _currentAeroModules.Count - 1; i >= 0; i--)        //start from the top and come down to improve performance if it needs to remove anything
                 {
-                    _currentAeroModules.RemoveAt(i);
-                    i--;
+                    FARAeroPartModule m = _currentAeroModules[i];
+                    if (m != null)
+                        m.UpdateVelocityAndAngVelocity(frameVel);
+                    else
+                    {
+                        _currentAeroModules.RemoveAt(i);
+                        i++;
+                    }
                 }
-            }
-
+            else                    //otherwise, we don't need to do Unity's expensive "is this part dead" null-check
+                for (int i = _currentAeroModules.Count - 1; i >= 0; i--)        //start from the top and come down to improve performance if it needs to remove anything
+                {
+                    FARAeroPartModule m = _currentAeroModules[i];
+                    m.UpdateVelocityAndAngVelocity(frameVel);
+                }
+            
             for (int i = 0; i < _currentAeroSections.Count; i++)
                 _currentAeroSections[i].FlightCalculateAeroForces(atmDensity, (float)machNumber, (float)(reynoldsNumber / Length), skinFrictionDragCoefficient);
 
@@ -245,8 +252,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             for (int i = 0; i < _currentAeroModules.Count; i++)
             {
                 FARAeroPartModule m = _currentAeroModules[i];
-                if ((object)m != null)
-                    m.ApplyForces();
+                m.ApplyForces();
             }
         }
 
