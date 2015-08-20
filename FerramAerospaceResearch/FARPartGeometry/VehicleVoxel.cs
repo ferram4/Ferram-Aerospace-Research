@@ -1530,6 +1530,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 for (int i = meshParams.lowerIndex; i < meshParams.upperIndex; i++)
                 {
                     GeometryPartModule module = meshParams.modules[i];
+                    if (module == null)
+                        continue;
+
                     for(int j = 0; j < module.meshDataList.Count; j++)
                     {
                         GeometryMesh mesh = module.meshDataList[j];
