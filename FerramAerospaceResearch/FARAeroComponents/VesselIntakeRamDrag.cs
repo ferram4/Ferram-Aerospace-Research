@@ -132,10 +132,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
         }
 
-        public void ApplyIntakeRamDrag(float machNumber, Vector3 vesselVelNorm, float dynPres)
+        public void ApplyIntakeRamDrag(float machNumber, Vector3 vesselVelNorm, float dynPres, bool checkNull = true)
         {
             float currentRamDrag = CalculateRamDrag(machNumber);
-            ApplyIntakeDrag(currentRamDrag, vesselVelNorm, dynPres);
+            ApplyIntakeDrag(currentRamDrag, vesselVelNorm, dynPres, checkNull);
         }
 
         private float CalculateRamDrag(float machNumber)
@@ -154,21 +154,21 @@ namespace FerramAerospaceResearch.FARAeroComponents
             return currentRamDrag;
         }
 
-        private void ApplyIntakeDrag(float currentRamDrag, Vector3 vesselVelNorm, float dynPres)
+        private void ApplyIntakeDrag(float currentRamDrag, Vector3 vesselVelNorm, float dynPres, bool checkNull)
         {
-            for(int i = 0; i < _intakeTransforms.Count; i++)
+            for (int i = _intakeTransforms.Count - 1; i >= 0; i--)
             {
                 ModuleResourceIntake intake = _intakeModules[i];
                 if (!intake.intakeEnabled)
                     continue;
 
                 Transform transform = _intakeTransforms[i];
-                if(transform == null)
+                if (checkNull && transform == null)
                 {
                     _intakeModules.RemoveAt(i);
                     _intakeTransforms.RemoveAt(i);
                     _aeroModulesWithIntakes.RemoveAt(i);
-                    --i;
+                    ++i;
                     continue;
                 }
 
@@ -183,8 +183,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
 
                 Vector3 force = -aeroModule.partLocalVelNorm * dynPres * cosAoA * currentRamDrag * intake.area * 100;
-                if(float.IsNaN(force.sqrMagnitude))
-                    force = Vector3.zero;
+                //if(float.IsNaN(force.sqrMagnitude))
+                //    force = Vector3.zero;
                 aeroModule.AddLocalForce(force, Vector3.zero);
             }
         }
