@@ -407,11 +407,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if(!vessel.packed)
                 CheckAeroStressFailure();
 
-            Matrix4x4 matrix = partTransform.localToWorldMatrix;
+            //Matrix4x4 matrix = partTransform.localToWorldMatrix;
             Rigidbody rb = part.Rigidbody;
 
-            worldSpaceAeroForce = matrix.MultiplyVector(partLocalForce);
-            worldSpaceTorque = matrix.MultiplyVector(partLocalTorque);
+            worldSpaceAeroForce = partTransform.TransformDirection(partLocalForce);
+            worldSpaceTorque = partTransform.TransformDirection(partLocalTorque);
             UpdateAeroDisplay();
 
             rb.AddForce(worldSpaceAeroForce);
@@ -442,25 +442,26 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public void UpdateVelocityAndAngVelocity(Vector3 frameVel)
         {
-            if (partTransform == null)
-                if (part != null)
+            if ((object)partTransform == null)
+                //if (part != null)
                     partTransform = part.partTransform;
-                else
-                    return;
-            if (part == null)
-                return;
+                //else
+                //    return;
 
-            Matrix4x4 matrix = partTransform.worldToLocalMatrix;
+            //if (part == null)
+            //    return;
+
+            //Matrix4x4 matrix = partTransform.worldToLocalMatrix;
             Rigidbody rb = part.Rigidbody;
 
             partLocalVel = rb.velocity + frameVel
                         - FARWind.GetWind(FARAeroUtil.CurrentBody, part, rb.position); 
-            partLocalVel = matrix.MultiplyVector(partLocalVel);
+            partLocalVel = partTransform.InverseTransformDirection(partLocalVel);
 
             partLocalVelNorm = partLocalVel.normalized;
 
             partLocalAngVel = rb.angularVelocity;
-            partLocalAngVel = matrix.MultiplyVector(partLocalAngVel);
+            partLocalAngVel = partTransform.InverseTransformDirection(partLocalAngVel);
 
         }
 
