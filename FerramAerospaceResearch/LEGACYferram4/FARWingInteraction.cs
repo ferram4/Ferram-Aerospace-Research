@@ -361,6 +361,8 @@ namespace ferram4
 
                                     double tmp = h.distance / dist;
                                     tmp = FARMathUtil.Clamp(tmp, 0, 1);
+                                    double tmp2 = Math.Abs(Vector3.Dot(parentWingPart.partTransform.forward, w.part.partTransform.forward));
+                                    tmp = 1 - (1 - tmp) * tmp2;
                                     interferencevalue = Math.Min(tmp, interferencevalue);
                                     gotSomething = true;
 
