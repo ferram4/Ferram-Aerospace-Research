@@ -565,6 +565,10 @@ namespace ferram4
             }
             else
             {
+                if (isShielded)
+                {
+                    Cl = Cd = Cm = stall = 0;
+                }
                 if ((object)liftArrow != null)
                 {
                     UnityEngine.Object.Destroy(liftArrow);
@@ -597,12 +601,6 @@ namespace ferram4
         {
             //This calculates the angle of attack, adjusting the part's orientation for any deflection
             //CalculateAoA();
-
-            if (isShielded)
-            {
-                Cl = Cd = Cm = stall = 0;
-                return Vector3d.zero;
-            }
 
             double v_scalar = velocity.magnitude;
             //if (v_scalar <= 0.1)
@@ -804,9 +802,9 @@ namespace ferram4
                 stall = Math.Max(stall, lastStall);
                 stall += effectiveUpstreamStall;
             }
-            else if (absAoA < AoAmax * 0.8)
+            else if (absAoA < AoAmax)
             {
-                stall = 1 - FARMathUtil.Clamp((AoAmax * 0.75 - absAoA) * 20, 0, 1);
+                stall = 1 - FARMathUtil.Clamp((AoAmax - absAoA) * 25, 0, 1);
                 stall = Math.Min(stall, lastStall);
                 stall += effectiveUpstreamStall;
             }
@@ -815,10 +813,12 @@ namespace ferram4
                 stall = lastStall;
             }
 
-            if (HighLogic.LoadedSceneIsFlight)
-                stall = FARMathUtil.Clamp(stall, lastStall - 2 * TimeWarp.fixedDeltaTime, lastStall + 2 * TimeWarp.fixedDeltaTime);     //Limits stall to increasing at a rate of 2/s
+            //if (HighLogic.LoadedSceneIsFlight)
+            //    stall = FARMathUtil.Clamp(stall, lastStall - 2 * TimeWarp.fixedDeltaTime, lastStall + 2 * TimeWarp.fixedDeltaTime);     //Limits stall to increasing at a rate of 2/s
 
             stall = FARMathUtil.Clamp(stall, 0, 1);
+            if (stall < 1e-5)
+                stall = 0;
         }
 
 
