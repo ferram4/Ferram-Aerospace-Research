@@ -12,7 +12,7 @@ namespace FerramAerospaceResearch
             public double upperLim, lowerLim;
             public int nextIndex, prevIndex;
 
-            public void BuildSection(Vector3d upperInputs, Vector3d lowerInputs)
+            public void BuildSection(Vector3d lowerInputs, Vector3d upperInputs)
             {
                 //Creates cubic from x,y,dy/dx data
 
@@ -27,10 +27,12 @@ namespace FerramAerospaceResearch
                 b = 3 * (upperInputs.x + lowerInputs.x) * (lowerInputs.y - upperInputs.y) * recipXDiff;
                 b -= (lowerInputs.x + 2 * upperInputs.x) * lowerInputs.z;
                 b -= (2 * lowerInputs.x + upperInputs.x) * upperInputs.z;
+                b *= recipXDiffSq;
 
                 c = 6 * upperInputs.x * lowerInputs.x * (upperInputs.y - lowerInputs.y) * recipXDiff;
                 c += (2 * lowerInputs.x * upperInputs.x + upperInputs.x * upperInputs.x) * lowerInputs.z;
                 c += (2 * lowerInputs.x * upperInputs.x + lowerInputs.x * lowerInputs.x) * upperInputs.z;
+                c *= recipXDiffSq;
 
                 d = (3 * lowerInputs.x - upperInputs.x) * upperInputs.x * upperInputs.x * lowerInputs.y;
                 d += (lowerInputs.x - 3 * upperInputs.x) * lowerInputs.x * lowerInputs.x * upperInputs.y;
@@ -95,7 +97,7 @@ namespace FerramAerospaceResearch
 
         private void SetNextPrevIndices(int upperIndex, int lowerIndex, int curIndex)
         {
-            if (curIndex == lowerIndex)
+            if (upperIndex <= lowerIndex)
                 return;
 
             int nextIndex, prevIndex;
@@ -126,23 +128,35 @@ namespace FerramAerospaceResearch
 
         public double Evaluate(double x)
         {
+            //return 0;
+
             int curIndex = centerIndex;
+            //int lowIndex = 0;
+            //int highIndex = sections.Length - 1;
+            int count = 0;
             while(true)
             {
+                if (count > sections.Length)
+                    throw new Exception();
+                else
+                    ++count;
+                //curIndex = (highIndex + lowIndex) / 2;
                 int check = sections[curIndex].CheckRange(x);
                 if (check > 0)       //above of this cubic's range
-                    if (curIndex == sections.Length - 1)
+                    if (curIndex >= sections.Length - 1)
                         return sections[curIndex].EvalUpperLim();   //at upper end of curve, just return max val of last cubic
                     else
                     {
+                        //lowIndex = curIndex + 1;
                         curIndex = sections[curIndex].nextIndex;    //otherwise, find next cubic to check and continue
                         continue;
                     }
                 else if (check < 0) //below this cubic's range
-                    if (curIndex == 0)
+                    if (curIndex <= 0)
                         return sections[curIndex].EvalLowerLim();   //at lower end of curve, return min val of first cubic
                     else
                     {
+                        //highIndex = curIndex - 1;
                         curIndex = sections[curIndex].prevIndex;    //otherwise, find next cubic to check and continue
                         continue;
                     }

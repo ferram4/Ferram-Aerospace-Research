@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.4.1 "Goldstein"
+Ferram Aerospace Research v0.15.5 "Haack"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -532,6 +532,7 @@ namespace FerramAerospaceResearch
             FARAeroStress.LoadStressTemplates();
             FARAeroUtil.LoadAeroDataFromConfig();
             FARActionGroupConfiguration.LoadConfiguration();
+            FARAnimOverrides.LoadAnimOverrides();
 
             Color tmpColor = GUIColors.Instance[0];
             ReColorTexture(ref tmpColor, ref cLTexture);

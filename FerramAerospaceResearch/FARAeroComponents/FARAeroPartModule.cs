@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.4.1 "Goldstein"
+Ferram Aerospace Research v0.15.5 "Haack"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -64,6 +64,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
         public Vector3 worldSpaceAeroForce;
         public Vector3 worldSpaceTorque;
 
+        public Vector3 totalWorldSpaceAeroForce;
+
         Vector3 partLocalForce;
         Vector3 partLocalTorque;
 
@@ -96,6 +98,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         private MaterialColorUpdater materialColorUpdater;
         private FARWingAerodynamicModel legacyWingModel;
+        public FARWingAerodynamicModel LegacyWingModel
+        {
+            get { return legacyWingModel; }
+        }
         private ModuleLiftingSurface stockAeroSurfaceModule;
 
         public ProjectedArea ProjectedAreas
@@ -131,6 +137,19 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 a.kN += b.kN;
                 a.kP += b.kP;
                 return a;
+            }
+
+            public static implicit operator ProjectedArea(FARPartGeometry.VoxelCrossSection.SideAreaValues b)
+            {
+                ProjectedArea a = new ProjectedArea();
+                a.iN = b.iN;
+                a.iP = b.iP;
+                a.jN = b.jN;
+                a.jP = b.jP;
+                a.kN = b.kN;
+                a.kP = b.kP;
+                return a;
+               
             }
         }
 
@@ -230,11 +249,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
             part.maximum_drag = 0;
             part.minimum_drag = 0;
             part.angularDrag = 0;
-            this.enabled = false;
+            if (HighLogic.LoadedSceneIsFlight)
+                this.enabled = true;
+            else if (HighLogic.LoadedSceneIsEditor)
+                this.enabled = false;
 
             partLocalVel = Vector3.zero;
             partLocalForce = Vector3.zero;
             partLocalTorque = Vector3.zero;
+
+            if (!part.Modules.Contains("ModuleAeroSurface"))
+                part.dragModel = Part.DragModel.CYLINDRICAL;
 
             if(FARDebugValues.allowStructuralFailures)
             {
@@ -285,10 +310,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
             return area;
         }
 
-        public override void OnUpdate()
+        public void Update()
         {
+            CalculateTotalAeroForce();
+
             FlightGUI flightGUI;
             AeroVisualizationGUI aeroVizGUI = null;
+
             if (FlightGUI.vesselFlightGUI != null && FlightGUI.vesselFlightGUI.TryGetValue(vessel, out flightGUI))
                 aeroVizGUI = flightGUI.AeroVizGUI;
 
@@ -296,6 +324,26 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 Color tintColor = AeroVisualizationTintingCalculation(aeroVizGUI);
                 materialColorUpdater.Update(tintColor);
+            }
+        }
+
+        //Do this so FlightGUI can read off of the numbers from this
+        private void CalculateTotalAeroForce()
+        {
+            if (projectedArea.totalArea > 0.0)
+            {
+                totalWorldSpaceAeroForce = worldSpaceAeroForce;
+
+                // Combine forces from legacy wing model
+                if (legacyWingModel != null)
+                    totalWorldSpaceAeroForce += legacyWingModel.worldSpaceForce;
+
+                // Combine forces from stock code
+                totalWorldSpaceAeroForce += -part.dragVectorDir * part.dragScalar; // dragVectorDir is actually the velocity vector direction
+
+                // Handle airbrakes
+                if (stockAeroSurfaceModule != null)
+                    totalWorldSpaceAeroForce += stockAeroSurfaceModule.dragForce + stockAeroSurfaceModule.liftForce;
             }
         }
 
@@ -317,22 +365,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             if (projectedArea.totalArea > 0.0)
             {
-                Vector3 totalAeroForceVector = worldSpaceAeroForce;
-
-                // Combine forces from legacy wing model
-                if (legacyWingModel != null)
-                    totalAeroForceVector += legacyWingModel.worldSpaceForce;
-
-                // Combine forces from stock code
-                totalAeroForceVector += -part.dragVectorDir * part.dragScalar; // dragVectorDir is actually the velocity vector direction
-
-                // Handle airbrakes
-                if (stockAeroSurfaceModule != null)
-                    totalAeroForceVector += stockAeroSurfaceModule.dragForce;
-
                 Vector3 worldVelNorm = partTransform.localToWorldMatrix.MultiplyVector(partLocalVelNorm);
-                Vector3 worldDragArrow = Vector3.Dot(totalAeroForceVector, worldVelNorm) * worldVelNorm;
-                Vector3 worldLiftArrow = totalAeroForceVector - worldDragArrow;
+                Vector3 worldDragArrow = Vector3.Dot(totalWorldSpaceAeroForce, worldVelNorm) * worldVelNorm;
+                Vector3 worldLiftArrow = totalWorldSpaceAeroForce - worldDragArrow;
 
                 double invAndDynPresArea = legacyWingModel != null ? legacyWingModel.S : projectedArea.totalArea;
                 invAndDynPresArea *= vessel.dynamicPressurekPa;
@@ -372,11 +407,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if(!vessel.packed)
                 CheckAeroStressFailure();
 
-            Matrix4x4 matrix = partTransform.localToWorldMatrix;
+            //Matrix4x4 matrix = partTransform.localToWorldMatrix;
             Rigidbody rb = part.Rigidbody;
 
-            worldSpaceAeroForce = matrix.MultiplyVector(partLocalForce);
-            worldSpaceTorque = matrix.MultiplyVector(partLocalTorque);
+            worldSpaceAeroForce = partTransform.TransformDirection(partLocalForce);
+            worldSpaceTorque = partTransform.TransformDirection(partLocalTorque);
             UpdateAeroDisplay();
 
             rb.AddForce(worldSpaceAeroForce);
@@ -407,25 +442,26 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public void UpdateVelocityAndAngVelocity(Vector3 frameVel)
         {
-            if (partTransform == null)
-                if (part != null)
+            if ((object)partTransform == null)
+                //if (part != null)
                     partTransform = part.partTransform;
-                else
-                    return;
-            if (part == null)
-                return;
+                //else
+                //    return;
 
-            Matrix4x4 matrix = partTransform.worldToLocalMatrix;
+            //if (part == null)
+            //    return;
+
+            //Matrix4x4 matrix = partTransform.worldToLocalMatrix;
             Rigidbody rb = part.Rigidbody;
 
             partLocalVel = rb.velocity + frameVel
                         - FARWind.GetWind(FARAeroUtil.CurrentBody, part, rb.position); 
-            partLocalVel = matrix.MultiplyVector(partLocalVel);
+            partLocalVel = partTransform.InverseTransformDirection(partLocalVel);
 
             partLocalVelNorm = partLocalVel.normalized;
 
             partLocalAngVel = rb.angularVelocity;
-            partLocalAngVel = matrix.MultiplyVector(partLocalAngVel);
+            partLocalAngVel = partTransform.InverseTransformDirection(partLocalAngVel);
 
         }
 
@@ -566,6 +602,27 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 fieldsVisible = false;
             }
 
+        }
+
+        private void OnDestroy()
+        {
+            if (liftArrow != null)
+            {
+                UnityEngine.Object.Destroy(liftArrow);
+                liftArrow = null;
+            }
+            if (dragArrow != null)
+            {
+                UnityEngine.Object.Destroy(dragArrow);
+                dragArrow = null;
+            }
+            if (momentArrow != null)
+            {
+                UnityEngine.Object.Destroy(momentArrow);
+                momentArrow = null;
+            }
+            legacyWingModel = null;
+            stockAeroSurfaceModule = null;
         }
     }
 }

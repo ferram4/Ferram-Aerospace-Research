@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.4.1 "Goldstein"
+Ferram Aerospace Research v0.15.5 "Haack"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -208,9 +208,9 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         }
 
         //Receives message from FARVesselAero through _vessel on the recalc being completed
-        void UpdateAeroModules(List<FARAeroPartModule> newAeroModules)
+        public void UpdateAeroModules(List<FARAeroPartModule> newAeroModules, List<FARWingAerodynamicModel> legacyWingModels)
         {
-            _physicsCalcs.UpdateAeroModules(newAeroModules);
+            _physicsCalcs.UpdateAeroModules(newAeroModules, legacyWingModels);
         }
 
         //Receives a message from any FARWingAerodynamicModel or FARAeroPartModule that has failed to update the GUI
@@ -267,7 +267,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
             if (_vessel == FlightGlobals.ActiveVessel && showGUI && showAllGUI)
             {
-                mainGuiRect = GUILayout.Window(this.GetHashCode(), mainGuiRect, MainFlightGUIWindow, "FAR, v0.15.4.1 'Goldstein'", GUILayout.MinWidth(230));
+                mainGuiRect = GUILayout.Window(this.GetHashCode(), mainGuiRect, MainFlightGUIWindow, "FAR, v0.15.5 'Haack'", GUILayout.MinWidth(230));
                 GUIUtils.ClampToScreen(mainGuiRect);
 
                 if (showFlightDataWindow)

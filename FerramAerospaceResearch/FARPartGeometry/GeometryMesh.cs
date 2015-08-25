@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.4.1 "Goldstein"
+Ferram Aerospace Research v0.15.5 "Haack"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -87,11 +87,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             this.triangles = triangles;
             this.meshTransform = meshTransform;
 
-            Vector3 size = thisToVesselMatrix.MultiplyVector(meshBounds.size);
-            size.x = Math.Abs(size.x);
-            size.y = Math.Abs(size.y);
-            size.z = Math.Abs(size.z);
-
             bounds = TransformBounds(meshBounds, thisToVesselMatrix);
 
             this.module = module;
@@ -118,9 +113,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Matrix4x4 tempMatrix = thisToVesselMatrix.inverse;
             thisToVesselMatrix = newThisToVesselMatrix * meshLocalToWorld;
 
-            tempMatrix = thisToVesselMatrix *  tempMatrix;
+            tempMatrix = thisToVesselMatrix * tempMatrix;
 
-            bounds = TransformBounds(bounds, tempMatrix);
+            //bounds = TransformBounds(bounds, tempMatrix);
+
+            Vector3 low, high;
+            low = Vector3.one * float.PositiveInfinity;
+            high = Vector3.one * float.NegativeInfinity;
 
             for (int i = 0; i < vertices.Length; i++)
             {
@@ -132,8 +131,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 vert.z = tempMatrix.m20 * v.x + tempMatrix.m21 * v.y + tempMatrix.m22 * v.z + tempMatrix.m23;
 
                 vertices[i] = vert;
+                low = Vector3.Min(low, vert);
+                high = Vector3.Max(high, vert);
             }
 
+            bounds = new Bounds(0.5f * (high + low), high - low);
         }
 
         public void MultithreadTransformBasis(object newThisToVesselMatrixObj)
@@ -143,12 +145,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 try
                 {
                     Matrix4x4 tempMatrix = thisToVesselMatrix.inverse;
-
                     thisToVesselMatrix = (Matrix4x4)newThisToVesselMatrixObj * meshLocalToWorld;
 
                     tempMatrix = thisToVesselMatrix * tempMatrix;
 
-                    bounds = TransformBounds(bounds, tempMatrix);
+                    Vector3 low, high;
+                    low = Vector3.one * float.PositiveInfinity;
+                    high = Vector3.one * float.NegativeInfinity;
 
                     for (int i = 0; i < vertices.Length; i++)
                     {
@@ -160,81 +163,53 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         vert.z = tempMatrix.m20 * v.x + tempMatrix.m21 * v.y + tempMatrix.m22 * v.z + tempMatrix.m23;
 
                         vertices[i] = vert;
+                        low = Vector3.Min(low, vert);
+                        high = Vector3.Max(high, vert);
                     }
 
-                    module.DecrementMeshesToUpdate();
+                    bounds = new Bounds(0.5f * (high + low), high - low);
+
                 }
                 catch (Exception e)
                 {
                     Debug.LogException(e);
+                }
+                finally
+                {
+                    module.DecrementMeshesToUpdate();
                 }
             }
         }
 
         private Bounds TransformBounds(Bounds oldBounds, Matrix4x4 matrix)
         {
-            Bounds bounds = new Bounds();
             Vector3 center, extents;
             center = oldBounds.center;//matrix.MultiplyPoint3x4(m.bounds.center);
             extents = oldBounds.extents;//matrix.MultiplyVector(m.bounds.size);
 
-            /*size.x = Math.Abs(size.x);
-            size.y = Math.Abs(size.y);
-            size.z = Math.Abs(size.z);*/
+            Vector3 lower = Vector3.one * float.PositiveInfinity;
+            Vector3 upper = Vector3.one * float.NegativeInfinity;
 
-            Vector3 boundPt;
-            boundPt = center + extents;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-            bounds.Encapsulate(boundPt);
+            TransformedPointBounds(matrix, center, +extents.x, +extents.y, +extents.z, ref lower, ref upper);
+            TransformedPointBounds(matrix, center, +extents.x, +extents.y, -extents.z, ref lower, ref upper);
+            TransformedPointBounds(matrix, center, +extents.x, -extents.y, -extents.z, ref lower, ref upper);
+            TransformedPointBounds(matrix, center, +extents.x, -extents.y, +extents.z, ref lower, ref upper);
+            TransformedPointBounds(matrix, center, -extents.x, -extents.y, +extents.z, ref lower, ref upper);
+            TransformedPointBounds(matrix, center, -extents.x, -extents.y, -extents.z, ref lower, ref upper);
+            TransformedPointBounds(matrix, center, -extents.x, +extents.y, -extents.z, ref lower, ref upper);
+            TransformedPointBounds(matrix, center, -extents.x, +extents.y, +extents.z, ref lower, ref upper);
 
-            boundPt = center - extents;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-            bounds.Encapsulate(boundPt);
-
-            boundPt = center;
-            boundPt.x += extents.x;
-            boundPt.y += extents.y;
-            boundPt.z -= extents.z;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-            bounds.Encapsulate(boundPt);
-
-            boundPt = center;
-            boundPt.x += extents.x;
-            boundPt.y -= extents.y;
-            boundPt.z += extents.z;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-            bounds.Encapsulate(boundPt);
-
-            boundPt = center;
-            boundPt.x -= extents.x;
-            boundPt.y += extents.y;
-            boundPt.z += extents.z;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-            bounds.Encapsulate(boundPt);
-
-            boundPt = center;
-            boundPt.x -= extents.x;
-            boundPt.y -= extents.y;
-            boundPt.z += extents.z;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-            bounds.Encapsulate(boundPt);
-
-            boundPt = center;
-            boundPt.x -= extents.x;
-            boundPt.y += extents.y;
-            boundPt.z -= extents.z;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-            bounds.Encapsulate(boundPt);
-
-            boundPt = center;
-            boundPt.x += extents.x;
-            boundPt.y -= extents.y;
-            boundPt.z -= extents.z;
-            boundPt = matrix.MultiplyPoint3x4(boundPt);
-
-            bounds.Encapsulate(boundPt);
-
+            Bounds bounds = new Bounds((lower + upper) * 0.5f, upper - lower);
+            //FARThreading.ThreadSafeDebugLogger.Instance.RegisterMessage("Bounds center: " + bounds.center + " extents: " + bounds.extents);
             return bounds;
+        }
+
+        void TransformedPointBounds(Matrix4x4 matrix, Vector3 center, float extX, float extY, float extZ, ref Vector3 lower, ref Vector3 upper)
+        {
+            Vector3 boundPt = new Vector3(center.x + extX, center.y + extY, center.z + extZ);
+            boundPt = matrix.MultiplyPoint3x4(boundPt);
+            lower = Vector3.Min(lower, boundPt);
+            upper = Vector3.Max(upper, boundPt);
         }
     }
 }

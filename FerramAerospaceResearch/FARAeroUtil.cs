@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.4.1 "Goldstein"
+Ferram Aerospace Research v0.15.5 "Haack"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -90,8 +90,8 @@ namespace FerramAerospaceResearch
         private const double UNDERWATER_DENSITY_FACTOR_MINUS_ONE = 814.51020408163265306122448979592;
         //Standard Reynolds number for transition from laminar to turbulent flow
         private const double TRANSITION_REYNOLDS_NUMBER = 5e5;
-        //Multiplier to skin friction due to surface roughness; approximately a 50% increase in drag
-        private const double ROUGHNESS_SKIN_FRICTION_MULTIPLIER = 1;
+        //Multiplier to skin friction due to surface roughness; approximately an 8% increase in drag
+        private const double ROUGHNESS_SKIN_FRICTION_MULTIPLIER = 1.08;
 
         public static void SaveCustomAeroDataToConfig()
         {
@@ -802,6 +802,43 @@ namespace FerramAerospaceResearch
             double e = 1 - 0.02 * FARMathUtil.PowApprox(AR, 0.7) * FARMathUtil.PowApprox(Math.Acos(CosSweepAngle), 2.2);
             double tmp = AR * Cd0 * Mathf.PI + 1;
             e /= tmp;
+
+            return e;
+        }
+
+        //More modern, accurate Oswald's Efficiency
+        //http://www.fzt.haw-hamburg.de/pers/Scholz/OPerA/OPerA_PUB_DLRK_12-09-10.pdf
+        public static double CalculateOswaldsEfficiencyNitaScholz(double AR, double CosSweepAngle, double Cd0, double taperRatio)
+        {
+            //model coupling between taper and sweep
+            double deltaTaper = Math.Acos(CosSweepAngle) * FARMathUtil.rad2deg;
+            deltaTaper = ExponentialApproximation(-0.0375 * deltaTaper);
+            deltaTaper *= 0.45;
+            deltaTaper -= 0.357;
+
+            taperRatio -= deltaTaper;
+            
+            //theoretic efficiency assuming an unswept wing with no sweep
+            double straightWingE = 0.0524 * taperRatio;
+            straightWingE += -0.15;
+            straightWingE *= taperRatio;
+            straightWingE += 0.1659;
+            straightWingE *= taperRatio;
+            straightWingE += -0.0706;
+            straightWingE *= taperRatio;
+            straightWingE += 0.0119;
+
+            //Efficiency assuming only sweep and taper contributions; still need viscous contributions
+            double theoreticE = straightWingE * AR + 1;
+            theoreticE = 1 / theoreticE;
+
+            double eWingInterference = 0.974008 * theoreticE;// 1 - 2 * (fuse dia / span)^2, using avg val for ratio (0.114) because it isn't easy to get here
+                                                             //this results in this being a simple constant
+
+            double e = 0.38 * Cd0 * AR * Math.PI;   //accounts for changes due to Mach number and compressibility
+            e *= eWingInterference;
+            e += 1;
+            e = eWingInterference / e;
 
             return e;
         }

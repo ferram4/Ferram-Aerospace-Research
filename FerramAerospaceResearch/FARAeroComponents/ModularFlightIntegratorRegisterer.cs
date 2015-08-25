@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.4.1 "Goldstein"
+Ferram Aerospace Research v0.15.5 "Haack"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -99,7 +99,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         void UpdateAerodynamics(ModularFI.ModularFlightIntegrator fi, Part part)
         {
-            if (part.Modules.Contains("ModuleAeroSurface") || part.Modules.Contains("KerbalEVA"))     //FIXME Proper model for airbrakes
+            if (part.dragModel != Part.DragModel.CYLINDRICAL)// || part.Modules.Contains("KerbalEVA"))     //FIXME Proper model for airbrakes
             {
                 fi.BaseFIUpdateAerodynamics(part);
                 return;
@@ -108,7 +108,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 Rigidbody rb = part.Rigidbody;
                 if (rb)
-                    part.DragCubes.SetDrag(-part.partTransform.worldToLocalMatrix.MultiplyVector(rb.velocity + Krakensbane.GetFrameVelocityV3f()).normalized, (float)part.machNumber);
+                {
+                    part.dragVectorDir = -rb.velocity - Krakensbane.GetFrameVelocityV3f().normalized;
+                    part.dragVectorDirLocal = part.partTransform.worldToLocalMatrix.MultiplyVector(part.dragVectorDir);
+                    part.DragCubes.SetDrag(part.dragVectorDirLocal, (float)part.machNumber);
+                }
             }
 
         }
@@ -126,16 +130,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         double CalculateAreaExposed(ModularFI.ModularFlightIntegrator fi, Part part, FARAeroPartModule aeroModule, double stockRadArea)
         {
-            double dragCubeExposed = fi.BaseFICalculateAreaExposed(part);
-            if (aeroModule == null)
-                return dragCubeExposed;
+            if ((object)aeroModule == null)
+                return fi.BaseFICalculateAreaExposed(part);
             else
+                return aeroModule.ProjectedAreaLocal(-part.dragVectorDirLocal);
+            /*else
             {
                 if (stockRadArea > 0)
                     return aeroModule.ProjectedAreas.totalArea * dragCubeExposed / stockRadArea;
                 else
                     return aeroModule.ProjectedAreas.totalArea;
-            }
+            }*/
         }
     }
 }

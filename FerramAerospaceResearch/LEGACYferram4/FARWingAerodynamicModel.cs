@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.4.1 "Goldstein"
+Ferram Aerospace Research v0.15.5 "Haack"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -186,7 +186,12 @@ namespace ferram4
                 Part p = counterparts[i];
                 if (p == null)
                     continue;
-                FARWingAerodynamicModel model = p.GetComponent<FARWingAerodynamicModel>();
+                FARWingAerodynamicModel model;
+                if (this is FARControllableSurface)
+                    model = (FARWingAerodynamicModel)p.Modules["FARControllableSurface"];
+                else
+                    model = (FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
+
                 ++counterpartsCount;
                 sum += model.NUFAR_areaExposedFactor;
                 totalExposedSum += model.NUFAR_totalExposedAreaFactor;
@@ -203,7 +208,11 @@ namespace ferram4
                 Part p = counterparts[i];
                 if (p == null)
                     continue;
-                FARWingAerodynamicModel model = p.GetComponent<FARWingAerodynamicModel>();
+                FARWingAerodynamicModel model;
+                if (this is FARControllableSurface)
+                    model = (FARWingAerodynamicModel)p.Modules["FARControllableSurface"];
+                else
+                    model = (FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
 
                 model.NUFAR_areaExposedFactor = sum;
                 model.NUFAR_totalExposedAreaFactor = totalExposedSum;
@@ -449,11 +458,11 @@ namespace ferram4
             if (part.srfAttachNode.originalOrientation.x < 0)
                 srfAttachNegative = -1;
 
-            transformed_AR = 2 * b_2_actual / MAC_actual;
+            transformed_AR = b_2_actual / MAC_actual;
 
             MidChordSweepSideways = (1 - TaperRatio) / (1 + TaperRatio);
 
-            MidChordSweepSideways = (Math.PI * 0.5 - Math.Atan(Math.Tan(MidChordSweep * FARMathUtil.deg2rad) + MidChordSweepSideways * 2 / transformed_AR)) * MidChordSweepSideways * 0.5;
+            MidChordSweepSideways = (Math.PI * 0.5 - Math.Atan(Math.Tan(MidChordSweep * FARMathUtil.deg2rad) + MidChordSweepSideways * 4 / transformed_AR)) * MidChordSweepSideways * 0.5;
 
             double sweepHalfChord = MidChordSweep * FARMathUtil.deg2rad;
 
@@ -495,6 +504,8 @@ namespace ferram4
         {
             if(VesselPartList == null)
                 VesselPartList = GetShipPartList();
+            if (wingInteraction == null)
+                wingInteraction = new FARWingInteraction(this, part, rootMidChordOffsetFromOrig, srfAttachNegative);
 
             wingInteraction.UpdateWingInteraction(VesselPartList, nonSideAttach == 1);
         }
@@ -554,6 +565,10 @@ namespace ferram4
             }
             else
             {
+                if (isShielded)
+                {
+                    Cl = Cd = Cm = stall = 0;
+                }
                 if ((object)liftArrow != null)
                 {
                     UnityEngine.Object.Destroy(liftArrow);
@@ -587,12 +602,6 @@ namespace ferram4
             //This calculates the angle of attack, adjusting the part's orientation for any deflection
             //CalculateAoA();
 
-            if (isShielded)
-            {
-                Cl = Cd = Cm = stall = 0;
-                return Vector3d.zero;
-            }
-
             double v_scalar = velocity.magnitude;
             //if (v_scalar <= 0.1)
             //    return Vector3d.zero;
@@ -618,6 +627,9 @@ namespace ferram4
                 skinFrictionDrag = FARAeroUtil.SkinFrictionDrag(rho, effective_MAC, v_scalar, MachNumber, vessel.externalTemperature, vessel.mainBody.atmosphereAdiabaticIndex);
             else
                 skinFrictionDrag = 0.005;
+
+
+            skinFrictionDrag *= 1.1;    //account for thickness
 
             CalculateCoefficients(MachNumber, AoA, skinFrictionDrag);
 
@@ -697,6 +709,8 @@ namespace ferram4
         private void UpdateMassToAccountForArea()
         {
             float supportedArea = (float)(refAreaChildren + S);
+            if ((object)parentWing != null)
+                supportedArea *= 0.66666667f;   //if any supported area has been transfered to another part, we must remove it from here
             curWingMass = supportedArea * (float)FARAeroUtil.massPerWingAreaSupported * massMultiplier;
             part.mass = curWingMass;
             oldMassMultiplier = massMultiplier;
@@ -713,7 +727,8 @@ namespace ferram4
                 if ((object)childWing == null)
                     continue;
 
-                refAreaChildren += childWing.refAreaChildren + childWing.S;
+                refAreaChildren += (childWing.refAreaChildren + childWing.S) * 0.33333333333333333333;//Take 1/3 of the area of the child wings
+                //refAreaChildren += childWing.refAreaChildren + childWing.S;
             }
 
             if ((object)parentWing != null)
@@ -787,9 +802,9 @@ namespace ferram4
                 stall = Math.Max(stall, lastStall);
                 stall += effectiveUpstreamStall;
             }
-            else if (absAoA < AoAmax * 0.8)
+            else if (absAoA < AoAmax)
             {
-                stall = 1 - FARMathUtil.Clamp((AoAmax * 0.75 - absAoA) * 20, 0, 1);
+                stall = 1 - FARMathUtil.Clamp((AoAmax - absAoA) * 25, 0, 1);
                 stall = Math.Min(stall, lastStall);
                 stall += effectiveUpstreamStall;
             }
@@ -798,10 +813,12 @@ namespace ferram4
                 stall = lastStall;
             }
 
-            if (HighLogic.LoadedSceneIsFlight)
-                stall = FARMathUtil.Clamp(stall, lastStall - 2 * TimeWarp.fixedDeltaTime, lastStall + 2 * TimeWarp.fixedDeltaTime);     //Limits stall to increasing at a rate of 2/s
+            //if (HighLogic.LoadedSceneIsFlight)
+            //    stall = FARMathUtil.Clamp(stall, lastStall - 2 * TimeWarp.fixedDeltaTime, lastStall + 2 * TimeWarp.fixedDeltaTime);     //Limits stall to increasing at a rate of 2/s
 
             stall = FARMathUtil.Clamp(stall, 0, 1);
+            if (stall < 1e-5)
+                stall = 0;
         }
 
 
@@ -829,7 +846,7 @@ namespace ferram4
 
             double Cd0 = CdCompressibilityZeroLiftIncrement(MachNumber, cosSweepAngle, TanSweep, beta_TanSweep, beta) + 2 * skinFrictionCoefficient;
             double CdMax = CdMaxFlatPlate(MachNumber, beta);
-            e = FARAeroUtil.CalculateOswaldsEfficiency(effective_AR, cosSweepAngle, Cd0);
+            e = FARAeroUtil.CalculateOswaldsEfficiencyNitaScholz(effective_AR, cosSweepAngle, Cd0, TaperRatio);
             piARe = effective_AR * e * Math.PI;
 
             double CosAoA = Math.Cos(AoA);
@@ -1128,7 +1145,7 @@ namespace ferram4
 
             effective_b_2 = Math.Max(b_2_actual * CosPartAngle, MAC_actual * SinPartAngle2);
             effective_MAC = MAC_actual * CosPartAngle + b_2_actual * SinPartAngle2;
-            transformed_AR = 2 * effective_b_2 / effective_MAC;
+            transformed_AR = effective_b_2 / effective_MAC;
 
             sweepHalfChord = Math.Sqrt(Math.Max(1 - sweepHalfChord * sweepHalfChord, 0)) / sweepHalfChord;  //convert to tangent
 
@@ -1382,6 +1399,27 @@ namespace ferram4
                 fieldsVisible = false;
             }
 
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+
+            if (liftArrow != null)
+            {
+                UnityEngine.Object.Destroy(liftArrow);
+                liftArrow = null;
+            }
+            if (dragArrow != null)
+            {
+                UnityEngine.Object.Destroy(dragArrow);
+                dragArrow = null;
+            }
+            if (wingInteraction != null)
+            {
+                wingInteraction.Destroy();
+                wingInteraction = null;
+            }
         }
 
     }

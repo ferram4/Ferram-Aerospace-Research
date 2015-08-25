@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.4.1 "Goldstein"
+Ferram Aerospace Research v0.15.5 "Haack"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -56,9 +56,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
         static FloatCurve crossFlowDragMachCurve;
         static FloatCurve crossFlowDragReynoldsCurve;
 
-        FloatCurve xForcePressureAoA0;
-        FloatCurve xForcePressureAoA180;
-        FloatCurve xForceSkinFriction;
+        public FARFloatCurve xForcePressureAoA0;
+        public FARFloatCurve xForcePressureAoA180;
+        public FARFloatCurve xForceSkinFriction;
         float potentialFlowNormalForce;
         float viscCrossflowDrag;
         float flatnessRatio;
@@ -78,7 +78,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
             public float dragFactor;    //sum of these should add up to 1
         }
 
-        public FARAeroSection(FloatCurve xForcePressureAoA0, FloatCurve xForcePressureAoA180, FloatCurve xForceSkinFriction,
+        public FARAeroSection()
+        {
+            xForcePressureAoA0 = new FARFloatCurve(6);
+            xForcePressureAoA180 = new FARFloatCurve(6);
+            xForceSkinFriction = new FARFloatCurve(3);
+            partData = new List<PartData>();
+            if (crossFlowDragMachCurve == null)
+                GenerateCrossFlowDragCurve();
+        }
+
+/*        public FARAeroSection(FloatCurve xForcePressureAoA0, FloatCurve xForcePressureAoA180, FloatCurve xForceSkinFriction,
             float potentialFlowNormalForce, float viscCrossflowDrag, float diameter, float flatnessRatio, float hypersonicMomentForward, float hypersonicMomentBackward,
             Vector3 centroidWorldSpace, Vector3 xRefVectorWorldSpace, Vector3 nRefVectorWorldSpace, Matrix4x4 vesselToWorldMatrix, Vector3 vehicleMainAxis, List<FARAeroPartModule> moduleList,
             Dictionary<Part, FARPartGeometry.VoxelCrossSection.SideAreaValues> sideAreaValues, List<float> dragFactor, Dictionary<Part, PartTransformInfo> partWorldToLocalMatrixDict)
@@ -142,16 +152,89 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             if (crossFlowDragMachCurve == null)
                 GenerateCrossFlowDragCurve();
+        }*/
+
+        public void UpdateAeroSection(float potentialFlowNormalForce, float viscCrossflowDrag, float diameter, float flatnessRatio, float hypersonicMomentForward, float hypersonicMomentBackward,
+            Vector3 centroidWorldSpace, Vector3 xRefVectorWorldSpace, Vector3 nRefVectorWorldSpace, Matrix4x4 vesselToWorldMatrix, Vector3 vehicleMainAxis, List<FARAeroPartModule> moduleList,
+            List<float> dragFactor, Dictionary<Part, PartTransformInfo> partWorldToLocalMatrixDict)
+        {
+            this.potentialFlowNormalForce = potentialFlowNormalForce;                   //copy lifting body info over
+            this.viscCrossflowDrag = viscCrossflowDrag;
+            this.flatnessRatio = flatnessRatio;
+            invFlatnessRatio = 1 / flatnessRatio;
+            this.hypersonicMomentForward = hypersonicMomentForward;
+            this.hypersonicMomentBackward = hypersonicMomentBackward;
+            this.diameter = diameter;
+
+            partData.Clear();
+            if (partData.Capacity < moduleList.Capacity)
+                partData.Capacity = moduleList.Capacity;
+
+            Vector3 worldVehicleAxis = vesselToWorldMatrix.MultiplyVector(vehicleMainAxis);
+
+            Vector3 centroidLocationAlongxRef = Vector3.Project(centroidWorldSpace, worldVehicleAxis);
+            Vector3 centroidSansxRef = Vector3.ProjectOnPlane(centroidWorldSpace, worldVehicleAxis);
+
+            Vector3 worldSpaceAvgPos = Vector3.zero;
+            float totalDragFactor = 0;
+            for (int i = 0; i < moduleList.Count; i++)
+            {
+                Part p = moduleList[i].part;
+                if (partWorldToLocalMatrixDict.ContainsKey(p))
+                {
+                    worldSpaceAvgPos += partWorldToLocalMatrixDict[p].worldPosition * dragFactor[i];
+                    totalDragFactor += dragFactor[i];
+                }
+            }
+
+            worldSpaceAvgPos /= totalDragFactor;
+
+            worldSpaceAvgPos = Vector3.ProjectOnPlane(worldSpaceAvgPos, worldVehicleAxis);
+
+            Vector3 avgPosDiffFromCentroid = centroidSansxRef - worldSpaceAvgPos;
+
+            for (int i = 0; i < moduleList.Count; i++)
+            {
+                PartData data = new PartData();
+                data.aeroModule = moduleList[i];
+                Matrix4x4 transformMatrix = partWorldToLocalMatrixDict[data.aeroModule.part].worldToLocalMatrix;
+
+                Vector3 forceCenterWorldSpace = centroidLocationAlongxRef + Vector3.ProjectOnPlane(partWorldToLocalMatrixDict[data.aeroModule.part].worldPosition, worldVehicleAxis) + avgPosDiffFromCentroid;
+
+                data.centroidPartSpace = transformMatrix.MultiplyPoint3x4(forceCenterWorldSpace);
+                data.xRefVectorPartSpace = transformMatrix.MultiplyVector(xRefVectorWorldSpace);
+                data.nRefVectorPartSpace = transformMatrix.MultiplyVector(nRefVectorWorldSpace);
+                data.dragFactor = dragFactor[i];
+
+                transformMatrix = transformMatrix * vesselToWorldMatrix;
+
+                if (i < partData.Count)
+                    partData[i] = data;
+                else
+                    partData.Add(data);
+            }
+
+            xForcePressureAoA0.BakeCurve();
+            xForcePressureAoA180.BakeCurve();
+            xForceSkinFriction.BakeCurve();
         }
 
+        public void ClearAeroSection()
+        {
+            xForcePressureAoA0 = null;
+            xForcePressureAoA180 = null;
+            xForceSkinFriction = null;
+            partData = null;
+        }
+        
         public void PredictionCalculateAeroForces(float atmDensity, float machNumber, float reynoldsPerUnitLength, float skinFrictionDrag, Vector3 vel, ferram4.FARCenterQuery center)
         {
             if (partData.Count == 0)
                 return;
 
             double skinFrictionForce = skinFrictionDrag * xForceSkinFriction.Evaluate(machNumber);      //this will be the same for each part, so why recalc it multiple times?
-            float xForceAoA0 = xForcePressureAoA0.Evaluate(machNumber);
-            float xForceAoA180 = xForcePressureAoA180.Evaluate(machNumber);
+            double xForceAoA0 = xForcePressureAoA0.Evaluate(machNumber);
+            double xForceAoA180 = xForcePressureAoA180.Evaluate(machNumber);
 
 
             PartData data = partData[0];
@@ -271,8 +354,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
         {
 
             double skinFrictionForce = skinFrictionDrag * xForceSkinFriction.Evaluate(machNumber);      //this will be the same for each part, so why recalc it multiple times?
-            float xForceAoA0 = xForcePressureAoA0.Evaluate(machNumber);
-            float xForceAoA180 = xForcePressureAoA180.Evaluate(machNumber);
+            double xForceAoA0 = xForcePressureAoA0.Evaluate(machNumber);
+            double xForceAoA180 = xForcePressureAoA180.Evaluate(machNumber);
 
             for(int i = 0; i < partData.Count; i++)
             {

@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.4.1 "Goldstein"
+Ferram Aerospace Research v0.15.5 "Haack"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -82,19 +82,17 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
         }
 
-        public void UpdateAeroModules(List<FARAeroPartModule> newAeroModules)
+        public void UpdateAeroModules(List<FARAeroPartModule> newAeroModules, List<FARWingAerodynamicModel> legacyWingModels)
         {
             _currentAeroModules = newAeroModules;
-            _LEGACY_currentWingAeroModel.Clear();
+            _LEGACY_currentWingAeroModel = legacyWingModels;
             wingArea = 0;
             useWingArea = false;
-            for (int i = 0; i < _vessel.parts.Count; i++)
+            for (int i = 0; i < legacyWingModels.Count; i++)
             {
-                Part p = _vessel.parts[i];
-                FARWingAerodynamicModel w = p.GetComponent<FARWingAerodynamicModel>();
+                FARWingAerodynamicModel w = legacyWingModels[i];
                 if ((object)w != null)
                 {
-                    _LEGACY_currentWingAeroModel.Add(w);
                     useWingArea = true;
                     wingArea += w.S;
                 }
@@ -136,16 +134,16 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 {
                     FARAeroPartModule m = _currentAeroModules[i];
                     if ((object)m != null)
-                        totalAeroForceVector += m.worldSpaceAeroForce;
+                        totalAeroForceVector += m.totalWorldSpaceAeroForce;
                 }
             }
 
-            for (int i = 0; i < _LEGACY_currentWingAeroModel.Count; i++)
+            /*for (int i = 0; i < _LEGACY_currentWingAeroModel.Count; i++)
             {
                 FARWingAerodynamicModel w = _LEGACY_currentWingAeroModel[i];
                 if ((object)w != null)
                     totalAeroForceVector += w.worldSpaceForce;
-            }
+            }*/
 
             for(int i = 0; i < _vessel.parts.Count; i++)
             {

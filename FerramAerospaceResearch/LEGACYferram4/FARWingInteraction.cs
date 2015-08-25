@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.4.1 "Goldstein"
+Ferram Aerospace Research v0.15.5 "Haack"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -52,6 +52,8 @@ namespace ferram4
 {
     public class FARWingInteraction
     {
+        static RaycastHitComparer _comparer = new RaycastHitComparer();
+
         private FARWingAerodynamicModel parentWingModule;
         private Part parentWingPart;
         private Vector3 rootChordMidLocal;
@@ -162,6 +164,14 @@ namespace ferram4
 
         }
 
+        public void Destroy()
+        {
+            nearbyWingModulesForwardList = nearbyWingModulesBackwardList = nearbyWingModulesLeftwardList = nearbyWingModulesRightwardList = null;
+            nearbyWingModulesForwardInfluence = nearbyWingModulesBackwardInfluence = nearbyWingModulesLeftwardInfluence = nearbyWingModulesRightwardInfluence = null;
+            parentWingModule = null;
+            parentWingPart = null;
+        }
+
         /// <summary>
         /// Called when plane is stopped to get rid of old wing interaction data
         /// </summary>
@@ -225,9 +235,9 @@ namespace ferram4
             CompressArrayToList(nearbyWingModulesRightward, ref nearbyWingModulesRightwardList, ref nearbyWingModulesRightwardInfluence);
 
             //This part handles effects of biplanes, triplanes, etc.
-            double ClCdInterference = 1;
-            ClCdInterference *= WingInterference(parentWingPart.partTransform.forward, VesselPartList, flt_b_2);
-            ClCdInterference *= WingInterference(-parentWingPart.partTransform.forward, VesselPartList, flt_b_2);
+            double ClCdInterference = 0;
+            ClCdInterference += 0.5f * WingInterference(parentWingPart.partTransform.forward, VesselPartList, flt_b_2);
+            ClCdInterference += 0.5f * WingInterference(-parentWingPart.partTransform.forward, VesselPartList, flt_b_2);
 
             ClInterferenceFactor = ClCdInterference;
         }
@@ -351,6 +361,8 @@ namespace ferram4
 
                                     double tmp = h.distance / dist;
                                     tmp = FARMathUtil.Clamp(tmp, 0, 1);
+                                    double tmp2 = Math.Abs(Vector3.Dot(parentWingPart.partTransform.forward, w.part.partTransform.forward));
+                                    tmp = 1 - (1 - tmp) * tmp2;
                                     interferencevalue = Math.Min(tmp, interferencevalue);
                                     gotSomething = true;
 
@@ -457,7 +469,7 @@ namespace ferram4
 
                         Collider[] colliders;
 
-                        if (farModule != null)
+                        if ((object)farModule != null)
                         {
                             colliders = farModule.PartColliders;
                             if (colliders == null)
@@ -504,7 +516,7 @@ namespace ferram4
         {
             List<RaycastHit> sortedHits = unsortedList.ToList();
 
-            sortedHits.Sort(new RaycastHitComparer());
+            sortedHits.Sort(_comparer);
 
             return sortedHits.ToArray();
         }
@@ -742,7 +754,7 @@ namespace ferram4
             if (effective_AR_modifier < 1)
                 return (effective_AR_modifier + 1);
             else
-                return 2 * (2 - effective_AR_modifier) + 30 * (effective_AR_modifier - 1);
+                return 2 * (2 - effective_AR_modifier) + 8 * (effective_AR_modifier - 1);
         }
     }
 }

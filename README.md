@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.15.4.1 "Goldstein"
+Ferram Aerospace Research v0.15.5 "Haack"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -64,6 +64,34 @@ Set all the other winglet/control surface values to zero
 
 CHANGELOG
 =======================================================
+
+0.15.5V "Haack"------------------------------------  
+
+Upgrade to MM 2.6.7  
+Fix for some RealChute issues by DaMichel  
+Animation ignoring for voxelization by Blowfish  
+Addition of air brakes for yaw control (RudderBrakes) adopted from original code contributed by HoneyFox  
+
+Reduction in memory garbage created during voxelization; this should reduce the impact of voxelization somewhat, especially hitching.  Note: some hitching may still occur with vehicles with many wing parts due to legacy wing code  
+Runtime performance optimizations for ram drag and general aero calculations  
+Highly optimized bounds checking for voxelization  
+
+Kerbals handled by voxel model now (using a simple primitive shape, presence or absence of helmet doesn't matter)  
+Control surface parameters available for tweaking in flight  
+Control surface tweakables given open/close buttons for sections to reduce clutter  
+Revert BDArmory bombs and missiles to stock model after launch to improve tracking, stability and predictions  
+
+Fixed main axis issue with BDArmory parts and similarly designed parts  
+Fixed a long-standing issue in wing aspect ratio calcs (they were double what they should have been)  
+Fixed ram drag variation with throttle not accepting AJE jets as valid jets for that purpose  
+Fixed drag not using the calculated critical Mach number for the beginning of the drag transonic rise  
+Fixed possible NRE issues during steady destruction of vessel with parts being destroyed  
+Fixed issue where increased number of wing parts would cause wing mass adjustment to increase mass without bound; mass is now bounded, but more concentrated in root parts than wingtip parts  
+
+Tweaked subsonic drag downwards to get more accurate results with fixed AJE props
+Tweaked wing mass downwards slightly  
+Tweaked wing strength power to result in greater strength from lower-mass wings  
+
 
 0.15.4.1V "Goldstein"------------------------------------  
 

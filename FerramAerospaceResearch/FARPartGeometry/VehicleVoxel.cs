@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.4.1 "Goldstein"
+Ferram Aerospace Research v0.15.5 "Haack"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -109,6 +109,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     for (int i = 0; i < MAX_SWEEP_PLANES_IN_QUEUE; i++)
                         clearedPlanes.Push(new SweepPlanePoint[1, 1]);
 
+                    clearedPlanes.TrimExcess();
 
                 }
                 int chunksForQueue = (int)Math.Ceiling(FARSettingsScenarioModule.VoxelSettings.numVoxelsControllableVessel * 0.034375);      //2.2 / 64
@@ -120,9 +121,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     MAX_CHUNKS_ALLOWED = (int)Math.Ceiling(1.5 * MAX_CHUNKS_IN_QUEUE);
 
                     Debug.Log(MAX_CHUNKS_IN_QUEUE + " " + MAX_CHUNKS_ALLOWED);
-
                     for (int i = 0; i < MAX_CHUNKS_IN_QUEUE; i++)
                         clearedChunks.Push(new VoxelChunk(0, Vector3.zero, 0, 0, 0, null));
+
+                    clearedChunks.TrimExcess();
                 }
             }
         }
@@ -138,8 +140,22 @@ namespace FerramAerospaceResearch.FARPartGeometry
             for (int i = 0; i < geoModules.Count; i++)
             {
                 GeometryPartModule m = geoModules[i];
+
                 if ((object)m != null)
                 {
+                    bool cont = true;
+                    while (!m.Ready)
+                    {
+                        Thread.SpinWait(5);
+                        if (m == null)
+                        {
+                            cont = false;
+                            break;
+                        }
+                    }
+                    if (!cont)
+                        continue;
+
                     Vector3d minBounds = m.overallMeshBounds.min;
                     Vector3d maxBounds = m.overallMeshBounds.max;
 
@@ -150,9 +166,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     max.x = Math.Max(max.x, maxBounds.x);
                     max.y = Math.Max(max.y, maxBounds.y);
                     max.z = Math.Max(max.z, maxBounds.z);
+
+                    if (CheckPartForOverridingPartList(m))
+                        overridingParts.Add(m.part);
                 }
-                if (CheckPartForOverridingPartList(m))
-                    overridingParts.Add(m.part);
             }
 
 
@@ -226,8 +243,26 @@ namespace FerramAerospaceResearch.FARPartGeometry
             PartModuleList modules = g.part.Modules;
             bool returnVal = false;
 
-            returnVal |= modules.Contains("FARControllableSurface");
-            if(g.HasCrossSectionAdjusters)
+            for (int i = 0; i < modules.Count; i++)
+            {
+                PartModule m = modules[i];
+                if (m is ferram4.FARControllableSurface)
+                {
+                    returnVal = true;
+                    break;
+                }
+                if (m is ModuleRCS)
+                {
+                    returnVal = true;
+                    break;
+                }
+                if (m is ModuleEngines)
+                {
+                    returnVal = true;
+                    break;
+                }
+            }
+            if (g.HasCrossSectionAdjusters)
             {
                 returnVal |= g.MaxCrossSectionAdjusterArea > 0;
             }
@@ -237,7 +272,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         private void BuildVoxel(List<GeometryPartModule> geoModules, bool multiThreaded, bool solidify)
         {
-            threadsQueued = 8;
+            threadsQueued = Environment.ProcessorCount - 1;
 
             //for (int i = 0; i < geoModules.Count; i++)
             //    threadsQueued += geoModules[i].meshDataList.Count;      //Doing this out here allows us to get rid of the lock, which should reduce sync costs for many meshes
@@ -1495,6 +1530,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 for (int i = meshParams.lowerIndex; i < meshParams.upperIndex; i++)
                 {
                     GeometryPartModule module = meshParams.modules[i];
+                    if (module == null)
+                        continue;
+
                     for(int j = 0; j < module.meshDataList.Count; j++)
                     {
                         GeometryMesh mesh = module.meshDataList[j];

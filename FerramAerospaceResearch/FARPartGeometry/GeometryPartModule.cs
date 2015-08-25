@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.4.1 "Goldstein"
+Ferram Aerospace Research v0.15.5 "Haack"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -106,7 +106,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             get { return _ready && _started; }
         }
         private int _sendUpdateTick = 0;
-        private int _meshesToUpdate = 0;
+        private int _meshesToUpdate = -1;
 
         private float currentScaleFactor = 1;
 
@@ -152,8 +152,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 RebuildAllMeshData();
                 _started = true;
             }
-            if(!_ready && _meshesToUpdate == 0)
+            if (!_ready && _meshesToUpdate == 0)
+            {
                 _ready = true;
+                overallMeshBounds = SetBoundsFromMeshes();
+            }
 
             if (animStates != null && animStates.Count > 0)
                 CheckAnimations();
@@ -178,6 +181,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if(!(HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor))
                 return;
 
+            _ready = false;
+
+            while (_meshesToUpdate > 0) //if the previous transform order hasn't been completed yet, wait here to let it
+                if (this == null)
+                    return;
+            
             partTransform = part.partTransform;
             List<Transform> meshTransforms = part.PartModelTransformList();
             List<MeshData> geometryMeshes = CreateMeshListFromTransforms(ref meshTransforms);
@@ -199,8 +208,30 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 GeometryMesh geoMesh = new GeometryMesh(m, meshTransforms[i], worldToVesselMatrix, this);
                 meshDataList.Add(geoMesh);
             }
+
+            _meshesToUpdate = 0;
             //UpdateTransformMatrixList(worldToVesselMatrix);
-            overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
+            //overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
+        }
+
+        private Bounds SetBoundsFromMeshes()
+        {
+            Vector3 upper = new Vector3(1, 1, 1) * float.NegativeInfinity, lower = new Vector3(1, 1, 1) * float.PositiveInfinity;
+            for(int i = 0; i < meshDataList.Count; i++)
+            {
+                GeometryMesh geoMesh = meshDataList[i];
+                upper.x = Math.Max(upper.x, geoMesh.bounds.max.x);
+                upper.y = Math.Max(upper.y, geoMesh.bounds.max.y);
+                upper.z = Math.Max(upper.z, geoMesh.bounds.max.z);
+
+                lower.x = Math.Min(lower.x, geoMesh.bounds.min.x);
+                lower.y = Math.Min(lower.y, geoMesh.bounds.min.y);
+                lower.z = Math.Min(lower.z, geoMesh.bounds.min.z);
+            }
+            Bounds overallBounds = new Bounds((upper + lower) * 0.5f, upper - lower);
+
+            return overallBounds;
+            
         }
 
         private void GetAnimations()
@@ -223,6 +254,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         private void FindAnimStatesInModule(Animation[] animations, PartModule m, string fieldName)
         {
+            if (FARAnimOverrides.FieldNameForModule(m.moduleName) == fieldName)
+                return;
             FieldInfo field = m.GetType().GetField(fieldName);
             if (field != null)        //This handles stock and Firespitter deployment animations
             {
@@ -367,37 +400,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
                 return;
             }
-            /*if (part.Modules.Contains("ModuleEnginesFX"))
-            {
-                ModuleEnginesFX engines = (ModuleEnginesFX)part.Modules["ModuleEnginesFX"];
-                for (int i = 0; i < engines.propellants.Count; i++)
-                {
-                    Propellant p = engines.propellants[i];
-                    if (p.name == "IntakeAir")
-                    {
-                        AirbreathingEngineCrossSectonAdjuster engineAdjuster = new AirbreathingEngineCrossSectonAdjuster(engines, worldToVesselMatrix);
-                        crossSectionAdjusters.Add(engineAdjuster);
-                        break;
-                    }
-                }
-            }
-            if (part.Modules.Contains("ModuleEnginesAJEJet"))       //hard-coded support for AJE; TODO: separate out for more configurable compatibility on 3rd-party end
-            {
-                AirbreathingEngineCrossSectonAdjuster engineAdjuster = new AirbreathingEngineCrossSectonAdjuster((ModuleEngines)part.Modules["ModuleEnginesAJEJet"], worldToVesselMatrix);
-                crossSectionAdjusters.Add(engineAdjuster);
-            }
-            if (part.Modules.Contains("ModuleResourceIntake"))
-            {
-                ModuleResourceIntake intake = (ModuleResourceIntake)part.Modules["ModuleResourceIntake"];
-
-                IntakeCrossSectionAdjuster intakeAdjuster = new IntakeCrossSectionAdjuster(intake, worldToVesselMatrix);
-                crossSectionAdjusters.Add(intakeAdjuster);
-            }
-            if(part.Modules.Contains("AJEInlet"))
-            {
-                IntakeCrossSectionAdjuster intakeAdjuster = new IntakeCrossSectionAdjuster(part.Modules["AJEInlet"], worldToVesselMatrix);
-                crossSectionAdjusters.Add(intakeAdjuster);
-            }*/
         }
 
         public void RunIGeometryUpdaters()
@@ -505,6 +507,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             _ready = false;
             if (meshDataList != null)
             {
+                while (_meshesToUpdate > 0) //if the previous transform order hasn't been completed yet, wait here to let it
+                    if (this == null)
+                        return;
+
                 _meshesToUpdate = meshDataList.Count;
                 for (int i = 0; i < meshDataList.Count; ++i)
                 {
@@ -521,7 +527,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         lock (this)
                             --_meshesToUpdate;
                     }
-                    /*if (!meshDataList[i].TryTransformBasis(worldToVesselMatrix))
+                    /*if (mesh.TrySetThisToVesselMatrixForTransform())
+                    {
+                        mesh.TransformBasis(worldToVesselMatrix);
+                    }
+                    else
                     {
                         meshDataList.RemoveAt(i);
                         i--;
@@ -538,7 +548,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     adjuster.UpdateArea();
                 }
             }
-            overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
+            //overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
         }
 
         internal void DecrementMeshesToUpdate()
@@ -614,6 +624,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
             List<MeshData> meshList = new List<MeshData>();
             List<Transform> validTransformList = new List<Transform>();
 
+            if (part.Modules.Contains("KerbalEVA"))
+            {
+                meshList.Add(CreateBoxMeshForKerbalEVA());
+                validTransformList.Add(part.partTransform);
+                meshTransforms = validTransformList;
+                return meshList;
+            } 
+            
             Bounds rendererBounds = this.part.GetPartOverallMeshBoundsInBasis(part.partTransform.worldToLocalMatrix);
             Bounds colliderBounds = this.part.GetPartColliderBoundsInBasis(part.partTransform.worldToLocalMatrix);
 
@@ -725,6 +743,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
             return mesh;
         }
 
+        private static MeshData CreateBoxMeshForKerbalEVA()
+        {
+            return CreateBoxMeshFromBoxCollider(new Vector3(0.5f, 0.8f, 0.5f), Vector3.zero);
+        }
+        
         public void OnRescale(TweakScale.ScalingFactor factor)
         {
             if (meshDataList == null)

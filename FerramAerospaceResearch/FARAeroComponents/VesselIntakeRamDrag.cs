@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.4.1 "Goldstein"
+Ferram Aerospace Research v0.15.5 "Haack"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -55,6 +55,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
         const float AVG_NOZZLE_VEL_RELATIVE_TO_FREESTREAM = 0.25f;       //assume value approximately for turbojets
         const float AVG_NOZZLE_VEL_FACTOR = AVG_NOZZLE_VEL_RELATIVE_TO_FREESTREAM * (1 - AVG_NOZZLE_VEL_RELATIVE_TO_FREESTREAM);
 
+        static int AJE_JET_CLASS_ID = "ModuleEnginesAJEJet".GetHashCode();
+        static int AJE_PROP_CLASS_ID = "ModuleEnginesAJEPropeller".GetHashCode();
+
+
         List<FARAeroPartModule> _aeroModulesWithIntakes = new List<FARAeroPartModule>();
         List<ModuleResourceIntake> _intakeModules = new List<ModuleResourceIntake>();
         List<Transform> _intakeTransforms = new List<Transform>();
@@ -107,6 +111,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if (m is ModuleEngines)
                     {
                         ModuleEngines e = (ModuleEngines)m;
+                        if (FARAeroUtil.AJELoaded)
+                            if (m.ClassID == AJE_JET_CLASS_ID || m.ClassID == AJE_PROP_CLASS_ID)
+                            {
+                                _airBreathingEngines.Add(e);
+                                continue;
+                            }
+
                         for (int k = 0; k < e.propellants.Count; k++)
                         {
                             Propellant prop = e.propellants[k];
@@ -116,16 +127,15 @@ namespace FerramAerospaceResearch.FARAeroComponents
                                 break;
                             }
                         }
-
                     }
                 }
             }
         }
 
-        public void ApplyIntakeRamDrag(float machNumber, Vector3 vesselVelNorm, float dynPres)
+        public void ApplyIntakeRamDrag(float machNumber, Vector3 vesselVelNorm, float dynPres, bool checkNull = true)
         {
             float currentRamDrag = CalculateRamDrag(machNumber);
-            ApplyIntakeDrag(currentRamDrag, vesselVelNorm, dynPres);
+            ApplyIntakeDrag(currentRamDrag, vesselVelNorm, dynPres, checkNull);
         }
 
         private float CalculateRamDrag(float machNumber)
@@ -134,7 +144,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             for (int i = 0; i < _airBreathingEngines.Count; i++)
             {
-                currentThrottle += _airBreathingEngines[i].currentThrottle;
+                currentThrottle += _airBreathingEngines[i].requestedThrottle;
             }
             currentThrottle /= Math.Max((float)_airBreathingEngines.Count, 1);
 
@@ -144,21 +154,21 @@ namespace FerramAerospaceResearch.FARAeroComponents
             return currentRamDrag;
         }
 
-        private void ApplyIntakeDrag(float currentRamDrag, Vector3 vesselVelNorm, float dynPres)
+        private void ApplyIntakeDrag(float currentRamDrag, Vector3 vesselVelNorm, float dynPres, bool checkNull)
         {
-            for(int i = 0; i < _intakeTransforms.Count; i++)
+            for (int i = _intakeTransforms.Count - 1; i >= 0; i--)
             {
                 ModuleResourceIntake intake = _intakeModules[i];
                 if (!intake.intakeEnabled)
                     continue;
 
                 Transform transform = _intakeTransforms[i];
-                if(transform == null)
+                if (checkNull && transform == null)
                 {
                     _intakeModules.RemoveAt(i);
                     _intakeTransforms.RemoveAt(i);
                     _aeroModulesWithIntakes.RemoveAt(i);
-                    --i;
+                    ++i;
                     continue;
                 }
 
@@ -173,8 +183,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
 
                 Vector3 force = -aeroModule.partLocalVelNorm * dynPres * cosAoA * currentRamDrag * intake.area * 100;
-                if(float.IsNaN(force.sqrMagnitude))
-                    force = Vector3.zero;
+                //if(float.IsNaN(force.sqrMagnitude))
+                //    force = Vector3.zero;
                 aeroModule.AddLocalForce(force, Vector3.zero);
             }
         }

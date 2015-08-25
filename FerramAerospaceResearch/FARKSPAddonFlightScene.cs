@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.4.1 "Goldstein"
+Ferram Aerospace Research v0.15.5 "Haack"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -60,6 +60,7 @@ namespace FerramAerospaceResearch
         {
             FARAeroStress.LoadStressTemplates();
             FARAeroUtil.LoadAeroDataFromConfig();
+            FARAnimOverrides.LoadAnimOverrides();
             //FARSettingsScenarioModule.LoadConfigs();
             this.enabled = false;
         }
