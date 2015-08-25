@@ -67,6 +67,7 @@ CHANGELOG
 
 0.15.5V "Haack"------------------------------------  
 
+Upgrade to MM 2.6.7  
 Fix for some RealChute issues by DaMichel  
 Animation ignoring for voxelization by Blowfish  
 Addition of air brakes for yaw control (RudderBrakes) adopted from original code contributed by HoneyFox  
