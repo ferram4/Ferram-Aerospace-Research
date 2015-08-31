@@ -577,7 +577,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
                 else
                 {
-                    Mesh m = mc.sharedMesh;
+                    Mesh m = mc.sharedMesh;     //but if we can't, grab the sharedMesh anyway and try to use that
                     
                     if (m != null)
                         return new MeshData(m.vertices, m.triangles, m.bounds);
@@ -594,10 +594,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
             return null;
         }
 
-        private MeshData GetVisibleMeshData(Transform t)
+        private MeshData GetVisibleMeshData(Transform t, bool onlyMeshes)
         {
             Mesh m = null;
             MeshFilter mf = t.GetComponent<MeshFilter>();
+
+            if (onlyMeshes && t.GetComponent<MeshCollider>() != null)       //if we've decided to force use of meshes, we don't want colliders
+                return null;
+
             if (mf != null)
             {
                 m = mf.sharedMesh;
@@ -657,7 +661,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 foreach (Transform t in meshTransforms)
                 {
-                    MeshData md = GetVisibleMeshData(t);
+                    MeshData md = GetVisibleMeshData(t, forceUseMeshes);
                     if (md == null)
                         continue;
 
@@ -678,7 +682,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (t.gameObject.activeInHierarchy == false)
                         continue;
                     
-                    MeshData md = GetVisibleMeshData(t);
+                    MeshData md = GetVisibleMeshData(t, forceUseMeshes);
                     if (md == null)
                         continue;
 
