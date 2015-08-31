@@ -642,7 +642,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             bool cantUseColliders = true;
 
             //Voxelize colliders
-            if (forceUseColliders || (rendererBounds.size.x * rendererBounds.size.z < colliderBounds.size.x * colliderBounds.size.z * 1.6f && rendererBounds.size.y < colliderBounds.size.y * 1.2f && (rendererBounds.center - colliderBounds.center).magnitude < 0.3f))
+            if ((forceUseColliders || (rendererBounds.size.x * rendererBounds.size.z < colliderBounds.size.x * colliderBounds.size.z * 1.6f && rendererBounds.size.y < colliderBounds.size.y * 1.2f && (rendererBounds.center - colliderBounds.center).magnitude < 0.3f)) && !forceUseMeshes)
             {
                 foreach (Transform t in meshTransforms)
                 {
