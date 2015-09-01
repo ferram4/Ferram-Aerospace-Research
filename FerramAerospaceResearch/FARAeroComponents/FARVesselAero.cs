@@ -178,7 +178,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     FARAeroPartModule a = _unusedAeroModules[i];
                     a.SetShielded(true);
-                    a.ForceLegacyAeroUpdates();
                     //Debug.Log(a.part.partInfo.title + " shielded");
                 }
 
@@ -186,7 +185,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     FARAeroPartModule a = _currentAeroModules[i];
                     a.SetShielded(false);
-                    a.ForceLegacyAeroUpdates();
                     //Debug.Log(a.part.partInfo.title + " unshielded");
                 }
 
@@ -281,8 +279,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             for(int i = 0; i < _currentAeroSections.Count; i++)
                 _currentAeroSections[i].PredictionCalculateAeroForces(density, machNumber, reynoldsPerLength, skinFriction, velocityWorldVector, center);
 
-            for (int i = 0; i < _legacyWingModels.Count; i++)
-                _legacyWingModels[i].PrecomputeCenterOfLift(velocityWorldVector, machNumber, density, center);
+            //for (int i = 0; i < _legacyWingModels.Count; i++)
+            //    _legacyWingModels[i].PrecomputeCenterOfLift(velocityWorldVector, machNumber, density, center);
 
             aeroForce = center.force;
             aeroTorque = center.TorqueAt(_vessel.CoM);

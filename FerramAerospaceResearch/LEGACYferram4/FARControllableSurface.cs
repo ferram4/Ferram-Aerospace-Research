@@ -50,7 +50,7 @@ using FerramAerospaceResearch;
 
 namespace ferram4
 {
-    public class FARControllableSurface : FARWingAerodynamicModel, ILiftProvider
+    public class FARControllableSurface : FARWingAerodynamicModel
     {        
         protected Transform movableSection = null;
 
@@ -253,48 +253,25 @@ namespace ferram4
             Events["DeflectLess"].active = isFlap && flapDeflectionLevel > 0;
 
         }
-        public override void Initialization()
+        public void Initialization()
         {
-            base.Initialization();
             if (part.Modules.Contains("ModuleControlSurface"))
             {
                 part.RemoveModule(part.Modules["ModuleControlSurface"]);
             }
 
-            OnVesselPartsChange += CalculateSurfaceFunctions;
+            //TODO: make this work with OnVesselWasModified
+            //OnVesselPartsChange += CalculateSurfaceFunctions;
             UpdateEvents();
             justStarted = true;
             if(vessel)
                 lastReferenceTransform = vessel.ReferenceTransform;
 
-            if (FARDebugValues.allowStructuralFailures)
-            {
-                FARPartStressTemplate template;
-                foreach (FARPartStressTemplate temp in FARAeroStress.StressTemplates)
-                    if (temp.name == "ctrlSurfStress")
-                    {
-                        template = temp;
-                        double maxForceMult = Math.Pow(massMultiplier, FARAeroUtil.massStressPower);
-
-                        YmaxForce *= 1 - ctrlSurfFrac;
-                        XZmaxForce *= 1 - ctrlSurfFrac;
-
-                        double tmp = template.YmaxStress;    //in MPa
-                        tmp *= S * ctrlSurfFrac * maxForceMult;
-                        YmaxForce += tmp;
-
-                        tmp = template.XZmaxStress;    //in MPa
-                        tmp *= S * ctrlSurfFrac * maxForceMult;
-                        XZmaxForce += tmp;
-                        break;
-                    }
-            }
-
             //if (HighLogic.LoadedSceneIsEditor)        //should be unneeded now
             //    FixAllUIRanges();
         }
 
-        public override void FixedUpdate()
+        public void FixedUpdate()
         {
             if (justStarted)
                 CalculateSurfaceFunctions();
@@ -318,7 +295,7 @@ namespace ferram4
             }
             CheckFieldVisibility();
 
-            base.FixedUpdate();
+            //base.FixedUpdate();
             justStarted = false;
 
             if(vessel && vessel.ReferenceTransform != lastReferenceTransform)
@@ -331,7 +308,7 @@ namespace ferram4
 
         void CheckShielded()
         {
-            if (NUFAR_areaExposedFactor < 0.1 * S && NUFAR_totalExposedAreaFactor != 0)
+            if (NUFAR_areaExposedFactor < 0.1 * areaTestFactor && NUFAR_totalExposedAreaFactor != 0)
             {
                 if (Math.Abs(AoAoffset) > 5)
                     isShielded = false;
@@ -364,9 +341,16 @@ namespace ferram4
 
             Vector3 CoM = Vector3.zero;
             float mass = 0;
-            for (int i = 0; i < VesselPartList.Count; i++)
+
+            List<Part> parts;
+            if (HighLogic.LoadedSceneIsFlight)
+                parts = vessel.parts;
+            else
+                parts = EditorLogic.SortedShipList;
+
+            for (int i = 0; i < parts.Count; i++)
             {
-                Part p = VesselPartList[i];
+                Part p = parts[i];
 
                 CoM += p.transform.position * p.mass;
                 mass += p.mass;
@@ -452,7 +436,7 @@ namespace ferram4
                     AoAdesiredControl += BrakeRudderLocation * Math.Max(0.0, BrakeRudderSide * vessel.ctrlState.yaw) * brakeRudder * 0.01;
                 }
                 AoAdesiredControl *= maxdeflect;
-                if (pitchaxisDueToAoA != 0.0)
+                /*if (pitchaxisDueToAoA != 0.0)
 				{ 
                     Vector3d vel = this.GetVelocity();
                     double velMag = vel.magnitude;
@@ -460,20 +444,20 @@ namespace ferram4
                     {
                         //Vector3 tmpVec = vessel.ReferenceTransform.up * Vector3.Dot(vessel.ReferenceTransform.up, vel) + vessel.ReferenceTransform.forward * Vector3.Dot(vessel.ReferenceTransform.forward, vel);   //velocity vector projected onto a plane that divides the airplane into left and right halves
                         //double AoA = Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.forward);
-                        double AoA = base.CalculateAoA(vel / velMag);      //using base.CalculateAoA gets the deflection using WingAeroModel's code, which does not account for deflection; this gives us the AoA that the surface _would_ be at if it hadn't deflected at all.
+                        double AoA = 0;//base.CalculateAoA(vel / velMag);      //using base.CalculateAoA gets the deflection using WingAeroModel's code, which does not account for deflection; this gives us the AoA that the surface _would_ be at if it hadn't deflected at all.
                         AoA = FARMathUtil.rad2deg * AoA;
                         if (double.IsNaN(AoA))
                             AoA = 0;
                         AoAdesiredControl += AoA * pitchaxisDueToAoA * 0.01;
                     }
-				}
+				}*/
 
                 AoAdesiredControl *= AoAsign;
                 AoAdesiredControl = FARMathUtil.Clamp(AoAdesiredControl, -Math.Abs(maxdeflect), Math.Abs(maxdeflect));
             }
         }
 
-        public override double CalculateAoA(Vector3d velocity)
+        public double CalculateAoA(Vector3d velocity)
         {
             // Use the vector computed by DeflectionAnimation
             Vector3d perp = part_transform.TransformDirection(deflectedNormal);
@@ -602,7 +586,7 @@ namespace ferram4
                 if (pitchaxisDueToAoA != 0.0)
                 {
                     Vector3 tmpVec = rootTransform.up * Vector3.Dot(rootTransform.up, velocityVec) + rootTransform.forward * Vector3.Dot(rootTransform.forward, velocityVec);   //velocity vector projected onto a plane that divides the airplane into left and right halves
-                    double AoA = base.CalculateAoA(tmpVec.normalized);      //using base.CalculateAoA gets the deflection using WingAeroModel's code, which does not account for deflection; this gives us the AoA that the surface _would_ be at if it hadn't deflected at all.
+                    double AoA = 0;// base.CalculateAoA(tmpVec.normalized);      //using base.CalculateAoA gets the deflection using WingAeroModel's code, which does not account for deflection; this gives us the AoA that the surface _would_ be at if it hadn't deflected at all.
                     AoA = FARMathUtil.rad2deg * AoA;
                     if (double.IsNaN(AoA))
                         AoA = 0;

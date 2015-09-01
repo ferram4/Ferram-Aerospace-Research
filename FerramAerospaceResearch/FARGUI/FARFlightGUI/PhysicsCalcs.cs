@@ -94,7 +94,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 if ((object)w != null)
                 {
                     useWingArea = true;
-                    wingArea += w.S;
+                    //wingArea += w.S;
                 }
             }
         }
@@ -344,7 +344,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             for (int i = 0; i < _LEGACY_currentWingAeroModel.Count; i++)
             {
                 FARWingAerodynamicModel w = _LEGACY_currentWingAeroModel[i];
-                vesselInfo.stallFraction += w.GetStall() * w.S;
+                //vesselInfo.stallFraction += w.GetStall() * w.S;
 
             }
 

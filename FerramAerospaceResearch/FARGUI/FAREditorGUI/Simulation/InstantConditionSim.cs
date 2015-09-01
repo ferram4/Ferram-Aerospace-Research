@@ -150,56 +150,6 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
 
             Vector3d sideways = Vector3.Cross(velocity, liftVector).normalized;
 
-
-            for (int i = 0; i < _wingAerodynamicModel.Count; i++)
-            {
-                FARWingAerodynamicModel w = _wingAerodynamicModel[i];
-                if (!(w && w.part))
-                    continue;
-
-                w.ComputeForceEditor(velocity.normalized, input.machNumber, 2);
-
-                if (clear)
-                    w.EditorClClear(reset_stall);
-
-                Vector3d relPos = w.GetAerodynamicCenter() - CoM;
-
-                Vector3d vel = velocity + Vector3d.Cross(AngVel, relPos);
-
-                if (w is FARControllableSurface)
-                    (w as FARControllableSurface).SetControlStateEditor(CoM, vel, (float)input.pitchValue, 0, 0, input.flaps, input.spoilers);
-                else if (w.isShielded)
-                    continue;
-
-
-                //w.ComputeForceEditor(velocity, input.machNumber);     //do this just to get the AC right
-
-                Vector3d force = w.ComputeForceEditor(vel.normalized, input.machNumber, 2) * 1000;
-
-                output.Cl += -Vector3d.Dot(force, liftVector);
-                output.Cy += Vector3d.Dot(force, sideways);
-                output.Cd += -Vector3d.Dot(force, velocity);
-
-                Vector3d moment = -Vector3d.Cross(relPos, force);
-
-                output.Cm += Vector3d.Dot(moment, sideways);
-                output.Cn += Vector3d.Dot(moment, liftVector);
-                output.C_roll += Vector3d.Dot(moment, velocity);
-
-                //w.ComputeClCdEditor(vel.normalized, input.machNumber);
-
-                /*double tmpCl = w.GetCl() * w.S;
-                output.Cl += tmpCl * -Vector3d.Dot(w.GetLiftDirection(), liftVector);
-                output.Cy += tmpCl * -Vector3d.Dot(w.GetLiftDirection(), sideways);
-                double tmpCd = w.GetCd() * w.S;
-                output.Cd += tmpCd;
-                output.Cm += tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(w.GetLiftDirection(), liftVector) + tmpCd * -Vector3d.Dot((relPos), liftVector);
-                output.Cn += tmpCd * Vector3d.Dot((relPos), sideways) + tmpCl * Vector3d.Dot((relPos), velocity) * -Vector3d.Dot(w.GetLiftDirection(), sideways);
-                output.C_roll += tmpCl * Vector3d.Dot((relPos), sideways) * -Vector3d.Dot(w.GetLiftDirection(), liftVector);*/
-                area += w.S;
-                MAC += w.GetMAC() * w.S;
-                b_2 += w.Getb_2() * w.S;
-            }
             FARCenterQuery center = new FARCenterQuery();
             for (int i = 0; i < _currentAeroSections.Count; i++)
             {

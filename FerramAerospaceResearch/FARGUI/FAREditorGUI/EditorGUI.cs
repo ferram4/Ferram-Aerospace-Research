@@ -275,32 +275,6 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             }
         }
 
-
-        private void LEGACY_UpdateWingAeroModels(bool updateWingInteractions)
-        {
-            List<Part> partsList = EditorLogic.SortedShipList;
-            _wingAerodynamicModel.Clear();
-            for (int i = 0; i < partsList.Count; i++)
-            {
-                Part p = partsList[i];
-                if(p != null)
-                    if (p.Modules.Contains("FARWingAerodynamicModel"))
-                    {
-                        FARWingAerodynamicModel w = (FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
-                        if(updateWingInteractions)
-                            w.EditorUpdateWingInteractions();
-                        _wingAerodynamicModel.Add(w);
-                    }
-                    else if (p.Modules.Contains("FARControllableSurface"))
-                    {
-                        FARControllableSurface c = (FARControllableSurface)p.Modules["FARControllableSurface"];
-                        if(updateWingInteractions)
-                            c.EditorUpdateWingInteractions();
-                        _wingAerodynamicModel.Add(c);
-                    }
-            }
-
-        }
         #endregion
 
         void FixedUpdate()
@@ -309,7 +283,6 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             {
                 if (_vehicleAero.CalculationCompleted)
                 {
-                    LEGACY_UpdateWingAeroModels(EditorLogic.SortedShipList.Count == prevPartCount);
                     prevPartCount = EditorLogic.SortedShipList.Count;
 
                     voxelWatch.Stop();

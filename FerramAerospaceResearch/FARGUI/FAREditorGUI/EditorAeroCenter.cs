@@ -111,8 +111,6 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 section.PredictionCalculateAeroForces(1, 3, 100000, 0.005f, vel, aeroSection);
             }
 
-            FARBaseAerodynamics.PrecomputeGlobalCenterOfLift(aeroSection, dummy, vel, 1);
-
             Vector3 pos = Vector3.zero;//rootPartTrans.position;
             float mass = 0;
             for(int i = 0; i < EditorLogic.SortedShipList.Count; i++)
@@ -143,8 +141,6 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 FARAeroSection section = _currentAeroSections[i];
                 section.PredictionCalculateAeroForces(1, 3, 100000, 0.005f, vel, aeroSection);
             }
-
-            FARBaseAerodynamics.PrecomputeGlobalCenterOfLift(aeroSection, dummy, vel, 1);
 
             Vector3 force1, moment1;
             force1 = aeroSection.force;

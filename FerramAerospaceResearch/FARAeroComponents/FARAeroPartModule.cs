@@ -158,12 +158,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
             part.ShieldedFromAirstream = value;
         }
 
-        public void ForceLegacyAeroUpdates()
-        {
-            if (legacyWingModel != null)
-                legacyWingModel.ForceOnVesselPartsChange();
-        }
-
 
         public void SetProjectedArea(ProjectedArea areas, Matrix4x4 vesselToWorldMatrix)
         {
@@ -334,10 +328,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 totalWorldSpaceAeroForce = worldSpaceAeroForce;
 
-                // Combine forces from legacy wing model
-                if (legacyWingModel != null)
-                    totalWorldSpaceAeroForce += legacyWingModel.worldSpaceForce;
-
                 // Combine forces from stock code
                 totalWorldSpaceAeroForce += -part.dragVectorDir * part.dragScalar; // dragVectorDir is actually the velocity vector direction
 
@@ -355,8 +345,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 return new Color(0, 0, 0, 0);
 
             // Stall tinting overrides Cl / Cd tinting
-            if (legacyWingModel != null && aeroVizGUI.TintForStall)
-                return new Color((float)((legacyWingModel.GetStall() * 100.0) / aeroVizGUI.FullySaturatedStall), 0f, 0f, 0.5f);
+            //if (legacyWingModel != null && aeroVizGUI.TintForStall)
+            //    return new Color((float)((legacyWingModel.GetStall() * 100.0) / aeroVizGUI.FullySaturatedStall), 0f, 0f, 0.5f);
 
             if (!aeroVizGUI.TintForCl && !aeroVizGUI.TintForCd)
                 return new Color(0, 0, 0, 0);
@@ -369,7 +359,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 Vector3 worldDragArrow = Vector3.Dot(totalWorldSpaceAeroForce, worldVelNorm) * worldVelNorm;
                 Vector3 worldLiftArrow = totalWorldSpaceAeroForce - worldDragArrow;
 
-                double invAndDynPresArea = legacyWingModel != null ? legacyWingModel.S : projectedArea.totalArea;
+                double invAndDynPresArea = projectedArea.totalArea;//legacyWingModel != null ? legacyWingModel.S : projectedArea.totalArea;
                 invAndDynPresArea *= vessel.dynamicPressurekPa;
                 invAndDynPresArea = 1 / invAndDynPresArea;
                 visualizationCl = worldLiftArrow.magnitude * invAndDynPresArea;

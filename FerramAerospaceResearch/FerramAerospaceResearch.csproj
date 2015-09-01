@@ -93,7 +93,6 @@
     <Compile Include="FARAeroComponents\VehicleAerodynamics.cs" />
     <Compile Include="LEGACYferram4\FARAeroStress.cs" />
     <Compile Include="FARAeroUtil.cs" />
-    <Compile Include="LEGACYferram4\FARBaseAerodynamics.cs" />
     <Compile Include="LEGACYferram4\FARCenterQuery.cs" />
     <Compile Include="LEGACYferram4\FARControllableSurface.cs" />
     <Compile Include="FARGUI\GUIColors.cs" />
@@ -128,12 +127,10 @@
     <Compile Include="FARPartGeometry\VehicleVoxel.cs" />
     <Compile Include="FARPartGeometry\VoxelCrossSection.cs" />
     <Compile Include="FARPartGeometry\VoxelChunk.cs" />
-    <Compile Include="LEGACYferram4\FARPartModule.cs" />
     <Compile Include="FARPM.cs" />
     <Compile Include="FARThreading\ThreadBarrier.cs" />
     <Compile Include="FARWind.cs" />
     <Compile Include="LEGACYferram4\FARWingAerodynamicModel.cs" />
-    <Compile Include="LEGACYferram4\FARWingInteraction.cs" />
     <Compile Include="FARKSPAddonFlightScene.cs" />
     <Compile Include="InstallChecker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
