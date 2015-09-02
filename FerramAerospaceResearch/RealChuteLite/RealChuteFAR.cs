@@ -12,7 +12,7 @@ using Random = System.Random;
 namespace FerramAerospaceResearch.RealChuteLite
 {
 
-    public class RealChuteFAR : PartModule, IModuleInfo, IMultipleDragCube
+    public class RealChuteFAR : PartModule, IModuleInfo, IMultipleDragCube, IPartMassModifier
     {
         /// <summary>
         /// Parachute deployment states
@@ -354,6 +354,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         private PhysicsWatch randomTimer = new PhysicsWatch();
         private float randomX, randomY, randomTime;
         private DeploymentStates state = DeploymentStates.NONE;
+        private float massDelta = 0;
 
         //GUI
         private bool visible = false, hid = false;
@@ -515,6 +516,11 @@ namespace FerramAerospaceResearch.RealChuteLite
         public float GetModuleCost(float defaultCost)
         {
             return (float)Math.Round(this.deployedArea * areaCost);
+        }
+
+        public float GetModuleMass(float defaultMass)
+        {
+            return massDelta;
         }
 
         //Not needed
@@ -888,6 +894,10 @@ namespace FerramAerospaceResearch.RealChuteLite
                 this.cap.gameObject.SetActive(true);
             }
             this.part.mass = this.totalMass;
+            this.massDelta = 0f;
+            if ((object)(this.part.partInfo) != null)
+                if ((object)(this.part.partInfo.partPrefab) != null)
+                    this.massDelta = this.part.mass - this.part.partInfo.partPrefab.mass;
 
             //Flight loading
             if (HighLogic.LoadedSceneIsFlight)
@@ -953,6 +963,10 @@ namespace FerramAerospaceResearch.RealChuteLite
         {
             if (!CompatibilityChecker.IsAllCompatible()) { return; }
             this.part.mass = this.totalMass;
+            this.massDelta = 0f;
+            if ((object)(this.part.partInfo) != null)
+                if ((object)(this.part.partInfo.partPrefab) != null)
+                    this.massDelta = this.part.mass - this.part.partInfo.partPrefab.mass;
             if (HighLogic.LoadedScene == GameScenes.LOADING)
             {
                 if (this.deployAltitude <= 500) { this.deployAltitude += 200; }
@@ -964,6 +978,10 @@ namespace FerramAerospaceResearch.RealChuteLite
             if (!CompatibilityChecker.IsAllCompatible()) { return string.Empty; }
             //Info in the editor part window
             this.part.mass = this.totalMass;
+            this.massDelta = 0f;
+            if ((object)(this.part.partInfo) != null)
+                if ((object)(this.part.partInfo.partPrefab) != null)
+                    this.massDelta = this.part.mass - this.part.partInfo.partPrefab.mass;
 
             StringBuilder b = new StringBuilder();
             b.AppendFormat("<b>Case mass</b>: {0}\n", this.caseMass);
