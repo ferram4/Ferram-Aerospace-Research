@@ -44,64 +44,36 @@ Copyright 2015, Michael Ferrara, aka Ferram4
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using FerramAerospaceResearch.FARAeroComponents;
+using UnityEngine;
 
-namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
+namespace FerramAerospaceResearch.FARAeroComponents
 {
-    class EditorSimManager
+    class WingLiftingSection
     {
-        InstantConditionSim _instantCondition;
+        FARVehicleLiftingSurfaceSystem _vehicleSystem;
 
-        StabilityDerivCalculator _stabDerivCalculator;
-        public StabilityDerivCalculator StabDerivCalculator
+        private struct WingPartSection
         {
-            get { return _stabDerivCalculator; }
+            public FARWingAerodynamicModel wingModule;
+            public Vector3 vesselLocalAreaCentroid;
+            public float sectionAreaRatio;
         }
 
-        StabilityDerivLinearSim _stabDerivLinearSim;
-        public StabilityDerivLinearSim StabDerivLinearSim
-        {
-            get { return _stabDerivLinearSim; }
-        }
+        Vector3 leadingEdgeLocation;
+        Vector3 trailingEdgeLocation;
+        Vector3 quarterChordLocation;
 
-        SweepSim _sweepSim;
-        public SweepSim SweepSim
-        {
-            get { return _sweepSim; }
-        }
-        EditorAeroCenter _aeroCenter;
+        float leadingEdgeSweep;
+        float trailingEdgeSweep;
+        float quarterChordSweep;
 
-        public StabilityDerivOutput vehicleData;
+        Vector3 vesselLocalNormalVector;
 
-        public EditorSimManager()
-        {
-            _instantCondition = new InstantConditionSim();
-            _stabDerivCalculator = new StabilityDerivCalculator(_instantCondition);
-            _stabDerivLinearSim = new StabilityDerivLinearSim(_instantCondition);
-            _sweepSim = new SweepSim(_instantCondition);
-            _aeroCenter = new EditorAeroCenter();
-            vehicleData = new StabilityDerivOutput();
-        }
+        float sectionArea;
+        float sectionChord;
 
-        public EditorSimManager(InstantConditionSim _instantSim)
-        {
-            _instantCondition = _instantSim;
-            _stabDerivCalculator = new StabilityDerivCalculator(_instantCondition);
-            _stabDerivLinearSim = new StabilityDerivLinearSim(_instantCondition);
-            _sweepSim = new SweepSim(_instantCondition);
-            _aeroCenter = new EditorAeroCenter();
-            vehicleData = new StabilityDerivOutput();
-        }
+        List<WingPartSection> wingParts;
 
-        public void UpdateAeroData(VehicleAerodynamics vehicleAero, List<FARWingAerodynamicModel> wingAerodynamicModel)
-        {
-             List<FARAeroPartModule> aeroModules;
-             List<FARAeroSection> aeroSections;
-             vehicleAero.GetNewAeroData(out aeroModules, out aeroSections);
-             _instantCondition.UpdateAeroData(aeroModules, aeroSections, vehicleAero, wingAerodynamicModel);
-             _aeroCenter.UpdateAeroData(aeroModules, aeroSections);
-        }
+        
     }
 }

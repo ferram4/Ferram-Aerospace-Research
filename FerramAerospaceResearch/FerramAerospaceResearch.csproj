@@ -59,8 +59,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CompatibilityChecker.cs" />
+    <Compile Include="FARAeroComponents\FARVehicleLiftingSurfaceSystem.cs" />
     <Compile Include="FARAeroComponents\ModularFlightIntegratorRegisterer.cs" />
     <Compile Include="FARAeroComponents\VesselIntakeRamDrag.cs" />
+    <Compile Include="FARAeroComponents\WingLiftingSection.cs" />
     <Compile Include="FARAPI.cs" />
     <Compile Include="FARDebugAndSettings.cs" />
     <Compile Include="FARFloatCurve.cs" />
@@ -85,7 +87,7 @@
     <Compile Include="FARSettingsScenarioModule.cs" />
     <Compile Include="FARThreading\ThreadSafeDebugLogger.cs" />
     <Compile Include="FARThreading\VoxelizationThreadpool.cs" />
-    <Compile Include="LEGACYferram4\FARAction.cs" />
+    <Compile Include="FARAction.cs" />
     <Compile Include="FARGUI\FAREditorGUI\EditorAeroCenter.cs" />
     <Compile Include="FARAeroComponents\FARAeroPartModule.cs" />
     <Compile Include="FARAeroComponents\FARAeroSection.cs" />
@@ -94,7 +96,7 @@
     <Compile Include="LEGACYferram4\FARAeroStress.cs" />
     <Compile Include="FARAeroUtil.cs" />
     <Compile Include="LEGACYferram4\FARCenterQuery.cs" />
-    <Compile Include="LEGACYferram4\FARControllableSurface.cs" />
+    <Compile Include="FARAeroComponents\FARControllableSurface.cs" />
     <Compile Include="FARGUI\GUIColors.cs" />
     <Compile Include="FARGUI\FAREditorGUI\Simulation\EditorSimManager.cs" />
     <Compile Include="FARGUI\FAREditorGUI\Simulation\EquationSystem.cs" />
@@ -130,7 +132,7 @@
     <Compile Include="FARPM.cs" />
     <Compile Include="FARThreading\ThreadBarrier.cs" />
     <Compile Include="FARWind.cs" />
-    <Compile Include="LEGACYferram4\FARWingAerodynamicModel.cs" />
+    <Compile Include="FARAeroComponents\FARWingAerodynamicModel.cs" />
     <Compile Include="FARKSPAddonFlightScene.cs" />
     <Compile Include="InstallChecker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

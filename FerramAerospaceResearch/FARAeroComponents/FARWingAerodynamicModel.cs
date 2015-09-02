@@ -45,8 +45,6 @@ Copyright 2015, Michael Ferrara, aka Ferram4
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using FerramAerospaceResearch;
-using FerramAerospaceResearch.FARAeroComponents;
 
 /// <summary>
 /// This calculates the lift and drag on a wing in the atmosphere
@@ -54,7 +52,7 @@ using FerramAerospaceResearch.FARAeroComponents;
 /// It uses Prandtl lifting line theory to calculate the basic lift and drag coefficients and includes compressibility corrections for subsonic and supersonic flows; transsonic regime has placeholder
 /// </summary>
 
-namespace ferram4
+namespace FerramAerospaceResearch.FARAeroComponents
 {
     public class FARWingAerodynamicModel : PartModule
     {
@@ -70,8 +68,6 @@ namespace ferram4
                 nextWingAttached = nextWing;
                 edgeLocation = edgeLocationFactor;
             }
-
-            
         }
 
         private class WingEdgeComparer : Comparer<WingEdge>
@@ -112,13 +108,15 @@ namespace ferram4
 
         #region Edge Data From Vox
 
-        public void ResetEdgesForNewWingCalc()
+        public void ResetForNewWingCalc(Matrix4x4 worldToVesselTransformMatrix)
         {
             leadingEdgePoints.Clear();
             trailingEdgePoints.Clear();
 
             leadingEdgeWingAttached.Clear();
             trailingEdgeWingAttached.Clear();
+
+            vesselLocalPlanformNormalVector = worldToVesselTransformMatrix.MultiplyVector(part_transform.forward);
         }
         
         public void SetComparisonVectorForSorting(Vector3 vesselForwardPerpVec)
@@ -194,6 +192,83 @@ namespace ferram4
                 valid &= wingCount.Key.numEdgesConnectedToWing(this, true) == wingCount.Value;        //check if the count is correct for all the attached wings; remember, our trailing edges are their leading edges
 
             return valid;   //and if everything is good, return true; otherwise, false
+        }
+
+        public void MergeNearbyWingEdges(float tolerance, Vector3 vesselForwardVector)
+        {
+            Vector3 mergingPlaneVector = Vector3.Cross(vesselLocalPlanformNormalVector, vesselForwardVector);
+            mergingPlaneVector.Normalize();
+            for (int i = 0; i < leadingEdgePoints.Count - 1; i++)
+            {
+                if(leadingEdgePoints[i].edgeLocation - leadingEdgePoints[i+1].edgeLocation < tolerance
+                    || trailingEdgePoints[i].edgeLocation - trailingEdgePoints[i+1].edgeLocation < tolerance)
+                {
+                    //merge leading edge points
+                    float newEdgeLocation = leadingEdgePoints[i].edgeLocation + leadingEdgePoints[i + 1].edgeLocation;
+                    newEdgeLocation *= 0.5f;  //adjust edgeLocation to be the average of the two
+
+                    Vector3 newPoint = mergingPlaneVector * (Vector3.Dot(mergingPlaneVector, leadingEdgePoints[i].vesselLocalInPlanePosition) +
+                        Vector3.Dot(mergingPlaneVector, leadingEdgePoints[i + 1].vesselLocalInPlanePosition)) * 0.5f;   //get the average of the in-plane positions
+
+                    float point1ForwardDot, point2ForwardDot;
+                    point1ForwardDot = Vector3.Dot(vesselForwardVector, leadingEdgePoints[i].vesselLocalInPlanePosition);
+                    point2ForwardDot = Vector3.Dot(vesselForwardVector, leadingEdgePoints[i + 1].vesselLocalInPlanePosition);
+
+                    if (point1ForwardDot > point2ForwardDot)
+                        newPoint += vesselForwardVector * point1ForwardDot;
+                    else
+                        newPoint += vesselForwardVector * point2ForwardDot;
+
+                    bool point1WingExists, point2WingExists;
+                    point1WingExists = (object)leadingEdgePoints[i].nextWingAttached != null;
+                    point2WingExists = (object)leadingEdgePoints[i + 1].nextWingAttached != null;
+
+                    FARWingAerodynamicModel newWingRef = null;
+
+                    if (point1WingExists && point2WingExists)
+                        newWingRef = leadingEdgePoints[i].nextWingAttached.areaTestFactor > leadingEdgePoints[i + 1].nextWingAttached.areaTestFactor ? leadingEdgePoints[i].nextWingAttached : leadingEdgePoints[i + 1].nextWingAttached;
+                    else if (point1WingExists && !point2WingExists)
+                        newWingRef = leadingEdgePoints[i].nextWingAttached;
+                    else if (!point1WingExists && point2WingExists)
+                        newWingRef = leadingEdgePoints[i + 1].nextWingAttached;
+
+                    WingEdge newEdge = new WingEdge(newPoint, newWingRef, newEdgeLocation);
+
+                    leadingEdgePoints[i] = newEdge;
+                    leadingEdgePoints.RemoveAt(i+1);
+
+                    //merge trailing edge points
+                    newEdgeLocation = trailingEdgePoints[i].edgeLocation + trailingEdgePoints[i + 1].edgeLocation;
+                    newEdgeLocation *= 0.5f;  //adjust edgeLocation to be the average of the two
+
+                    newPoint = mergingPlaneVector * (Vector3.Dot(mergingPlaneVector, trailingEdgePoints[i].vesselLocalInPlanePosition) +
+                        Vector3.Dot(mergingPlaneVector, trailingEdgePoints[i + 1].vesselLocalInPlanePosition)) * 0.5f;   //get the average of the in-plane positions
+
+                    point1ForwardDot = Vector3.Dot(vesselForwardVector, trailingEdgePoints[i].vesselLocalInPlanePosition);
+                    point2ForwardDot = Vector3.Dot(vesselForwardVector, trailingEdgePoints[i + 1].vesselLocalInPlanePosition);
+
+                    if (point1ForwardDot < point2ForwardDot)
+                        newPoint += vesselForwardVector * point1ForwardDot;
+                    else
+                        newPoint += vesselForwardVector * point2ForwardDot;
+
+                    point1WingExists = (object)trailingEdgePoints[i].nextWingAttached != null;
+                    point2WingExists = (object)trailingEdgePoints[i + 1].nextWingAttached != null;
+
+                    if (point1WingExists && point2WingExists)
+                        newWingRef = trailingEdgePoints[i].nextWingAttached.areaTestFactor > trailingEdgePoints[i + 1].nextWingAttached.areaTestFactor ? trailingEdgePoints[i].nextWingAttached : trailingEdgePoints[i + 1].nextWingAttached;
+                    else if (point1WingExists && !point2WingExists)
+                        newWingRef = trailingEdgePoints[i].nextWingAttached;
+                    else if (!point1WingExists && point2WingExists)
+                        newWingRef = trailingEdgePoints[i + 1].nextWingAttached;
+
+                    newEdge = new WingEdge(newPoint, newWingRef, newEdgeLocation);
+
+                    trailingEdgePoints[i] = newEdge;
+                    trailingEdgePoints.RemoveAt(i + 1);
+                    --i;
+                }
+            }
         }
         #endregion
 

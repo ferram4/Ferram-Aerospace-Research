@@ -46,9 +46,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using KSP;
-using FerramAerospaceResearch;
 
-namespace ferram4
+namespace FerramAerospaceResearch.FARAeroComponents
 {
     public class FARControllableSurface : FARWingAerodynamicModel
     {        

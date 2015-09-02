@@ -48,7 +48,7 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 using KSP;
 using FerramAerospaceResearch.FARGUI;
-using ferram4;
+using FerramAerospaceResearch.FARAeroComponents;
 
 namespace FerramAerospaceResearch
 {

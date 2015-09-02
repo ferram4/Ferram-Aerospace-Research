@@ -46,10 +46,9 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using KSP;
-using FerramAerospaceResearch;
 using FerramAerospaceResearch.FARGUI;
 
-namespace ferram4
+namespace FerramAerospaceResearch
 {
     //Added by DaMichel: 
     public class FARAction : KSPAction

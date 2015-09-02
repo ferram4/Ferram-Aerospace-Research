@@ -47,6 +47,7 @@ using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 using FerramAerospaceResearch.FARThreading;
+using FerramAerospaceResearch.FARAeroComponents;
 
 namespace FerramAerospaceResearch.FARPartGeometry
 {
@@ -246,7 +247,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             for (int i = 0; i < modules.Count; i++)
             {
                 PartModule m = modules[i];
-                if (m is ferram4.FARControllableSurface)
+                if (m is FARControllableSurface)
                 {
                     returnVal = true;
                     break;

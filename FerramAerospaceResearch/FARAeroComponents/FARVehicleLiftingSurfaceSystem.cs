@@ -44,64 +44,12 @@ Copyright 2015, Michael Ferrara, aka Ferram4
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using FerramAerospaceResearch.FARAeroComponents;
+using UnityEngine;
 
-namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
+namespace FerramAerospaceResearch.FARAeroComponents
 {
-    class EditorSimManager
+    class FARVehicleLiftingSurfaceSystem
     {
-        InstantConditionSim _instantCondition;
-
-        StabilityDerivCalculator _stabDerivCalculator;
-        public StabilityDerivCalculator StabDerivCalculator
-        {
-            get { return _stabDerivCalculator; }
-        }
-
-        StabilityDerivLinearSim _stabDerivLinearSim;
-        public StabilityDerivLinearSim StabDerivLinearSim
-        {
-            get { return _stabDerivLinearSim; }
-        }
-
-        SweepSim _sweepSim;
-        public SweepSim SweepSim
-        {
-            get { return _sweepSim; }
-        }
-        EditorAeroCenter _aeroCenter;
-
-        public StabilityDerivOutput vehicleData;
-
-        public EditorSimManager()
-        {
-            _instantCondition = new InstantConditionSim();
-            _stabDerivCalculator = new StabilityDerivCalculator(_instantCondition);
-            _stabDerivLinearSim = new StabilityDerivLinearSim(_instantCondition);
-            _sweepSim = new SweepSim(_instantCondition);
-            _aeroCenter = new EditorAeroCenter();
-            vehicleData = new StabilityDerivOutput();
-        }
-
-        public EditorSimManager(InstantConditionSim _instantSim)
-        {
-            _instantCondition = _instantSim;
-            _stabDerivCalculator = new StabilityDerivCalculator(_instantCondition);
-            _stabDerivLinearSim = new StabilityDerivLinearSim(_instantCondition);
-            _sweepSim = new SweepSim(_instantCondition);
-            _aeroCenter = new EditorAeroCenter();
-            vehicleData = new StabilityDerivOutput();
-        }
-
-        public void UpdateAeroData(VehicleAerodynamics vehicleAero, List<FARWingAerodynamicModel> wingAerodynamicModel)
-        {
-             List<FARAeroPartModule> aeroModules;
-             List<FARAeroSection> aeroSections;
-             vehicleAero.GetNewAeroData(out aeroModules, out aeroSections);
-             _instantCondition.UpdateAeroData(aeroModules, aeroSections, vehicleAero, wingAerodynamicModel);
-             _aeroCenter.UpdateAeroData(aeroModules, aeroSections);
-        }
+        List<WingLiftingSection> vehicleLiftingSections;
     }
 }
