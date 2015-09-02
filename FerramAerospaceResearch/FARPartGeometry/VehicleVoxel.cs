@@ -1224,8 +1224,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                 if (crossSections[i].area > maxCrossSectionArea)
                     maxCrossSectionArea = crossSections[i].area;
-            }
-            
+            }            
         }
 
         private void DetermineIfPartGetsForcesAndAreas(Dictionary<Part, VoxelCrossSection.SideAreaValues> partSideAreas, VoxelChunk.PartSizePair voxel, int i, int j, int k)
