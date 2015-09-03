@@ -56,13 +56,14 @@ using FerramAerospaceResearch.FARAeroComponents;
 
 namespace ferram4
 {
-    public class FARWingAerodynamicModel : FARBaseAerodynamics, TweakScale.IRescalable<FARWingAerodynamicModel>, ILiftProvider
+    public class FARWingAerodynamicModel : FARBaseAerodynamics, TweakScale.IRescalable<FARWingAerodynamicModel>, ILiftProvider, IPartMassModifier
     {
         public double rawAoAmax = 15;
         private double AoAmax = 15;
 
         [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
         public float curWingMass = 1;
+        private float massDelta = 0f;
 
         [KSPField(guiName = "Mass-Strength Multiplier %", isPersistant = true, guiActiveEditor = true, guiActive = false), UI_FloatRange(maxValue = 2.0f, minValue = 0.05f, scene = UI_Scene.Editor, stepIncrement = 0.05f)]
         public float massMultiplier = 1.0f;
@@ -712,7 +713,13 @@ namespace ferram4
             if ((object)parentWing != null)
                 supportedArea *= 0.66666667f;   //if any supported area has been transfered to another part, we must remove it from here
             curWingMass = supportedArea * (float)FARAeroUtil.massPerWingAreaSupported * massMultiplier;
+            
             part.mass = curWingMass;
+            massDelta = 0f;
+            if ((object)(part.partInfo) != null)
+                if ((object)(part.partInfo.partPrefab) != null)
+                    massDelta = part.mass - part.partInfo.partPrefab.mass;
+
             oldMassMultiplier = massMultiplier;
         }
 
@@ -736,6 +743,11 @@ namespace ferram4
                 parentWing.GetRefAreaChildren();
                 parentWing.UpdateMassToAccountForArea();
             }
+        }
+
+        public float GetModuleMass(float defaultMass)
+        {
+            return massDelta;
         }
 
         #endregion
