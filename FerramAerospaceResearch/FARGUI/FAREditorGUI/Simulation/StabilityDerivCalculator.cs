@@ -96,7 +96,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
                 if (p.Resources.Count > 0)
                     partMass += p.GetResourceMass();
 
-                partMass += p.GetModuleMass(p.mass);
+                //partMass += p.GetModuleMass(p.mass);
+                // If you want to use GetModuleMass, you need to start from p.partInfo.mass, not p.mass
                 CoM += partMass * (Vector3d)p.transform.TransformPoint(p.CoMOffset);
                 mass += partMass;
                 FARWingAerodynamicModel w = p.GetComponent<FARWingAerodynamicModel>();
@@ -149,7 +150,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
                 if (p.Resources.Count > 0)
                     partMass += p.GetResourceMass();
 
-                partMass += p.GetModuleMass(p.mass);
+                //partMass += p.GetModuleMass(p.mass);
+                // If you want to use GetModuleMass, you need to start from p.partInfo.mass, not p.mass
 
                 Ix += (y2 + z2) * partMass;
                 Iy += (x2 + z2) * partMass;
