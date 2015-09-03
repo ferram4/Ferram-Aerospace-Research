@@ -172,8 +172,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
             }
 
-
-
             Vector3d size = max - min;
 
             double voxelVolume = size.x * size.y * size.z;  //from bounds, get voxel volume

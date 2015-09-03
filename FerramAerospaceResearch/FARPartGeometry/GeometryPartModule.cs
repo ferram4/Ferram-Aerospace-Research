@@ -220,13 +220,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
             for(int i = 0; i < meshDataList.Count; i++)
             {
                 GeometryMesh geoMesh = meshDataList[i];
-                upper.x = Math.Max(upper.x, geoMesh.bounds.max.x);
-                upper.y = Math.Max(upper.y, geoMesh.bounds.max.y);
-                upper.z = Math.Max(upper.z, geoMesh.bounds.max.z);
-
-                lower.x = Math.Min(lower.x, geoMesh.bounds.min.x);
-                lower.y = Math.Min(lower.y, geoMesh.bounds.min.y);
-                lower.z = Math.Min(lower.z, geoMesh.bounds.min.z);
+                upper = Vector3.Max(upper, geoMesh.bounds.max);
+                lower = Vector3.Min(lower, geoMesh.bounds.min);
             }
             Bounds overallBounds = new Bounds((upper + lower) * 0.5f, upper - lower);
 
@@ -504,9 +499,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public void UpdateTransformMatrixList(Matrix4x4 worldToVesselMatrix)
         {
-            _ready = false;
             if (meshDataList != null)
             {
+                _ready = false;
                 while (_meshesToUpdate > 0) //if the previous transform order hasn't been completed yet, wait here to let it
                     if (this == null)
                         return;
@@ -519,9 +514,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
                         ThreadPool.QueueUserWorkItem(mesh.MultithreadTransformBasis, worldToVesselMatrix);
                         //mesh.TransformBasis(worldToVesselMatrix);
+                        --_meshesToUpdate;
                     }
                     else
                     {
+                        Debug.Log("A mesh on " + part.partInfo.title + " did not exist and was removed");
                         meshDataList.RemoveAt(i);
                         --i;
                         lock (this)

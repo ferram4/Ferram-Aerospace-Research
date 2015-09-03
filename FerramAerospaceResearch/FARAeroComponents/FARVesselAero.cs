@@ -154,7 +154,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
 
             GameEvents.onVesselGoOffRails.Add(VesselUpdateEvent);
-            GameEvents.onVesselChange.Add(VesselUpdateEvent);
+            //GameEvents.onVesselChange.Add(VesselUpdateEvent);
             //GameEvents.onVesselLoaded.Add(VesselUpdate);
             GameEvents.onVesselCreate.Add(VesselUpdateEvent);
             GameEvents.onVesselWasModified.Add(VesselUpdateEvent);
@@ -183,13 +183,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 return;
             if (_vehicleAero.CalculationCompleted)
             {
-                Debug.Log("Updating " + _vessel.vesselName + " aero properties");
                 _vehicleAero.GetNewAeroData(out _currentAeroModules, out _unusedAeroModules, out _currentAeroSections, out _legacyWingModels);
 
                 if ((object)_flightGUI == null)
                     _flightGUI = _vessel.GetComponent<FerramAerospaceResearch.FARGUI.FARFlightGUI.FlightGUI>();
 
                 _flightGUI.UpdateAeroModules(_currentAeroModules, _legacyWingModels);
+                Debug.Log("Updating " + _vessel.vesselName + " aero properties\n\rCross-Sectional Area: " + _vehicleAero.MaxCrossSectionArea + " Crit Mach: " + _vehicleAero.CriticalMach + "\n\rUnusedAeroCount: " + _unusedAeroModules.Count + " UsedAeroCount: " + _currentAeroModules.Count + " sectCount: " + _currentAeroSections.Count);
 
                 for (int i = 0; i < _unusedAeroModules.Count; i++)
                 {
@@ -209,9 +209,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 _vesselIntakeRamDrag.UpdateAeroData(_currentAeroModules, _unusedAeroModules);
             }
-            
-            if (FlightGlobals.ready && _currentAeroSections != null)
+
+            if (FlightGlobals.ready && _currentAeroSections != null)                
                 CalculateAndApplyVesselAeroProperties();
+            
 
             if (_currentGeoModules.Count > geoModulesReady)
             {
@@ -355,7 +356,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
              if (_vessel == null)
              {
                  _vessel = gameObject.GetComponent<Vessel>();
-                 if (_vessel == null)
+                 if (_vessel == null || _vessel.vesselTransform == null)
                  {
                      return;
                  }
@@ -384,9 +385,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
              }
              if (recalcGeoModules)
              {
-                 _currentGeoModules = new List<GeometryPartModule>();
+                 _currentGeoModules.Clear();
                  geoModulesReady = 0;
-                 for (int i = 0; i < _vessel.Parts.Count; i++)
+                 for (int i = 0; i < _vessel.parts.Count; i++)
                  {
                      Part p = _vessel.parts[i];
                      GeometryPartModule g = p.GetComponent<GeometryPartModule>();
@@ -413,7 +414,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
              TriggerIGeometryUpdaters();
 
              _voxelCount = VoxelCountFromType();
-             if (!_vehicleAero.TryVoxelUpdate(_vessel.vesselTransform.worldToLocalMatrix, _vessel.vesselTransform.localToWorldMatrix, _voxelCount, _vessel.Parts, _currentGeoModules, !setup))
+             if (!_vehicleAero.TryVoxelUpdate(_vessel.vesselTransform.worldToLocalMatrix, _vessel.vesselTransform.localToWorldMatrix, _voxelCount, _vessel.parts, _currentGeoModules, !setup))
              {
                  _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
                  _updateQueued = true;
@@ -447,7 +448,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         {
             this.enabled = false;
             GameEvents.onVesselGoOffRails.Remove(VesselUpdateEvent);
-            GameEvents.onVesselChange.Remove(VesselUpdateEvent);
+            //GameEvents.onVesselChange.Remove(VesselUpdateEvent);
             //GameEvents.onVesselLoaded.Add(VesselUpdate);
             GameEvents.onVesselCreate.Remove(VesselUpdateEvent);
             GameEvents.onVesselWasModified.Remove(VesselUpdateEvent);

@@ -156,6 +156,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
         public void SetShielded(bool value)
         {
             part.ShieldedFromAirstream = value;
+            if (value)
+            {
+                worldSpaceAeroForce = Vector3.zero;
+                worldSpaceTorque = Vector3.zero;
+                partLocalForce = Vector3.zero;
+                partLocalTorque = Vector3.zero;
+            }
         }
 
         public void ForceLegacyAeroUpdates()

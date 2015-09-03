@@ -108,8 +108,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
         List<Part> _vehiclePartList;
 
         List<GeometryPartModule> _currentGeoModules;
-        Dictionary<Part, PartTransformInfo> _partWorldToLocalMatrix = new Dictionary<Part, PartTransformInfo>();
-        Dictionary<FARAeroPartModule, FARAeroPartModule.ProjectedArea> _moduleAndAreas = new Dictionary<FARAeroPartModule, FARAeroPartModule.ProjectedArea>();
+        Dictionary<Part, PartTransformInfo> _partWorldToLocalMatrixDict = new Dictionary<Part, PartTransformInfo>();
+        Dictionary<FARAeroPartModule, FARAeroPartModule.ProjectedArea> _moduleAndAreasDict = new Dictionary<FARAeroPartModule, FARAeroPartModule.ProjectedArea>();
 
         List<FARAeroPartModule> _currentAeroModules = new List<FARAeroPartModule>();
         List<FARAeroPartModule> _newAeroModules = new List<FARAeroPartModule>();
@@ -383,18 +383,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     this._vehiclePartList = vehiclePartList;
                     this._currentGeoModules = currentGeoModules;
 
-                    _partWorldToLocalMatrix.Clear();
+                    _partWorldToLocalMatrixDict.Clear();
 
                     for (int i = 0; i < _currentGeoModules.Count; i++)
                     {
                         GeometryPartModule g = _currentGeoModules[i];
-                        _partWorldToLocalMatrix.Add(g.part, new PartTransformInfo(g.part.partTransform));
+                        _partWorldToLocalMatrixDict.Add(g.part, new PartTransformInfo(g.part.partTransform));
                         if (updateGeometryPartModules)
                             g.UpdateTransformMatrixList(_worldToLocalMatrix);
                     }
 
                     this._vehicleMainAxis = CalculateVehicleMainAxis();
-
                     //If the voxel still exists, cleanup everything so we can continue;
                     visualizing = false;
 
@@ -1077,7 +1076,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             float lowFinenessRatioSubsonicFactor = 1f;
             lowFinenessRatioSubsonicFactor += 1f/(2f * (float)finenessRatio);
 
-            _moduleAndAreas.Clear();
+            _moduleAndAreasDict.Clear();
             //_newAeroSections = new List<FARAeroSection>();
 
             HashSet<FARAeroPartModule> tmpAeroModules = new HashSet<FARAeroPartModule>();
@@ -1309,10 +1308,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if ((object)m != null)
                         includedModules.Add(m);
 
-                    if (_moduleAndAreas.ContainsKey(m))
-                        _moduleAndAreas[m] += areas;
+                    if (_moduleAndAreasDict.ContainsKey(m))
+                        _moduleAndAreasDict[m] += areas;
                     else
-                        _moduleAndAreas[m] = areas;
+                        _moduleAndAreasDict[m] = areas;
 
                     weightingFactor += (float)pair.Value.exposedAreaCount;
                     weighting.Add((float)pair.Value.exposedAreaCount);
@@ -1332,7 +1331,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 currentSection.UpdateAeroSection(potentialFlowNormalForce, viscCrossflowDrag
                     ,viscCrossflowDrag / (float)(_sectionThickness), (float)flatnessRatio, hypersonicMomentForward, hypersonicMomentBackward,
-                    centroid, xRefVector, nRefVector, _localToWorldMatrix, _vehicleMainAxis, includedModules, weighting, _partWorldToLocalMatrix);
+                    centroid, xRefVector, nRefVector, _localToWorldMatrix, _vehicleMainAxis, includedModules, weighting, _partWorldToLocalMatrixDict);
 
                 if (i < _newAeroSections.Count)
                     _newAeroSections[i] = currentSection;
@@ -1366,7 +1365,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         }
                     }
             }
-            foreach (KeyValuePair<FARAeroPartModule, FARAeroPartModule.ProjectedArea> pair in _moduleAndAreas)
+            foreach (KeyValuePair<FARAeroPartModule, FARAeroPartModule.ProjectedArea> pair in _moduleAndAreasDict)
             {
                 pair.Key.SetProjectedArea(pair.Value, _localToWorldMatrix);
             }
