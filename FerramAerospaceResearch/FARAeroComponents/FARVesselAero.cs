@@ -158,7 +158,23 @@ namespace FerramAerospaceResearch.FARAeroComponents
             //GameEvents.onVesselLoaded.Add(VesselUpdate);
             GameEvents.onVesselCreate.Add(VesselUpdateEvent);
             GameEvents.onVesselWasModified.Add(VesselUpdateEvent);
-            VesselUpdate(false);
+            RequestUpdateVoxel(false);
+
+            if (_vessel == null)
+            {
+                _vessel = gameObject.GetComponent<Vessel>();
+                if (_vessel == null)
+                {
+                    return;
+                }
+            }
+
+            if (_vehicleAero == null)
+            {
+                _vehicleAero = new VehicleAerodynamics();
+                _vesselIntakeRamDrag = new VesselIntakeRamDrag();
+            }
+            Debug.Log("Starting " + _vessel.vesselName + " aero properties");
         }
 
         private void FixedUpdate()
@@ -167,6 +183,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 return;
             if (_vehicleAero.CalculationCompleted)
             {
+                Debug.Log("Updating " + _vessel.vesselName + " aero properties");
                 _vehicleAero.GetNewAeroData(out _currentAeroModules, out _unusedAeroModules, out _currentAeroSections, out _legacyWingModels);
 
                 if ((object)_flightGUI == null)
