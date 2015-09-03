@@ -99,19 +99,21 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         void UpdateAerodynamics(ModularFI.ModularFlightIntegrator fi, Part part)
         {
-            if (part.dragModel != Part.DragModel.CYLINDRICAL)// || part.Modules.Contains("KerbalEVA"))     //FIXME Proper model for airbrakes
+            if (part.dragModel != Part.DragModel.CYLINDRICAL || part.vessel.isEVA)     //FIXME Proper model for airbrakes
             {
                 fi.BaseFIUpdateAerodynamics(part);
                 return;
             }
-            else if (!part.DragCubes.None)
+            else
             {
                 Rigidbody rb = part.Rigidbody;
                 if (rb)
                 {
-                    part.dragVectorDir = -rb.velocity - Krakensbane.GetFrameVelocityV3f().normalized;
+                    part.dragVector = (-rb.velocity - Krakensbane.GetFrameVelocityV3f());
+                    part.dragVectorDir = part.dragVector.normalized;
                     part.dragVectorDirLocal = part.partTransform.worldToLocalMatrix.MultiplyVector(part.dragVectorDir);
-                    part.DragCubes.SetDrag(part.dragVectorDirLocal, (float)part.machNumber);
+                    if (!part.DragCubes.None) 
+                        part.DragCubes.SetDrag(part.dragVectorDirLocal, (float)part.machNumber);
                 }
             }
 

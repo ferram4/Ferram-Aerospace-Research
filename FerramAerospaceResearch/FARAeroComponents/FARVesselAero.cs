@@ -112,7 +112,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             _vessel = gameObject.GetComponent<Vessel>();
             this.enabled = true;
 
-            if(_vessel.rootPart.Modules.Contains("MissileLauncher") && _vessel.parts.Count == 1)
+            if (_vessel.rootPart.Modules.Contains("MissileLauncher") && _vessel.parts.Count == 1)
             {
                 _vessel.rootPart.dragModel = Part.DragModel.CUBE;
                 this.enabled = false;

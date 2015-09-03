@@ -785,6 +785,7 @@ namespace ferram4
 
                 cosSweepAngle *= (1 - effectiveUpstreamInfluence);
                 cosSweepAngle += wingInteraction.EffectiveUpstreamCosSweepAngle;
+                cosSweepAngle = FARMathUtil.Clamp(cosSweepAngle, 0d, 1d);
             }
             else
             {
@@ -797,15 +798,12 @@ namespace ferram4
         #endregion
 
         //Calculates current stall fraction based on previous stall fraction and current data.
-        private void DetermineStall(double MachNumber, double AoA, out double ACshift, out double ACweight)
+        private void DetermineStall(double MachNumber, double AoA)
         {
             double lastStall = stall;
             double effectiveUpstreamStall = wingInteraction.EffectiveUpstreamStall;
 
             stall = 0;
-
-            CalculateWingCamberInteractions(MachNumber, AoA, out ACshift, out ACweight);
-
             double absAoA = Math.Abs(AoA);
 
             if (absAoA > AoAmax)
@@ -846,7 +844,8 @@ namespace ferram4
 
 
             double ACshift = 0, ACweight = 0;
-            DetermineStall(MachNumber, AoA, out ACshift, out ACweight);
+            CalculateWingCamberInteractions(MachNumber, AoA, out ACshift, out ACweight);
+            DetermineStall(MachNumber, AoA);
 
             double beta = Math.Sqrt(MachNumber * MachNumber - 1);
             if (double.IsNaN(beta) || beta < 0.66332495807107996982298654733414)
@@ -1153,7 +1152,7 @@ namespace ferram4
             CosPartAngle = FARMathUtil.Clamp(ParallelInPlaneLocal.y, -1, 1);
 
             CosPartAngle *= CosPartAngle;
-            double SinPartAngle2 = FARMathUtil.Clamp(1 - CosPartAngle, 0, 1);               //Get the squared values for the angles
+            double SinPartAngle2 = FARMathUtil.Clamp(1d - CosPartAngle, 0, 1);               //Get the squared values for the angles
 
             effective_b_2 = Math.Max(b_2_actual * CosPartAngle, MAC_actual * SinPartAngle2);
             effective_MAC = MAC_actual * CosPartAngle + b_2_actual * SinPartAngle2;
@@ -1165,7 +1164,7 @@ namespace ferram4
 
             effective_AR = transformed_AR * wingInteraction.ARFactor;
 
-            effective_AR = FARMathUtil.Clamp(effective_AR, 0.25, 30);   //Even this range of effective ARs is large, but it keeps the Oswald's Efficiency numbers in check
+            effective_AR = FARMathUtil.Clamp(effective_AR, 0.25, 30d);   //Even this range of effective ARs is large, but it keeps the Oswald's Efficiency numbers in check
 
             /*if (MachNumber < 1)
                 tmp = Mathf.Clamp(MachNumber, 0, 0.9f);
@@ -1173,7 +1172,7 @@ namespace ferram4
                 tmp = 1 / Mathf.Clamp(MachNumber, 1.09f, Mathf.Infinity);*/
 
             if (MachNumber < 0.9)
-                tmp = 1 - MachNumber * MachNumber;
+                tmp = 1d - MachNumber * MachNumber;
             else
                 tmp = 0.09;
 
@@ -1203,12 +1202,12 @@ namespace ferram4
         {
             //cosSweepAngle = cosSweepHalfChord;
             //cosSweepAngle = Math.Tan(cosSweepAngle);
-            double tmp = (1 - TaperRatio) / (1 + TaperRatio);
-            tmp *= 2 / transformed_AR;
+            double tmp = (1d - TaperRatio) / (1d + TaperRatio);
+            tmp *= 2d / transformed_AR;
             tanSweepHalfChord += tmp;
-            cosSweepAngle = 1 / Math.Sqrt(1 + tanSweepHalfChord * tanSweepHalfChord);
-            if (cosSweepAngle > 1)
-                cosSweepAngle = 1;
+            cosSweepAngle = 1d / Math.Sqrt(1d + tanSweepHalfChord * tanSweepHalfChord);
+            if (cosSweepAngle > 1d)
+                cosSweepAngle = 1d;
         }
 
 
