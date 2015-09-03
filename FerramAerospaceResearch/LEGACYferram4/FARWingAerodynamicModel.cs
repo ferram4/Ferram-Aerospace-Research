@@ -1195,6 +1195,8 @@ namespace ferram4
             tmp *= 2 / transformed_AR;
             tanSweepHalfChord += tmp;
             cosSweepAngle = 1 / Math.Sqrt(1 + tanSweepHalfChord * tanSweepHalfChord);
+            if (cosSweepAngle > 1)
+                cosSweepAngle = 1;
         }
 
 
