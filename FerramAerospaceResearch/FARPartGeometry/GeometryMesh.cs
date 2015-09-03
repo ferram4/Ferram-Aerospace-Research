@@ -125,11 +125,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
             for (int i = 0; i < vertices.Length; i++)
             {
                 //vertices[i] = tempMatrix.MultiplyPoint3x4(vertices[i]);
-                Vector3 v = meshLocalVerts[i];
-                Vector3 vert = Vector3.zero;
-                vert.x = tempMatrix.m00 * v.x + tempMatrix.m01 * v.y + tempMatrix.m02 * v.z + tempMatrix.m03;
+                //Vector3 v = meshLocalVerts[i];
+                Vector3 vert = tempMatrix.MultiplyPoint3x4(meshLocalVerts[i]);// = Vector3.zero;
+                /*vert.x = tempMatrix.m00 * v.x + tempMatrix.m01 * v.y + tempMatrix.m02 * v.z + tempMatrix.m03;
                 vert.y = tempMatrix.m10 * v.x + tempMatrix.m11 * v.y + tempMatrix.m12 * v.z + tempMatrix.m13;
-                vert.z = tempMatrix.m20 * v.x + tempMatrix.m21 * v.y + tempMatrix.m22 * v.z + tempMatrix.m23;
+                vert.z = tempMatrix.m20 * v.x + tempMatrix.m21 * v.y + tempMatrix.m22 * v.z + tempMatrix.m23;*/
 
                 vertices[i] = vert;
                 low = Vector3.Min(low, vert);
@@ -158,11 +158,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     for (int i = 0; i < vertices.Length; i++)
                     {
                         //vertices[i] = tempMatrix.MultiplyPoint3x4(vertices[i]);
-                        Vector3 v = meshLocalVerts[i];
-                        Vector3 vert = Vector3.zero;
-                        vert.x = tempMatrix.m00 * v.x + tempMatrix.m01 * v.y + tempMatrix.m02 * v.z + tempMatrix.m03;
+                        //Vector3 v = meshLocalVerts[i];
+                        Vector3 vert = tempMatrix.MultiplyPoint3x4(meshLocalVerts[i]);// = Vector3.zero;
+                        /*vert.x = tempMatrix.m00 * v.x + tempMatrix.m01 * v.y + tempMatrix.m02 * v.z + tempMatrix.m03;
                         vert.y = tempMatrix.m10 * v.x + tempMatrix.m11 * v.y + tempMatrix.m12 * v.z + tempMatrix.m13;
-                        vert.z = tempMatrix.m20 * v.x + tempMatrix.m21 * v.y + tempMatrix.m22 * v.z + tempMatrix.m23;
+                        vert.z = tempMatrix.m20 * v.x + tempMatrix.m21 * v.y + tempMatrix.m22 * v.z + tempMatrix.m23;*/
 
                         vertices[i] = vert;
                         low = Vector3.Min(low, vert);

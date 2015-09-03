@@ -154,8 +154,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
             if (!_ready && _meshesToUpdate == 0)
             {
-                _ready = true;
                 overallMeshBounds = SetBoundsFromMeshes();
+                
+                _ready = true;
             }
 
             if (animStates != null && animStates.Count > 0)
@@ -216,7 +217,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         private Bounds SetBoundsFromMeshes()
         {
-            Vector3 upper = new Vector3(1, 1, 1) * float.NegativeInfinity, lower = new Vector3(1, 1, 1) * float.PositiveInfinity;
+            Vector3 upper = Vector3.one * float.NegativeInfinity, lower = Vector3.one * float.PositiveInfinity;
             for(int i = 0; i < meshDataList.Count; i++)
             {
                 GeometryMesh geoMesh = meshDataList[i];
@@ -514,7 +515,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
                         ThreadPool.QueueUserWorkItem(mesh.MultithreadTransformBasis, worldToVesselMatrix);
                         //mesh.TransformBasis(worldToVesselMatrix);
-                        --_meshesToUpdate;
                     }
                     else
                     {

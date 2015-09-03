@@ -143,6 +143,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if((object)g != null)
                 {
                     _currentGeoModules.Add(g);
+                    if (g.Ready)
+                        geoModulesReady++;
                 }
                 else if(p.Modules.Contains("KerbalEVA"))
                 {
@@ -156,7 +158,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             GameEvents.onVesselGoOffRails.Add(VesselUpdateEvent);
             //GameEvents.onVesselChange.Add(VesselUpdateEvent);
             //GameEvents.onVesselLoaded.Add(VesselUpdate);
-            GameEvents.onVesselCreate.Add(VesselUpdateEvent);
+            //GameEvents.onVesselCreate.Add(VesselUpdateEvent);
             GameEvents.onVesselWasModified.Add(VesselUpdateEvent);
             RequestUpdateVoxel(false);
 
@@ -174,7 +176,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 _vehicleAero = new VehicleAerodynamics();
                 _vesselIntakeRamDrag = new VesselIntakeRamDrag();
             }
-            Debug.Log("Starting " + _vessel.vesselName + " aero properties");
+            //Debug.Log("Starting " + _vessel.vesselName + " aero properties");
         }
 
         private void FixedUpdate()
@@ -189,7 +191,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     _flightGUI = _vessel.GetComponent<FerramAerospaceResearch.FARGUI.FARFlightGUI.FlightGUI>();
 
                 _flightGUI.UpdateAeroModules(_currentAeroModules, _legacyWingModels);
-                Debug.Log("Updating " + _vessel.vesselName + " aero properties\n\rCross-Sectional Area: " + _vehicleAero.MaxCrossSectionArea + " Crit Mach: " + _vehicleAero.CriticalMach + "\n\rUnusedAeroCount: " + _unusedAeroModules.Count + " UsedAeroCount: " + _currentAeroModules.Count + " sectCount: " + _currentAeroSections.Count);
+                //Debug.Log("Updating " + _vessel.vesselName + " aero properties\n\rCross-Sectional Area: " + _vehicleAero.MaxCrossSectionArea + " Crit Mach: " + _vehicleAero.CriticalMach + "\n\rUnusedAeroCount: " + _unusedAeroModules.Count + " UsedAeroCount: " + _currentAeroModules.Count + " sectCount: " + _currentAeroSections.Count);
 
                 for (int i = 0; i < _unusedAeroModules.Count; i++)
                 {
@@ -450,7 +452,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             GameEvents.onVesselGoOffRails.Remove(VesselUpdateEvent);
             //GameEvents.onVesselChange.Remove(VesselUpdateEvent);
             //GameEvents.onVesselLoaded.Add(VesselUpdate);
-            GameEvents.onVesselCreate.Remove(VesselUpdateEvent);
+            //GameEvents.onVesselCreate.Remove(VesselUpdateEvent);
             GameEvents.onVesselWasModified.Remove(VesselUpdateEvent);
         }
     }
