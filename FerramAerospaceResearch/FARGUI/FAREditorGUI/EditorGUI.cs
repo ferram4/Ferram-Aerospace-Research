@@ -84,6 +84,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         Stopwatch voxelWatch = new Stopwatch();
 
         int prevPartCount = 0;
+        bool partMovement = false;
 
         EditorSimManager _simManager;
 
@@ -251,6 +252,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                     UpdateGeometryModule(type, pEvent);
                 RequestUpdateVoxel();
 
+                if (type != ConstructionEventType.Unknown)
+                    partMovement = true;
             }
         }
 
@@ -309,7 +312,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             {
                 if (_vehicleAero.CalculationCompleted)
                 {
-                    LEGACY_UpdateWingAeroModels(EditorLogic.SortedShipList.Count != prevPartCount);
+                    LEGACY_UpdateWingAeroModels(EditorLogic.SortedShipList.Count != prevPartCount || partMovement);
                     prevPartCount = EditorLogic.SortedShipList.Count;
 
                     voxelWatch.Stop();
