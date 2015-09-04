@@ -96,7 +96,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public int MaxArrayLength
         {
-            get { return yCellLength; }//return yCellLength + xCellLength + zCellLength; }
+            get { return yCellLength + xCellLength + zCellLength; }
         }
 
         public static void VoxelSetup()
