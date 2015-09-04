@@ -309,7 +309,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             {
                 if (_vehicleAero.CalculationCompleted)
                 {
-                    LEGACY_UpdateWingAeroModels(EditorLogic.SortedShipList.Count == prevPartCount);
+                    LEGACY_UpdateWingAeroModels(EditorLogic.SortedShipList.Count != prevPartCount);
                     prevPartCount = EditorLogic.SortedShipList.Count;
 
                     voxelWatch.Stop();

@@ -160,6 +160,8 @@ namespace ferram4
         protected double NUFAR_areaExposedFactor = 0;
         protected double NUFAR_totalExposedAreaFactor = 0;
 
+        public bool ready = false;
+
         public void NUFAR_ClearExposedAreaFactor()
         {
             NUFAR_areaExposedFactor = 0;
@@ -418,6 +420,7 @@ namespace ferram4
             }
 
             OnVesselPartsChange += UpdateThisWingInteractions;
+            ready = true;
         }
 
         public void StartInitialization()
@@ -448,8 +451,6 @@ namespace ferram4
             OnWingAttach();
 
             wingInteraction = new FARWingInteraction(this, this.part, rootMidChordOffsetFromOrig, srfAttachNegative);
-
-            UpdateThisWingInteractions();
         }
 
         public void MathAndFunctionInitialization()
@@ -496,9 +497,9 @@ namespace ferram4
         public void EditorUpdateWingInteractions()
         {
 
-            HashSet<FARWingAerodynamicModel> wingsHandled = wingInteraction.UpdateNearbyWingInteractions();     //first update the old nearby wings
+            //HashSet<FARWingAerodynamicModel> wingsHandled = wingInteraction.UpdateNearbyWingInteractions();     //first update the old nearby wings
             UpdateThisWingInteractions();
-            wingInteraction.UpdateNearbyWingInteractions(wingsHandled);     //then update the new nearby wings, not doing the ones already handled
+            //wingInteraction.UpdateNearbyWingInteractions(wingsHandled);     //then update the new nearby wings, not doing the ones already handled
         }
 
         public void UpdateThisWingInteractions()

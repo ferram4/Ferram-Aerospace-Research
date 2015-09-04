@@ -308,6 +308,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             aeroTorque = center.TorqueAt(_vessel.CoM);
         }
 
+
         private void TriggerIGeometryUpdaters()
         {
             for (int i = 0; i < _currentGeoModules.Count; i++)
