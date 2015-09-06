@@ -109,8 +109,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 Rigidbody rb = part.Rigidbody;
                 if (rb)
                 {
-                    part.dragVector = (-rb.velocity - Krakensbane.GetFrameVelocityV3f());
-                    part.dragVectorDir = part.dragVector.normalized;
+                    part.dragVectorDir = (-rb.velocity - Krakensbane.GetFrameVelocityV3f()).normalized;
                     part.dragVectorDirLocal = part.partTransform.worldToLocalMatrix.MultiplyVector(part.dragVectorDir);
                     if (!part.DragCubes.None) 
                         part.DragCubes.SetDrag(part.dragVectorDirLocal, (float)part.machNumber);
