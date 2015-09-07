@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5 "Haack"
+Ferram Aerospace Research v0.15.5.1 "Hayes"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -84,6 +84,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         Stopwatch voxelWatch = new Stopwatch();
 
         int prevPartCount = 0;
+        bool partMovement = false;
 
         EditorSimManager _simManager;
 
@@ -251,6 +252,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                     UpdateGeometryModule(type, pEvent);
                 RequestUpdateVoxel();
 
+                if (type != ConstructionEventType.Unknown)
+                    partMovement = true;
             }
         }
 

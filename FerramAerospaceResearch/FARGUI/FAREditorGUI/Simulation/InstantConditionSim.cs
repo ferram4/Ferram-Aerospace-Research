@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5 "Haack"
+Ferram Aerospace Research v0.15.5.1 "Hayes"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -110,7 +110,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
                 if (p.Resources.Count > 0)
                     partMass += p.GetResourceMass();
 
-                partMass += p.GetModuleMass(p.mass);
+                //partMass += p.GetModuleMass(p.mass);
+                // If you want to use GetModuleMass, you need to start from p.partInfo.mass, not p.mass
                 CoM += partMass * (Vector3d)p.transform.TransformPoint(p.CoMOffset);
                 mass += partMass;
             }

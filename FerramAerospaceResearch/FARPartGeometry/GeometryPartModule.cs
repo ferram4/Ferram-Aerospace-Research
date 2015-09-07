@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5 "Haack"
+Ferram Aerospace Research v0.15.5.1 "Hayes"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -154,8 +154,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
             if (!_ready && _meshesToUpdate == 0)
             {
-                _ready = true;
                 overallMeshBounds = SetBoundsFromMeshes();
+                
+                _ready = true;
             }
 
             if (animStates != null && animStates.Count > 0)
@@ -216,17 +217,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         private Bounds SetBoundsFromMeshes()
         {
-            Vector3 upper = new Vector3(1, 1, 1) * float.NegativeInfinity, lower = new Vector3(1, 1, 1) * float.PositiveInfinity;
+            Vector3 upper = Vector3.one * float.NegativeInfinity, lower = Vector3.one * float.PositiveInfinity;
             for(int i = 0; i < meshDataList.Count; i++)
             {
                 GeometryMesh geoMesh = meshDataList[i];
-                upper.x = Math.Max(upper.x, geoMesh.bounds.max.x);
-                upper.y = Math.Max(upper.y, geoMesh.bounds.max.y);
-                upper.z = Math.Max(upper.z, geoMesh.bounds.max.z);
-
-                lower.x = Math.Min(lower.x, geoMesh.bounds.min.x);
-                lower.y = Math.Min(lower.y, geoMesh.bounds.min.y);
-                lower.z = Math.Min(lower.z, geoMesh.bounds.min.z);
+                upper = Vector3.Max(upper, geoMesh.bounds.max);
+                lower = Vector3.Min(lower, geoMesh.bounds.min);
             }
             Bounds overallBounds = new Bounds((upper + lower) * 0.5f, upper - lower);
 
@@ -504,9 +500,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public void UpdateTransformMatrixList(Matrix4x4 worldToVesselMatrix)
         {
-            _ready = false;
             if (meshDataList != null)
             {
+                _ready = false;
                 while (_meshesToUpdate > 0) //if the previous transform order hasn't been completed yet, wait here to let it
                     if (this == null)
                         return;
@@ -522,6 +518,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     }
                     else
                     {
+                        Debug.Log("A mesh on " + part.partInfo.title + " did not exist and was removed");
                         meshDataList.RemoveAt(i);
                         --i;
                         lock (this)

@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5 "Haack"
+Ferram Aerospace Research v0.15.5.1 "Hayes"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -97,7 +97,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public int MaxArrayLength
         {
-            get { return yCellLength; }//return yCellLength + xCellLength + zCellLength; }
+            get { return yCellLength + xCellLength + zCellLength; }
         }
 
         public static void VoxelSetup()
@@ -160,20 +160,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     Vector3d minBounds = m.overallMeshBounds.min;
                     Vector3d maxBounds = m.overallMeshBounds.max;
 
-                    min.x = Math.Min(min.x, minBounds.x);
-                    min.y = Math.Min(min.y, minBounds.y);
-                    min.z = Math.Min(min.z, minBounds.z);
-
-                    max.x = Math.Max(max.x, maxBounds.x);
-                    max.y = Math.Max(max.y, maxBounds.y);
-                    max.z = Math.Max(max.z, maxBounds.z);
+                    min = Vector3d.Min(min, minBounds);
+                    max = Vector3d.Max(max, maxBounds);
 
                     if (CheckPartForOverridingPartList(m))
                         overridingParts.Add(m.part);
                 }
             }
-
-
 
             Vector3d size = max - min;
 

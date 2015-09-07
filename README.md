@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.15.5 "Haack"
+Ferram Aerospace Research v0.15.5.1 "Hayes"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -64,6 +64,19 @@ Set all the other winglet/control surface values to zero
 
 CHANGELOG
 =======================================================
+
+0.15.5.1V "Hayes"------------------------------------  
+
+Upgrade to MM 2.6.8  
+
+Fix some legacy wing interaction issues  
+Fix drag properties drifting slowly over multiple voxelization events due to numerical errors  
+Fix parts being occluded when main axis is in a strange orientation  
+Fix in-flight control surface tweaks not applying to symmetry counterparts  
+Fix KerbalEVAs working with Vanguard Parachutes  
+
+Fix for a critical error where detached boosters, weapons, debris, etc. would not have drag properties  
+
 
 0.15.5V "Haack"------------------------------------  
 

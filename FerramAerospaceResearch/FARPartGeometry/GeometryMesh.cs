@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5 "Haack"
+Ferram Aerospace Research v0.15.5.1 "Hayes"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -47,12 +47,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using FerramAerospaceResearch.FARThreading;
 
 namespace FerramAerospaceResearch.FARPartGeometry
 {
     public class GeometryMesh
     {
         public Vector3[] vertices;
+        private Vector3[] meshLocalVerts;
         public int[] triangles;
         public Transform meshTransform;
         public Matrix4x4 thisToVesselMatrix;
@@ -65,17 +67,17 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public GeometryMesh(MeshData meshData, Transform meshTransform, Matrix4x4 worldToVesselMatrix, GeometryPartModule module)
         {
-            Vector3[] untransformedVerts = meshData.vertices;
-            int[] triangles = meshData.triangles;
+            this.meshLocalVerts = meshData.vertices;
+            this.triangles = meshData.triangles;
             Bounds meshBounds = meshData.bounds;
 
-            vertices = new Vector3[untransformedVerts.Length];
+            vertices = new Vector3[meshLocalVerts.Length];
             this.thisToVesselMatrix = worldToVesselMatrix * meshTransform.localToWorldMatrix;
 
             for (int i = 0; i < vertices.Length; i++)
             {
                 //vertices[i] = thisToVesselMatrix.MultiplyPoint3x4(untransformedVerts[i]);
-                Vector3 v = untransformedVerts[i];
+                Vector3 v = meshLocalVerts[i];
                 Vector3 vert = Vector3.zero;
                 vert.x = thisToVesselMatrix.m00 * v.x + thisToVesselMatrix.m01 * v.y + thisToVesselMatrix.m02 * v.z + thisToVesselMatrix.m03;
                 vert.y = thisToVesselMatrix.m10 * v.x + thisToVesselMatrix.m11 * v.y + thisToVesselMatrix.m12 * v.z + thisToVesselMatrix.m13;
@@ -84,7 +86,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 vertices[i] = vert;
             }
 
-            this.triangles = triangles;
             this.meshTransform = meshTransform;
 
             bounds = TransformBounds(meshBounds, thisToVesselMatrix);
@@ -109,11 +110,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public void TransformBasis(Matrix4x4 newThisToVesselMatrix)
         {
+            Matrix4x4 tempMatrix = newThisToVesselMatrix * meshLocalToWorld;
+            //Matrix4x4 tempMatrix = thisToVesselMatrix.inverse;
+            //thisToVesselMatrix = newThisToVesselMatrix * meshLocalToWorld;
 
-            Matrix4x4 tempMatrix = thisToVesselMatrix.inverse;
-            thisToVesselMatrix = newThisToVesselMatrix * meshLocalToWorld;
-
-            tempMatrix = thisToVesselMatrix * tempMatrix;
+            //tempMatrix = thisToVesselMatrix * tempMatrix;
 
             //bounds = TransformBounds(bounds, tempMatrix);
 
@@ -124,11 +125,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
             for (int i = 0; i < vertices.Length; i++)
             {
                 //vertices[i] = tempMatrix.MultiplyPoint3x4(vertices[i]);
-                Vector3 v = vertices[i];
-                Vector3 vert = Vector3.zero;
-                vert.x = tempMatrix.m00 * v.x + tempMatrix.m01 * v.y + tempMatrix.m02 * v.z + tempMatrix.m03;
+                //Vector3 v = meshLocalVerts[i];
+                Vector3 vert = tempMatrix.MultiplyPoint3x4(meshLocalVerts[i]);// = Vector3.zero;
+                /*vert.x = tempMatrix.m00 * v.x + tempMatrix.m01 * v.y + tempMatrix.m02 * v.z + tempMatrix.m03;
                 vert.y = tempMatrix.m10 * v.x + tempMatrix.m11 * v.y + tempMatrix.m12 * v.z + tempMatrix.m13;
-                vert.z = tempMatrix.m20 * v.x + tempMatrix.m21 * v.y + tempMatrix.m22 * v.z + tempMatrix.m23;
+                vert.z = tempMatrix.m20 * v.x + tempMatrix.m21 * v.y + tempMatrix.m22 * v.z + tempMatrix.m23;*/
 
                 vertices[i] = vert;
                 low = Vector3.Min(low, vert);
@@ -144,10 +145,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 try
                 {
-                    Matrix4x4 tempMatrix = thisToVesselMatrix.inverse;
-                    thisToVesselMatrix = (Matrix4x4)newThisToVesselMatrixObj * meshLocalToWorld;
+                    Matrix4x4 tempMatrix = (Matrix4x4)newThisToVesselMatrixObj * meshLocalToWorld;
+                    //Matrix4x4 tempMatrix = thisToVesselMatrix.inverse;
+                    //thisToVesselMatrix = (Matrix4x4)newThisToVesselMatrixObj * meshLocalToWorld;
 
-                    tempMatrix = thisToVesselMatrix * tempMatrix;
+                    //tempMatrix = thisToVesselMatrix * tempMatrix;
 
                     Vector3 low, high;
                     low = Vector3.one * float.PositiveInfinity;
@@ -156,11 +158,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     for (int i = 0; i < vertices.Length; i++)
                     {
                         //vertices[i] = tempMatrix.MultiplyPoint3x4(vertices[i]);
-                        Vector3 v = vertices[i];
-                        Vector3 vert = Vector3.zero;
-                        vert.x = tempMatrix.m00 * v.x + tempMatrix.m01 * v.y + tempMatrix.m02 * v.z + tempMatrix.m03;
+                        //Vector3 v = meshLocalVerts[i];
+                        Vector3 vert = tempMatrix.MultiplyPoint3x4(meshLocalVerts[i]);// = Vector3.zero;
+                        /*vert.x = tempMatrix.m00 * v.x + tempMatrix.m01 * v.y + tempMatrix.m02 * v.z + tempMatrix.m03;
                         vert.y = tempMatrix.m10 * v.x + tempMatrix.m11 * v.y + tempMatrix.m12 * v.z + tempMatrix.m13;
-                        vert.z = tempMatrix.m20 * v.x + tempMatrix.m21 * v.y + tempMatrix.m22 * v.z + tempMatrix.m23;
+                        vert.z = tempMatrix.m20 * v.x + tempMatrix.m21 * v.y + tempMatrix.m22 * v.z + tempMatrix.m23;*/
 
                         vertices[i] = vert;
                         low = Vector3.Min(low, vert);
@@ -168,7 +170,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     }
 
                     bounds = new Bounds(0.5f * (high + low), high - low);
-
                 }
                 catch (Exception e)
                 {

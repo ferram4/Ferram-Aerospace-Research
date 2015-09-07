@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5 "Haack"
+Ferram Aerospace Research v0.15.5.1 "Hayes"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -100,38 +100,38 @@ namespace FerramAerospaceResearch.FARAeroComponents
         bool showStdCtrl = false;
         bool prevStdCtrl = true;
 
-        [KSPField(guiName = "Pitch %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.All, stepIncrement = 5f)]
+        [KSPField(guiName = "Pitch %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(affectSymCounterparts = UI_Scene.All, maxValue = 100.0f, minValue = -100f, scene = UI_Scene.All, stepIncrement = 5f)]
         public float pitchaxis = 100.0f;
 
-        [KSPField(guiName = "Yaw %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.All, stepIncrement = 5f)]
+        [KSPField(guiName = "Yaw %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(affectSymCounterparts = UI_Scene.All, maxValue = 100.0f, minValue = -100f, scene = UI_Scene.All, stepIncrement = 5f)]
 		public float yawaxis = 100.0f;
 
-        [KSPField(guiName = "Roll %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.All, stepIncrement = 5f)]
+        [KSPField(guiName = "Roll %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(affectSymCounterparts = UI_Scene.All, maxValue = 100.0f, minValue = -100f, scene = UI_Scene.All, stepIncrement = 5f)]
         public float rollaxis = 100.0f;
 
-        [KSPField(guiName = "AoA %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(maxValue = 200.0f, minValue = -200f, scene = UI_Scene.All, stepIncrement = 5f)]
+        [KSPField(guiName = "AoA %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(affectSymCounterparts = UI_Scene.All, maxValue = 200.0f, minValue = -200f, scene = UI_Scene.All, stepIncrement = 5f)]
 		public float pitchaxisDueToAoA = 0.0f;
 
-        [KSPField(guiName = "BrakeRudder %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(maxValue = 100.0f, minValue = -100f, scene = UI_Scene.All, stepIncrement = 5f)]
+        [KSPField(guiName = "BrakeRudder %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(affectSymCounterparts = UI_Scene.All, maxValue = 100.0f, minValue = -100f, scene = UI_Scene.All, stepIncrement = 5f)]
         public float brakeRudder = 0.0f;
 
-        [KSPField(guiName = "Ctrl Dflct", guiActiveEditor = false, isPersistant = true), UI_FloatRange(maxValue = 40, minValue = -40, scene = UI_Scene.All, stepIncrement = 0.5f)]
+        [KSPField(guiName = "Ctrl Dflct", guiActiveEditor = false, isPersistant = true), UI_FloatRange(affectSymCounterparts = UI_Scene.All, maxValue = 40, minValue = -40, scene = UI_Scene.All, stepIncrement = 0.5f)]
         public float maxdeflect = 15;
 
         [KSPField(guiName = "Flp/splr", guiActiveEditor = true, guiActive = true), UI_Toggle(affectSymCounterparts = UI_Scene.All, scene = UI_Scene.All, disabledText = "Settings", enabledText = "Settings")]
         bool showFlpCtrl = false;
         bool prevFlpCtrl = true;
 
-        [KSPField(guiName = "Flap", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_Toggle(enabledText = "Active", scene = UI_Scene.All, disabledText = "Inactive")]
+        [KSPField(guiName = "Flap", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_Toggle(affectSymCounterparts = UI_Scene.All, enabledText = "Active", scene = UI_Scene.All, disabledText = "Inactive")]
         public bool isFlap;
 
-        [KSPField(guiName = "Spoiler", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_Toggle(enabledText = "Active", scene = UI_Scene.All, disabledText = "Inactive")]
+        [KSPField(guiName = "Spoiler", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_Toggle(affectSymCounterparts = UI_Scene.All, enabledText = "Active", scene = UI_Scene.All, disabledText = "Inactive")]
         public bool isSpoiler;
 
         [KSPField(isPersistant = true, guiName = "Flap setting")]
         public int flapDeflectionLevel = 2;
 
-        [KSPField(guiName = "Flp/splr Dflct", guiActiveEditor = false, isPersistant = true), UI_FloatRange(maxValue = 85, minValue = -85, scene = UI_Scene.All, stepIncrement = 0.5f)]
+        [KSPField(guiName = "Flp/splr Dflct", guiActiveEditor = false, isPersistant = true), UI_FloatRange(affectSymCounterparts = UI_Scene.All, maxValue = 85, minValue = -85, scene = UI_Scene.All, stepIncrement = 0.5f)]
         public float maxdeflectFlap = 15; 
         
         protected double PitchLocation = 0;
