@@ -1,5 +1,5 @@
 /*
-Ferram Aerospace Research v0.15.5 "Haack"
+Ferram Aerospace Research v0.15.5.1 "Hayes"
 =========================
 Aerodynamics model for Kerbal Space Program
 
