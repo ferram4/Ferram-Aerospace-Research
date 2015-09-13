@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5 "Haack"
+Ferram Aerospace Research v0.15.5.1 "Hayes"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -48,24 +48,24 @@ using UnityEngine;
 
 namespace FerramAerospaceResearch.FARAeroComponents
 {
-    class WingLiftingSection
+    class WingLiftingStrip
     {
         FARVehicleLiftingSurfaceSystem _vehicleSystem;
 
         private struct WingPartSection
         {
             public FARWingAerodynamicModel wingModule;
+            public FARAeroPartModule aeroModule;
             public Vector3 vesselLocalAreaCentroid;
             public float sectionAreaRatio;
         }
 
-        Vector3 leadingEdgeLocation;
-        Vector3 trailingEdgeLocation;
-        Vector3 quarterChordLocation;
+        Vector3 subsonicAeroCenter;
+        Vector3 supersonicAeroCenter;
 
         float leadingEdgeSweep;
         float trailingEdgeSweep;
-        float quarterChordSweep;
+        float midChordSweep;
 
         Vector3 vesselLocalNormalVector;
 

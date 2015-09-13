@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5 "Haack"
+Ferram Aerospace Research v0.15.5.1 "Hayes"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -50,6 +50,32 @@ namespace FerramAerospaceResearch.FARAeroComponents
 {
     class FARVehicleLiftingSurfaceSystem
     {
-        List<WingLiftingSection> vehicleLiftingSections;
+        public Vector3 vesselForwardVec;
+        struct ProtoWingLiftStrip
+        {
+            public Vector3 leadingEdgeRight;
+            public Vector3 leadingEdgeLeft;
+            public Vector3 trailingEdgeRight;
+            public Vector3 trailingEdgeLeft;
+            public Vector3 normalVector;
+
+            float thickness;
+
+            public struct WingStripSect
+            {
+                public FARWingAerodynamicModel wingModule;
+                public Vector3 centroid;
+                public float fraction;
+            }
+            List<WingStripSect> stripSections;
+        }
+
+        List<WingLiftingStrip> vehicleLiftingSections;
+        List<FARWingAerodynamicModel> wingModules;
+
+        void PrepWingPartsForStripBuilding()
+        {
+
+        }
     }
 }

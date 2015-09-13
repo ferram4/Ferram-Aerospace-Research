@@ -197,7 +197,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             _newUnusedAeroModules = tmpAeroModules;
 
 
-            legacyWingModel = LEGACY_UpdateWingAerodynamicModels();
+            legacyWingModel = _legacyWingModels;
         }
 
         public void GetNewAeroData(out List<FARAeroPartModule> aeroModules, out List<FARAeroSection> aeroSections)
@@ -214,8 +214,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
             tmpAeroModules = _currentUnusedAeroModules;
             _currentUnusedAeroModules = _newUnusedAeroModules;
             _newUnusedAeroModules = tmpAeroModules;
-
-            LEGACY_UpdateWingAerodynamicModels();
         }
 
         private List<FARWingAerodynamicModel> LEGACY_UpdateWingAerodynamicModels()
@@ -383,6 +381,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     this._vehiclePartList = vehiclePartList;
                     this._currentGeoModules = currentGeoModules;
 
+                    this._vehicleMainAxis = CalculateVehicleMainAxis();
+
+                    //_worldToLocalMatrix *= Matrix4x4.TRS(Vector3.zero, Quaternion.FromToRotation(Vector3.up, _vehicleMainAxis), Vector3.one);
+                    //_localToWorldMatrix *= Matrix4x4.TRS(Vector3.zero, Quaternion.FromToRotation(_vehicleMainAxis, Vector3.up), Vector3.one);
+
                     _partWorldToLocalMatrixDict.Clear();
 
                     for (int i = 0; i < _currentGeoModules.Count; i++)
@@ -393,7 +396,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
                             g.UpdateTransformMatrixList(_worldToLocalMatrix);
                     }
 
-                    this._vehicleMainAxis = CalculateVehicleMainAxis();
                     //If the voxel still exists, cleanup everything so we can continue;
                     visualizing = false;
 
@@ -404,7 +406,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                     //set flag so that this function can't run again before voxelizing completes and queue voxelizing thread
                     voxelizing = true;
-                    VoxelizationThreadpool.Instance.QueueVoxelization(CreateVoxel);
+                    VoxelizationThreadpool.Instance.QueueVoxelization(CreateVoxelAndAeroProperties);
                     returnVal = true;
                 }
                 finally
@@ -417,7 +419,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         }
 
         //And this actually creates the voxel and then begins the aero properties determination
-        private void CreateVoxel()
+        private void CreateVoxelAndAeroProperties()
         {
             lock (this)     //lock this object to prevent race with main thread
             {
@@ -457,7 +459,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         #endregion
 
-
+        #region Cross-Section Calcs
         private Vector3 CalculateVehicleMainAxis()
         {
             Vector3 axis = Vector3.zero;
@@ -1038,6 +1040,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
             activeAdjusters.Clear();
         }
+        #endregion
 
         #region Aerodynamics Calculations
 
@@ -1419,6 +1422,15 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
         }
 
+        #region WingCalculations
+        void CalculateWingLiftingSurfaces()
+        {
+            LEGACY_UpdateWingAerodynamicModels();
+
+            
+        }
+        #endregion
+        
         private double CalculateHypersonicMoment(double lowArea, double highArea, double sectionThickness)
         {
             if(lowArea >= highArea)
