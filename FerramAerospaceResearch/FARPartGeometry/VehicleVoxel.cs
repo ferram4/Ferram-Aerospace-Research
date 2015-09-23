@@ -1707,7 +1707,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW < 0)
+                        if (signW <= 0)
                             plane = VoxelOrientationPlane.X_UP;
                         else
                             plane = VoxelOrientationPlane.X_DOWN;
@@ -1734,7 +1734,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW < 0)
+                        if (signW <= 0)
                             plane = VoxelOrientationPlane.X_UP;
                         else
                             plane = VoxelOrientationPlane.X_DOWN;
@@ -1758,7 +1758,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW < 0)
+                        if (signW <= 0)
                             plane = VoxelOrientationPlane.X_UP;
                         else
                             plane = VoxelOrientationPlane.X_DOWN;
@@ -1854,7 +1854,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW < 0)
+                        if (signW <= 0)
                             plane = VoxelOrientationPlane.Y_UP;
                         else
                             plane = VoxelOrientationPlane.Y_DOWN;
@@ -1881,7 +1881,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW < 0)
+                        if (signW <= 0)
                             plane = VoxelOrientationPlane.Y_UP;
                         else
                             plane = VoxelOrientationPlane.Y_DOWN;
@@ -1904,7 +1904,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW < 0)
+                        if (signW <= 0)
                             plane = VoxelOrientationPlane.Y_UP;
                         else
                             plane = VoxelOrientationPlane.Y_DOWN;
@@ -1998,7 +1998,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW < 0)
+                        if (signW <= 0)
                             plane = VoxelOrientationPlane.Z_UP;
                         else
                             plane = VoxelOrientationPlane.Z_DOWN;
@@ -2024,7 +2024,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW < 0)
+                        if (signW <= 0)
                             plane = VoxelOrientationPlane.Z_UP;
                         else
                             plane = VoxelOrientationPlane.Z_DOWN;
@@ -2047,7 +2047,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         byte location = (byte)Math.Round(floatLoc);
                         VoxelOrientationPlane plane;
-                        if (signW < 0)
+                        if (signW <= 0)
                             plane = VoxelOrientationPlane.Z_UP;
                         else
                             plane = VoxelOrientationPlane.Z_DOWN;
