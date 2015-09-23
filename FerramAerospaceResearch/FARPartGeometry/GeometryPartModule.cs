@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5.1 "Hayes"
+Ferram Aerospace Research v0.15.5.2 "Helmbold"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -658,7 +658,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 foreach (Transform t in meshTransforms)
                 {
-                    MeshData md = GetVisibleMeshData(t, forceUseMeshes);
+                    MeshData md = GetVisibleMeshData(t, false);
                     if (md == null)
                         continue;
 

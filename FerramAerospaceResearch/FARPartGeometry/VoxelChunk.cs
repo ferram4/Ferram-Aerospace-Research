@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5.1 "Hayes"
+Ferram Aerospace Research v0.15.5.2 "Helmbold"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -243,20 +243,19 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public class PartSizePair
         {
-            const float AREA_SCALING = 1f / (255f * 255f * 255f);
-            const int LENGTH_OF_VOXEL = 255;
+            const float AREA_SCALING = 1f / (15f * 15f * 15f);
+            const int LENGTH_OF_VOXEL = 15;
             //const byte UP_MASK = 15;
             //const byte DOWN_MASK = 240;
 
             public Part part;
 
-            byte xPlaneUp, yPlaneUp, zPlaneUp;
-            byte xPlaneDown, yPlaneDown, zPlaneDown;
+            byte xPlane, yPlane, zPlane;
+            //byte xPlaneDown, yPlaneDown, zPlaneDown;
 
             public void Clear()
             {
-                xPlaneUp = yPlaneUp = zPlaneUp = 0;
-                xPlaneDown = yPlaneDown = zPlaneDown = 0;
+                xPlane = yPlane = zPlane = 0;
                 part = null;
             }
 
@@ -264,9 +263,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 int x, y, z;
 
-                x = xPlaneUp + xPlaneDown;
-                y = yPlaneUp + yPlaneDown;
-                z = zPlaneUp + zPlaneDown;
+                x = (xPlane | 0xF0) + ((xPlane | 0x0F) >> 4);
+                y = (yPlane | 0xF0) + ((yPlane | 0x0F) >> 4);
+                z = (zPlane | 0xF0) + ((zPlane | 0x0F) >> 4);
 
                 if (x > LENGTH_OF_VOXEL)
                     x -= LENGTH_OF_VOXEL;
@@ -300,86 +299,92 @@ namespace FerramAerospaceResearch.FARPartGeometry
             public void SetFilledSides(VoxelOrientationPlane filledPlanes)
             {
                 if ((filledPlanes & VoxelOrientationPlane.X_UP) == VoxelOrientationPlane.X_UP)
-                    xPlaneUp = LENGTH_OF_VOXEL;
+                    xPlane |= 0xF0;
 
                 if ((filledPlanes & VoxelOrientationPlane.X_DOWN) == VoxelOrientationPlane.X_DOWN)
-                    xPlaneDown = LENGTH_OF_VOXEL;
+                    xPlane |= 0x0F;
 
                 if ((filledPlanes & VoxelOrientationPlane.Y_UP) == VoxelOrientationPlane.Y_UP)
-                    yPlaneUp = LENGTH_OF_VOXEL;
+                    yPlane |= 0xF0;
 
                 if ((filledPlanes & VoxelOrientationPlane.Y_DOWN) == VoxelOrientationPlane.Y_DOWN)
-                    yPlaneDown = LENGTH_OF_VOXEL;
+                    yPlane |= 0x0F;
 
                 if ((filledPlanes & VoxelOrientationPlane.Z_UP) == VoxelOrientationPlane.Z_UP)
-                    zPlaneUp = LENGTH_OF_VOXEL;
+                    zPlane |= 0xF0;
 
                 if ((filledPlanes & VoxelOrientationPlane.Z_DOWN) == VoxelOrientationPlane.Z_DOWN)
-                    zPlaneDown = LENGTH_OF_VOXEL;
+                    zPlane |= 0x0F;
             }
 
             //Will return true if the location is updated
             public bool SetPlaneLocation(VoxelOrientationPlane plane, byte location)
             {
                 bool returnVal = false;
+                location /= 4;
                 switch (plane)
                 {
                     case VoxelOrientationPlane.X_UP:
-                        if (location >= xPlaneUp)
+                        if (location >= (xPlane | 0xF0))
                         {
-                            xPlaneUp = location;
+                            xPlane &= 0x0F;     //clear out all 4 lower bits
+                            xPlane |= location; //then overwrite them from location
                             returnVal = true;
                         }
                         break;
 
                     case VoxelOrientationPlane.X_DOWN:
-                        if (location >= xPlaneDown)
+                        location = (byte)(location << 4);   //shift the byte as necessary
+                        if (location >= (xPlane | 0x0F))
                         {
-                            xPlaneDown = location;
+                            xPlane &= 0xF0;     //clear out all 4 upper bits
+                            xPlane |= location;
                             returnVal = true;
                         }
                         break;
 
                     case VoxelOrientationPlane.Y_UP:
-                        if (location >= yPlaneUp)
+                        if (location >= (yPlane | 0xF0))
                         {
-                            yPlaneUp = location;
+                            yPlane &= 0x0F;     //clear out all 4 lower bits
+                            yPlane |= location; //then overwrite them from location
                             returnVal = true;
                         }
                         break;
 
                     case VoxelOrientationPlane.Y_DOWN:
-                        if (location >= yPlaneDown)
+                        location = (byte)(location << 4);   //shift the byte as necessary
+                        if (location >= (yPlane | 0x0F))
                         {
-                            yPlaneDown = location;
+                            yPlane &= 0xF0;     //clear out all 4 upper bits
+                            yPlane |= location;
                             returnVal = true;
                         }
                         break;
 
                     case VoxelOrientationPlane.Z_UP:
-                        if (location >= zPlaneUp)
+                        if (location >= (zPlane | 0xF0))
                         {
-                            zPlaneUp = location;
+                            zPlane &= 0x0F;     //clear out all 4 lower bits
+                            zPlane |= location; //then overwrite them from location
                             returnVal = true;
                         }
                         break;
 
                     case VoxelOrientationPlane.Z_DOWN:
-                        if (location >= zPlaneDown)
+                        location = (byte)(location << 4);   //shift the byte as necessary
+                        if (location >= (zPlane | 0x0F))
                         {
-                            zPlaneDown = location;
+                            zPlane &= 0xF0;     //clear out all 4 upper bits
+                            zPlane |= location;
                             returnVal = true;
                         }
                         break;
 
                     case VoxelOrientationPlane.FILL_VOXEL:
-                        xPlaneUp = location;
-                        yPlaneUp = location;
-                        zPlaneUp = location;
-
-                        xPlaneDown = location;
-                        yPlaneDown = location;
-                        zPlaneDown = location;
+                        xPlane = (byte)(location * 2);
+                        yPlane = (byte)(location * 2);
+                        zPlane = (byte)(location * 2);
                         break;
                 }
 
