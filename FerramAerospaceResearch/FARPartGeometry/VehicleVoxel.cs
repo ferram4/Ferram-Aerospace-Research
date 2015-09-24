@@ -1549,11 +1549,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
         }
         private void UpdateFromMesh(GeometryMesh mesh, Part part)
         {
-            if (mesh.bounds.size.x < elementSize && mesh.bounds.size.y < elementSize && mesh.bounds.size.z < elementSize)
-            {
-                CalculateVoxelShellFromTinyMesh(mesh.bounds.min, mesh.bounds.max, part);
-                return;
-            }
+            //if (mesh.bounds.size.x < elementSize && mesh.bounds.size.y < elementSize && mesh.bounds.size.z < elementSize)
+            //{
+            //    CalculateVoxelShellFromTinyMesh(mesh.bounds.min, mesh.bounds.max, part);
+            //    return;
+            //}
 
             /*Vector3[] vertsVoxelSpace = new Vector3[vertices.Length];
             for (int i = 0; i < vertsVoxelSpace.Length; i++)
@@ -1602,7 +1602,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 for (int j = lowerJ; j <= upperJ; j++)
                     for (int k = lowerK; k <= upperK; k++)
                     {
-                        SetVoxelPoint(i, j, k, part, VoxelOrientationPlane.FILL_VOXEL, 7);
+                        SetVoxelPoint(i, j, k, part, VoxelOrientationPlane.FILL_VOXEL, 1);
                     }
         }
 
@@ -1698,10 +1698,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (u >= 0 && v >= 0 && u + v <= 1)
                     {
                         double floatLoc = (i - iFloat) * signW + 0.5;
-                        floatLoc *= 255d;
+                        floatLoc *= 15d;
 
-                        if (floatLoc > 255)
-                            floatLoc = 255;
+                        if (floatLoc > 15)
+                            floatLoc = 15;
                         if (floatLoc < 0)
                             floatLoc = 0;
 
@@ -1725,10 +1725,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
 
                         double floatLoc = (i - iFloat) * signW + 0.5;
-                        floatLoc *= 255d * 0.25d;
+                        floatLoc *= 15d * 0.25d;
 
-                        if (floatLoc > 255)
-                            floatLoc = 255;
+                        if (floatLoc > 15)
+                            floatLoc = 15;
                         if (floatLoc < 0)
                             floatLoc = 0;
 
@@ -1749,10 +1749,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
 
                         double floatLoc = (i - iFloat) * signW + 0.5;
-                        floatLoc *= 255d * 0.5d;
+                        floatLoc *= 15d * 0.5d;
 
-                        if (floatLoc > 255)
-                            floatLoc = 255;
+                        if (floatLoc > 15)
+                            floatLoc = 15;
                         if (floatLoc < 0)
                             floatLoc = 0;
 
@@ -1845,10 +1845,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (u >= 0 && v >= 0 && u + v <= 1)
                     {
                         double floatLoc = (j - jFloat) * signW + 0.5;
-                        floatLoc *= 255d;
+                        floatLoc *= 15d;
 
-                        if (floatLoc > 255)
-                            floatLoc = 255;
+                        if (floatLoc > 15)
+                            floatLoc = 15;
                         if (floatLoc < 0)
                             floatLoc = 0;
 
@@ -1872,10 +1872,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (p1TestPt.magnitude <= RC || p2TestPt.magnitude <= RC || p3TestPt.magnitude <= RC)
                     {
                         double floatLoc = (j - jFloat) * signW + 0.5;
-                        floatLoc *= 255d * 0.25d;
+                        floatLoc *= 15d * 0.25d;
 
-                        if (floatLoc > 255)
-                            floatLoc = 255;
+                        if (floatLoc > 15)
+                            floatLoc = 15;
                         if (floatLoc < 0)
                             floatLoc = 0;
 
@@ -1895,10 +1895,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt))
                     {
                         double floatLoc = (j - jFloat) * signW + 0.5;
-                        floatLoc *= 255d * 0.5d;
+                        floatLoc *= 15d * 0.5d;
 
-                        if (floatLoc > 255)
-                            floatLoc = 255;
+                        if (floatLoc > 15)
+                            floatLoc = 15;
                         if (floatLoc < 0)
                             floatLoc = 0;
 
@@ -1989,10 +1989,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (u >= 0 && v >= 0 && u + v <= 1)
                     {
                         double floatLoc = (k - kFloat) * signW + 0.5;
-                        floatLoc *= 255d;
+                        floatLoc *= 15d;
 
-                        if (floatLoc > 255)
-                            floatLoc = 255;
+                        if (floatLoc > 15)
+                            floatLoc = 15;
                         if (floatLoc < 0)
                             floatLoc = 0;
 
@@ -2015,10 +2015,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (p1TestPt.magnitude <= RC || p2TestPt.magnitude <= RC || p3TestPt.magnitude <= RC)
                     {
                         double floatLoc = (k - kFloat) * signW + 0.5;
-                        floatLoc *= 255d * 0.25d;
+                        floatLoc *= 15d * 0.25d;
 
-                        if (floatLoc > 255)
-                            floatLoc = 255;
+                        if (floatLoc > 15)
+                            floatLoc = 15;
                         if (floatLoc < 0)
                             floatLoc = 0;
 
@@ -2038,10 +2038,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt))
                     {
                         double floatLoc = (k - kFloat) * signW + 0.5;
-                        floatLoc *= 255d * 0.5d;
+                        floatLoc *= 15d * 0.5d;
 
-                        if (floatLoc > 255)
-                            floatLoc = 255;
+                        if (floatLoc > 15)
+                            floatLoc = 15;
                         if (floatLoc < 0)
                             floatLoc = 0;
 

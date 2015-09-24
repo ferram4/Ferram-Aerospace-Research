@@ -46,6 +46,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
+using FerramAerospaceResearch.FARThreading;
 
 namespace FerramAerospaceResearch.FARPartGeometry
 {
@@ -96,7 +97,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         }
 
         //Use when locking is unnecessary and only to change size, not part
-        public unsafe void SetVoxelPointGlobalIndexNoLock(int zeroBaseIndex, VoxelOrientationPlane plane = VoxelOrientationPlane.FILL_VOXEL, byte location = 255)
+        public unsafe void SetVoxelPointGlobalIndexNoLock(int zeroBaseIndex, VoxelOrientationPlane plane = VoxelOrientationPlane.FILL_VOXEL, byte location = 15)
         {
             zeroBaseIndex -= offset;
             //voxelPoints[zeroBaseIndex].part = p;
@@ -104,19 +105,19 @@ namespace FerramAerospaceResearch.FARPartGeometry
         }
         
         //Use when certian that locking is unnecessary
-        public unsafe void SetVoxelPointGlobalIndexNoLock(int zeroBaseIndex, Part p, VoxelOrientationPlane plane = VoxelOrientationPlane.FILL_VOXEL, byte location = 255)
+        public unsafe void SetVoxelPointGlobalIndexNoLock(int zeroBaseIndex, Part p, VoxelOrientationPlane plane = VoxelOrientationPlane.FILL_VOXEL, byte location = 15)
         {
             zeroBaseIndex -= offset;
             SetPart(p, zeroBaseIndex, plane, location);
         }
 
-        public unsafe void SetVoxelPointGlobalIndexNoLock(int i, int j, int k, Part p, VoxelOrientationPlane plane = VoxelOrientationPlane.FILL_VOXEL, byte location = 255)
+        public unsafe void SetVoxelPointGlobalIndexNoLock(int i, int j, int k, Part p, VoxelOrientationPlane plane = VoxelOrientationPlane.FILL_VOXEL, byte location = 15)
         {
             int index = i + 8 * j + 64 * k - offset;
             SetPart(p, index, plane, location);
         }
         //Sets point and ensures that includedParts includes p
-        public unsafe void SetVoxelPointGlobalIndex(int zeroBaseIndex, Part p, VoxelOrientationPlane plane = VoxelOrientationPlane.FILL_VOXEL, byte location = 255)
+        public unsafe void SetVoxelPointGlobalIndex(int zeroBaseIndex, Part p, VoxelOrientationPlane plane = VoxelOrientationPlane.FILL_VOXEL, byte location = 15)
         {
             lock (voxelPoints)
             {
@@ -125,7 +126,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
         }
 
-        public unsafe void SetVoxelPointGlobalIndex(int i, int j, int k, Part p, VoxelOrientationPlane plane = VoxelOrientationPlane.FILL_VOXEL, byte location = 255)
+        public unsafe void SetVoxelPointGlobalIndex(int i, int j, int k, Part p, VoxelOrientationPlane plane = VoxelOrientationPlane.FILL_VOXEL, byte location = 15)
         {
             lock (voxelPoints)
             {
@@ -245,8 +246,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             const float AREA_SCALING = 1f / (15f * 15f * 15f);
             const int LENGTH_OF_VOXEL = 15;
-            //const byte UP_MASK = 15;
-            //const byte DOWN_MASK = 240;
+            const byte UP_MASK = 0xF0;
+            const byte DOWN_MASK = 0x0F;
 
             public Part part;
 
@@ -263,9 +264,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 int x, y, z;
 
-                x = (xPlane & 0x0F) + ((xPlane & 0xF0) >> 4);
-                y = (yPlane & 0x0F) + ((yPlane & 0xF0) >> 4);
-                z = (zPlane & 0x0F) + ((zPlane & 0xF0) >> 4);
+                x = (xPlane & DOWN_MASK) + (xPlane >> 4);
+                y = (yPlane & DOWN_MASK) + (yPlane >> 4);
+                z = (zPlane & DOWN_MASK) + (zPlane >> 4);
 
                 if (x > LENGTH_OF_VOXEL)
                     x -= LENGTH_OF_VOXEL;
@@ -276,7 +277,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 if (z > LENGTH_OF_VOXEL)
                     z -= LENGTH_OF_VOXEL;
 
-                if (x == 0 && y == 0 & z == 0)      //if they're all 0, this is 0
+                if (x == 0 && y == 0 && z == 0)      //if they're all 0, this is 0
                     return 0f;
 
                 //If a plane actually passes through this, that means that any values that are 0 indicate no planes cutting through this, and thus, that they should fill that dimension
@@ -292,103 +293,142 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                 float size = x * y * z;     //so then calc the volume
                 size *= AREA_SCALING;       //scale for the 0-15 scaling used for the plane locations
-
                 return size;
             }
 
             public void SetFilledSides(VoxelOrientationPlane filledPlanes)
             {
                 if ((filledPlanes & VoxelOrientationPlane.X_UP) == VoxelOrientationPlane.X_UP)
-                    xPlane |= 0xF0;
+                    xPlane |= UP_MASK;
 
                 if ((filledPlanes & VoxelOrientationPlane.X_DOWN) == VoxelOrientationPlane.X_DOWN)
-                    xPlane |= 0x0F;
+                    xPlane |= DOWN_MASK;
 
                 if ((filledPlanes & VoxelOrientationPlane.Y_UP) == VoxelOrientationPlane.Y_UP)
-                    yPlane |= 0xF0;
+                    yPlane |= UP_MASK;
 
                 if ((filledPlanes & VoxelOrientationPlane.Y_DOWN) == VoxelOrientationPlane.Y_DOWN)
-                    yPlane |= 0x0F;
+                    yPlane |= DOWN_MASK;
 
                 if ((filledPlanes & VoxelOrientationPlane.Z_UP) == VoxelOrientationPlane.Z_UP)
-                    zPlane |= 0xF0;
+                    zPlane |= UP_MASK;
 
                 if ((filledPlanes & VoxelOrientationPlane.Z_DOWN) == VoxelOrientationPlane.Z_DOWN)
-                    zPlane |= 0x0F;
+                    zPlane |= DOWN_MASK;
             }
 
             //Will return true if the location is updated
             public bool SetPlaneLocation(VoxelOrientationPlane plane, byte location)
             {
                 bool returnVal = false;
-                location = (byte)(location >> 4);
-                if (location <= 0)
-                    location = 1;
 
                 switch (plane)
                 {
                     case VoxelOrientationPlane.X_UP:
-                        location = (byte)(location << 4);   //shift the byte as necessary
-                        if (location >= (xPlane & 0xF0))
                         {
-                            xPlane &= 0x0F;     //clear out all 4 upper bits
-                            xPlane |= location; //then overwrite them from location
-                            returnVal = true;
+                            location = (byte)(location << 4);   //shift the byte as necessary
+                            if (location > (xPlane & UP_MASK))     //only compare upper bits
+                            {
+                                xPlane &= DOWN_MASK;     //clear out all 4 upper bits but keep lower bits
+                                xPlane |= location; //then overwrite them from location
+                                returnVal = true;
+                            }
+                            break;
                         }
-                        break;
 
                     case VoxelOrientationPlane.X_DOWN:
-                        if (location >= (xPlane & 0x0F))
                         {
-                            xPlane &= 0xF0;     //clear out all 4 lower bits
-                            xPlane |= location;
-                            returnVal = true;
+                            if (location > (xPlane & DOWN_MASK))
+                            {
+                                xPlane &= UP_MASK;     //clear out all 4 lower bits
+                                xPlane |= location;
+                                returnVal = true;
+                            }
+                            break;
                         }
-                        break;
 
                     case VoxelOrientationPlane.Y_UP:
-                        location = (byte)(location << 4);   //shift the byte as necessary
-                        if (location >= (yPlane & 0xF0))
                         {
-                            yPlane &= 0x0F;     //clear out all 4 upper bits
-                            yPlane |= location; //then overwrite them from location
-                            returnVal = true;
+                            location = (byte)(location << 4);   //shift the byte as necessary
+                            if (location > (yPlane & UP_MASK))
+                            {
+                                yPlane &= DOWN_MASK;     //clear out all 4 upper bits
+                                yPlane |= location; //then overwrite them from location
+                                returnVal = true;
+                            }
+                            break;
                         }
-                        break;
 
                     case VoxelOrientationPlane.Y_DOWN:
-                        if (location >= (yPlane & 0x0F))
                         {
-                            yPlane &= 0xF0;     //clear out all 4 lower bits
-                            yPlane |= location;
-                            returnVal = true;
+                            if (location > (yPlane & DOWN_MASK))
+                            {
+                                yPlane &= UP_MASK;     //clear out all 4 lower bits
+                                yPlane |= location;
+                                returnVal = true;
+                            }
+                            break;
                         }
-                        break;
 
                     case VoxelOrientationPlane.Z_UP:
-                        location = (byte)(location << 4);   //shift the byte as necessary
-                        if (location >= (zPlane & 0xF0))
                         {
-                            zPlane &= 0x0F;     //clear out all 4 upper bits
-                            zPlane |= location; //then overwrite them from location
-                            returnVal = true;
+                            location = (byte)(location << 4);   //shift the byte as necessary
+                            if (location > (zPlane & UP_MASK))
+                            {
+                                zPlane &= DOWN_MASK;     //clear out all 4 upper bits
+                                zPlane |= location; //then overwrite them from location
+                                returnVal = true;
+                            }
+                            break;
                         }
-                        break;
 
                     case VoxelOrientationPlane.Z_DOWN:
-                        if (location >= (zPlane & 0x0F))
                         {
-                            zPlane &= 0xF0;     //clear out all 4 lower bits
-                            zPlane |= location;
-                            returnVal = true;
+                            if (location > (zPlane & DOWN_MASK))
+                            {
+                                zPlane &= UP_MASK;     //clear out all 4 lower bits
+                                zPlane |= location;
+                                returnVal = true;
+                            }
+                            break;
                         }
-                        break;
 
                     case VoxelOrientationPlane.FILL_VOXEL:
-                        xPlane = (byte)(location * 2);
-                        yPlane = (byte)(location * 2);
-                        zPlane = (byte)(location * 2);
-                        break;
+                        {
+                            if (location > (xPlane & DOWN_MASK))
+                            {
+                                xPlane &= UP_MASK;     //clear out all 4 lower bits
+                                xPlane |= location;
+                            }
+                            if (location > (yPlane & DOWN_MASK))
+                            {
+                                yPlane &= UP_MASK;     //clear out all 4 lower bits
+                                yPlane |= location;
+                            }
+                            if (location > (zPlane & DOWN_MASK))
+                            {
+                                zPlane &= UP_MASK;     //clear out all 4 lower bits
+                                zPlane |= location;
+                            }
+                            location = (byte)(location << 4);   //shift the byte as necessary
+
+                            if (location > (xPlane & UP_MASK))
+                            {
+                                xPlane &= DOWN_MASK;     //clear out all 4 upper bits
+                                xPlane |= location; //then overwrite them from location
+                            }
+                            if (location > (yPlane & UP_MASK))
+                            {
+                                yPlane &= DOWN_MASK;     //clear out all 4 upper bits
+                                yPlane |= location; //then overwrite them from location
+                            }
+                            if (location > (zPlane & UP_MASK))
+                            {
+                                zPlane &= DOWN_MASK;     //clear out all 4 upper bits
+                                zPlane |= location; //then overwrite them from location
+                            }
+                            break;
+                        }
                 }
 
                 return returnVal;
