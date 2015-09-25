@@ -61,6 +61,9 @@ namespace ferram4
         public double rawAoAmax = 15;
         private double AoAmax = 15;
 
+        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = false)]
+        public float wingBaseMassMultiplier = 1f;
+
         [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
         public float curWingMass = 1;
         private float massDelta = 0f;
@@ -715,8 +718,8 @@ namespace ferram4
             if ((object)parentWing != null)
                 supportedArea *= 0.66666667f;   //if any supported area has been transfered to another part, we must remove it from here
             curWingMass = supportedArea * (float)FARAeroUtil.massPerWingAreaSupported * massMultiplier;
-            
-            part.mass = curWingMass;
+
+            part.mass = curWingMass * wingBaseMassMultiplier;
             massDelta = 0f;
             if ((object)(part.partInfo) != null)
                 if ((object)(part.partInfo.partPrefab) != null)
