@@ -67,7 +67,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
         float hypersonicMomentBackward;
         float diameter;
 
+        float mergeFactor = 0;
+        Vector3 worldNormalVector;
+
         List<PartData> partData;
+        Dictionary<FARAeroPartModule, int> handledAeroModulesIndexDict;
 
         public struct PartData
         {
@@ -84,80 +88,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
             xForcePressureAoA180 = new FARFloatCurve(6);
             xForceSkinFriction = new FARFloatCurve(3);
             partData = new List<PartData>();
+            handledAeroModulesIndexDict = new Dictionary<FARAeroPartModule, int>();
             if (crossFlowDragMachCurve == null)
                 GenerateCrossFlowDragCurve();
         }
-
-/*        public FARAeroSection(FloatCurve xForcePressureAoA0, FloatCurve xForcePressureAoA180, FloatCurve xForceSkinFriction,
-            float potentialFlowNormalForce, float viscCrossflowDrag, float diameter, float flatnessRatio, float hypersonicMomentForward, float hypersonicMomentBackward,
-            Vector3 centroidWorldSpace, Vector3 xRefVectorWorldSpace, Vector3 nRefVectorWorldSpace, Matrix4x4 vesselToWorldMatrix, Vector3 vehicleMainAxis, List<FARAeroPartModule> moduleList,
-            Dictionary<Part, FARPartGeometry.VoxelCrossSection.SideAreaValues> sideAreaValues, List<float> dragFactor, Dictionary<Part, PartTransformInfo> partWorldToLocalMatrixDict)
-        {
-            this.xForcePressureAoA0 = xForcePressureAoA0;       //copy references to floatcurves over
-            this.xForcePressureAoA180 = xForcePressureAoA180;
-            this.xForceSkinFriction = xForceSkinFriction;
-
-            this.potentialFlowNormalForce = potentialFlowNormalForce;                   //copy lifting body info over
-            this.viscCrossflowDrag = viscCrossflowDrag;
-            this.flatnessRatio = flatnessRatio;
-            invFlatnessRatio = 1 / flatnessRatio;
-            this.hypersonicMomentForward = hypersonicMomentForward;
-            this.hypersonicMomentBackward = hypersonicMomentBackward;
-            this.diameter = diameter;
-
-            partData = new List<PartData>();
-
-            Vector3 worldVehicleAxis = vesselToWorldMatrix.MultiplyVector(vehicleMainAxis);
-
-            Vector3 centroidLocationAlongxRef = Vector3.Project(centroidWorldSpace, worldVehicleAxis);
-            Vector3 centroidSansxRef = Vector3.ProjectOnPlane(centroidWorldSpace, worldVehicleAxis);
-
-            Vector3 worldSpaceAvgPos = Vector3.zero;
-            float totalDragFactor = 0;
-            for (int i = 0; i < moduleList.Count; i++)
-            {
-                Part p = moduleList[i].part;
-                if (partWorldToLocalMatrixDict.ContainsKey(p))
-                {
-                    worldSpaceAvgPos += partWorldToLocalMatrixDict[p].worldPosition * dragFactor[i];
-                    totalDragFactor += dragFactor[i];
-                }
-            }
-            
-            worldSpaceAvgPos /= totalDragFactor;
-
-            worldSpaceAvgPos = Vector3.ProjectOnPlane(worldSpaceAvgPos, worldVehicleAxis);
-
-            Vector3 avgPosDiffFromCentroid = centroidSansxRef - worldSpaceAvgPos;
-            
-            for (int i = 0; i < moduleList.Count; i++)
-            {
-                PartData data = new PartData();
-                data.aeroModule = moduleList[i];
-                Matrix4x4 transformMatrix = partWorldToLocalMatrixDict[data.aeroModule.part].worldToLocalMatrix;
-
-                Vector3 forceCenterWorldSpace = centroidLocationAlongxRef + Vector3.ProjectOnPlane(partWorldToLocalMatrixDict[data.aeroModule.part].worldPosition, worldVehicleAxis) + avgPosDiffFromCentroid;
-
-                data.centroidPartSpace = transformMatrix.MultiplyPoint3x4(forceCenterWorldSpace);
-                data.xRefVectorPartSpace = transformMatrix.MultiplyVector(xRefVectorWorldSpace);
-                data.nRefVectorPartSpace = transformMatrix.MultiplyVector(nRefVectorWorldSpace);
-                data.dragFactor = dragFactor[i];
-
-                FARPartGeometry.VoxelCrossSection.SideAreaValues values = sideAreaValues[data.aeroModule.part];
-
-                transformMatrix = transformMatrix * vesselToWorldMatrix;
-                
-                partData.Add(data);
-            }
-
-            if (crossFlowDragMachCurve == null)
-                GenerateCrossFlowDragCurve();
-        }*/
 
         public void UpdateAeroSection(float potentialFlowNormalForce, float viscCrossflowDrag, float diameter, float flatnessRatio, float hypersonicMomentForward, float hypersonicMomentBackward,
             Vector3 centroidWorldSpace, Vector3 xRefVectorWorldSpace, Vector3 nRefVectorWorldSpace, Matrix4x4 vesselToWorldMatrix, Vector3 vehicleMainAxis, List<FARAeroPartModule> moduleList,
             List<float> dragFactor, Dictionary<Part, PartTransformInfo> partWorldToLocalMatrixDict)
         {
+            mergeFactor = 0;
+
             this.potentialFlowNormalForce = potentialFlowNormalForce;                   //copy lifting body info over
             this.viscCrossflowDrag = viscCrossflowDrag;
             this.flatnessRatio = flatnessRatio;
@@ -167,6 +108,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             this.diameter = diameter;
 
             partData.Clear();
+            handledAeroModulesIndexDict.Clear();
             if (partData.Capacity < moduleList.Capacity)
                 partData.Capacity = moduleList.Capacity;
 
@@ -212,11 +154,101 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     partData[i] = data;
                 else
                     partData.Add(data);
+
+                handledAeroModulesIndexDict.Add(data.aeroModule, i);
             }
 
             xForcePressureAoA0.BakeCurve();
             xForcePressureAoA180.BakeCurve();
             xForceSkinFriction.BakeCurve();
+
+            worldNormalVector = nRefVectorWorldSpace;
+        }
+
+        public bool CanMerge(FARAeroSection otherSection)
+        {
+            if (mergeFactor >= 14)
+                return false;       //only merge up to 15 sections
+
+            bool merge = true;
+
+            float flatnessRelDiff = flatnessRatio - otherSection.flatnessRatio;
+            flatnessRelDiff *= invFlatnessRatio;
+
+            if (flatnessRelDiff < 0.05)  //allow for 5% rel difference for merging
+                if ((flatnessRatio - 1) < 0.05)  //if it's within 5% of 1, it's good
+                    merge &= true;
+                else if (Math.Abs(Vector3.Dot(worldNormalVector, otherSection.worldNormalVector)) > 0.996)    //allow 5 degrees error for flatnessRatio
+                    merge &= true;
+                else
+                    merge &= false;         //too different in out-of-roundness, don't merge
+
+            float diameterRelDiff = diameter - otherSection.diameter;
+            diameterRelDiff /= diameter;
+
+            if (diameterRelDiff < 0.05)
+                merge &= true;
+            else
+                merge &= false;
+
+            return merge;
+        }
+
+        public void MergeAeroSection(FARAeroSection otherSection)
+        {
+            //increase merge factor each time we merge to maintain relative strength of sections
+            mergeFactor += 1;
+
+            float invMergeFactor = 1 / (mergeFactor + 1);
+
+            //merge simple factors
+            potentialFlowNormalForce = invMergeFactor * (potentialFlowNormalForce * mergeFactor + otherSection.potentialFlowNormalForce);
+            viscCrossflowDrag = invMergeFactor * (viscCrossflowDrag * mergeFactor + otherSection.viscCrossflowDrag);
+            flatnessRatio = invMergeFactor * (flatnessRatio * mergeFactor + otherSection.flatnessRatio);
+            invFlatnessRatio = invMergeFactor * (invFlatnessRatio * mergeFactor + otherSection.invFlatnessRatio);
+            hypersonicMomentForward = invMergeFactor * (hypersonicMomentForward * mergeFactor + otherSection.hypersonicMomentForward);
+            hypersonicMomentBackward = invMergeFactor * (hypersonicMomentBackward * mergeFactor + otherSection.hypersonicMomentBackward);
+            diameter = invMergeFactor * (diameter * mergeFactor + otherSection.diameter);
+
+            //merge the curves
+            xForcePressureAoA0.Scale(mergeFactor);
+            xForcePressureAoA180.Scale(mergeFactor);
+            xForceSkinFriction.Scale(mergeFactor);
+
+            xForcePressureAoA0.AddCurve(otherSection.xForcePressureAoA0);
+            xForcePressureAoA180.AddCurve(otherSection.xForcePressureAoA180);
+            xForceSkinFriction.AddCurve(otherSection.xForceSkinFriction);
+
+            xForcePressureAoA0.Scale(invMergeFactor);
+            xForcePressureAoA180.Scale(invMergeFactor);
+            xForceSkinFriction.Scale(invMergeFactor);
+
+            //merge PartData
+
+            for(int i = 0; i < otherSection.partData.Count; ++i)
+            {
+                PartData tmpOtherData = otherSection.partData[i];
+                int index = -1;
+                if(handledAeroModulesIndexDict.TryGetValue(tmpOtherData.aeroModule, out index))
+                {
+                    PartData tmpData = partData[index];
+                    tmpData.centroidPartSpace = invMergeFactor * (tmpData.centroidPartSpace * mergeFactor + tmpOtherData.centroidPartSpace);
+                    tmpData.xRefVectorPartSpace = invMergeFactor * (tmpData.xRefVectorPartSpace * mergeFactor + tmpOtherData.xRefVectorPartSpace);
+                    tmpData.nRefVectorPartSpace = invMergeFactor * (tmpData.nRefVectorPartSpace * mergeFactor + tmpOtherData.nRefVectorPartSpace);
+                    tmpData.dragFactor = invMergeFactor * (tmpData.dragFactor * mergeFactor + tmpOtherData.dragFactor);
+                }
+                else
+                {
+                    tmpOtherData.centroidPartSpace = invMergeFactor * (tmpOtherData.centroidPartSpace);
+                    tmpOtherData.xRefVectorPartSpace = invMergeFactor * (tmpOtherData.xRefVectorPartSpace);
+                    tmpOtherData.nRefVectorPartSpace = invMergeFactor * (tmpOtherData.nRefVectorPartSpace);
+                    tmpOtherData.dragFactor = invMergeFactor * (tmpOtherData.dragFactor);
+
+                    partData.Add(tmpOtherData);
+
+                    handledAeroModulesIndexDict.Add(tmpOtherData.aeroModule, partData.Count - 1);
+                }
+            }
         }
 
         public void ClearAeroSection()

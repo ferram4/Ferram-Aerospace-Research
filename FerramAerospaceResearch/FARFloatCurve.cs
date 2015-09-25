@@ -164,5 +164,42 @@ namespace FerramAerospaceResearch
                 return sections[curIndex].Evaluate(x);          //if we get here, we're in range and should evaluate this cubic
             }
         }
+
+        public void Scale(double scalar)
+        {
+            for(int i = 0; i < sections.Length; ++i)
+            {
+                CubicSection tmpSection = sections[i];
+                tmpSection.a *= scalar;
+                tmpSection.b *= scalar;
+                tmpSection.c *= scalar;
+                tmpSection.d *= scalar;
+
+                sections[i] = tmpSection;
+            }
+        }
+
+        /// <summary>
+        /// If num curve sections are identical, adds the curve coefficients together, keeping the limits of this curve
+        /// </summary>
+        /// <param name="otherCurve"></param>
+        public void AddCurve(FARFloatCurve otherCurve)
+        {
+            if (sections.Length != otherCurve.sections.Length)
+                throw new ArgumentException("Section array lengths do not match");
+
+            for(int i = 0; i < sections.Length; ++i)
+            {
+                CubicSection tmpSection = sections[i];
+                CubicSection addSection = otherCurve.sections[i];
+
+                tmpSection.a += addSection.a;
+                tmpSection.b += addSection.b;
+                tmpSection.c += addSection.c;
+                tmpSection.d += addSection.d;
+
+                sections[i] = tmpSection;
+            }
+        }
     }
 }

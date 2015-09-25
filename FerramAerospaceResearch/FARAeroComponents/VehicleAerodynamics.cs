@@ -1085,6 +1085,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if (_newAeroSections.Capacity < numSections)
                 _newAeroSections.Capacity = numSections;
 
+            int aeroSectionIndex = 0;
+            FARAeroSection prevSection = null;
+
             for (int i = 0; i <= numSections; i++)  //index in the cross sections
             {
                 int index = i + front;      //index along the actual body
@@ -1103,8 +1106,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 FARAeroSection currentSection = null;
 
-                if (i < _newAeroSections.Count)
-                    currentSection = _newAeroSections[i];
+                if (aeroSectionIndex < _newAeroSections.Count)
+                    currentSection = _newAeroSections[aeroSectionIndex];
                 else
                 {
                     lock (_commonLocker)
@@ -1333,10 +1336,19 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     ,viscCrossflowDrag / (float)(_sectionThickness), (float)flatnessRatio, hypersonicMomentForward, hypersonicMomentBackward,
                     centroid, xRefVector, nRefVector, _localToWorldMatrix, _vehicleMainAxis, includedModules, weighting, _partWorldToLocalMatrixDict);
 
-                if (i < _newAeroSections.Count)
-                    _newAeroSections[i] = currentSection;
+
+                if (prevSection != null && prevSection.CanMerge(currentSection))
+                    prevSection.MergeAeroSection(currentSection);
                 else
-                    _newAeroSections.Add(currentSection);
+                {
+                    if (aeroSectionIndex < _newAeroSections.Count)
+                        _newAeroSections[aeroSectionIndex] = currentSection;
+                    else
+                        _newAeroSections.Add(currentSection);
+
+                    prevSection = currentSection;
+                    ++aeroSectionIndex;
+                }
 
                 for (int j = 0; j < includedModules.Count; j++)
                 {
@@ -1351,7 +1363,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if(_newAeroSections.Count > numSections)        //deal with sections that are unneeded now
             {
                 lock (_commonLocker)
-                    for (int i = _newAeroSections.Count - 1; i > numSections; --i)
+                    for (int i = _newAeroSections.Count - 1; i > aeroSectionIndex + 1; --i)
                     {
                         FARAeroSection unusedSection = _newAeroSections[i];
                         _newAeroSections.RemoveAt(i);
