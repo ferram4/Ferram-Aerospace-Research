@@ -202,26 +202,18 @@ namespace FerramAerospaceResearch.FARAeroComponents
             float invMergeFactor = 1 / (mergeFactor + 1);
 
             //merge simple factors
-            potentialFlowNormalForce = invMergeFactor * (potentialFlowNormalForce * mergeFactor + otherSection.potentialFlowNormalForce);
-            viscCrossflowDrag = invMergeFactor * (viscCrossflowDrag * mergeFactor + otherSection.viscCrossflowDrag);
+            potentialFlowNormalForce += otherSection.potentialFlowNormalForce;
+            viscCrossflowDrag += otherSection.viscCrossflowDrag;
             flatnessRatio = invMergeFactor * (flatnessRatio * mergeFactor + otherSection.flatnessRatio);
             invFlatnessRatio = invMergeFactor * (invFlatnessRatio * mergeFactor + otherSection.invFlatnessRatio);
             hypersonicMomentForward = invMergeFactor * (hypersonicMomentForward * mergeFactor + otherSection.hypersonicMomentForward);
             hypersonicMomentBackward = invMergeFactor * (hypersonicMomentBackward * mergeFactor + otherSection.hypersonicMomentBackward);
             diameter = invMergeFactor * (diameter * mergeFactor + otherSection.diameter);
 
-            //merge the curves
-            xForcePressureAoA0.Scale(mergeFactor);
-            xForcePressureAoA180.Scale(mergeFactor);
-            xForceSkinFriction.Scale(mergeFactor);
-
+            //merge the curves; don't scale because these are actual drag values
             xForcePressureAoA0.AddCurve(otherSection.xForcePressureAoA0);
             xForcePressureAoA180.AddCurve(otherSection.xForcePressureAoA180);
             xForceSkinFriction.AddCurve(otherSection.xForceSkinFriction);
-
-            xForcePressureAoA0.Scale(invMergeFactor);
-            xForcePressureAoA180.Scale(invMergeFactor);
-            xForceSkinFriction.Scale(invMergeFactor);
 
             //merge PartData
 
