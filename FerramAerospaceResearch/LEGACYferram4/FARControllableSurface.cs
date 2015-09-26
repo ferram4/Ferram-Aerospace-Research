@@ -460,7 +460,7 @@ namespace ferram4
                     {
                         //Vector3 tmpVec = vessel.ReferenceTransform.up * Vector3.Dot(vessel.ReferenceTransform.up, vel) + vessel.ReferenceTransform.forward * Vector3.Dot(vessel.ReferenceTransform.forward, vel);   //velocity vector projected onto a plane that divides the airplane into left and right halves
                         //double AoA = Vector3.Dot(tmpVec.normalized, vessel.ReferenceTransform.forward);
-                        double AoA = base.CalculateAoA(vel / velMag);      //using base.CalculateAoA gets the deflection using WingAeroModel's code, which does not account for deflection; this gives us the AoA that the surface _would_ be at if it hadn't deflected at all.
+                        double AoA = base.CalculateAoA(vel);      //using base.CalculateAoA gets the deflection using WingAeroModel's code, which does not account for deflection; this gives us the AoA that the surface _would_ be at if it hadn't deflected at all.
                         AoA = FARMathUtil.rad2deg * AoA;
                         if (double.IsNaN(AoA))
                             AoA = 0;
@@ -553,16 +553,23 @@ namespace ferram4
             // Compute a vector for CalculateAoA
             double radAoAoffset = AoAoffset * FARMathUtil.deg2rad * ctrlSurfFrac;
             deflectedNormal.y = Math.Sin(radAoAoffset);
-            deflectedNormal.z = Math.Cos(radAoAoffset);
+            double tmp = 1 - deflectedNormal.y * deflectedNormal.y;
+            if (tmp < 0)
+                tmp = 0;
+            deflectedNormal.z = Math.Sqrt(tmp);
 
             // Visually animate the surface
             MovableSection.localRotation = MovableOrig;
             if (AoAoffset != 0)
             {
-                if(flipAxis)
-                    MovableSection.Rotate(controlSurfacePivot, (float)AoAoffset);
+                Quaternion localRot;
+                if (flipAxis)
+                    localRot = Quaternion.FromToRotation(deflectedNormal, new Vector3(0, 0, 1));
                 else
-                    MovableSection.Rotate(controlSurfacePivot, (float)-AoAoffset);
+                    localRot = Quaternion.FromToRotation(new Vector3(0, 0, 1), deflectedNormal);
+                
+                MovableSection.localRotation *= localRot;
+
             }
             CheckShielded();
         }
