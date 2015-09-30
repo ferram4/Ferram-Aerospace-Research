@@ -245,10 +245,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public void ClearAeroSection()
         {
-            xForcePressureAoA0 = null;
-            xForcePressureAoA180 = null;
-            xForceSkinFriction = null;
-            partData = null;
+            //xForcePressureAoA0 = null;
+            //xForcePressureAoA180 = null;
+            //xForceSkinFriction = null;
+            partData.Clear();
         }
         
         public void PredictionCalculateAeroForces(float atmDensity, float machNumber, float reynoldsPerUnitLength, float skinFrictionDrag, Vector3 vel, ferram4.FARCenterQuery center)

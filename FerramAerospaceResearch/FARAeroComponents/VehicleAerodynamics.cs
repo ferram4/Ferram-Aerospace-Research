@@ -784,12 +784,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if (i + k <= backIndex)
                         backwardArea = vehicleCrossSection[i + k].area;
                     else
-                        backwardArea = 0;// vehicleCrossSection[backIndex].area;
+                        backwardArea = (vehicleCrossSection[backIndex].area - vehicleCrossSection[backIndex - 1].area) * (i + k - backIndex) + vehicleCrossSection[backIndex].area;
 
                     if (i - k >= frontIndex)
                         forwardArea = vehicleCrossSection[i - k].area;
                     else
-                        forwardArea = 0;// vehicleCrossSection[frontIndex].area;
+                        forwardArea = (vehicleCrossSection[frontIndex].area - vehicleCrossSection[frontIndex + 1].area) * (i - k - frontIndex) + vehicleCrossSection[frontIndex].area; ;// vehicleCrossSection[frontIndex].area;
 
                     secondDeriv += sK[k] * (forwardArea + backwardArea);
                 }
@@ -922,7 +922,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 tmpArea = _ductedAreaAdjustment[_ductedAreaAdjustment.Length - 1];
 
-                for (int i = _ductedAreaAdjustment.Length - 2; i >= 0; i--)
+                for (int i = _ductedAreaAdjustment.Length - 1; i >= 0; i--)
                 {
                     double areaAdjustment = _ductedAreaAdjustment[i];
                     double prevAreaAdjustment = tmpArea;
@@ -1082,8 +1082,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             HashSet<FARAeroPartModule> tmpAeroModules = new HashSet<FARAeroPartModule>();
             _sonicDragArea = 0;
 
-            if (_newAeroSections.Capacity < numSections)
-                _newAeroSections.Capacity = numSections;
+            if (_newAeroSections.Capacity < numSections + 1)
+                _newAeroSections.Capacity = numSections + 1;
 
             int aeroSectionIndex = 0;
             FARAeroSection prevSection = null;
@@ -1220,6 +1220,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                     sonicAoA0Drag = -(float)(cPSonicForward * (curArea - prevArea)) + hypersonicDragForward * 0.3f * hypersonicDragForwardFrac;
                     sonicAoA180Drag = (float)(cPSonicBackward * (curArea - nextArea)) + sonicBaseDrag - hypersonicDragBackward * 0.3f * hypersonicDragBackwardFrac;
+                    if(i == 0)
+                        sonicAoA180Drag += (float)(cPSonicBackward * (0 - curArea));
                 }
                 else if (sonicBaseDrag < 0)
                 {
@@ -1234,7 +1236,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                     sonicAoA0Drag = -(float)(cPSonicForward * (curArea - prevArea)) + sonicBaseDrag + hypersonicDragForward * 0.3f * hypersonicDragForwardFrac;
                     sonicAoA180Drag = (float)(cPSonicBackward * (curArea - nextArea)) - hypersonicDragBackward * 0.3f * hypersonicDragBackwardFrac;
-
+                    if (i == numSections)
+                        sonicAoA0Drag += -(float)(cPSonicForward * (0 - curArea));
                 }
                 else
                 {
@@ -1338,7 +1341,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
 
                 if (prevSection != null && prevSection.CanMerge(currentSection))
+                {
                     prevSection.MergeAeroSection(currentSection);
+                    currentSection.ClearAeroSection();
+                }
                 else
                 {
                     if (aeroSectionIndex < _newAeroSections.Count)
@@ -1360,10 +1366,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 weighting.Clear();
 
             }
-            if(_newAeroSections.Count > numSections)        //deal with sections that are unneeded now
+            if (_newAeroSections.Count > aeroSectionIndex + 1)        //deal with sections that are unneeded now
             {
                 lock (_commonLocker)
-                    for (int i = _newAeroSections.Count - 1; i > aeroSectionIndex + 1; --i)
+                    for (int i = _newAeroSections.Count - 1; i > aeroSectionIndex; --i)
                     {
                         FARAeroSection unusedSection = _newAeroSections[i];
                         _newAeroSections.RemoveAt(i);

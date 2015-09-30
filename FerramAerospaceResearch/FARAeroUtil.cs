@@ -157,7 +157,7 @@ namespace FerramAerospaceResearch
                         || !bodyProperties.HasValue("referenceTemp"))
                         continue;
 
-                    double[] Rgamma_and_gamma = new double[5];
+                    double[] Rgamma_and_gamma = new double[2];
                     double tmp;
                     double.TryParse(bodyProperties.GetValue("viscosityAtReferenceTemp"), out tmp);
 
@@ -194,7 +194,7 @@ namespace FerramAerospaceResearch
                 if (bodyAtmosphereConfiguration.ContainsKey(body.flightGlobalsIndex))
                     continue;
 
-                double[] Rgamma_and_gamma = new double[5];
+                double[] Rgamma_and_gamma = new double[2];
                 Rgamma_and_gamma[0] = 1.7894e-5;
                 Rgamma_and_gamma[1] = 288;
 

@@ -271,8 +271,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 if (x > LENGTH_OF_VOXEL)
                     x -= LENGTH_OF_VOXEL;
 
-                if (y > LENGTH_OF_VOXEL)
-                    y -= LENGTH_OF_VOXEL;
+                //if (y > LENGTH_OF_VOXEL)
+                //    y -= LENGTH_OF_VOXEL;
 
                 if (z > LENGTH_OF_VOXEL)
                     z -= LENGTH_OF_VOXEL;
@@ -284,12 +284,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 if (x == 0)
                     x = LENGTH_OF_VOXEL;
 
-                if (y == 0)
-                    y = LENGTH_OF_VOXEL;
+                //if (y == 0)
+                //    y = LENGTH_OF_VOXEL;
 
                 if (z == 0)
                     z = LENGTH_OF_VOXEL;
 
+                y = LENGTH_OF_VOXEL;    //quick solution; always full in flight direction
 
                 float size = x * y * z;     //so then calc the volume
                 size *= AREA_SCALING;       //scale for the 0-15 scaling used for the plane locations
