@@ -349,17 +349,35 @@ namespace ferram4
 
             if (isFlap == true)
             {
-                if (HighLogic.LoadedSceneIsFlight)
-                    flapLocation = (int)Math.Sign(Vector3.Dot(vessel.ReferenceTransform.forward, part.partTransform.forward));      //figure out which way is up
+                if (part.symMethod == SymmetryMethod.Mirror || part.symmetryCounterparts.Count < 1)
+                {
+                    if (HighLogic.LoadedSceneIsFlight)
+                        flapLocation = Math.Sign(Vector3.Dot(vessel.ReferenceTransform.forward, part.partTransform.forward));      //figure out which way is up
+                    else
+                        flapLocation = Math.Sign(Vector3.Dot(EditorLogic.RootPart.partTransform.forward, part.partTransform.forward));      //figure out which way is up
+                }
+                else if(part.parent != null)
+                {
+                    flapLocation = Math.Sign(Vector3.Dot(part.partTransform.position - part.parent.partTransform.position, part.partTransform.forward));
+                }
                 else
-                    flapLocation = (int)Math.Sign(Vector3.Dot(EditorLogic.RootPart.partTransform.forward, part.partTransform.forward));      //figure out which way is up
+                    flapLocation = 1;
             }
             else if (isSpoiler == true)
             {
-                if (HighLogic.LoadedSceneIsFlight)
-                    flapLocation = -(int)Math.Sign(Vector3.Dot(vessel.ReferenceTransform.forward, part.partTransform.forward));      //figure out which way is up
+                if (part.symMethod == SymmetryMethod.Mirror || part.symmetryCounterparts.Count < 1)
+                {
+                    if (HighLogic.LoadedSceneIsFlight)
+                        flapLocation = -Math.Sign(Vector3.Dot(vessel.ReferenceTransform.forward, part.partTransform.forward));      //figure out which way is up
+                    else
+                        flapLocation = -Math.Sign(Vector3.Dot(EditorLogic.RootPart.partTransform.forward, part.partTransform.forward));      //figure out which way is up
+                }
+                else if (part.parent != null)
+                {
+                    flapLocation = Math.Sign(Vector3.Dot(part.partTransform.position - part.parent.partTransform.position, part.partTransform.forward));
+                }
                 else
-                    flapLocation = -(int)Math.Sign(Vector3.Dot(EditorLogic.RootPart.partTransform.forward, part.partTransform.forward));      //figure out which way is up
+                    flapLocation = 1;
             }
 
             Vector3 CoM = Vector3.zero;
@@ -623,12 +641,32 @@ namespace ferram4
                 if (isFlap == true)
                 {
                     int flapDeflectionLevel = flap;
-                    flapLocation = (int)Math.Sign(Vector3.Dot(rootTransform.forward, partTransform.forward));      //figure out which way is up
+                    if (part.symMethod == SymmetryMethod.Mirror || part.symmetryCounterparts.Count < 1)
+                    {
+                        flapLocation = Math.Sign(Vector3.Dot(EditorLogic.RootPart.partTransform.forward, part.partTransform.forward));      //figure out which way is up
+                    }
+                    else if (part.parent != null)
+                    {
+                        flapLocation = Math.Sign(Vector3.Dot(part.partTransform.position - part.parent.partTransform.position, part.partTransform.forward));
+                    }
+                    else
+                        flapLocation = 1;
+
                     AoAcurrentFlap += maxdeflectFlap * flapLocation * flapDeflectionLevel * 0.3333333333333;
                 }
                 else if (isSpoiler == true)
                 {
-                    flapLocation = -(int)Math.Sign(Vector3.Dot(rootTransform.forward, partTransform.forward));      //figure out which way is up
+                    if (part.symMethod == SymmetryMethod.Mirror || part.symmetryCounterparts.Count < 1)
+                    {
+                        flapLocation = -Math.Sign(Vector3.Dot(EditorLogic.RootPart.partTransform.forward, part.partTransform.forward));      //figure out which way is up
+                    }
+                    else if (part.parent != null)
+                    {
+                        flapLocation = Math.Sign(Vector3.Dot(part.partTransform.position - part.parent.partTransform.position, part.partTransform.forward));
+                    }
+                    else
+                        flapLocation = 1; 
+                    
                     AoAcurrentFlap += brake ? maxdeflectFlap * flapLocation : 0;
                 }
                 AoAdesiredFlap = AoAcurrentFlap;
