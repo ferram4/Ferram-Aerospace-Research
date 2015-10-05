@@ -478,47 +478,44 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 hitParts.Add(p);
 
-                Vector3 tmpCandVector;
-                Vector3 candVector;
-
-                if (p.srfAttachNode != null && p.srfAttachNode.attachedPart != null)// && p.attachRules.allowSrfAttach)
-                {
-                    tmpCandVector = p.srfAttachNode.orientation;
-                    tmpCandVector = new Vector3(0, Math.Abs(tmpCandVector.x) + Math.Abs(tmpCandVector.z), Math.Abs(tmpCandVector.y));
-
-                    if (p.srfAttachNode.position.sqrMagnitude == 0 && tmpCandVector == Vector3.forward)
-                        tmpCandVector = Vector3.up;
-
-                    if (tmpCandVector.z > tmpCandVector.x && tmpCandVector.z > tmpCandVector.y)
-                        tmpCandVector = Vector3.forward;
-                    else if (tmpCandVector.y > tmpCandVector.x && tmpCandVector.y > tmpCandVector.z)
-                        tmpCandVector = Vector3.up;
-                    else
-                        tmpCandVector = Vector3.right;
-                }
-                else
-                {
-                    tmpCandVector = Vector3.up;
-                }
-
-                candVector = p.partTransform.TransformDirection(tmpCandVector);
+                Vector3 tmpCandVector = Vector3.zero;
+                Vector3 candVector = Vector3.zero;
 
                 if (p.Modules.Contains("ModuleResourceIntake"))      //intakes are probably pointing in the direction we're gonna be going in
                 {
                     ModuleResourceIntake intake = (ModuleResourceIntake)p.Modules["ModuleResourceIntake"];
                     Transform intakeTrans = p.FindModelTransform(intake.intakeTransformName);
                     if ((object)intakeTrans != null)
-                        candVector = intakeTrans.forward;
+                        candVector = intakeTrans.TransformDirection(Vector3.forward);
                 }
                 else if (geoModule == null || geoModule.IgnoreForMainAxis || p.Modules.Contains("FARWingAerodynamicModel") || p.Modules.Contains("FARControllableSurface"))      //aggregate wings for later calc...
                 {
                     continue;
-                /*    Vector3 notCandVector =  _worldToLocalMatrix.MultiplyVector(p.partTransform.forward);
-                    notCandVector.x = Math.Abs(notCandVector.x);
-                    notCandVector.y = Math.Abs(notCandVector.y);
-                    notCandVector.z = Math.Abs(notCandVector.z);
-                    notAxis += notCandVector;*/
                 }
+                else
+                {
+                    if (p.srfAttachNode != null && p.srfAttachNode.attachedPart != null)// && p.attachRules.allowSrfAttach)
+                    {
+                        tmpCandVector = p.srfAttachNode.orientation;
+                        tmpCandVector = new Vector3(0, Math.Abs(tmpCandVector.x) + Math.Abs(tmpCandVector.z), Math.Abs(tmpCandVector.y));
+
+                        if (p.srfAttachNode.position.sqrMagnitude == 0 && tmpCandVector == Vector3.forward)
+                            tmpCandVector = Vector3.up;
+
+                        if (tmpCandVector.z > tmpCandVector.x && tmpCandVector.z > tmpCandVector.y)
+                            tmpCandVector = Vector3.forward;
+                        else if (tmpCandVector.y > tmpCandVector.x && tmpCandVector.y > tmpCandVector.z)
+                            tmpCandVector = Vector3.up;
+                        else
+                            tmpCandVector = Vector3.right;
+                    }
+                    else
+                    {
+                        tmpCandVector = Vector3.up;
+                    }
+                    candVector = p.partTransform.TransformDirection(tmpCandVector);
+                }
+
                 for (int j = 0; j < p.symmetryCounterparts.Count; j++)
                 {
                     Part q = p.symmetryCounterparts[j];
@@ -533,16 +530,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         ModuleResourceIntake intake = (ModuleResourceIntake)q.Modules["ModuleResourceIntake"];
                         Transform intakeTrans = q.FindModelTransform(intake.intakeTransformName);
                         if ((object)intakeTrans != null)
-                            candVector += intakeTrans.forward;
+                            candVector += intakeTrans.TransformDirection(Vector3.forward);
                     }
-                    /*else if (q.Modules.Contains("FARWingAerodynamicModel") || q.Modules.Contains("FARControllableSurface"))      //aggregate wings for later calc...
-                    {
-                        Vector3 notCandVector = _worldToLocalMatrix.MultiplyVector(p.partTransform.forward);
-                        notCandVector.x = Math.Abs(notCandVector.x);
-                        notCandVector.y = Math.Abs(notCandVector.y);
-                        notCandVector.z = Math.Abs(notCandVector.z);
-                        notAxis += notCandVector;
-                    }*/
                     else
                         candVector += q.partTransform.TransformDirection(tmpCandVector);
                 }
@@ -554,7 +543,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 Vector3 size = geoModule.overallMeshBounds.size;
 
-                axis += candVector * size.x * size.y * size.z * (1 + p.symmetryCounterparts.Count);    //scale part influence by approximate size
+                axis += candVector * size.x * size.y * size.z;// *(1 + p.symmetryCounterparts.Count);    //scale part influence by approximate size
             }
             /*float perpTest = Math.Abs(Vector3.Dot(axis, notAxis));
 
