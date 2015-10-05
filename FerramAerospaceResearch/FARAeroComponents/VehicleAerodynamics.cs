@@ -759,7 +759,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             lowIndex = Math.Max(frontIndex - 1, 0);
             highIndex = Math.Min(backIndex + 1, vehicleCrossSection.Length - 1);
 
-            for (int i = lowIndex; i <= highIndex; i++)
+            for (int i = lowIndex + M; i <= highIndex - M; i++)
             {
 
                 double secondDeriv = 0;
@@ -773,18 +773,48 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if (i + k <= backIndex)
                         backwardArea = vehicleCrossSection[i + k].area;
                     else
-                        backwardArea = (vehicleCrossSection[backIndex].area - vehicleCrossSection[backIndex - 1].area) * (i + k - backIndex) + vehicleCrossSection[backIndex].area;
+                        backwardArea = 0;// (vehicleCrossSection[backIndex].area - vehicleCrossSection[backIndex - 1].area) * (i + k - backIndex) + vehicleCrossSection[backIndex].area;
 
                     if (i - k >= frontIndex)
                         forwardArea = vehicleCrossSection[i - k].area;
                     else
-                        forwardArea = (vehicleCrossSection[frontIndex].area - vehicleCrossSection[frontIndex + 1].area) * (i - k - frontIndex) + vehicleCrossSection[frontIndex].area; ;// vehicleCrossSection[frontIndex].area;
+                        forwardArea = 0;// (vehicleCrossSection[frontIndex].area - vehicleCrossSection[frontIndex + 1].area) * (i - k - frontIndex) + vehicleCrossSection[frontIndex].area; ;// vehicleCrossSection[frontIndex].area;
 
                     secondDeriv += sK[k] * (forwardArea + backwardArea);
                 }
 
                 vehicleCrossSection[i].secondAreaDeriv = secondDeriv * denom;
                 //ThreadSafeDebugLogger.Instance.RegisterMessage(vehicleCrossSection[i].secondAreaDeriv.ToString());
+            }
+            //forward difference
+            for (int i = frontIndex; i < lowIndex + M; i++)
+            {
+                double secondDeriv = 0;
+
+                secondDeriv += vehicleCrossSection[i].area;
+                if(i + 2 <= backIndex)
+                    secondDeriv += vehicleCrossSection[i + 2].area;
+                if (i + 1 <= backIndex)
+                    secondDeriv -= 2 * vehicleCrossSection[i + 1].area;
+
+                secondDeriv /= sectionThickness * sectionThickness;
+
+                vehicleCrossSection[i].secondAreaDeriv = secondDeriv;
+            }
+            //backward difference
+            for (int i = highIndex - M + 1; i <= backIndex; i++)
+            {
+                double secondDeriv = 0;
+
+                secondDeriv += vehicleCrossSection[i].area;
+                if (i - 2 >= frontIndex)
+                    secondDeriv += vehicleCrossSection[i - 2].area;
+                if (i - 1 >= frontIndex)
+                    secondDeriv -= 2 * vehicleCrossSection[i - 1].area;
+
+                secondDeriv /= sectionThickness * sectionThickness;
+
+                vehicleCrossSection[i].secondAreaDeriv = secondDeriv;
             }
         }
 
