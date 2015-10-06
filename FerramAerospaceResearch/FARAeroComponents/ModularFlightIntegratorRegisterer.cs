@@ -76,10 +76,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 double stockRadArea = fi.BaseFICalculateAreaRadiative(part);
 
                 part.radiativeArea = CalculateAreaRadiative(fi, part, aeroModule);
-                part.exposedArea = part.machNumber > 0 ? CalculateAreaExposed(fi, part, aeroModule, stockRadArea) : part.radiativeArea;
+                part.exposedArea = part.machNumber > 0 ? CalculateAreaExposed(fi, part, aeroModule) : part.radiativeArea;
 
                 if (part.radiativeArea < stockRadArea)
                     SkinThermalMassShenanigansForShieldedParts(fi, part, stockRadArea, part.radiativeArea);     //very hacky method to deal with the fact that stock assumes that radiative area is also the skin area for the part.  This causes issues for parts that cannot radiate to the environment because they are completely enclosed
+
+                if (part.exposedArea > part.radiativeArea)
+                    part.exposedArea = part.radiativeArea;      //sanity check just in case
             }
             //Debug.Log("MFI: " + fi.CoM + " " + Planetarium.GetUniversalTime());
         }
@@ -94,7 +97,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             part.thermalMass -= part.skinThermalMass;   //re-subtract skin thermal mass
             part.thermalMassReciprocal = 1.0 / Math.Max(part.thermalMass, 0.001);   //reset thermalMassRecip
 
-            part.radiativeArea = calculatedArea;
+            //part.radiativeArea = calculatedArea;      //I doubt that this ever caused a problem, but let's be sure
         }
 
         void UpdateAerodynamics(ModularFI.ModularFlightIntegrator fi, Part part)
@@ -129,7 +132,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
         }
 
-        double CalculateAreaExposed(ModularFI.ModularFlightIntegrator fi, Part part, FARAeroPartModule aeroModule, double stockRadArea)
+        double CalculateAreaExposed(ModularFI.ModularFlightIntegrator fi, Part part, FARAeroPartModule aeroModule)
         {
             if ((object)aeroModule == null)
                 return fi.BaseFICalculateAreaExposed(part);
