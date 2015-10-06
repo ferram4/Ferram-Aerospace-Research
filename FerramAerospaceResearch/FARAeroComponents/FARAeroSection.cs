@@ -215,32 +215,48 @@ namespace FerramAerospaceResearch.FARAeroComponents
             xForcePressureAoA180.AddCurve(otherSection.xForcePressureAoA180);
             xForceSkinFriction.AddCurve(otherSection.xForceSkinFriction);
 
-            //merge PartData
+            //prep old data for merging
+            for (int i = 0; i < partData.Count; ++i)
+            {
+                PartData oldData = partData[i];
+                oldData.dragFactor *= mergeFactor;      //scale all of these up for the incoming data
+                partData[i] = oldData;
+            }
 
-            for(int i = 0; i < otherSection.partData.Count; ++i)
+            //merge PartData
+            float mergeFactorP1 = mergeFactor + 1;
+            for (int i = 0; i < otherSection.partData.Count; ++i)
             {
                 PartData tmpOtherData = otherSection.partData[i];
                 int index = -1;
-                if(handledAeroModulesIndexDict.TryGetValue(tmpOtherData.aeroModule, out index))
+                if (handledAeroModulesIndexDict.TryGetValue(tmpOtherData.aeroModule, out index))
                 {
                     PartData tmpData = partData[index];
-                    tmpData.centroidPartSpace = invMergeFactor * (tmpData.centroidPartSpace * mergeFactor + tmpOtherData.centroidPartSpace);
-                    tmpData.xRefVectorPartSpace = invMergeFactor * (tmpData.xRefVectorPartSpace * mergeFactor + tmpOtherData.xRefVectorPartSpace);
-                    tmpData.nRefVectorPartSpace = invMergeFactor * (tmpData.nRefVectorPartSpace * mergeFactor + tmpOtherData.nRefVectorPartSpace);
-                    tmpData.dragFactor = invMergeFactor * (tmpData.dragFactor * mergeFactor + tmpOtherData.dragFactor);
+                    tmpData.centroidPartSpace = (tmpData.centroidPartSpace * mergeFactor + tmpOtherData.centroidPartSpace);         //prep'd for averaging
+                    tmpData.xRefVectorPartSpace = (tmpData.xRefVectorPartSpace * mergeFactor + tmpOtherData.xRefVectorPartSpace);
+                    tmpData.nRefVectorPartSpace = (tmpData.nRefVectorPartSpace * mergeFactor + tmpOtherData.nRefVectorPartSpace);
+                    tmpData.dragFactor = (tmpData.dragFactor * mergeFactor + tmpOtherData.dragFactor);
                 }
                 else
                 {
-                    tmpOtherData.centroidPartSpace = invMergeFactor * (tmpOtherData.centroidPartSpace);
-                    tmpOtherData.xRefVectorPartSpace = invMergeFactor * (tmpOtherData.xRefVectorPartSpace);
-                    tmpOtherData.nRefVectorPartSpace = invMergeFactor * (tmpOtherData.nRefVectorPartSpace);
-                    tmpOtherData.dragFactor = invMergeFactor * (tmpOtherData.dragFactor);
+                    tmpOtherData.centroidPartSpace = mergeFactorP1 * (tmpOtherData.centroidPartSpace);     //these must be scaled to completely counter the effect of the downscale at the end
+                    tmpOtherData.xRefVectorPartSpace = mergeFactorP1 * (tmpOtherData.xRefVectorPartSpace);
+                    tmpOtherData.nRefVectorPartSpace = mergeFactorP1 * (tmpOtherData.nRefVectorPartSpace);
+                    //tmpOtherData.dragFactor = invMergeFactor * (tmpOtherData.dragFactor);       //this will already be scaled down at the end
 
                     partData.Add(tmpOtherData);
 
                     handledAeroModulesIndexDict.Add(tmpOtherData.aeroModule, partData.Count - 1);
                 }
             }
+
+            for (int i = 0; i < partData.Count; ++i)
+            {
+                PartData newData = partData[i];
+                newData.dragFactor *= invMergeFactor;      //now scale everything back down to sane levels
+                partData[i] = newData;
+            }
+
         }
 
         public void ClearAeroSection()

@@ -267,7 +267,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             for (int i = 0; i < _currentAeroSections.Count; i++)
                 _currentAeroSections[i].FlightCalculateAeroForces(atmDensity, (float)machNumber, (float)(reynoldsNumber / Length), skinFrictionDragCoefficient);
 
-            _vesselIntakeRamDrag.ApplyIntakeRamDrag((float)machNumber, _vessel.srf_velocity.normalized, (float)_vessel.dynamicPressurekPa, _updateQueued);
+            _vesselIntakeRamDrag.ApplyIntakeRamDrag((float)machNumber, _vessel.srf_velocity.normalized, (float)_vessel.dynamicPressurekPa);
 
             for (int i = 0; i < _currentAeroModules.Count; i++)
             {

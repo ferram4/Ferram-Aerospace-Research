@@ -132,10 +132,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
         }
 
-        public void ApplyIntakeRamDrag(float machNumber, Vector3 vesselVelNorm, float dynPres, bool checkNull = true)
+        public void ApplyIntakeRamDrag(float machNumber, Vector3 vesselVelNorm, float dynPres)
         {
             float currentRamDrag = CalculateRamDrag(machNumber);
-            ApplyIntakeDrag(currentRamDrag, vesselVelNorm, dynPres, checkNull);
+            ApplyIntakeDrag(currentRamDrag, vesselVelNorm, dynPres);
         }
 
         private float CalculateRamDrag(float machNumber)
@@ -154,7 +154,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             return currentRamDrag;
         }
 
-        private void ApplyIntakeDrag(float currentRamDrag, Vector3 vesselVelNorm, float dynPres, bool checkNull)
+        private void ApplyIntakeDrag(float currentRamDrag, Vector3 vesselVelNorm, float dynPres)
         {
             for (int i = _intakeTransforms.Count - 1; i >= 0; i--)
             {
@@ -163,7 +163,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     continue;
 
                 Transform transform = _intakeTransforms[i];
-                if (checkNull && transform == null)
+                if (transform == null)
                 {
                     _intakeModules.RemoveAt(i);
                     _intakeTransforms.RemoveAt(i);
