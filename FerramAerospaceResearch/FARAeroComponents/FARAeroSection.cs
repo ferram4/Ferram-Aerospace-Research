@@ -254,6 +254,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 PartData newData = partData[i];
                 newData.dragFactor *= invMergeFactor;      //now scale everything back down to sane levels
+                newData.centroidPartSpace *= invMergeFactor;
+                newData.xRefVectorPartSpace *= invMergeFactor;
+                newData.nRefVectorPartSpace *= invMergeFactor;
                 partData[i] = newData;
             }
 
