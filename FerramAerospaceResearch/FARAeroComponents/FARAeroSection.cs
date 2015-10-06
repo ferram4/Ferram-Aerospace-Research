@@ -167,8 +167,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public bool CanMerge(FARAeroSection otherSection)
         {
-            if (mergeFactor >= 14)
-                return false;       //only merge up to 15 sections
+            if (mergeFactor >= 4)
+                return false;       //only merge up to 5 sections
 
             bool merge = true;
 
@@ -178,7 +178,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if (flatnessRelDiff < 0.05)  //allow for 5% rel difference for merging
                 if ((flatnessRatio - 1) < 0.05)  //if it's within 5% of 1, it's good
                     merge &= true;
-                else if (Math.Abs(Vector3.Dot(worldNormalVector, otherSection.worldNormalVector)) > 0.996)    //allow 5 degrees error for flatnessRatio
+                else if (Math.Abs(Vector3.Dot(worldNormalVector, otherSection.worldNormalVector)) > 0.999)    //allow 5 degrees error for flatnessRatio
                     merge &= true;
                 else
                     merge &= false;         //too different in out-of-roundness, don't merge
@@ -204,10 +204,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
             //merge simple factors
             potentialFlowNormalForce += otherSection.potentialFlowNormalForce;
             viscCrossflowDrag += otherSection.viscCrossflowDrag;
+            hypersonicMomentForward += otherSection.hypersonicMomentForward;
+            hypersonicMomentBackward += otherSection.hypersonicMomentBackward;
+
             flatnessRatio = invMergeFactor * (flatnessRatio * mergeFactor + otherSection.flatnessRatio);
             invFlatnessRatio = invMergeFactor * (invFlatnessRatio * mergeFactor + otherSection.invFlatnessRatio);
-            hypersonicMomentForward = invMergeFactor * (hypersonicMomentForward * mergeFactor + otherSection.hypersonicMomentForward);
-            hypersonicMomentBackward = invMergeFactor * (hypersonicMomentBackward * mergeFactor + otherSection.hypersonicMomentBackward);
             diameter = invMergeFactor * (diameter * mergeFactor + otherSection.diameter);
 
             //merge the curves; don't scale because these are actual drag values
@@ -220,6 +221,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 PartData oldData = partData[i];
                 oldData.dragFactor *= mergeFactor;      //scale all of these up for the incoming data
+                oldData.centroidPartSpace *= mergeFactor;
+                oldData.xRefVectorPartSpace *= mergeFactor;
+                oldData.nRefVectorPartSpace *= mergeFactor;
                 partData[i] = oldData;
             }
 
@@ -232,10 +236,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (handledAeroModulesIndexDict.TryGetValue(tmpOtherData.aeroModule, out index))
                 {
                     PartData tmpData = partData[index];
-                    tmpData.centroidPartSpace = (tmpData.centroidPartSpace * mergeFactor + tmpOtherData.centroidPartSpace);         //prep'd for averaging
-                    tmpData.xRefVectorPartSpace = (tmpData.xRefVectorPartSpace * mergeFactor + tmpOtherData.xRefVectorPartSpace);
-                    tmpData.nRefVectorPartSpace = (tmpData.nRefVectorPartSpace * mergeFactor + tmpOtherData.nRefVectorPartSpace);
-                    tmpData.dragFactor = (tmpData.dragFactor * mergeFactor + tmpOtherData.dragFactor);
+                    tmpData.centroidPartSpace += tmpOtherData.centroidPartSpace;         //prep'd for averaging
+                    tmpData.xRefVectorPartSpace += tmpOtherData.xRefVectorPartSpace;
+                    tmpData.nRefVectorPartSpace += tmpOtherData.nRefVectorPartSpace;
+                    tmpData.dragFactor += tmpOtherData.dragFactor;
+
+                    partData[index] = tmpData;
                 }
                 else
                 {
@@ -255,8 +261,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 PartData newData = partData[i];
                 newData.dragFactor *= invMergeFactor;      //now scale everything back down to sane levels
                 newData.centroidPartSpace *= invMergeFactor;
-                newData.xRefVectorPartSpace *= invMergeFactor;
-                newData.nRefVectorPartSpace *= invMergeFactor;
+                newData.xRefVectorPartSpace.Normalize();
+                newData.nRefVectorPartSpace.Normalize();
                 partData[i] = newData;
             }
 
