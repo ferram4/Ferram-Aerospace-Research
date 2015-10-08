@@ -245,11 +245,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
                 else
                 {
-                    tmpOtherData.centroidPartSpace = mergeFactorP1 * (tmpOtherData.centroidPartSpace);     //these must be scaled to completely counter the effect of the downscale at the end
-                    tmpOtherData.xRefVectorPartSpace = mergeFactorP1 * (tmpOtherData.xRefVectorPartSpace);
-                    tmpOtherData.nRefVectorPartSpace = mergeFactorP1 * (tmpOtherData.nRefVectorPartSpace);
-                    //tmpOtherData.dragFactor = invMergeFactor * (tmpOtherData.dragFactor);       //this will already be scaled down at the end
-
+                    /*tmpOtherData.centroidPartSpace = mergeFactorP1 * (tmpOtherData.centroidPartSpace);     //these must be scaled to completely counter the effect of the downscale at the end
+                    tmpOtherData.xRefVectorPartSpace = (tmpOtherData.xRefVectorPartSpace);
+                    tmpOtherData.nRefVectorPartSpace = (tmpOtherData.nRefVectorPartSpace);
+                    tmpOtherData.dragFactor = invMergeFactor * (tmpOtherData.dragFactor);       //this will already be scaled down at the end
+                    */
                     partData.Add(tmpOtherData);
 
                     handledAeroModulesIndexDict.Add(tmpOtherData.aeroModule, partData.Count - 1);
