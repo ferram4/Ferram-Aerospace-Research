@@ -464,6 +464,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             //Vector3 notAxis = Vector3.zero;
             HashSet<Part> hitParts = new HashSet<Part>();
 
+            bool hasPartsForAxis = false;
+
             for (int i = 0; i < _vehiclePartList.Count; i++)
             {
                 Part p = _vehiclePartList[i];
@@ -535,6 +537,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     else
                         candVector += q.partTransform.TransformDirection(tmpCandVector);
                 }
+                hasPartsForAxis = true;     //set that we will get a valid axis out of this operation
 
                 candVector = _worldToLocalMatrix.MultiplyVector(candVector);
                 candVector.x = Math.Abs(candVector.x);
@@ -545,35 +548,30 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 axis += candVector * size.x * size.y * size.z;// *(1 + p.symmetryCounterparts.Count);    //scale part influence by approximate size
             }
-            /*float perpTest = Math.Abs(Vector3.Dot(axis, notAxis));
 
-            if (perpTest > 0.3)
+            if (hasPartsForAxis)
             {
-                axis = Vector3.Cross(axis, notAxis);
-                axis = Vector3.Cross(axis, notAxis);        //this shoudl result in an axis perpendicular to notAxis
-                //axis.Normalize();
-            }*/
+                float dotProdX, dotProdY, dotProdZ;
 
+                dotProdX = Math.Abs(Vector3.Dot(axis, Vector3.right));
+                dotProdY = Math.Abs(Vector3.Dot(axis, Vector3.up));
+                dotProdZ = Math.Abs(Vector3.Dot(axis, Vector3.forward));
 
-            float dotProdX, dotProdY, dotProdZ;
+                if (dotProdY > 2 * dotProdX && dotProdY > 2 * dotProdZ)
+                    return Vector3.up;
 
-            dotProdX = Math.Abs(Vector3.Dot(axis, Vector3.right));
-            dotProdY = Math.Abs(Vector3.Dot(axis, Vector3.up));
-            dotProdZ = Math.Abs(Vector3.Dot(axis, Vector3.forward));
+                if (dotProdX > 2 * dotProdY && dotProdX > 2 * dotProdZ)
+                    return Vector3.right;
 
-            if (dotProdY > 2 * dotProdX && dotProdY > 2 * dotProdZ)
-                return Vector3.up;
+                if (dotProdZ > 2 * dotProdX && dotProdZ > 2 * dotProdY)
+                    return Vector3.forward;
 
-            if (dotProdX > 2 * dotProdY && dotProdX > 2 * dotProdZ)
-                return Vector3.right;
+                //Otherwise, now we need to use axis, since it's obviously not close to anything else
 
-            if (dotProdZ > 2 * dotProdX && dotProdZ > 2 * dotProdY)
-                return Vector3.forward;
-
-            //Otherwise, now we need to use axis, since it's obviously not close to anything else
-
-
-            return axis.normalized;
+                return axis.normalized;
+            }
+            else
+                return Vector3.up;      //welp, no parts that we can rely on for determining the axis; fall back to up
         }
 
         //Smooths out area and area 2nd deriv distributions to deal with noise in the representation
