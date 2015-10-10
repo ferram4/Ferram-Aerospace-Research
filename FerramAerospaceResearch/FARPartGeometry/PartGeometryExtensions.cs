@@ -173,7 +173,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             foreach (Transform t in propellersToIgnore)
                 returnList.Remove(t);
-
             return returnList;
         }
 

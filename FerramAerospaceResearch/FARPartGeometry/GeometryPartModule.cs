@@ -206,6 +206,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
             for (int i = 0; i < meshTransforms.Count; i++)
             {
                 MeshData m = geometryMeshes[i];
+                if (m.vertices.Length <= 0)
+                {
+                    geometryMeshes.RemoveAt(i);
+                    meshTransforms.RemoveAt(i);
+                    i--;
+                    continue;
+                } 
                 GeometryMesh geoMesh = new GeometryMesh(m, meshTransforms[i], worldToVesselMatrix, this);
                 meshDataList.Add(geoMesh);
             }
@@ -218,13 +225,18 @@ namespace FerramAerospaceResearch.FARPartGeometry
         private Bounds SetBoundsFromMeshes()
         {
             Vector3 upper = Vector3.one * float.NegativeInfinity, lower = Vector3.one * float.PositiveInfinity;
-            for(int i = 0; i < meshDataList.Count; i++)
+            for (int i = 0; i < meshDataList.Count; i++)
             {
                 GeometryMesh geoMesh = meshDataList[i];
                 upper = Vector3.Max(upper, geoMesh.bounds.max);
                 lower = Vector3.Min(lower, geoMesh.bounds.min);
             }
             Bounds overallBounds = new Bounds((upper + lower) * 0.5f, upper - lower);
+
+            float tmpTestBounds = overallBounds.center.x + overallBounds.center.y + overallBounds.center.z +
+                overallBounds.extents.x + overallBounds.extents.y + overallBounds.extents.z;
+            if (float.IsNaN(tmpTestBounds) || float.IsInfinity(tmpTestBounds))
+                Debug.Log("Overall bounds error in " + part.partInfo.title + " " + meshDataList.Count + " meshes");
 
             return overallBounds;
             
@@ -687,7 +699,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     validTransformList.Add(t);
                 }
             }
-
             meshTransforms = validTransformList;
             return meshList;
         }

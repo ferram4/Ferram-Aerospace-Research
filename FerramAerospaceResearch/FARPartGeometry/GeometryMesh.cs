@@ -83,12 +83,20 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 vert.y = thisToVesselMatrix.m10 * v.x + thisToVesselMatrix.m11 * v.y + thisToVesselMatrix.m12 * v.z + thisToVesselMatrix.m13;
                 vert.z = thisToVesselMatrix.m20 * v.x + thisToVesselMatrix.m21 * v.y + thisToVesselMatrix.m22 * v.z + thisToVesselMatrix.m23;
 
+                float tmpTestVert = vert.x + vert.y + vert.z;
+                if (float.IsNaN(tmpTestVert) || float.IsInfinity(tmpTestVert))
+                    ThreadSafeDebugLogger.Instance.RegisterMessage("Mesh error in " + module.part.partInfo.title);
                 vertices[i] = vert;
             }
 
             this.meshTransform = meshTransform;
 
             bounds = TransformBounds(meshBounds, thisToVesselMatrix);
+
+            float tmpTestBounds = bounds.center.x + bounds.center.y + bounds.center.z +
+                bounds.extents.x + bounds.extents.y + bounds.extents.z;
+            if (float.IsNaN(tmpTestBounds) || float.IsInfinity(tmpTestBounds))
+                ThreadSafeDebugLogger.Instance.RegisterMessage("Bounds error in " + module.part.partInfo.title);
 
             this.module = module;
             this.part = module.part;
@@ -131,6 +139,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 vert.y = tempMatrix.m10 * v.x + tempMatrix.m11 * v.y + tempMatrix.m12 * v.z + tempMatrix.m13;
                 vert.z = tempMatrix.m20 * v.x + tempMatrix.m21 * v.y + tempMatrix.m22 * v.z + tempMatrix.m23;*/
 
+                float tmpTestVert = vert.x + vert.y + vert.z;
+                if (float.IsNaN(tmpTestVert) || float.IsInfinity(tmpTestVert))
+                    ThreadSafeDebugLogger.Instance.RegisterMessage("Transform error in " + module.part.partInfo.title);
+
                 vertices[i] = vert;
                 low = Vector3.Min(low, vert);
                 high = Vector3.Max(high, vert);
@@ -163,6 +175,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         /*vert.x = tempMatrix.m00 * v.x + tempMatrix.m01 * v.y + tempMatrix.m02 * v.z + tempMatrix.m03;
                         vert.y = tempMatrix.m10 * v.x + tempMatrix.m11 * v.y + tempMatrix.m12 * v.z + tempMatrix.m13;
                         vert.z = tempMatrix.m20 * v.x + tempMatrix.m21 * v.y + tempMatrix.m22 * v.z + tempMatrix.m23;*/
+
+                        float tmpTestVert = vert.x + vert.y + vert.z;
+                        if (float.IsNaN(tmpTestVert) || float.IsInfinity(tmpTestVert))
+                            ThreadSafeDebugLogger.Instance.RegisterMessage("Transform error in " + module.part.partInfo.title);
 
                         vertices[i] = vert;
                         low = Vector3.Min(low, vert);
