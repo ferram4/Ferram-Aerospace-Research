@@ -1616,6 +1616,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
             y = Math.Abs(indexPlane.y);
             z = Math.Abs(indexPlane.z);
 
+            double testSum = x + y + z;
+            if (testSum == 0 || double.IsNaN(testSum) || double.IsInfinity(testSum))
+            {
+                ThreadSafeDebugLogger.Instance.RegisterMessage("Error in mesh triangle; triangle plane components are NaN or triangle is degenerate");
+                return;
+            }
             //Vector4 indexPlane = TransformPlaneToIndices(plane);
 
             if (x > y && x > z)
