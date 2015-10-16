@@ -155,10 +155,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (!_ready && _meshesToUpdate == 0)
             {
                 overallMeshBounds = SetBoundsFromMeshes();
-                
-                _ready = true;
-            }
 
+                _ready = true;
+            } 
             if (animStates != null && animStates.Count > 0)
                 CheckAnimations();
 
@@ -518,6 +517,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 while (_meshesToUpdate > 0) //if the previous transform order hasn't been completed yet, wait here to let it
                     if (this == null)
                         return;
+                _ready = false;
 
                 _meshesToUpdate = meshDataList.Count;
                 for (int i = 0; i < meshDataList.Count; ++i)

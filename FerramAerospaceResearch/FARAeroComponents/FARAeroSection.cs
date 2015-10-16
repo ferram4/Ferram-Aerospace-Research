@@ -167,8 +167,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public bool CanMerge(FARAeroSection otherSection)
         {
-            if (mergeFactor >= 4)
-                return false;       //only merge up to 5 sections
+            if (mergeFactor >= 11)
+                return false;       //only merge up to 10 sections
 
             bool merge = true;
 

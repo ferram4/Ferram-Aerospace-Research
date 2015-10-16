@@ -1436,22 +1436,23 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (aeroModule != null && !tmpAeroModules.Contains(aeroModule))
                     _newUnusedAeroModules.Add(aeroModule);
             }
+            //UpdateSonicDragArea();
+        }
 
-            if (HighLogic.LoadedSceneIsEditor)
+        public void UpdateSonicDragArea()
+        {
+            ferram4.FARCenterQuery center = new ferram4.FARCenterQuery();
+
+            Vector3 worldMainAxis = _localToWorldMatrix.MultiplyVector(_vehicleMainAxis);
+            worldMainAxis.Normalize();
+
+            for (int i = 0; i < _newAeroSections.Count; i++)
             {
-                ferram4.FARCenterQuery center = new ferram4.FARCenterQuery();
-
-                Vector3 worldMainAxis = _localToWorldMatrix.MultiplyVector(_vehicleMainAxis);
-                worldMainAxis.Normalize();
-
-                for (int i = 0; i < _newAeroSections.Count; i++)
-                {
-                    FARAeroSection a = _newAeroSections[i];
-                    a.PredictionCalculateAeroForces(2f, 1f, 50000f, 0.005f, worldMainAxis, center);
-                }
-
-                _sonicDragArea = Vector3.Dot(center.force, worldMainAxis) * -1000;
+                FARAeroSection a = _newAeroSections[i];
+                a.PredictionCalculateAeroForces(2f, 1f, 50000f, 0.005f, worldMainAxis, center);
             }
+
+            _sonicDragArea = Vector3.Dot(center.force, worldMainAxis) * -1000;
         }
 
         private double CalculateHypersonicMoment(double lowArea, double highArea, double sectionThickness)

@@ -312,6 +312,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             {
                 if (_vehicleAero.CalculationCompleted)
                 {
+                    _vehicleAero.UpdateSonicDragArea();
                     LEGACY_UpdateWingAeroModels(EditorLogic.SortedShipList.Count != prevPartCount || partMovement);
                     prevPartCount = EditorLogic.SortedShipList.Count;
 
