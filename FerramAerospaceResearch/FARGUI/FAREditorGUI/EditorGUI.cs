@@ -100,6 +100,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         bool gearToggle = false;
 
+        ArrowPointer velocityArrow = null;
+        Transform arrowTransform = null;
+
         FAREditorMode currentMode = FAREditorMode.STATIC;
         private enum FAREditorMode
         {
@@ -150,7 +153,6 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             _areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.7f), crossSection, crossSectionDeriv, 10, 5);
             guiRect.height = 500;
             guiRect.width = 650;
-
 
             GameEvents.onEditorPartEvent.Add(UpdateGeometryEvent);
             GameEvents.onEditorUndo.Add(ResetEditorEvent);
@@ -443,11 +445,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         #endregion
 
         #region GUIFunctions
-        /*void LateUpdate()
-        {
-            if (_areaRulingOverlay != null)
-                _areaRulingOverlay.Display();
-        }*/
+
         void OnGUI()
         {
             //Make this an option
@@ -549,6 +547,42 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             GUILayout.Label("Minimize curvature to minimize wave drag");
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
+        }
+        #endregion
+
+        #region AoAArrow
+        void LateUpdate()
+        {
+            if (arrowTransform == null)
+            {
+                if (velocityArrow != null)
+                    UnityEngine.Object.Destroy(velocityArrow);
+
+                if (EditorLogic.RootPart != null)
+                    arrowTransform = EditorLogic.RootPart.partTransform;
+                else
+                    return;
+            }
+            if (velocityArrow == null)
+                velocityArrow = ArrowPointer.Create(arrowTransform, Vector3.zero, Vector3.forward, 15, Color.cyan, true);
+            
+            if (showGUI)
+            {
+                velocityArrow.gameObject.SetActive(true);
+                ArrowDisplay();
+            }
+            else
+                velocityArrow.gameObject.SetActive(false);
+        }
+
+        void ArrowDisplay()
+        {
+            if (currentMode == FAREditorMode.STATIC)
+                _editorGraph.ArrowAnim(velocityArrow);
+            else if (currentMode == FAREditorMode.STABILITY || currentMode == FAREditorMode.SIMULATION)
+                _stabDeriv.ArrowAnim(velocityArrow);
+            else
+                velocityArrow.Direction = Vector3.zero;
         }
         #endregion
 

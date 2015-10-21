@@ -66,6 +66,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         EditorSimManager simManager;
 
+        Vector3 aoAVec;
+
         public StabilityDerivGUI(EditorSimManager simManager, GUIDropDown<int> flapSettingDropDown, GUIDropDown<CelestialBody> bodySettingDropdown)
         {
             this.simManager = simManager;
@@ -73,6 +75,27 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             _bodySettingDropdown = bodySettingDropdown;
 
             stabDerivOutput = new StabilityDerivOutput();
+        }
+
+        public void ArrowAnim(ArrowPointer velArrow)
+        {
+            velArrow.Direction = aoAVec;
+
+            //Debug.Log(velArrow.Direction);
+        }
+
+        void SetAngleVectors(double aoA)
+        {
+            aoA *= FARMathUtil.deg2rad;
+
+            if (EditorDriver.editorFacility == EditorFacility.SPH)
+            {
+                aoAVec = new Vector3d(0, -Math.Sin(aoA), Math.Cos(aoA));
+            }
+            else
+            {
+                aoAVec = new Vector3d(0, Math.Cos(aoA), Math.Sin(aoA));
+            }
         }
 
         public void Display()
@@ -131,6 +154,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
                     stabDerivOutput = simManager.StabDerivCalculator.CalculateStabilityDerivs(vel, q, machDouble, 0, 0, 0, _flapSettingDropdown.ActiveSelection, spoilersDeployed, body, altitudeDouble);
                     simManager.vehicleData = stabDerivOutput;
+                    SetAngleVectors(stabDerivOutput.stableAoA);
                 }
                 else
                     PopupDialog.SpawnPopupDialog("Error!", "Altitude was above atmosphere", "OK", false, HighLogic.Skin);

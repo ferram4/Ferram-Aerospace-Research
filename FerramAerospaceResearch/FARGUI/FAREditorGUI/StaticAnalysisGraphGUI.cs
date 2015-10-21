@@ -65,6 +65,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         GUIDropDown<CelestialBody> bodySettingDropdown;
         EditorSimManager simManager;
 
+        Vector3 upperAoAVec, lowerAoAVec;
+        float pingPongAoAFactor = 0;
+
         public StaticAnalysisGraphGUI(EditorSimManager simManager, GUIDropDown<int> flapSettingDropDown, GUIDropDown<CelestialBody> bodySettingDropdown)
         {
             this.simManager = simManager;
@@ -103,6 +106,39 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             bodySettingDropdown = null;
             simManager = null;
             _graph = null;
+        }
+
+        public void ArrowAnim(ArrowPointer velArrow)
+        {
+            if (pingPongAoAFactor < 1)
+                velArrow.Direction = Vector3.Slerp(lowerAoAVec, upperAoAVec, pingPongAoAFactor);
+            else
+                velArrow.Direction = Vector3.Slerp(lowerAoAVec, upperAoAVec, 2 - pingPongAoAFactor);
+
+            pingPongAoAFactor += TimeWarp.deltaTime * 0.5f;
+
+            if (pingPongAoAFactor >= 2)
+                pingPongAoAFactor = 0;
+
+            //Debug.Log(velArrow.Direction);
+        }
+
+        void SetAngleVectors(double lowerAoA, double upperAoA)
+        {
+            lowerAoA *= FARMathUtil.deg2rad;
+            upperAoA *= FARMathUtil.deg2rad;
+
+
+            if (EditorDriver.editorFacility == EditorFacility.SPH)
+            {
+                lowerAoAVec = new Vector3d(0, -Math.Sin(lowerAoA), Math.Cos(lowerAoA));
+                upperAoAVec = new Vector3d(0, -Math.Sin(upperAoA), Math.Cos(upperAoA));
+            }
+            else
+            {
+                lowerAoAVec = new Vector3d(0, Math.Cos(lowerAoA), Math.Sin(lowerAoA));
+                upperAoAVec = new Vector3d(0, Math.Cos(upperAoA), Math.Sin(upperAoA));
+            }
         }
 
         public void Display()
@@ -202,9 +238,15 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 GraphData data;
 
                 if (isMachMode)
+                {
                     data = simManager.SweepSim.MachNumberSweep(otherInput, pitchSetting, lowerBound, upperBound, (int)numPts, input.flapSetting, input.spoilers, bodySettingDropdown.ActiveSelection);
+                    SetAngleVectors(pitchSetting, pitchSetting);
+                }
                 else
+                {
                     data = simManager.SweepSim.AngleOfAttackSweep(otherInput, pitchSetting, lowerBound, upperBound, (int)numPts, input.flapSetting, input.spoilers, bodySettingDropdown.ActiveSelection);
+                    SetAngleVectors(lowerBound, upperBound);
+                }
 
                 UpdateGraph(data, isMachMode ? "Mach Number" : "Angle of Attack, degrees", "Cl\nCd\nCm\nL/D / 10", lowerBound, upperBound);
             }
