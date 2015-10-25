@@ -85,7 +85,7 @@ namespace FerramAerospaceResearch.FARGUI
             InitStyles();
 
             FARGUIDropDownDisplay display = FARGUIDropDownDisplay.Instance;
-            toggleBtnState = GUILayout.Toggle(toggleBtnState, stringOptions[selectedOption], toggleBtnStyle, guiOptions);
+            toggleBtnState = GUILayout.Toggle(toggleBtnState, "▼ " + stringOptions[selectedOption] + " ▼", toggleBtnStyle, guiOptions);
 
             // Calcuate absolute regions for the button and dropdown list, this only works when
             // Event.current.type == EventType.Repaint

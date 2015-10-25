@@ -167,7 +167,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public bool CanMerge(FARAeroSection otherSection)
         {
-            if (mergeFactor >= 11)
+            if (mergeFactor >= 0)
                 return false;       //only merge up to 10 sections
 
             bool merge = true;
@@ -281,13 +281,25 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if (partData.Count == 0)
                 return;
 
+            PartData data = partData[0];
+            FARAeroPartModule aeroModule = null;
+            for (int i = 0; i < partData.Count; i++)
+            {
+                data = partData[i];
+                aeroModule = data.aeroModule;
+                if (aeroModule.part == null)
+                {
+                    continue;
+                }
+                break;
+            } 
+            if (aeroModule.part == null)
+            {
+                return;
+            }
             double skinFrictionForce = skinFrictionDrag * xForceSkinFriction.Evaluate(machNumber);      //this will be the same for each part, so why recalc it multiple times?
             double xForceAoA0 = xForcePressureAoA0.Evaluate(machNumber);
             double xForceAoA180 = xForcePressureAoA180.Evaluate(machNumber);
-
-
-            PartData data = partData[0];
-            FARAeroPartModule aeroModule = data.aeroModule;
 
             Vector3 xRefVector = data.xRefVectorPartSpace;
             Vector3 nRefVector = data.nRefVectorPartSpace;

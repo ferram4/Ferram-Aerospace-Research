@@ -99,10 +99,12 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         MethodInfo editorReportUpdate;
 
         bool gearToggle = false;
+        bool showAoAArrow = true;
 
         ArrowPointer velocityArrow = null;
         Transform arrowTransform = null;
 
+        GUIDropDown<FAREditorMode> modeDropdown;
         FAREditorMode currentMode = FAREditorMode.STATIC;
         private enum FAREditorMode
         {
@@ -137,6 +139,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             _instantSim = new InstantConditionSim();
             GUIDropDown<int> flapSettingDropDown = new GUIDropDown<int>(new string[] { "0 (up)", "1 (init climb)", "2 (takeoff)", "3 (landing)" }, new int[] { 0, 1, 2, 3 }, 0);
             GUIDropDown<CelestialBody> celestialBodyDropdown = CreateBodyDropdown();
+
+            modeDropdown = new GUIDropDown<FAREditorMode>(FAReditorMode_str, new FAREditorMode[] {FAREditorMode.STATIC, FAREditorMode.STABILITY, FAREditorMode.SIMULATION, FAREditorMode.AREA_RULING});
 
             _simManager = new EditorSimManager(_instantSim);
 
@@ -473,11 +477,18 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         void OverallSelectionGUI(int windowId)
         {
-            GUILayout.BeginHorizontal(GUILayout.Width(500));
-            currentMode = (FAREditorMode)GUILayout.SelectionGrid((int)currentMode, FAReditorMode_str, 4);
+            GUILayout.BeginHorizontal(GUILayout.Width(800));
+            modeDropdown.GUIDropDownDisplay();
+            currentMode = modeDropdown.ActiveSelection;
+
             GUILayout.BeginVertical();
             if (GUILayout.Button(gearToggle ? "Lower Gear" : "Raise Gear"))
                 ToggleGear();
+            GUILayout.EndVertical();
+
+            GUILayout.BeginVertical();
+            if (GUILayout.Button(showAoAArrow ? "Hide Vel Indicator" : "Show Vel Indicator"))
+                showAoAArrow = !showAoAArrow;
             GUILayout.EndVertical();
 
             GUILayout.EndHorizontal();
@@ -565,8 +576,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             }
             if (velocityArrow == null)
                 velocityArrow = ArrowPointer.Create(arrowTransform, Vector3.zero, Vector3.forward, 15, Color.cyan, true);
-            
-            if (showGUI)
+
+            if (showGUI && showAoAArrow)
             {
                 velocityArrow.gameObject.SetActive(true);
                 ArrowDisplay();

@@ -112,10 +112,24 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 Rigidbody rb = part.Rigidbody;
                 if (rb)
                 {
-                    part.dragVectorDir = (-rb.velocity - Krakensbane.GetFrameVelocityV3f()).normalized;
-                    part.dragVectorDirLocal = part.partTransform.worldToLocalMatrix.MultiplyVector(part.dragVectorDir);
+                    part.dragVector = rb.velocity + Krakensbane.GetFrameVelocity();
+                    part.dragVectorSqrMag = part.dragVector.sqrMagnitude;
+                    if (part.dragVectorSqrMag == 0f)
+                    {
+                        part.dragVectorMag = 0f;
+                        part.dragVectorDir = Vector3.zero;
+                        part.dragVectorDirLocal = Vector3.zero;
+                        part.dragScalar = 0f;
+                    }
+                    else
+                    {
+                        part.dragVectorMag = (float)Math.Sqrt(part.dragVectorSqrMag);
+                        part.dragVectorDir = part.dragVector / part.dragVectorMag;
+                        part.dragVectorDirLocal = -part.partTransform.InverseTransformDirection(part.dragVectorDir);
+                        part.dragScalar = 0f;
+                    }
                     if (!part.DragCubes.None) 
-                        part.DragCubes.SetDrag(part.dragVectorDirLocal, (float)part.machNumber);
+                        part.DragCubes.SetDrag(part.dragVectorDirLocal, (float)fi.mach);
                 }
             }
 
