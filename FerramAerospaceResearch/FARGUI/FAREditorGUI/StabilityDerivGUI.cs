@@ -79,8 +79,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         public void ArrowAnim(ArrowPointer velArrow)
         {
-            velArrow.Direction = aoAVec;
-
+            velArrow.Direction = -aoAVec;
             //Debug.Log(velArrow.Direction);
         }
 
