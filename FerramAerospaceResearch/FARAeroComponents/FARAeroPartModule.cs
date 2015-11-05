@@ -421,6 +421,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
             worldSpaceTorque = partTransform.TransformDirection(partLocalTorque);
             UpdateAeroDisplay();
 
+            worldSpaceAeroForce *= part.dragScalar;     //is now used as a multiplier, not a force itself, in kPa
+            worldSpaceTorque *= part.dragScalar;
+
             rb.AddForce(worldSpaceAeroForce);
             rb.AddTorque(worldSpaceTorque);
 

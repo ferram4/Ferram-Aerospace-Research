@@ -645,10 +645,10 @@ namespace FerramAerospaceResearch.RealChuteLite
                     (this.vessel.mach - PhysicsGlobals.FullToCrossSectionLerpStart) / (PhysicsGlobals.FullToCrossSectionLerpEnd))
                     * (this.vessel.externalTemperature - this.chuteTemperature);
 
-            if (this.vessel.mach > PhysicsGlobals.MachConvectionStart)
+            if (this.vessel.mach > PhysicsGlobals.NewtonianMachTempLerpStartMach)
             {
-                double machLerp = (this.part.machNumber - PhysicsGlobals.MachConvectionStart) / (PhysicsGlobals.MachConvectionEnd - PhysicsGlobals.MachConvectionStart);
-                machLerp = Math.Pow(machLerp, PhysicsGlobals.MachConvectionExponent);
+                double machLerp = (this.part.machNumber - PhysicsGlobals.NewtonianMachTempLerpStartMach) / (PhysicsGlobals.NewtonianMachTempLerpEndMach - PhysicsGlobals.NewtonianMachTempLerpStartMach);
+                machLerp = Math.Pow(machLerp, PhysicsGlobals.NewtonianMachTempLerpEndMach);
                 flux = UtilMath.Lerp(flux, this.vessel.convectiveMachFlux, machLerp);
             }
             this.chuteTemperature += 0.001 * this.invThermalMass * flux * this.convectionArea * TimeWarp.fixedDeltaTime;
@@ -656,7 +656,7 @@ namespace FerramAerospaceResearch.RealChuteLite
             {
                 this.chuteTemperature -= 0.001 * this.invThermalMass * PhysicsGlobals.StefanBoltzmanConstant * this.convectionArea * this.chuteEmissivity
                     * PhysicsGlobals.RadiationFactor * TimeWarp.fixedDeltaTime
-                    * Math.Pow(this.chuteTemperature, PhysicsGlobals.PartEmissivityExponent);
+                    * Math.Pow(this.chuteTemperature, this.part.emissiveConstant);
             }
             this.chuteTemperature = Math.Max(PhysicsGlobals.SpaceTemperature, this.chuteTemperature);
             if (this.chuteTemperature > maxTemp)

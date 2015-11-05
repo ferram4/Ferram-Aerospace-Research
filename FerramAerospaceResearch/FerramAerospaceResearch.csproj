@@ -38,14 +38,14 @@
   <ItemGroup>
     <Reference Include="Assembly-CSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Games\KSP 1.0\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\..\..\Games\KSP 1.0.5 exp\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="ferramGraph">
       <HintPath>..\ferramGraph\bin\Release\ferramGraph.dll</HintPath>
     </Reference>
-    <Reference Include="ModularFlightIntegrator, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="ModularFlightIntegrator, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Games\KSP 1.0\GameData\ModularFlightIntegrator\ModularFlightIntegrator.dll</HintPath>
+      <HintPath>..\..\..\..\Games\KSP 1.0.5 exp\GameData\ModularFlightIntegrator\ModularFlightIntegrator.dll</HintPath>
     </Reference>
     <Reference Include="Scale_Redist, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -54,7 +54,7 @@
     <Reference Include="System" />
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Games\KSP 1.0\KSP_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>..\..\..\..\Games\KSP 1.0.5 exp\KSP_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

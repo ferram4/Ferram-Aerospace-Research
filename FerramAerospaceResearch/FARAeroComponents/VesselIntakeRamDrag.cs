@@ -176,13 +176,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (cosAoA < 0)
                     cosAoA = 0;
 
-                if (cosAoA <= intake.aoaThreshold)
+                if (cosAoA <= 0)
                     continue;
 
                 FARAeroPartModule aeroModule = _aeroModulesWithIntakes[i];
 
 
-                Vector3 force = -aeroModule.partLocalVelNorm * dynPres * cosAoA * currentRamDrag * intake.area * 100;
+                Vector3 force = -aeroModule.partLocalVelNorm * dynPres * cosAoA * currentRamDrag * (float)intake.area * 100;
                 //if(float.IsNaN(force.sqrMagnitude))
                 //    force = Vector3.zero;
                 aeroModule.AddLocalForce(force, Vector3.zero);

@@ -78,26 +78,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 part.radiativeArea = CalculateAreaRadiative(fi, part, aeroModule);
                 part.exposedArea = part.machNumber > 0 ? CalculateAreaExposed(fi, part, aeroModule) : part.radiativeArea;
 
-                if (part.radiativeArea < stockRadArea)
-                    SkinThermalMassShenanigansForShieldedParts(fi, part, stockRadArea, part.radiativeArea);     //very hacky method to deal with the fact that stock assumes that radiative area is also the skin area for the part.  This causes issues for parts that cannot radiate to the environment because they are completely enclosed
-
                 if (part.exposedArea > part.radiativeArea)
                     part.exposedArea = part.radiativeArea;      //sanity check just in case
             }
             //Debug.Log("MFI: " + fi.CoM + " " + Planetarium.GetUniversalTime());
-        }
-
-        void SkinThermalMassShenanigansForShieldedParts(ModularFI.ModularFlightIntegrator fi, Part part, double stockRadArea, double calculatedArea)
-        {
-            part.thermalMass += part.skinThermalMass;   //reset overall thermalmass
-
-            part.radiativeArea = stockRadArea;          //set rad area to stock values
-            fi.SetSkinThermalMass(part);                //re-run setting skin thermal mass
-
-            part.thermalMass -= part.skinThermalMass;   //re-subtract skin thermal mass
-            part.thermalMassReciprocal = 1.0 / Math.Max(part.thermalMass, 0.001);   //reset thermalMassRecip
-
-            //part.radiativeArea = calculatedArea;      //I doubt that this ever caused a problem, but let's be sure
         }
 
         void UpdateAerodynamics(ModularFI.ModularFlightIntegrator fi, Part part)
@@ -119,20 +103,40 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         part.dragVectorMag = 0f;
                         part.dragVectorDir = Vector3.zero;
                         part.dragVectorDirLocal = Vector3.zero;
-                        part.dragScalar = 0f;
+                        CalculateLocalDynPres(fi, part);
                     }
                     else
                     {
                         part.dragVectorMag = (float)Math.Sqrt(part.dragVectorSqrMag);
                         part.dragVectorDir = part.dragVector / part.dragVectorMag;
                         part.dragVectorDirLocal = -part.partTransform.InverseTransformDirection(part.dragVectorDir);
-                        part.dragScalar = 0f;
+                        CalculateLocalDynPres(fi, part);
                     }
                     if (!part.DragCubes.None) 
                         part.DragCubes.SetDrag(part.dragVectorDirLocal, (float)fi.mach);
                 }
             }
 
+        }
+
+        void CalculateLocalDynPres(ModularFI.ModularFlightIntegrator fi, Part p)
+        {
+            if(fi.CurrentMainBody.ocean && p.submergedPortion > 0)
+            {
+                p.submergedDynamicPressurekPa = fi.CurrentMainBody.oceanDensity * 1000;
+                p.dynamicPressurekPa = p.atmDensity;
+            }
+            else
+            {
+                p.submergedDynamicPressurekPa = 0;
+                p.dynamicPressurekPa = p.atmDensity;
+            }
+            double tmp = 0.0005 * p.dragVectorSqrMag;
+
+            p.submergedDynamicPressurekPa *= tmp;
+            p.dynamicPressurekPa *= tmp;
+
+            p.dragScalar = (float)(p.dynamicPressurekPa * (1.0 - p.submergedPortion) + p.submergedDynamicPressurekPa * p.submergedPortion * p.submergedDragScalar * fi.pseudoReDragMult);
         }
 
         double CalculateAreaRadiative(ModularFI.ModularFlightIntegrator fi, Part part, FARAeroPartModule aeroModule)

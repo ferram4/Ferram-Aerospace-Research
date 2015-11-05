@@ -519,10 +519,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 Vector3 torqueVector = Vector3.Cross(xRefVector, localNormalForceVec) * moment;
                 torqueVector -= dampingMoment * angVelLocal;
 
-                float dynPresAndScaling = 0.0005f * atmDensity * velLocal.sqrMagnitude * data.dragFactor;        //dyn pres and N -> kN conversion
+                //float dynPresAndScaling = 0.0005f * atmDensity * velLocal.sqrMagnitude * data.dragFactor;        //dyn pres and N -> kN conversion
 
-                forceVector *= dynPresAndScaling;
-                torqueVector *= dynPresAndScaling;
+                //forceVector *= dynPresAndScaling;
+                //torqueVector *= dynPresAndScaling;
 
                 aeroModule.AddLocalForceAndTorque(forceVector, torqueVector, data.centroidPartSpace);
             }
