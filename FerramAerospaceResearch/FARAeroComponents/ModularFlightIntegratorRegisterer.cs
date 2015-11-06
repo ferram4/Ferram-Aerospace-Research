@@ -93,7 +93,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
             else
             {
-                Rigidbody rb = part.Rigidbody;
+                Rigidbody rb = part.rb;
                 if (rb)
                 {
                     part.dragVector = rb.velocity + Krakensbane.GetFrameVelocity() - FARWind.GetWind(FlightGlobals.currentMainBody, part, rb.position);

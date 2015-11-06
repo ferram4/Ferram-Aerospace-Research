@@ -1388,11 +1388,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         FARAeroSection unusedSection = _newAeroSections[i];
                         _newAeroSections.RemoveAt(i);
 
+                        unusedSection.ClearAeroSection();
                         if (currentlyUnusedSections.Count < 64)
                             currentlyUnusedSections.Push(unusedSection);        //if there aren't that many extra ones stored, add them to the stack to be reused
                         else
                         {
-                            unusedSection.ClearAeroSection();
                             unusedSection = null;
                         }
                     }

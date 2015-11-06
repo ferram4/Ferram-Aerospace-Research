@@ -167,7 +167,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public bool CanMerge(FARAeroSection otherSection)
         {
-            if (mergeFactor >= 0)
+            if (mergeFactor >= 10)
                 return false;       //only merge up to 10 sections
 
             bool merge = true;
@@ -274,6 +274,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             //xForcePressureAoA180 = null;
             //xForceSkinFriction = null;
             partData.Clear();
+            handledAeroModulesIndexDict.Clear();
         }
         
         public void PredictionCalculateAeroForces(float atmDensity, float machNumber, float reynoldsPerUnitLength, float skinFrictionDrag, Vector3 vel, ferram4.FARCenterQuery center)
@@ -287,13 +288,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 data = partData[i];
                 aeroModule = data.aeroModule;
-                if (aeroModule.part == null)
+                if (aeroModule.part == null || aeroModule.part.partTransform == null)
                 {
                     continue;
                 }
                 break;
             } 
-            if (aeroModule.part == null)
+            if (aeroModule.part == null || aeroModule.part.partTransform == null)
             {
                 return;
             }
