@@ -103,7 +103,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         part.dragVectorMag = 0f;
                         part.dragVectorDir = Vector3.zero;
                         part.dragVectorDirLocal = Vector3.zero;
-                        CalculateLocalDynPres(fi, part);
+                        part.dragScalar = 0f;
                     }
                     else
                     {

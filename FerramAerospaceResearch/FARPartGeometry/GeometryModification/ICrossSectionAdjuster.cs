@@ -56,6 +56,8 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
         void SetForwardBackwardNoFlowDirection(int sign);
         int GetForwardBackwardNoFlowSign();
+
+        bool IntegratedCrossSectionIncreaseDecrease();
         
         void TransformBasis(Matrix4x4 transform);
 

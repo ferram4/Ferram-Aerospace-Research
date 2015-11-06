@@ -69,6 +69,10 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
             return part;
         }
 
+        public bool IntegratedCrossSectionIncreaseDecrease()
+        {
+            return false;
+        }
 
         public AirbreathingEngineCrossSectonAdjuster(ModuleEngines engine, Matrix4x4 worldToVesselMatrix)
         {

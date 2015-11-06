@@ -59,7 +59,7 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
         Matrix4x4 thisToVesselMatrix;
         Matrix4x4 meshLocalToWorld;
         Transform intakeTrans;
-        AttachNode frontNode;
+        ModuleResourceIntake intakeModule;
 
         //ModuleResourceIntake intake;
         //public ModuleResourceIntake IntakeModule
@@ -72,36 +72,45 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
             return part;
         }
 
+        public bool IntegratedCrossSectionIncreaseDecrease()
+        {
+            return false;
+        }
+        
         public IntakeCrossSectionAdjuster(PartModule intake, Matrix4x4 worldToVesselMatrix)
         {
             this.part = intake.part;
+            intakeModule = intake as ModuleResourceIntake;
+            intakeTrans = intakeModule.intakeTransform;
             //ModuleResourceIntake intake = intake;
 
-            Type intakeType = intake.GetType();
-            intakeTrans = (Transform)intakeType.GetField("intakeTransform", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(intake);
 
-            vehicleBasisForwardVector = Vector3.forward;//intakeTrans.forward;
+            /*vehicleBasisForwardVector = Vector3.forward;//intakeTrans.forward;
 
             foreach(AttachNode node in part.attachNodes)
                 if(node.nodeType == AttachNode.NodeType.Stack && Vector3.Dot(node.position, (part.transform.worldToLocalMatrix * intakeTrans.localToWorldMatrix).MultiplyVector(Vector3.forward)) > 0)
                 {
                     frontNode = node;
                     break;
-                }
+                }*/
 
             thisToVesselMatrix = worldToVesselMatrix * intakeTrans.localToWorldMatrix;
 
+            vehicleBasisForwardVector = Vector3.forward;
             vehicleBasisForwardVector = thisToVesselMatrix.MultiplyVector(vehicleBasisForwardVector);
 
+            Type intakeType = intake.GetType();
             intakeArea = (float)intakeType.GetField("Area").GetValue(intake);
         }
 
         public IntakeCrossSectionAdjuster(ModuleResourceIntake intake, Matrix4x4 worldToVesselMatrix)
         {
             this.part = intake.part;
+            intakeModule = intake as ModuleResourceIntake;
+            intakeTrans = intakeModule.intakeTransform;
             //ModuleResourceIntake intake = intake;
 
-            intakeTrans = part.FindModelTransform(intake.intakeTransformName);
+            /*intakeTrans = part.FindModelTransform(intake.intakeTransformName);
             vehicleBasisForwardVector = Vector3.forward;//intakeTrans.forward;
 
             foreach (AttachNode node in part.attachNodes)
@@ -109,10 +118,11 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
                 {
                     frontNode = node;
                     break;
-                }
+                }*/
 
             thisToVesselMatrix = worldToVesselMatrix * intakeTrans.localToWorldMatrix;
 
+            vehicleBasisForwardVector = Vector3.forward;
             vehicleBasisForwardVector = thisToVesselMatrix.MultiplyVector(vehicleBasisForwardVector);
 
             intakeArea = INTAKE_AREA_SCALAR * intake.area;
@@ -130,7 +140,7 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
         public double AreaRemovedFromCrossSection()
         {
-            if (frontNode == null || frontNode.attachedPart == null)
+            if (intakeModule.node == null || intakeModule.node.attachedPart == null)
                 return intakeArea * sign;
             else
                 return 0;
@@ -162,12 +172,7 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
         public void UpdateArea()
         {
-            foreach (AttachNode node in part.attachNodes)
-                if (node.nodeType == AttachNode.NodeType.Stack && Vector3.Dot(node.position, (part.transform.worldToLocalMatrix * intakeTrans.localToWorldMatrix).MultiplyVector(Vector3.forward)) > 0)
-                {
-                    frontNode = node;
-                    break;
-                }
+
         }
     }
 }
