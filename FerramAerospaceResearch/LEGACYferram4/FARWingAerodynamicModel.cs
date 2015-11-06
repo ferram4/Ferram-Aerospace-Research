@@ -544,7 +544,7 @@ namespace ferram4
 
                     double machNumber, v_scalar = velocity.magnitude;
 
-                    rho = FARAeroUtil.GetCurrentDensity(vessel);
+                    rho = FARAeroUtil.GetCurrentDensity(part);
                     machNumber = vessel.mach;
                     if (rho > 0 && v_scalar > 0.1)
                     {

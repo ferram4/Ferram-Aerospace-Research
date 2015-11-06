@@ -145,11 +145,11 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                     totalAeroForceVector += w.worldSpaceForce;
             }*/
 
-            for(int i = 0; i < _vessel.parts.Count; i++)
+            /*for(int i = 0; i < _vessel.parts.Count; i++)
             {
                 Part p = _vessel.parts[i];
                 totalAeroForceVector += -p.dragVectorDir * p.dragScalar; // dragVectorDir is actually the velocity vector direction
-            }
+            }*/
         }
 
         private void CalculateForceBreakdown(Vector3d velVectorNorm, Vector3d velVector)

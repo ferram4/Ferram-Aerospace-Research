@@ -524,6 +524,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 //forceVector *= dynPresAndScaling;
                 //torqueVector *= dynPresAndScaling;
 
+                forceVector *= data.dragFactor;
+                torqueVector *= data.dragFactor;
+
                 aeroModule.AddLocalForceAndTorque(forceVector, torqueVector, data.centroidPartSpace);
             }
         }

@@ -595,21 +595,9 @@ namespace FerramAerospaceResearch
         }
 
         // Vessel has altitude and cached pressure, and both density and sound speed need temperature
-        public static double GetCurrentDensity(Vessel vessel, bool densitySmoothingAtOcean = true)
+        public static double GetCurrentDensity(Part p, bool densitySmoothingAtOcean = true)
         {
-            double altitude = vessel.altitude;
-            CelestialBody body = vessel.mainBody;
-            double density = vessel.atmDensity;
-
-            if (altitude < 0 && densitySmoothingAtOcean)
-            {
-                double densityMultFromOcean = Math.Max(-altitude, 1);
-                densityMultFromOcean *= UNDERWATER_DENSITY_FACTOR_MINUS_ONE;
-                densityMultFromOcean++;
-                density *= densityMultFromOcean;
-            }
-
-            return density;
+            return (p.atmDensity * (1.0 - p.submergedPortion) + p.vessel.mainBody.oceanDensity * 1000 * p.submergedPortion * p.submergedDragScalar);// * fi.pseudoReDragMult);
         }
 
         public static double CalculateCurrentViscosity(double tempInK)

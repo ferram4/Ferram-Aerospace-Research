@@ -346,7 +346,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     totalWorldSpaceAeroForce += legacyWingModel.worldSpaceForce;
 
                 // Combine forces from stock code
-                totalWorldSpaceAeroForce += -part.dragVectorDir * part.dragScalar; // dragVectorDir is actually the velocity vector direction
+                //totalWorldSpaceAeroForce += -part.dragVectorDir * part.dragScalar; // dragVectorDir is actually the velocity vector direction
 
                 // Handle airbrakes
                 if (stockAeroSurfaceModule != null)
@@ -421,8 +421,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             worldSpaceTorque = partTransform.TransformDirection(partLocalTorque);
             UpdateAeroDisplay();
 
-            worldSpaceAeroForce *= part.dragScalar;     //is now used as a multiplier, not a force itself, in kPa
-            worldSpaceTorque *= part.dragScalar;
+            worldSpaceAeroForce *= (float)part.dynamicPressurekPa;     //is now used as a multiplier, not a force itself, in kPa
+            worldSpaceTorque *= (float)part.dynamicPressurekPa;
 
             rb.AddForce(worldSpaceAeroForce);
             rb.AddTorque(worldSpaceTorque);

@@ -96,7 +96,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 Rigidbody rb = part.Rigidbody;
                 if (rb)
                 {
-                    part.dragVector = rb.velocity + Krakensbane.GetFrameVelocity();
+                    part.dragVector = rb.velocity + Krakensbane.GetFrameVelocity() - FARWind.GetWind(FlightGlobals.currentMainBody, part, rb.position);
                     part.dragVectorSqrMag = part.dragVector.sqrMagnitude;
                     if (part.dragVectorSqrMag == 0f)
                     {
@@ -110,7 +110,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         part.dragVectorMag = (float)Math.Sqrt(part.dragVectorSqrMag);
                         part.dragVectorDir = part.dragVector / part.dragVectorMag;
                         part.dragVectorDirLocal = -part.partTransform.InverseTransformDirection(part.dragVectorDir);
-                        CalculateLocalDynPres(fi, part);
+                        CalculateLocalDynPresAndAngularDrag(fi, part);
                     }
                     if (!part.DragCubes.None) 
                         part.DragCubes.SetDrag(part.dragVectorDirLocal, (float)fi.mach);
@@ -119,7 +119,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         }
 
-        void CalculateLocalDynPres(ModularFI.ModularFlightIntegrator fi, Part p)
+        void CalculateLocalDynPresAndAngularDrag(ModularFI.ModularFlightIntegrator fi, Part p)
         {
             if(fi.CurrentMainBody.ocean && p.submergedPortion > 0)
             {
@@ -136,7 +136,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
             p.submergedDynamicPressurekPa *= tmp;
             p.dynamicPressurekPa *= tmp;
 
-            p.dragScalar = (float)(p.dynamicPressurekPa * (1.0 - p.submergedPortion) + p.submergedDynamicPressurekPa * p.submergedPortion * p.submergedDragScalar * fi.pseudoReDragMult);
+            tmp = p.dynamicPressurekPa * (1.0 - p.submergedPortion);
+            tmp += p.submergedDynamicPressurekPa * PhysicsGlobals.BuoyancyWaterAngularDragScalar * p.waterAngularDragMultiplier * p.submergedPortion;
+
+            p.rb.angularDrag = (float)(p.angularDrag * tmp * PhysicsGlobals.AngularDragMultiplier);
+            
+            p.dynamicPressurekPa = (p.dynamicPressurekPa * (1.0 - p.submergedPortion) + p.submergedDynamicPressurekPa * p.submergedPortion * p.submergedDragScalar * fi.pseudoReDragMult);       //dyn pres adjusted for submersion
+
         }
 
         double CalculateAreaRadiative(ModularFI.ModularFlightIntegrator fi, Part part, FARAeroPartModule aeroModule)
