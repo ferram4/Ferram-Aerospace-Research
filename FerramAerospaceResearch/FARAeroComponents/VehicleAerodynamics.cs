@@ -901,7 +901,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
                                     //actualArea -= adjuster.AreaRemovedFromCrossSection();
                                     ductedArea -= Math.Max(0, val.crossSectionalAreaCount * voxelCountScale + adjuster.AreaThreshold());
                                 }
-                                ThreadSafeDebugLogger.Instance.RegisterMessage(val.crossSectionalAreaCount.ToString());
                             }
                         }
 

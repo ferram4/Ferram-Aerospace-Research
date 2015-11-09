@@ -59,6 +59,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             ModularFI.ModularFlightIntegrator.RegisterUpdateThermodynamicsPre(UpdateThermodynamicsPre);
             ModularFI.ModularFlightIntegrator.RegisterCalculateAreaExposedOverride(CalculateAreaRadiative);
             ModularFI.ModularFlightIntegrator.RegisterCalculateAreaRadiativeOverride(CalculateAreaRadiative);
+            ModularFI.ModularFlightIntegrator.RegisterGetSunAreaOverride(CalculateSunArea);
+            ModularFI.ModularFlightIntegrator.RegisterGetBodyAreaOverride(CalculateBodyArea);
             Debug.Log("FAR Modular Flight Integrator function registration complete");
             GameObject.Destroy(this);
         }
@@ -193,5 +195,30 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     return aeroModule.ProjectedAreas.totalArea;
             }*/
         }
+
+        double CalculateSunArea(ModularFI.ModularFlightIntegrator fi, FlightIntegrator.PartThermalData ptd)
+        {
+            FARAeroPartModule module = null;
+            if (ptd.part.Modules.Contains("FARAeroPartModule"))
+                module = (FARAeroPartModule)ptd.part.Modules["FARAeroPartModule"];
+
+            if ((object)module == null)
+                return fi.BaseFIGetSunArea(ptd);
+            else
+                return module.ProjectedAreaWorld(fi.sunVector) * ptd.sunAreaMultiplier;
+        }
+
+        double CalculateBodyArea(ModularFI.ModularFlightIntegrator fi, FlightIntegrator.PartThermalData ptd)
+        {
+            FARAeroPartModule module = null;
+            if (ptd.part.Modules.Contains("FARAeroPartModule"))
+                module = (FARAeroPartModule)ptd.part.Modules["FARAeroPartModule"];
+
+            if ((object)module == null)
+                return fi.BaseFIGetSunArea(ptd);
+            else
+                return module.ProjectedAreaWorld(-fi.Vessel.upAxis) * ptd.sunAreaMultiplier;
+        }
+    
     }
 }
