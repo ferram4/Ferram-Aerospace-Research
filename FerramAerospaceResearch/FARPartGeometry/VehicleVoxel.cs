@@ -2253,7 +2253,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
                         if ((object)p != null)
                         {
-                            sweepPlane[i, k] = new SweepPlanePoint(p, i, k);
+                            pt = new SweepPlanePoint(p, i, k);
+                            sweepPlane[i, k] = pt;
                             continue;
                         }
                     }
@@ -2273,7 +2274,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             }
                             //Only other situation is that it is an inactive point, in which case we do nothing here, because it is already taken care of
                         }
-                        else if (pt.mark == SweepPlanePoint.MarkingType.Clear)
+                        else if (pt.mark == SweepPlanePoint.MarkingType.Clear)      //if it was clear and we hit something, we're starting a voxel shell
                         {
                             pt.mark = SweepPlanePoint.MarkingType.VoxelShell;
                             pt.part = p;

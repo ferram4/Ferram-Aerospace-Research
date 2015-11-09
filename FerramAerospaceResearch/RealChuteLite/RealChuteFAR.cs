@@ -347,6 +347,8 @@ namespace FerramAerospaceResearch.RealChuteLite
         private double atmPressure, atmDensity;
         private float sqrSpeed;
         private double thermMass = 0;
+        private double convFlux = 0;
+        private double extTemp = 0;
 
         //Part
         private Animation anim = null;
@@ -636,22 +638,20 @@ namespace FerramAerospaceResearch.RealChuteLite
             return DragCalculation(DragDeployment(time, debutDiameter, endDiameter)) * this.dragVector;
         }
 
-        //Calculates the temperature of the chute and cuts it if needed
-        private bool CalculateChuteTemp()
+        private void CalculateChuteFlux()
         {
             if (this.chuteTemperature < PhysicsGlobals.SpaceTemperature) { this.chuteTemperature = startTemp; }
 
-            double flux = this.vessel.convectiveCoefficient * UtilMath.Lerp(1d, 1d + this.vessel.mach * this.vessel.mach * this.vessel.mach,
+            convFlux = this.vessel.convectiveCoefficient * UtilMath.Lerp(1d, 1d + this.vessel.mach * this.vessel.mach * this.vessel.mach,
                     (this.vessel.mach - PhysicsGlobals.FullToCrossSectionLerpStart) / (PhysicsGlobals.FullToCrossSectionLerpEnd))
                     * (this.vessel.externalTemperature - this.chuteTemperature);
 
-            if (this.vessel.mach > PhysicsGlobals.NewtonianMachTempLerpStartMach)
-            {
-                double machLerp = (this.part.machNumber - PhysicsGlobals.NewtonianMachTempLerpStartMach) / (PhysicsGlobals.NewtonianMachTempLerpEndMach - PhysicsGlobals.NewtonianMachTempLerpStartMach);
-                machLerp = Math.Pow(machLerp, PhysicsGlobals.NewtonianMachTempLerpEndMach);
-                flux = UtilMath.Lerp(flux, this.vessel.convectiveMachFlux, machLerp);
-            }
-            this.chuteTemperature += 0.001 * this.invThermalMass * flux * this.convectionArea * TimeWarp.fixedDeltaTime;
+        }
+
+        //Calculates the temperature of the chute and cuts it if needed
+        private bool CalculateChuteTemp()
+        {
+            this.chuteTemperature += 0.001 * this.invThermalMass * convFlux * this.convectionArea * TimeWarp.fixedDeltaTime;
             if (chuteTemperature > 0d)
             {
                 this.chuteTemperature -= 0.001 * this.invThermalMass * PhysicsGlobals.StefanBoltzmanConstant * this.convectionArea * this.chuteEmissivity
@@ -667,6 +667,26 @@ namespace FerramAerospaceResearch.RealChuteLite
             }
             this.currentTemp = (float)(this.chuteTemperature + absoluteZero);
             return true;
+        }
+
+        //estimates whether it is safe to deploy the chute or not
+        private void CalculateSafeToDeployEstimate()
+        {
+            if (this.vessel.externalTemperature <= maxTemp || convFlux < 0)
+            {
+                part.stackIcon.SetBgColor(XKCDColors.White);
+            }
+            else
+            {
+                double expectedTemp = 0.001 * convFlux * this.invThermalMass * this.deployedArea * 0.35;
+                expectedTemp = this.chuteTemperature + expectedTemp;
+                if (expectedTemp <= maxTemp)
+                {
+                    part.stackIcon.SetBgColor(XKCDColors.BrightYellow);
+                }
+                else
+                    part.stackIcon.SetBgColor(XKCDColors.Red);
+            }
         }
 
         //Sets the part in the correct position for DragCube rendering
@@ -774,10 +794,16 @@ namespace FerramAerospaceResearch.RealChuteLite
                 if (!this.vessel.mainBody.ocean || terrainAlt > 0) { this.trueAlt -= terrainAlt; }
             }
             this.atmPressure = FlightGlobals.getStaticPressure(this.ASL, this.vessel.mainBody) * PhysicsGlobals.KpaToAtmospheres;
-            this.atmDensity = FARAeroUtil.GetCurrentDensity(this.vessel.mainBody, this.ASL, false);
+            this.atmDensity = part.atmDensity;
             Vector3 velocity = this.part.Rigidbody.velocity + Krakensbane.GetFrameVelocityV3f();
             this.sqrSpeed = velocity.sqrMagnitude;
             this.dragVector = -velocity.normalized;
+
+            if (atmDensity > 0)
+                CalculateChuteFlux();
+
+            CalculateSafeToDeployEstimate();
+
             if (!this.staged && GameSettings.LAUNCH_STAGES.GetKeyDown() && this.vessel.isActiveVessel && (this.part.inverseStage == Staging.CurrentStage - 1 || Staging.CurrentStage == 0)) { ActivateRC(); }
 
             if (this.staged)

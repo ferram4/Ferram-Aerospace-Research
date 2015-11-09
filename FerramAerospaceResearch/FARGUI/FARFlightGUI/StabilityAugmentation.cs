@@ -309,6 +309,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
             systemTemplates[0] = sys;
 
+            sys = new ControlSystem();
             //Yaw system
             sys.kP = 0;
             sys.kD = 1;
@@ -316,6 +317,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
             systemTemplates[1] = sys;
 
+            sys = new ControlSystem();
             //Pitch system
             sys.kP = 0;
             sys.kD = 1;
@@ -323,6 +325,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
             systemTemplates[2] = sys;
 
+            sys = new ControlSystem();
             //AoA system
             sys.kP = 0.25;
             sys.kD = 0;

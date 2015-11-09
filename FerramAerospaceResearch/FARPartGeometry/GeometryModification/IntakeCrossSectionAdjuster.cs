@@ -60,6 +60,9 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
         Matrix4x4 meshLocalToWorld;
         Transform intakeTrans;
         ModuleResourceIntake intakeModule;
+        AttachNode node;
+
+        double nodeOffsetArea = 0;      //used to handle intakes being on the side of fuselage parts
 
         //ModuleResourceIntake intake;
         //public ModuleResourceIntake IntakeModule
@@ -82,17 +85,27 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
             this.part = intake.part;
             intakeModule = intake as ModuleResourceIntake;
             intakeTrans = intakeModule.intakeTransform;
-            //ModuleResourceIntake intake = intake;
 
-
-            /*vehicleBasisForwardVector = Vector3.forward;//intakeTrans.forward;
-
-            foreach(AttachNode node in part.attachNodes)
-                if(node.nodeType == AttachNode.NodeType.Stack && Vector3.Dot(node.position, (part.transform.worldToLocalMatrix * intakeTrans.localToWorldMatrix).MultiplyVector(Vector3.forward)) > 0)
+            if (!string.IsNullOrEmpty(intakeModule.occludeNode))
+                node = intakeModule.node; 
+            
+            foreach (AttachNode candidateNode in part.attachNodes)
+                if (candidateNode.nodeType == AttachNode.NodeType.Stack && Vector3.Dot(candidateNode.position, (part.transform.worldToLocalMatrix * intakeTrans.localToWorldMatrix).MultiplyVector(Vector3.forward)) > 0)
                 {
-                    frontNode = node;
+                    if (candidateNode == node)
+                        continue;
+
+                    nodeOffsetArea = candidateNode.size;
+                    if (nodeOffsetArea == 0)
+                        nodeOffsetArea = 0.5;
+
+                    nodeOffsetArea *= 0.625;     //scale it up as needed
+                    nodeOffsetArea *= nodeOffsetArea;
+                    nodeOffsetArea *= Math.PI;  //calc area;
+
+                    nodeOffsetArea *= -1;        //and the adjustment area
                     break;
-                }*/
+                }
 
             thisToVesselMatrix = worldToVesselMatrix * intakeTrans.localToWorldMatrix;
 
@@ -108,17 +121,27 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
             this.part = intake.part;
             intakeModule = intake as ModuleResourceIntake;
             intakeTrans = intakeModule.intakeTransform;
-            //ModuleResourceIntake intake = intake;
 
-            /*intakeTrans = part.FindModelTransform(intake.intakeTransformName);
-            vehicleBasisForwardVector = Vector3.forward;//intakeTrans.forward;
+            if(!string.IsNullOrEmpty(intakeModule.occludeNode))
+                node = intakeModule.node;
 
-            foreach (AttachNode node in part.attachNodes)
-                if (node.nodeType == AttachNode.NodeType.Stack && Vector3.Dot(node.position, (part.transform.worldToLocalMatrix * intakeTrans.localToWorldMatrix).MultiplyVector(Vector3.forward)) > 0)
+            foreach (AttachNode candidateNode in part.attachNodes)
+                if (candidateNode.nodeType == AttachNode.NodeType.Stack && Vector3.Dot(candidateNode.position, (part.transform.worldToLocalMatrix * intakeTrans.localToWorldMatrix).MultiplyVector(Vector3.forward)) > 0)
                 {
-                    frontNode = node;
+                    if (candidateNode == node)
+                        continue;
+
+                    nodeOffsetArea = candidateNode.size;
+                    if (nodeOffsetArea == 0)
+                        nodeOffsetArea = 0.5;
+
+                    nodeOffsetArea *= 0.625;     //scale it up as needed
+                    nodeOffsetArea *= nodeOffsetArea;
+                    nodeOffsetArea *= Math.PI;  //calc area;
+
+                    nodeOffsetArea *= -1;        //and the adjustment area
                     break;
-                }*/
+                }
 
             thisToVesselMatrix = worldToVesselMatrix * intakeTrans.localToWorldMatrix;
 
@@ -126,7 +149,6 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
             vehicleBasisForwardVector = thisToVesselMatrix.MultiplyVector(vehicleBasisForwardVector);
 
             intakeArea = INTAKE_AREA_SCALAR * intake.area;
-
         }
 
         public double AreaRemovedFromCrossSection(Vector3 vehicleAxis)
@@ -140,10 +162,16 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
         public double AreaRemovedFromCrossSection()
         {
-            if (intakeModule.node == null || intakeModule.node.attachedPart == null)
+            if (node == null || node.attachedPart == null)
                 return intakeArea * sign;
             else
                 return 0;
+        }
+
+
+        public double AreaThreshold()
+        {
+             return nodeOffsetArea;
         }
 
         public void SetForwardBackwardNoFlowDirection(int sign)

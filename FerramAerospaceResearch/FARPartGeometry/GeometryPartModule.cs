@@ -458,6 +458,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         animStates.RemoveAt(i);
                         animStateTime.RemoveAt(i);
                         --i;
+                        continue;
                     }
                     float prevNormTime = animStateTime[i];
 

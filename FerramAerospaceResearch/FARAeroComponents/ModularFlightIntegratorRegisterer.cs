@@ -57,6 +57,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             Debug.Log("FAR Modular Flight Integrator function registration started");
             ModularFI.ModularFlightIntegrator.RegisterUpdateAerodynamicsOverride(UpdateAerodynamics);
             ModularFI.ModularFlightIntegrator.RegisterUpdateThermodynamicsPre(UpdateThermodynamicsPre);
+            ModularFI.ModularFlightIntegrator.RegisterCalculateAreaExposedOverride(CalculateAreaRadiative);
+            ModularFI.ModularFlightIntegrator.RegisterCalculateAreaRadiativeOverride(CalculateAreaRadiative);
             Debug.Log("FAR Modular Flight Integrator function registration complete");
             GameObject.Destroy(this);
         }
@@ -65,7 +67,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
         {
             for (int i = 0; i < fi.PartThermalDataCount; i++)
             {
-                Part part = fi.partThermalDataList[i].part;
+                FlightIntegrator.PartThermalData ptd = fi.partThermalDataList[i];
+                Part part = ptd.part;
                 if (!part.Modules.Contains("FARAeroPartModule"))
                     continue;
 
@@ -73,14 +76,15 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 FARAeroPartModule aeroModule = (FARAeroPartModule)module;
 
-                double stockRadArea = fi.BaseFICalculateAreaRadiative(part);
-
                 part.radiativeArea = CalculateAreaRadiative(fi, part, aeroModule);
                 part.exposedArea = part.machNumber > 0 ? CalculateAreaExposed(fi, part, aeroModule) : part.radiativeArea;
 
                 if (part.exposedArea > part.radiativeArea)
                     part.exposedArea = part.radiativeArea;      //sanity check just in case
+
+                //fi.SetSkinProperties(ptd);
             }
+            //fi.timeSinceLastUpdate = 0;
             //Debug.Log("MFI: " + fi.CoM + " " + Planetarium.GetUniversalTime());
         }
 
@@ -140,11 +144,21 @@ namespace FerramAerospaceResearch.FARAeroComponents
             tmp += p.submergedDynamicPressurekPa * PhysicsGlobals.BuoyancyWaterAngularDragScalar * p.waterAngularDragMultiplier * p.submergedPortion;
 
             p.rb.angularDrag = (float)(p.angularDrag * tmp * PhysicsGlobals.AngularDragMultiplier);
-            
+
             p.dynamicPressurekPa = (p.dynamicPressurekPa * (1.0 - p.submergedPortion) + p.submergedDynamicPressurekPa * p.submergedPortion * p.submergedDragScalar * fi.pseudoReDragMult);       //dyn pres adjusted for submersion
+            p.submergedDynamicPressurekPa = (p.dynamicPressurekPa * (1.0 - p.submergedPortion) + p.submergedDynamicPressurekPa * p.submergedPortion * p.submergedLiftScalar);
 
         }
 
+        double CalculateAreaRadiative(ModularFI.ModularFlightIntegrator fi, Part part)
+        {
+            FARAeroPartModule module = null;
+            if (part.Modules.Contains("FARAeroPartModule"))
+                module = (FARAeroPartModule)part.Modules["FARAeroPartModule"];
+
+            return CalculateAreaRadiative(fi, part, module);
+        }
+        
         double CalculateAreaRadiative(ModularFI.ModularFlightIntegrator fi, Part part, FARAeroPartModule aeroModule)
         {
             //double dragCubeExposed = fi.BaseFICalculateAreaExposed(part);
@@ -154,6 +168,15 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 return aeroModule.ProjectedAreas.totalArea;
             }
+        }
+
+        double CalculateAreaExposed(ModularFI.ModularFlightIntegrator fi, Part part)
+        {
+            FARAeroPartModule module = null;
+            if (part.Modules.Contains("FARAeroPartModule"))
+                module = (FARAeroPartModule)part.Modules["FARAeroPartModule"];
+
+            return CalculateAreaExposed(fi, part, module);
         }
 
         double CalculateAreaExposed(ModularFI.ModularFlightIntegrator fi, Part part, FARAeroPartModule aeroModule)

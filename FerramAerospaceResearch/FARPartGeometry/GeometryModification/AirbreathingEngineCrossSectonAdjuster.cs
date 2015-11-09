@@ -114,6 +114,11 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
             return exitArea * sign;
         }
 
+        public double AreaThreshold()
+        {
+            return 0;
+        }
+
         public void SetForwardBackwardNoFlowDirection(int sign)
         {
             this.sign = sign;

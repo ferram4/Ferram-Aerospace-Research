@@ -595,7 +595,7 @@ namespace FerramAerospaceResearch
         }
 
         // Vessel has altitude and cached pressure, and both density and sound speed need temperature
-        public static double GetCurrentDensity(Part p, bool densitySmoothingAtOcean = true)
+        public static double GetCurrentDensity(Part p)
         {
             return (p.atmDensity * (1.0 - p.submergedPortion) + p.vessel.mainBody.oceanDensity * 1000 * p.submergedPortion * p.submergedDragScalar);// * fi.pseudoReDragMult);
         }

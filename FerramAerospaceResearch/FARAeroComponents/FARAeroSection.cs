@@ -294,7 +294,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
                 break;
             } 
-            if (aeroModule.part == null || aeroModule.part.partTransform == null)
+            if (aeroModule.part == null || aeroModule.part.transform == null)
             {
                 return;
             }
@@ -403,8 +403,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 PartData data2 = partData[i];
                 FARAeroPartModule module = data2.aeroModule;
-                if ((object)aeroModule == null)
+                if ((object)module == null)
                     continue;
+
+                if (module.part == null || module.part.partTransform == null)
+                {
+                    continue;
+                }
 
                 centroid = module.part.partTransform.localToWorldMatrix.MultiplyPoint3x4(data2.centroidPartSpace);
                 center.AddForce(centroid, forceVector * data2.dragFactor);

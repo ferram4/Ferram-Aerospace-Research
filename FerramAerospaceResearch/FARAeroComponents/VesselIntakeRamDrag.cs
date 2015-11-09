@@ -87,6 +87,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if (m is ModuleResourceIntake)
                     {
                         ModuleResourceIntake intake = (ModuleResourceIntake)m;
+
+                        if (intake.node != null && intake.node.attachedPart != null)
+                            continue;
+
                         _aeroModulesWithIntakes.Add(aeroModule);
                         _intakeModules.Add(intake);
                         _intakeTransforms.Add(p.FindModelTransform(intake.intakeTransformName));
@@ -144,12 +148,15 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             for (int i = 0; i < _airBreathingEngines.Count; i++)
             {
-                currentThrottle += _airBreathingEngines[i].requestedThrottle;
+                currentThrottle += _airBreathingEngines[i].currentThrottle;
             }
             currentThrottle /= Math.Max((float)_airBreathingEngines.Count, 1);
 
+            if (currentThrottle > 0.5)
+                return 0;
+
             float currentRamDrag = RamDragPerArea(machNumber);
-            currentRamDrag *= 1f - currentThrottle;
+            currentRamDrag *= 1f - 2f * currentThrottle;
 
             return currentRamDrag;
         }

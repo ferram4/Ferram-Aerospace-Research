@@ -208,7 +208,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     a.ForceLegacyAeroUpdates();
                     //Debug.Log(a.part.partInfo.title + " unshielded");
                 }
-
+                
                 _vesselIntakeRamDrag.UpdateAeroData(_currentAeroModules, _unusedAeroModules);
             }
 

@@ -142,6 +142,11 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
                 return -intakeArea * sign;      //if the intake is covered, switch the math so that it functions like an AirbreathingEngineCrossSectionAdjuster instead
         }
 
+        public double AreaThreshold()
+        {
+            return 0;
+        }
+
         public void SetForwardBackwardNoFlowDirection(int sign)
         {
             this.sign = sign;

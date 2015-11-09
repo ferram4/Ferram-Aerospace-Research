@@ -871,7 +871,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     double ductedArea = 0;      //area based on the voxel size
                     //double actualArea = 0;      //area based on intake and engine data
-
+                    double voxelCountScale = _voxelElementSize * _voxelElementSize;
                     //and all the intakes / engines
                     if (i >= front && i <= back)
                     {
@@ -894,17 +894,18 @@ namespace FerramAerospaceResearch.FARAeroComponents
                                 if (adjuster.AreaRemovedFromCrossSection() > 0)
                                 {
                                     //actualArea += adjuster.AreaRemovedFromCrossSection();
-                                    ductedArea += val.crossSectionalAreaCount;
+                                    ductedArea += Math.Max(0, val.crossSectionalAreaCount * voxelCountScale + adjuster.AreaThreshold());
                                 }
                                 else
                                 {
                                     //actualArea -= adjuster.AreaRemovedFromCrossSection();
-                                    ductedArea -= val.crossSectionalAreaCount;
+                                    ductedArea -= Math.Max(0, val.crossSectionalAreaCount * voxelCountScale + adjuster.AreaThreshold());
                                 }
+                                ThreadSafeDebugLogger.Instance.RegisterMessage(val.crossSectionalAreaCount.ToString());
                             }
                         }
 
-                        ductedArea *= _voxelElementSize * _voxelElementSize * 0.75;
+                        ductedArea *= 0.75;
 
                         //if (Math.Abs(actualArea) < Math.Abs(ductedArea))
                         //    ductedArea = actualArea;
@@ -977,7 +978,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 for (int i = 0; i < vehicleCrossSection.Length; i++)
                 {
                     double ductedArea = 0;      //area based on the voxel size
-                    //double actualArea = 0;      //area based on intake and engine data
+                    double actualArea = 0;      //area based on intake and engine data
 
                     //and all the intakes / engines
                     for (int j = 0; j < activeAdjusters.Count; j++)
@@ -993,16 +994,16 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         //see if you can find that in this section
                         if (vehicleCrossSection[i].partSideAreaValues.TryGetValue(p, out val))
                         {
-                           ductedArea += val.crossSectionalAreaCount;
-
+                            ductedArea += val.crossSectionalAreaCount;
+                            actualArea += adjuster.AreaRemovedFromCrossSection();
                         }
                         //ThreadSafeDebugLogger.Instance.RegisterMessage(ductedArea.ToString());
                     }
 
                     ductedArea *= _voxelElementSize * _voxelElementSize * 0.75;
 
-                    //if (Math.Abs(actualArea) < Math.Abs(ductedArea))
-                    //    ductedArea = actualArea;
+                    if (Math.Abs(actualArea) < Math.Abs(ductedArea))
+                        ductedArea = actualArea;
 
                     if (ductedArea != 0)
                         if (i < frontMostIndex)
@@ -1338,7 +1339,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
 
                 weightingFactor = 1 / weightingFactor;
-                for (int j = 0; j < includedPartsAndAreas.Count; j++)
+                for (int j = 0; j < weighting.Count; j++)
                 {
                     weighting[j] *= weightingFactor;
                 }

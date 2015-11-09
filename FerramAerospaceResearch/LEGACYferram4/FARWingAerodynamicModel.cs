@@ -301,8 +301,10 @@ namespace ferram4
         {
             velocityEditor = velocityVector;
 
-            rho = 1;
+            rho = density;
 
+            part.dynamicPressurekPa = 0.0005 * density * velocityEditor.sqrMagnitude;
+            part.submergedDynamicPressurekPa = part.dynamicPressurekPa;
             double AoA = CalculateAoA(velocityVector);
             return CalculateForces(velocityVector, M, AoA, density);
         }
@@ -311,8 +313,10 @@ namespace ferram4
         {
             velocityEditor = velocityVector;
 
-            rho = 1;
+            rho = density;
 
+            part.dynamicPressurekPa = 0.0005 * density * velocityEditor.sqrMagnitude;
+            part.submergedDynamicPressurekPa = part.dynamicPressurekPa;
             double AoA = CalculateAoA(velocityVector);
             CalculateForces(velocityVector, M, AoA, density);
         }
@@ -544,7 +548,7 @@ namespace ferram4
 
                     double machNumber, v_scalar = velocity.magnitude;
 
-                    rho = FARAeroUtil.GetCurrentDensity(part);
+                    rho = part.atmDensity;
                     machNumber = vessel.mach;
                     if (rho > 0 && v_scalar > 0.1)
                     {
@@ -615,7 +619,7 @@ namespace ferram4
             Vector3 forward = part_transform.forward;
             Vector3d velocity_normalized = velocity / v_scalar;
 
-            double q = rho * v_scalar * v_scalar * 0.5;   //dynamic pressure, q
+            //double q = rho * v_scalar * v_scalar * 0.5;   //dynamic pressure, q
 
             ParallelInPlane = Vector3d.Exclude(forward, velocity).normalized;  //Projection of velocity vector onto the plane of the wing
             perp = Vector3d.Cross(forward, ParallelInPlane).normalized;       //This just gives the vector to cross with the velocity vector
@@ -641,8 +645,8 @@ namespace ferram4
 
 
             //lift and drag vectors
-            Vector3d L = liftDirection * (q * Cl * S) * 0.001;    //lift;
-            Vector3d D = velocity_normalized * (-q * Cd * S) * 0.001;                         //drag is parallel to velocity vector
+            Vector3d L = liftDirection * (Cl * S) * part.submergedDynamicPressurekPa;    //lift; submergedDynPreskPa handles lift
+            Vector3d D = -velocity_normalized * (Cd * S) * part.dynamicPressurekPa;                         //drag is parallel to velocity vector
 
             UpdateAeroDisplay(L, D);
             Vector3d force = (L + D);
