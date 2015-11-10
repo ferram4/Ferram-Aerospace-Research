@@ -467,7 +467,10 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             if (cursorInGUI)
             {
                 EditorTooltip.Instance.HideToolTip();
-                EdLogInstance.Lock(false, false, false, "FAREdLock");
+                if(!CameraMouseLook.GetMouseLook())
+                    EdLogInstance.Lock(false, false, false, "FAREdLock");
+                else
+                    EdLogInstance.Unlock("FAREdLock");
             }
             else if (!cursorInGUI)
             {
@@ -575,7 +578,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                     return;
             }
             if (velocityArrow == null)
-                velocityArrow = ArrowPointer.Create(arrowTransform, Vector3.zero, Vector3.forward, 15, Color.cyan, true);
+                velocityArrow = ArrowPointer.Create(arrowTransform, Vector3.zero, Vector3.forward, 15, Color.white, true);
 
             if (showGUI && showAoAArrow)
             {

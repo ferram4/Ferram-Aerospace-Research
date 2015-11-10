@@ -69,6 +69,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         VoxelChunk[, ,] voxelChunks;
         HashSet<Part> overridingParts;
+        HashSet<Part> ductingParts;
         int xLength, yLength, zLength;
         int xCellLength, yCellLength, zCellLength;
         int threadsQueued = 0;
@@ -135,7 +136,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Vector3d max = new Vector3d(double.NegativeInfinity, double.NegativeInfinity, double.NegativeInfinity);
 
             overridingParts = new HashSet<Part>();
-
+            ductingParts = new HashSet<Part>();
             //Determine bounds and "overriding parts" from geoModules
             for (int i = 0; i < geoModules.Count; i++)
             {
@@ -258,6 +259,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (g.HasCrossSectionAdjusters)
             {
                 returnVal |= g.MaxCrossSectionAdjusterArea > 0;
+                //if (g.MaxCrossSectionAdjusterArea > 0)
+                //    ductingParts.Add(g.part);
             }
 
             return returnVal;
@@ -2289,8 +2292,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         if ((object)p != null)
                         {
                             pt = new SweepPlanePoint(p, i, k);
-                            if (overridingParts.Contains(p))
-                                pt.overridingParts = true;
+                            if (ductingParts.Contains(p))
+                                pt.ductingParts = true;
 
                             pt.jLastInactive = j;
                             sweepPlane[i, k] = pt;
@@ -2310,9 +2313,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             {
                                 activePts.Add(pt); //And add it to the list of active interior pts
                                 pt.mark = SweepPlanePoint.MarkingType.ActivePassedThroughInternalShell;
-                                if(overridingParts.Contains(pt.part))
+                                if (ductingParts.Contains(pt.part))
                                 {
-                                    pt.overridingParts = true;
+                                    pt.ductingParts = true;
                                 }
                             }
                             //Only other situation is that it is an inactive point, in which case we do nothing here, because it is already taken care of
@@ -2326,26 +2329,26 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             else
                                 pt.mark = SweepPlanePoint.MarkingType.VoxelShellPreviouslyInterior;     //this marks that this point was once part of the voxel shell
                             
-                            if(pt.overridingParts && pt.part == p)      //marks end of overriding part if it finds the other end of it
+                            if(pt.ductingParts && pt.part == p)      //marks end of overriding part if it finds the other end of it
                             {
-                                pt.overridingParts = false;
+                                pt.ductingParts = false;
                                 pt.jLastInactive = j;
                             }
-                            else if (!pt.overridingParts)
+                            else if (!pt.ductingParts)
                             {
                                 pt.part = p;
-                                if (overridingParts.Contains(p))
-                                    pt.overridingParts = true;
+                                if (ductingParts.Contains(p))
+                                    pt.ductingParts = true;
                                 pt.jLastInactive = j;
                             }
                         }
-                        else if (overridingParts.Contains(p) && pt.part != p)
+                        else if (ductingParts.Contains(p) && pt.part != p)
                         {
                             pt.part = p;
-                            pt.overridingParts = true;
+                            pt.ductingParts = true;
                             pt.jLastInactive = j;
                         }
-                        else if (pt.overridingParts && pt.part != p)
+                        else if (pt.ductingParts && pt.part != p)
                         {
                             SetVoxelPointPartOnlyNoLock(i, j, k, pt.part);
                         }
@@ -2395,14 +2398,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     }
                     SweepPlanePoint pt = sweepPlane[activeInteriorPt.i, activeInteriorPt.k];
                     pt.mark = SweepPlanePoint.MarkingType.Clear; //Then, set this point to be marked clear in the sweepPlane
-                    pt.overridingParts = false;
+                    pt.ductingParts = false;
                     pt.part = null;
                 }
                 else
                 { //If it's surrounded by other points, it's inactive; add it to that list
                     if (activeInteriorPt.mark == SweepPlanePoint.MarkingType.ActivePassedThroughInternalShell)
                     {
-                        if (activeInteriorPt.overridingParts)
+                        if (activeInteriorPt.ductingParts)
                         {
                             if (activeInteriorPt.jLastInactive < j)
                                 for (int mJ = activeInteriorPt.jLastInactive; mJ < j; mJ++)
@@ -2424,7 +2427,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     }
 
                     activeInteriorPt.mark = SweepPlanePoint.MarkingType.InactiveInterior;
-                    activeInteriorPt.overridingParts = false;
+                    activeInteriorPt.ductingParts = false;
                     inactiveInteriorPts.Add(activeInteriorPt);
                 }
             }
@@ -2441,7 +2444,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             public Part part;
             public int i, k;
             public int jLastInactive;
-            public bool overridingParts = false;
+            public bool ductingParts = false;
 
             public MarkingType mark = MarkingType.VoxelShell;
 
@@ -2449,7 +2452,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 jLastInactive = 0;
                 mark = MarkingType.Clear;
-                overridingParts = false;
+                ductingParts = false;
                 part = null;
             }
 
