@@ -69,6 +69,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         VoxelChunk[, ,] voxelChunks;
         HashSet<Part> overridingParts;
+        HashSet<Part> ductingParts;
         int xLength, yLength, zLength;
         int xCellLength, yCellLength, zCellLength;
         int threadsQueued = 0;
@@ -135,7 +136,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Vector3d max = new Vector3d(double.NegativeInfinity, double.NegativeInfinity, double.NegativeInfinity);
 
             overridingParts = new HashSet<Part>();
-
+            ductingParts = new HashSet<Part>();
             //Determine bounds and "overriding parts" from geoModules
             for (int i = 0; i < geoModules.Count; i++)
             {
@@ -258,6 +259,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (g.HasCrossSectionAdjusters)
             {
                 returnVal |= g.MaxCrossSectionAdjusterArea > 0;
+                //if (g.MaxCrossSectionAdjusterArea > 0)
+                //    ductingParts.Add(g.part);
             }
 
             return returnVal;
@@ -1380,7 +1383,42 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             section.SetVoxelPointGlobalIndexNoLock(i + j * 8 + k * 64);
         }
-        
+
+        //Use when guaranteed that you will not attempt to write to the same section simultaneously
+        private void SetVoxelPointPartOnlyNoLock(int i, int j, int k, Part part)
+        {
+            int iSec, jSec, kSec;
+            //Find the voxel section that this point points to
+
+            iSec = i >> 3;
+            jSec = j >> 3;
+            kSec = k >> 3;
+
+            VoxelChunk section;
+
+            section = voxelChunks[iSec, jSec, kSec];
+            if (section == null)
+            {
+                lock (clearedChunks)
+                {
+                    if (clearedChunks.Count > 0)
+                    {
+                        section = clearedChunks.Pop();
+                    }
+                }
+                if (section == null)
+                    section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8, overridingParts);
+                else
+                    section.SetChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8, overridingParts);
+
+                voxelChunks[iSec, jSec, kSec] = section;
+            }
+
+            //Debug.Log(i.ToString() + ", " + j.ToString() + ", " + k.ToString() + ", " + part.partInfo.title);
+
+            section.SetVoxelPointPartOnlyGlobalIndexNoLock(i + j * 8 + k * 64, part);
+        }
+
         //Use when guaranteed that you will not attempt to write to the same section simultaneously
         private void SetVoxelPointNoLock(int i, int j, int k, Part part)
         {
@@ -2253,7 +2291,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
                         if ((object)p != null)
                         {
-                            sweepPlane[i, k] = new SweepPlanePoint(p, i, k);
+                            pt = new SweepPlanePoint(p, i, k);
+                            if (ductingParts.Contains(p))
+                                pt.ductingParts = true;
+
+                            pt.jLastInactive = j;
+                            sweepPlane[i, k] = pt;
                             continue;
                         }
                     }
@@ -2270,20 +2313,44 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             {
                                 activePts.Add(pt); //And add it to the list of active interior pts
                                 pt.mark = SweepPlanePoint.MarkingType.ActivePassedThroughInternalShell;
+                                if (ductingParts.Contains(pt.part))
+                                {
+                                    pt.ductingParts = true;
+                                }
                             }
                             //Only other situation is that it is an inactive point, in which case we do nothing here, because it is already taken care of
-                        }
-                        else if (pt.mark == SweepPlanePoint.MarkingType.Clear)
-                        {
-                            pt.mark = SweepPlanePoint.MarkingType.VoxelShell;
-                            pt.part = p;
                         }
                         else if (pt.mark != SweepPlanePoint.MarkingType.VoxelShell && pt.mark != SweepPlanePoint.MarkingType.VoxelShellPreviouslyInterior)  //only run this if it's not already labeled as part of a voxel shell
                         {  //Make sure the point is labeled as a voxel shell if there is already a part there
                             inactiveInteriorPts.Remove(pt);
-                            pt.mark = SweepPlanePoint.MarkingType.VoxelShellPreviouslyInterior;     //this marks that this point was once part of the voxel shell
+
+                            if (pt.mark == SweepPlanePoint.MarkingType.Clear)
+                                pt.mark = SweepPlanePoint.MarkingType.VoxelShell;
+                            else
+                                pt.mark = SweepPlanePoint.MarkingType.VoxelShellPreviouslyInterior;     //this marks that this point was once part of the voxel shell
+                            
+                            if(pt.ductingParts && pt.part == p)      //marks end of overriding part if it finds the other end of it
+                            {
+                                pt.ductingParts = false;
+                                pt.jLastInactive = j;
+                            }
+                            else if (!pt.ductingParts)
+                            {
+                                pt.part = p;
+                                if (ductingParts.Contains(p))
+                                    pt.ductingParts = true;
+                                pt.jLastInactive = j;
+                            }
+                        }
+                        else if (ductingParts.Contains(p) && pt.part != p)
+                        {
                             pt.part = p;
+                            pt.ductingParts = true;
                             pt.jLastInactive = j;
+                        }
+                        else if (pt.ductingParts && pt.part != p)
+                        {
+                            SetVoxelPointPartOnlyNoLock(i, j, k, pt.part);
                         }
                     }
                 }
@@ -2329,22 +2396,38 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             activePts.Add(neighbor); //And add them to the end of activePts
                         }
                     }
-                    sweepPlane[activeInteriorPt.i, activeInteriorPt.k].mark = SweepPlanePoint.MarkingType.Clear; //Then, set this point to be marked clear in the sweepPlane
+                    SweepPlanePoint pt = sweepPlane[activeInteriorPt.i, activeInteriorPt.k];
+                    pt.mark = SweepPlanePoint.MarkingType.Clear; //Then, set this point to be marked clear in the sweepPlane
+                    pt.ductingParts = false;
+                    pt.part = null;
                 }
                 else
                 { //If it's surrounded by other points, it's inactive; add it to that list
                     if (activeInteriorPt.mark == SweepPlanePoint.MarkingType.ActivePassedThroughInternalShell)
                     {
-                        if (activeInteriorPt.jLastInactive < j)
-                            for (int mJ = activeInteriorPt.jLastInactive; mJ < j; mJ++)
-                                SetVoxelPointNoLock(activeInteriorPt.i, mJ, activeInteriorPt.k);       //used to make sure that internal part boundaries for cargo bays don't result in dips in cross-section
+                        if (activeInteriorPt.ductingParts)
+                        {
+                            if (activeInteriorPt.jLastInactive < j)
+                                for (int mJ = activeInteriorPt.jLastInactive; mJ < j; mJ++)
+                                    SetVoxelPointNoLock(activeInteriorPt.i, mJ, activeInteriorPt.k, activeInteriorPt.part);       //used to make sure that internal part boundaries for cargo bays don't result in dips in cross-section
+                            else
+                                for (int mJ = lastJ; mJ <= activeInteriorPt.jLastInactive; mJ++)
+                                    SetVoxelPointNoLock(activeInteriorPt.i, mJ, activeInteriorPt.k, activeInteriorPt.part);       //used to make sure that internal part boundaries for cargo bays don't result in dips in cross-section
+                        }
                         else
-                            for (int mJ = lastJ; mJ <= activeInteriorPt.jLastInactive; mJ++)
-                                SetVoxelPointNoLock(activeInteriorPt.i, mJ, activeInteriorPt.k);       //used to make sure that internal part boundaries for cargo bays don't result in dips in cross-section
+                        {
+                            if (activeInteriorPt.jLastInactive < j)
+                                for (int mJ = activeInteriorPt.jLastInactive; mJ < j; mJ++)
+                                    SetVoxelPointNoLock(activeInteriorPt.i, mJ, activeInteriorPt.k);       //used to make sure that internal part boundaries for cargo bays don't result in dips in cross-section
+                            else
+                                for (int mJ = lastJ; mJ <= activeInteriorPt.jLastInactive; mJ++)
+                                    SetVoxelPointNoLock(activeInteriorPt.i, mJ, activeInteriorPt.k);       //used to make sure that internal part boundaries for cargo bays don't result in dips in cross-section
 
+                        }
                     }
 
                     activeInteriorPt.mark = SweepPlanePoint.MarkingType.InactiveInterior;
+                    activeInteriorPt.ductingParts = false;
                     inactiveInteriorPts.Add(activeInteriorPt);
                 }
             }
@@ -2361,6 +2444,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             public Part part;
             public int i, k;
             public int jLastInactive;
+            public bool ductingParts = false;
 
             public MarkingType mark = MarkingType.VoxelShell;
 
@@ -2368,6 +2452,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 jLastInactive = 0;
                 mark = MarkingType.Clear;
+                ductingParts = false;
                 part = null;
             }
 

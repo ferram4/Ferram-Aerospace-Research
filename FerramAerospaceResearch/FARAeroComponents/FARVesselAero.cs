@@ -208,7 +208,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     a.ForceLegacyAeroUpdates();
                     //Debug.Log(a.part.partInfo.title + " unshielded");
                 }
-
+                
                 _vesselIntakeRamDrag.UpdateAeroData(_currentAeroModules, _unusedAeroModules);
             }
 
@@ -254,7 +254,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     else
                     {
                         _currentAeroModules.RemoveAt(i);
-                        i++;
+                        //i++;
                     }
                 }
             else                    //otherwise, we don't need to do Unity's expensive "is this part dead" null-check

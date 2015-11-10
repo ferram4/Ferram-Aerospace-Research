@@ -58,8 +58,8 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
         Matrix4x4 thisToVesselMatrix;
         Matrix4x4 meshLocalToWorld;
+        ModuleResourceIntake intakeModule;
         Transform intakeTrans;
-        AttachNode frontNode;
 
         Part part;
         public Part GetPart()
@@ -67,58 +67,62 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
             return part;
         }
 
+        public bool IntegratedCrossSectionIncreaseDecrease()
+        {
+            return intakeModule.node == null || intakeModule.node.attachedPart == null;
+        }
+
         public IntegratedIntakeEngineCrossSectionAdjuster(PartModule intake, Matrix4x4 worldToVesselMatrix)
         {
             this.part = intake.part;
+            intakeModule = intake as ModuleResourceIntake;
+            intakeTrans = intakeModule.intakeTransform;
             //ModuleResourceIntake intake = intake;
 
-            Type intakeType = intake.GetType();
-            intakeTrans = (Transform)intakeType.GetField("intakeTransform", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(intake);
 
-            vehicleBasisForwardVector = Vector3.forward;//intakeTrans.forward;
+            /*vehicleBasisForwardVector = Vector3.forward;//intakeTrans.forward;
 
-            if (intakeTrans == null)
-                intakeTrans = intake.part.partTransform;
-
-            foreach (AttachNode node in part.attachNodes)
+            foreach(AttachNode node in part.attachNodes)
                 if(node.nodeType == AttachNode.NodeType.Stack && Vector3.Dot(node.position, (part.transform.worldToLocalMatrix * intakeTrans.localToWorldMatrix).MultiplyVector(Vector3.forward)) > 0)
                 {
                     frontNode = node;
                     break;
-                }
+                }*/
 
             thisToVesselMatrix = worldToVesselMatrix * intakeTrans.localToWorldMatrix;
 
+            vehicleBasisForwardVector = Vector3.forward;
             vehicleBasisForwardVector = thisToVesselMatrix.MultiplyVector(vehicleBasisForwardVector);
 
+            Type intakeType = intake.GetType();
             intakeArea = (float)intakeType.GetField("Area").GetValue(intake);
-
         }
 
         public IntegratedIntakeEngineCrossSectionAdjuster(ModuleResourceIntake intake, Matrix4x4 worldToVesselMatrix)
         {
             this.part = intake.part;
+            intakeModule = intake as ModuleResourceIntake;
+            intakeTrans = intakeModule.intakeTransform;
             //ModuleResourceIntake intake = intake;
 
-            intakeTrans = part.FindModelTransform(intake.intakeTransformName);
+            /*intakeTrans = part.FindModelTransform(intake.intakeTransformName);
             vehicleBasisForwardVector = Vector3.forward;//intakeTrans.forward;
-
-            if (intakeTrans == null)
-                intakeTrans = intake.part.partTransform;
 
             foreach (AttachNode node in part.attachNodes)
                 if (node.nodeType == AttachNode.NodeType.Stack && Vector3.Dot(node.position, (part.transform.worldToLocalMatrix * intakeTrans.localToWorldMatrix).MultiplyVector(Vector3.forward)) > 0)
                 {
                     frontNode = node;
                     break;
-                }
+                }*/
 
             thisToVesselMatrix = worldToVesselMatrix * intakeTrans.localToWorldMatrix;
 
+            vehicleBasisForwardVector = Vector3.forward;
             vehicleBasisForwardVector = thisToVesselMatrix.MultiplyVector(vehicleBasisForwardVector);
 
             intakeArea = INTAKE_AREA_SCALAR * intake.area;
 
+            Debug.Log("Integrated cross-section adjuster");
         }
 
         public double AreaRemovedFromCrossSection(Vector3 vehicleAxis)
@@ -132,10 +136,15 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
         public double AreaRemovedFromCrossSection()
         {
-            if (frontNode == null || frontNode.attachedPart == null)
+            if (intakeModule.node == null || intakeModule.node.attachedPart == null)
                 return intakeArea * sign;
             else
-                return 0;
+                return -intakeArea * sign;      //if the intake is covered, switch the math so that it functions like an AirbreathingEngineCrossSectionAdjuster instead
+        }
+
+        public double AreaThreshold()
+        {
+            return 0;
         }
 
         public void SetForwardBackwardNoFlowDirection(int sign)

@@ -167,7 +167,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public bool CanMerge(FARAeroSection otherSection)
         {
-            if (mergeFactor >= 0)
+            if (mergeFactor >= 10)
                 return false;       //only merge up to 10 sections
 
             bool merge = true;
@@ -274,6 +274,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             //xForcePressureAoA180 = null;
             //xForceSkinFriction = null;
             partData.Clear();
+            handledAeroModulesIndexDict.Clear();
         }
         
         public void PredictionCalculateAeroForces(float atmDensity, float machNumber, float reynoldsPerUnitLength, float skinFrictionDrag, Vector3 vel, ferram4.FARCenterQuery center)
@@ -287,13 +288,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 data = partData[i];
                 aeroModule = data.aeroModule;
-                if (aeroModule.part == null)
+                if (aeroModule.part == null || aeroModule.part.partTransform == null)
                 {
                     continue;
                 }
                 break;
             } 
-            if (aeroModule.part == null)
+            if (aeroModule.part == null || aeroModule.part.transform == null)
             {
                 return;
             }
@@ -402,8 +403,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 PartData data2 = partData[i];
                 FARAeroPartModule module = data2.aeroModule;
-                if ((object)aeroModule == null)
+                if ((object)module == null)
                     continue;
+
+                if (module.part == null || module.part.partTransform == null)
+                {
+                    continue;
+                }
 
                 centroid = module.part.partTransform.localToWorldMatrix.MultiplyPoint3x4(data2.centroidPartSpace);
                 center.AddForce(centroid, forceVector * data2.dragFactor);
@@ -519,10 +525,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 Vector3 torqueVector = Vector3.Cross(xRefVector, localNormalForceVec) * moment;
                 torqueVector -= dampingMoment * angVelLocal;
 
-                float dynPresAndScaling = 0.0005f * atmDensity * velLocal.sqrMagnitude * data.dragFactor;        //dyn pres and N -> kN conversion
+                //float dynPresAndScaling = 0.0005f * atmDensity * velLocal.sqrMagnitude * data.dragFactor;        //dyn pres and N -> kN conversion
 
-                forceVector *= dynPresAndScaling;
-                torqueVector *= dynPresAndScaling;
+                //forceVector *= dynPresAndScaling;
+                //torqueVector *= dynPresAndScaling;
+
+                forceVector *= data.dragFactor;
+                torqueVector *= data.dragFactor;
 
                 aeroModule.AddLocalForceAndTorque(forceVector, torqueVector, data.centroidPartSpace);
             }

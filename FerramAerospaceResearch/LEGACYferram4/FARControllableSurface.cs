@@ -85,6 +85,7 @@ namespace ferram4
 
         [KSPField(isPersistant = false)]
         public float ctrlSurfFrac = 1;
+        private float invCtrlSurfFrac = 1;
 
         [KSPField(isPersistant = false)]
         public string transformName = "obj_ctrlSrf";
@@ -266,6 +267,8 @@ namespace ferram4
             justStarted = true;
             if(vessel)
                 lastReferenceTransform = vessel.ReferenceTransform;
+
+            invCtrlSurfFrac = 1 / ctrlSurfFrac;
 
             if (FARDebugValues.allowStructuralFailures)
             {

@@ -103,8 +103,20 @@ namespace FerramAerospaceResearch.FARPartGeometry
             //voxelPoints[zeroBaseIndex].part = p;
             voxelPoints[zeroBaseIndex].SetPlaneLocation(plane, location);
         }
-        
-        //Use when certian that locking is unnecessary
+
+        //Use when certain that locking is unnecessary and need to fill the location
+        public unsafe void SetVoxelPointPartOnlyGlobalIndexNoLock(int zeroBaseIndex, Part p)
+        {
+            zeroBaseIndex -= offset;
+            SetPart(p, zeroBaseIndex, VoxelOrientationPlane.NONE, 0);
+        }
+
+        public unsafe void SetVoxelPointPartOnlyGlobalIndexNoLock(int i, int j, int k, Part p)
+        {
+            int index = i + 8 * j + 64 * k - offset;
+            SetPart(p, index, VoxelOrientationPlane.NONE, 0);
+        }
+        //Use when certain that locking is unnecessary and need to fill the location
         public unsafe void SetVoxelPointGlobalIndexNoLock(int zeroBaseIndex, Part p, VoxelOrientationPlane plane = VoxelOrientationPlane.FILL_VOXEL, byte location = 15)
         {
             zeroBaseIndex -= offset;

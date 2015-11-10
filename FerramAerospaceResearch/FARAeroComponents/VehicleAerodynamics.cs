@@ -847,9 +847,14 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 ICrossSectionAdjuster adjuster = activeAdjusters[i];
                 if (adjuster is AirbreathingEngineCrossSectonAdjuster)
-                    engineExitArea -= adjuster.AreaRemovedFromCrossSection();
+                    engineExitArea += Math.Abs(adjuster.AreaRemovedFromCrossSection());
                 if (adjuster is IntakeCrossSectionAdjuster)
-                    intakeArea += adjuster.AreaRemovedFromCrossSection();
+                    intakeArea += Math.Abs(adjuster.AreaRemovedFromCrossSection());
+                if(adjuster is IntegratedIntakeEngineCrossSectionAdjuster)
+                {
+                    engineExitArea += Math.Abs(adjuster.AreaRemovedFromCrossSection());
+                    intakeArea += Math.Abs(adjuster.AreaRemovedFromCrossSection());
+                }
             }
 
             //ThreadSafeDebugLogger.Instance.RegisterMessage(intakeArea + " " + engineExitArea);
@@ -866,7 +871,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     double ductedArea = 0;      //area based on the voxel size
                     //double actualArea = 0;      //area based on intake and engine data
-
+                    double voxelCountScale = _voxelElementSize * _voxelElementSize;
                     //and all the intakes / engines
                     if (i >= front && i <= back)
                     {
@@ -874,7 +879,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         {
                             ICrossSectionAdjuster adjuster = activeAdjusters[j];
 
-                            if (adjuster is IntegratedIntakeEngineCrossSectionAdjuster)
+                            if (adjuster.IntegratedCrossSectionIncreaseDecrease())
                                 continue;
 
                             if (adjuster.AreaRemovedFromCrossSection() == 0)
@@ -889,17 +894,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
                                 if (adjuster.AreaRemovedFromCrossSection() > 0)
                                 {
                                     //actualArea += adjuster.AreaRemovedFromCrossSection();
-                                    ductedArea += val.crossSectionalAreaCount;
+                                    ductedArea += Math.Max(0, val.crossSectionalAreaCount * voxelCountScale + adjuster.AreaThreshold());
                                 }
                                 else
                                 {
                                     //actualArea -= adjuster.AreaRemovedFromCrossSection();
-                                    ductedArea -= val.crossSectionalAreaCount;
+                                    ductedArea -= Math.Max(0, val.crossSectionalAreaCount * voxelCountScale + adjuster.AreaThreshold());
                                 }
                             }
                         }
 
-                        ductedArea *= _voxelElementSize * _voxelElementSize * 0.75;
+                        ductedArea *= 0.75;
 
                         //if (Math.Abs(actualArea) < Math.Abs(ductedArea))
                         //    ductedArea = actualArea;
@@ -979,7 +984,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     {
                         ICrossSectionAdjuster adjuster = activeAdjusters[j];
 
-                        if (!(adjuster is IntegratedIntakeEngineCrossSectionAdjuster))
+                        if (!adjuster.IntegratedCrossSectionIncreaseDecrease())
                             continue;
 
                         VoxelCrossSection.SideAreaValues val;
@@ -988,17 +993,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         //see if you can find that in this section
                         if (vehicleCrossSection[i].partSideAreaValues.TryGetValue(p, out val))
                         {
-                            if (adjuster.AreaRemovedFromCrossSection() > 0)
-                            {
-                                actualArea += adjuster.AreaRemovedFromCrossSection();
-                                ductedArea += val.crossSectionalAreaCount;
-                            }
-                            else
-                            {
-                                actualArea -= adjuster.AreaRemovedFromCrossSection();
-                                ductedArea -= val.crossSectionalAreaCount;
-                            }
+                            ductedArea += val.crossSectionalAreaCount;
+                            actualArea += adjuster.AreaRemovedFromCrossSection();
                         }
+                        //ThreadSafeDebugLogger.Instance.RegisterMessage(ductedArea.ToString());
                     }
 
                     ductedArea *= _voxelElementSize * _voxelElementSize * 0.75;
@@ -1043,7 +1041,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         areaChanged = 0;
                     areaChanged += areaUnchanged;
 
-                    //ThreadSafeDebugLogger.Instance.RegisterMessage(areaChanged.ToString());
                     double tmpTotalArea = Math.Max(0.15 * areaUnchanged, areaChanged);
                     if (tmpTotalArea > maxCrossSectionArea)
                         maxCrossSectionArea = tmpTotalArea;
@@ -1341,7 +1338,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
 
                 weightingFactor = 1 / weightingFactor;
-                for (int j = 0; j < includedPartsAndAreas.Count; j++)
+                for (int j = 0; j < weighting.Count; j++)
                 {
                     weighting[j] *= weightingFactor;
                 }
@@ -1391,11 +1388,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         FARAeroSection unusedSection = _newAeroSections[i];
                         _newAeroSections.RemoveAt(i);
 
+                        unusedSection.ClearAeroSection();
                         if (currentlyUnusedSections.Count < 64)
                             currentlyUnusedSections.Push(unusedSection);        //if there aren't that many extra ones stored, add them to the stack to be reused
                         else
                         {
-                            unusedSection.ClearAeroSection();
                             unusedSection = null;
                         }
                     }

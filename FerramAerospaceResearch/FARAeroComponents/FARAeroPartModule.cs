@@ -324,7 +324,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             FlightGUI flightGUI;
             AeroVisualizationGUI aeroVizGUI = null;
 
-            if (FlightGUI.vesselFlightGUI != null && FlightGUI.vesselFlightGUI.TryGetValue(vessel, out flightGUI))
+            if (FlightGUI.vesselFlightGUI != null && vessel != null && FlightGUI.vesselFlightGUI.TryGetValue(vessel, out flightGUI))
                 aeroVizGUI = flightGUI.AeroVizGUI;
 
             if (aeroVizGUI != null && aeroVizGUI.AnyVisualizationActive && HighLogic.LoadedSceneIsFlight && !PhysicsGlobals.ThermalColorsDebug)
@@ -346,7 +346,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     totalWorldSpaceAeroForce += legacyWingModel.worldSpaceForce;
 
                 // Combine forces from stock code
-                totalWorldSpaceAeroForce += -part.dragVectorDir * part.dragScalar; // dragVectorDir is actually the velocity vector direction
+                //totalWorldSpaceAeroForce += -part.dragVectorDir * part.dragScalar; // dragVectorDir is actually the velocity vector direction
 
                 // Handle airbrakes
                 if (stockAeroSurfaceModule != null)
@@ -411,6 +411,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if (float.IsNaN(partLocalTorque.sqrMagnitude))
                 partLocalTorque = Vector3.zero;
 
+
+            Vector3 localForceTemp = Vector3.Dot(partLocalVelNorm, partLocalForce) * partLocalVelNorm;
+            partLocalForce = (localForceTemp * (float)part.dynamicPressurekPa + (partLocalForce - localForceTemp) * (float)part.submergedDynamicPressurekPa);
+            partLocalTorque *= (float)part.submergedDynamicPressurekPa;    //submerged handles lift and torques
+
             if(!vessel.packed)
                 CheckAeroStressFailure();
 
@@ -420,6 +425,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
             worldSpaceAeroForce = partTransform.TransformDirection(partLocalForce);
             worldSpaceTorque = partTransform.TransformDirection(partLocalTorque);
             UpdateAeroDisplay();
+
+            //worldSpaceAeroForce *= (float)part.dynamicPressurekPa;     //is now used as a multiplier, not a force itself, in kPa
+            //worldSpaceTorque *= (float)part.dynamicPressurekPa;
 
             rb.AddForce(worldSpaceAeroForce);
             rb.AddTorque(worldSpaceTorque);
@@ -450,13 +458,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
         public void UpdateVelocityAndAngVelocity(Vector3 frameVel)
         {
             if ((object)partTransform == null)
-                //if (part != null)
+                if (part != null)
                     partTransform = part.partTransform;
-                //else
-                //    return;
+                else
+                    return;
 
-            //if (part == null)
-            //    return;
+            if (part == null)
+                return;
 
             //Matrix4x4 matrix = partTransform.worldToLocalMatrix;
             Rigidbody rb = part.Rigidbody;
@@ -484,7 +492,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         private void CheckAeroStressFailure()
         {
-            if (partForceMaxY < partLocalForce.y || Vector3.ProjectOnPlane(partLocalForce, Vector3.up).magnitude > partForceMaxXZ)
+            if (partForceMaxY * (1 + part.submergedPortion * 1000) < partLocalForce.y || Vector3.ProjectOnPlane(partLocalForce, Vector3.up).magnitude > partForceMaxXZ * (1 + part.submergedPortion * 1000))
                 ApplyAeroStressFailure();
         }
 

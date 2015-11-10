@@ -87,6 +87,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if (m is ModuleResourceIntake)
                     {
                         ModuleResourceIntake intake = (ModuleResourceIntake)m;
+
+                        if (intake.node != null && intake.node.attachedPart != null)
+                            continue;
+
                         _aeroModulesWithIntakes.Add(aeroModule);
                         _intakeModules.Add(intake);
                         _intakeTransforms.Add(p.FindModelTransform(intake.intakeTransformName));
@@ -144,12 +148,15 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             for (int i = 0; i < _airBreathingEngines.Count; i++)
             {
-                currentThrottle += _airBreathingEngines[i].requestedThrottle;
+                currentThrottle += _airBreathingEngines[i].currentThrottle;
             }
             currentThrottle /= Math.Max((float)_airBreathingEngines.Count, 1);
 
+            if (currentThrottle > 0.5)
+                return 0;
+
             float currentRamDrag = RamDragPerArea(machNumber);
-            currentRamDrag *= 1f - currentThrottle;
+            currentRamDrag *= 1f - 2f * currentThrottle;
 
             return currentRamDrag;
         }
@@ -176,13 +183,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (cosAoA < 0)
                     cosAoA = 0;
 
-                if (cosAoA <= intake.aoaThreshold)
+                if (cosAoA <= 0)
                     continue;
 
                 FARAeroPartModule aeroModule = _aeroModulesWithIntakes[i];
 
 
-                Vector3 force = -aeroModule.partLocalVelNorm * dynPres * cosAoA * currentRamDrag * intake.area * 100;
+                Vector3 force = -aeroModule.partLocalVelNorm * cosAoA * currentRamDrag * (float)intake.area * 100f;
                 //if(float.IsNaN(force.sqrMagnitude))
                 //    force = Vector3.zero;
                 aeroModule.AddLocalForce(force, Vector3.zero);
