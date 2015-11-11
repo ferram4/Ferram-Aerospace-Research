@@ -697,29 +697,36 @@ namespace FerramAerospaceResearch.RealChuteLite
             switch (name)
             {
                 //DaMichel: now we handle the stock behaviour, too.
-                case "PACKED": //  stock 
-                    goto case "STOWED";
+                case "PACKED":          //stock
                 case "STOWED":
-                    parachute.gameObject.SetActive(false);
-                    cap.gameObject.SetActive(true); 
-                    break;
-                case "RCDEPLOYED": // i think this is also a semideployed state (see void PreDeploy())
-                    parachute.gameObject.SetActive(true);
-                    cap.gameObject.SetActive(false); 
-                    part.SkipToAnimationTime(this.semiDeployedAnimation, 0f, 1f); // to the end of the animation
-                    break;
-                case "DEPLOYED": //  stock 
-                    parachute.gameObject.SetActive(true);
-                    cap.gameObject.SetActive(false); 
-                    part.SkipToAnimationTime(this.fullyDeployedAnimation, 0f, 1f);  // to the end of the animation
-                    break;
-                case "SEMIDEPLOYED": //  stock 
-                    parachute.gameObject.SetActive(true);
-                    cap.gameObject.SetActive(false);
-                    part.SkipToAnimationTime(this.semiDeployedAnimation, 0f, 1f); // to the end of the animation
-                    break;
-                default:
-                    break;
+                    {
+                        parachute.gameObject.SetActive(false);
+                        cap.gameObject.SetActive(true);
+                        break;
+                    }
+
+                case "RCDEPLOYED":      //This is not a predeployed state, no touchy
+                    {
+                        parachute.gameObject.SetActive(false);
+                        cap.gameObject.SetActive(false);
+                        break;
+                    }
+
+                case "SEMIDEPLOYED":    //  stock 
+                    {
+                        parachute.gameObject.SetActive(true);
+                        cap.gameObject.SetActive(false);
+                        part.SkipToAnimationTime(this.semiDeployedAnimation, 0f, 1f); // to the end of the animation
+                        break;
+                    }
+
+                case "DEPLOYED":        //  stock 
+                    {
+                        parachute.gameObject.SetActive(true);
+                        cap.gameObject.SetActive(false);
+                        part.SkipToAnimationTime(this.fullyDeployedAnimation, 0f, 1f);  // to the end of the animation
+                        break;
+                    }
             }
         }
 
