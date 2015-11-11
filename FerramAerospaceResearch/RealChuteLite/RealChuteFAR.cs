@@ -26,6 +26,16 @@ namespace FerramAerospaceResearch.RealChuteLite
             CUT
         }
 
+        /// <summary>
+        /// Parachute deployment safety state
+        /// </summary>
+        public enum SafeState
+        {
+            SAFE,
+            RISKY,
+            DANGEROUS
+        }
+
         #region Constants
         //Material constants
         public const string materialName = "Nylon";
@@ -285,6 +295,23 @@ namespace FerramAerospaceResearch.RealChuteLite
             }
         }
 
+        //Yellow KSP style GUI label
+        private static GUIStyle _yellowLabel = null;
+        public static GUIStyle yellowLabel
+        {
+            get
+            {
+                if (_yellowLabel == null)
+                {
+                    GUIStyle style = new GUIStyle(HighLogic.Skin.label);
+                    style.normal.textColor = XKCDColors.BrightYellow;
+                    style.hover.textColor = XKCDColors.BrightYellow;
+                    _yellowLabel = style;
+                }
+                return _yellowLabel;
+            }
+        }
+
         //Red KSP style GUI label
         private static GUIStyle _redLabel = null;
         public static GUIStyle redLabel
@@ -346,9 +373,8 @@ namespace FerramAerospaceResearch.RealChuteLite
         private double ASL, trueAlt;
         private double atmPressure, atmDensity;
         private float sqrSpeed;
-        private double thermMass = 0;
-        private double convFlux = 0;
-        private double extTemp = 0;
+        private double thermMass = 0, convFlux = 0, extTemp = 0;
+
 
         //Part
         private Animation anim = null;
@@ -356,6 +382,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         private PhysicsWatch randomTimer = new PhysicsWatch();
         private float randomX, randomY, randomTime;
         private DeploymentStates state = DeploymentStates.NONE;
+        private SafeState safeState = SafeState.SAFE;
         private float massDelta = 0;
 
         //GUI
@@ -520,6 +547,7 @@ namespace FerramAerospaceResearch.RealChuteLite
             return (float)Math.Round(this.deployedArea * areaCost);
         }
 
+        //For IPartMassModifier
         public float GetModuleMass(float defaultMass)
         {
             return massDelta;
@@ -671,21 +699,44 @@ namespace FerramAerospaceResearch.RealChuteLite
         //estimates whether it is safe to deploy the chute or not
         private void CalculateSafeToDeployEstimate()
         {
-            if (this.vessel.externalTemperature <= maxTemp || convFlux < 0)
-            {
-                part.stackIcon.SetBgColor(XKCDColors.White);
-            }
+            part.stackIcon.SetBgColor(XKCDColors.White);
+            SafeState s;
+            if (this.vessel.externalTemperature <= maxTemp || convFlux < 0) { s = SafeState.SAFE; }
             else
             {
-                double expectedTemp = 0.001 * convFlux * this.invThermalMass * this.deployedArea * 0.35;
-                expectedTemp = this.chuteTemperature + expectedTemp;
-                if (expectedTemp <= maxTemp)
-                {
-                    part.stackIcon.SetBgColor(XKCDColors.BrightYellow);
-                }
-                else
-                    part.stackIcon.SetBgColor(XKCDColors.Red);
+                if (this.chuteTemperature + (0.001 * convFlux * this.invThermalMass * this.deployedArea * 0.35) <= maxTemp) { s = SafeState.RISKY; }
+                else { s = SafeState.DANGEROUS; }
             }
+
+            if (this.safeState != s)
+            {
+                this.safeState = s;
+                switch(this.safeState)
+                {
+                    case SafeState.SAFE:
+                        part.stackIcon.SetBgColor(XKCDColors.White); break;
+
+                    case SafeState.RISKY:
+                        part.stackIcon.SetBgColor(XKCDColors.BrightYellow); break;
+
+                    case SafeState.DANGEROUS:
+                        part.stackIcon.SetBgColor(XKCDColors.Red); break;
+                }
+            }
+        }
+
+        //Initializes parachute animations
+        private void InitializeAnimationSystem()
+        {
+            //I know this seems random, but trust me, it's needed, else some parachutes don't animate, because fuck you, that's why.
+            this.anim = this.part.FindModelAnimators(this.capName).FirstOrDefault();
+
+            this.cap = this.part.FindModelTransform(this.capName);
+            this.parachute = this.part.FindModelTransform(this.canopyName);
+            this.parachute.gameObject.SetActive(true);
+            this.part.InitiateAnimation(this.semiDeployedAnimation);
+            this.part.InitiateAnimation(this.fullyDeployedAnimation);
+            this.parachute.gameObject.SetActive(false);
         }
 
         //Sets the part in the correct position for DragCube rendering
@@ -779,14 +830,6 @@ namespace FerramAerospaceResearch.RealChuteLite
             this.repack.guiActiveUnfocused = this.canRepack;
         }
 
-        public override void OnActive ()
-        {
-            if (!this.staged)
-            {
-                ActivateRC ();
-            }
-        }
-
         private void FixedUpdate()
         {
             //Flight values
@@ -805,8 +848,8 @@ namespace FerramAerospaceResearch.RealChuteLite
             this.sqrSpeed = velocity.sqrMagnitude;
             this.dragVector = -velocity.normalized;
 
-            if (atmDensity > 0)
-                CalculateChuteFlux();
+            if (this.atmDensity > 0) { CalculateChuteFlux(); }
+            else { this.convFlux = 0; }                
 
             CalculateSafeToDeployEstimate();
 
@@ -881,21 +924,6 @@ namespace FerramAerospaceResearch.RealChuteLite
         }
         #endregion
 
-        // DaMichel: functionality was in OnStart before. Now it is here so it can be used in  AssumeDragCubePosition
-        private void InitializeAnimationSystem()
-        {
-            //I know this seems random, but trust me, it's needed, else some parachutes don't animate, because fuck you, that's why.
-            this.anim = this.part.FindModelAnimators(this.capName).FirstOrDefault();
-
-            this.cap = this.part.FindModelTransform(this.capName);
-            this.parachute = this.part.FindModelTransform(this.canopyName);
-            this.parachute.gameObject.SetActive(true);
-            this.part.InitiateAnimation(this.semiDeployedAnimation); // disables animation states
-            this.part.InitiateAnimation(this.fullyDeployedAnimation);
-            this.parachute.gameObject.SetActive(false);
-        }
-
-
         #region Overrides
         public override void OnStart(PartModule.StartState state)
         {
@@ -927,9 +955,10 @@ namespace FerramAerospaceResearch.RealChuteLite
             }
             this.part.mass = this.totalMass;
             this.massDelta = 0f;
-            if ((object)(this.part.partInfo) != null)
-                if ((object)(this.part.partInfo.partPrefab) != null)
-                    this.massDelta = this.part.mass - this.part.partInfo.partPrefab.mass;
+            if ((object)(this.part.partInfo) != null && (object)(this.part.partInfo.partPrefab) != null)
+            {
+                this.massDelta = this.part.mass - this.part.partInfo.partPrefab.mass;
+            }
 
             //Flight loading
             if (HighLogic.LoadedSceneIsFlight)
@@ -961,7 +990,6 @@ namespace FerramAerospaceResearch.RealChuteLite
                             this.part.SkipToAnimationTime(this.semiDeployedAnimation, this.semiDeploymentSpeed, Mathf.Clamp01(this.time)); break;
                         case DeploymentStates.DEPLOYED:
                             this.part.SkipToAnimationTime(this.fullyDeployedAnimation, this.deploymentSpeed, Mathf.Clamp01(this.time)); break;
-
                         default:
                             break;
                     }
@@ -996,12 +1024,22 @@ namespace FerramAerospaceResearch.RealChuteLite
             if (!CompatibilityChecker.IsAllCompatible()) { return; }
             this.part.mass = this.totalMass;
             this.massDelta = 0f;
-            if ((object)(this.part.partInfo) != null)
-                if ((object)(this.part.partInfo.partPrefab) != null)
-                    this.massDelta = this.part.mass - this.part.partInfo.partPrefab.mass;
+
+            if ((object)(this.part.partInfo) != null && (object)(this.part.partInfo.partPrefab) != null)
+            {
+                this.massDelta = this.part.mass - this.part.partInfo.partPrefab.mass;
+            }
             if (HighLogic.LoadedScene == GameScenes.LOADING)
             {
                 if (this.deployAltitude <= 500) { this.deployAltitude += 200; }
+            }
+        }
+
+        public override void OnActive()
+        {
+            if (!this.staged)
+            {
+                ActivateRC();
             }
         }
 
@@ -1011,9 +1049,10 @@ namespace FerramAerospaceResearch.RealChuteLite
             //Info in the editor part window
             this.part.mass = this.totalMass;
             this.massDelta = 0f;
-            if ((object)(this.part.partInfo) != null)
-                if ((object)(this.part.partInfo.partPrefab) != null)
-                    this.massDelta = this.part.mass - this.part.partInfo.partPrefab.mass;
+            if ((object)(this.part.partInfo) != null && (object)(this.part.partInfo.partPrefab) != null)
+            {
+                this.massDelta = this.part.mass - this.part.partInfo.partPrefab.mass;
+            }
 
             StringBuilder b = new StringBuilder();
             b.AppendFormat("<b>Case mass</b>: {0}\n", this.caseMass);
@@ -1078,6 +1117,19 @@ namespace FerramAerospaceResearch.RealChuteLite
             b.Append("Predeployed diameter: ").Append(this.preDeployedDiameter).Append("m\nArea: ").Append(this.preDeployedArea.ToString("0.###")).AppendLine("m²");
             b.Append("Deployed diameter: ").Append(this.deployedDiameter).Append("m\nArea: ").Append(this.deployedArea.ToString("0.###")).Append("m²");
             GUILayout.Label(b.ToString(), this.skins.label);
+
+            //DeploymentSafety
+            switch (this.safeState)
+            {
+                case SafeState.SAFE:
+                    GUILayout.Label("Deployment safety: safe", skins.label); break;
+
+                case SafeState.RISKY:
+                    GUILayout.Label("Deployment safety: risky", yellowLabel); break;
+
+                case SafeState.DANGEROUS:
+                    GUILayout.Label("Deployment safety: dangerous", redLabel); break;
+            }
 
             //Temperature info
             b = new StringBuilder();
