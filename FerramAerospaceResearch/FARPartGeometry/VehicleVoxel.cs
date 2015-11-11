@@ -1760,7 +1760,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         if (floatLoc < 0)
                             floatLoc = 0;
 
-                        byte location = (byte)Math.Round(floatLoc);
+                        byte location = (byte)Math.Ceiling(floatLoc);
                         VoxelOrientationPlane plane;
                         if (signW <= 0)
                             plane = VoxelOrientationPlane.X_UP;
@@ -1787,7 +1787,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         if (floatLoc < 0)
                             floatLoc = 0;
 
-                        byte location = (byte)Math.Round(floatLoc);
+                        byte location = (byte)Math.Ceiling(floatLoc);
                         VoxelOrientationPlane plane;
                         if (signW <= 0)
                             plane = VoxelOrientationPlane.X_UP;
@@ -1811,7 +1811,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         if (floatLoc < 0)
                             floatLoc = 0;
 
-                        byte location = (byte)Math.Round(floatLoc);
+                        byte location = (byte)Math.Ceiling(floatLoc);
                         VoxelOrientationPlane plane;
                         if (signW <= 0)
                             plane = VoxelOrientationPlane.X_UP;
@@ -1907,7 +1907,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         if (floatLoc < 0)
                             floatLoc = 0;
 
-                        byte location = (byte)Math.Round(floatLoc);
+                        byte location = (byte)Math.Ceiling(floatLoc);
                         VoxelOrientationPlane plane;
                         if (signW <= 0)
                             plane = VoxelOrientationPlane.Y_UP;
@@ -1934,7 +1934,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         if (floatLoc < 0)
                             floatLoc = 0;
 
-                        byte location = (byte)Math.Round(floatLoc);
+                        byte location = (byte)Math.Ceiling(floatLoc);
                         VoxelOrientationPlane plane;
                         if (signW <= 0)
                             plane = VoxelOrientationPlane.Y_UP;
@@ -1957,7 +1957,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         if (floatLoc < 0)
                             floatLoc = 0;
 
-                        byte location = (byte)Math.Round(floatLoc);
+                        byte location = (byte)Math.Ceiling(floatLoc);
                         VoxelOrientationPlane plane;
                         if (signW <= 0)
                             plane = VoxelOrientationPlane.Y_UP;
@@ -2051,7 +2051,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         if (floatLoc < 0)
                             floatLoc = 0;
 
-                        byte location = (byte)Math.Round(floatLoc);
+                        byte location = (byte)Math.Ceiling(floatLoc);
                         VoxelOrientationPlane plane;
                         if (signW <= 0)
                             plane = VoxelOrientationPlane.Z_UP;
@@ -2077,7 +2077,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         if (floatLoc < 0)
                             floatLoc = 0;
 
-                        byte location = (byte)Math.Round(floatLoc);
+                        byte location = (byte)Math.Ceiling(floatLoc);
                         VoxelOrientationPlane plane;
                         if (signW <= 0)
                             plane = VoxelOrientationPlane.Z_UP;
@@ -2100,7 +2100,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         if (floatLoc < 0)
                             floatLoc = 0;
 
-                        byte location = (byte)Math.Round(floatLoc);
+                        byte location = (byte)Math.Ceiling(floatLoc);
                         VoxelOrientationPlane plane;
                         if (signW <= 0)
                             plane = VoxelOrientationPlane.Z_UP;

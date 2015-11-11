@@ -411,8 +411,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if (float.IsNaN(partLocalTorque.sqrMagnitude))
                 partLocalTorque = Vector3.zero;
 
-
             Vector3 localForceTemp = Vector3.Dot(partLocalVelNorm, partLocalForce) * partLocalVelNorm;
+            
             partLocalForce = (localForceTemp * (float)part.dynamicPressurekPa + (partLocalForce - localForceTemp) * (float)part.submergedDynamicPressurekPa);
             partLocalTorque *= (float)part.submergedDynamicPressurekPa;    //submerged handles lift and torques
 
@@ -468,7 +468,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             //Matrix4x4 matrix = partTransform.worldToLocalMatrix;
             Rigidbody rb = part.Rigidbody;
-
+            rb.drag = 0;
             partLocalVel = rb.velocity + frameVel
                         - FARWind.GetWind(FARAeroUtil.CurrentBody, part, rb.position); 
             partLocalVel = partTransform.InverseTransformDirection(partLocalVel);

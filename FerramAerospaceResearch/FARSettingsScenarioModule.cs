@@ -108,6 +108,7 @@ namespace FerramAerospaceResearch
 
             Debug.Log("FAR Vehicle Voxel Setup started");
             VehicleVoxel.VoxelSetup();
+            PhysicsGlobals.DragCubeMultiplier = 0;
             Debug.Log("FAR Vehicle Voxel Setup complete");
 
             //GameEvents.onGameStateSave.Add(OnSave);
