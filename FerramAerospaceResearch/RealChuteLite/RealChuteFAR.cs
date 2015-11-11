@@ -651,13 +651,15 @@ namespace FerramAerospaceResearch.RealChuteLite
         //Calculates the temperature of the chute and cuts it if needed
         private bool CalculateChuteTemp()
         {
-            this.chuteTemperature += 0.001 * this.invThermalMass * convFlux * this.convectionArea * TimeWarp.fixedDeltaTime;
-            if (chuteTemperature > 0d)
+            this.chuteTemperature += 0.001 * this.invThermalMass * this.convectionArea * TimeWarp.fixedDeltaTime * (convFlux
+                - PhysicsGlobals.StefanBoltzmanConstant * this.chuteEmissivity * PhysicsGlobals.RadiationFactor
+                    * this.chuteTemperature * this.chuteTemperature * this.chuteTemperature * this.chuteTemperature);
+            /*if (chuteTemperature > 0d)
             {
                 this.chuteTemperature -= 0.001 * this.invThermalMass * PhysicsGlobals.StefanBoltzmanConstant * this.convectionArea * this.chuteEmissivity
                     * PhysicsGlobals.RadiationFactor * TimeWarp.fixedDeltaTime
-                    * Math.Pow(this.chuteTemperature, this.part.emissiveConstant);
-            }
+                    * this.chuteTemperature * this.chuteTemperature * this.chuteTemperature * this.chuteTemperature;
+            }*/
             this.chuteTemperature = Math.Max(PhysicsGlobals.SpaceTemperature, this.chuteTemperature);
             if (this.chuteTemperature > maxTemp)
             {

@@ -333,6 +333,8 @@ namespace ferram4
             {
                 double AoA = CalculateAoA(velocity);
 
+                part.dynamicPressurekPa = 0.0005 * density * velocity.sqrMagnitude;
+                part.submergedDynamicPressurekPa = part.dynamicPressurekPa;
                 Vector3d force = CalculateForces(velocity, MachNumber, AoA, density, double.PositiveInfinity);
                 center.AddForce(AerodynamicCenter, force);
 
