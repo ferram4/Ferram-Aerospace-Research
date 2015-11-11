@@ -638,27 +638,26 @@ namespace FerramAerospaceResearch.RealChuteLite
             return DragCalculation(DragDeployment(time, debutDiameter, endDiameter)) * this.dragVector;
         }
 
+        //Calculates convective flux
         private void CalculateChuteFlux()
         {
-            if (this.chuteTemperature < PhysicsGlobals.SpaceTemperature) { this.chuteTemperature = startTemp; }
-
-            convFlux = this.vessel.convectiveCoefficient * UtilMath.Lerp(1d, 1d + this.vessel.mach * this.vessel.mach * this.vessel.mach,
+            this.convFlux = this.vessel.convectiveCoefficient * UtilMath.Lerp(1d, 1d + this.vessel.mach * this.vessel.mach * this.vessel.mach,
                     (this.vessel.mach - PhysicsGlobals.FullToCrossSectionLerpStart) / (PhysicsGlobals.FullToCrossSectionLerpEnd))
                     * (this.vessel.externalTemperature - this.chuteTemperature);
-
         }
 
         //Calculates the temperature of the chute and cuts it if needed
         private bool CalculateChuteTemp()
         {
-            this.chuteTemperature += 0.001 * this.invThermalMass * convFlux * this.convectionArea * TimeWarp.fixedDeltaTime;
+            if (this.chuteTemperature < PhysicsGlobals.SpaceTemperature) { this.chuteTemperature = startTemp; }
+
+            double emissiveFlux = 0;
             if (chuteTemperature > 0d)
             {
-                this.chuteTemperature -= 0.001 * this.invThermalMass * PhysicsGlobals.StefanBoltzmanConstant * this.convectionArea * this.chuteEmissivity
-                    * PhysicsGlobals.RadiationFactor * TimeWarp.fixedDeltaTime
-                    * Math.Pow(this.chuteTemperature, this.part.emissiveConstant);
+                double temp2 = this.chuteTemperature * this.chuteTemperature;
+                emissiveFlux = 2 * PhysicsGlobals.StefanBoltzmanConstant * this.chuteEmissivity * PhysicsGlobals.RadiationFactor * temp2 * temp2;
             }
-            this.chuteTemperature = Math.Max(PhysicsGlobals.SpaceTemperature, this.chuteTemperature);
+            this.chuteTemperature = Math.Max(PhysicsGlobals.SpaceTemperature, this.chuteTemperature + ((this.convFlux - emissiveFlux) * 0.001 * this.convectionArea * this.invThermalMass * TimeWarp.fixedDeltaTime));
             if (this.chuteTemperature > maxTemp)
             {
                 ScreenMessages.PostScreenMessage("<color=orange>[RealChute]: " + this.part.partInfo.title + "'s parachute has been destroyed due to aero forces and heat.</color>", 6f, ScreenMessageStyle.UPPER_LEFT);
