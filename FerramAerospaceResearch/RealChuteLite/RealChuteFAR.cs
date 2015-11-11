@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
-using ferram4.PartExtensions;
+using FerramAerospaceResearch.PartExtensions;
 using Random = System.Random;
 
 /* RealChuteLite is the work of Christophe Savard (stupid_chris), and is licensed the same way than the rest of FAR is.

@@ -187,12 +187,12 @@ namespace ferram4
             for (int i = 0; i < parts.Count; i++)
             {
                 FARBaseAerodynamics ba = parts[i];
-                ba.PrecomputeCenterOfLift(vel, 0, density, dummy);
+                ba.PrecomputeCenterOfLift(vel, 0.5, density, dummy);
             }
             for (int i = 0; i < parts.Count; i++)
             {
                 FARBaseAerodynamics ba = parts[i];
-                ba.PrecomputeCenterOfLift(vel, 0, density, lift);
+                ba.PrecomputeCenterOfLift(vel, 0.5, density, lift);
             }
         }
 

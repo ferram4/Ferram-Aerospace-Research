@@ -45,7 +45,7 @@ Copyright 2015, Michael Ferrara, aka Ferram4
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using ferram4.PartExtensions;
+using FerramAerospaceResearch.PartExtensions;
 using FerramAerospaceResearch;
 
 namespace ferram4
