@@ -100,6 +100,17 @@ namespace FerramAerospaceResearch.FARPartGeometry
             get { return yCellLength + xCellLength + zCellLength; }
         }
 
+        private double volume;
+        public double Volume
+        {
+            get
+            {
+                //double volume = xCellLength * yCellLength * zCellLength;
+                //volume *= elementSize * elementSize * elementSize;
+                return volume;
+            }
+        }
+
         public static void VoxelSetup()
         {
             lock (clearedChunks)
@@ -170,14 +181,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             Vector3d size = max - min;
 
-            double voxelVolume = size.x * size.y * size.z;  //from bounds, get voxel volume
+            volume = size.x * size.y * size.z;  //from bounds, get voxel volume
 
-            if (double.IsInfinity(voxelVolume))     //...if something broke, get out of here
+            if (double.IsInfinity(volume))     //...if something broke, get out of here
             {
                 Debug.LogError("Voxel Volume was infinity; ending voxelization");
                 return;
             }
-            double elementVol = voxelVolume / elementCount;
+            double elementVol = volume / elementCount;
             elementSize = Math.Pow(elementVol, 1d / 3d);
             invElementSize = 1 / elementSize;
 

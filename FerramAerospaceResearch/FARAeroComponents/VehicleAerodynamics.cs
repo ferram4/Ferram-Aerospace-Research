@@ -1064,9 +1064,30 @@ namespace FerramAerospaceResearch.FARAeroComponents
             numSections = back - front;
             _length = _sectionThickness * numSections;
 
+            double voxelVolume = _voxel.Volume;
+
+            double filledVolume = 0;
+            for (int i = front; i <= back; i++)
+                filledVolume += _vehicleCrossSection[i].area;
+
+            filledVolume *= _sectionThickness;      //total volume taken up by the filled voxel
+
+            double gridFillednessFactor = filledVolume / voxelVolume;     //determines how fine the grid is compared to the vehicle.  Accounts for loss in precision and added smoothing because of unused sections of voxel volume
+
+            gridFillednessFactor *= 25;     //used to handle relatively empty, but still alright, planes
+            double stdDevCutoff = 3;
+            stdDevCutoff *= gridFillednessFactor;
+            if (stdDevCutoff < 0.5)
+                stdDevCutoff = 0.5;
+            if (stdDevCutoff > 3)
+                stdDevCutoff = 3;
+
+            ThreadSafeDebugLogger.Instance.RegisterMessage("Std dev for smoothing: " + stdDevCutoff + " voxel total vol: " + voxelVolume + " filled vol: " + filledVolume);
+
+            
             AdjustCrossSectionForAirDucting(_vehicleCrossSection, _currentGeoModules, front, back, ref _maxCrossSectionArea);
 
-            GaussianSmoothCrossSections(_vehicleCrossSection, 3, FARSettingsScenarioModule.Settings.gaussianVehicleLengthFractionForSmoothing, _sectionThickness, _length, front, back, FARSettingsScenarioModule.Settings.numAreaSmoothingPasses, FARSettingsScenarioModule.Settings.numDerivSmoothingPasses);
+            GaussianSmoothCrossSections(_vehicleCrossSection, stdDevCutoff, FARSettingsScenarioModule.Settings.gaussianVehicleLengthFractionForSmoothing, _sectionThickness, _length, front, back, FARSettingsScenarioModule.Settings.numAreaSmoothingPasses, FARSettingsScenarioModule.Settings.numDerivSmoothingPasses);
 
             CalculateSonicPressure(_vehicleCrossSection, front, back, _sectionThickness, _maxCrossSectionArea);
 
@@ -1800,6 +1821,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         private double CriticalMachFactorForUnsmoothCrossSection(VoxelCrossSection[] crossSections, double finenessRatio, double sectionThickness)
         {
             double maxAbsRateOfChange = 0;
+            double maxSecondDeriv = 0;
             double prevArea = 0;
             double invSectionThickness = 1/ sectionThickness;
 
@@ -1810,12 +1832,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (absRateOfChange > maxAbsRateOfChange)
                     maxAbsRateOfChange = absRateOfChange;
                 prevArea = currentArea;
+                maxSecondDeriv = Math.Max(maxSecondDeriv, Math.Abs(crossSections[i].secondAreaDeriv));
             }
 
             //double normalizedRateOfChange = maxAbsRateOfChange / _maxCrossSectionArea;
 
-            double maxCritMachAdjustmentFactor = 2 * _maxCrossSectionArea + 5 * maxAbsRateOfChange;
-            maxCritMachAdjustmentFactor = 0.5 + _maxCrossSectionArea / maxCritMachAdjustmentFactor;     //will vary based on x = maxAbsRateOfChange / _maxCrossSectionArea from 1 @ x = 0 to 0.5 as x -> infinity
+            double maxCritMachAdjustmentFactor = 2 * _maxCrossSectionArea + 5 * (maxAbsRateOfChange + 0.3 * maxSecondDeriv);
+            maxCritMachAdjustmentFactor = 0.5 + (_maxCrossSectionArea - 0.5 * (maxAbsRateOfChange + 0.3 * maxSecondDeriv)) / maxCritMachAdjustmentFactor;     //will vary based on x = maxAbsRateOfChange / _maxCrossSectionArea from 1 @ x = 0 to 0.5 as x -> infinity
 
             double critAdjustmentFactor = 4 + finenessRatio;
             critAdjustmentFactor = 6 * (1 - maxCritMachAdjustmentFactor) / critAdjustmentFactor;
