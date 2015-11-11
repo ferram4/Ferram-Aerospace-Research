@@ -48,7 +48,7 @@ using System.Linq;
 using UnityEngine;
 using KSP;
 
-namespace ferram4
+namespace FerramAerospaceResearch
 {
     namespace PartExtensions
     {
