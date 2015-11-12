@@ -148,7 +148,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             for (int i = 0; i < _airBreathingEngines.Count; i++)
             {
-                currentThrottle += _airBreathingEngines[i].currentThrottle;
+                ModuleEngines engine = _airBreathingEngines[i];
+                if (engine.manuallyOverridden)
+                    currentThrottle++;
+                else
+                    currentThrottle += engine.currentThrottle;
             }
             currentThrottle /= Math.Max((float)_airBreathingEngines.Count, 1);
 

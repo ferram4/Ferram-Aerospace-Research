@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.15.5.2 "Helmbold"
+Ferram Aerospace Research v0.15.5.3 "von Helmholtz"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -65,7 +65,21 @@ Set all the other winglet/control surface values to zero
 CHANGELOG
 =======================================================
 
-0.15.5.1V "Helmbold"------------------------------------  
+0.15.5.3V "von Helmholtz"------------------------------------  
+
+Upgrade to MM 2.6.13  
+
+RealChuteLite consistency with RealChute calcs and optimizations thanks to stupid_chris  
+Implement dynamic smoothing calculations based on relative "filledness" of voxel; should help reduce effect of voxel-resolution-induced smoothing on larger vehicles  
+Tweaks to critical Mach calculations  
+
+Fix "silent" KSP update breaking hydrodynamic drag  
+Fix some voxelization irregularities  
+
+Fix Firehound MS example craft action groups not acting in symmetry  
+
+
+0.15.5.2V "Helmbold"------------------------------------  
 
 Compatibility with KSP 1.0.5  
 Upgrade to MFI 1.1.2  

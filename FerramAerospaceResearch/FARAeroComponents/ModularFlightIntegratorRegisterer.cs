@@ -147,7 +147,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             p.rb.angularDrag = (float)(p.angularDrag * tmp * PhysicsGlobals.AngularDragMultiplier);
 
-            p.dynamicPressurekPa = (p.dynamicPressurekPa * (1.0 - p.submergedPortion) + p.submergedDynamicPressurekPa * p.submergedPortion * p.submergedDragScalar * fi.pseudoReDragMult);       //dyn pres adjusted for submersion
+            tmp = Math.Max(fi.pseudoReDragMult, 1);
+            p.dynamicPressurekPa = (p.dynamicPressurekPa * (1.0 - p.submergedPortion) + p.submergedDynamicPressurekPa * p.submergedPortion * p.submergedDragScalar) * tmp;       //dyn pres adjusted for submersion
             p.submergedDynamicPressurekPa = (p.dynamicPressurekPa * (1.0 - p.submergedPortion) + p.submergedDynamicPressurekPa * p.submergedPortion * p.submergedLiftScalar);
 
         }

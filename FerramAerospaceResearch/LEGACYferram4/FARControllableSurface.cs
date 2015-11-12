@@ -126,6 +126,7 @@ namespace ferram4
 
         [KSPField(guiName = "Flap", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_Toggle(affectSymCounterparts = UI_Scene.All, enabledText = "Active", scene = UI_Scene.All, disabledText = "Inactive")]
         public bool isFlap;
+        bool prevIsFlap;
 
         [KSPField(guiName = "Spoiler", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_Toggle(affectSymCounterparts = UI_Scene.All, enabledText = "Active", scene = UI_Scene.All, disabledText = "Inactive")]
         public bool isSpoiler;
@@ -240,6 +241,11 @@ namespace ferram4
                 Fields["maxdeflectFlap"].guiActive = showFlpCtrl;
                 prevFlpCtrl = showFlpCtrl;
             }
+            if(isFlap != prevIsFlap)
+            {
+                UpdateEvents();
+                prevIsFlap = isFlap;
+            }
         }
         public void SetDeflection(int newstate)
         {
@@ -264,6 +270,7 @@ namespace ferram4
 
             OnVesselPartsChange += CalculateSurfaceFunctions;
             UpdateEvents();
+            prevIsFlap = isFlap;
             justStarted = true;
             if(vessel)
                 lastReferenceTransform = vessel.ReferenceTransform;
