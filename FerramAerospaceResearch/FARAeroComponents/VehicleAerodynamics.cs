@@ -1837,8 +1837,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             //double normalizedRateOfChange = maxAbsRateOfChange / _maxCrossSectionArea;
 
-            double maxCritMachAdjustmentFactor = 2 * _maxCrossSectionArea + 5 * (maxAbsRateOfChange + 0.3 * maxSecondDeriv);
-            maxCritMachAdjustmentFactor = 0.5 + (_maxCrossSectionArea - 0.5 * (maxAbsRateOfChange + 0.3 * maxSecondDeriv)) / maxCritMachAdjustmentFactor;     //will vary based on x = maxAbsRateOfChange / _maxCrossSectionArea from 1 @ x = 0 to 0.5 as x -> infinity
+            double maxCritMachAdjustmentFactor = 2 * _maxCrossSectionArea + 5 * (0.5 * maxAbsRateOfChange + 0.3 * maxSecondDeriv);
+            maxCritMachAdjustmentFactor = 0.5 + (_maxCrossSectionArea - 0.5 * (0.5 * maxAbsRateOfChange + 0.3 * maxSecondDeriv)) / maxCritMachAdjustmentFactor;     //will vary based on x = maxAbsRateOfChange / _maxCrossSectionArea from 1 @ x = 0 to 0.5 as x -> infinity
 
             double critAdjustmentFactor = 4 + finenessRatio;
             critAdjustmentFactor = 6 * (1 - maxCritMachAdjustmentFactor) / critAdjustmentFactor;

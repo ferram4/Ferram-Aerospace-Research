@@ -75,8 +75,11 @@ Tweaks to critical Mach calculations
 
 Fix "silent" KSP update breaking hydrodynamic drag  
 Fix some voxelization irregularities  
+Fix control surface flap settings not appearing if the settings are turned on in flight  
+Fix some other control surface in-flight changes oddities  
 
 Fix Firehound MS example craft action groups not acting in symmetry  
+Added E42 example craft by tetryds  
 
 
 0.15.5.2V "Helmbold"------------------------------------  

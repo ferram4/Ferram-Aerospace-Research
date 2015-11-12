@@ -130,6 +130,7 @@ namespace ferram4
 
         [KSPField(guiName = "Spoiler", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_Toggle(affectSymCounterparts = UI_Scene.All, enabledText = "Active", scene = UI_Scene.All, disabledText = "Inactive")]
         public bool isSpoiler;
+        bool prevIsSpoiler;
 
         [KSPField(isPersistant = true, guiName = "Flap setting")]
         public int flapDeflectionLevel = 2;
@@ -143,6 +144,7 @@ namespace ferram4
         protected double BrakeRudderLocation = 0;
         protected double BrakeRudderSide = 0;
         protected int flapLocation = 0;
+        protected int spoilerLocation = 0;
 
         private double AoAsign = 1;
         private double AoAdesiredControl = 0; //DaMichel: treat desired AoA's from flap and stick inputs separately for different animation rates
@@ -243,8 +245,17 @@ namespace ferram4
             }
             if(isFlap != prevIsFlap)
             {
-                UpdateEvents();
                 prevIsFlap = isFlap;
+                isSpoiler = false;
+                prevIsSpoiler = false;
+                UpdateEvents();
+            }
+            if(isSpoiler != prevIsSpoiler)
+            {
+                prevIsSpoiler = isSpoiler;
+                isFlap = false;
+                prevIsFlap = false;
+                UpdateEvents();
             }
         }
         public void SetDeflection(int newstate)
@@ -258,6 +269,8 @@ namespace ferram4
             Fields["flapDeflectionLevel"].guiActive = isFlap;
             Events["DeflectMore"].active = isFlap && flapDeflectionLevel < 3;
             Events["DeflectLess"].active = isFlap && flapDeflectionLevel > 0;
+            if (!isFlap)
+                flapDeflectionLevel = 0;
 
         }
         public override void Initialization()
@@ -271,6 +284,11 @@ namespace ferram4
             OnVesselPartsChange += CalculateSurfaceFunctions;
             UpdateEvents();
             prevIsFlap = isFlap;
+            prevIsSpoiler = isSpoiler;
+            if (!isFlap)
+                flapDeflectionLevel = 0;
+
+
             justStarted = true;
             if(vessel)
                 lastReferenceTransform = vessel.ReferenceTransform;
@@ -316,10 +334,10 @@ namespace ferram4
                 if (process && (object)MovableSection != null && part.Rigidbody)
                 {
                     // Set member vars for desired AoA
-                    if (isFlap == true)
-                        AoAOffsetFromFlapDeflection();
-                    else if (isSpoiler == true)
+                    if (isSpoiler)
                         AoAOffsetFromSpoilerDeflection();
+                    else
+                        AoAOffsetFromFlapDeflection();
                     AoAOffsetFromControl();
                     //DaMichel: put deflection change here so that AoAOffsetFromControlInput does only the thing which the name suggests
                     ChangeDeflection();
@@ -357,37 +375,25 @@ namespace ferram4
             if (HighLogic.LoadedSceneIsEditor && (!FlightGlobals.ready || (object)vessel == null || (object)part.partTransform == null))
                 return;
 
-            if (isFlap == true)
+
+            if (part.symMethod == SymmetryMethod.Mirror || part.symmetryCounterparts.Count < 1)
             {
-                if (part.symMethod == SymmetryMethod.Mirror || part.symmetryCounterparts.Count < 1)
-                {
-                    if (HighLogic.LoadedSceneIsFlight)
-                        flapLocation = Math.Sign(Vector3.Dot(vessel.ReferenceTransform.forward, part.partTransform.forward));      //figure out which way is up
-                    else
-                        flapLocation = Math.Sign(Vector3.Dot(EditorLogic.RootPart.partTransform.forward, part.partTransform.forward));      //figure out which way is up
-                }
-                else if(part.parent != null)
-                {
-                    flapLocation = Math.Sign(Vector3.Dot(part.partTransform.position - part.parent.partTransform.position, part.partTransform.forward));
-                }
+                if (HighLogic.LoadedSceneIsFlight)
+                    flapLocation = Math.Sign(Vector3.Dot(vessel.ReferenceTransform.forward, part.partTransform.forward));      //figure out which way is up
                 else
-                    flapLocation = 1;
+                    flapLocation = Math.Sign(Vector3.Dot(EditorLogic.RootPart.partTransform.forward, part.partTransform.forward));      //figure out which way is up
+
+                spoilerLocation = -flapLocation;
             }
-            else if (isSpoiler == true)
+            else if (part.parent != null)
             {
-                if (part.symMethod == SymmetryMethod.Mirror || part.symmetryCounterparts.Count < 1)
-                {
-                    if (HighLogic.LoadedSceneIsFlight)
-                        flapLocation = -Math.Sign(Vector3.Dot(vessel.ReferenceTransform.forward, part.partTransform.forward));      //figure out which way is up
-                    else
-                        flapLocation = -Math.Sign(Vector3.Dot(EditorLogic.RootPart.partTransform.forward, part.partTransform.forward));      //figure out which way is up
-                }
-                else if (part.parent != null)
-                {
-                    flapLocation = Math.Sign(Vector3.Dot(part.partTransform.position - part.parent.partTransform.position, part.partTransform.forward));
-                }
-                else
-                    flapLocation = 1;
+                flapLocation = Math.Sign(Vector3.Dot(part.partTransform.position - part.parent.partTransform.position, part.partTransform.forward));
+                spoilerLocation = flapLocation;
+            }
+            else
+            {
+                flapLocation = 1;
+                spoilerLocation = flapLocation;
             }
 
             Vector3 CoM = Vector3.zero;
@@ -445,7 +451,7 @@ namespace ferram4
         private void AoAOffsetFromSpoilerDeflection()
         {
             if (brake)
-                AoAdesiredFlap = maxdeflectFlap * flapLocation;
+                AoAdesiredFlap = maxdeflectFlap * spoilerLocation;
             else
                 AoAdesiredFlap = 0;
             AoAdesiredFlap = FARMathUtil.Clamp(AoAdesiredFlap, -Math.Abs(maxdeflectFlap), Math.Abs(maxdeflectFlap));
@@ -648,36 +654,21 @@ namespace ferram4
                 AoAdesiredControl = FARMathUtil.Clamp(AoAdesiredControl, -Math.Abs(maxdeflect), Math.Abs(maxdeflect));
                 AoAcurrentControl = AoAdesiredControl;
                 AoAcurrentFlap = 0;
-                if (isFlap == true)
-                {
-                    int flapDeflectionLevel = flap;
-                    if (part.symMethod == SymmetryMethod.Mirror || part.symmetryCounterparts.Count < 1)
-                    {
-                        flapLocation = Math.Sign(Vector3.Dot(EditorLogic.RootPart.partTransform.forward, part.partTransform.forward));      //figure out which way is up
-                    }
-                    else if (part.parent != null)
-                    {
-                        flapLocation = Math.Sign(Vector3.Dot(part.partTransform.position - part.parent.partTransform.position, part.partTransform.forward));
-                    }
-                    else
-                        flapLocation = 1;
 
-                    AoAcurrentFlap += maxdeflectFlap * flapLocation * flapDeflectionLevel * 0.3333333333333;
-                }
-                else if (isSpoiler == true)
+                if (part.symMethod == SymmetryMethod.Mirror || part.symmetryCounterparts.Count < 1)
                 {
-                    if (part.symMethod == SymmetryMethod.Mirror || part.symmetryCounterparts.Count < 1)
-                    {
-                        flapLocation = -Math.Sign(Vector3.Dot(EditorLogic.RootPart.partTransform.forward, part.partTransform.forward));      //figure out which way is up
-                    }
-                    else if (part.parent != null)
-                    {
-                        flapLocation = Math.Sign(Vector3.Dot(part.partTransform.position - part.parent.partTransform.position, part.partTransform.forward));
-                    }
-                    else
-                        flapLocation = 1; 
-                    
-                    AoAcurrentFlap += brake ? maxdeflectFlap * flapLocation : 0;
+                    flapLocation = Math.Sign(Vector3.Dot(EditorLogic.RootPart.partTransform.forward, part.partTransform.forward));      //figure out which way is up
+                    spoilerLocation = -flapLocation;
+                }
+                else if (part.parent != null)
+                {
+                    flapLocation = Math.Sign(Vector3.Dot(part.partTransform.position - part.parent.partTransform.position, part.partTransform.forward));
+                    spoilerLocation = flapLocation;
+                }
+                else
+                {
+                    flapLocation = 1;
+                    spoilerLocation = flapLocation;
                 }
                 AoAdesiredFlap = AoAcurrentFlap;
                 AoAoffset = AoAcurrentFlap + AoAcurrentControl;
