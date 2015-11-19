@@ -61,6 +61,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         public Vector3 partLocalVelNorm;
         public Vector3 partLocalAngVel;
 
+        private Vector3 worldSpaceVelNorm;
         public Vector3 worldSpaceAeroForce;
         public Vector3 worldSpaceTorque;
 
@@ -413,8 +414,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             Vector3 localForceTemp = Vector3.Dot(partLocalVelNorm, partLocalForce) * partLocalVelNorm;
             
-            partLocalForce = (localForceTemp * (float)part.dynamicPressurekPa + (partLocalForce - localForceTemp) * (float)part.submergedDynamicPressurekPa);
-            partLocalTorque *= (float)part.submergedDynamicPressurekPa;    //submerged handles lift and torques
+            partLocalForce = (localForceTemp * (float)part.dragScalar + (partLocalForce - localForceTemp) * (float)part.bodyLiftScalar);
+            partLocalTorque *= (float)part.dragScalar;    //submerged handles lift and torques
+
+            part.dragScalar = 0;
+            part.bodyLiftScalar = 0;
 
             if(!vessel.packed)
                 CheckAeroStressFailure();
@@ -429,7 +433,34 @@ namespace FerramAerospaceResearch.FARAeroComponents
             //worldSpaceAeroForce *= (float)part.dynamicPressurekPa;     //is now used as a multiplier, not a force itself, in kPa
             //worldSpaceTorque *= (float)part.dynamicPressurekPa;
 
-            rb.AddForce(worldSpaceAeroForce);
+            if (part.submergedPortion <= 0)
+            {
+                rb.AddForce(worldSpaceAeroForce);
+            }
+            else
+            {
+                Vector3 worldSpaceDragForce, worldSpaceLiftForce;
+                worldSpaceDragForce = Vector3.Dot(worldSpaceVelNorm, worldSpaceAeroForce) * worldSpaceVelNorm;
+                worldSpaceLiftForce = worldSpaceAeroForce - worldSpaceDragForce;
+
+                Vector3 waterDragForce;
+                if (part.submergedPortion < 1)
+                {
+                    waterDragForce = worldSpaceDragForce / (float)(part.submergedDynamicPressurekPa * part.submergedPortion + part.dynamicPressurekPa * (1 - part.submergedPortion));        //calculate areaDrag vector
+                    waterDragForce *= (float)(part.submergedDynamicPressurekPa * part.submergedPortion);
+
+                    worldSpaceDragForce -= waterDragForce;      //remove water drag from this
+                }
+                else
+                {
+                    waterDragForce = worldSpaceDragForce;
+                    worldSpaceDragForce = Vector3.zero;
+                }
+
+                rb.drag += waterDragForce.magnitude / (rb.mass * 1000);
+
+                rb.AddForce(worldSpaceDragForce + worldSpaceLiftForce);
+            }
             rb.AddTorque(worldSpaceTorque);
 
             partLocalForce = Vector3.zero;
@@ -468,9 +499,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             //Matrix4x4 matrix = partTransform.worldToLocalMatrix;
             Rigidbody rb = part.Rigidbody;
-            rb.drag = 0;
+            //rb.drag = 0;
             partLocalVel = rb.velocity + frameVel
-                        - FARWind.GetWind(FARAeroUtil.CurrentBody, part, rb.position); 
+                        - FARWind.GetWind(FARAeroUtil.CurrentBody, part, rb.position);      //world velocity
+
+            worldSpaceVelNorm = partLocalVel.normalized;
             partLocalVel = partTransform.InverseTransformDirection(partLocalVel);
 
             partLocalVelNorm = partLocalVel.normalized;

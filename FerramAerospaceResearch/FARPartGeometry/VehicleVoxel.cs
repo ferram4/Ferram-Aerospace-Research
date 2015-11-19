@@ -289,7 +289,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 {
                     GeometryPartModule m = geoModules[i];
                     for (int j = 0; j < m.meshDataList.Count; j++)
-                        UpdateFromMesh(m.meshDataList[j], m.part);
+                    {
+                        GeometryMesh mesh = m.meshDataList[j];
+                        if(mesh.meshTransform.gameObject.activeInHierarchy)
+                            UpdateFromMesh(mesh, m.part);
+                    }
 
                 }
             else
@@ -1578,7 +1582,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
                         GeometryMesh mesh = module.meshDataList[j];
                         lock (mesh)
-                            UpdateFromMesh(mesh, mesh.part);
+                            if (mesh.meshTransform.gameObject.activeInHierarchy)
+                                UpdateFromMesh(mesh, mesh.part);
                     }
                 }
             }

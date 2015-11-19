@@ -179,7 +179,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     _intakeModules.RemoveAt(i);
                     _intakeTransforms.RemoveAt(i);
                     _aeroModulesWithIntakes.RemoveAt(i);
-                    ++i;
+                    //++i;
                     continue;
                 }
 

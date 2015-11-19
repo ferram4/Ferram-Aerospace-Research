@@ -303,8 +303,6 @@ namespace ferram4
 
             rho = density;
 
-            part.dynamicPressurekPa = 0.0005 * density * velocityEditor.sqrMagnitude;
-            part.submergedDynamicPressurekPa = part.dynamicPressurekPa;
             double AoA = CalculateAoA(velocityVector);
             return CalculateForces(velocityVector, M, AoA, density);
         }
@@ -315,8 +313,6 @@ namespace ferram4
 
             rho = density;
 
-            part.dynamicPressurekPa = 0.0005 * density * velocityEditor.sqrMagnitude;
-            part.submergedDynamicPressurekPa = part.dynamicPressurekPa;
             double AoA = CalculateAoA(velocityVector);
             CalculateForces(velocityVector, M, AoA, density);
         }
@@ -333,8 +329,6 @@ namespace ferram4
             {
                 double AoA = CalculateAoA(velocity);
 
-                part.dynamicPressurekPa = 0.0005 * density * velocity.sqrMagnitude;
-                part.submergedDynamicPressurekPa = part.dynamicPressurekPa;
                 Vector3d force = CalculateForces(velocity, MachNumber, AoA, density, double.PositiveInfinity);
                 center.AddForce(AerodynamicCenter, force);
 
@@ -550,7 +544,7 @@ namespace ferram4
 
                     double machNumber, v_scalar = velocity.magnitude;
 
-                    rho = part.atmDensity;
+                    rho = part.atmDensity * (1 - part.submergedPortion) + vessel.mainBody.oceanDensity * 1000 * (part.submergedPortion);
                     machNumber = vessel.mach;
                     if (rho > 0 && v_scalar > 0.1)
                     {
@@ -559,6 +553,22 @@ namespace ferram4
                         Vector3d force = DoCalculateForces(velocity, machNumber, AoA, rho, failureForceScaling);
 
                         worldSpaceForce = force;
+
+                        Vector3d scaledForce = force;
+                        //This accounts for the effect of flap effects only being handled by the rearward surface
+                        scaledForce *= S / (S + wingInteraction.EffectiveUpstreamArea);
+
+                        if (Math.Abs(Vector3d.Dot(scaledForce, part_transform.forward)) > YmaxForce * failureForceScaling || Vector3d.Exclude(part_transform.forward, scaledForce).magnitude > XZmaxForce * failureForceScaling)
+                            if (part.parent && !vessel.packed)
+                            {
+                                vessel.SendMessage("AerodynamicFailureStatus");
+                                string msg = String.Format("[{0:D2}:{1:D2}:{2:D2}] Joint between {3} and {4} failed due to aerodynamic stresses.",
+                                                           FlightLogger.met_hours, FlightLogger.met_mins, FlightLogger.met_secs, part.partInfo.title, part.parent.partInfo.title);
+                                FlightLogger.eventLog.Add(msg);
+                                part.decouple(25);
+                                if (FARDebugValues.aeroFailureExplosions)
+                                    FXMonger.Explode(part, AerodynamicCenter, 1);
+                            }
 
                         rb.AddForceAtPosition(force, AerodynamicCenter);            //and apply force
                     }
@@ -621,7 +631,7 @@ namespace ferram4
             Vector3 forward = part_transform.forward;
             Vector3d velocity_normalized = velocity / v_scalar;
 
-            //double q = rho * v_scalar * v_scalar * 0.5;   //dynamic pressure, q
+            double q = rho * v_scalar * v_scalar * 0.0005;   //dynamic pressure, q
 
             ParallelInPlane = Vector3d.Exclude(forward, velocity).normalized;  //Projection of velocity vector onto the plane of the wing
             perp = Vector3d.Cross(forward, ParallelInPlane).normalized;       //This just gives the vector to cross with the velocity vector
@@ -647,8 +657,17 @@ namespace ferram4
 
 
             //lift and drag vectors
-            Vector3d L = liftDirection * (Cl * S) * part.submergedDynamicPressurekPa;    //lift; submergedDynPreskPa handles lift
-            Vector3d D = -velocity_normalized * (Cd * S) * part.dynamicPressurekPa;                         //drag is parallel to velocity vector
+            Vector3d L, D;
+            if (failureForceScaling >= 1 && part.submergedPortion > 0)
+            {
+                L = liftDirection * (Cl * S) * q * (part.submergedPortion * part.submergedLiftScalar + 1 - part.submergedPortion);    //lift; submergedDynPreskPa handles lift
+                D = -velocity_normalized * (Cd * S) * q * (part.submergedPortion * part.submergedDragScalar + 1 - part.submergedPortion);                         //drag is parallel to velocity vector
+            }
+            else
+            {
+                L = liftDirection * (Cl * S) * q;    //lift; submergedDynPreskPa handles lift
+                D = -velocity_normalized * (Cd * S) * q;                         //drag is parallel to velocity vector
+            }
 
             UpdateAeroDisplay(L, D);
             Vector3d force = (L + D);
@@ -657,22 +676,6 @@ namespace ferram4
                 Debug.LogWarning("FAR Error: Aerodynamic force = " + force.magnitude + " AC Loc = " + AerodynamicCenter.magnitude + " AoA = " + AoA + "\n\rMAC = " + effective_MAC + " B_2 = " + effective_b_2 + " sweepAngle = " + cosSweepAngle + "\n\rMidChordSweep = " + MidChordSweep + " MidChordSweepSideways = " + MidChordSweepSideways + "\n\r at " + part.name);
                 force = AerodynamicCenter = Vector3d.zero;
             }
-
-            Vector3d scaledForce = force;
-            //This accounts for the effect of flap effects only being handled by the rearward surface
-            scaledForce *= S / (S + wingInteraction.EffectiveUpstreamArea);
-
-            if (Math.Abs(Vector3d.Dot(scaledForce, forward)) > YmaxForce * failureForceScaling || Vector3d.Exclude(forward, scaledForce).magnitude > XZmaxForce * failureForceScaling)
-                if (part.parent && !vessel.packed)
-                {
-                    vessel.SendMessage("AerodynamicFailureStatus");
-                    string msg = String.Format("[{0:D2}:{1:D2}:{2:D2}] Joint between {3} and {4} failed due to aerodynamic stresses.",
-                                               FlightLogger.met_hours, FlightLogger.met_mins, FlightLogger.met_secs, part.partInfo.title, part.parent.partInfo.title);
-                    FlightLogger.eventLog.Add(msg);
-                    part.decouple(25);
-                    if(FARDebugValues.aeroFailureExplosions)
-                        FXMonger.Explode(part, AerodynamicCenter, 1);
-                }
 
             double numericalControlFactor = (part.rb.mass * v_scalar * 0.67) / (force.magnitude * TimeWarp.fixedDeltaTime);
             force *= Math.Min(numericalControlFactor, 1);

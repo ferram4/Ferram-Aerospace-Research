@@ -249,7 +249,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 for (int i = _currentAeroModules.Count - 1; i >= 0; i--)        //start from the top and come down to improve performance if it needs to remove anything
                 {
                     FARAeroPartModule m = _currentAeroModules[i];
-                    if (m != null)
+                    if (m != null && m.part != null && m.part.partTransform != null)
                         m.UpdateVelocityAndAngVelocity(frameVel);
                     else
                     {
