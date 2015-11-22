@@ -670,6 +670,12 @@ namespace ferram4
                     flapLocation = 1;
                     spoilerLocation = flapLocation;
                 }
+
+                if(isFlap)
+                    AoAcurrentFlap += maxdeflectFlap * flapLocation * flapDeflectionLevel * 0.3333333333333;
+                else if(isSpoiler)
+                    AoAcurrentFlap += brake ? maxdeflectFlap * flapLocation : 0;
+
                 AoAdesiredFlap = AoAcurrentFlap;
                 AoAoffset = AoAcurrentFlap + AoAcurrentControl;
                 DeflectionAnimation();

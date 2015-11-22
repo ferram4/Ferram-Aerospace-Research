@@ -60,7 +60,7 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
         {
             this.engineFairing = engineFairing;
             this.geoModule = geoModule;
-            fairingVisible = engineFairing.jettisonTransform.gameObject.activeSelf;
+            fairingVisible = engineFairing.jettisonTransform.gameObject.activeSelf && !engineFairing.isJettisoned;
         }
 
         public void EditorGeometryUpdate()
@@ -86,7 +86,7 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
             GameObject o = t.gameObject;
             if (o != null)
-                if (fairingVisible != engineFairing.jettisonTransform.gameObject.activeSelf)
+                if (fairingVisible != engineFairing.jettisonTransform.gameObject.activeSelf || fairingVisible != !engineFairing.isJettisoned)
                 {
                     geoModule.RebuildAllMeshData();
                     fairingVisible = !fairingVisible;

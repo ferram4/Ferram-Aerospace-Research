@@ -132,12 +132,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             for (int i = 0; i < vertices.Length; i++)
             {
-                //vertices[i] = tempMatrix.MultiplyPoint3x4(vertices[i]);
-                //Vector3 v = meshLocalVerts[i];
                 Vector3 vert = tempMatrix.MultiplyPoint3x4(meshLocalVerts[i]);// = Vector3.zero;
-                /*vert.x = tempMatrix.m00 * v.x + tempMatrix.m01 * v.y + tempMatrix.m02 * v.z + tempMatrix.m03;
-                vert.y = tempMatrix.m10 * v.x + tempMatrix.m11 * v.y + tempMatrix.m12 * v.z + tempMatrix.m13;
-                vert.z = tempMatrix.m20 * v.x + tempMatrix.m21 * v.y + tempMatrix.m22 * v.z + tempMatrix.m23;*/
 
                 float tmpTestVert = vert.x + vert.y + vert.z;
                 if (float.IsNaN(tmpTestVert) || float.IsInfinity(tmpTestVert))
@@ -149,6 +144,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
 
             bounds = new Bounds(0.5f * (high + low), high - low);
+            module.DecrementMeshesToUpdate();
         }
 
         public void MultithreadTransformBasis(object newThisToVesselMatrixObj)
@@ -169,12 +165,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                     for (int i = 0; i < vertices.Length; i++)
                     {
-                        //vertices[i] = tempMatrix.MultiplyPoint3x4(vertices[i]);
-                        //Vector3 v = meshLocalVerts[i];
-                        Vector3 vert = tempMatrix.MultiplyPoint3x4(meshLocalVerts[i]);// = Vector3.zero;
-                        /*vert.x = tempMatrix.m00 * v.x + tempMatrix.m01 * v.y + tempMatrix.m02 * v.z + tempMatrix.m03;
-                        vert.y = tempMatrix.m10 * v.x + tempMatrix.m11 * v.y + tempMatrix.m12 * v.z + tempMatrix.m13;
-                        vert.z = tempMatrix.m20 * v.x + tempMatrix.m21 * v.y + tempMatrix.m22 * v.z + tempMatrix.m23;*/
+                        Vector3 vert = tempMatrix.MultiplyPoint3x4(meshLocalVerts[i]);
 
                         float tmpTestVert = vert.x + vert.y + vert.z;
                         if (float.IsNaN(tmpTestVert) || float.IsInfinity(tmpTestVert))

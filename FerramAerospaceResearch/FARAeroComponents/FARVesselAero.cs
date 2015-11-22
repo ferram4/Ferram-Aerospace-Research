@@ -245,24 +245,24 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             Vector3 frameVel = Krakensbane.GetFrameVelocityV3f();
 
-            if(_updateQueued)       //only happens if we have an voxelization scheduled, then we need to check for null
-                for (int i = _currentAeroModules.Count - 1; i >= 0; i--)        //start from the top and come down to improve performance if it needs to remove anything
+            //if(_updateQueued)       //only happens if we have an voxelization scheduled, then we need to check for null
+            for (int i = _currentAeroModules.Count - 1; i >= 0; i--)        //start from the top and come down to improve performance if it needs to remove anything
+            {
+                FARAeroPartModule m = _currentAeroModules[i];
+                if (m != null && m.part != null && m.part.partTransform != null)
+                    m.UpdateVelocityAndAngVelocity(frameVel);
+                else
                 {
-                    FARAeroPartModule m = _currentAeroModules[i];
-                    if (m != null && m.part != null && m.part.partTransform != null)
-                        m.UpdateVelocityAndAngVelocity(frameVel);
-                    else
-                    {
-                        _currentAeroModules.RemoveAt(i);
-                        //i++;
-                    }
+                    _currentAeroModules.RemoveAt(i);
+                    //i++;
                 }
-            else                    //otherwise, we don't need to do Unity's expensive "is this part dead" null-check
+            }
+            /*else                    //otherwise, we don't need to do Unity's expensive "is this part dead" null-check
                 for (int i = _currentAeroModules.Count - 1; i >= 0; i--)        //start from the top and come down to improve performance if it needs to remove anything
                 {
                     FARAeroPartModule m = _currentAeroModules[i];
                     m.UpdateVelocityAndAngVelocity(frameVel);
-                }
+                }*/
             
             for (int i = 0; i < _currentAeroSections.Count; i++)
                 _currentAeroSections[i].FlightCalculateAeroForces(atmDensity, (float)machNumber, (float)(reynoldsNumber / Length), skinFrictionDragCoefficient);
@@ -390,9 +390,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
              {
                  _currentGeoModules.Clear();
                  geoModulesReady = 0;
-                 for (int i = 0; i < _vessel.parts.Count; i++)
+                 for (int i = 0; i < _vessel.Parts.Count; i++)
                  {
-                     Part p = _vessel.parts[i];
+                     Part p = _vessel.Parts[i];
                      GeometryPartModule g = p.GetComponent<GeometryPartModule>();
                      if ((object)g != null)
                      {
@@ -417,13 +417,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
              TriggerIGeometryUpdaters();
 
              _voxelCount = VoxelCountFromType();
-             if (!_vehicleAero.TryVoxelUpdate(_vessel.vesselTransform.worldToLocalMatrix, _vessel.vesselTransform.localToWorldMatrix, _voxelCount, _vessel.parts, _currentGeoModules, !setup))
+             if (!_vehicleAero.TryVoxelUpdate(_vessel.vesselTransform.worldToLocalMatrix, _vessel.vesselTransform.localToWorldMatrix, _voxelCount, _vessel.Parts, _currentGeoModules, !setup))
              {
                  _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
                  _updateQueued = true;
              }
-
-             setup = true;
+             if(!_updateQueued)
+                setup = true;
 
              Debug.Log("Updating vessel voxel for " + _vessel.vesselName);
          }

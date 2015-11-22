@@ -525,8 +525,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     GeometryMesh mesh = meshDataList[i];
                     if (mesh.TrySetThisToVesselMatrixForTransform())
                     {
-                        ThreadPool.QueueUserWorkItem(mesh.MultithreadTransformBasis, worldToVesselMatrix);
-                        //mesh.TransformBasis(worldToVesselMatrix);
+                        //ThreadPool.QueueUserWorkItem(mesh.MultithreadTransformBasis, worldToVesselMatrix);
+                        mesh.TransformBasis(worldToVesselMatrix);
                     }
                     else
                     {
@@ -665,11 +665,23 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
             }
 
-            //Voxelize Everything
-            if (cantUseColliders || forceUseMeshes)       //in this case, voxelize _everything_
+
+
+            if (part.Modules.Contains("ModuleJettison"))
             {
-                foreach (Transform t in meshTransforms)
+                ModuleJettison[] jettisons = part.GetComponents<ModuleJettison>();
+                HashSet<Transform> jettisonTransforms = new HashSet<Transform>();
+                for(int i = 0; i < jettisons.Length; i++)
                 {
+                    ModuleJettison j = jettisons[i];
+                    jettisonTransforms.Add(j.jettisonTransform);
+                    if (j.isJettisoned || j.jettisonTransform == null)
+                        continue;
+                    
+                    Transform t = j.jettisonTransform;
+                    if (t.gameObject.activeInHierarchy == false)
+                        continue;
+                    
                     MeshData md = GetVisibleMeshData(t, false);
                     if (md == null)
                         continue;
@@ -677,26 +689,37 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     meshList.Add(md);
                     validTransformList.Add(t);
                 }
-            }
 
-            if (part.Modules.Contains("ModuleJettison"))
-            {
-                ModuleJettison[] jettisons = part.GetComponents<ModuleJettison>();
-                foreach (ModuleJettison j in jettisons)
+                //Voxelize Everything
+                if (cantUseColliders || forceUseMeshes)       //in this case, voxelize _everything_
                 {
-                    if (j.isJettisoned || j.jettisonTransform == null)
-                        continue;
+                    foreach (Transform t in meshTransforms)
+                    {
+                        if (jettisonTransforms.Contains(t))
+                            continue;
+                        MeshData md = GetVisibleMeshData(t, false);
+                        if (md == null)
+                            continue;
 
-                    Transform t = j.jettisonTransform;
-                    if (t.gameObject.activeInHierarchy == false)
-                        continue;
-                    
-                    MeshData md = GetVisibleMeshData(t, forceUseMeshes);
-                    if (md == null)
-                        continue;
+                        meshList.Add(md);
+                        validTransformList.Add(t);
+                    }
+                }
+            }
+            else
+            {
+                //Voxelize Everything
+                if (cantUseColliders || forceUseMeshes)       //in this case, voxelize _everything_
+                {
+                    foreach (Transform t in meshTransforms)
+                    {
+                        MeshData md = GetVisibleMeshData(t, false);
+                        if (md == null)
+                            continue;
 
-                    meshList.Add(md);
-                    validTransformList.Add(t);
+                        meshList.Add(md);
+                        validTransformList.Add(t);
+                    }
                 }
             }
             meshTransforms = validTransformList;
