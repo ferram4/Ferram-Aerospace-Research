@@ -58,6 +58,7 @@ namespace FerramAerospaceResearch
 
         private void Awake()
         {
+            FerramAerospaceResearch.FARAeroComponents.FARAeroSection.GenerateCrossFlowDragCurve();
             FARAeroStress.LoadStressTemplates();
             FARAeroUtil.LoadAeroDataFromConfig();
             FARAnimOverrides.LoadAnimOverrides();

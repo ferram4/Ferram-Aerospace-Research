@@ -101,6 +101,7 @@ namespace FerramAerospaceResearch
                 return;
             }
 
+            FerramAerospaceResearch.FARAeroComponents.FARAeroSection.GenerateCrossFlowDragCurve();
             FARAeroStress.LoadStressTemplates();
             FARAeroUtil.LoadAeroDataFromConfig();
             //LoadConfigs();

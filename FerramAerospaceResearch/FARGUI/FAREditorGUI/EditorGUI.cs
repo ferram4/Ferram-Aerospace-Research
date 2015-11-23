@@ -53,6 +53,7 @@ using FerramAerospaceResearch.FARPartGeometry;
 using FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation;
 using FerramAerospaceResearch.FARGUI.FAREditorGUI.DesignConcerns;
 using ferram4;
+using Debug = UnityEngine.Debug;
 
 namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 {
@@ -338,7 +339,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 }
                 else if (_updateQueued)
                 {
-                    UnityEngine.Debug.Log("Updating " + EditorLogic.fetch.ship.shipName);
+                    Debug.Log("Updating " + EditorLogic.fetch.ship.shipName);
                     RecalculateVoxel();
                 }
             }
@@ -394,11 +395,11 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                         {
                             _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
                             _updateQueued = true;
+                            //Debug.Log("We're not ready!");
                             return;
                         }
                     }
                 }
-
             }
             TriggerIGeometryUpdaters();
 

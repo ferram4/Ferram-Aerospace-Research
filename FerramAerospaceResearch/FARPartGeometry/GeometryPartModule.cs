@@ -150,7 +150,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             HighLogic.LoadedSceneIsEditor && ApplicationLauncher.Ready && part.collider != null))                //waiting prevents changes in physics in flight or in predictions because the voxel switches to colliders rather than meshes
             {
                 RebuildAllMeshData();
-                _started = true;
             }
             if (!_ready && _meshesToUpdate == 0)
             {
@@ -217,6 +216,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
 
             _meshesToUpdate = 0;
+            _started = true;
+
             //UpdateTransformMatrixList(worldToVesselMatrix);
             //overallMeshBounds = part.GetPartOverallMeshBoundsInBasis(worldToVesselMatrix);
         }
@@ -536,15 +537,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         lock (this)
                             --_meshesToUpdate;
                     }
-                    /*if (mesh.TrySetThisToVesselMatrixForTransform())
-                    {
-                        mesh.TransformBasis(worldToVesselMatrix);
-                    }
-                    else
-                    {
-                        meshDataList.RemoveAt(i);
-                        i--;
-                    }*/
                 }
             }
             if(crossSectionAdjusters != null)
@@ -674,8 +666,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 for(int i = 0; i < jettisons.Length; i++)
                 {
                     ModuleJettison j = jettisons[i];
+                    if (j.jettisonTransform == null)
+                        continue;
+
                     jettisonTransforms.Add(j.jettisonTransform);
-                    if (j.isJettisoned || j.jettisonTransform == null)
+                    if (j.isJettisoned)
                         continue;
                     
                     Transform t = j.jettisonTransform;

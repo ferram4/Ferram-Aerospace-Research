@@ -89,8 +89,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             xForceSkinFriction = new FARFloatCurve(3);
             partData = new List<PartData>();
             handledAeroModulesIndexDict = new Dictionary<FARAeroPartModule, int>();
-            if (crossFlowDragMachCurve == null)
-                GenerateCrossFlowDragCurve();
+            GenerateCrossFlowDragCurve();
         }
 
         public void UpdateAeroSection(float potentialFlowNormalForce, float viscCrossflowDrag, float diameter, float flatnessRatio, float hypersonicMomentForward, float hypersonicMomentBackward,
@@ -537,8 +536,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
         }
 
-        private void GenerateCrossFlowDragCurve()
+        public static void GenerateCrossFlowDragCurve()
         {
+            if (crossFlowDragMachCurve != null)
+                return;
+
             crossFlowDragMachCurve = new FloatCurve();
             crossFlowDragMachCurve.Add(0, 1.2f, 0, 0);
             crossFlowDragMachCurve.Add(0.3f, 1.2f, 0, 0);

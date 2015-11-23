@@ -164,6 +164,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             cont = false;
                             break;
                         }
+                        //ThreadSafeDebugLogger.Instance.RegisterMessage("Waiting on " + m.part.partInfo.title + " to ready its meshes...");
                     }
                     if (!cont)
                         continue;
