@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.15.5.3 "von Helmholtz"
+Ferram Aerospace Research v0.15.5.4 "Hoerner"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -64,6 +64,14 @@ Set all the other winglet/control surface values to zero
 
 CHANGELOG
 =======================================================
+
+0.15.5.3V "Hoerner"------------------------------------  
+
+Adjust water drag for better splashdown performance  
+Fix a serious voxelization issue with ModuleJettison, most notable in leading to no-drag reentries  
+Fix an issue where 3rd-party voxelization updates could sometimes break the editor GUI and CoL  
+Fix a serious issue that could lead to spontaneous crashes on aero initialization (either VAB / SPH CoL, editor GUI, or going to flight)  
+
 
 0.15.5.3V "von Helmholtz"------------------------------------  
 

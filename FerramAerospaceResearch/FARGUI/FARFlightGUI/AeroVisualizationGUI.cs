@@ -1,5 +1,5 @@
 /*
-Ferram Aerospace Research v0.15.5.3 "von Helmholtz"
+Ferram Aerospace Research v0.15.5.4 "Hoerner"
 =========================
 Aerodynamics model for Kerbal Space Program
 
