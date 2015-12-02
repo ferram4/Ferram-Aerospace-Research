@@ -65,7 +65,7 @@ Set all the other winglet/control surface values to zero
 CHANGELOG
 =======================================================
 
-0.15.5.3V "Hoerner"------------------------------------  
+0.15.5.4V "Hoerner"------------------------------------  
 
 Adjust water drag for better splashdown performance  
 Fix a serious voxelization issue with ModuleJettison, most notable in leading to no-drag reentries  
