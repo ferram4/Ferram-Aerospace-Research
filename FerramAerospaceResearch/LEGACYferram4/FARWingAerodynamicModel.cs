@@ -147,6 +147,7 @@ namespace ferram4
         private Vector3d ParallelInPlaneLocal = Vector3d.zero;
 
         FARWingInteraction wingInteraction;
+        FARAeroPartModule aeroModule;
 
         public short srfAttachNegative = 1;
 
@@ -429,6 +430,7 @@ namespace ferram4
         public void StartInitialization()
         {
             MathAndFunctionInitialization();
+            aeroModule = part.GetComponent<FARAeroPartModule>();
 
             if (part is ControlSurface)
             {
@@ -553,6 +555,30 @@ namespace ferram4
                         Vector3d force = DoCalculateForces(velocity, machNumber, AoA, rho, failureForceScaling);
 
                         worldSpaceForce = force;
+
+                        if(part.submergedPortion > 0)
+                        {
+                            Vector3 velNorm = velocity / v_scalar;
+                            Vector3 worldSpaceDragForce, worldSpaceLiftForce;
+                            worldSpaceDragForce = Vector3.Dot(velNorm, worldSpaceForce) * velNorm;
+                            worldSpaceLiftForce = worldSpaceForce - worldSpaceDragForce;
+
+                            Vector3 waterDragForce;
+                            if (part.submergedPortion < 1)
+                            {
+                                waterDragForce = worldSpaceDragForce / (float)(part.submergedDynamicPressurekPa * part.submergedPortion + part.dynamicPressurekPa * (1 - part.submergedPortion));        //calculate areaDrag vector
+                                waterDragForce *= (float)(part.submergedDynamicPressurekPa * part.submergedPortion);
+
+                                worldSpaceForce -= waterDragForce;      //remove water drag from this
+                            }
+                            else
+                            {
+                                waterDragForce = worldSpaceDragForce;
+                                worldSpaceForce = worldSpaceLiftForce;
+                            }
+                            aeroModule.hackWaterDragVal += waterDragForce.magnitude / (rb.mass * rb.velocity.magnitude);
+                            //rb.drag += waterDragForce.magnitude / (rb.mass * rb.velocity.magnitude);
+                        }
 
                         Vector3d scaledForce = force;
                         //This accounts for the effect of flap effects only being handled by the rearward surface

@@ -70,6 +70,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
         Vector3 partLocalForce;
         Vector3 partLocalTorque;
 
+        public float hackWaterDragVal;
+
         ProjectedArea projectedArea;
 
         private double partStressMaxY = double.MaxValue;
@@ -456,8 +458,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     waterDragForce = worldSpaceDragForce;
                     worldSpaceDragForce = Vector3.zero;
                 }
-
-                rb.drag += waterDragForce.magnitude / (rb.mass * 1000);
+                hackWaterDragVal += waterDragForce.magnitude / (rb.mass * rb.velocity.magnitude);
+                //rb.drag += waterDragForce.magnitude / (rb.mass * rb.velocity.magnitude);
 
                 rb.AddForce(worldSpaceDragForce + worldSpaceLiftForce);
             }
@@ -468,6 +470,14 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             //expSkinArea = part.skinExposedArea;
             //expSkinFrac = part.skinExposedAreaFrac;
+        }
+
+        //just to make water drag work in some possibly sane way
+        public void FixedUpdate()
+        {
+            PhysicsGlobals.BuoyancyWaterDragPartVelGreaterVesselMult = 0;
+            PhysicsGlobals.BuoyancyWaterDragSlow = hackWaterDragVal;
+            hackWaterDragVal = 0;
         }
 
         public void AddLocalForce(Vector3 partLocalForce, Vector3 partLocalLocation)
