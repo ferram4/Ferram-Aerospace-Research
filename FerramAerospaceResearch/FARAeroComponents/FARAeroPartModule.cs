@@ -458,7 +458,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     waterDragForce = worldSpaceDragForce;
                     worldSpaceDragForce = Vector3.zero;
                 }
-                hackWaterDragVal += waterDragForce.magnitude / (rb.mass * rb.velocity.magnitude);
+                hackWaterDragVal += Math.Abs(waterDragForce.magnitude / (rb.mass * rb.velocity.magnitude));
                 //rb.drag += waterDragForce.magnitude / (rb.mass * rb.velocity.magnitude);
 
                 rb.AddForce(worldSpaceDragForce + worldSpaceLiftForce);
@@ -476,7 +476,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         public void FixedUpdate()
         {
             PhysicsGlobals.BuoyancyWaterDragPartVelGreaterVesselMult = 0;
-            PhysicsGlobals.BuoyancyWaterDragSlow = hackWaterDragVal;
+            PhysicsGlobals.BuoyancyWaterDragSlow = hackWaterDragVal + 0.001f;
             hackWaterDragVal = 0;
         }
 

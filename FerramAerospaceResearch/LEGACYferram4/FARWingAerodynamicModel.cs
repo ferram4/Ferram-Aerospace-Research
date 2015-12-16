@@ -148,6 +148,7 @@ namespace ferram4
 
         FARWingInteraction wingInteraction;
         FARAeroPartModule aeroModule;
+        PartBuoyancy partBuoyancy;
 
         public short srfAttachNegative = 1;
 
@@ -431,6 +432,7 @@ namespace ferram4
         {
             MathAndFunctionInitialization();
             aeroModule = part.GetComponent<FARAeroPartModule>();
+            partBuoyancy = part.GetComponent<PartBuoyancy>();
 
             if (part is ControlSurface)
             {
@@ -560,31 +562,46 @@ namespace ferram4
                         {
                             Vector3 velNorm = velocity / v_scalar;
                             Vector3 worldSpaceDragForce, worldSpaceLiftForce;
-                            worldSpaceDragForce = Vector3.Dot(velNorm, worldSpaceForce) * velNorm;
+                            worldSpaceDragForce = Vector3.Dot(velNorm, force) * velNorm;
                             worldSpaceLiftForce = worldSpaceForce - worldSpaceDragForce;
 
-                            Vector3 waterDragForce;
+                            Vector3 waterDragForce, waterLiftForce;
                             if (part.submergedPortion < 1)
                             {
-                                waterDragForce = worldSpaceDragForce / (float)(part.submergedDynamicPressurekPa * part.submergedPortion + part.dynamicPressurekPa * (1 - part.submergedPortion));        //calculate areaDrag vector
-                                waterDragForce *= (float)(part.submergedDynamicPressurekPa * part.submergedPortion);
+                                float waterFraction = (float)(part.submergedDynamicPressurekPa * part.submergedPortion);
+                                waterFraction /= (float)(part.submergedDynamicPressurekPa * part.submergedPortion + part.dynamicPressurekPa * (1 - part.submergedPortion));
 
-                                worldSpaceForce -= waterDragForce;      //remove water drag from this
+                                waterDragForce = worldSpaceDragForce * waterFraction;        //calculate areaDrag vector
+                                waterLiftForce = worldSpaceLiftForce * waterFraction;
+
+                                worldSpaceDragForce -= waterDragForce;
+                                worldSpaceLiftForce -= waterLiftForce;
                             }
                             else
                             {
                                 waterDragForce = worldSpaceDragForce;
-                                worldSpaceForce = worldSpaceLiftForce;
+                                waterLiftForce = worldSpaceLiftForce;
+
+                                worldSpaceDragForce = worldSpaceLiftForce = Vector3.zero;
                             }
-                            aeroModule.hackWaterDragVal += waterDragForce.magnitude / (rb.mass * rb.velocity.magnitude);
+                            aeroModule.hackWaterDragVal += Math.Abs(waterDragForce.magnitude / (rb.mass * rb.velocity.magnitude)) * 5;  //extra water drag factor for wings
                             //rb.drag += waterDragForce.magnitude / (rb.mass * rb.velocity.magnitude);
+
+
+
+                            if (partBuoyancy.splashedCounter < PhysicsGlobals.BuoyancyWaterDragTimer)
+                            {
+                                waterLiftForce *= (float)(partBuoyancy.splashedCounter * PhysicsGlobals.BuoyancyWaterLiftScalarEnd / PhysicsGlobals.BuoyancyWaterDragTimer);
+                            }
+
+                            force = worldSpaceDragForce + worldSpaceLiftForce + waterLiftForce;
                         }
 
                         Vector3d scaledForce = force;
                         //This accounts for the effect of flap effects only being handled by the rearward surface
                         scaledForce *= S / (S + wingInteraction.EffectiveUpstreamArea);
 
-                        if (Math.Abs(Vector3d.Dot(scaledForce, part_transform.forward)) > YmaxForce * failureForceScaling || Vector3d.Exclude(part_transform.forward, scaledForce).magnitude > XZmaxForce * failureForceScaling)
+                        if (Math.Abs(Vector3d.Dot(scaledForce, part_transform.forward)) > YmaxForce * failureForceScaling * (1 + part.submergedPortion * 1000) || Vector3d.Exclude(part_transform.forward, scaledForce).magnitude > XZmaxForce * failureForceScaling * (1 + part.submergedPortion * 1000))
                             if (part.parent && !vessel.packed)
                             {
                                 vessel.SendMessage("AerodynamicFailureStatus");
