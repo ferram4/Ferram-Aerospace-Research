@@ -166,7 +166,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         }
                         //ThreadSafeDebugLogger.Instance.RegisterMessage("Waiting on " + m.part.partInfo.title + " to ready its meshes...");
                     }
-                    if (!cont)
+                    if (!cont || !m.Valid)
                         continue;
 
                     Vector3d minBounds = m.overallMeshBounds.min;
@@ -289,12 +289,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 for (int i = 0; i < geoModules.Count; i++)       //Go through it backwards; this ensures that children (and so interior to cargo bay parts) are handled first
                 {
                     GeometryPartModule m = geoModules[i];
-                    for (int j = 0; j < m.meshDataList.Count; j++)
-                    {
-                        GeometryMesh mesh = m.meshDataList[j];
-                        if(mesh.meshTransform.gameObject.activeInHierarchy)
-                            UpdateFromMesh(mesh, m.part);
-                    }
+                    if(m.Valid)
+                        for (int j = 0; j < m.meshDataList.Count; j++)
+                        {
+                            GeometryMesh mesh = m.meshDataList[j];
+
+                            if(mesh.valid && mesh.meshTransform.gameObject.activeInHierarchy)
+                                UpdateFromMesh(mesh, m.part);
+                        }
 
                 }
             else
@@ -1576,14 +1578,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 for (int i = meshParams.lowerIndex; i < meshParams.upperIndex; i++)
                 {
                     GeometryPartModule module = meshParams.modules[i];
-                    if (module == null)
+                    if (module == null || !module.Valid)
                         continue;
 
                     for(int j = 0; j < module.meshDataList.Count; j++)
                     {
                         GeometryMesh mesh = module.meshDataList[j];
                         lock (mesh)
-                            if (mesh.meshTransform.gameObject.activeInHierarchy)
+                            if (mesh.meshTransform.gameObject.activeInHierarchy && mesh.valid)
                                 UpdateFromMesh(mesh, mesh.part);
                     }
                 }

@@ -588,10 +588,10 @@ namespace ferram4
                             //rb.drag += waterDragForce.magnitude / (rb.mass * rb.velocity.magnitude);
 
 
-
+                            waterLiftForce *= (float)PhysicsGlobals.BuoyancyWaterLiftScalarEnd;
                             if (partBuoyancy.splashedCounter < PhysicsGlobals.BuoyancyWaterDragTimer)
                             {
-                                waterLiftForce *= (float)(partBuoyancy.splashedCounter * PhysicsGlobals.BuoyancyWaterLiftScalarEnd / PhysicsGlobals.BuoyancyWaterDragTimer);
+                                waterLiftForce *= (float)(partBuoyancy.splashedCounter / PhysicsGlobals.BuoyancyWaterDragTimer);
                             }
 
                             force = worldSpaceDragForce + worldSpaceLiftForce + waterLiftForce;

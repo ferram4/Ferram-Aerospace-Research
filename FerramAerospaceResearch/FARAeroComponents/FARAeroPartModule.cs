@@ -476,7 +476,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         public void FixedUpdate()
         {
             PhysicsGlobals.BuoyancyWaterDragPartVelGreaterVesselMult = 0;
-            PhysicsGlobals.BuoyancyWaterDragSlow = hackWaterDragVal + 0.001f;
+            PhysicsGlobals.BuoyancyWaterDragSlow = Math.Max(hackWaterDragVal, 0f);
             hackWaterDragVal = 0;
         }
 

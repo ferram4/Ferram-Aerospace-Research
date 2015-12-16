@@ -108,6 +108,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
         private int _sendUpdateTick = 0;
         private int _meshesToUpdate = -1;
 
+        private bool _valid = true;
+        public bool Valid
+        {
+            get { return _valid; }
+        }
+
         private float currentScaleFactor = 1;
 
         [SerializeField]
@@ -228,6 +234,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             for (int i = 0; i < meshDataList.Count; i++)
             {
                 GeometryMesh geoMesh = meshDataList[i];
+
+                if (!geoMesh.valid)
+                    continue;
+
                 upper = Vector3.Max(upper, geoMesh.bounds.max);
                 lower = Vector3.Min(lower, geoMesh.bounds.min);
             }
@@ -236,7 +246,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
             float tmpTestBounds = overallBounds.center.x + overallBounds.center.y + overallBounds.center.z +
                 overallBounds.extents.x + overallBounds.extents.y + overallBounds.extents.z;
             if (float.IsNaN(tmpTestBounds) || float.IsInfinity(tmpTestBounds))
+            {
                 Debug.Log("Overall bounds error in " + part.partInfo.title + " " + meshDataList.Count + " meshes");
+                _valid = false;
+            }
+            else
+                _valid = true;
 
             return overallBounds;
             

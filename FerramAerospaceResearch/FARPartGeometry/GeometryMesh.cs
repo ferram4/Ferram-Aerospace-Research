@@ -62,6 +62,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         public Bounds bounds;
         public Part part;
         private GeometryPartModule module;
+        public bool valid;
 
         public int invertXYZ;
 
@@ -96,7 +97,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
             float tmpTestBounds = bounds.center.x + bounds.center.y + bounds.center.z +
                 bounds.extents.x + bounds.extents.y + bounds.extents.z;
             if (float.IsNaN(tmpTestBounds) || float.IsInfinity(tmpTestBounds))
+            {
                 ThreadSafeDebugLogger.Instance.RegisterMessage("Bounds error in " + module.part.partInfo.title);
+                valid = false;
+            }
+            else
+                valid = true;
 
             this.module = module;
             this.part = module.part;
@@ -136,7 +142,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                 float tmpTestVert = vert.x + vert.y + vert.z;
                 if (float.IsNaN(tmpTestVert) || float.IsInfinity(tmpTestVert))
+                {
                     ThreadSafeDebugLogger.Instance.RegisterMessage("Transform error in " + module.part.partInfo.title);
+                    valid = false;
+                }
+                else
+                    valid = true;
 
                 vertices[i] = vert;
                 low = Vector3.Min(low, vert);
@@ -169,7 +180,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                         float tmpTestVert = vert.x + vert.y + vert.z;
                         if (float.IsNaN(tmpTestVert) || float.IsInfinity(tmpTestVert))
+                        { 
                             ThreadSafeDebugLogger.Instance.RegisterMessage("Transform error in " + module.part.partInfo.title);
+                            valid = false;
+                        }
+                        else
+                            valid = true;
 
                         vertices[i] = vert;
                         low = Vector3.Min(low, vert);
