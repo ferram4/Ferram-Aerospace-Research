@@ -670,7 +670,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         //Calculates convective flux
         private void CalculateChuteFlux()
         {
-            this.convFlux = this.vessel.convectiveCoefficient * UtilMath.Lerp(1d, 1d + this.vessel.mach * this.vessel.mach * this.vessel.mach,
+            this.convFlux = this.vessel.convectiveCoefficient * UtilMath.Lerp(1d, 1d + (Math.Sqrt(this.vessel.mach * this.vessel.mach * this.vessel.mach) * (this.vessel.dynamicPressurekPa / 101.325)),
                     (this.vessel.mach - PhysicsGlobals.FullToCrossSectionLerpStart) / (PhysicsGlobals.FullToCrossSectionLerpEnd))
                     * (this.vessel.externalTemperature - this.chuteTemperature);
         }
