@@ -595,6 +595,7 @@ namespace ferram4
                             }
 
                             force = worldSpaceDragForce + worldSpaceLiftForce + waterLiftForce;
+                            worldSpaceForce = force + waterDragForce;
                         }
 
                         Vector3d scaledForce = force;
