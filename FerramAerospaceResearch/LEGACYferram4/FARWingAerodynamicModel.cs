@@ -571,16 +571,16 @@ namespace ferram4
                                 float waterFraction = (float)(part.submergedDynamicPressurekPa * part.submergedPortion);
                                 waterFraction /= (float)(part.submergedDynamicPressurekPa * part.submergedPortion + part.dynamicPressurekPa * (1 - part.submergedPortion));
 
-                                waterDragForce = worldSpaceDragForce * waterFraction;        //calculate areaDrag vector
-                                waterLiftForce = worldSpaceLiftForce * waterFraction;
+                                waterDragForce = worldSpaceDragForce * waterFraction * (float)part.submergedDragScalar;        //calculate areaDrag vector
+                                waterLiftForce = worldSpaceLiftForce * waterFraction * (float)part.submergedLiftScalar;
 
                                 worldSpaceDragForce -= waterDragForce;
                                 worldSpaceLiftForce -= waterLiftForce;
                             }
                             else
                             {
-                                waterDragForce = worldSpaceDragForce;
-                                waterLiftForce = worldSpaceLiftForce;
+                                waterDragForce = worldSpaceDragForce * (float)part.submergedDragScalar;
+                                waterLiftForce = worldSpaceLiftForce * (float)part.submergedLiftScalar;
 
                                 worldSpaceDragForce = worldSpaceLiftForce = Vector3.zero;
                             }

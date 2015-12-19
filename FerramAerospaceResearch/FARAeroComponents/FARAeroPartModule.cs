@@ -448,8 +448,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 Vector3 waterDragForce;
                 if (part.submergedPortion < 1)
                 {
-                    waterDragForce = worldSpaceDragForce / (float)(part.submergedDynamicPressurekPa * part.submergedPortion + part.dynamicPressurekPa * (1 - part.submergedPortion));        //calculate areaDrag vector
-                    waterDragForce *= (float)(part.submergedDynamicPressurekPa * part.submergedPortion);
+                    waterDragForce = worldSpaceDragForce / (float)(part.submergedDynamicPressurekPa * part.submergedPortion * part.submergedDragScalar + part.dynamicPressurekPa * (1 - part.submergedPortion));        //calculate areaDrag vector
+                    waterDragForce *= (float)(part.submergedDynamicPressurekPa * part.submergedPortion * part.submergedDragScalar);
 
                     worldSpaceDragForce -= waterDragForce;      //remove water drag from this
                 }

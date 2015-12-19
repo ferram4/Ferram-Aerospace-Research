@@ -146,7 +146,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if (g.Ready)
                         geoModulesReady++;
                 }
-                else if(p.Modules.Contains("KerbalEVA"))
+                if(p.Modules.Contains("KerbalEVA"))
                 {
                     p.AddModule("GeometryPartModule");
                     g = p.GetComponent<GeometryPartModule>();
