@@ -205,6 +205,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             effectiveG -= u0 * u0 / (alt + body.Radius);                          //This is the effective reduction of gravity due to high velocity
             double neededCl = mass * effectiveG / (q * area);
 
+
+            _instantCondition.GetClCdCmSteady(input, out pertOutput, true, true);
             //Longitudinal Mess
             _instantCondition.SetState(machNumber, neededCl, CoM, 0, input.flaps, input.spoilers);
 

@@ -153,14 +153,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
         void FixedUpdate()
         {
             if (!_started && ((HighLogic.LoadedSceneIsFlight && FlightGlobals.ready) ||       //this is done because it takes a frame for colliders to be set up in the editor
-            HighLogic.LoadedSceneIsEditor && ApplicationLauncher.Ready && part.collider != null))                //waiting prevents changes in physics in flight or in predictions because the voxel switches to colliders rather than meshes
+            (HighLogic.LoadedSceneIsEditor && ApplicationLauncher.Ready && (part.collider != null || part.Modules.Contains("ModuleWheel")))))                //waiting prevents changes in physics in flight or in predictions because the voxel switches to colliders rather than meshes
             {
                 RebuildAllMeshData();
             }
             if (!_ready && _meshesToUpdate == 0)
             {
                 overallMeshBounds = SetBoundsFromMeshes();
-
+                Debug.Log(part.partInfo.title + " ready");
                 _ready = true;
             } 
             if (animStates != null && animStates.Count > 0)
@@ -570,7 +570,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
         internal void DecrementMeshesToUpdate()
         {
             lock (this)
+            {
                 --_meshesToUpdate;
+                if (_meshesToUpdate < 0)
+                    _meshesToUpdate = 0;
+            }
         }
 
         #endregion

@@ -269,6 +269,12 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             iterationInput.flaps = flapSetting;
             iterationInput.spoilers = spoilers;
 
+            iterationInput.alphaDot = 0;
+            iterationInput.beta = 0;
+            iterationInput.betaDot = 0;
+            iterationInput.phi = 0;
+            iterationInput.phiDot = 0;
+
             for (int i = 0; i < _wingAerodynamicModel.Count; i++)
             {
                 FARWingAerodynamicModel w = _wingAerodynamicModel[i];
