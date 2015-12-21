@@ -160,7 +160,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (!_ready && _meshesToUpdate == 0)
             {
                 overallMeshBounds = SetBoundsFromMeshes();
-                Debug.Log(part.partInfo.title + " ready");
                 _ready = true;
             } 
             if (animStates != null && animStates.Count > 0)

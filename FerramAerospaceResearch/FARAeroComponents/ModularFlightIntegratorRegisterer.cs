@@ -215,9 +215,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 module = (FARAeroPartModule)ptd.part.Modules["FARAeroPartModule"];
 
             if ((object)module == null)
-                return fi.BaseFIGetSunArea(ptd);
+                return fi.BaseFIBodyArea(ptd);
             else
-                return module.ProjectedAreaWorld(-fi.Vessel.upAxis) * ptd.sunAreaMultiplier;
+                return module.ProjectedAreaWorld(-fi.Vessel.upAxis) * ptd.bodyAreaMultiplier;
         }
     
     }
