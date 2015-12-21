@@ -219,6 +219,5 @@ namespace FerramAerospaceResearch.FARAeroComponents
             else
                 return module.ProjectedAreaWorld(-fi.Vessel.upAxis) * ptd.bodyAreaMultiplier;
         }
-    
     }
 }
