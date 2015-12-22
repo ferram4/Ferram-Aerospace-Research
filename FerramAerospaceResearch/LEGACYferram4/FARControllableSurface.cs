@@ -620,20 +620,20 @@ namespace ferram4
                 YawLocation = -Vector3.Dot(partTransform.forward, rootTransform.right) * Math.Sign(Vector3.Dot(CoMoffset, rootTransform.up));
                 RollLocation = Vector3.Dot(partTransform.forward, rootTransform.forward) * Math.Sign(Vector3.Dot(CoMoffset, -rootTransform.right));
                 BrakeRudderLocation = Vector3.Dot(partTransform.forward, rootTransform.forward);
-                BrakeRudderSide = Mathf.Sign(Vector3.Dot(CoMoffset, rootTransform.right)); 
+                BrakeRudderSide = Mathf.Sign(Vector3.Dot(CoMoffset, rootTransform.right));
                 AoAsign = Math.Sign(Vector3.Dot(partTransform.up, rootTransform.up));
                 AoAdesiredControl = 0;
                 if (pitchaxis != 0.0)
                 {
-					AoAdesiredControl += PitchLocation * pitch * pitchaxis * 0.01;
+                    AoAdesiredControl += PitchLocation * pitch * pitchaxis * 0.01;
                 }
-				if (yawaxis != 0.0)
+                if (yawaxis != 0.0)
                 {
-					AoAdesiredControl += YawLocation * yaw * yawaxis * 0.01;
+                    AoAdesiredControl += YawLocation * yaw * yawaxis * 0.01;
                 }
-				if (rollaxis != 0.0)
+                if (rollaxis != 0.0)
                 {
-					AoAdesiredControl += RollLocation * roll * rollaxis * 0.01;
+                    AoAdesiredControl += RollLocation * roll * rollaxis * 0.01;
                 }
                 if (brakeRudder != 0.0)
                 {
@@ -657,7 +657,11 @@ namespace ferram4
 
                 if (part.symMethod == SymmetryMethod.Mirror || part.symmetryCounterparts.Count < 1)
                 {
-                    flapLocation = Math.Sign(Vector3.Dot(EditorLogic.RootPart.partTransform.forward, part.partTransform.forward));      //figure out which way is up
+                    if (HighLogic.LoadedSceneIsFlight)
+                        flapLocation = Math.Sign(Vector3.Dot(vessel.ReferenceTransform.forward, part.partTransform.forward));      //figure out which way is up
+                    else
+                        flapLocation = Math.Sign(Vector3.Dot(EditorLogic.RootPart.partTransform.forward, part.partTransform.forward));      //figure out which way is up
+
                     spoilerLocation = -flapLocation;
                 }
                 else if (part.parent != null)
@@ -671,10 +675,10 @@ namespace ferram4
                     spoilerLocation = flapLocation;
                 }
 
-                if(isFlap)
-                    AoAcurrentFlap += maxdeflectFlap * flapLocation * flapDeflectionLevel * 0.3333333333333;
-                else if(isSpoiler)
-                    AoAcurrentFlap += brake ? maxdeflectFlap * flapLocation : 0;
+                if (isFlap)
+                    AoAcurrentFlap += maxdeflectFlap * flapLocation * flap * 0.3333333333333;
+                else if (isSpoiler)
+                    AoAcurrentFlap += brake ? maxdeflectFlap * spoilerLocation : 0;
 
                 AoAdesiredFlap = AoAcurrentFlap;
                 AoAoffset = AoAcurrentFlap + AoAcurrentControl;
