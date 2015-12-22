@@ -164,11 +164,18 @@ namespace FerramAerospaceResearch.FARAeroComponents
         double CalculateAreaRadiative(ModularFI.ModularFlightIntegrator fi, Part part, FARAeroPartModule aeroModule)
         {
             //double dragCubeExposed = fi.BaseFICalculateAreaExposed(part);
-            if ((object)aeroModule == null)
-                return fi.BaseFICalculateAreaRadiative(part);
+            if ((object)aeroModule != null)
+            {
+                double radArea = aeroModule.ProjectedAreas.totalArea;
+
+                if (radArea > 0)
+                    return radArea;
+                else
+                    return fi.BaseFICalculateAreaRadiative(part);
+            }
             else
             {
-                return aeroModule.ProjectedAreas.totalArea;
+                return fi.BaseFICalculateAreaRadiative(part);
             }
         }
 
@@ -183,10 +190,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         double CalculateAreaExposed(ModularFI.ModularFlightIntegrator fi, Part part, FARAeroPartModule aeroModule)
         {
-            if ((object)aeroModule == null)
-                return fi.BaseFICalculateAreaExposed(part);
+            if ((object)aeroModule != null)
+            {
+                double exposedArea = aeroModule.ProjectedAreaLocal(-part.dragVectorDirLocal);
+
+                if (exposedArea > 0)
+                    return exposedArea;
+                else
+                    return fi.BaseFICalculateAreaExposed(part); 
+            }
             else
-                return aeroModule.ProjectedAreaLocal(-part.dragVectorDirLocal);
+                return fi.BaseFICalculateAreaExposed(part);
             /*else
             {
                 if (stockRadArea > 0)
@@ -202,10 +216,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if (ptd.part.Modules.Contains("FARAeroPartModule"))
                 module = (FARAeroPartModule)ptd.part.Modules["FARAeroPartModule"];
 
-            if ((object)module == null)
-                return fi.BaseFIGetSunArea(ptd);
+            if ((object)module != null)
+            {
+                double sunArea = module.ProjectedAreaWorld(fi.sunVector) * ptd.sunAreaMultiplier;
+
+                if (sunArea > 0)
+                    return sunArea;
+                else
+                    return fi.BaseFIGetSunArea(ptd);
+            }
             else
-                return module.ProjectedAreaWorld(fi.sunVector) * ptd.sunAreaMultiplier;
+                return fi.BaseFIGetSunArea(ptd);
         }
 
         double CalculateBodyArea(ModularFI.ModularFlightIntegrator fi, FlightIntegrator.PartThermalData ptd)
@@ -214,10 +235,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if (ptd.part.Modules.Contains("FARAeroPartModule"))
                 module = (FARAeroPartModule)ptd.part.Modules["FARAeroPartModule"];
 
-            if ((object)module == null)
-                return fi.BaseFIBodyArea(ptd);
+            if ((object)module != null)
+            {
+                double bodyArea = module.ProjectedAreaWorld(-fi.Vessel.upAxis) * ptd.bodyAreaMultiplier;
+
+                if (bodyArea > 0)
+                    return bodyArea;
+                else
+                    return fi.BaseFIBodyArea(ptd);
+            }
             else
-                return module.ProjectedAreaWorld(-fi.Vessel.upAxis) * ptd.bodyAreaMultiplier;
+                return fi.BaseFIBodyArea(ptd);
         }
     }
 }
