@@ -1082,20 +1082,30 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if (stdDevCutoff > 3)
                 stdDevCutoff = 3;
 
+            double invMaxRadFactor = 1f / Math.Sqrt(_maxCrossSectionArea / Math.PI);
+
+            double finenessRatio = _sectionThickness * numSections * 0.5 * invMaxRadFactor;       //vehicle length / max diameter, as calculated from sect thickness * num sections / (2 * max radius) 
+
+            int extraLowFinessRatioSmoothingPasses = (int)Math.Round((5f - finenessRatio) * 0.5f) * FARSettingsScenarioModule.Settings.numDerivSmoothingPasses;
+
+            if (extraLowFinessRatioSmoothingPasses < 0)
+                extraLowFinessRatioSmoothingPasses = 0;
+
             ThreadSafeDebugLogger.Instance.RegisterMessage("Std dev for smoothing: " + stdDevCutoff + " voxel total vol: " + voxelVolume + " filled vol: " + filledVolume);
 
-            
             AdjustCrossSectionForAirDucting(_vehicleCrossSection, _currentGeoModules, front, back, ref _maxCrossSectionArea);
 
-            GaussianSmoothCrossSections(_vehicleCrossSection, stdDevCutoff, FARSettingsScenarioModule.Settings.gaussianVehicleLengthFractionForSmoothing, _sectionThickness, _length, front, back, FARSettingsScenarioModule.Settings.numAreaSmoothingPasses, FARSettingsScenarioModule.Settings.numDerivSmoothingPasses);
+            GaussianSmoothCrossSections(_vehicleCrossSection, stdDevCutoff, FARSettingsScenarioModule.Settings.gaussianVehicleLengthFractionForSmoothing, _sectionThickness, _length, front, back, FARSettingsScenarioModule.Settings.numAreaSmoothingPasses, FARSettingsScenarioModule.Settings.numDerivSmoothingPasses + extraLowFinessRatioSmoothingPasses);
 
             CalculateSonicPressure(_vehicleCrossSection, front, back, _sectionThickness, _maxCrossSectionArea);
 
             validSectionCount = numSections;
             firstSection = front;
-            double invMaxRadFactor = 1f / Math.Sqrt(_maxCrossSectionArea / Math.PI);
 
-            double finenessRatio = _sectionThickness * numSections * 0.5 * invMaxRadFactor;       //vehicle length / max diameter, as calculated from sect thickness * num sections / (2 * max radius) 
+            //recalc these with adjusted cross-sections
+            invMaxRadFactor = 1f / Math.Sqrt(_maxCrossSectionArea / Math.PI);
+
+            finenessRatio = _sectionThickness * numSections * 0.5 * invMaxRadFactor;       //vehicle length / max diameter, as calculated from sect thickness * num sections / (2 * max radius) 
 
             //skin friction and pressure drag for a body, taken from 1978 USAF Stability And Control DATCOM, Section 4.2.3.1, Paragraph A
             double viscousDragFactor = 0;
@@ -1195,9 +1205,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 float hypersonicDragForwardFrac = 0, hypersonicDragBackwardFrac = 0;
 
                 if(curArea - prevArea != 0)
-                    hypersonicDragForwardFrac = Math.Abs(hypersonicDragForward * 0.5f / (float)(curArea - prevArea));
+                    hypersonicDragForwardFrac = 1 / Math.Abs(hypersonicDragForward * 0.5f / (float)(curArea - prevArea));
                 if(curArea - nextArea != 0)
-                    hypersonicDragBackwardFrac = Math.Abs(hypersonicDragBackward * 0.5f / (float)(curArea - nextArea));
+                    hypersonicDragBackwardFrac = 1 / Math.Abs(hypersonicDragBackward * 0.5f / (float)(curArea - nextArea));
 
                 hypersonicDragForwardFrac *= hypersonicDragForwardFrac;
                 hypersonicDragForwardFrac *= hypersonicDragForwardFrac;
@@ -1215,6 +1225,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     hypersonicDragForwardFrac *= (float)(flatnessRatio * flatnessRatio);
                     hypersonicDragBackwardFrac *= (float)(flatnessRatio * flatnessRatio);
                 }
+
+                if (hypersonicDragForwardFrac > 1)
+                    hypersonicDragForwardFrac = 1;
+                if (hypersonicDragBackwardFrac > 1)
+                    hypersonicDragBackwardFrac = 1;
 
                 float hypersonicMomentForward = (float)CalculateHypersonicMoment(prevArea, curArea, _sectionThickness);
                 float hypersonicMomentBackward = (float)CalculateHypersonicMoment(nextArea, curArea, _sectionThickness);
@@ -1256,7 +1271,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     sonicAoA0Drag = -(float)(cPSonicForward * (curArea - prevArea)) + hypersonicDragForward * 0.3f * hypersonicDragForwardFrac;
                     sonicAoA180Drag = (float)(cPSonicBackward * (curArea - nextArea)) + sonicBaseDrag - hypersonicDragBackward * 0.3f * hypersonicDragBackwardFrac;
                     if(i == 0)
-                        sonicAoA180Drag += (float)(cPSonicBackward * (0 - curArea));
+                        sonicAoA180Drag += (float)(cPSonicBackward * (curArea)) + sonicBaseDrag - hypersonicDragBackward * 0.3f * hypersonicDragBackwardFrac;
                 }
                 else if (sonicBaseDrag < 0)
                 {
@@ -1272,7 +1287,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     sonicAoA0Drag = -(float)(cPSonicForward * (curArea - prevArea)) + sonicBaseDrag + hypersonicDragForward * 0.3f * hypersonicDragForwardFrac;
                     sonicAoA180Drag = (float)(cPSonicBackward * (curArea - nextArea)) - hypersonicDragBackward * 0.3f * hypersonicDragBackwardFrac;
                     if (i == numSections)
-                        sonicAoA0Drag += -(float)(cPSonicForward * (0 - curArea));
+                        sonicAoA0Drag += -(float)(cPSonicForward * (curArea)) + sonicBaseDrag + hypersonicDragForward * 0.3f * hypersonicDragForwardFrac;
                 }
                 else
                 {
@@ -1509,7 +1524,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             for (int i = front; i <= back; i++)
             {
-                double cP = CalculateCpLinearForward(vehicleCrossSection, i, front, beta, sectionThickness, maxCrossSection);
+                double cP = CalculateCpLinearForward(vehicleCrossSection, i, front, beta, sectionThickness, double.PositiveInfinity);
                 //cP += CalculateCpNoseDiscont(i - front, noseAreaSlope, sectionThickness);
 
                 cP *= -0.5;
@@ -1525,7 +1540,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             for (int i = back; i >= front; i--)
             {
-                double cP = CalculateCpLinearBackward(vehicleCrossSection, i, back, beta, sectionThickness, maxCrossSection);
+                double cP = CalculateCpLinearBackward(vehicleCrossSection, i, back, beta, sectionThickness, double.PositiveInfinity);
                 //cP += CalculateCpNoseDiscont(back - i, noseAreaSlope, sectionThickness);
 
                 cP *= -0.5;
@@ -1546,7 +1561,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             double cutoff = maxCrossSection * 2;//Math.Min(maxCrossSection * 0.1, vehicleCrossSection[index].area * 0.25);
 
             double tmp1, tmp2;
-            tmp1 = Math.Sqrt(index);
+            tmp1 = indexSqrt[index];
             for (int i = front - 1; i <= index; i++)
             {
                 double tmp;
@@ -1575,7 +1590,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             double cutoff = maxCrossSection * 2;//Math.Min(maxCrossSection * 0.1, vehicleCrossSection[index].area * 0.25);
 
             double tmp1, tmp2;
-            tmp1 = Math.Sqrt(index);
+            tmp1 = indexSqrt[index];
             for (int i = back + 1; i >= index; i--)
             {
                 double tmp;
