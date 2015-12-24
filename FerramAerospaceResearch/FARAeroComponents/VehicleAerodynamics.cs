@@ -1205,9 +1205,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 float hypersonicDragForwardFrac = 0, hypersonicDragBackwardFrac = 0;
 
                 if(curArea - prevArea != 0)
-                    hypersonicDragForwardFrac = 1 / Math.Abs(hypersonicDragForward * 0.5f / (float)(curArea - prevArea));
+                    hypersonicDragForwardFrac = Math.Abs(hypersonicDragForward * 0.5f / (float)(curArea - prevArea));
                 if(curArea - nextArea != 0)
-                    hypersonicDragBackwardFrac = 1 / Math.Abs(hypersonicDragBackward * 0.5f / (float)(curArea - nextArea));
+                    hypersonicDragBackwardFrac = Math.Abs(hypersonicDragBackward * 0.5f / (float)(curArea - nextArea));
 
                 hypersonicDragForwardFrac *= hypersonicDragForwardFrac;
                 hypersonicDragForwardFrac *= hypersonicDragForwardFrac;
@@ -1226,10 +1226,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     hypersonicDragBackwardFrac *= (float)(flatnessRatio * flatnessRatio);
                 }
 
-                if (hypersonicDragForwardFrac > 1)
+                /*if (hypersonicDragForwardFrac > 1)
                     hypersonicDragForwardFrac = 1;
                 if (hypersonicDragBackwardFrac > 1)
-                    hypersonicDragBackwardFrac = 1;
+                    hypersonicDragBackwardFrac = 1;*/
 
                 float hypersonicMomentForward = (float)CalculateHypersonicMoment(prevArea, curArea, _sectionThickness);
                 float hypersonicMomentBackward = (float)CalculateHypersonicMoment(nextArea, curArea, _sectionThickness);
