@@ -2311,9 +2311,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         if ((object)p != null)
                         {
                             pt = new SweepPlanePoint(p, i, k);
-                            if (ductingParts.Contains(p))
-                                pt.ductingParts = true;
-
                             pt.jLastInactive = j;
                             sweepPlane[i, k] = pt;
                             continue;
@@ -2332,10 +2329,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             {
                                 activePts.Add(pt); //And add it to the list of active interior pts
                                 pt.mark = SweepPlanePoint.MarkingType.ActivePassedThroughInternalShell;
-                                if (ductingParts.Contains(pt.part))
-                                {
-                                    pt.ductingParts = true;
-                                }
                             }
                             //Only other situation is that it is an inactive point, in which case we do nothing here, because it is already taken care of
                         }
@@ -2348,28 +2341,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             else
                                 pt.mark = SweepPlanePoint.MarkingType.VoxelShellPreviouslyInterior;     //this marks that this point was once part of the voxel shell
                             
-                            if(pt.ductingParts && pt.part == p)      //marks end of overriding part if it finds the other end of it
-                            {
-                                pt.ductingParts = false;
-                                pt.jLastInactive = j;
-                            }
-                            else if (!pt.ductingParts)
-                            {
-                                pt.part = p;
-                                if (ductingParts.Contains(p))
-                                    pt.ductingParts = true;
-                                pt.jLastInactive = j;
-                            }
-                        }
-                        else if (ductingParts.Contains(p) && pt.part != p)
-                        {
+
                             pt.part = p;
-                            pt.ductingParts = true;
                             pt.jLastInactive = j;
-                        }
-                        else if (pt.ductingParts && pt.part != p)
-                        {
-                            SetVoxelPointPartOnlyNoLock(i, j, k, pt.part);
+                            
                         }
                     }
                 }

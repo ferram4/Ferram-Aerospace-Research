@@ -1086,16 +1086,20 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             double finenessRatio = _sectionThickness * numSections * 0.5 * invMaxRadFactor;       //vehicle length / max diameter, as calculated from sect thickness * num sections / (2 * max radius) 
 
-            int extraLowFinessRatioSmoothingPasses = (int)Math.Round((5f - finenessRatio) * 0.5f) * FARSettingsScenarioModule.Settings.numDerivSmoothingPasses;
+            int extraLowFinessRatioDerivSmoothingPasses = (int)Math.Round((5f - finenessRatio) * 0.5f) * FARSettingsScenarioModule.Settings.numDerivSmoothingPasses;
+            if (extraLowFinessRatioDerivSmoothingPasses < 0)
+                extraLowFinessRatioDerivSmoothingPasses = 0;
 
-            if (extraLowFinessRatioSmoothingPasses < 0)
-                extraLowFinessRatioSmoothingPasses = 0;
+            int extraAreaSmoothingPasses = (int)Math.Round((gridFillednessFactor / 25.0 - 0.5) * 2.0);
+            if (extraAreaSmoothingPasses < 0)
+                extraAreaSmoothingPasses = 0;
+
 
             ThreadSafeDebugLogger.Instance.RegisterMessage("Std dev for smoothing: " + stdDevCutoff + " voxel total vol: " + voxelVolume + " filled vol: " + filledVolume);
 
             AdjustCrossSectionForAirDucting(_vehicleCrossSection, _currentGeoModules, front, back, ref _maxCrossSectionArea);
 
-            GaussianSmoothCrossSections(_vehicleCrossSection, stdDevCutoff, FARSettingsScenarioModule.Settings.gaussianVehicleLengthFractionForSmoothing, _sectionThickness, _length, front, back, FARSettingsScenarioModule.Settings.numAreaSmoothingPasses, FARSettingsScenarioModule.Settings.numDerivSmoothingPasses + extraLowFinessRatioSmoothingPasses);
+            GaussianSmoothCrossSections(_vehicleCrossSection, stdDevCutoff, FARSettingsScenarioModule.Settings.gaussianVehicleLengthFractionForSmoothing, _sectionThickness, _length, front, back, FARSettingsScenarioModule.Settings.numAreaSmoothingPasses + extraAreaSmoothingPasses, FARSettingsScenarioModule.Settings.numDerivSmoothingPasses + extraLowFinessRatioDerivSmoothingPasses);
 
             CalculateSonicPressure(_vehicleCrossSection, front, back, _sectionThickness, _maxCrossSectionArea);
 
@@ -1270,8 +1274,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                     sonicAoA0Drag = -(float)(cPSonicForward * (curArea - prevArea)) + hypersonicDragForward * 0.3f * hypersonicDragForwardFrac;
                     sonicAoA180Drag = (float)(cPSonicBackward * (curArea - nextArea)) + sonicBaseDrag - hypersonicDragBackward * 0.3f * hypersonicDragBackwardFrac;
-                    if(i == 0)
-                        sonicAoA180Drag += (float)(cPSonicBackward * (curArea)) + sonicBaseDrag - hypersonicDragBackward * 0.3f * hypersonicDragBackwardFrac;
+                    //if(i == 0)
+                    //    sonicAoA180Drag += (float)(cPSonicBackward * (curArea)) + sonicBaseDrag - hypersonicDragBackward * 0.3f * hypersonicDragBackwardFrac;
                 }
                 else if (sonicBaseDrag < 0)
                 {
@@ -1286,8 +1290,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                     sonicAoA0Drag = -(float)(cPSonicForward * (curArea - prevArea)) + sonicBaseDrag + hypersonicDragForward * 0.3f * hypersonicDragForwardFrac;
                     sonicAoA180Drag = (float)(cPSonicBackward * (curArea - nextArea)) - hypersonicDragBackward * 0.3f * hypersonicDragBackwardFrac;
-                    if (i == numSections)
-                        sonicAoA0Drag += -(float)(cPSonicForward * (curArea)) + sonicBaseDrag + hypersonicDragForward * 0.3f * hypersonicDragForwardFrac;
+                    //if (i == numSections)
+                    //    sonicAoA0Drag += -(float)(cPSonicForward * (-curArea)) + sonicBaseDrag + hypersonicDragForward * 0.3f * hypersonicDragForwardFrac;
                 }
                 else
                 {
@@ -1515,7 +1519,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         {
             lock (_commonLocker)
                 if (vehicleCrossSection.Length > indexSqrt.Length + 1)
-                    indexSqrt = GenerateIndexSqrtLookup(vehicleCrossSection.Length + 1);
+                    indexSqrt = GenerateIndexSqrtLookup(vehicleCrossSection.Length + 2);
 
             double machTest = 1.2;
             double beta = Math.Sqrt(machTest * machTest - 1);
@@ -1561,7 +1565,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             double cutoff = maxCrossSection * 2;//Math.Min(maxCrossSection * 0.1, vehicleCrossSection[index].area * 0.25);
 
             double tmp1, tmp2;
-            tmp1 = indexSqrt[index];
+            tmp1 = indexSqrt[index - (front - 2)];
             for (int i = front - 1; i <= index; i++)
             {
                 double tmp;
@@ -1590,7 +1594,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             double cutoff = maxCrossSection * 2;//Math.Min(maxCrossSection * 0.1, vehicleCrossSection[index].area * 0.25);
 
             double tmp1, tmp2;
-            tmp1 = indexSqrt[index];
+            tmp1 = indexSqrt[back + 2 - index];
             for (int i = back + 1; i >= index; i--)
             {
                 double tmp;
