@@ -71,6 +71,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
         Vector3 partLocalTorque;
 
         public float hackWaterDragVal;
+        public static float waterSlowDragNew = -1;
+        public static float minVelVesselMultNew = 0;
 
         ProjectedArea projectedArea;
 
@@ -256,6 +258,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         void Start()
         {
+            if (waterSlowDragNew < 0)
+            {
+                waterSlowDragNew = PhysicsGlobals.BuoyancyWaterDragSlow;
+                minVelVesselMultNew = (float)PhysicsGlobals.BuoyancyWaterDragPartVelGreaterVesselMult;
+                PhysicsGlobals.BuoyancyWaterDragPartVelGreaterVesselMult = 0;
+            }
+
             part.maximum_drag = 0;
             part.minimum_drag = 0;
             part.angularDrag = 0;
@@ -417,7 +426,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             Vector3 localForceTemp = Vector3.Dot(partLocalVelNorm, partLocalForce) * partLocalVelNorm;
             
             partLocalForce = (localForceTemp * (float)part.dragScalar + (partLocalForce - localForceTemp) * (float)part.bodyLiftScalar);
-            partLocalTorque *= (float)part.dragScalar;    //submerged handles lift and torques
+            partLocalTorque *= (float)part.dragScalar;
 
             part.dragScalar = 0;
             part.bodyLiftScalar = 0;
@@ -445,23 +454,33 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 worldSpaceDragForce = Vector3.Dot(worldSpaceVelNorm, worldSpaceAeroForce) * worldSpaceVelNorm;
                 worldSpaceLiftForce = worldSpaceAeroForce - worldSpaceDragForce;
 
-                Vector3 waterDragForce;
+                Vector3 waterDragForce, waterLiftForce;
                 if (part.submergedPortion < 1)
                 {
-                    waterDragForce = worldSpaceDragForce / (float)(part.submergedDynamicPressurekPa * part.submergedPortion * part.submergedDragScalar + part.dynamicPressurekPa * (1 - part.submergedPortion));        //calculate areaDrag vector
-                    waterDragForce *= (float)(part.submergedDynamicPressurekPa * part.submergedPortion * part.submergedDragScalar);
+                    float waterFraction = (float)(part.submergedDynamicPressurekPa * part.submergedPortion + part.dynamicPressurekPa * (1 - part.submergedPortion));
+                    waterFraction = (float)(part.submergedDynamicPressurekPa * part.submergedPortion) / waterFraction;
+
+                    waterDragForce = worldSpaceDragForce * waterFraction;        //calculate areaDrag vector
+                    waterLiftForce = worldSpaceLiftForce * waterFraction;
 
                     worldSpaceDragForce -= waterDragForce;      //remove water drag from this
+                    worldSpaceLiftForce -= waterLiftForce;
+
+                    waterDragForce *= (float)Math.Min(part.submergedDragScalar, 1);
+                    waterLiftForce *= (float)part.submergedLiftScalar;
                 }
                 else
                 {
-                    waterDragForce = worldSpaceDragForce;
+                    waterDragForce = worldSpaceDragForce * (float)Math.Min(part.submergedDragScalar, 1);
+                    waterLiftForce = worldSpaceLiftForce * (float)part.submergedLiftScalar;
                     worldSpaceDragForce = Vector3.zero;
                 }
                 hackWaterDragVal += Math.Abs(waterDragForce.magnitude / (rb.mass * rb.velocity.magnitude));
                 //rb.drag += waterDragForce.magnitude / (rb.mass * rb.velocity.magnitude);
 
-                rb.AddForce(worldSpaceDragForce + worldSpaceLiftForce);
+                rb.AddForce(worldSpaceDragForce + worldSpaceLiftForce + waterLiftForce);
+
+                worldSpaceAeroForce = worldSpaceDragForce + worldSpaceLiftForce + waterDragForce + waterLiftForce;
             }
             rb.AddTorque(worldSpaceTorque);
 
@@ -475,9 +494,16 @@ namespace FerramAerospaceResearch.FARAeroComponents
         //just to make water drag work in some possibly sane way
         public void FixedUpdate()
         {
-            PhysicsGlobals.BuoyancyWaterDragPartVelGreaterVesselMult = 0;
-            PhysicsGlobals.BuoyancyWaterDragSlow = Math.Max(hackWaterDragVal, 0f);
-            hackWaterDragVal = 0;
+            if (waterSlowDragNew > 0 && vessel && part.submergedPortion > 0)
+            {
+                PhysicsGlobals.BuoyancyWaterDragSlow = Math.Max(hackWaterDragVal, 0f);
+                hackWaterDragVal = 0;
+
+                float vel = partLocalVel.magnitude;
+
+                if (vel < PhysicsGlobals.BuoyancyWaterDragMinVel || vel > vessel.srfSpeed * minVelVesselMultNew)
+                    PhysicsGlobals.BuoyancyWaterDragSlow += waterSlowDragNew;
+            }
         }
 
         public void AddLocalForce(Vector3 partLocalForce, Vector3 partLocalLocation)

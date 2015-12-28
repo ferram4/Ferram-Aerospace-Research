@@ -548,7 +548,7 @@ namespace ferram4
 
                     double machNumber, v_scalar = velocity.magnitude;
 
-                    rho = part.atmDensity * (1 - part.submergedPortion) + vessel.mainBody.oceanDensity * 1000 * (part.submergedPortion);
+                    rho = (part.submergedDynamicPressurekPa * part.submergedPortion + part.dynamicPressurekPa * (1 - part.submergedPortion));
                     machNumber = vessel.mach;
                     if (rho > 0 && v_scalar > 0.1)
                     {
@@ -569,17 +569,20 @@ namespace ferram4
                             if (part.submergedPortion < 1)
                             {
                                 float waterFraction = (float)(part.submergedDynamicPressurekPa * part.submergedPortion);
-                                waterFraction /= (float)(part.submergedDynamicPressurekPa * part.submergedPortion + part.dynamicPressurekPa * (1 - part.submergedPortion));
+                                waterFraction /= (float)rho;
 
-                                waterDragForce = worldSpaceDragForce * waterFraction * (float)part.submergedDragScalar;        //calculate areaDrag vector
-                                waterLiftForce = worldSpaceLiftForce * waterFraction * (float)part.submergedLiftScalar;
+                                waterDragForce = worldSpaceDragForce * waterFraction;        //calculate areaDrag vector
+                                waterLiftForce = worldSpaceLiftForce * waterFraction;
 
                                 worldSpaceDragForce -= waterDragForce;
                                 worldSpaceLiftForce -= waterLiftForce;
+
+                                waterDragForce *= Math.Min((float)part.submergedDragScalar, 1);
+                                waterLiftForce *= (float)part.submergedLiftScalar;
                             }
                             else
                             {
-                                waterDragForce = worldSpaceDragForce * (float)part.submergedDragScalar;
+                                waterDragForce = worldSpaceDragForce * Math.Min((float)part.submergedDragScalar, 1);
                                 waterLiftForce = worldSpaceLiftForce * (float)part.submergedLiftScalar;
 
                                 worldSpaceDragForce = worldSpaceLiftForce = Vector3.zero;
@@ -593,6 +596,30 @@ namespace ferram4
                             {
                                 waterLiftForce *= (float)(partBuoyancy.splashedCounter / PhysicsGlobals.BuoyancyWaterDragTimer);
                             }
+
+                            double waterLiftScalar = 1;
+                            //reduce lift drastically when wing is in water
+                            if (part.submergedPortion < 0.05)
+                            {
+                                waterLiftScalar = 396.0 * part.submergedPortion;
+                                waterLiftScalar -= 39.6;
+                                waterLiftScalar *= part.submergedPortion;
+                                waterLiftScalar++;
+                            }
+                            else if (part.submergedPortion > 0.95)
+                            {
+                                waterLiftScalar = 396.0 * part.submergedPortion;
+                                waterLiftScalar -= 752.4;
+                                waterLiftScalar *= part.submergedPortion;
+                                waterLiftScalar += 357.4;
+                            }
+                            else
+                            {
+                                waterLiftScalar = 0.01;
+                            }
+
+                            waterLiftForce *= (float)waterLiftScalar;
+                            worldSpaceLiftForce *= (float)waterLiftScalar;
 
                             force = worldSpaceDragForce + worldSpaceLiftForce + waterLiftForce;
                             worldSpaceForce = force + waterDragForce;

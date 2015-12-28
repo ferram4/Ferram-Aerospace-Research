@@ -148,8 +148,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             p.rb.angularDrag = (float)(p.angularDrag * tmp * PhysicsGlobals.AngularDragMultiplier);
 
             tmp = Math.Max(fi.pseudoReDragMult, 1);
-            p.dragScalar = (float)((p.dynamicPressurekPa * (1.0 - p.submergedPortion) + p.submergedDynamicPressurekPa * p.submergedPortion * p.submergedDragScalar) * tmp);       //dyn pres adjusted for submersion
-            p.bodyLiftScalar = (float)(p.dynamicPressurekPa * (1.0 - p.submergedPortion) + p.submergedDynamicPressurekPa * p.submergedPortion * p.submergedLiftScalar);
+            p.dragScalar = (float)((p.dynamicPressurekPa * (1.0 - p.submergedPortion) + p.submergedDynamicPressurekPa * p.submergedPortion) * tmp);       //dyn pres adjusted for submersion
+            p.bodyLiftScalar = (float)(p.dynamicPressurekPa * (1.0 - p.submergedPortion) + p.submergedDynamicPressurekPa * p.submergedPortion);
         }
 
         double CalculateAreaRadiative(ModularFI.ModularFlightIntegrator fi, Part part)
