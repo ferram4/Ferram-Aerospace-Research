@@ -548,7 +548,11 @@ namespace ferram4
 
                     double machNumber, v_scalar = velocity.magnitude;
 
-                    rho = (part.submergedDynamicPressurekPa * part.submergedPortion + part.dynamicPressurekPa * (1 - part.submergedPortion));
+                    if (vessel.mainBody.ocean)
+                        rho = (vessel.mainBody.oceanDensity * 1000 * part.submergedPortion + part.atmDensity * (1 - part.submergedPortion));
+                    else
+                        rho = part.atmDensity;
+
                     machNumber = vessel.mach;
                     if (rho > 0 && v_scalar > 0.1)
                     {
@@ -625,15 +629,18 @@ namespace ferram4
                             worldSpaceForce = force + waterDragForce;
                         }
 
-                        Vector3d scaledForce = force;
+                        Vector3d scaledForce = worldSpaceForce;
                         //This accounts for the effect of flap effects only being handled by the rearward surface
                         scaledForce *= S / (S + wingInteraction.EffectiveUpstreamArea);
 
-                        if (Math.Abs(Vector3d.Dot(scaledForce, part_transform.forward)) > YmaxForce * failureForceScaling * (1 + part.submergedPortion * 1000) || Vector3d.Exclude(part_transform.forward, scaledForce).magnitude > XZmaxForce * failureForceScaling * (1 + part.submergedPortion * 1000))
+                        double forwardScaledForceMag = Vector3d.Dot(scaledForce, part_transform.forward);
+                        Vector3d forwardScaledForce = forwardScaledForceMag * (Vector3d)part_transform.forward;
+
+                        if (Math.Abs(forwardScaledForceMag) > YmaxForce * failureForceScaling * (1 + part.submergedPortion * 1000) || (scaledForce - forwardScaledForce).magnitude > XZmaxForce * failureForceScaling * (1 + part.submergedPortion * 1000))
                             if (part.parent && !vessel.packed)
                             {
                                 vessel.SendMessage("AerodynamicFailureStatus");
-                                string msg = String.Format("[{0:D2}:{1:D2}:{2:D2}] Joint between {3} and {4} failed due to aerodynamic stresses.",
+                                string msg = String.Format("[{0:D2}:{1:D2}:{2:D2}] Joint between {3} and {4} failed due to aerodynamic stresses on the wing structure.",
                                                            FlightLogger.met_hours, FlightLogger.met_mins, FlightLogger.met_secs, part.partInfo.title, part.parent.partInfo.title);
                                 FlightLogger.eventLog.Add(msg);
                                 part.decouple(25);
