@@ -62,20 +62,18 @@ namespace FerramAerospaceResearch
             FARAeroStress.LoadStressTemplates();
             FARAeroUtil.LoadAeroDataFromConfig();
             FARAnimOverrides.LoadAnimOverrides();
-            //FARSettingsScenarioModule.LoadConfigs();
-            this.enabled = false;
         }
 
-        /*private void Start()
+        private void Start()
         {
-            GameEvents.onVesselGoOffRails.Add(VesselUpdate);
-            GameEvents.onVesselChange.Add(VesselUpdate);
-            //GameEvents.onVesselLoaded.Add(VesselUpdate);
-            GameEvents.onVesselCreate.Add(VesselUpdate);
-            GameEvents.onVesselWasModified.Add(VesselUpdate);
+            FARSettingsScenarioModule module = FARSettingsScenarioModule.Instance;
+            if (module == null)
+                Debug.LogError("FARSettingsScenarioModule could not be found.  Unable to start FAR aerodynamics");
+            this.enabled = false;
+
         }
 
-        private void VesselUpdate(Vessel v)
+        /*private void VesselUpdate(Vessel v)
         {
             if (v != null)
             {

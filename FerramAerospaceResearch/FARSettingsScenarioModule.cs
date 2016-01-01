@@ -61,7 +61,10 @@ namespace FerramAerospaceResearch
         public FARDifficultyAndExactnessSettings settings;
         public static FARDifficultyAndExactnessSettings Settings
         {
-            get { return instance.settings; }
+            get
+            {
+                return Instance.settings;
+            }
         }
 
         public FARDifficultyAndExactnessSettings customSettings;
@@ -69,13 +72,19 @@ namespace FerramAerospaceResearch
         public FARVoxelSettings voxelSettings;
         public static FARVoxelSettings VoxelSettings
         {
-            get { return instance.voxelSettings; }
+            get
+            { 
+                return Instance.voxelSettings;
+            }
         }
 
         public List<ConfigNode> flightGUISettings;
         public static List<ConfigNode> FlightGUISettings
         {
-            get { return instance.flightGUISettings; }
+            get
+            {
+                return Instance.flightGUISettings;
+            }
         }
 
         static List<string> presetNames;
@@ -83,12 +92,20 @@ namespace FerramAerospaceResearch
         public int currentIndex;
 
         static FARSettingsScenarioModule instance;
-        GUIDropDown<FARDifficultyAndExactnessSettings> dropdown;
-
         public static FARSettingsScenarioModule Instance
         {
-            get { return instance; }
+            get
+            {
+                if (instance == null)
+                {
+                    instance = new FARSettingsScenarioModule();
+                    instance.OnLoad(new ConfigNode());
+                }
+                return instance;
+            }
         }
+        GUIDropDown<FARDifficultyAndExactnessSettings> dropdown;
+
 
         FARSettingsScenarioModule()
         {
