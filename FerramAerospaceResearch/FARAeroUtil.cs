@@ -575,29 +575,21 @@ namespace FerramAerospaceResearch
             return densityMultFactor;
         }
 
-        public static double GetCurrentDensity(CelestialBody body, double altitude, bool densitySmoothingAtOcean = true)
+        public static double GetCurrentDensity(Vessel v)
         {
-            double pressure, temperature;
-            pressure = FlightGlobals.getStaticPressure(altitude, body);
-            temperature = FlightGlobals.getExternalTemperature(altitude, body);
+            double density = 0;
 
-            double density = FlightGlobals.getAtmDensity(pressure, temperature, body);
-
-            if (altitude < 0 && densitySmoothingAtOcean)
+            for (int i = 0; i < v.parts.Count; i++)
             {
-                double densityMultFromOcean = Math.Max(-altitude, 1);
-                densityMultFromOcean *= UNDERWATER_DENSITY_FACTOR_MINUS_ONE;
-                densityMultFromOcean++;
-                density *= densityMultFromOcean;
+                Part p = v.parts[i];
+                density += p.dynamicPressurekPa * (1.0 - p.submergedPortion);
+                density += p.submergedDynamicPressurekPa * p.submergedPortion;
             }
+            density /= v.parts.Count;
+            density *= 2;
+            density /= (v.srfSpeed * v.srfSpeed);
 
             return density;
-        }
-
-        // Vessel has altitude and cached pressure, and both density and sound speed need temperature
-        public static double GetCurrentDensity(Part p)
-        {
-            return (p.atmDensity * (1.0 - p.submergedPortion) + p.vessel.mainBody.oceanDensity * 1000 * p.submergedPortion * p.submergedDragScalar);// * fi.pseudoReDragMult);
         }
 
         public static double CalculateCurrentViscosity(double tempInK)
