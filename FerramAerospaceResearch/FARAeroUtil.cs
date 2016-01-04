@@ -586,7 +586,7 @@ namespace FerramAerospaceResearch
                 density += p.submergedDynamicPressurekPa * p.submergedPortion;
             }
             density /= v.parts.Count;
-            density *= 2;
+            density *= 2000;        //need answers in Pa, not kPa
             density /= (v.srfSpeed * v.srfSpeed);
 
             return density;
