@@ -582,6 +582,9 @@ namespace FerramAerospaceResearch
             for (int i = 0; i < v.parts.Count; i++)
             {
                 Part p = v.parts[i];
+                if (p.physicalSignificance == Part.PhysicalSignificance.NONE)
+                    continue;
+
                 density += p.dynamicPressurekPa * (1.0 - p.submergedPortion);
                 density += p.submergedDynamicPressurekPa * p.submergedPortion;
             }
