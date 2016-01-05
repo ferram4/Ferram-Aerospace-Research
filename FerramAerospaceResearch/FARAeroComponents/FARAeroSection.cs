@@ -198,24 +198,24 @@ namespace FerramAerospaceResearch.FARAeroComponents
             //increase merge factor each time we merge to maintain relative strength of sections
             mergeFactor += 1;
 
-            float invMergeFactor = 1 / (mergeFactor + 1);
+            float invMergeFactorP1 = 1 / (mergeFactor + 1);
 
-            //merge simple factors
+            //add simple factors
             potentialFlowNormalForce += otherSection.potentialFlowNormalForce;
             viscCrossflowDrag += otherSection.viscCrossflowDrag;
             hypersonicMomentForward += otherSection.hypersonicMomentForward;
             hypersonicMomentBackward += otherSection.hypersonicMomentBackward;
 
-            flatnessRatio = invMergeFactor * (flatnessRatio * mergeFactor + otherSection.flatnessRatio);
-            invFlatnessRatio = invMergeFactor * (invFlatnessRatio * mergeFactor + otherSection.invFlatnessRatio);
-            diameter = invMergeFactor * (diameter * mergeFactor + otherSection.diameter);
+            flatnessRatio = invMergeFactorP1 * (flatnessRatio * mergeFactor + otherSection.flatnessRatio);
+            invFlatnessRatio = invMergeFactorP1 * (invFlatnessRatio * mergeFactor + otherSection.invFlatnessRatio);
+            diameter = invMergeFactorP1 * (diameter * mergeFactor + otherSection.diameter);
 
             //merge the curves; don't scale because these are actual drag values
             xForcePressureAoA0.AddCurve(otherSection.xForcePressureAoA0);
             xForcePressureAoA180.AddCurve(otherSection.xForcePressureAoA180);
             xForceSkinFriction.AddCurve(otherSection.xForceSkinFriction);
 
-            //prep old data for merging
+            //prep old part data for merging
             for (int i = 0; i < partData.Count; ++i)
             {
                 PartData oldData = partData[i];
@@ -249,6 +249,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     tmpOtherData.nRefVectorPartSpace = (tmpOtherData.nRefVectorPartSpace);
                     tmpOtherData.dragFactor = invMergeFactor * (tmpOtherData.dragFactor);       //this will already be scaled down at the end
                     */
+                    tmpOtherData.centroidPartSpace *= mergeFactorP1;      //needs to be scaled this way to place the centroid in the correct location
                     partData.Add(tmpOtherData);
 
                     handledAeroModulesIndexDict.Add(tmpOtherData.aeroModule, partData.Count - 1);
@@ -258,8 +259,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             for (int i = 0; i < partData.Count; ++i)
             {
                 PartData newData = partData[i];
-                newData.dragFactor *= invMergeFactor;      //now scale everything back down to sane levels
-                newData.centroidPartSpace *= invMergeFactor;
+                newData.dragFactor *= invMergeFactorP1;      //now scale everything back down to sane levels
+                newData.centroidPartSpace *= invMergeFactorP1;
                 newData.xRefVectorPartSpace.Normalize();
                 newData.nRefVectorPartSpace.Normalize();
                 partData[i] = newData;

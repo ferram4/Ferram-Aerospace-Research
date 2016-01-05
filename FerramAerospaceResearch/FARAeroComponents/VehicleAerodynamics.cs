@@ -621,7 +621,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             for (int j = 0; j < areaSmoothingIterations; j++)
             {
                 for (int i = 0; i < numVals; i++)
-                    prevUncorrectedVals[i] = 0;     //set all the vals to 0 to prevent screwups between iterations
+                    prevUncorrectedVals[i] = vehicleCrossSection[frontIndex].area;     //set all the vals to 0 to prevent screwups between iterations
 
                 for (int i = frontIndex; i <= backIndex; i++)       //area smoothing pass
                 {
@@ -638,7 +638,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         if (i + k < backIndex)
                             futureUncorrectedVals[k] = vehicleCrossSection[i + k + 1].area;
                         else
-                            futureUncorrectedVals[k] = 0;
+                            futureUncorrectedVals[k] = vehicleCrossSection[backIndex].area;
                     }
                     curValue = 0;       //zero for coming calculations...
 
@@ -675,7 +675,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             for (int j = 0; j < derivSmoothingIterations; j++)
             {
                 for (int i = 0; i < numVals; i++)
-                    prevUncorrectedVals[i] = 0;     //set all the vals to 0 to prevent screwups between iterations
+                    prevUncorrectedVals[i] = vehicleCrossSection[frontIndex].secondAreaDeriv;     //set all the vals to 0 to prevent screwups between iterations
 
                 for (int i = frontIndex; i <= backIndex; i++)       //deriv smoothing pass
                 {
@@ -692,7 +692,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         if (i + k < backIndex)
                             futureUncorrectedVals[k] = vehicleCrossSection[i + k + 1].secondAreaDeriv;
                         else
-                            futureUncorrectedVals[k] = 0;
+                            futureUncorrectedVals[k] = vehicleCrossSection[backIndex].secondAreaDeriv;
                     }
                     curValue = 0;       //zero for coming calculations...
 
