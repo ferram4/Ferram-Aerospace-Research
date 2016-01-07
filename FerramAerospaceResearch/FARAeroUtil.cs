@@ -578,7 +578,7 @@ namespace FerramAerospaceResearch
         public static double GetCurrentDensity(Vessel v)
         {
             double density = 0;
-
+            double counter = 0;
             for (int i = 0; i < v.parts.Count; i++)
             {
                 Part p = v.parts[i];
@@ -587,8 +587,10 @@ namespace FerramAerospaceResearch
 
                 density += p.dynamicPressurekPa * (1.0 - p.submergedPortion);
                 density += p.submergedDynamicPressurekPa * p.submergedPortion;
+                counter++;
             }
-            density /= v.parts.Count;
+            if(counter > 0)
+                density /= counter;
             density *= 2000;        //need answers in Pa, not kPa
             density /= (v.srfSpeed * v.srfSpeed);
 

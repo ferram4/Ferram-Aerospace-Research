@@ -1676,7 +1676,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
             double testSum = x + y + z;
             if (testSum == 0 || double.IsNaN(testSum) || double.IsInfinity(testSum))
             {
-                ThreadSafeDebugLogger.Instance.RegisterMessage("Error in mesh triangle; triangle plane components are NaN or triangle is degenerate; FAR unable to use this triangle");
+                //ThreadSafeDebugLogger.Instance.RegisterMessage("Error in mesh triangle; triangle plane components are NaN or triangle is degenerate; FAR unable to use this triangle");
+                //after much user confusion, we're just gonna quietly swallow this error; need to change so there's a debug switch
                 return;
             }
             //Vector4 indexPlane = TransformPlaneToIndices(plane);
