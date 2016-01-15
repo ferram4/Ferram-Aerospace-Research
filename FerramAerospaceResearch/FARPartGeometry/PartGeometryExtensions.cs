@@ -64,7 +64,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Vector3 lower = Vector3.one * float.PositiveInfinity;
             Vector3 upper = Vector3.one * float.NegativeInfinity;
 
-            for (int i = 0; i < transforms.Length; i++)
+            for (int i = transforms.Length - 1; i >= 0; --i)
             {
                 Transform t = transforms[i];
 
@@ -75,7 +75,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 if (mc != null)
                 {
                     m = mc.sharedMesh;
-                    EncapsulateBounds(ref lower, ref upper, matrix, m);
+                    if(m != null)
+                        EncapsulateBounds(ref lower, ref upper, matrix, m);
                 }
 
 
@@ -132,7 +133,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             Transform[] transforms = part.FindModelComponents<Transform>();
             Bounds bounds = new Bounds();
-            for (int i = 0; i < transforms.Length; i++)
+            for (int i = transforms.Length - 1; i >= 0; --i)
             {
                 Transform t = transforms[i];
 
