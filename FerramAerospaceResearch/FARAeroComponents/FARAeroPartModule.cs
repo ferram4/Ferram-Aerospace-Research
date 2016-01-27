@@ -226,7 +226,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
 
             double areaForStress = projectedArea.totalArea / 6;
-            if (areaForStress <= 0.1 || part.Modules.Contains("RealChuteFAR") || part.Modules.Contains("ModuleAblator"))
+            if (!FARDebugValues.allowStructuralFailures || areaForStress <= 0.1 || part.Modules.Contains("RealChuteFAR") || part.Modules.Contains("ModuleAblator"))
             {
                 partForceMaxY = double.MaxValue;
                 partForceMaxXZ = double.MaxValue;

@@ -704,7 +704,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
 
                 //Voxelize Everything
-                if (cantUseColliders || forceUseMeshes)       //in this case, voxelize _everything_
+                if (cantUseColliders || forceUseMeshes || part.Modules.Contains("ProceduralFairingSide"))       //in this case, voxelize _everything_
                 {
                     foreach (Transform t in meshTransforms)
                     {
