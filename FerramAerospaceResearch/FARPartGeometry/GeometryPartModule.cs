@@ -152,7 +152,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         void FixedUpdate()
         {
-            if (!_started && ((HighLogic.LoadedSceneIsFlight && FlightGlobals.ready) ||       //this is done because it takes a frame for colliders to be set up in the editor
+            if (!_started && ((HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && (part.collider != null || part.Modules.Contains("ModuleWheel"))) ||       //this is done because it takes a frame for colliders to be set up in the editor
             (HighLogic.LoadedSceneIsEditor && ApplicationLauncher.Ready && (part.collider != null || part.Modules.Contains("ModuleWheel")))))                //waiting prevents changes in physics in flight or in predictions because the voxel switches to colliders rather than meshes
             {
                 RebuildAllMeshData();
