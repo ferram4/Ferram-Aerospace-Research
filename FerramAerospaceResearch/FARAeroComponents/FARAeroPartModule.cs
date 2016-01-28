@@ -167,6 +167,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 worldSpaceTorque = Vector3.zero;
                 partLocalForce = Vector3.zero;
                 partLocalTorque = Vector3.zero;
+                UpdateAeroDisplay();
             }
         }
 
