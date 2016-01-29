@@ -198,7 +198,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     FARAeroPartModule a = _unusedAeroModules[i];
                     a.SetShielded(true);
                     a.ForceLegacyAeroUpdates();
-                    //Debug.Log(a.part.partInfo.title + " shielded");
+                    //Debug.Log(a.part.partInfo.title + " shielded, area: " + a.ProjectedAreas.totalArea);
                 }
 
                 for (int i = 0; i < _currentAeroModules.Count; i++)
@@ -206,7 +206,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     FARAeroPartModule a = _currentAeroModules[i];
                     a.SetShielded(false);
                     a.ForceLegacyAeroUpdates();
-                    //Debug.Log(a.part.partInfo.title + " unshielded");
+                    //Debug.Log(a.part.partInfo.title + " unshielded, area: " + a.ProjectedAreas.totalArea);
                 }
                 
                 _vesselIntakeRamDrag.UpdateAeroData(_currentAeroModules, _unusedAeroModules);

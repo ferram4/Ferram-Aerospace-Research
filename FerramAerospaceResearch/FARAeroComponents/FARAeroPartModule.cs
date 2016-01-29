@@ -165,8 +165,16 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 worldSpaceAeroForce = Vector3.zero;
                 worldSpaceTorque = Vector3.zero;
+
+                totalWorldSpaceAeroForce = Vector3.zero;
+
                 partLocalForce = Vector3.zero;
                 partLocalTorque = Vector3.zero;
+
+                partLocalAngVel = Vector3.zero;
+                partLocalVel = Vector3.zero;
+                partLocalVelNorm = Vector3.zero;
+
                 UpdateAeroDisplay();
             }
         }
@@ -613,13 +621,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
             Vector3 worldDragArrow = Vector3.zero;
             Vector3 worldLiftArrow = Vector3.zero;
 
-            if (PhysicsGlobals.AeroForceDisplay || PhysicsGlobals.AeroDataDisplay)
+            if ((PhysicsGlobals.AeroForceDisplay || PhysicsGlobals.AeroDataDisplay) && part.ShieldedFromAirstream)
             {
                 Vector3 worldVelNorm = partTransform.localToWorldMatrix.MultiplyVector(partLocalVelNorm);
                 worldDragArrow = Vector3.Dot(worldSpaceAeroForce, worldVelNorm) * worldVelNorm;
                 worldLiftArrow = worldSpaceAeroForce - worldDragArrow;
             }
-            if (PhysicsGlobals.AeroForceDisplay)
+            if (PhysicsGlobals.AeroForceDisplay && part.ShieldedFromAirstream)
             {
                 if (liftArrow == null)
                     liftArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldLiftArrow, worldLiftArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale, FARGUI.GUIColors.GetColor(0), true);
@@ -667,7 +675,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
             }
 
-            if (PhysicsGlobals.AeroDataDisplay)
+            if (PhysicsGlobals.AeroDataDisplay && part.ShieldedFromAirstream)
             {
                 if (!fieldsVisible)
                 {
