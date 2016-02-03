@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5.4 "Hoerner"
+Ferram Aerospace Research v0.15.5.5 "Hugoniot"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -267,12 +267,12 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
             if (_vessel == FlightGlobals.ActiveVessel && showGUI && showAllGUI)
             {
-                mainGuiRect = GUILayout.Window(this.GetHashCode(), mainGuiRect, MainFlightGUIWindow, "FAR, v0.15.5.4 'Hoerner'", GUILayout.MinWidth(230));
+                mainGuiRect = GUILayout.Window(this.GetHashCode(), mainGuiRect, MainFlightGUIWindow, "FAR, v0.15.5.5 'Hugoniot'", GUILayout.MinWidth(230));
                 GUIUtils.ClampToScreen(mainGuiRect);
 
                 if (showFlightDataWindow)
                 {
-                    dataGuiRect = GUILayout.Window(this.GetHashCode() + 1, dataGuiRect, FlightDataWindow, "FAR FlightData", GUILayout.MinWidth(150));
+                    dataGuiRect = GUILayout.Window(this.GetHashCode() + 1, dataGuiRect, FlightDataWindow, "FAR Flight Data", GUILayout.MinWidth(150));
                     GUIUtils.ClampToScreen(dataGuiRect);
                 }
 

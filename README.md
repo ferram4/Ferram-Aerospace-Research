@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.15.5.4 "Hoerner"
+Ferram Aerospace Research v0.15.5.5 "Hugoniot"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -64,6 +64,20 @@ Set all the other winglet/control surface values to zero
 
 CHANGELOG
 =======================================================
+
+0.15.5.5V "Hugoniot"------------------------------------  
+
+Fix an inconsistency in calculations of sonic drag  
+Fix possibility of sonic drag resulting in negative drag coefficients on very blunt shapes  
+Generally increase sonic drag of blunt objects, generally decrease drag of slender objects  
+
+Fix water drag failing to function under complete submersion  
+Fix rare error where Procedural Fairings will not properly voxelize  
+Fix GetCurrentDensity method (for external mods) to return result consistent with simulation  
+Fix overheat interaction on load with ModuleCoreHeat  
+Fix FAR breaking on attempts to load Training or Scenario scenes  
+Fix spoilers and flaps not updating with settings in the editor  
+
 
 0.15.5.4V "Hoerner"------------------------------------  
 

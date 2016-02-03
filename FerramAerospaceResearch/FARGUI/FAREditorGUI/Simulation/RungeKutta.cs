@@ -34,7 +34,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
  * Toolbar integration powered by blizzy78's Toolbar plugin; used with permission
  *	http://forum.kerbalspaceprogram.com/threads/60863
 =======
-Ferram Aerospace Research v0.15.5.4 "Hoerner"
+Ferram Aerospace Research v0.15.5.5 "Hugoniot"
 =========================
 Aerodynamics model for Kerbal Space Program
 
