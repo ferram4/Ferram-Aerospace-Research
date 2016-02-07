@@ -175,9 +175,9 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
             if (activeFlightDataSections[4])        //Coeffs + refArea
             {
-                dataReadoutString.AppendLine(infoParameters.liftCoeff.ToString("F3"));
-                dataReadoutString.AppendLine(infoParameters.dragCoeff.ToString("F3"));
-                dataReadoutString.AppendLine(infoParameters.sideCoeff.ToString("F3"));
+                dataReadoutString.AppendLine(infoParameters.liftCoeff.ToString("F4"));
+                dataReadoutString.AppendLine(infoParameters.dragCoeff.ToString("F4"));
+                dataReadoutString.AppendLine(infoParameters.sideCoeff.ToString("F4"));
                 dataReadoutString.Append(infoParameters.refArea.ToString("F3"));
                 dataReadoutString.AppendLine(" m²");
                 dataReadoutString.AppendLine();

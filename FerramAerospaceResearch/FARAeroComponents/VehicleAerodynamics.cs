@@ -1254,18 +1254,20 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 double cPSonicForward, cPSonicBackward;
 
                 cPSonicForward = _vehicleCrossSection[index].cpSonicForward;
-                if (index > front)
+                /*if (index > front)
                 {
                     cPSonicForward += _vehicleCrossSection[index - 1].cpSonicForward;
                     cPSonicForward *= 0.5;
-                }
+                }*/
 
                 cPSonicBackward = _vehicleCrossSection[index].cpSonicBackward;
-                if (index < back)
+                /*if (index < back)
                 {
                     cPSonicBackward += _vehicleCrossSection[index + 1].cpSonicBackward;
                     cPSonicBackward *= 0.5;
-                }
+                }*/
+
+                double areaForForces = ((curArea + prevArea) - (nextArea + curArea)) * 0.5;
 
                 if (sonicBaseDrag > 0)      //occurs with increase in area; force applied at 180 AoA
                 {
@@ -1279,11 +1281,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     hypersonicDragForwardFrac += 1f;
                     hypersonicDragForwardFrac *= 0.5f;
 
-                    sonicAoA0Drag = -(float)(cPSonicForward * (curArea - prevArea)) + 0.3f * hypersonicDragForward * hypersonicDragForwardFrac;
+                    sonicAoA0Drag = -(float)(cPSonicForward * (areaForForces)) + 0.3f * hypersonicDragForward * hypersonicDragForwardFrac;
                     sonicAoA0Drag *= (1 - lowFinenessRatioBlendFactor);      //at high finenessRatios, use the entire above section for sonic drag
                     sonicAoA0Drag += hypersonicDragForward * hypersonicDragForwardFrac * lowFinenessRatioBlendFactor * 1.4f;     //at very low finenessRatios, use a boosted version of the hypersonic drag
 
-                    sonicAoA180Drag = (float)(cPSonicBackward * (curArea - nextArea)) + sonicBaseDrag - 0.3f * hypersonicDragBackward * hypersonicDragBackwardFrac;
+                    sonicAoA180Drag = (float)(cPSonicBackward * (-areaForForces)) + sonicBaseDrag - 0.3f * hypersonicDragBackward * hypersonicDragBackwardFrac;
                     sonicAoA180Drag *= (1 - lowFinenessRatioBlendFactor);      //at high finenessRatios, use the entire above section for sonic drag
                     sonicAoA180Drag += (-hypersonicDragBackward * hypersonicDragBackwardFrac * 1.4f + sonicBaseDrag) * lowFinenessRatioBlendFactor;     //at very low finenessRatios, use a boosted version of the hypersonic drag
                     //if(i == 0)
@@ -1300,11 +1302,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     hypersonicDragForwardFrac += 1f;
                     hypersonicDragForwardFrac *= 0.5f;
 
-                    sonicAoA0Drag = -(float)(cPSonicForward * (curArea - prevArea)) + sonicBaseDrag + 0.3f * hypersonicDragForward * hypersonicDragForwardFrac;
+                    sonicAoA0Drag = -(float)(cPSonicForward * (areaForForces)) + sonicBaseDrag + 0.3f * hypersonicDragForward * hypersonicDragForwardFrac;
                     sonicAoA0Drag *= (1 - lowFinenessRatioBlendFactor);      //at high finenessRatios, use the entire above section for sonic drag
                     sonicAoA0Drag += (hypersonicDragForward * hypersonicDragForwardFrac * 1.4f + sonicBaseDrag) * lowFinenessRatioBlendFactor;     //at very low finenessRatios, use a boosted version of the hypersonic drag
 
-                    sonicAoA180Drag = (float)(cPSonicBackward * (curArea - nextArea)) - 0.3f * hypersonicDragBackward * hypersonicDragBackwardFrac;
+                    sonicAoA180Drag = (float)(cPSonicBackward * (-areaForForces)) - 0.3f * hypersonicDragBackward * hypersonicDragBackwardFrac;
                     sonicAoA180Drag *= (1 - lowFinenessRatioBlendFactor);      //at high finenessRatios, use the entire above section for sonic drag
                     sonicAoA180Drag += (-hypersonicDragBackward * hypersonicDragBackwardFrac * 1.4f) * lowFinenessRatioBlendFactor;     //at very low finenessRatios, use a boosted version of the hypersonic drag
 
@@ -1322,11 +1324,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     hypersonicDragForwardFrac += 1f;
                     hypersonicDragForwardFrac *= 0.5f;
 
-                    sonicAoA0Drag = -(float)(cPSonicForward * (curArea - prevArea)) + 0.3f * hypersonicDragForward * hypersonicDragForwardFrac;
+                    sonicAoA0Drag = -(float)(cPSonicForward * (areaForForces)) + 0.3f * hypersonicDragForward * hypersonicDragForwardFrac;
                     sonicAoA0Drag *= (1 - lowFinenessRatioBlendFactor);      //at high finenessRatios, use the entire above section for sonic drag
                     sonicAoA0Drag += hypersonicDragForward * hypersonicDragForwardFrac * lowFinenessRatioBlendFactor * 1.4f;     //at very low finenessRatios, use a boosted version of the hypersonic drag
 
-                    sonicAoA180Drag = (float)(cPSonicBackward * (curArea - nextArea)) - 0.3f * hypersonicDragBackward * hypersonicDragBackwardFrac;
+                    sonicAoA180Drag = (float)(cPSonicBackward * (-areaForForces)) - 0.3f * hypersonicDragBackward * hypersonicDragBackwardFrac;
                     sonicAoA180Drag *= (1 - lowFinenessRatioBlendFactor);      //at high finenessRatios, use the entire above section for sonic drag
                     sonicAoA180Drag += (-hypersonicDragBackward * hypersonicDragBackwardFrac * 1.4f) * lowFinenessRatioBlendFactor;     //at very low finenessRatios, use a boosted version of the hypersonic drag
                 }
@@ -1547,6 +1549,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             double machTest = 1.2;
             double beta = Math.Sqrt(machTest * machTest - 1);
 
+            double cP90 = CalcMaxCp(machTest);
             //double noseAreaSlope = (vehicleCrossSection[front].area) / sectionThickness;
 
             for (int i = front; i <= back; i++)
@@ -1559,6 +1562,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 cP *= -2;
                 if (cP < 0)
                     cP = AdjustCpForNonlinearEffects(cP, beta, machTest);
+
+                if (cP > cP90)
+                    cP = cP90;
 
                 vehicleCrossSection[i].cpSonicForward = cP;
             }
@@ -1575,6 +1581,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 cP *= -2;
                 if (cP < 0)
                     cP = AdjustCpForNonlinearEffects(cP, beta, machTest);
+
+                if (cP > cP90)
+                    cP = cP90;
 
                 vehicleCrossSection[i].cpSonicBackward = cP;
             }
@@ -1673,6 +1682,20 @@ namespace FerramAerospaceResearch.FARAeroComponents
             newVel = 1.0 - newVel;
 
             return newVel;
+        }
+
+        private double CalcMaxCp(double mach)
+        {
+
+            double cP90;
+            double machSqr = mach * mach;
+            cP90 = 7.0 * machSqr - 1.0;
+            cP90 = Math.Pow(6.0 / cP90, 2.5);
+            cP90 *= Math.Pow(1.2 * machSqr, 3.5);
+            cP90--;
+            cP90 /= 0.7 * machSqr;
+
+            return cP90;
         }
 
         private double AdjustCpForNonlinearEffects(double cP, double beta, double freestreamMach)
@@ -1897,7 +1920,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             maxCritMachAdjustmentFactor = 0.5 + (_maxCrossSectionArea - 0.5 * (0.5 * maxAbsRateOfChange + 0.3 * maxSecondDeriv)) / maxCritMachAdjustmentFactor;     //will vary based on x = maxAbsRateOfChange / _maxCrossSectionArea from 1 @ x = 0 to 0.5 as x -> infinity
 
             double critAdjustmentFactor = 4 + finenessRatio;
-            critAdjustmentFactor = 6 * (1 - maxCritMachAdjustmentFactor) / critAdjustmentFactor;
+            critAdjustmentFactor = 2 * (1 - maxCritMachAdjustmentFactor) / critAdjustmentFactor;
             critAdjustmentFactor += maxCritMachAdjustmentFactor;
 
             if (critAdjustmentFactor > 1)
