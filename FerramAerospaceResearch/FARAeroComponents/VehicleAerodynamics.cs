@@ -1561,8 +1561,26 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 cP = AdjustVelForFinitePressure(cP);
                 cP *= -2;
                 if (cP < 0)
-                    cP = AdjustCpForNonlinearEffects(cP, beta, machTest);
-
+                {
+                    double firstDerivArea;
+                    if(i == front)
+                    {
+                        firstDerivArea = vehicleCrossSection[i].area - vehicleCrossSection[i+1].area;
+                        firstDerivArea /= sectionThickness;
+                    }
+                    else if (i == back)
+                    {
+                        firstDerivArea = vehicleCrossSection[i].area - vehicleCrossSection[i+1].area;
+                        firstDerivArea /= sectionThickness;
+                    }
+                    else
+                    {
+                        firstDerivArea = vehicleCrossSection[i-1].area - vehicleCrossSection[i+1].area;
+                        firstDerivArea /= sectionThickness;
+                        firstDerivArea *= 0.5;
+                    }
+                    cP = AdjustCpForNonlinearEffects(cP, vehicleCrossSection[i].area, firstDerivArea, beta, machTest);
+                }
                 if (cP > cP90)
                     cP = cP90;
 
@@ -1580,7 +1598,26 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 cP = AdjustVelForFinitePressure(cP);
                 cP *= -2;
                 if (cP < 0)
-                    cP = AdjustCpForNonlinearEffects(cP, beta, machTest);
+                {
+                    double firstDerivArea;
+                    if (i == front)
+                    {
+                        firstDerivArea = vehicleCrossSection[i].area - vehicleCrossSection[i + 1].area;
+                        firstDerivArea /= -sectionThickness;
+                    }
+                    else if (i == back)
+                    {
+                        firstDerivArea = vehicleCrossSection[i].area - vehicleCrossSection[i + 1].area;
+                        firstDerivArea /= -sectionThickness;
+                    }
+                    else
+                    {
+                        firstDerivArea = vehicleCrossSection[i - 1].area - vehicleCrossSection[i + 1].area;
+                        firstDerivArea /= -sectionThickness;
+                        firstDerivArea *= 0.5;
+                    }
+                    cP = AdjustCpForNonlinearEffects(cP, vehicleCrossSection[i].area, firstDerivArea, beta, machTest);
+                }
 
                 if (cP > cP90)
                     cP = cP90;
@@ -1698,12 +1735,34 @@ namespace FerramAerospaceResearch.FARAeroComponents
             return cP90;
         }
 
-        private double AdjustCpForNonlinearEffects(double cP, double beta, double freestreamMach)
+        private double AdjustCpForNonlinearEffects(double cP, double area, double firstDerivArea, double beta, double freestreamMach)
         {
             double nuFreestream = PrandtlMeyerExpansionAngle(freestreamMach, freestreamMach);
-            double deflectionAngle = 0.5 * cP * beta;
+            double deflectionAngle = CalculateEquivalentDeflectionAngle(cP, area, firstDerivArea, freestreamMach, beta);
 
             return cPPrandtlMeyerExpansion(freestreamMach, nuFreestream, deflectionAngle);
+        }
+
+        double CalculateEquivalentDeflectionAngle(double linCp, double area, double firstDerivArea, double machNumber, double beta)
+        {
+            double turnAngle = area * Math.PI;
+            turnAngle = 2.0 * Math.Sqrt(turnAngle);
+            turnAngle = firstDerivArea / turnAngle;
+            turnAngle = Math.Atan(turnAngle);
+
+            double uI = linCp * -0.5;
+            double uO = AdjustVelForFinitePressure(-turnAngle / beta);
+
+            double machI, machO;
+            machI = machNumber * (1.0 + uI);
+            machO = machNumber * (1.0 + uO);
+
+            double nuI, nuO;
+            nuI = PrandtlMeyerExpansionAngle(machI, machNumber);
+            nuO = PrandtlMeyerExpansionAngle(machO, machNumber);
+
+            double totalTurnAngle = turnAngle + nuO - nuI;
+            return totalTurnAngle;
         }
 
         double cPPrandtlMeyerExpansion(double machNumber, double nuFreestream, double deflectionAngle)
