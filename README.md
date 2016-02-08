@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.15.5.5 "Hugoniot"
+Ferram Aerospace Research v0.15.5.6 "Jacobs"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -64,6 +64,16 @@ Set all the other winglet/control surface values to zero
 
 CHANGELOG
 =======================================================
+
+0.15.5.6V "Jacobs"------------------------------------  
+
+Fix more negative sonic drag issues  
+Fix unrealistically low sonic drag  
+Fix failure to load saved FAR data in flight  
+Fix unrealistically high numbers in indicated airspeed at higher Mach numbers  
+
+Lower critical Mach number for slender vehicles with sudden bulges and waviness in their cross-section  
+
 
 0.15.5.5V "Hugoniot"------------------------------------  
 

@@ -160,9 +160,15 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 if (velMode == SurfaceVelMode.IAS)
                 {
                     caption = "IAS";
-                    double densityRatio = (FARAeroUtil.GetCurrentDensity(_vessel) / 1.225);
-                    double pressureRatio = FARAeroUtil.RayleighPitotTubeStagPressure(_vessel.mach);
-                    velString = (_vessel.srfSpeed * Math.Sqrt(densityRatio) * pressureRatio * unitConversion).ToString("F1") + unitString;
+                    //double densityRatio = (FARAeroUtil.GetCurrentDensity(_vessel) / 1.225);
+                    double pressureRatio = FARAeroUtil.RayleighPitotTubeStagPressure(_vessel.mach);     //stag pressure at pitot tube face / ambient pressure
+
+                    double velocity = pressureRatio - 1;
+                    velocity *= _vessel.staticPressurekPa * 1000 * 2;
+                    velocity /= 1.225;
+                    velocity = Math.Sqrt(velocity);
+
+                    velString = (velocity * unitConversion).ToString("F1") + unitString;
                 }
                 else if (velMode == SurfaceVelMode.EAS)
                 {
