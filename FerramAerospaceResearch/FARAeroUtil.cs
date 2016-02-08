@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5.5 "Hugoniot"
+Ferram Aerospace Research v0.15.5.6 "Jacobs"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -235,20 +235,7 @@ namespace FerramAerospaceResearch
 
             if (M <= 0)
                 return 1;
-            double value;
-            if (M <= 1)
-                value = StagnationPressureCalc(M);
-            else
-            {
-
-                value = (gamma + 1) * M;                  //Rayleigh Pitot Tube Formula; gives max stagnation pressure behind shock
-                value *= value;
-                value /= (4 * gamma * M * M - 2 * (gamma - 1));
-                value = Math.Pow(value, gamma / (gamma - 1));
-
-                value *= (1 - gamma + 2 * gamma * M * M);
-                value /= (gamma + 1);
-            }
+            double value = RayleighPitotTubeStagPressure(M);
             value--;                                //and now to convert to pressure coefficient
             value *= 2 / (gamma * M * M);
 
@@ -267,6 +254,24 @@ namespace FerramAerospaceResearch
 
             ratio = Math.Pow(ratio, gamma / (gamma - 1));
             return ratio;
+        }
+
+        public static double RayleighPitotTubeStagPressure(double M)
+        {
+            if (M <= 1)
+                return StagnationPressureCalc(M);
+
+            double gamma = CurrentBody.atmosphereAdiabaticIndex;
+            double value;
+            value = (gamma + 1) * M;                  //Rayleigh Pitot Tube Formula; gives max stagnation pressure behind shock
+            value *= value;
+            value /= (4 * gamma * M * M - 2 * (gamma - 1));
+            value = Math.Pow(value, gamma / (gamma - 1));
+
+            value *= (1 - gamma + 2 * gamma * M * M);
+            value /= (gamma + 1);
+
+            return value;
         }
 
         public static double PressureBehindShockCalc(double M)

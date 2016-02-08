@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5.5 "Hugoniot"
+Ferram Aerospace Research v0.15.5.6 "Jacobs"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -161,7 +161,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 {
                     caption = "IAS";
                     double densityRatio = (FARAeroUtil.GetCurrentDensity(_vessel) / 1.225);
-                    double pressureRatio = FARAeroUtil.StagnationPressureCalc(_vessel.mach);
+                    double pressureRatio = FARAeroUtil.RayleighPitotTubeStagPressure(_vessel.mach);
                     velString = (_vessel.srfSpeed * Math.Sqrt(densityRatio) * pressureRatio * unitConversion).ToString("F1") + unitString;
                 }
                 else if (velMode == SurfaceVelMode.EAS)
