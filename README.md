@@ -67,6 +67,8 @@ CHANGELOG
 
 0.15.5.6V "Jacobs"------------------------------------  
 
+Update to MM 2.6.18
+
 Fix more negative sonic drag issues  
 Fix unrealistically low sonic drag  
 Fix failure to load saved FAR data in flight  
