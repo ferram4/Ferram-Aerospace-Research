@@ -52,16 +52,13 @@ using ferram4;
 
 namespace FerramAerospaceResearch
 {
-    [KSPAddon(KSPAddon.Startup.Flight, false)]
-    public class FARKSPAddonFlightScene : MonoBehaviour
+    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
+    class FARKSPAddonMainMenuSetup : MonoBehaviour
     {
-
-        private void Awake()
+        void Start()
         {
-            FerramAerospaceResearch.FARAeroComponents.FARAeroSection.GenerateCrossFlowDragCurve();
-            FARAeroStress.LoadStressTemplates();
-            FARAeroUtil.LoadAeroDataFromConfig();
-            FARAnimOverrides.LoadAnimOverrides();
+            FARSettingsScenarioModule.MainMenuBuildDefaultScenarioModule();
+            this.enabled = false;
         }
     }
 }

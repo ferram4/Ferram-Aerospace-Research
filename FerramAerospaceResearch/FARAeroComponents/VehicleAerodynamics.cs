@@ -1979,7 +1979,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             maxCritMachAdjustmentFactor = 0.5 + (_maxCrossSectionArea - 0.5 * (0.5 * maxAbsRateOfChange + 0.3 * maxSecondDeriv)) / maxCritMachAdjustmentFactor;     //will vary based on x = maxAbsRateOfChange / _maxCrossSectionArea from 1 @ x = 0 to 0.5 as x -> infinity
 
             double critAdjustmentFactor = 4 + finenessRatio;
-            critAdjustmentFactor = 2 * (1 - maxCritMachAdjustmentFactor) / critAdjustmentFactor;
+            critAdjustmentFactor = 3.5 * (1 - maxCritMachAdjustmentFactor) / critAdjustmentFactor;
             critAdjustmentFactor += maxCritMachAdjustmentFactor;
 
             if (critAdjustmentFactor > 1)
