@@ -148,6 +148,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
                 if(p.Modules.Contains("KerbalEVA"))
                 {
+                    Debug.Log("Handling Stuff for KerbalEVA");
                     p.AddModule("GeometryPartModule");
                     g = p.GetComponent<GeometryPartModule>();
                     p.AddModule("FARAeroPartModule");

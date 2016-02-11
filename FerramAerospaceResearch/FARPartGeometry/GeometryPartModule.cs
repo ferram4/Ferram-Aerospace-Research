@@ -152,8 +152,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         void FixedUpdate()
         {
-            if (!_started && ((HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && (part.collider != null || part.Modules.Contains("ModuleWheel"))) ||       //this is done because it takes a frame for colliders to be set up in the editor
-            (HighLogic.LoadedSceneIsEditor && ApplicationLauncher.Ready && (part.collider != null || part.Modules.Contains("ModuleWheel")))))                //waiting prevents changes in physics in flight or in predictions because the voxel switches to colliders rather than meshes
+            if (!_started &&
+            ((HighLogic.LoadedSceneIsFlight && FlightGlobals.ready) || (HighLogic.LoadedSceneIsEditor && ApplicationLauncher.Ready)) &&      //this is done because it takes a frame for colliders to be set up in the editor
+            (part.collider != null || part.Modules.Contains("ModuleWheel") || part.Modules.Contains("KerbalEVA")))                //waiting prevents changes in physics in flight or in predictions because the voxel switches to colliders rather than meshes
             {
                 RebuildAllMeshData();
             }
@@ -649,6 +650,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             if (part.Modules.Contains("KerbalEVA"))
             {
+                Debug.Log("Adding vox box to Kerbal");
                 meshList.Add(CreateBoxMeshForKerbalEVA());
                 validTransformList.Add(part.partTransform);
                 meshTransforms = validTransformList;
