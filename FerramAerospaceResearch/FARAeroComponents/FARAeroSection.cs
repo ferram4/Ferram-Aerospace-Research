@@ -519,11 +519,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
                 moment /= normalForceFactor;
                 dampingMoment = Math.Abs(dampingMoment);
-                dampingMoment += (float)Math.Abs(skinFrictionForce) * 0.1f;
+                //dampingMoment += (float)Math.Abs(skinFrictionForce) * 0.1f;
+                float rollDampingMoment = (float)(skinFrictionForce * 0.5 * diameter);      //skin friction force times avg moment arm for vehicle
+                rollDampingMoment *= (0.75f + flatnessRatio * 0.25f);     //this is just an approximation for now
 
                 Vector3 forceVector = (float)xForce * xRefVector + (float)nForce * localNormalForceVec;
                 Vector3 torqueVector = Vector3.Cross(xRefVector, localNormalForceVec) * moment;
-                torqueVector -= dampingMoment * angVelLocal;
+
+                Vector3 axialAngLocalVel = Vector3.Dot(xRefVector, angVelLocal) * xRefVector;
+                Vector3 nonAxialAngLocalVel = angVelLocal - axialAngLocalVel;
+
+                torqueVector -= dampingMoment * axialAngLocalVel + rollDampingMoment * nonAxialAngLocalVel * nonAxialAngLocalVel.magnitude;
 
                 //float dynPresAndScaling = 0.0005f * atmDensity * velLocal.sqrMagnitude * data.dragFactor;        //dyn pres and N -> kN conversion
 

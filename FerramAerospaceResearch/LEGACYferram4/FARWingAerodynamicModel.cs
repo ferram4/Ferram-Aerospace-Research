@@ -68,7 +68,7 @@ namespace ferram4
         public float curWingMass = 1;
         private float massDelta = 0f;
 
-        [KSPField(guiName = "Mass-Strength Multiplier %", isPersistant = true, guiActiveEditor = true, guiActive = false), UI_FloatRange(maxValue = 2.0f, minValue = 0.05f, scene = UI_Scene.Editor, stepIncrement = 0.05f)]
+        [KSPField(guiName = "Mass-Strength Multiplier %", isPersistant = true, guiActiveEditor = true, guiActive = false), UI_FloatRange(maxValue = 4.0f, minValue = 0.05f, scene = UI_Scene.Editor, stepIncrement = 0.05f)]
         public float massMultiplier = 1.0f;
 
         public float oldMassMultiplier = -1f;

@@ -196,7 +196,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 dataReadoutString.AppendLine(" hr⁻¹");
                 dataReadoutString.AppendLine((infoParameters.intakeAirFrac * 100).ToString("P1"));
                 dataReadoutString.Append(infoParameters.specExcessPower.ToString("N2"));
-                dataReadoutString.AppendLine(" m²/s²");
+                dataReadoutString.AppendLine(" m²/s³");
                 dataReadoutString.AppendLine();
             }
             if (activeFlightDataSections[7])        //Range, Endurance est
