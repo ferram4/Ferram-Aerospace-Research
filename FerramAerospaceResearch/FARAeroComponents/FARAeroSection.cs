@@ -477,7 +477,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 double xForce = -skinFrictionForce * Math.Sign(cosAoA) * cosSqrAoA;
                 float moment = (float)(cosAoA * sinAoA);
-                float dampingMoment = 0.25f * moment;
+                float dampingMoment = 1.25f * moment;
 
                 if (cosAoA > 0)
                 {
@@ -529,7 +529,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 Vector3 axialAngLocalVel = Vector3.Dot(xRefVector, angVelLocal) * xRefVector;
                 Vector3 nonAxialAngLocalVel = angVelLocal - axialAngLocalVel;
 
-                torqueVector -= dampingMoment * axialAngLocalVel + rollDampingMoment * nonAxialAngLocalVel * nonAxialAngLocalVel.magnitude / velLocal.sqrMagnitude;
+                if (velLocal.sqrMagnitude > 0.001f)
+                    torqueVector -= (dampingMoment * axialAngLocalVel * axialAngLocalVel.magnitude + rollDampingMoment * nonAxialAngLocalVel * nonAxialAngLocalVel.magnitude) / velLocal.sqrMagnitude;
+                else
+                    torqueVector -= (dampingMoment * axialAngLocalVel * axialAngLocalVel.magnitude + rollDampingMoment * nonAxialAngLocalVel * nonAxialAngLocalVel.magnitude) / 0.001f;
 
                 //float dynPresAndScaling = 0.0005f * atmDensity * velLocal.sqrMagnitude * data.dragFactor;        //dyn pres and N -> kN conversion
 
