@@ -477,7 +477,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 double xForce = -skinFrictionForce * Math.Sign(cosAoA) * cosSqrAoA;
                 float moment = (float)(cosAoA * sinAoA);
-                float dampingMoment = 1.25f * moment;
+                float dampingMoment = 4f * moment;
 
                 if (cosAoA > 0)
                 {
