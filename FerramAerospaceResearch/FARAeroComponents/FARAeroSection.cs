@@ -529,7 +529,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 Vector3 axialAngLocalVel = Vector3.Dot(xRefVector, angVelLocal) * xRefVector;
                 Vector3 nonAxialAngLocalVel = angVelLocal - axialAngLocalVel;
 
-                torqueVector -= dampingMoment * axialAngLocalVel + rollDampingMoment * nonAxialAngLocalVel * nonAxialAngLocalVel.magnitude;
+                torqueVector -= dampingMoment * axialAngLocalVel + rollDampingMoment * nonAxialAngLocalVel * nonAxialAngLocalVel.magnitude / velLocal.sqrMagnitude;
 
                 //float dynPresAndScaling = 0.0005f * atmDensity * velLocal.sqrMagnitude * data.dragFactor;        //dyn pres and N -> kN conversion
 
