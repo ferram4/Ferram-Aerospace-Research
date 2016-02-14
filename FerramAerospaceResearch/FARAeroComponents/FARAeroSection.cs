@@ -530,9 +530,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 Vector3 nonAxialAngLocalVel = angVelLocal - axialAngLocalVel;
 
                 if (velLocal.sqrMagnitude > 0.001f)
-                    torqueVector -= (dampingMoment * axialAngLocalVel * axialAngLocalVel.magnitude + rollDampingMoment * nonAxialAngLocalVel * nonAxialAngLocalVel.magnitude) / velLocal.sqrMagnitude;
+                    torqueVector -= (dampingMoment * nonAxialAngLocalVel * nonAxialAngLocalVel.magnitude + rollDampingMoment * axialAngLocalVel * axialAngLocalVel.magnitude) / velLocal.sqrMagnitude;
                 else
-                    torqueVector -= (dampingMoment * axialAngLocalVel * axialAngLocalVel.magnitude + rollDampingMoment * nonAxialAngLocalVel * nonAxialAngLocalVel.magnitude) / 0.001f;
+                    torqueVector -= (dampingMoment * nonAxialAngLocalVel * nonAxialAngLocalVel.magnitude + rollDampingMoment * axialAngLocalVel * axialAngLocalVel.magnitude) / 0.001f;
 
                 //float dynPresAndScaling = 0.0005f * atmDensity * velLocal.sqrMagnitude * data.dragFactor;        //dyn pres and N -> kN conversion
 
