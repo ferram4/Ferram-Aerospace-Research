@@ -87,13 +87,13 @@ namespace ferram4
 
                 rawDataX = xValues;
                 rawDataY = yValues;
-                ConvertRawToPixels();
+                ConvertRawToPixels(false);
             }
             #endregion
 
             #region ConvertRawToPixels
 
-            private void ConvertRawToPixels()
+            private void ConvertRawToPixels(bool update = true)
             {
                 pixelDataX = new int[rawDataX.Length];
                 pixelDataY = new int[rawDataY.Length];
@@ -120,7 +120,8 @@ namespace ferram4
                     pixelDataX[i] = (int)tmpx;
                     pixelDataY[i] = (int)tmpy;
                 }
-                Update();
+                if(update)
+                    Update();
             }
             #endregion
 
@@ -171,7 +172,7 @@ namespace ferram4
                                 for (int j = -tmpThick; j <= tmpThick; j++)
                                 {
                                     int linear = (int)Math.Round(m * (i - xend) + yend);
-                                    if((i >= 0 && i <= lineDisplay.width) && (linear + j >= 0 && linear + j <= lineDisplay.height))
+                                    if((i >= 0 && i < lineDisplay.width) && (linear + j >= 0 && linear + j < lineDisplay.height))
                                         lineDisplay.SetPixel(i, linear + j, lineColor);
                                 }
                         }
@@ -193,14 +194,16 @@ namespace ferram4
 
                             m = 1 / m;
 
-                            for (int i = ystart; i < yend; i++)
-                                for (int j = -tmpThick; j <= tmpThick; j++)
-                                {
-                                    int linear = (int)Math.Round(m * (i - yend) + xend);
-                                    if ((linear + j >= 0 && linear + j <= lineDisplay.width) && (i >= 0 && i <= lineDisplay.height))
-                                        lineDisplay.SetPixel(linear + j, i, lineColor);
-                                }
-
+                            if (ystart != yend)
+                            {
+                                for (int i = ystart; i < yend; i++)
+                                    for (int j = -tmpThick; j <= tmpThick; j++)
+                                    {
+                                        int linear = (int)Math.Round(m * (i - yend) + xend);
+                                        if ((linear + j >= 0 && linear + j < lineDisplay.width) && (i >= 0 && i < lineDisplay.height))
+                                            lineDisplay.SetPixel(linear + j, i, lineColor);
+                                    }
+                            }
                         }
                     }
                     lastx = tmpx;

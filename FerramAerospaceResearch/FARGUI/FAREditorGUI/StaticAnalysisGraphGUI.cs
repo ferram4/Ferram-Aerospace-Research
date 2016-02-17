@@ -296,6 +296,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         {
             int j = 0;
 
+            List<double> xv_yvPairs = new List<double>();
+
             for (int i = 0; i < y.Length - 1; i++)
             {
                 if (Math.Sign(y[i]) == Math.Sign(y[i + 1]))
@@ -309,8 +311,14 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
                 double xv = x[i] + Math.Abs(y[i]) * (x[i + 1] - x[i]) / Math.Abs(y[i + 1] - y[i]);
                 double yv = ysize * 3 / 275;
-                _graph.AddLine(key + (j++), new double[] { xv, xv }, new double[] { -yv, yv }, color, 1, false);
+                xv_yvPairs.Add(xv);
+                xv_yvPairs.Add(yv);
             }
+            if(xv_yvPairs.Count < 5)
+                for(int i = 0; i < xv_yvPairs.Count; i += 2)
+                {
+                    _graph.AddLine(key + (j++), new double[] { xv_yvPairs[i], xv_yvPairs[i] }, new double[] { -xv_yvPairs[i + 1], xv_yvPairs[i + 1] }, color, 1, false);
+                }
         }
 
         class GraphInputs
