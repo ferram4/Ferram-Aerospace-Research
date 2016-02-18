@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.15.5.6 "Jacobs"
+Ferram Aerospace Research v0.15.5.7 "Johnson"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -64,6 +64,14 @@ Set all the other winglet/control surface values to zero
 
 CHANGELOG
 =======================================================
+
+0.15.5.7V "Johnson"------------------------------------  
+
+Tweak pitch and roll damping of fuselages to make more logical sense; excessive roll damping at high dynamic pressures for wingless vehicles has been fixed  
+Change units for specific excess power in the Flight Data readout to be W/kg on the basis that it makes more logical sense than m^2/s^3  
+
+Fix a critical error that prevented voxelizations of Kerbals or any vehicles that had Kerbals riding in a command seat  
+
 
 0.15.5.6V "Jacobs"------------------------------------  
 

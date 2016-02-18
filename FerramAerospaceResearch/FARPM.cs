@@ -1,5 +1,5 @@
 /*
-Ferram Aerospace Research v0.15.5.6 "Jacobs"
+Ferram Aerospace Research v0.15.5.7 "Johnson"
 =========================
 Aerodynamics model for Kerbal Space Program
 
