@@ -621,13 +621,13 @@ namespace FerramAerospaceResearch.FARAeroComponents
             Vector3 worldDragArrow = Vector3.zero;
             Vector3 worldLiftArrow = Vector3.zero;
 
-            if ((PhysicsGlobals.AeroForceDisplay || PhysicsGlobals.AeroDataDisplay) && part.ShieldedFromAirstream)
+            if ((PhysicsGlobals.AeroForceDisplay || PhysicsGlobals.AeroDataDisplay) && !part.ShieldedFromAirstream)
             {
                 Vector3 worldVelNorm = partTransform.localToWorldMatrix.MultiplyVector(partLocalVelNorm);
                 worldDragArrow = Vector3.Dot(worldSpaceAeroForce, worldVelNorm) * worldVelNorm;
                 worldLiftArrow = worldSpaceAeroForce - worldDragArrow;
             }
-            if (PhysicsGlobals.AeroForceDisplay && part.ShieldedFromAirstream)
+            if (PhysicsGlobals.AeroForceDisplay && !part.ShieldedFromAirstream)
             {
                 if (liftArrow == null)
                     liftArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldLiftArrow, worldLiftArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale, FARGUI.GUIColors.GetColor(0), true);
@@ -675,7 +675,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
             }
 
-            if (PhysicsGlobals.AeroDataDisplay && part.ShieldedFromAirstream)
+            if (PhysicsGlobals.AeroDataDisplay && !part.ShieldedFromAirstream)
             {
                 if (!fieldsVisible)
                 {
