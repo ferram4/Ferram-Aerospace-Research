@@ -47,6 +47,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using KSP;
+using KSP.UI.Screens;
 using FerramAerospaceResearch.FARAeroComponents;
 using ferram4;
 
@@ -191,16 +192,20 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             if (_vessel == FlightGlobals.ActiveVessel)
             {
                 SaveConfigs();
-                _airSpeedGUI.SaveSettings();
-                _stabilityAugmentation.SaveSettings();
-                _flightDataGUI.SaveSettings();
-                _aeroVizGUI.SaveSettings();
+                if(_airSpeedGUI != null)
+                    _airSpeedGUI.SaveSettings();
+                if(_stabilityAugmentation != null)
+                    _stabilityAugmentation.SaveSettings();
+                if(_flightDataGUI != null)
+                    _flightDataGUI.SaveSettings();
+                if(_aeroVizGUI != null)
+                    _aeroVizGUI.SaveSettings();
             }
         }
         public static void SaveActiveData()
         {
             FlightGUI gui;
-            if (FlightGlobals.ActiveVessel != null && vesselFlightGUI != null && vesselFlightGUI.TryGetValue(FlightGlobals.ActiveVessel, out gui))
+            if (FlightGlobals.ready && FlightGlobals.ActiveVessel != null && vesselFlightGUI != null && vesselFlightGUI.TryGetValue(FlightGlobals.ActiveVessel, out gui))
             {
                 if(gui != null)
                     gui.SaveData();
@@ -237,6 +242,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         void LateUpdate()
         {
+            OnGUIAppLauncherReady();
             if (_airSpeedGUI != null)
                 _airSpeedGUI.ChangeSurfVelocity();
             else if (FlightUIController.fetch != null)

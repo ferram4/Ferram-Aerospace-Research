@@ -95,6 +95,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             //Based on Kronal Vessel Viewer CoM axes rendering
             if (_rendererMaterial == null)
             {
+                //TODO: definitely replace this with a proper shader when we can
                 _rendererMaterial = new Material("Shader \"Lines/Colored Blended\" {" +
                         "SubShader { Pass { " +
                         "    Blend SrcAlpha OneMinusSrcAlpha " +

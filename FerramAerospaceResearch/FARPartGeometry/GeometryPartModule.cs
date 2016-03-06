@@ -48,6 +48,7 @@ using System.Reflection;
 using System.Threading;
 using UnityEngine;
 using KSP;
+using KSP.UI.Screens;
 using FerramAerospaceResearch.FARPartGeometry.GeometryModification;
 
 namespace FerramAerospaceResearch.FARPartGeometry

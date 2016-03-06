@@ -606,7 +606,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (vessel)
                 {
                     vessel.SendMessage("AerodynamicFailureStatus");
-                    string msg = String.Format("[{0:D2}:{1:D2}:{2:D2}] {3} failed due to aerodynamic stresses.", FlightLogger.met_hours, FlightLogger.met_mins, FlightLogger.met_secs, part.partInfo.title);
+                    string msg = String.Format("[{0}] {1} failed due to aerodynamic stresses.", FlightLogger.met, part.partInfo.title);
                     FlightLogger.eventLog.Add(msg); 
                     if (FARDebugValues.aeroFailureExplosions)
                     {

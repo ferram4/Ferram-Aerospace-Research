@@ -700,7 +700,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         //estimates whether it is safe to deploy the chute or not
         private void CalculateSafeToDeployEstimate()
         {
-            part.stackIcon.SetBgColor(XKCDColors.White);
+            part.stackIcon.SetBackgroundColor(XKCDColors.White);
             SafeState s;
             if (this.vessel.externalTemperature <= maxTemp || convFlux < 0) { s = SafeState.SAFE; }
             else
@@ -715,13 +715,13 @@ namespace FerramAerospaceResearch.RealChuteLite
                 switch(this.safeState)
                 {
                     case SafeState.SAFE:
-                        part.stackIcon.SetBgColor(XKCDColors.White); break;
+                        part.stackIcon.SetBackgroundColor(XKCDColors.White); break;
 
                     case SafeState.RISKY:
-                        part.stackIcon.SetBgColor(XKCDColors.BrightYellow); break;
+                        part.stackIcon.SetBackgroundColor(XKCDColors.BrightYellow); break;
 
                     case SafeState.DANGEROUS:
-                        part.stackIcon.SetBgColor(XKCDColors.Red); break;
+                        part.stackIcon.SetBackgroundColor(XKCDColors.Red); break;
                 }
             }
         }
@@ -854,7 +854,7 @@ namespace FerramAerospaceResearch.RealChuteLite
 
             CalculateSafeToDeployEstimate();
 
-            if (!this.staged && GameSettings.LAUNCH_STAGES.GetKeyDown() && this.vessel.isActiveVessel && (this.part.inverseStage == Staging.CurrentStage - 1 || Staging.CurrentStage == 0)) { ActivateRC(); }
+            if (!this.staged && GameSettings.LAUNCH_STAGES.GetKeyDown() && this.vessel.isActiveVessel && (this.part.inverseStage == vessel.currentStage - 1 || vessel.currentStage == 0)) { ActivateRC(); }
 
             if (this.staged)
             {
@@ -894,7 +894,7 @@ namespace FerramAerospaceResearch.RealChuteLite
 
                             case DeploymentStates.DEPLOYED:
                                 {
-                                    this.part.rigidbody.AddForceAtPosition(DragForce(this.preDeployedDiameter, this.deployedDiameter, 1f / this.deploymentSpeed), this.forcePosition, ForceMode.Force);
+                                    this.part.rb.AddForceAtPosition(DragForce(this.preDeployedDiameter, this.deployedDiameter, 1f / this.deploymentSpeed), this.forcePosition, ForceMode.Force);
                                     break;
                                 }
 

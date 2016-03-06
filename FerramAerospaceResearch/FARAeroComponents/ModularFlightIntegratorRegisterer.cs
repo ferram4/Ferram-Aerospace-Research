@@ -69,7 +69,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         {
             for (int i = 0; i < fi.PartThermalDataCount; i++)
             {
-                FlightIntegrator.PartThermalData ptd = fi.partThermalDataList[i];
+                PartThermalData ptd = fi.partThermalDataList[i];
                 Part part = ptd.part;
                 if (!part.Modules.Contains("FARAeroPartModule"))
                     continue;
@@ -210,7 +210,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }*/
         }
 
-        double CalculateSunArea(ModularFI.ModularFlightIntegrator fi, FlightIntegrator.PartThermalData ptd)
+        double CalculateSunArea(ModularFI.ModularFlightIntegrator fi, PartThermalData ptd)
         {
             FARAeroPartModule module = null;
             if (ptd.part.Modules.Contains("FARAeroPartModule"))
@@ -229,7 +229,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 return fi.BaseFIGetSunArea(ptd);
         }
 
-        double CalculateBodyArea(ModularFI.ModularFlightIntegrator fi, FlightIntegrator.PartThermalData ptd)
+        double CalculateBodyArea(ModularFI.ModularFlightIntegrator fi, PartThermalData ptd)
         {
             FARAeroPartModule module = null;
             if (ptd.part.Modules.Contains("FARAeroPartModule"))

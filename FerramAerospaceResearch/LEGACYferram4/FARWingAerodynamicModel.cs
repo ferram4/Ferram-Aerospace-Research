@@ -640,8 +640,8 @@ namespace ferram4
                             if (part.parent && !vessel.packed)
                             {
                                 vessel.SendMessage("AerodynamicFailureStatus");
-                                string msg = String.Format("[{0:D2}:{1:D2}:{2:D2}] Joint between {3} and {4} failed due to aerodynamic stresses on the wing structure.",
-                                                           FlightLogger.met_hours, FlightLogger.met_mins, FlightLogger.met_secs, part.partInfo.title, part.parent.partInfo.title);
+                                string msg = String.Format("[{0}] Joint between {1} and {2} failed due to aerodynamic stresses on the wing structure.",
+                                                           FlightLogger.met, part.partInfo.title, part.parent.partInfo.title);
                                 FlightLogger.eventLog.Add(msg);
                                 part.decouple(25);
                                 if (FARDebugValues.aeroFailureExplosions)

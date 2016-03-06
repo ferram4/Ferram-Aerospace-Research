@@ -47,6 +47,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Diagnostics;
 using UnityEngine;
+using KSP.UI.Screens;
+using ModuleWheels;
 using PreFlightTests;
 using FerramAerospaceResearch.FARAeroComponents;
 using FerramAerospaceResearch.FARPartGeometry;
@@ -229,7 +231,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             RequestUpdateVoxel();
         }
-        private void ResetEditorEvent(ShipConstruct construct, CraftBrowser.LoadType type)
+        private void ResetEditorEvent(ShipConstruct construct, CraftBrowserDialog.LoadType type)
         {
             ResetEditor();
         }
@@ -467,7 +469,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             }
             if (cursorInGUI)
             {
-                EditorTooltip.Instance.HideToolTip();
+                if (EditorTooltip.Instance)
+                    EditorTooltip.Instance.HideToolTip();
+
                 if(!CameraMouseLook.GetMouseLook())
                     EdLogInstance.Lock(false, false, false, "FAREdLock");
                 else
@@ -678,15 +682,10 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             for(int i = 0; i < partsList.Count; i++)
             {
                 Part p = partsList[i];
-                if(p.Modules.Contains("ModuleLandingGear"))
+                if (p.Modules.Contains("ModuleWheelDeployment"))
                 {
-                    ModuleLandingGear l = (ModuleLandingGear)p.Modules["ModuleLandingGear"];
-                    l.StartDeployed = gearToggle;
-                }
-                if (p.Modules.Contains("ModuleAdvancedLandingGear"))
-                {
-                    ModuleAdvancedLandingGear l = (ModuleAdvancedLandingGear)p.Modules["ModuleAdvancedLandingGear"];
-                    l.startDeployed = gearToggle;
+                    ModuleWheelDeployment l = (ModuleWheelDeployment)p.Modules["ModuleWheelDeployment"];
+                    l.ActionToggle(new KSPActionParam(KSPActionGroup.Gear, gearToggle ? KSPActionType.Activate : KSPActionType.Deactivate));
                 }
                 if(p.Modules.Contains("FSwheel"))
                 {
