@@ -509,7 +509,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             else if (currentMode == FAREditorMode.STABILITY)
             {
                 _stabDeriv.Display();
-                guiRect.height = useKSPSkin ? 610 : 450;
+                guiRect.height = useKSPSkin ? 680 : 450;
             }
             else if (currentMode == FAREditorMode.SIMULATION)
             {
@@ -520,7 +520,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             {
                 CrossSectionAnalysisGUI();
                 DebugVisualizationGUI();
-                guiRect.height = useKSPSkin ? 330 : 220;
+                guiRect.height = useKSPSkin ? 350 : 220;
             }
 
             GUI.DragWindow();

@@ -270,7 +270,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             foreach (PartModule m in part.Modules)
             {
+                
                 FindAnimStatesInModule(animations, m, "animationName");
+                FindAnimStatesInModule(animations, m, "animationStateName");
                 FindAnimStatesInModule(animations, m, "animName");
                 FindAnimStatesInModule(animations, m, "deployAnimationName");
             }

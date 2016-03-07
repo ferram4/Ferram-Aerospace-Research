@@ -806,11 +806,11 @@ namespace ferram4
                 supportedArea *= 0.66666667f;   //if any supported area has been transfered to another part, we must remove it from here
             curWingMass = supportedArea * (float)FARAeroUtil.massPerWingAreaSupported * massMultiplier;
 
-            part.mass = curWingMass * wingBaseMassMultiplier;
+            float tmpPartMass = curWingMass * wingBaseMassMultiplier;
             massDelta = 0f;
             if ((object)(part.partInfo) != null)
                 if ((object)(part.partInfo.partPrefab) != null)
-                    massDelta = part.mass - part.partInfo.partPrefab.mass;
+                    massDelta = tmpPartMass;
 
             oldMassMultiplier = massMultiplier;
         }

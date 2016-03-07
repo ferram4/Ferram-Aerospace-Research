@@ -96,13 +96,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             if (_rendererMaterial == null)
             {
                 //TODO: definitely replace this with a proper shader when we can
-                _rendererMaterial = new Material("Shader \"Lines/Colored Blended\" {" +
-                        "SubShader { Pass { " +
-                        "    Blend SrcAlpha OneMinusSrcAlpha " +
-                        "    ZWrite Off ZTest Off Cull Off Fog { Mode Off } " +
-                        "    BindChannels {" +
-                        "      Bind \"vertex\", vertex Bind \"color\", color }" +
-                        "} } }");
+                Shader lineShader = Shader.Find("Sprites/Default");
+
+                _rendererMaterial = new Material(lineShader);
                 _rendererMaterial.hideFlags = HideFlags.HideAndDontSave;
                 _rendererMaterial.shader.hideFlags = HideFlags.HideAndDontSave;
                 _rendererMaterial.renderQueue = 4500;
@@ -320,6 +316,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             renderer.transform.parent = EditorLogic.RootPart.partTransform;
             renderer.transform.localPosition = Vector3.zero;
             renderer.transform.localRotation = Quaternion.identity;
+            renderer.transform.SetAsFirstSibling();
 
             renderer.SetVertexCount(xCoords.Length);
 
