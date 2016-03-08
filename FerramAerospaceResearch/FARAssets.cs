@@ -16,7 +16,7 @@ namespace FerramAerospaceResearch
         {
             shaderDict = new Dictionary<string, Shader>();
 
-            Debug.Log("Asset bundles");
+            /*Debug.Log("Asset bundles");
             Debug.Log(AssetLoader.BundleDefinitions.Count);
             foreach (BundleDefinition b in AssetLoader.BundleDefinitions)
             {
@@ -26,7 +26,7 @@ namespace FerramAerospaceResearch
             foreach (AssetDefinition a in AssetLoader.AssetDefinitions)
             {
                 Debug.Log(a.name + " " + a.type + " " + a.path);
-            }
+            }*/
 
             AssetLoader.LoadAssets(LoadAssets, AssetLoader.GetAssetDefinitionWithName("FerramAerospaceResearch/Shaders/farshaders", "FARCrossSectionGraph"));
         }
