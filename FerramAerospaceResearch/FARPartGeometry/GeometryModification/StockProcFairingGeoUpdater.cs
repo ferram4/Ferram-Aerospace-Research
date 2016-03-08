@@ -104,7 +104,7 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
             {
                 Debug.Log("Update fairing event");
                 FieldInfo[] fields = fairing.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
-                deployEvent = (KFSMEvent)fields[31].GetValue(fairing);
+                deployEvent = (KFSMEvent)fields[33].GetValue(fairing);
                 deployEvent.OnEvent += delegate { FairingDeployGeometryUpdate(); };
             }
         }

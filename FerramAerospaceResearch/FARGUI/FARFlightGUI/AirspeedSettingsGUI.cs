@@ -44,6 +44,7 @@ Copyright 2015, Michael Ferrara, aka Ferram4
 
 using System;
 using System.Collections.Generic;
+using KSP.UI.Screens.Flight;
 using UnityEngine;
 
 
@@ -129,7 +130,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             if (FlightGlobals.ActiveVessel != _vessel)
                 return;
             //DaMichel: Keep our fingers off of this also if there is no atmosphere (staticPressure <= 0)
-            if (FlightUIController.speedDisplayMode != FlightUIController.SpeedDisplayModes.Surface || _vessel.atmDensity <= 0)
+            if (FlightGlobals.speedDisplayMode != FlightGlobals.SpeedDisplayModes.Surface || _vessel.atmDensity <= 0)
                 return;
 
             double unitConversion = 1;
@@ -184,12 +185,12 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
             active = true;
 
-            FlightUIController UI = FlightUIController.fetch;
-            if (UI.spdCaption == null || UI.speed == null)
+            SpeedDisplay UI = SpeedDisplay.Instance;
+            if (UI.textSpeed == null || UI.textTitle == null)
                 return;
 
-            UI.spdCaption.text = caption;
-            UI.speed.text = velString;
+            UI.textTitle.text = caption;
+            UI.textSpeed.text = velString;
         }
 
         public void SaveSettings()

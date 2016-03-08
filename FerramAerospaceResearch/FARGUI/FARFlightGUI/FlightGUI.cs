@@ -245,7 +245,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             OnGUIAppLauncherReady();
             if (_airSpeedGUI != null)
                 _airSpeedGUI.ChangeSurfVelocity();
-            else if (FlightUIController.fetch != null)
+            else if (_vessel != null)
                 _airSpeedGUI = new AirspeedSettingsGUI(_vessel);
         }
 

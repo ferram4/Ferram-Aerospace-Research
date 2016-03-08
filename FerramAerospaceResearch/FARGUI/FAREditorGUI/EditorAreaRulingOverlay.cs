@@ -44,6 +44,8 @@ Copyright 2015, Michael Ferrara, aka Ferram4
 
 using System;
 using System.Collections.Generic;
+using KSPAssets;
+using KSPAssets.Loaders;
 using UnityEngine;
 
 namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
@@ -95,8 +97,15 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             //Based on Kronal Vessel Viewer CoM axes rendering
             if (_rendererMaterial == null)
             {
-                //TODO: definitely replace this with a proper shader when we can
-                Shader lineShader = Shader.Find("Sprites/Default");
+
+                Shader lineShader;
+
+                if (!FARAssets.shaderDict.TryGetValue("FARCrossSectionGraph", out lineShader))
+                {
+                    //TODO: definitely replace this with a proper shader when we can
+                    Debug.Log("Could not load cross-section shader; using fallback shader");
+                    lineShader = Shader.Find("Sprites/Default");
+                }
 
                 _rendererMaterial = new Material(lineShader);
                 _rendererMaterial.hideFlags = HideFlags.HideAndDontSave;

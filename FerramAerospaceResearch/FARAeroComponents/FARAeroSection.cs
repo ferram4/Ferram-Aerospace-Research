@@ -440,7 +440,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 Vector3 angVelLocal = aeroModule.partLocalAngVel;
 
-                //velLocal += Vector3.Cross(angVelLocal, data.centroidPartSpace);       //some transform issue here, needs investigation
+                velLocal += Vector3.Cross(data.centroidPartSpace, angVelLocal);       //some transform issue here, needs investigation
                 Vector3 velLocalNorm = velLocal.normalized;
 
                 Vector3 localNormalForceVec = Vector3.ProjectOnPlane(-velLocalNorm, xRefVector).normalized;
@@ -518,7 +518,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     dampingMoment *= momentFactor;
                 }
                 moment /= normalForceFactor;
-                dampingMoment = Math.Abs(dampingMoment);
+                dampingMoment = Math.Abs(dampingMoment) * 0.1f;
                 //dampingMoment += (float)Math.Abs(skinFrictionForce) * 0.1f;
                 float rollDampingMoment = (float)(skinFrictionForce * 0.5 * diameter);      //skin friction force times avg moment arm for vehicle
                 rollDampingMoment *= (0.75f + flatnessRatio * 0.25f);     //this is just an approximation for now
@@ -530,9 +530,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 Vector3 nonAxialAngLocalVel = angVelLocal - axialAngLocalVel;
 
                 if (velLocal.sqrMagnitude > 0.001f)
-                    torqueVector -= (dampingMoment * nonAxialAngLocalVel * nonAxialAngLocalVel.magnitude + rollDampingMoment * axialAngLocalVel * axialAngLocalVel.magnitude) / velLocal.sqrMagnitude;
+                    torqueVector -= (dampingMoment * nonAxialAngLocalVel) + (rollDampingMoment * axialAngLocalVel * axialAngLocalVel.magnitude) / velLocal.sqrMagnitude;
                 else
-                    torqueVector -= (dampingMoment * nonAxialAngLocalVel * nonAxialAngLocalVel.magnitude + rollDampingMoment * axialAngLocalVel * axialAngLocalVel.magnitude) / 0.001f;
+                    torqueVector -= (dampingMoment * nonAxialAngLocalVel) + (rollDampingMoment * axialAngLocalVel * axialAngLocalVel.magnitude) / 0.001f;
 
                 //float dynPresAndScaling = 0.0005f * atmDensity * velLocal.sqrMagnitude * data.dragFactor;        //dyn pres and N -> kN conversion
 
