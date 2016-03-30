@@ -14,7 +14,7 @@ using Random = System.Random;
 namespace FerramAerospaceResearch.RealChuteLite
 {
 
-    public class RealChuteFAR : PartModule, IModuleInfo, IMultipleDragCube, IPartMassModifier
+    public class RealChuteFAR : PartModule, IModuleInfo, IMultipleDragCube, IPartMassModifier, IPartCostModifier
     {
         /// <summary>
         /// Parachute deployment states
@@ -394,8 +394,6 @@ namespace FerramAerospaceResearch.RealChuteLite
         private GUISkin skins = HighLogic.Skin;
         private Rect window = new Rect(), drag = new Rect();
         private Vector2 scroll = new Vector2();
-        private string screenMessage = string.Empty;
-        private bool showMessage = false;
         #endregion
 
         #region Part GUI
@@ -929,7 +927,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         #endregion
 
         #region Overrides
-        public override void OnStart(PartModule.StartState state)
+        public override void OnStart(StartState state)
         {
             if (!HighLogic.LoadedSceneIsEditor && !HighLogic.LoadedSceneIsFlight) { return; }
             if (!CompatibilityChecker.IsAllCompatible())
