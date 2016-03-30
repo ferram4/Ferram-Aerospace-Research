@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using KSP.UI.Screens;
 using FerramAerospaceResearch.PartExtensions;
 using Random = System.Random;
 
@@ -380,6 +381,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         //Part
         private Animation anim = null;
         private Transform parachute = null, cap = null;
+        private Rigidbody rigidbody = null;
         private PhysicsWatch randomTimer = new PhysicsWatch();
         private float randomX, randomY, randomTime;
         private DeploymentStates state = DeploymentStates.NONE;
@@ -392,6 +394,8 @@ namespace FerramAerospaceResearch.RealChuteLite
         private GUISkin skins = HighLogic.Skin;
         private Rect window = new Rect(), drag = new Rect();
         private Vector2 scroll = new Vector2();
+        private string screenMessage = string.Empty;
+        private bool showMessage = false;
         #endregion
 
         #region Part GUI
@@ -526,7 +530,7 @@ namespace FerramAerospaceResearch.RealChuteLite
             DeactivateRC();
             this.armed = false;
             if (this.part.inverseStage != 0) { this.part.inverseStage = this.part.inverseStage - 1; }
-            else { this.part.inverseStage = Staging.CurrentStage; }
+            else { this.part.inverseStage = StageManager.CurrentStage; }
         }
 
         //Allows the chute to be repacked if available
@@ -700,7 +704,6 @@ namespace FerramAerospaceResearch.RealChuteLite
         //estimates whether it is safe to deploy the chute or not
         private void CalculateSafeToDeployEstimate()
         {
-            part.stackIcon.SetBgColor(XKCDColors.White);
             SafeState s;
             if (this.vessel.externalTemperature <= maxTemp || convFlux < 0) { s = SafeState.SAFE; }
             else
@@ -715,13 +718,13 @@ namespace FerramAerospaceResearch.RealChuteLite
                 switch(this.safeState)
                 {
                     case SafeState.SAFE:
-                        part.stackIcon.SetBgColor(XKCDColors.White); break;
+                        this.part.stackIcon.SetBackgroundColor(XKCDColors.White); break;
 
                     case SafeState.RISKY:
-                        part.stackIcon.SetBgColor(XKCDColors.BrightYellow); break;
+                        this.part.stackIcon.SetBackgroundColor(XKCDColors.BrightYellow); break;
 
                     case SafeState.DANGEROUS:
-                        part.stackIcon.SetBgColor(XKCDColors.Red); break;
+                        this.part.stackIcon.SetBackgroundColor(XKCDColors.Red); break;
                 }
             }
         }
@@ -854,7 +857,7 @@ namespace FerramAerospaceResearch.RealChuteLite
 
             CalculateSafeToDeployEstimate();
 
-            if (!this.staged && GameSettings.LAUNCH_STAGES.GetKeyDown() && this.vessel.isActiveVessel && (this.part.inverseStage == Staging.CurrentStage - 1 || Staging.CurrentStage == 0)) { ActivateRC(); }
+            if (!this.staged && GameSettings.LAUNCH_STAGES.GetKeyDown() && this.vessel.isActiveVessel && (this.part.inverseStage == StageManager.CurrentStage - 1 || StageManager.CurrentStage == 0)) { ActivateRC(); }
 
             if (this.staged)
             {
@@ -875,7 +878,7 @@ namespace FerramAerospaceResearch.RealChuteLite
                             if (!CalculateChuteTemp()) { return; }
                             FollowDragDirection();
                         }
-
+                        this.part.GetComponentCached(ref this.rigidbody);
                         switch (this.deploymentState)
                         {
                             case DeploymentStates.STOWED:
@@ -887,14 +890,14 @@ namespace FerramAerospaceResearch.RealChuteLite
 
                             case DeploymentStates.PREDEPLOYED:
                                 {
-                                    this.part.Rigidbody.AddForceAtPosition(DragForce(0, this.preDeployedDiameter, 1f / this.semiDeploymentSpeed), this.forcePosition, ForceMode.Force);
+                                    this.rigidbody.AddForceAtPosition(DragForce(0, this.preDeployedDiameter, 1f / this.semiDeploymentSpeed), this.forcePosition, ForceMode.Force);
                                     if (this.trueAlt <= this.deployAltitude && this.dragTimer.elapsed.TotalSeconds >= 1f / this.semiDeploymentSpeed) { Deploy(); }
                                     break;
                                 }
 
                             case DeploymentStates.DEPLOYED:
                                 {
-                                    this.part.rigidbody.AddForceAtPosition(DragForce(this.preDeployedDiameter, this.deployedDiameter, 1f / this.deploymentSpeed), this.forcePosition, ForceMode.Force);
+                                    this.rigidbody.AddForceAtPosition(DragForce(this.preDeployedDiameter, this.deployedDiameter, 1f / this.deploymentSpeed), this.forcePosition, ForceMode.Force);
                                     break;
                                 }
 
@@ -1023,16 +1026,15 @@ namespace FerramAerospaceResearch.RealChuteLite
         public override void OnLoad(ConfigNode node)
         {
             if (!CompatibilityChecker.IsAllCompatible()) { return; }
-            this.part.mass = this.totalMass;
-            this.massDelta = 0f;
 
-            if ((object)(this.part.partInfo) != null && (object)(this.part.partInfo.partPrefab) != null)
-            {
-                this.massDelta = this.part.mass - this.part.partInfo.partPrefab.mass;
-            }
             if (HighLogic.LoadedScene == GameScenes.LOADING)
             {
                 if (this.deployAltitude <= 500) { this.deployAltitude += 200; }
+            }
+            else
+            {
+                Part prefab = this.part.partInfo.partPrefab;
+                this.massDelta = prefab == null ? 0 : this.totalMass - prefab.mass;
             }
         }
 
@@ -1069,6 +1071,11 @@ namespace FerramAerospaceResearch.RealChuteLite
             b.AppendFormat("<b>Predeployment speed</b>: {0}s\n", Math.Round(1f / this.semiDeploymentSpeed, 1, MidpointRounding.AwayFromZero));
             b.AppendFormat("<b>Deployment speed</b>: {0}s\n", Math.Round(1f / this.deploymentSpeed, 1, MidpointRounding.AwayFromZero));
             return b.ToString();
+        }
+
+        public override bool IsStageable()
+        {
+            return true;
         }
         #endregion
 
