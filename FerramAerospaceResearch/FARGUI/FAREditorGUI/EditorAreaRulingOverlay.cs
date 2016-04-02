@@ -74,18 +74,24 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         double _yAxisGridScale;
         int _numGridLines;
 
-        static Material _rendererMaterial;
+        Material _rendererMaterial;
 
-        public EditorAreaRulingOverlay(Color axisColor, Color crossSectionColor, Color derivColor, double yScaleMaxDistance, double yAxisGridScale)
+        public static EditorAreaRulingOverlay CreateNewAreaRulingOverlay(Color axisColor, Color crossSectionColor, Color derivColor, double yScaleMaxDistance, double yAxisGridScale)
         {
-            _axisColor = axisColor;
-            _crossSectionColor = crossSectionColor;
-            _derivColor = derivColor;
-            _yScaleMaxDistance = yScaleMaxDistance;
-            _yAxisGridScale = yAxisGridScale;
+            EditorAreaRulingOverlay overlay = new EditorAreaRulingOverlay();
 
-            Initialize();
+            overlay._axisColor = axisColor;
+            overlay._crossSectionColor = crossSectionColor;
+            overlay._derivColor = derivColor;
+            overlay._yScaleMaxDistance = yScaleMaxDistance;
+            overlay._yAxisGridScale = yAxisGridScale;
+
+            overlay.Initialize();
+
+            return overlay;
         }
+
+        private EditorAreaRulingOverlay() { }
 
         ~EditorAreaRulingOverlay()
         {
@@ -137,6 +143,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 }
 
             _markingRenderers = null;
+
+            GameObject.Destroy(_rendererMaterial);
         }
 
         public void RestartOverlay()

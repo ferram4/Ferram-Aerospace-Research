@@ -371,12 +371,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 {
                     ModuleResourceIntake intake = (ModuleResourceIntake)module;
 
-                    IntegratedIntakeEngineCrossSectionAdjuster intakeAdjuster = new IntegratedIntakeEngineCrossSectionAdjuster(intake, worldToVesselMatrix);
+                    IntegratedIntakeEngineCrossSectionAdjuster intakeAdjuster = IntegratedIntakeEngineCrossSectionAdjuster.CreateAdjuster(intake, worldToVesselMatrix);
                     crossSectionAdjusters.Add(intakeAdjuster);
                 }
                 else
                 {
-                    IntegratedIntakeEngineCrossSectionAdjuster intakeAdjuster = new IntegratedIntakeEngineCrossSectionAdjuster(module, worldToVesselMatrix);
+                    IntegratedIntakeEngineCrossSectionAdjuster intakeAdjuster = IntegratedIntakeEngineCrossSectionAdjuster.CreateAdjuster(module, worldToVesselMatrix);
                     crossSectionAdjusters.Add(intakeAdjuster);
                 }
                 return;
@@ -389,12 +389,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 {
                     ModuleResourceIntake intake = (ModuleResourceIntake)module;
 
-                    IntakeCrossSectionAdjuster intakeAdjuster = new IntakeCrossSectionAdjuster(intake, worldToVesselMatrix);
+                    IntakeCrossSectionAdjuster intakeAdjuster = IntakeCrossSectionAdjuster.CreateAdjuster(intake, worldToVesselMatrix);
                     crossSectionAdjusters.Add(intakeAdjuster);
                 }
                 else
                 {
-                    IntakeCrossSectionAdjuster intakeAdjuster = new IntakeCrossSectionAdjuster(module, worldToVesselMatrix);
+                    IntakeCrossSectionAdjuster intakeAdjuster = IntakeCrossSectionAdjuster.CreateAdjuster(module, worldToVesselMatrix);
                     crossSectionAdjusters.Add(intakeAdjuster);
                 }
                 return;

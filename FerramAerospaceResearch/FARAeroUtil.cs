@@ -664,7 +664,7 @@ namespace FerramAerospaceResearch
                 double rarefiedGasVal = machNumber / reynoldsNumber;
                 if (rarefiedGasVal > 0.01)
                 {
-                    return (lamCf + (0.25 - lamCf) * (rarefiedGasVal - 0.01) / (0.99 + rarefiedGasVal)) * ROUGHNESS_SKIN_FRICTION_MULTIPLIER;
+                    return (lamCf + (0.075 - lamCf) * (rarefiedGasVal - 0.01) / (0.99 + rarefiedGasVal)) * ROUGHNESS_SKIN_FRICTION_MULTIPLIER;
                 }
                 return lamCf * ROUGHNESS_SKIN_FRICTION_MULTIPLIER;
             }

@@ -125,6 +125,11 @@ namespace ferram4
 
         private double rawLiftSlope = 0;
         private double liftslope = 0;
+        private double finalLiftSlope = 0;
+        public double LiftSlope
+        {
+            get { return finalLiftSlope; }
+        }
         protected double zeroLiftCdIncrement = 0;
 
         protected double criticalCl = 1.6;
@@ -641,7 +646,7 @@ namespace ferram4
                             {
                                 vessel.SendMessage("AerodynamicFailureStatus");
                                 string msg = String.Format("[{0}] Joint between {1} and {2} failed due to aerodynamic stresses on the wing structure.",
-                                                           FlightLogger.met, part.partInfo.title, part.parent.partInfo.title);
+                                                           KSPUtil.PrintTimeStamp(FlightLogger.met), part.partInfo.title, part.parent.partInfo.title);
                                 FlightLogger.eventLog.Add(msg);
                                 part.decouple(25);
                                 if (FARDebugValues.aeroFailureExplosions)
@@ -957,6 +962,7 @@ namespace ferram4
             if (MachNumber <= 0.8)
             {
                 double Cn = liftslope;
+                finalLiftSlope = liftslope;
                 //Cl = Cn * Math.Sin(2 * AoA) * 0.5;
                 double sinAoA = Math.Sqrt(FARMathUtil.Clamp(1 - CosAoA * CosAoA, 0, 1));
                 Cl = Cn * CosAoA * Math.Sign(AoA);
@@ -984,7 +990,9 @@ namespace ferram4
 //                double SinAoA = Math.Sin(AoA);
                 //Cl = coefMult * (normalForce * CosAoA * Math.Sign(AoA) * sonicLEFactor - axialForce * SinAoA);
                 //Cd = coefMult * (Math.Abs(normalForce * SinAoA) * sonicLEFactor + axialForce * CosAoA);
-                Cl = coefMult * normalForce * CosAoA * Math.Sign(AoA) * supersonicLENormalForceFactor;
+                finalLiftSlope = coefMult * normalForce * supersonicLENormalForceFactor;
+
+                Cl = finalLiftSlope * CosAoA * Math.Sign(AoA);
                 Cd = beta * Cl * Cl / piARe;
 
                 Cd += Cd0;
@@ -1015,7 +1023,7 @@ namespace ferram4
                     if (Math.Abs(Cl) > Math.Abs(ACweight))
                         ACshift *= FARMathUtil.Clamp(Math.Abs(ACweight / Cl), 0, 1);
                 }
-                
+                finalLiftSlope = Cn * (1 - supScale);
                 Cl *= (1 - supScale);
 
                 double M = FARMathUtil.Clamp(MachNumber, 1.2, double.PositiveInfinity);
@@ -1028,7 +1036,10 @@ namespace ferram4
                 double normalForce;
                 normalForce = GetSupersonicPressureDifference(M, AoA);
 
-                Cl += coefMult * normalForce * CosAoA * Math.Sign(AoA) * supersonicLENormalForceFactor * supScale;
+                finalLiftSlope += coefMult * normalForce * supersonicLENormalForceFactor * supScale;
+
+
+                Cl += CosAoA * Math.Sign(AoA) * finalLiftSlope;
 
                 double effectiveBeta = beta * supScale + (1 - supScale);
 
@@ -1060,6 +1071,8 @@ namespace ferram4
             AerodynamicCenter = AerodynamicCenter + ACShiftVec;
 
             Cl *= wingInteraction.ClInterferenceFactor;
+
+            finalLiftSlope *= wingInteraction.ClInterferenceFactor;
 
             ClIncrementFromRear = 0;
         }
@@ -1266,7 +1279,7 @@ namespace ferram4
             if (MachNumber < 0.9)
                 tmp = 1d - MachNumber * MachNumber;
             else
-                tmp = 0.09;
+                tmp = 0.19;
 
             double sweepTmp = sweepHalfChord;
             sweepTmp *= sweepTmp;

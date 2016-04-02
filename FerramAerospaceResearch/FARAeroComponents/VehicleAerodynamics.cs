@@ -424,7 +424,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 try
                 {
                     //Actually voxelize it
-                    _voxel = new VehicleVoxel(_vehiclePartList, _currentGeoModules, _voxelCount);
+                    _voxel = VehicleVoxel.CreateNewVoxel(_vehiclePartList, _currentGeoModules, _voxelCount);
                     if (_vehicleCrossSection.Length < _voxel.MaxArrayLength)
                         _vehicleCrossSection = _voxel.EmptyCrossSectionArray;
 
@@ -1166,7 +1166,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
 
                 if (currentSection == null)
-                    currentSection = new FARAeroSection();
+                    currentSection = FARAeroSection.CreateNewAeroSection();
 
                 FARFloatCurve xForcePressureAoA0 = currentSection.xForcePressureAoA0;
                 FARFloatCurve xForcePressureAoA180 = currentSection.xForcePressureAoA180;
@@ -1511,7 +1511,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             for (int i = 0; i < _newAeroSections.Count; i++)
             {
                 FARAeroSection a = _newAeroSections[i];
-                a.PredictionCalculateAeroForces(2f, 1f, 50000f, 0.005f, worldMainAxis, center);
+                a.PredictionCalculateAeroForces(2f, 1f, 50000f, 0, 0.005f, worldMainAxis, center);
             }
 
             _sonicDragArea = Vector3.Dot(center.force, worldMainAxis) * -1000;

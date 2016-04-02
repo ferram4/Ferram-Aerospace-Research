@@ -157,9 +157,10 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             Color crossSectionDeriv = GUIColors.GetColor(2);
             crossSectionDeriv.a = 0.8f;
 
-            _areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.7f), crossSection, crossSectionDeriv, 10, 5);
+            _areaRulingOverlay = EditorAreaRulingOverlay.CreateNewAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.7f), crossSection, crossSectionDeriv, 10, 5);
             guiRect.height = 500;
             guiRect.width = 650;
+
 
             GameEvents.onEditorPartEvent.Add(UpdateGeometryEvent);
             GameEvents.onEditorUndo.Add(ResetEditorEvent);

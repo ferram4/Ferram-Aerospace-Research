@@ -141,7 +141,16 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
         }
 
-        public VehicleVoxel(List<Part> partList, List<GeometryPartModule> geoModules, int elementCount, bool multiThreaded = true, bool solidify = true)
+        public static VehicleVoxel CreateNewVoxel(List<Part> partList, List<GeometryPartModule> geoModules, int elementCount, bool multiThreaded = true, bool solidify = true)
+        {
+            VehicleVoxel newVoxel = new VehicleVoxel();
+
+            newVoxel.CreateVoxel(partList, geoModules, elementCount, multiThreaded, solidify);
+
+            return newVoxel;
+        }
+
+        private void CreateVoxel(List<Part> partList, List<GeometryPartModule> geoModules, int elementCount, bool multiThreaded, bool solidify)
         {
             Vector3d min = new Vector3d(double.PositiveInfinity, double.PositiveInfinity, double.PositiveInfinity);
             Vector3d max = new Vector3d(double.NegativeInfinity, double.NegativeInfinity, double.NegativeInfinity);
@@ -239,7 +248,110 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 ThreadSafeDebugLogger.Instance.RegisterException(e);
             }
+
         }
+
+        private VehicleVoxel() { }
+
+        /*public VehicleVoxel(List<Part> partList, List<GeometryPartModule> geoModules, int elementCount, bool multiThreaded = true, bool solidify = true)
+        {
+            Vector3d min = new Vector3d(double.PositiveInfinity, double.PositiveInfinity, double.PositiveInfinity);
+            Vector3d max = new Vector3d(double.NegativeInfinity, double.NegativeInfinity, double.NegativeInfinity);
+
+            overridingParts = new HashSet<Part>();
+            ductingParts = new HashSet<Part>();
+            //Determine bounds and "overriding parts" from geoModules
+            for (int i = 0; i < geoModules.Count; i++)
+            {
+                GeometryPartModule m = geoModules[i];
+
+                if ((object)m != null)
+                {
+                    bool cont = true;
+                    while (!m.Ready)
+                    {
+                        Thread.SpinWait(5);
+                        if (m == null)
+                        {
+                            cont = false;
+                            break;
+                        }
+                        //ThreadSafeDebugLogger.Instance.RegisterMessage("Waiting on " + m.part.partInfo.title + " to ready its meshes...");
+                    }
+                    if (!cont || !m.Valid)
+                        continue;
+
+                    Vector3d minBounds = m.overallMeshBounds.min;
+                    Vector3d maxBounds = m.overallMeshBounds.max;
+
+                    min = Vector3d.Min(min, minBounds);
+                    max = Vector3d.Max(max, maxBounds);
+
+                    if (CheckPartForOverridingPartList(m))
+                        overridingParts.Add(m.part);
+                }
+            }
+
+            Vector3d size = max - min;
+
+            volume = size.x * size.y * size.z;  //from bounds, get voxel volume
+
+            if (double.IsInfinity(volume))     //...if something broke, get out of here
+            {
+                Debug.LogError("Voxel Volume was infinity; ending voxelization");
+                return;
+            }
+            double elementVol = volume / elementCount;
+            elementSize = Math.Pow(elementVol, 1d / 3d);
+            invElementSize = 1 / elementSize;
+
+            double tmp = 0.125 * invElementSize;
+
+            xLength = (int)Math.Ceiling(size.x * tmp) + 2;
+            yLength = (int)Math.Ceiling(size.y * tmp) + 2;
+            zLength = (int)Math.Ceiling(size.z * tmp) + 2;
+
+            lock (clearedChunks)        //make sure that we can actually voxelize without breaking the memory limits
+            {
+                while (chunksInUse >= MAX_CHUNKS_ALLOWED)
+                {
+                    ThreadSafeDebugLogger.Instance.RegisterMessage("Voxel waiting for chunks to be released");
+                    Monitor.Wait(clearedChunks);
+                }
+
+                chunksInUse += xLength * yLength * zLength;
+            }
+            //ThreadSafeDebugLogger.Instance.RegisterMessage(chunksInUse + " voxel chunks in use.");
+
+
+            xCellLength = xLength * 8;
+            yCellLength = yLength * 8;
+            zCellLength = zLength * 8;
+
+            //Debug.Log(elementSize);
+            //Debug.Log(xLength + " " + yLength + " " + zLength);
+            //Debug.Log(size);
+
+            Vector3d extents = new Vector3d(); //this will be the distance from the center to the edges of the voxel object
+            extents.x = xLength * 4 * elementSize;
+            extents.y = yLength * 4 * elementSize;
+            extents.z = zLength * 4 * elementSize;
+
+            Vector3d center = (max + min) * 0.5f;    //Center of the vessel
+
+            lowerRightCorner = center - extents;    //This places the center of the voxel at the center of the vehicle to achieve maximum symmetry
+
+            voxelChunks = new VoxelChunk[xLength, yLength, zLength];
+
+            try
+            {
+                BuildVoxel(geoModules, multiThreaded, solidify);
+            }
+            catch (Exception e)
+            {
+                ThreadSafeDebugLogger.Instance.RegisterException(e);
+            }
+        }*/
 
         private bool CheckPartForOverridingPartList(GeometryPartModule g)
         {

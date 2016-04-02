@@ -72,7 +72,25 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
             return intakeModule.node == null || intakeModule.node.attachedPart == null;
         }
 
-        public IntegratedIntakeEngineCrossSectionAdjuster(PartModule intake, Matrix4x4 worldToVesselMatrix)
+        public static IntegratedIntakeEngineCrossSectionAdjuster CreateAdjuster(PartModule intake, Matrix4x4 worldToVesselMatrix)
+        {
+            IntegratedIntakeEngineCrossSectionAdjuster adjuster = new IntegratedIntakeEngineCrossSectionAdjuster();
+            adjuster.SetupAdjuster(intake, worldToVesselMatrix);
+
+            return adjuster;
+        }
+
+        public static IntegratedIntakeEngineCrossSectionAdjuster CreateAdjuster(ModuleResourceIntake intake, Matrix4x4 worldToVesselMatrix)
+        {
+            IntegratedIntakeEngineCrossSectionAdjuster adjuster = new IntegratedIntakeEngineCrossSectionAdjuster();
+            adjuster.SetupAdjuster(intake, worldToVesselMatrix);
+
+            return adjuster;
+        }
+
+        private IntegratedIntakeEngineCrossSectionAdjuster() { }
+
+        public void SetupAdjuster(PartModule intake, Matrix4x4 worldToVesselMatrix)
         {
             this.part = intake.part;
             intakeModule = intake as ModuleResourceIntake;
@@ -98,7 +116,7 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
             intakeArea = (float)intakeType.GetField("Area").GetValue(intake);
         }
 
-        public IntegratedIntakeEngineCrossSectionAdjuster(ModuleResourceIntake intake, Matrix4x4 worldToVesselMatrix)
+        public void SetupAdjuster(ModuleResourceIntake intake, Matrix4x4 worldToVesselMatrix)
         {
             this.part = intake.part;
             intakeModule = intake as ModuleResourceIntake;
