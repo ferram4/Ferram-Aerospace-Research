@@ -89,7 +89,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 VoxelCrossSection[] array = new VoxelCrossSection[MaxArrayLength];
                 for (int i = 0; i < array.Length; i++)
                 {
-                    array[i].partSideAreaValues = new Dictionary<Part, VoxelCrossSection.SideAreaValues>();
+                    array[i].partSideAreaValues = new Dictionary<Part, VoxelCrossSection.SideAreaValues>(ObjectReferenceEqualityComparer<Part>.Default);
                 }
                 return array;
             }
@@ -155,7 +155,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Vector3d min = new Vector3d(double.PositiveInfinity, double.PositiveInfinity, double.PositiveInfinity);
             Vector3d max = new Vector3d(double.NegativeInfinity, double.NegativeInfinity, double.NegativeInfinity);
 
-            overridingParts = new HashSet<Part>();
+            overridingParts = new HashSet<Part>(ObjectReferenceEqualityComparer<Part>.Default);
             ductingParts = new HashSet<Part>();
             //Determine bounds and "overriding parts" from geoModules
             for (int i = 0; i < geoModules.Count; i++)
@@ -168,7 +168,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     while (!m.Ready)
                     {
                         Thread.SpinWait(5);
-                        if (m == null)
+                        if ((object)m == null)
                         {
                             cont = false;
                             break;
@@ -355,7 +355,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         private bool CheckPartForOverridingPartList(GeometryPartModule g)
         {
-            if (g.part == null)
+            if ((object)g.part == null)
                 return false;
 
             PartModuleList modules = g.part.Modules;
@@ -1686,20 +1686,29 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             try
             {
-                VoxelShellMeshParams meshParams = (VoxelShellMeshParams)meshParamsObject;
-                for (int i = meshParams.lowerIndex; i < meshParams.upperIndex; i++)
+                var meshes = new List<object>();
+                VoxelizationThreadpool.Instance.RunOnMainThread(() =>
                 {
-                    GeometryPartModule module = meshParams.modules[i];
-                    if (module == null || !module.Valid)
-                        continue;
-
-                    for(int j = 0; j < module.meshDataList.Count; j++)
+                    VoxelShellMeshParams meshParams = (VoxelShellMeshParams)meshParamsObject;
+                    for (int i = meshParams.lowerIndex; i < meshParams.upperIndex; i++)
                     {
-                        GeometryMesh mesh = module.meshDataList[j];
-                        lock (mesh)
-                            if (mesh.meshTransform.gameObject.activeInHierarchy && mesh.valid)
-                                UpdateFromMesh(mesh, mesh.part);
+                        GeometryPartModule module = meshParams.modules[i];
+                        if (module == null || !module.Valid)
+                            continue;
+
+                        for (int j = 0; j < module.meshDataList.Count; j++)
+                        {
+                            GeometryMesh mesh = module.meshDataList[j];
+                            lock (mesh)
+                                if (mesh.meshTransform.gameObject.activeInHierarchy && mesh.valid)
+                                    meshes.Add(mesh);
+                        }
                     }
+                });
+                foreach(var obj in meshes)
+                {
+                    var mesh = (GeometryMesh)obj;
+                    UpdateFromMesh(mesh, mesh.part);
                 }
             }
             catch (Exception e)

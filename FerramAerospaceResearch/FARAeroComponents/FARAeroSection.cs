@@ -90,7 +90,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             section.xForcePressureAoA180 = new FARFloatCurve(6);
             section.xForceSkinFriction = new FARFloatCurve(3);
             section.partData = new List<PartData>();
-            section.handledAeroModulesIndexDict = new Dictionary<FARAeroPartModule, int>();
+            section.handledAeroModulesIndexDict = new Dictionary<FARAeroPartModule, int>(ObjectReferenceEqualityComparer<FARAeroPartModule>.Default);
 
             GenerateCrossFlowDragCurve();
 

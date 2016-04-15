@@ -154,6 +154,7 @@
     <Compile Include="LEGACYferram4\FARWingInteraction.cs" />
     <Compile Include="FARKSPAddonFlightScene.cs" />
     <Compile Include="InstallChecker.cs" />
+    <Compile Include="ObjectReferenceEqualityComparer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RealChuteLite\ChuteCalculator.cs" />
     <Compile Include="RealChuteLite\PhysicsWatch.cs" />

@@ -49,6 +49,7 @@ using UnityEngine;
 using FerramAerospaceResearch.FARAeroComponents;
 using FerramAerospaceResearch.FARGUI;
 using ferram4;
+using FerramAerospaceResearch.FARThreading;
 
 namespace FerramAerospaceResearch
 {
@@ -62,6 +63,11 @@ namespace FerramAerospaceResearch
             FARAeroStress.LoadStressTemplates();
             FARAeroUtil.LoadAeroDataFromConfig();
             FARAnimOverrides.LoadAnimOverrides();
+        }
+
+        private void Update()
+        {
+            VoxelizationThreadpool.Instance.ExecuteMainThreadTasks();
         }
     }
 }
