@@ -756,8 +756,8 @@ namespace ferram4
 
             Vector3 resultVector = Vector3.zero;
             resultVector.x = (float)(vesselRelMaxMoment.x * pitchaxis * PitchLocation * 0.01);
-            resultVector.y = (float)(vesselRelMaxMoment.z * yawaxis * YawLocation * 0.01);
-            resultVector.z = (float)(vesselRelMaxMoment.y * rollaxis * RollLocation * 0.01);
+            resultVector.z = (float)(vesselRelMaxMoment.z * yawaxis * YawLocation * 0.01);
+            resultVector.y = (float)(vesselRelMaxMoment.y * rollaxis * RollLocation * 0.01);
 
             return resultVector;
         }

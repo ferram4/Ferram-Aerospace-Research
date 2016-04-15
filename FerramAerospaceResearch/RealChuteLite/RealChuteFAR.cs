@@ -549,9 +549,14 @@ namespace FerramAerospaceResearch.RealChuteLite
         }
 
         //For IPartMassModifier
-        public float GetModuleMass(float defaultMass)
+        public float GetModuleMass(float defaultMass, ModifierStagingSituation sit)
         {
             return massDelta;
+        }
+
+        public ModifierChangeWhen GetModuleMassChangeWhen()
+        {
+            return ModifierChangeWhen.FIXED;
         }
 
         //Not needed
