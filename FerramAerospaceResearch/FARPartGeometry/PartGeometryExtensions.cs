@@ -260,7 +260,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
 
                 string tag = t.tag.ToLowerInvariant();
-                if (tag == "ladder" || tag == "airlock" || tag == "transparentfx")
+                if (tag == "ladder" || tag == "airlock")
                     Transform.Add(t);
             }
 
