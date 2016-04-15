@@ -57,6 +57,7 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
         GeometryPartModule geoModule;
         List<Bounds> prevPanelBounds;
         KFSMEvent deployEvent;
+        KFSMEvent breakEvent;
 
         public StockProcFairingGeoUpdater(ModuleProceduralFairing fairing, GeometryPartModule geoModule)
         {
@@ -80,6 +81,11 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
             for (int i = 0; i < panels.Count; i++)      //set them back to where they started to prevent voxelization errors
             {
                 panels[i].SetExplodedView(0);
+                panels[i].SetOpacity(1);
+                panels[i].SetTgtExplodedView(0);
+                panels[i].SetTgtOpacity(1);
+                panels[i].ColliderContainer.SetActive(true);
+
                 Bounds panelBounds = panels[i].GetBounds();
 
                 if(i >= prevPanelBounds.Count)      //set new panel bounds
@@ -90,7 +96,7 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
                 else if(panelBounds != prevPanelBounds[i])
                 {
                     rebuildMesh = true;
-                    prevPanelBounds.Add(panelBounds);
+                    prevPanelBounds[i] = (panelBounds);
                 }
             }
 
@@ -106,6 +112,8 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
                 FieldInfo[] fields = fairing.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
                 deployEvent = (KFSMEvent)fields[33].GetValue(fairing);
                 deployEvent.OnEvent += delegate { FairingDeployGeometryUpdate(); };
+                breakEvent = (KFSMEvent)fields[34].GetValue(fairing);
+                breakEvent.OnEvent += delegate { FairingDeployGeometryUpdate(); };
             }
         }
 

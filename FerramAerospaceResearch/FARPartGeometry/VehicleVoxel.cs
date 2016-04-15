@@ -1686,7 +1686,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             try
             {
-                var meshes = new List<object>();
+                List<GeometryMesh> meshes = new List<GeometryMesh>();
                 VoxelizationThreadpool.Instance.RunOnMainThread(() =>
                 {
                     VoxelShellMeshParams meshParams = (VoxelShellMeshParams)meshParamsObject;
@@ -1703,11 +1703,13 @@ namespace FerramAerospaceResearch.FARPartGeometry
                                 if (mesh.meshTransform.gameObject.activeInHierarchy && mesh.valid)
                                     meshes.Add(mesh);
                         }
+
                     }
                 });
-                foreach(var obj in meshes)
+                for(int i = 0; i < meshes.Count; i++)
                 {
-                    var mesh = (GeometryMesh)obj;
+                    GeometryMesh mesh = meshes[i];
+
                     UpdateFromMesh(mesh, mesh.part);
                 }
             }

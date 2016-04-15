@@ -145,6 +145,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             _markingRenderers = null;
 
             GameObject.Destroy(_rendererMaterial);
+            _rendererMaterial = null;
         }
 
         public void RestartOverlay()

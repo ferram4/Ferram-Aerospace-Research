@@ -1041,10 +1041,11 @@ namespace ferram4
                 double normalForce;
                 normalForce = GetSupersonicPressureDifference(M, AoA);
 
-                finalLiftSlope += coefMult * normalForce * supersonicLENormalForceFactor * supScale;
+                double supersonicLiftSlope = coefMult * normalForce * supersonicLENormalForceFactor * supScale;
+                finalLiftSlope += supersonicLiftSlope;
 
 
-                Cl += CosAoA * Math.Sign(AoA) * finalLiftSlope;
+                Cl += CosAoA * Math.Sign(AoA) * supersonicLiftSlope;
 
                 double effectiveBeta = beta * supScale + (1 - supScale);
 
