@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using KSP.UI.Screens;
 using FerramAerospaceResearch.PartExtensions;
 using Random = System.Random;
 
@@ -13,7 +14,7 @@ using Random = System.Random;
 namespace FerramAerospaceResearch.RealChuteLite
 {
 
-    public class RealChuteFAR : PartModule, IModuleInfo, IMultipleDragCube, IPartMassModifier
+    public class RealChuteFAR : PartModule, IModuleInfo, IMultipleDragCube, IPartMassModifier, IPartCostModifier
     {
         /// <summary>
         /// Parachute deployment states
@@ -380,6 +381,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         //Part
         private Animation anim = null;
         private Transform parachute = null, cap = null;
+        private Rigidbody rigidbody = null;
         private PhysicsWatch randomTimer = new PhysicsWatch();
         private float randomX, randomY, randomTime;
         private DeploymentStates state = DeploymentStates.NONE;
@@ -526,7 +528,7 @@ namespace FerramAerospaceResearch.RealChuteLite
             DeactivateRC();
             this.armed = false;
             if (this.part.inverseStage != 0) { this.part.inverseStage = this.part.inverseStage - 1; }
-            else { this.part.inverseStage = Staging.CurrentStage; }
+            else { this.part.inverseStage = StageManager.CurrentStage; }
         }
 
         //Allows the chute to be repacked if available
@@ -543,9 +545,14 @@ namespace FerramAerospaceResearch.RealChuteLite
         }
 
         //Gives the cost for this parachute
-        public float GetModuleCost(float defaultCost)
+        public float GetModuleCost(float defaultCost, ModifierStagingSituation sit)
         {
             return (float)Math.Round(this.deployedArea * areaCost);
+        }
+
+        public ModifierChangeWhen GetModuleCostChangeWhen()
+        {
+            return ModifierChangeWhen.FIXED;
         }
 
         //For IPartMassModifier
@@ -705,7 +712,6 @@ namespace FerramAerospaceResearch.RealChuteLite
         //estimates whether it is safe to deploy the chute or not
         private void CalculateSafeToDeployEstimate()
         {
-            part.stackIcon.SetBackgroundColor(XKCDColors.White);
             SafeState s;
             if (this.vessel.externalTemperature <= maxTemp || convFlux < 0) { s = SafeState.SAFE; }
             else
@@ -720,13 +726,13 @@ namespace FerramAerospaceResearch.RealChuteLite
                 switch(this.safeState)
                 {
                     case SafeState.SAFE:
-                        part.stackIcon.SetBackgroundColor(XKCDColors.White); break;
+                        this.part.stackIcon.SetBackgroundColor(XKCDColors.White); break;
 
                     case SafeState.RISKY:
-                        part.stackIcon.SetBackgroundColor(XKCDColors.BrightYellow); break;
+                        this.part.stackIcon.SetBackgroundColor(XKCDColors.BrightYellow); break;
 
                     case SafeState.DANGEROUS:
-                        part.stackIcon.SetBackgroundColor(XKCDColors.Red); break;
+                        this.part.stackIcon.SetBackgroundColor(XKCDColors.Red); break;
                 }
             }
         }
@@ -859,7 +865,7 @@ namespace FerramAerospaceResearch.RealChuteLite
 
             CalculateSafeToDeployEstimate();
 
-            if (!this.staged && GameSettings.LAUNCH_STAGES.GetKeyDown() && this.vessel.isActiveVessel && (this.part.inverseStage == vessel.currentStage - 1 || vessel.currentStage == 0)) { ActivateRC(); }
+            if (!this.staged && GameSettings.LAUNCH_STAGES.GetKeyDown() && this.vessel.isActiveVessel && (this.part.inverseStage == StageManager.CurrentStage - 1 || StageManager.CurrentStage == 0)) { ActivateRC(); }
 
             if (this.staged)
             {
@@ -880,7 +886,7 @@ namespace FerramAerospaceResearch.RealChuteLite
                             if (!CalculateChuteTemp()) { return; }
                             FollowDragDirection();
                         }
-
+                        this.part.GetComponentCached(ref this.rigidbody);
                         switch (this.deploymentState)
                         {
                             case DeploymentStates.STOWED:
@@ -892,14 +898,14 @@ namespace FerramAerospaceResearch.RealChuteLite
 
                             case DeploymentStates.PREDEPLOYED:
                                 {
-                                    this.part.Rigidbody.AddForceAtPosition(DragForce(0, this.preDeployedDiameter, 1f / this.semiDeploymentSpeed), this.forcePosition, ForceMode.Force);
+                                    this.rigidbody.AddForceAtPosition(DragForce(0, this.preDeployedDiameter, 1f / this.semiDeploymentSpeed), this.forcePosition, ForceMode.Force);
                                     if (this.trueAlt <= this.deployAltitude && this.dragTimer.elapsed.TotalSeconds >= 1f / this.semiDeploymentSpeed) { Deploy(); }
                                     break;
                                 }
 
                             case DeploymentStates.DEPLOYED:
                                 {
-                                    this.part.rb.AddForceAtPosition(DragForce(this.preDeployedDiameter, this.deployedDiameter, 1f / this.deploymentSpeed), this.forcePosition, ForceMode.Force);
+                                    this.rigidbody.AddForceAtPosition(DragForce(this.preDeployedDiameter, this.deployedDiameter, 1f / this.deploymentSpeed), this.forcePosition, ForceMode.Force);
                                     break;
                                 }
 
@@ -931,7 +937,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         #endregion
 
         #region Overrides
-        public override void OnStart(PartModule.StartState state)
+        public override void OnStart(StartState state)
         {
             if (!HighLogic.LoadedSceneIsEditor && !HighLogic.LoadedSceneIsFlight) { return; }
             if (!CompatibilityChecker.IsAllCompatible())
@@ -1028,16 +1034,14 @@ namespace FerramAerospaceResearch.RealChuteLite
         public override void OnLoad(ConfigNode node)
         {
             if (!CompatibilityChecker.IsAllCompatible()) { return; }
-            float tmpPartMass = this.totalMass;
-            this.massDelta = 0f;
-
-            if ((object)(this.part.partInfo) != null && (object)(this.part.partInfo.partPrefab) != null)
-            {
-                this.massDelta = tmpPartMass - this.part.partInfo.partPrefab.mass;
-            }
             if (HighLogic.LoadedScene == GameScenes.LOADING)
             {
                 if (this.deployAltitude <= 500) { this.deployAltitude += 200; }
+            }
+            else
+            {
+                Part prefab = this.part.partInfo.partPrefab;
+                this.massDelta = prefab == null ? 0 : this.totalMass - prefab.mass;
             }
         }
 
@@ -1074,6 +1078,11 @@ namespace FerramAerospaceResearch.RealChuteLite
             b.AppendFormat("<b>Predeployment speed</b>: {0}s\n", Math.Round(1f / this.semiDeploymentSpeed, 1, MidpointRounding.AwayFromZero));
             b.AppendFormat("<b>Deployment speed</b>: {0}s\n", Math.Round(1f / this.deploymentSpeed, 1, MidpointRounding.AwayFromZero));
             return b.ToString();
+        }
+
+        public override bool IsStageable()
+        {
+            return true;
         }
         #endregion
 
