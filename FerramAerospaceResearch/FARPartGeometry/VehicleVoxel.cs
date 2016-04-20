@@ -1700,7 +1700,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         {
                             GeometryMesh mesh = module.meshDataList[j];
                             lock (mesh)
-                                if (mesh.meshTransform.gameObject.activeInHierarchy && mesh.valid)
+                                if (mesh.meshTransform != null && mesh.meshTransform.gameObject.activeInHierarchy && mesh.valid)
                                     meshes.Add(mesh);
                         }
 

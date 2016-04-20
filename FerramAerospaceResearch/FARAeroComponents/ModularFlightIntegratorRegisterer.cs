@@ -92,7 +92,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         void UpdateAerodynamics(ModularFI.ModularFlightIntegrator fi, Part part)
         {
-            if (part.dragModel != Part.DragModel.CYLINDRICAL || part.vessel.isEVA)     //FIXME Proper model for airbrakes
+            if (part.Modules.Contains("ModuleAeroSurface") || part.vessel.isEVA)     //FIXME Proper model for airbrakes
             {
                 fi.BaseFIUpdateAerodynamics(part);
                 return;

@@ -286,8 +286,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             partLocalForce = Vector3.zero;
             partLocalTorque = Vector3.zero;
 
-            if (!part.Modules.Contains("ModuleAeroSurface"))
-                part.dragModel = Part.DragModel.CYLINDRICAL;
+            //if (!part.Modules.Contains("ModuleAeroSurface"))
+            //    part.dragModel = Part.DragModel.CYLINDRICAL;
 
             if(FARDebugValues.allowStructuralFailures)
             {
@@ -544,6 +544,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             //Matrix4x4 matrix = partTransform.worldToLocalMatrix;
             Rigidbody rb = part.Rigidbody;
+
+            if (rb == null)
+                return;
+
             //rb.drag = 0;
             partLocalVel = rb.velocity + frameVel
                         - FARWind.GetWind(FARAeroUtil.CurrentBody, part, rb.position);      //world velocity
