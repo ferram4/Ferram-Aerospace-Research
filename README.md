@@ -77,6 +77,8 @@ Compatibility changes for use of KSP debuggers, thanks to neouy
 Increase aerodynamic damping for fuselages to somewhat more realistic levels  
 Fix a serious issue that disabled the majority of conduction between parts  
 
+Disable win64 locking
+
 0.15.5.7V "Johnson"------------------------------------  
 
 Tweak pitch and roll damping of fuselages to make more logical sense; excessive roll damping at high dynamic pressures for wingless vehicles has been fixed  
