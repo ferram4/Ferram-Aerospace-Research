@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.15.5.7 "Johnson"
+Ferram Aerospace Research v0.15.6 "Jones"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -64,6 +64,18 @@ Set all the other winglet/control surface values to zero
 
 CHANGELOG
 =======================================================
+
+0.15.6V "Jones"------------------------------------  
+
+Update to KSP 1.1  
+Update to bundle ModuleManager 2.6.22  
+Update to bundle ModularFlightIntegrator 1.1.3  
+
+Updates to RealChuteLite, thanks to stupid_chris  
+Compatibility changes for use of KSP debuggers, thanks to neouy  
+
+Increase aerodynamic damping for fuselages to somewhat more realistic levels  
+Fix a serious issue that disabled the majority of conduction between parts  
 
 0.15.5.7V "Johnson"------------------------------------  
 
