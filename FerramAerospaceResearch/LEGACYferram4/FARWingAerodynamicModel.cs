@@ -153,7 +153,6 @@ namespace ferram4
 
         FARWingInteraction wingInteraction;
         FARAeroPartModule aeroModule;
-        PartBuoyancy partBuoyancy;
 
         public short srfAttachNegative = 1;
 
@@ -437,7 +436,9 @@ namespace ferram4
         {
             MathAndFunctionInitialization();
             aeroModule = part.GetComponent<FARAeroPartModule>();
-            partBuoyancy = part.GetComponent<PartBuoyancy>();
+
+            if (aeroModule == null)
+                Debug.LogError("[FAR] Could not find FARAeroPartModule on same part as FARWingAerodynamicModel!");
 
             if (part is ControlSurface)
             {
@@ -538,7 +539,7 @@ namespace ferram4
                 Rigidbody rb = part.Rigidbody;
                 Vessel vessel = part.vessel;
 
-                if (!rb || vessel.packed)
+                if (!rb || !vessel || vessel.packed)
                     return;
 
                 //bool set_vel = false;
@@ -601,9 +602,9 @@ namespace ferram4
 
 
                             waterLiftForce *= (float)PhysicsGlobals.BuoyancyWaterLiftScalarEnd;
-                            if (partBuoyancy.splashedCounter < PhysicsGlobals.BuoyancyWaterDragTimer)
+                            if (part.partBuoyancy.splashedCounter < PhysicsGlobals.BuoyancyWaterDragTimer)
                             {
-                                waterLiftForce *= (float)(partBuoyancy.splashedCounter / PhysicsGlobals.BuoyancyWaterDragTimer);
+                                waterLiftForce *= (float)(part.partBuoyancy.splashedCounter / PhysicsGlobals.BuoyancyWaterDragTimer);
                             }
 
                             double waterLiftScalar = 1;
