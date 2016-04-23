@@ -1119,7 +1119,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         public override void OnLoad(ConfigNode node)
         {
             if (!CompatibilityChecker.IsAllCompatible()) { return; }
-            if (HighLogic.LoadedScene == GameScenes.LOADING)
+            if (HighLogic.LoadedScene == GameScenes.LOADING || !PartLoader.Instance.IsReady() || this.part.partInfo == null)
             {
                 if (this.deployAltitude <= 500) { this.deployAltitude += 200; }
             }
