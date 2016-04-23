@@ -41,9 +41,9 @@ namespace FerramAerospaceResearch.RealChuteLite
         #region Constants
         //Material constants
         public const string materialName = "Nylon";
-        public const float areaDensity = 5.65E-5f, areaCost = 0.075f, staticCd = 1;  //t/m², and F/m² for the first two
-        public const double startTemp = 300, maxTemp = 493.15;
-        public const double specificHeat = 1700, absoluteZero = -273.15;  //Specific heat in J/kg*K
+        public const float areaDensity = 5.65E-5f, areaCost = 0.075f, staticCd = 1;     //t/m², and F/m² for the first two
+        public const double startTemp = 300, maxTemp = 493.15;                          //In °K
+        public const double specificHeat = 1700, absoluteZero = -273.15;                //Specific heat in J/kg*K
 
         //More useful constants
         public const int maxSpares = 5;
@@ -124,7 +124,7 @@ namespace FerramAerospaceResearch.RealChuteLite
             get
             {
                 return (this.GroundStop || this.atmPressure == 0) && this.DeploymentState == DeploymentStates.CUT
-                    && this.chuteCount > 0 && FlightGlobals.ActiveVessel.isEVA;
+                       && this.chuteCount > 0 && FlightGlobals.ActiveVessel.isEVA;
             }
         }
 
@@ -156,7 +156,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         {
             get
             {
-                if (this.DeploymentState == DeploymentStates.PREDEPLOYED && this.dragTimer.Elapsed.Seconds < 1f / this.semiDeploymentSpeed)
+                if (this.DeploymentState == DeploymentStates.PREDEPLOYED && this.dragTimer.Elapsed.Seconds < 1 / this.semiDeploymentSpeed)
                 {
                     return UtilMath.Lerp(0, this.DeployedArea, this.dragTimer.Elapsed.Seconds * this.semiDeploymentSpeed);
                 }
@@ -205,10 +205,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         //If the parachute is in a high enough atmospheric pressure to deploy
         public bool PressureCheck
         {
-            get
-            {
-                return this.atmPressure >= this.minAirPressureToOpen;
-            }
+            get { return this.atmPressure >= this.minAirPressureToOpen; }
         }
 
         //If the parachute can deploy
@@ -217,10 +214,9 @@ namespace FerramAerospaceResearch.RealChuteLite
             get
             {
                 if (this.GroundStop || this.atmPressure == 0) { return false; }
-                else if (this.DeploymentState == DeploymentStates.CUT) { return false; }
-                else if (this.PressureCheck) { return true; }
-                else if (!this.PressureCheck && this.IsDeployed) { return true; }
-                return false;
+                if (this.DeploymentState == DeploymentStates.CUT) { return false; }
+                if (this.PressureCheck) { return true; }
+                return !this.PressureCheck && this.IsDeployed;
             }
         }
 
@@ -234,8 +230,10 @@ namespace FerramAerospaceResearch.RealChuteLite
                     case DeploymentStates.PREDEPLOYED:
                     case DeploymentStates.DEPLOYED:
                         return true;
+
+                    default:
+                        return false;
                 }
-                return false;
             }
         }
 
@@ -245,7 +243,7 @@ namespace FerramAerospaceResearch.RealChuteLite
             get
             {
                 if (this.state == DeploymentStates.NONE) { this.DeploymentState = states[this.depState]; }
-                    return this.state;
+                return this.state;
             }
             set
             {
@@ -261,7 +259,7 @@ namespace FerramAerospaceResearch.RealChuteLite
             {
                 if (this.thermMass == 0)
                 {
-                    this.thermMass = 1d / (specificHeat * this.ChuteMass);
+                    this.thermMass = 1 / (specificHeat * this.ChuteMass);
                 }
                 return this.thermMass;
             }
@@ -273,11 +271,7 @@ namespace FerramAerospaceResearch.RealChuteLite
             get
             {
                 if (this.chuteTemperature < 293.15) { return 0.72; }
-                else if (this.chuteTemperature > 403.15) { return 0.9; }
-                else
-                {
-                    return UtilMath.Lerp(0.72, 0.9, ((this.chuteTemperature - 293.15) / 110) + 293.15);
-                }
+                return this.chuteTemperature > 403.15 ? 0.9 : UtilMath.Lerp(0.72, 0.9, ((this.chuteTemperature - 293.15) / 110) + 293.15);
             }
         }
 
@@ -289,9 +283,7 @@ namespace FerramAerospaceResearch.RealChuteLite
             {
                 if (boldLabel == null)
                 {
-                    GUIStyle style = new GUIStyle(HighLogic.Skin.label);
-                    style.fontStyle = FontStyle.Bold;
-                    boldLabel = style;
+                    boldLabel = new GUIStyle(HighLogic.Skin.label) { fontStyle = FontStyle.Bold };
                 }
                 return boldLabel;
             }
@@ -305,10 +297,11 @@ namespace FerramAerospaceResearch.RealChuteLite
             {
                 if (yellowLabel == null)
                 {
-                    GUIStyle style = new GUIStyle(HighLogic.Skin.label);
-                    style.normal.textColor = XKCDColors.BrightYellow;
-                    style.hover.textColor = XKCDColors.BrightYellow;
-                    yellowLabel = style;
+                    yellowLabel = new GUIStyle(HighLogic.Skin.label)
+                    {
+                        normal = { textColor = XKCDColors.BrightYellow },
+                        hover = { textColor = XKCDColors.BrightYellow }
+                    };
                 }
                 return yellowLabel;
             }
@@ -322,48 +315,33 @@ namespace FerramAerospaceResearch.RealChuteLite
             {
                 if (redLabel == null)
                 {
-                    GUIStyle style = new GUIStyle(HighLogic.Skin.label);
-                    style.normal.textColor = XKCDColors.Red;
-                    style.hover.textColor = XKCDColors.Red;
-                    redLabel = style;
+                    redLabel = new GUIStyle(HighLogic.Skin.label)
+                    {
+                        normal = { textColor = XKCDColors.Red },
+                        hover = { textColor = XKCDColors.Red }
+                    };
                 }
                 return redLabel;
             }
         }
 
         //Quick access to the part GUI events
-        private BaseEvent _deploy, disarm, _cut, repack;
-        private BaseEvent deploy
+        private BaseEvent deploy, disarm, cutE, repack;
+        private BaseEvent DeployE
         {
-            get
-            {
-                if (this._deploy == null) { this._deploy = this.Events["GUIDeploy"]; }
-                return this._deploy;
-            }
+            get { return this.deploy ?? (this.deploy = this.Events["GUIDeploy"]); }
         }
         private BaseEvent Disarm
         {
-            get
-            {
-                if (this.disarm == null) { this.disarm = this.Events["GUIDisarm"]; }
-                return this.disarm;
-            }
+            get { return this.disarm ?? (this.disarm = this.Events["GUIDisarm"]); }
         }
         private BaseEvent CutE
         {
-            get
-            {
-                if (this._cut == null) { this._cut = this.Events["GUICut"]; }
-                return this._cut;
-            }
+            get { return this.cutE ?? (this.cutE = this.Events["GUICut"]); }
         }
         private BaseEvent Repack
         {
-            get
-            {
-                if (this.repack == null) { this.repack = this.Events["GUIRepack"]; }
-                return this.repack;
-            }
+            get { return this.repack ?? (this.repack = this.Events["GUIRepack"]); }
         }
         #endregion
 
@@ -414,7 +392,7 @@ namespace FerramAerospaceResearch.RealChuteLite
             this.armed = false;
             this.showDisarm = false;
             this.part.stackIcon.SetIconColor(XKCDColors.White);
-            this.deploy.active = true;
+            this.DeployE.active = true;
             DeactivateRC();
         }
 
@@ -490,7 +468,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         //Returns the canopy area of the given Diameter
         public float GetArea(float diameter)
         {
-            return (float)((diameter * diameter * Math.PI) / 4d);
+            return (float)((diameter * diameter * Math.PI) / 4);
         }
 
         //Activates the parachute
@@ -940,7 +918,7 @@ namespace FerramAerospaceResearch.RealChuteLite
             }
 
             this.Disarm.active = this.armed || this.showDisarm;
-            this.deploy.active = !this.staged && this.DeploymentState != DeploymentStates.CUT;
+            this.DeployE.active = !this.staged && this.DeploymentState != DeploymentStates.CUT;
             this.CutE.active = this.IsDeployed;
             this.Repack.guiActiveUnfocused = this.CanRepack;
         }
