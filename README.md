@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.15.6 "Jones"
+Ferram Aerospace Research v0.15.6.1 "von Kármán"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -64,6 +64,12 @@ Set all the other winglet/control surface values to zero
 
 CHANGELOG
 =======================================================
+
+0.15.6.1V "von Kármán"------------------------------------
+
+Fix a critical CPU usage bug that resulted in voxelization threads SpinWaiting forever, monopolizing the processor  
+Fix parachutes without RealChute configs not applying forces when FAR + RC are installed, thanks to stupid_chris  
+Fix ModuleManager database reload function hanging halfway through, breaking the game, thanks to stupid_chris  
 
 0.15.6V "Jones"------------------------------------  
 

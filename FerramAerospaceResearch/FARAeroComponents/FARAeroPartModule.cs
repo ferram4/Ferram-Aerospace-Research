@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.6 "Jones"
+Ferram Aerospace Research v0.15.6.1 "von Kármán"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -427,6 +427,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         public void ApplyForces()
         {
+            if (!part)
+                return;
+
             if (float.IsNaN(partLocalForce.sqrMagnitude))
                 partLocalForce = Vector3.zero;
             if (float.IsNaN(partLocalTorque.sqrMagnitude))
