@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5.7 "Johnson"
+Ferram Aerospace Research v0.15.6 "Jones"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -48,6 +48,7 @@ using System.Reflection;
 using System.Threading;
 using UnityEngine;
 using KSP;
+using KSP.UI.Screens;
 using FerramAerospaceResearch.FARPartGeometry.GeometryModification;
 
 namespace FerramAerospaceResearch.FARPartGeometry
@@ -101,9 +102,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         private bool _started = false;
         private bool _ready = false;
+        private bool _sceneSetup = false;
         public bool Ready
         {
-            get { return _ready && _started; }
+            get { return _ready && _started && _sceneSetup; }
         }
         private int _sendUpdateTick = 0;
         private int _meshesToUpdate = -1;
@@ -113,6 +115,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             get { return _valid; }
         }
+
+        static int ignoreLayers = 0;
 
         private float currentScaleFactor = 1;
 
@@ -150,9 +154,16 @@ namespace FerramAerospaceResearch.FARPartGeometry
             animStateTime = null;
         }
 
+        public override void OnStart(PartModule.StartState state)
+        {
+            base.OnStart(state);
+            _sceneSetup = true;     //this exists only to ensure that OnStart has occurred first
+            ignoreLayers = LayerMask.NameToLayer("TransparentFX");
+        }
+
         void FixedUpdate()
         {
-            if (!_started &&
+            if (!_started && _sceneSetup &&
             ((HighLogic.LoadedSceneIsFlight && FlightGlobals.ready) || (HighLogic.LoadedSceneIsEditor && ApplicationLauncher.Ready)) &&      //this is done because it takes a frame for colliders to be set up in the editor
             (part.collider != null || part.Modules.Contains("ModuleWheel") || part.Modules.Contains("KerbalEVA")))                //waiting prevents changes in physics in flight or in predictions because the voxel switches to colliders rather than meshes
             {
@@ -165,7 +176,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             } 
             if (animStates != null && animStates.Count > 0)
                 CheckAnimations();
-
             //Debug.Log("Geo PM: " + vessel.CoM + " " + Planetarium.GetUniversalTime());
         }
 
@@ -269,7 +279,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             foreach (PartModule m in part.Modules)
             {
+                
                 FindAnimStatesInModule(animations, m, "animationName");
+                FindAnimStatesInModule(animations, m, "animationStateName");
                 FindAnimStatesInModule(animations, m, "animName");
                 FindAnimStatesInModule(animations, m, "deployAnimationName");
             }
@@ -368,12 +380,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 {
                     ModuleResourceIntake intake = (ModuleResourceIntake)module;
 
-                    IntegratedIntakeEngineCrossSectionAdjuster intakeAdjuster = new IntegratedIntakeEngineCrossSectionAdjuster(intake, worldToVesselMatrix);
+                    IntegratedIntakeEngineCrossSectionAdjuster intakeAdjuster = IntegratedIntakeEngineCrossSectionAdjuster.CreateAdjuster(intake, worldToVesselMatrix);
                     crossSectionAdjusters.Add(intakeAdjuster);
                 }
                 else
                 {
-                    IntegratedIntakeEngineCrossSectionAdjuster intakeAdjuster = new IntegratedIntakeEngineCrossSectionAdjuster(module, worldToVesselMatrix);
+                    IntegratedIntakeEngineCrossSectionAdjuster intakeAdjuster = IntegratedIntakeEngineCrossSectionAdjuster.CreateAdjuster(module, worldToVesselMatrix);
                     crossSectionAdjusters.Add(intakeAdjuster);
                 }
                 return;
@@ -386,12 +398,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 {
                     ModuleResourceIntake intake = (ModuleResourceIntake)module;
 
-                    IntakeCrossSectionAdjuster intakeAdjuster = new IntakeCrossSectionAdjuster(intake, worldToVesselMatrix);
+                    IntakeCrossSectionAdjuster intakeAdjuster = IntakeCrossSectionAdjuster.CreateAdjuster(intake, worldToVesselMatrix);
                     crossSectionAdjusters.Add(intakeAdjuster);
                 }
                 else
                 {
-                    IntakeCrossSectionAdjuster intakeAdjuster = new IntakeCrossSectionAdjuster(module, worldToVesselMatrix);
+                    IntakeCrossSectionAdjuster intakeAdjuster = IntakeCrossSectionAdjuster.CreateAdjuster(module, worldToVesselMatrix);
                     crossSectionAdjusters.Add(intakeAdjuster);
                 }
                 return;
@@ -625,6 +637,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (mf != null)
             {
                 m = mf.sharedMesh;
+
+                MeshRenderer mr = t.GetComponent<MeshRenderer>();
+                if ((t.gameObject.layer == ignoreLayers))
+                    return null;
+
                 return new MeshData(m.vertices, m.triangles, m.bounds);
             }
             else

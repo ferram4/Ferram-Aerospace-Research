@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5.7 "Johnson"
+Ferram Aerospace Research v0.15.6 "Jones"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -79,8 +79,26 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
         {
             return false;
         }
+
+        public static IntakeCrossSectionAdjuster CreateAdjuster(PartModule intake, Matrix4x4 worldToVesselMatrix)
+        {
+            IntakeCrossSectionAdjuster adjuster = new IntakeCrossSectionAdjuster();
+            adjuster.SetupAdjuster(intake, worldToVesselMatrix);
+
+            return adjuster;
+        }
+
+        public static IntakeCrossSectionAdjuster CreateAdjuster(ModuleResourceIntake intake, Matrix4x4 worldToVesselMatrix)
+        {
+            IntakeCrossSectionAdjuster adjuster = new IntakeCrossSectionAdjuster();
+            adjuster.SetupAdjuster(intake, worldToVesselMatrix);
+
+            return adjuster;
+        }
+
+        private IntakeCrossSectionAdjuster() { }
         
-        public IntakeCrossSectionAdjuster(PartModule intake, Matrix4x4 worldToVesselMatrix)
+        public void SetupAdjuster(PartModule intake, Matrix4x4 worldToVesselMatrix)
         {
             this.part = intake.part;
             intakeModule = intake as ModuleResourceIntake;
@@ -116,7 +134,7 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
             intakeArea = (float)intakeType.GetField("Area").GetValue(intake);
         }
 
-        public IntakeCrossSectionAdjuster(ModuleResourceIntake intake, Matrix4x4 worldToVesselMatrix)
+        public void SetupAdjuster(ModuleResourceIntake intake, Matrix4x4 worldToVesselMatrix)
         {
             this.part = intake.part;
             intakeModule = intake as ModuleResourceIntake;

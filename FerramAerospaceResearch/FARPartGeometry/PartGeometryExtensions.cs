@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5.7 "Johnson"
+Ferram Aerospace Research v0.15.6 "Jones"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -64,6 +64,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Vector3 lower = Vector3.one * float.PositiveInfinity;
             Vector3 upper = Vector3.one * float.NegativeInfinity;
 
+            int ignoreLayers = ignoreLayers = LayerMask.NameToLayer("TransparentFX");
+
+
             for (int i = transforms.Length - 1; i >= 0; --i)
             {
                 Transform t = transforms[i];
@@ -84,6 +87,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 if (mf != null)
                 {
                     m = mf.sharedMesh;
+                    MeshRenderer mr = t.GetComponent<MeshRenderer>();
+                    if ((t.gameObject.layer == ignoreLayers))
+                        m = null;
                 }
                 else
                 {

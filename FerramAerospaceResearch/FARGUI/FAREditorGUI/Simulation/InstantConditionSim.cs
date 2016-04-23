@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5.7 "Johnson"
+Ferram Aerospace Research v0.15.6 "Jones"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -204,7 +204,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             FARCenterQuery center = new FARCenterQuery();
             for (int i = 0; i < _currentAeroSections.Count; i++)
             {
-                _currentAeroSections[i].PredictionCalculateAeroForces(2, (float)input.machNumber, 10000, 0.005f, velocity.normalized, center);
+                _currentAeroSections[i].PredictionCalculateAeroForces(2, (float)input.machNumber, 10000, 0, 0.005f, velocity.normalized, center);
             }
 
             Vector3d centerForce = center.force * 1000;

@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5.7 "Johnson"
+Ferram Aerospace Research v0.15.6 "Jones"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -108,8 +108,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
         List<Part> _vehiclePartList;
 
         List<GeometryPartModule> _currentGeoModules;
-        Dictionary<Part, PartTransformInfo> _partWorldToLocalMatrixDict = new Dictionary<Part, PartTransformInfo>();
-        Dictionary<FARAeroPartModule, FARAeroPartModule.ProjectedArea> _moduleAndAreasDict = new Dictionary<FARAeroPartModule, FARAeroPartModule.ProjectedArea>();
+        Dictionary<Part, PartTransformInfo> _partWorldToLocalMatrixDict = new Dictionary<Part, PartTransformInfo>(ObjectReferenceEqualityComparer<Part>.Default);
+        Dictionary<FARAeroPartModule, FARAeroPartModule.ProjectedArea> _moduleAndAreasDict = new Dictionary<FARAeroPartModule, FARAeroPartModule.ProjectedArea>(ObjectReferenceEqualityComparer<FARAeroPartModule>.Default);
 
         List<FARAeroPartModule> _currentAeroModules = new List<FARAeroPartModule>();
         List<FARAeroPartModule> _newAeroModules = new List<FARAeroPartModule>();
@@ -424,7 +424,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 try
                 {
                     //Actually voxelize it
-                    _voxel = new VehicleVoxel(_vehiclePartList, _currentGeoModules, _voxelCount);
+                    _voxel = VehicleVoxel.CreateNewVoxel(_vehiclePartList, _currentGeoModules, _voxelCount);
                     if (_vehicleCrossSection.Length < _voxel.MaxArrayLength)
                         _vehicleCrossSection = _voxel.EmptyCrossSectionArray;
 
@@ -1129,7 +1129,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             _moduleAndAreasDict.Clear();
             //_newAeroSections = new List<FARAeroSection>();
 
-            HashSet<FARAeroPartModule> tmpAeroModules = new HashSet<FARAeroPartModule>();
+            HashSet<FARAeroPartModule> tmpAeroModules = new HashSet<FARAeroPartModule>(ObjectReferenceEqualityComparer<FARAeroPartModule>.Default);
             _sonicDragArea = 0;
 
             if (_newAeroSections.Capacity < numSections + 1)
@@ -1166,7 +1166,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
 
                 if (currentSection == null)
-                    currentSection = new FARAeroSection();
+                    currentSection = FARAeroSection.CreateNewAeroSection();
 
                 FARFloatCurve xForcePressureAoA0 = currentSection.xForcePressureAoA0;
                 FARFloatCurve xForcePressureAoA180 = currentSection.xForcePressureAoA180;
@@ -1383,7 +1383,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     surfaceArea += areas.iN + areas.iP + areas.jN + areas.jP + areas.kN + areas.kP;
 
                     Part key = pair.Key;
-                    if (key == null)
+                    if ((object)key == null)
                         continue;
 
                     if (!key.Modules.Contains("FARAeroPartModule"))
@@ -1462,9 +1462,15 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         }
                     }
             }
-            foreach (KeyValuePair<FARAeroPartModule, FARAeroPartModule.ProjectedArea> pair in _moduleAndAreasDict)
+            if (_moduleAndAreasDict.Count > 0)
             {
-                pair.Key.SetProjectedArea(pair.Value, _localToWorldMatrix);
+                VoxelizationThreadpool.Instance.RunOnMainThread(() =>
+                {
+                    foreach (KeyValuePair<FARAeroPartModule, FARAeroPartModule.ProjectedArea> pair in _moduleAndAreasDict)
+                    {
+                        pair.Key.SetProjectedArea(pair.Value, _localToWorldMatrix);
+                    }
+                });
             }
 
             //_newAeroModules = tmpAeroModules.ToList();        //this method creates lots of garbage
@@ -1489,15 +1495,19 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             _newUnusedAeroModules.Clear();
 
-            for (int i = 0; i < _currentGeoModules.Count; i++)
+            var existingParts = new bool[_currentGeoModules.Count];
+            VoxelizationThreadpool.Instance.RunOnMainThread(() =>
             {
-                if (!_currentGeoModules[i])
-                    continue;
+                for (int i = 0; i < _currentGeoModules.Count; i++)
+                {
+                    if (!_currentGeoModules[i])
+                        continue;
 
-                FARAeroPartModule aeroModule = _currentGeoModules[i].GetComponent<FARAeroPartModule>();
-                if (aeroModule != null && !tmpAeroModules.Contains(aeroModule))
-                    _newUnusedAeroModules.Add(aeroModule);
-            }
+                    FARAeroPartModule aeroModule = _currentGeoModules[i].GetComponent<FARAeroPartModule>();
+                    if (aeroModule != null && !tmpAeroModules.Contains(aeroModule))
+                        _newUnusedAeroModules.Add(aeroModule);
+                }
+            });
             //UpdateSonicDragArea();
         }
 
@@ -1511,7 +1521,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             for (int i = 0; i < _newAeroSections.Count; i++)
             {
                 FARAeroSection a = _newAeroSections[i];
-                a.PredictionCalculateAeroForces(2f, 1f, 50000f, 0.005f, worldMainAxis, center);
+                a.PredictionCalculateAeroForces(2f, 1f, 50000f, 0, 0.005f, worldMainAxis, center);
             }
 
             _sonicDragArea = Vector3.Dot(center.force, worldMainAxis) * -1000;

@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5.7 "Johnson"
+Ferram Aerospace Research v0.15.6 "Jones"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -44,6 +44,8 @@ Copyright 2015, Michael Ferrara, aka Ferram4
 
 using System;
 using System.Collections.Generic;
+using KSPAssets;
+using KSPAssets.Loaders;
 using UnityEngine;
 
 namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
@@ -72,18 +74,24 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         double _yAxisGridScale;
         int _numGridLines;
 
-        static Material _rendererMaterial;
+        Material _rendererMaterial;
 
-        public EditorAreaRulingOverlay(Color axisColor, Color crossSectionColor, Color derivColor, double yScaleMaxDistance, double yAxisGridScale)
+        public static EditorAreaRulingOverlay CreateNewAreaRulingOverlay(Color axisColor, Color crossSectionColor, Color derivColor, double yScaleMaxDistance, double yAxisGridScale)
         {
-            _axisColor = axisColor;
-            _crossSectionColor = crossSectionColor;
-            _derivColor = derivColor;
-            _yScaleMaxDistance = yScaleMaxDistance;
-            _yAxisGridScale = yAxisGridScale;
+            EditorAreaRulingOverlay overlay = new EditorAreaRulingOverlay();
 
-            Initialize();
+            overlay._axisColor = axisColor;
+            overlay._crossSectionColor = crossSectionColor;
+            overlay._derivColor = derivColor;
+            overlay._yScaleMaxDistance = yScaleMaxDistance;
+            overlay._yAxisGridScale = yAxisGridScale;
+
+            overlay.Initialize();
+
+            return overlay;
         }
+
+        private EditorAreaRulingOverlay() { }
 
         ~EditorAreaRulingOverlay()
         {
@@ -95,13 +103,17 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             //Based on Kronal Vessel Viewer CoM axes rendering
             if (_rendererMaterial == null)
             {
-                _rendererMaterial = new Material("Shader \"Lines/Colored Blended\" {" +
-                        "SubShader { Pass { " +
-                        "    Blend SrcAlpha OneMinusSrcAlpha " +
-                        "    ZWrite Off ZTest Off Cull Off Fog { Mode Off } " +
-                        "    BindChannels {" +
-                        "      Bind \"vertex\", vertex Bind \"color\", color }" +
-                        "} } }");
+
+                Shader lineShader;
+
+                if (!FARAssets.shaderDict.TryGetValue("FARCrossSectionGraph", out lineShader))
+                {
+                    //TODO: definitely replace this with a proper shader when we can
+                    Debug.Log("Could not load cross-section shader; using fallback shader");
+                    lineShader = Shader.Find("Sprites/Default");
+                }
+
+                _rendererMaterial = new Material(lineShader);
                 _rendererMaterial.hideFlags = HideFlags.HideAndDontSave;
                 _rendererMaterial.shader.hideFlags = HideFlags.HideAndDontSave;
                 _rendererMaterial.renderQueue = 4500;
@@ -131,6 +143,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 }
 
             _markingRenderers = null;
+
+            GameObject.Destroy(_rendererMaterial);
+            _rendererMaterial = null;
         }
 
         public void RestartOverlay()
@@ -319,6 +334,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             renderer.transform.parent = EditorLogic.RootPart.partTransform;
             renderer.transform.localPosition = Vector3.zero;
             renderer.transform.localRotation = Quaternion.identity;
+            renderer.transform.SetAsFirstSibling();
 
             renderer.SetVertexCount(xCoords.Length);
 

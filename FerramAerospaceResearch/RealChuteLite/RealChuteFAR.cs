@@ -545,15 +545,25 @@ namespace FerramAerospaceResearch.RealChuteLite
         }
 
         //Gives the cost for this parachute
-        public float GetModuleCost(float defaultCost)
+        public float GetModuleCost(float defaultCost, ModifierStagingSituation sit)
         {
             return (float)Math.Round(this.deployedArea * areaCost);
         }
 
+        public ModifierChangeWhen GetModuleCostChangeWhen()
+        {
+            return ModifierChangeWhen.FIXED;
+        }
+
         //For IPartMassModifier
-        public float GetModuleMass(float defaultMass)
+        public float GetModuleMass(float defaultMass, ModifierStagingSituation sit)
         {
             return massDelta;
+        }
+
+        public ModifierChangeWhen GetModuleMassChangeWhen()
+        {
+            return ModifierChangeWhen.FIXED;
         }
 
         //Not needed
@@ -955,11 +965,11 @@ namespace FerramAerospaceResearch.RealChuteLite
                 this.chuteCount = maxSpares;
                 this.cap.gameObject.SetActive(true);
             }
-            this.part.mass = this.totalMass;
+            float tmpPartMass = this.totalMass;
             this.massDelta = 0f;
             if ((object)(this.part.partInfo) != null && (object)(this.part.partInfo.partPrefab) != null)
             {
-                this.massDelta = this.part.mass - this.part.partInfo.partPrefab.mass;
+                this.massDelta = tmpPartMass - this.part.partInfo.partPrefab.mass;
             }
 
             //Flight loading
@@ -1024,7 +1034,6 @@ namespace FerramAerospaceResearch.RealChuteLite
         public override void OnLoad(ConfigNode node)
         {
             if (!CompatibilityChecker.IsAllCompatible()) { return; }
-
             if (HighLogic.LoadedScene == GameScenes.LOADING)
             {
                 if (this.deployAltitude <= 500) { this.deployAltitude += 200; }
@@ -1048,11 +1057,11 @@ namespace FerramAerospaceResearch.RealChuteLite
         {
             if (!CompatibilityChecker.IsAllCompatible()) { return string.Empty; }
             //Info in the editor part window
-            this.part.mass = this.totalMass;
+            float tmpPartMass = this.totalMass;
             this.massDelta = 0f;
             if ((object)(this.part.partInfo) != null && (object)(this.part.partInfo.partPrefab) != null)
             {
-                this.massDelta = this.part.mass - this.part.partInfo.partPrefab.mass;
+                this.massDelta = tmpPartMass - this.part.partInfo.partPrefab.mass;
             }
 
             StringBuilder b = new StringBuilder();

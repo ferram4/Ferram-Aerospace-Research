@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5.7 "Johnson"
+Ferram Aerospace Research v0.15.6 "Jones"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -303,7 +303,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         {
             ControlSystem sys = new ControlSystem();
             //Roll system
-            sys.kP = 0.05;
+            sys.kP = 0.5;
             sys.kD = 1;
             sys.kI = 0.5;
 

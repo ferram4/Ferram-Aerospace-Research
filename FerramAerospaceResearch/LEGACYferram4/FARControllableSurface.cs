@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5.7 "Johnson"
+Ferram Aerospace Research v0.15.6 "Jones"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -50,7 +50,7 @@ using FerramAerospaceResearch;
 
 namespace ferram4
 {
-    public class FARControllableSurface : FARWingAerodynamicModel, ILiftProvider
+    public class FARControllableSurface : FARWingAerodynamicModel, ILiftProvider, ITorqueProvider
     {        
         protected Transform movableSection = null;
 
@@ -741,6 +741,25 @@ namespace ferram4
             UI_FloatRange tmpUI = (UI_FloatRange)Fields[field].uiControlEditor;
             tmpUI.maxValue = upperRange;
             tmpUI.minValue = lowerRange;
+        }
+
+        public Vector3 GetPotentialTorque()
+        {
+            Vector3 maxLiftVec = LiftSlope * GetLiftDirection() * maxdeflect * Math.PI / 180;       //get max lift coeff
+            maxLiftVec *= (float)(vessel.dynamicPressurekPa * S);             //get an actual lift vector out of it
+
+            Vector3 relPosVector = AerodynamicCenter - vessel.CoM;
+
+            Vector3 maxMomentVector = Vector3.Cross(relPosVector, maxLiftVec);
+
+            Vector3 vesselRelMaxMoment = vessel.ReferenceTransform.worldToLocalMatrix.MultiplyVector(maxMomentVector);
+
+            Vector3 resultVector = Vector3.zero;
+            resultVector.x = (float)(vesselRelMaxMoment.x * pitchaxis * PitchLocation * 0.01);
+            resultVector.z = (float)(vesselRelMaxMoment.z * yawaxis * YawLocation * 0.01);
+            resultVector.y = (float)(vesselRelMaxMoment.y * rollaxis * RollLocation * 0.01);
+
+            return resultVector;
         }
     }
 }

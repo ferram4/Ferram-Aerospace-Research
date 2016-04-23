@@ -1,6 +1,6 @@
 ﻿
 /**
- * Copyright (c) 2014, Majiir
+ * Copyright (c) 2016, Majiir, ferram4
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted
@@ -65,7 +65,7 @@ namespace FerramAerospaceResearch
             // Even if you don't lock down functionality, you should return true if your users
             // can expect a future update to be available.
             //
-            return Versioning.version_minor == 0 && Versioning.version_major == 1 && Versioning.Revision > 0;
+            return Versioning.version_minor == 1 && Versioning.version_major == 1;
 
             /*-----------------------------------------------*\
             | IMPLEMENTERS SHOULD NOT EDIT BEYOND THIS POINT! |
@@ -88,7 +88,7 @@ namespace FerramAerospaceResearch
         }
 
         // Version of the compatibility checker itself.
-        private static int _version = 4;
+        private static int _version = 5;
 
         public void Start()
         {
@@ -160,10 +160,10 @@ namespace FerramAerospaceResearch
 
             String message = String.Empty;
 
-            if (IsWin64())
+            /*if (IsWin64())
             {
                 message += "WARNING: You are using 64-bit KSP on Windows. This version of KSP is known to cause crashes. It's highly recommended that you use either 32-bit KSP on Windows or switch to Linux.";
-            }
+            }*/
 
             if ((incompatible.Length > 0) || (incompatibleUnity.Length > 0))
             {
@@ -184,21 +184,20 @@ namespace FerramAerospaceResearch
                 }
             }
 
-            if ((incompatible.Length > 0) || (incompatibleUnity.Length > 0) || IsWin64())
+            if ((incompatible.Length > 0) || (incompatibleUnity.Length > 0))// || IsWin64())
             {
-                PopupDialog.SpawnPopupDialog("Incompatible Mods Detected", message, "OK", true, HighLogic.Skin);
+                PopupDialog.SpawnPopupDialog(new Vector2(0, 0), new Vector2(0, 0), "Incompatible Mods Detected", message, "OK", true, HighLogic.UISkin);
             }
         }
 
-        internal static IntPtr intPtr = new IntPtr(long.MaxValue);
         public static bool IsWin64()
         {
-            return (intPtr.ToInt64() == long.MaxValue) && (Environment.OSVersion.Platform == PlatformID.Win32NT);
+            return (IntPtr.Size == 8) && (Environment.OSVersion.Platform == PlatformID.Win32NT);
         }
 
         public static bool IsAllCompatible()
         {
-            return IsCompatible() && IsUnityCompatible() && !IsWin64();
+            return IsCompatible() && IsUnityCompatible();// && !IsWin64();
         }
 
         private static IEnumerable<Type> getAllTypes()

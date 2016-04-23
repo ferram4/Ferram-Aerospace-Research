@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5.7 "Johnson"
+Ferram Aerospace Research v0.15.6 "Jones"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -156,7 +156,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                     SetAngleVectors(stabDerivOutput.stableAoA);
                 }
                 else
-                    PopupDialog.SpawnPopupDialog("Error!", "Altitude was above atmosphere", "OK", false, HighLogic.Skin);
+                {
+                    PopupDialog.SpawnPopupDialog(new Vector2(0, 0), new Vector2(0, 0), "Error!", "Altitude was above atmosphere", "OK", true, HighLogic.UISkin);
+                }
             }
             GUILayout.BeginHorizontal();
             GUILayout.Label("Aircraft Properties", GUILayout.Width(180));

@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5.7 "Johnson"
+Ferram Aerospace Research v0.15.6 "Jones"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -286,8 +286,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             partLocalForce = Vector3.zero;
             partLocalTorque = Vector3.zero;
 
-            if (!part.Modules.Contains("ModuleAeroSurface"))
-                part.dragModel = Part.DragModel.CYLINDRICAL;
+            //if (!part.Modules.Contains("ModuleAeroSurface"))
+            //    part.dragModel = Part.DragModel.CYLINDRICAL;
 
             if(FARDebugValues.allowStructuralFailures)
             {
@@ -544,6 +544,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             //Matrix4x4 matrix = partTransform.worldToLocalMatrix;
             Rigidbody rb = part.Rigidbody;
+
+            if (rb == null)
+                return;
+
             //rb.drag = 0;
             partLocalVel = rb.velocity + frameVel
                         - FARWind.GetWind(FARAeroUtil.CurrentBody, part, rb.position);      //world velocity
@@ -606,7 +610,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (vessel)
                 {
                     vessel.SendMessage("AerodynamicFailureStatus");
-                    string msg = String.Format("[{0:D2}:{1:D2}:{2:D2}] {3} failed due to aerodynamic stresses.", FlightLogger.met_hours, FlightLogger.met_mins, FlightLogger.met_secs, part.partInfo.title);
+                    string msg = String.Format("[{0}] {1} failed due to aerodynamic stresses.", KSPUtil.PrintTimeStamp(FlightLogger.met), part.partInfo.title);
                     FlightLogger.eventLog.Add(msg); 
                     if (FARDebugValues.aeroFailureExplosions)
                     {

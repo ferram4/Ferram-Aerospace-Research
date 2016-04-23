@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5.7 "Johnson"
+Ferram Aerospace Research v0.15.6 "Jones"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -69,7 +69,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
         {
             for (int i = 0; i < fi.PartThermalDataCount; i++)
             {
-                FlightIntegrator.PartThermalData ptd = fi.partThermalDataList[i];
+                PartThermalData ptd = fi.partThermalDataList[i];
                 Part part = ptd.part;
                 if (!part.Modules.Contains("FARAeroPartModule"))
                     continue;
@@ -92,7 +92,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         void UpdateAerodynamics(ModularFI.ModularFlightIntegrator fi, Part part)
         {
-            if (part.dragModel != Part.DragModel.CYLINDRICAL || part.vessel.isEVA)     //FIXME Proper model for airbrakes
+            if (part.Modules.Contains("ModuleAeroSurface") || part.vessel.isEVA)     //FIXME Proper model for airbrakes
             {
                 fi.BaseFIUpdateAerodynamics(part);
                 return;
@@ -210,7 +210,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }*/
         }
 
-        double CalculateSunArea(ModularFI.ModularFlightIntegrator fi, FlightIntegrator.PartThermalData ptd)
+        double CalculateSunArea(ModularFI.ModularFlightIntegrator fi, PartThermalData ptd)
         {
             FARAeroPartModule module = null;
             if (ptd.part.Modules.Contains("FARAeroPartModule"))
@@ -229,7 +229,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 return fi.BaseFIGetSunArea(ptd);
         }
 
-        double CalculateBodyArea(ModularFI.ModularFlightIntegrator fi, FlightIntegrator.PartThermalData ptd)
+        double CalculateBodyArea(ModularFI.ModularFlightIntegrator fi, PartThermalData ptd)
         {
             FARAeroPartModule module = null;
             if (ptd.part.Modules.Contains("FARAeroPartModule"))

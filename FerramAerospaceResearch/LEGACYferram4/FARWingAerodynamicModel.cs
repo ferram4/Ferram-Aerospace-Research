@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5.7 "Johnson"
+Ferram Aerospace Research v0.15.6 "Jones"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -125,6 +125,11 @@ namespace ferram4
 
         private double rawLiftSlope = 0;
         private double liftslope = 0;
+        private double finalLiftSlope = 0;
+        public double LiftSlope
+        {
+            get { return finalLiftSlope; }
+        }
         protected double zeroLiftCdIncrement = 0;
 
         protected double criticalCl = 1.6;
@@ -148,7 +153,6 @@ namespace ferram4
 
         FARWingInteraction wingInteraction;
         FARAeroPartModule aeroModule;
-        PartBuoyancy partBuoyancy;
 
         public short srfAttachNegative = 1;
 
@@ -432,7 +436,9 @@ namespace ferram4
         {
             MathAndFunctionInitialization();
             aeroModule = part.GetComponent<FARAeroPartModule>();
-            partBuoyancy = part.GetComponent<PartBuoyancy>();
+
+            if (aeroModule == null)
+                Debug.LogError("[FAR] Could not find FARAeroPartModule on same part as FARWingAerodynamicModel!");
 
             if (part is ControlSurface)
             {
@@ -533,7 +539,7 @@ namespace ferram4
                 Rigidbody rb = part.Rigidbody;
                 Vessel vessel = part.vessel;
 
-                if (!rb || vessel.packed)
+                if (!rb || !vessel || vessel.packed)
                     return;
 
                 //bool set_vel = false;
@@ -596,9 +602,9 @@ namespace ferram4
 
 
                             waterLiftForce *= (float)PhysicsGlobals.BuoyancyWaterLiftScalarEnd;
-                            if (partBuoyancy.splashedCounter < PhysicsGlobals.BuoyancyWaterDragTimer)
+                            if (part.partBuoyancy.splashedCounter < PhysicsGlobals.BuoyancyWaterDragTimer)
                             {
-                                waterLiftForce *= (float)(partBuoyancy.splashedCounter / PhysicsGlobals.BuoyancyWaterDragTimer);
+                                waterLiftForce *= (float)(part.partBuoyancy.splashedCounter / PhysicsGlobals.BuoyancyWaterDragTimer);
                             }
 
                             double waterLiftScalar = 1;
@@ -640,8 +646,8 @@ namespace ferram4
                             if (part.parent && !vessel.packed)
                             {
                                 vessel.SendMessage("AerodynamicFailureStatus");
-                                string msg = String.Format("[{0:D2}:{1:D2}:{2:D2}] Joint between {3} and {4} failed due to aerodynamic stresses on the wing structure.",
-                                                           FlightLogger.met_hours, FlightLogger.met_mins, FlightLogger.met_secs, part.partInfo.title, part.parent.partInfo.title);
+                                string msg = String.Format("[{0}] Joint between {1} and {2} failed due to aerodynamic stresses on the wing structure.",
+                                                           KSPUtil.PrintTimeStamp(FlightLogger.met), part.partInfo.title, part.parent.partInfo.title);
                                 FlightLogger.eventLog.Add(msg);
                                 part.decouple(25);
                                 if (FARDebugValues.aeroFailureExplosions)
@@ -806,11 +812,11 @@ namespace ferram4
                 supportedArea *= 0.66666667f;   //if any supported area has been transfered to another part, we must remove it from here
             curWingMass = supportedArea * (float)FARAeroUtil.massPerWingAreaSupported * massMultiplier;
 
-            part.mass = curWingMass * wingBaseMassMultiplier;
+            float tmpPartMass = curWingMass * wingBaseMassMultiplier;
             massDelta = 0f;
             if ((object)(part.partInfo) != null)
                 if ((object)(part.partInfo.partPrefab) != null)
-                    massDelta = part.mass - part.partInfo.partPrefab.mass;
+                    massDelta = tmpPartMass;
 
             oldMassMultiplier = massMultiplier;
         }
@@ -837,9 +843,14 @@ namespace ferram4
             }
         }
 
-        public float GetModuleMass(float defaultMass)
+        public float GetModuleMass(float defaultMass, ModifierStagingSituation sit)
         {
             return massDelta;
+        }
+
+        public ModifierChangeWhen GetModuleMassChangeWhen()
+        {
+            return ModifierChangeWhen.FIXED;
         }
 
         #endregion
@@ -957,6 +968,7 @@ namespace ferram4
             if (MachNumber <= 0.8)
             {
                 double Cn = liftslope;
+                finalLiftSlope = liftslope;
                 //Cl = Cn * Math.Sin(2 * AoA) * 0.5;
                 double sinAoA = Math.Sqrt(FARMathUtil.Clamp(1 - CosAoA * CosAoA, 0, 1));
                 Cl = Cn * CosAoA * Math.Sign(AoA);
@@ -984,7 +996,9 @@ namespace ferram4
 //                double SinAoA = Math.Sin(AoA);
                 //Cl = coefMult * (normalForce * CosAoA * Math.Sign(AoA) * sonicLEFactor - axialForce * SinAoA);
                 //Cd = coefMult * (Math.Abs(normalForce * SinAoA) * sonicLEFactor + axialForce * CosAoA);
-                Cl = coefMult * normalForce * CosAoA * Math.Sign(AoA) * supersonicLENormalForceFactor;
+                finalLiftSlope = coefMult * normalForce * supersonicLENormalForceFactor;
+
+                Cl = finalLiftSlope * CosAoA * Math.Sign(AoA);
                 Cd = beta * Cl * Cl / piARe;
 
                 Cd += Cd0;
@@ -1015,7 +1029,7 @@ namespace ferram4
                     if (Math.Abs(Cl) > Math.Abs(ACweight))
                         ACshift *= FARMathUtil.Clamp(Math.Abs(ACweight / Cl), 0, 1);
                 }
-                
+                finalLiftSlope = Cn * (1 - supScale);
                 Cl *= (1 - supScale);
 
                 double M = FARMathUtil.Clamp(MachNumber, 1.2, double.PositiveInfinity);
@@ -1028,7 +1042,11 @@ namespace ferram4
                 double normalForce;
                 normalForce = GetSupersonicPressureDifference(M, AoA);
 
-                Cl += coefMult * normalForce * CosAoA * Math.Sign(AoA) * supersonicLENormalForceFactor * supScale;
+                double supersonicLiftSlope = coefMult * normalForce * supersonicLENormalForceFactor * supScale;
+                finalLiftSlope += supersonicLiftSlope;
+
+
+                Cl += CosAoA * Math.Sign(AoA) * supersonicLiftSlope;
 
                 double effectiveBeta = beta * supScale + (1 - supScale);
 
@@ -1060,6 +1078,8 @@ namespace ferram4
             AerodynamicCenter = AerodynamicCenter + ACShiftVec;
 
             Cl *= wingInteraction.ClInterferenceFactor;
+
+            finalLiftSlope *= wingInteraction.ClInterferenceFactor;
 
             ClIncrementFromRear = 0;
         }
@@ -1266,7 +1286,7 @@ namespace ferram4
             if (MachNumber < 0.9)
                 tmp = 1d - MachNumber * MachNumber;
             else
-                tmp = 0.09;
+                tmp = 0.19;
 
             double sweepTmp = sweepHalfChord;
             sweepTmp *= sweepTmp;

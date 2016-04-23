@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5.7 "Johnson"
+Ferram Aerospace Research v0.15.6 "Jones"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -47,6 +47,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Diagnostics;
 using UnityEngine;
+using KSP.UI.Screens;
+using ModuleWheels;
 using PreFlightTests;
 using FerramAerospaceResearch.FARAeroComponents;
 using FerramAerospaceResearch.FARPartGeometry;
@@ -155,9 +157,10 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             Color crossSectionDeriv = GUIColors.GetColor(2);
             crossSectionDeriv.a = 0.8f;
 
-            _areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.7f), crossSection, crossSectionDeriv, 10, 5);
+            _areaRulingOverlay = EditorAreaRulingOverlay.CreateNewAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.7f), crossSection, crossSectionDeriv, 10, 5);
             guiRect.height = 500;
             guiRect.width = 650;
+
 
             GameEvents.onEditorPartEvent.Add(UpdateGeometryEvent);
             GameEvents.onEditorUndo.Add(ResetEditorEvent);
@@ -229,7 +232,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             RequestUpdateVoxel();
         }
-        private void ResetEditorEvent(ShipConstruct construct, CraftBrowser.LoadType type)
+        private void ResetEditorEvent(ShipConstruct construct, CraftBrowserDialog.LoadType type)
         {
             ResetEditor();
         }
@@ -467,7 +470,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             }
             if (cursorInGUI)
             {
-                EditorTooltip.Instance.HideToolTip();
+                if (EditorTooltip.Instance)
+                    EditorTooltip.Instance.HideToolTip();
+
                 if(!CameraMouseLook.GetMouseLook())
                     EdLogInstance.Lock(false, false, false, "FAREdLock");
                 else
@@ -505,7 +510,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             else if (currentMode == FAREditorMode.STABILITY)
             {
                 _stabDeriv.Display();
-                guiRect.height = useKSPSkin ? 610 : 450;
+                guiRect.height = useKSPSkin ? 680 : 450;
             }
             else if (currentMode == FAREditorMode.SIMULATION)
             {
@@ -516,7 +521,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             {
                 CrossSectionAnalysisGUI();
                 DebugVisualizationGUI();
-                guiRect.height = useKSPSkin ? 330 : 220;
+                guiRect.height = useKSPSkin ? 350 : 220;
             }
 
             GUI.DragWindow();
@@ -678,15 +683,10 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             for(int i = 0; i < partsList.Count; i++)
             {
                 Part p = partsList[i];
-                if(p.Modules.Contains("ModuleLandingGear"))
+                if (p.Modules.Contains("ModuleWheelDeployment"))
                 {
-                    ModuleLandingGear l = (ModuleLandingGear)p.Modules["ModuleLandingGear"];
-                    l.StartDeployed = gearToggle;
-                }
-                if (p.Modules.Contains("ModuleAdvancedLandingGear"))
-                {
-                    ModuleAdvancedLandingGear l = (ModuleAdvancedLandingGear)p.Modules["ModuleAdvancedLandingGear"];
-                    l.startDeployed = gearToggle;
+                    ModuleWheelDeployment l = (ModuleWheelDeployment)p.Modules["ModuleWheelDeployment"];
+                    l.ActionToggle(new KSPActionParam(KSPActionGroup.Gear, gearToggle ? KSPActionType.Activate : KSPActionType.Deactivate));
                 }
                 if(p.Modules.Contains("FSwheel"))
                 {

@@ -36,16 +36,28 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Assembly-CSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Games\KSP 1.0.5\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\..\..\Games\KSP 1.1\KSP_x64_Data\Managed\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Games\KSP 1.1\KSP_x64_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="ferramGraph">
       <HintPath>..\ferramGraph\bin\Release\ferramGraph.dll</HintPath>
     </Reference>
+    <Reference Include="KSPAssets, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Games\KSP 1.1\KSP_x64_Data\Managed\KSPAssets.dll</HintPath>
+    </Reference>
+    <Reference Include="KSPUtil, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Games\KSP 1.1\KSP_x64_Data\Managed\KSPUtil.dll</HintPath>
+    </Reference>
     <Reference Include="ModularFlightIntegrator, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Games\KSP 1.0.5\GameData\ModularFlightIntegrator\ModularFlightIntegrator.dll</HintPath>
+      <HintPath>..\..\..\..\Games\KSP 1.1\GameData\ModularFlightIntegrator\ModularFlightIntegrator.dll</HintPath>
     </Reference>
     <Reference Include="Scale_Redist, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -54,7 +66,11 @@
     <Reference Include="System" />
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Games\KSP 1.0.5\KSP_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>..\..\..\..\Games\KSP 1.1\KSP_x64_Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Games\KSP 1.1\KSP_x64_Data\Managed\UnityEngine.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -62,6 +78,7 @@
     <Compile Include="FARAeroComponents\ModularFlightIntegratorRegisterer.cs" />
     <Compile Include="FARAeroComponents\VesselIntakeRamDrag.cs" />
     <Compile Include="FARAPI.cs" />
+    <Compile Include="FARAssets.cs" />
     <Compile Include="FARDebugAndSettings.cs" />
     <Compile Include="FARFloatCurve.cs" />
     <Compile Include="FARGUI\FAREditorGUI\DesignConcerns\AreaRulingConcern.cs" />
@@ -137,13 +154,16 @@
     <Compile Include="LEGACYferram4\FARWingInteraction.cs" />
     <Compile Include="FARKSPAddonFlightScene.cs" />
     <Compile Include="InstallChecker.cs" />
+    <Compile Include="ObjectReferenceEqualityComparer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RealChuteLite\ChuteCalculator.cs" />
     <Compile Include="RealChuteLite\PhysicsWatch.cs" />
     <Compile Include="RealChuteLite\RealChuteFAR.cs" />
     <Compile Include="ToolbarWrapper.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy /y "$(TargetPath)" "$(SolutionDir)/GameData\FerramAerospaceResearch\Plugins"</PostBuildEvent>

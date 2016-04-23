@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5.7 "Johnson"
+Ferram Aerospace Research v0.15.6 "Jones"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -45,6 +45,7 @@ Copyright 2015, Michael Ferrara, aka Ferram4
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using KSP.UI.Screens.Flight;
 using FerramAerospaceResearch.FARAeroComponents;
 using FerramAerospaceResearch.RealChuteLite;
 using ferram4;
@@ -53,7 +54,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 {
     class PhysicsCalcs
     {
-        NavBall _navball;
+        KSP.UI.Screens.Flight.NavBall _navball;
         Vessel _vessel;
         FARVesselAero _vesselAero;
 
@@ -192,7 +193,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         private void GetNavball()
         {
             if (HighLogic.LoadedSceneIsFlight)
-                _navball = FlightUIController.fetch.GetComponentInChildren<NavBall>();
+                _navball = GameObject.FindObjectOfType<KSP.UI.Screens.Flight.NavBall>();
         }
 
         private void CalculateVesselOrientation(Vector3d velVectorNorm)

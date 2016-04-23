@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.5.7 "Johnson"
+Ferram Aerospace Research v0.15.6 "Jones"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -228,10 +228,10 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();
-            GUILayout.Box(labelString, boxStyle, GUILayout.Width(120));
+            GUILayout.Box(labelString, boxStyle, GUILayout.Width(140));
             GUILayout.EndVertical();
             GUILayout.BeginVertical();
-            GUILayout.Box(dataString, boxStyle, GUILayout.Width(120));
+            GUILayout.Box(dataString, boxStyle, GUILayout.Width(140));
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
         }
