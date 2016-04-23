@@ -1,7 +1,7 @@
 ﻿using System;
 
 /* RealChuteLite is the work of Christophe Savard (stupid_chris), and is licensed the same way than the rest of FAR is.
- * If you have any questions about this code, or want to report something, don't bug ferram about it, ask me
+ * If you have any questions about this code, or want to report something, don't annoy ferram about it, ask me
  * directly on GitHub, the forums, or IRC. */
 
 namespace FerramAerospaceResearch.RealChuteLite
@@ -27,41 +27,36 @@ namespace FerramAerospaceResearch.RealChuteLite
         /// <summary>
         /// UT of the last frame
         /// </summary>
-        protected double lastCheck = 0d;
+        protected double lastCheck;
 
         /// <summary>
         /// Total elapsed time calculated by the watch in seconds
         /// </summary>
-        protected double totalSeconds = 0d;
+        protected double totalSeconds;
         #endregion
 
         #region Propreties
-        private bool _isRunning = false;
         /// <summary>
         /// If the watch is currently counting down time
         /// </summary>
-        public bool isRunning
-        {
-            get { return this._isRunning; }
-            protected set { this._isRunning = value; }
-        }
+        public bool IsRunning { get; protected set; }
 
         /// <summary>
         /// The current elapsed time of the watch
         /// </summary>
-        public TimeSpan elapsed
+        public TimeSpan Elapsed
         {
-            get { return new TimeSpan(this.elapsedTicks); }
+            get { return new TimeSpan(this.ElapsedTicks); }
         }
 
         /// <summary>
         /// The amount of milliseconds elapsed to the current watch
         /// </summary>
-        public long elapsedMilliseconds
+        public long ElapsedMilliseconds
         {
             get
             {
-                if (this._isRunning) { UpdateWatch(); }
+                if (this.IsRunning) { UpdateWatch(); }
                 return (long)Math.Round(this.totalSeconds * millisecondPerSecond);
             }
         }
@@ -69,11 +64,11 @@ namespace FerramAerospaceResearch.RealChuteLite
         /// <summary>
         /// The amount of ticks elapsed to the current watch
         /// </summary>
-        public long elapsedTicks
+        public long ElapsedTicks
         {
             get
             {
-                if (this._isRunning) { UpdateWatch(); }
+                if (this.IsRunning) { UpdateWatch(); }
                 return (long)Math.Round(this.totalSeconds * ticksPerSecond);
             }
         }
@@ -101,10 +96,10 @@ namespace FerramAerospaceResearch.RealChuteLite
         /// </summary>
         public void Start()
         {
-            if (!this._isRunning)
+            if (!this.IsRunning)
             {
                 this.lastCheck = Planetarium.GetUniversalTime();
-                this._isRunning = true;
+                this.IsRunning = true;
             }
         }
 
@@ -113,10 +108,10 @@ namespace FerramAerospaceResearch.RealChuteLite
         /// </summary>
         public void Stop()
         {
-            if (this._isRunning)
+            if (this.IsRunning)
             {
                 UpdateWatch();
-                this._isRunning = false;
+                this.IsRunning = false;
             }
         }
 
@@ -127,7 +122,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         {
             this.totalSeconds = 0;
             this.lastCheck = Planetarium.GetUniversalTime();
-            this._isRunning = true;
+            this.IsRunning = true;
         }
 
         /// <summary>
@@ -137,7 +132,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         {
             this.totalSeconds = 0;
             this.lastCheck = 0;
-            this._isRunning = false;
+            this.IsRunning = false;
         }
         #endregion
 
@@ -159,7 +154,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         /// </summary>
         public override string ToString()
         {
-            return elapsed.ToString();
+            return this.Elapsed.ToString();
         }
         #endregion
 
