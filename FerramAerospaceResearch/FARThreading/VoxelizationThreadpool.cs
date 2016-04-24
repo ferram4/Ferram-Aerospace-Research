@@ -161,7 +161,7 @@ namespace FerramAerospaceResearch.FARThreading
 
         public void RunOnMainThread(Action action)
         {
-            if (enableRunInMainThread)
+            if (enableRunInMainThread || Debug.isDebugBuild)
             {
                 var task = new Task(action);
                 lock (queuedMainThreadTasks)
