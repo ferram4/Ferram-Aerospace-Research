@@ -118,16 +118,20 @@ namespace FerramAerospaceResearch.FARThreading
                 
                     try
                     {
+                    	enableRunInMainThread = !Debug.isDebugBuild;
                         var test = new MonoBehaviour();
                         var test1 = test;
                         if (test == test1) // this comparison will throw an exception in regular Unity builds, but won't with KSP.exe
-                            Debug.Log("Current Unity version allows API usage from all threads");
+                            Debug.Log("Comparison test succeeded.");
                     }
                     catch(Exception)
                     {
-                        Debug.Log("Current Unity version allows API usage from the main thread only");
                         enableRunInMainThread = true;
                     }
+                    if(enableRunInMainThread)
+                        Debug.Log("Running FAR in a debug / development build or the Unity editor; multithreading disabled.");
+                    else
+                        Debug.Log("Running FAR in a release build; multithreading enabled.");
                 }
             }
 
@@ -161,7 +165,7 @@ namespace FerramAerospaceResearch.FARThreading
 
         public void RunOnMainThread(Action action)
         {
-            if (enableRunInMainThread || Debug.isDebugBuild)
+            if (enableRunInMainThread)
             {
                 var task = new Task(action);
                 lock (queuedMainThreadTasks)
