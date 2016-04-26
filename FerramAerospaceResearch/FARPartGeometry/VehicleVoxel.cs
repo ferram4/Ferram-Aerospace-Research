@@ -158,38 +158,42 @@ namespace FerramAerospaceResearch.FARPartGeometry
             overridingParts = new HashSet<Part>(ObjectReferenceEqualityComparer<Part>.Default);
             ductingParts = new HashSet<Part>();
             //Determine bounds and "overriding parts" from geoModules
-            VoxelizationThreadpool.Instance.RunOnMainThread(() =>
+            for (int i = 0; i < geoModules.Count; i++)
             {
-                for (int i = 0; i < geoModules.Count; i++)
+                GeometryPartModule m = geoModules[i];
+
+                if ((object)m != null)
                 {
-                    GeometryPartModule m = geoModules[i];
-
-                    if ((object)m != null)
+                    bool cont = true;
+                    while (!m.Ready)
                     {
-                        bool cont = true;
-                        while (!m.Ready)
+                        Thread.SpinWait(5);
+
+                        bool test = false;
+                        if (VoxelizationThreadpool.RunInMainThread)
+                            test = (object)m == null || m.destroyed;
+                        else
+                            test = m == null;
+
+                        if (test)
                         {
-                            Thread.SpinWait(5);
-                            if (m == null)
-                            {
-                                cont = false;
-                                break;
-                            }
+                            cont = false;
+                            break;
                         }
-                        if (!cont || !m.Valid)
-                            continue;
-
-                        Vector3d minBounds = m.overallMeshBounds.min;
-                        Vector3d maxBounds = m.overallMeshBounds.max;
-
-                        min = Vector3d.Min(min, minBounds);
-                        max = Vector3d.Max(max, maxBounds);
-
-                        if (CheckPartForOverridingPartList(m))
-                            overridingParts.Add(m.part);
                     }
+                    if (!cont || !m.Valid)
+                        continue;
+
+                    Vector3d minBounds = m.overallMeshBounds.min;
+                    Vector3d maxBounds = m.overallMeshBounds.max;
+
+                    min = Vector3d.Min(min, minBounds);
+                    max = Vector3d.Max(max, maxBounds);
+
+                    if (CheckPartForOverridingPartList(m))
+                        overridingParts.Add(m.part);
                 }
-            });
+            }
 
             Vector3d size = max - min;
 

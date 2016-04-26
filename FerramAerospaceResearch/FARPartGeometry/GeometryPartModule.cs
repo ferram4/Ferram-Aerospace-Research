@@ -55,6 +55,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
 {
     public class GeometryPartModule : PartModule, TweakScale.IRescalable<GeometryPartModule>
     {
+        public bool destroyed = false;
+
         public Transform partTransform;
         public Rigidbody partRigidBody;
 
@@ -134,6 +136,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         void Start()
         {
+            destroyed = false;
+
             if (!CompatibilityChecker.IsAllCompatible())
             {
                 this.enabled = false;
@@ -152,6 +156,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             crossSectionAdjusters = null;
             animStates = null;
             animStateTime = null;
+            destroyed = true;
         }
 
         public override void OnStart(PartModule.StartState state)

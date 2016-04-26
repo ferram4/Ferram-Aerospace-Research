@@ -82,13 +82,10 @@ namespace FerramAerospaceResearch.FARThreading
         Queue<Action> queuedVoxelizations;
         const int THREAD_COUNT = 8;
 
-        private bool threadingInitialized;
-        private bool enableRunInMainThread;
+        public static bool RunInMainThread = false;
 
         VoxelizationThreadpool()
         {
-            threadingInitialized = false;
-            enableRunInMainThread = false;
             _threads = new Thread[THREAD_COUNT];
             queuedVoxelizations = new Queue<Action>();
             queuedMainThreadTasks = new Queue<Task>();
@@ -110,27 +107,6 @@ namespace FerramAerospaceResearch.FARThreading
 
         void ExecuteQueuedVoxelization()
         {
-            lock (this)
-            {
-                if(!threadingInitialized)
-                {
-                    threadingInitialized = true;
-                
-                    try
-                    {
-                        var test = new MonoBehaviour();
-                        var test1 = test;
-                        if (test == test1) // this comparison will throw an exception in regular Unity builds, but won't with KSP.exe
-                            Debug.Log("Current Unity version allows API usage from all threads");
-                    }
-                    catch(Exception)
-                    {
-                        Debug.Log("Current Unity version allows API usage from the main thread only");
-                        enableRunInMainThread = true;
-                    }
-                }
-            }
-
             while (true)
             {
                 Action task;
@@ -161,7 +137,7 @@ namespace FerramAerospaceResearch.FARThreading
 
         public void RunOnMainThread(Action action)
         {
-            if (enableRunInMainThread || Debug.isDebugBuild)
+            if (RunInMainThread)
             {
                 var task = new Task(action);
                 lock (queuedMainThreadTasks)
@@ -184,7 +160,7 @@ namespace FerramAerospaceResearch.FARThreading
 
         public void ExecuteMainThreadTasks()
         {
-            if (!enableRunInMainThread)
+            if (!RunInMainThread)
                 return;
 
             while(true)

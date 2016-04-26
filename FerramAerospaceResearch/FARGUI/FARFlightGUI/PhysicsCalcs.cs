@@ -245,7 +245,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 Part p = partsList[i];
 
                 Rigidbody rb = p.rb;
-                if ((object)rb != null)
+                if (rb != null)
                 {
                     vesselInfo.fullMass += rb.mass;
                     vesselInfo.dryMass += p.mass;
