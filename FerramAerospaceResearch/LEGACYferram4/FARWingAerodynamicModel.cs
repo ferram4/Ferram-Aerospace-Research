@@ -816,7 +816,7 @@ namespace ferram4
             massDelta = 0f;
             if ((object)(part.partInfo) != null)
                 if ((object)(part.partInfo.partPrefab) != null)
-                    massDelta = tmpPartMass;
+                    massDelta = tmpPartMass - part.partInfo.partPrefab.mass;
 
             oldMassMultiplier = massMultiplier;
         }
