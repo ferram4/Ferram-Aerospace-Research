@@ -489,7 +489,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if ((object)intakeTrans != null)
                         candVector = intakeTrans.TransformDirection(Vector3.forward);
                 }
-                else if (geoModule == null || geoModule.IgnoreForMainAxis || p.Modules.Contains<ferram4.FARWingAerodynamicModel>() || p.Modules.Contains<ferram4.FARControllableSurface>())      //aggregate wings for later calc...
+                else if (geoModule == null || geoModule.IgnoreForMainAxis || p.Modules.Contains<ferram4.FARWingAerodynamicModel>() || p.Modules.Contains<ferram4.FARControllableSurface>() || p.Modules.Contains<ModuleWheelBase>())      //aggregate wings for later calc...
                 {
                     continue;
                 }

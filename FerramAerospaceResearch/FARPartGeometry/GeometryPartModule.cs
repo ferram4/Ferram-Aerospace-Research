@@ -170,7 +170,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             if (!_started && _sceneSetup &&
             ((HighLogic.LoadedSceneIsFlight && FlightGlobals.ready) || (HighLogic.LoadedSceneIsEditor && ApplicationLauncher.Ready)) &&      //this is done because it takes a frame for colliders to be set up in the editor
-            (part.collider != null || part.Modules.Contains<ModuleWheel>() || part.Modules.Contains<KerbalEVA>()))                //waiting prevents changes in physics in flight or in predictions because the voxel switches to colliders rather than meshes
+            (part.collider != null || part.Modules.Contains<ModuleWheel>() || part.Modules.Contains<ModuleWheelBase>() || part.Modules.Contains<KerbalEVA>()))                //waiting prevents changes in physics in flight or in predictions because the voxel switches to colliders rather than meshes
             {
                 RebuildAllMeshData();
             }
