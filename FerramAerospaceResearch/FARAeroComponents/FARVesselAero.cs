@@ -420,6 +420,18 @@ namespace FerramAerospaceResearch.FARAeroComponents
              }
 
              TriggerIGeometryUpdaters();
+            if (FARThreading.VoxelizationThreadpool.RunInMainThread)
+            {
+                for (int i = _currentGeoModules.Count - 1; i >= 0; --i)
+                {
+                    if (!_currentGeoModules[i].Ready)
+                    {
+                        _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
+                        _updateQueued = true;
+                        return;
+                    }
+                }
+            }
 
              _voxelCount = VoxelCountFromType();
              if (!_vehicleAero.TryVoxelUpdate(_vessel.vesselTransform.worldToLocalMatrix, _vessel.vesselTransform.localToWorldMatrix, _voxelCount, _vessel.Parts, _currentGeoModules, !setup))

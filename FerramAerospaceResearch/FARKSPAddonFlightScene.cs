@@ -59,6 +59,8 @@ namespace FerramAerospaceResearch
 
         private void Awake()
         {
+            VoxelizationThreadpool.RunInMainThread = Debug.isDebugBuild;
+
             FerramAerospaceResearch.FARAeroComponents.FARAeroSection.GenerateCrossFlowDragCurve();
             FARAeroStress.LoadStressTemplates();
             FARAeroUtil.LoadAeroDataFromConfig();

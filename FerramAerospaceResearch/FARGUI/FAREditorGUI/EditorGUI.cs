@@ -315,6 +315,14 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         }
         #endregion
+        void Awake()
+        {
+            FARThreading.VoxelizationThreadpool.RunInMainThread = Debug.isDebugBuild;
+        }
+        void Update()
+        {
+            FARThreading.VoxelizationThreadpool.Instance.ExecuteMainThreadTasks();
+        }
 
         void FixedUpdate()
         {
