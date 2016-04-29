@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.6.1 "von Kármán"
+Ferram Aerospace Research v0.15.6.2 "Kartveli"
 =========================
 Aerodynamics model for Kerbal Space Program
 

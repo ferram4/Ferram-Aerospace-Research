@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.15.6.1 "von Kármán"
+Ferram Aerospace Research v0.15.6.2 "Kartveli"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -64,6 +64,16 @@ Set all the other winglet/control surface values to zero
 
 CHANGELOG
 =======================================================
+
+0.15.6.1V "Kartveli"------------------------------------
+
+Ensure KSP 1.1.1 compatiblity  
+Upgrade to ModuleManager 2.6.23  
+
+Fix new landing gear interfering with main axis determination  
+Fix RealChute / RealChuteLite interaction breaking stock chute behavior, thanks to stupid_chris  
+Fix mass-calc error for wing-mass-strength that resulted in all planes gaining unhealthy amounts of weight  
+Attempt to make debug-compatibility actually work, thanks to NathanKell  
 
 0.15.6.1V "von Kármán"------------------------------------
 
