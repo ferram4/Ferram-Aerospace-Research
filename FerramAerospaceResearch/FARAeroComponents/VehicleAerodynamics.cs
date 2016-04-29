@@ -226,9 +226,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 Part p = _currentAeroModules[i].part;
                 if (!p)
                     continue;
-                if (p.Modules.Contains("FARWingAerodynamicModel"))
+                if (p.Modules.Contains<ferram4.FARWingAerodynamicModel>())
                 {
-                    ferram4.FARWingAerodynamicModel w = (ferram4.FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
+                    ferram4.FARWingAerodynamicModel w = p.Modules.GetModule<ferram4.FARWingAerodynamicModel>();
                     if ((object)w != null)
                     {
                         w.isShielded = false;
@@ -236,9 +236,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                         _legacyWingModels.Add(w);
                     }
                 }
-                else if (p.Modules.Contains("FARControllableSurface"))
+                else if (p.Modules.Contains<ferram4.FARControllableSurface>())
                 {
-                    ferram4.FARWingAerodynamicModel w = (ferram4.FARWingAerodynamicModel)p.Modules["FARControllableSurface"];
+                    ferram4.FARWingAerodynamicModel w = p.Modules.GetModule<ferram4.FARControllableSurface>();
                     if ((object)w != null)
                     {
                         w.isShielded = false;
@@ -475,22 +475,21 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                 GeometryPartModule geoModule = null;
 
-                if (p.Modules.Contains("GeometryPartModule"))
-                    geoModule = (GeometryPartModule)p.Modules["GeometryPartModule"]; // Could be left null if a launch clamp
+                geoModule = p.Modules.GetModule<GeometryPartModule>(); // Could be left null if a launch clamp
 
                 hitParts.Add(p);
 
                 Vector3 tmpCandVector = Vector3.zero;
                 Vector3 candVector = Vector3.zero;
 
-                if (p.Modules.Contains("ModuleResourceIntake"))      //intakes are probably pointing in the direction we're gonna be going in
+                if (p.Modules.Contains<ModuleResourceIntake>())      //intakes are probably pointing in the direction we're gonna be going in
                 {
-                    ModuleResourceIntake intake = (ModuleResourceIntake)p.Modules["ModuleResourceIntake"];
+                    ModuleResourceIntake intake = p.Modules.GetModule<ModuleResourceIntake>();
                     Transform intakeTrans = p.FindModelTransform(intake.intakeTransformName);
                     if ((object)intakeTrans != null)
                         candVector = intakeTrans.TransformDirection(Vector3.forward);
                 }
-                else if (geoModule == null || geoModule.IgnoreForMainAxis || p.Modules.Contains("FARWingAerodynamicModel") || p.Modules.Contains("FARControllableSurface"))      //aggregate wings for later calc...
+                else if (geoModule == null || geoModule.IgnoreForMainAxis || p.Modules.Contains<ferram4.FARWingAerodynamicModel>() || p.Modules.Contains<ferram4.FARControllableSurface>())      //aggregate wings for later calc...
                 {
                     continue;
                 }
@@ -527,9 +526,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
                     hitParts.Add(q);
 
-                    if (q.Modules.Contains("ModuleResourceIntake"))      //intakes are probably pointing in the direction we're gonna be going in
+                    if (q.Modules.Contains<ModuleResourceIntake>())      //intakes are probably pointing in the direction we're gonna be going in
                     {
-                        ModuleResourceIntake intake = (ModuleResourceIntake)q.Modules["ModuleResourceIntake"];
+                        ModuleResourceIntake intake = q.Modules.GetModule<ModuleResourceIntake>();
                         Transform intakeTrans = q.FindModelTransform(intake.intakeTransformName);
                         if ((object)intakeTrans != null)
                             candVector += intakeTrans.TransformDirection(Vector3.forward);
@@ -1386,10 +1385,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if ((object)key == null)
                         continue;
 
-                    if (!key.Modules.Contains("FARAeroPartModule"))
+                    if (!key.Modules.Contains<FARAeroPartModule>())
                         continue;
 
-                    FARAeroPartModule m = (FARAeroPartModule)key.Modules["FARAeroPartModule"];
+                    FARAeroPartModule m = key.Modules.GetModule<FARAeroPartModule>();
                     if ((object)m != null)
                         includedModules.Add(m);
 

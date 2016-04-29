@@ -235,7 +235,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
 
             double areaForStress = projectedArea.totalArea / 6;
-            if (!FARDebugValues.allowStructuralFailures || areaForStress <= 0.1 || part.Modules.Contains("RealChuteFAR") || part.Modules.Contains("ModuleAblator"))
+            if (!FARDebugValues.allowStructuralFailures || areaForStress <= 0.1 || part.Modules.Contains<RealChuteLite.RealChuteFAR>() || part.Modules.Contains<ModuleAblator>())
             {
                 partForceMaxY = double.MaxValue;
                 partForceMaxXZ = double.MaxValue;
@@ -298,16 +298,16 @@ namespace FerramAerospaceResearch.FARAeroComponents
             partTransform = part.partTransform;
 
             materialColorUpdater = new MaterialColorUpdater(partTransform, PhysicsGlobals.TemperaturePropertyID);
-            if (part.Modules.Contains("FARWingAerodynamicModel"))
-                legacyWingModel = part.Modules["FARWingAerodynamicModel"] as FARWingAerodynamicModel;
-            else if (part.Modules.Contains("FARControllableSurface"))
-                legacyWingModel = part.Modules["FARControllableSurface"] as FARWingAerodynamicModel;
+            if (part.Modules.Contains<FARWingAerodynamicModel>())
+                legacyWingModel = part.Modules.GetModule<FARWingAerodynamicModel>();
+            else if (part.Modules.Contains<FARControllableSurface>())
+                legacyWingModel = part.Modules.GetModule<FARControllableSurface>();
             else
                 legacyWingModel = null;
 
             // For handling airbrakes aero visualization
-            if (part.Modules.Contains("ModuleAeroSurface"))
-                stockAeroSurfaceModule = part.Modules["ModuleAeroSurface"] as ModuleAeroSurface;
+            if (part.Modules.Contains<ModuleAeroSurface>())
+                stockAeroSurfaceModule = part.Modules.GetModule<ModuleAeroSurface>();
             else
                 stockAeroSurfaceModule = null;
         }
@@ -584,9 +584,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
         private void ApplyAeroStressFailure()
         {
             bool failureOccured = false;
-            if (part.Modules.Contains("ModuleProceduralFairing"))
+            if (part.Modules.Contains<ModuleProceduralFairing>())
             {
-                ModuleProceduralFairing fairing = (ModuleProceduralFairing)part.Modules["ModuleProceduralFairing"];
+                ModuleProceduralFairing fairing = part.Modules.GetModule<ModuleProceduralFairing>();
                 fairing.ejectionForce = 0.5f;
 
                 fairing.DeployFairing();

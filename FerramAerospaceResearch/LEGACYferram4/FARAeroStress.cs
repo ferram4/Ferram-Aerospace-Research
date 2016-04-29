@@ -201,7 +201,7 @@ namespace FerramAerospaceResearch
 
             int resCount = p.Resources.Count;
             bool crewed = p.CrewCapacity > 0;
-            if (p.Resources.Contains("Ablator") || p.Modules.Contains("ModuleAblator"))
+            if ( p.Modules.Contains<ModuleAblator>()|| p.Resources.Contains("Ablator"))
                 return template;
 
             foreach (FARPartStressTemplate candidate in StressTemplates)

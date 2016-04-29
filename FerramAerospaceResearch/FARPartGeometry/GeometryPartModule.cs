@@ -165,7 +165,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             if (!_started && _sceneSetup &&
             ((HighLogic.LoadedSceneIsFlight && FlightGlobals.ready) || (HighLogic.LoadedSceneIsEditor && ApplicationLauncher.Ready)) &&      //this is done because it takes a frame for colliders to be set up in the editor
-            (part.collider != null || part.Modules.Contains("ModuleWheel") || part.Modules.Contains("KerbalEVA")))                //waiting prevents changes in physics in flight or in predictions because the voxel switches to colliders rather than meshes
+            (part.collider != null || part.Modules.Contains<ModuleWheel>() || part.Modules.Contains<KerbalEVA>()))                //waiting prevents changes in physics in flight or in predictions because the voxel switches to colliders rather than meshes
             {
                 RebuildAllMeshData();
             }
@@ -320,10 +320,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 CompoundPartGeoUpdater compoundUpdate = new CompoundPartGeoUpdater((CompoundPart)part, this);
                 geometryUpdaters.Add(compoundUpdate);
             }
-            if(part.Modules.Contains("ModuleProceduralFairing"))
+            if(part.Modules.Contains<ModuleProceduralFairing>())
             {
-                ModuleProceduralFairing[] fairings = part.GetComponents<ModuleProceduralFairing>();
-                for (int i = 0; i < fairings.Length; i++)
+                List<ModuleProceduralFairing> fairings = part.Modules.GetModules<ModuleProceduralFairing>();
+                for (int i = 0; i < fairings.Count; i++)
                 {
                     ModuleProceduralFairing fairing = fairings[i];
 
@@ -331,10 +331,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     geometryUpdaters.Add(fairingUpdater);
                 }
             }
-            if(part.Modules.Contains("ModuleJettison"))
+            if(part.Modules.Contains<ModuleJettison>())
             {
-                ModuleJettison[] engineFairings = part.GetComponents<ModuleJettison>();
-                for (int i = 0; i < engineFairings.Length; i++)
+                List<ModuleJettison> engineFairings = part.Modules.GetModules<ModuleJettison>();
+                for (int i = 0; i < engineFairings.Count; i++)
                 {
                     ModuleJettison engineFairing = engineFairings[i];
 
@@ -665,7 +665,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             List<MeshData> meshList = new List<MeshData>();
             List<Transform> validTransformList = new List<Transform>();
 
-            if (part.Modules.Contains("KerbalEVA"))
+            if (part.Modules.Contains<KerbalEVA>())
             {
                 Debug.Log("Adding vox box to Kerbal");
                 meshList.Add(CreateBoxMeshForKerbalEVA());
@@ -696,11 +696,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
 
 
-            if (part.Modules.Contains("ModuleJettison"))
+            if (part.Modules.Contains<ModuleJettison>())
             {
-                ModuleJettison[] jettisons = part.GetComponents<ModuleJettison>();
+                List<ModuleJettison> jettisons = part.Modules.GetModules<ModuleJettison>();
                 HashSet<Transform> jettisonTransforms = new HashSet<Transform>();
-                for(int i = 0; i < jettisons.Length; i++)
+                for(int i = 0; i < jettisons.Count; i++)
                 {
                     ModuleJettison j = jettisons[i];
                     if (j.jettisonTransform == null)

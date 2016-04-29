@@ -71,23 +71,29 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
         public void EditorGeometryUpdate()
         {
             List<FairingPanel> panels = fairing.Panels;
-            bool rebuildMesh = false;
+            if (panels == null)
+                return;
 
-            rebuildMesh = prevPanelBounds.Count == panels.Count;        //if bounds count doesn't equal panels count, the number of panels changed
+            bool rebuildMesh = prevPanelBounds.Count == panels.Count;        //if bounds count doesn't equal panels count, the number of panels changed
 
             if (rebuildMesh)
                 prevPanelBounds.Clear();
 
             for (int i = 0; i < panels.Count; i++)      //set them back to where they started to prevent voxelization errors
             {
-                panels[i].SetExplodedView(0);
-                panels[i].SetOpacity(1);
-                panels[i].SetTgtExplodedView(0);
-                panels[i].SetTgtOpacity(1);
-                panels[i].ColliderContainer.SetActive(true);
+                FairingPanel p = panels[i];
+                Bounds panelBounds = new Bounds();
+                if (p != null)
+                {
+                    p.SetExplodedView(0);
+                    p.SetOpacity(1);
+                    p.SetTgtExplodedView(0);
+                    p.SetTgtOpacity(1);
+                    if(p.ColliderContainer)
+                        p.ColliderContainer.SetActive(true);
 
-                Bounds panelBounds = panels[i].GetBounds();
-
+                    panelBounds = p.GetBounds();
+                }
                 if(i >= prevPanelBounds.Count)      //set new panel bounds
                 {
                     rebuildMesh = true;
@@ -102,6 +108,7 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
             if (rebuildMesh)
                 geoModule.RebuildAllMeshData();
+
         }
 
         public void FlightGeometryUpdate()

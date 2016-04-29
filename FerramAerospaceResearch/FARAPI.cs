@@ -227,9 +227,9 @@ namespace FerramAerospaceResearch
             for(int i = 0; i < v.parts.Count; i++)
             {
                 Part p = v.parts[i];
-                if(p.Modules.Contains("FARControllableSurface"))
+                if(p.Modules.Contains<ferram4.FARControllableSurface>())
                 {
-                    ferram4.FARControllableSurface surface = (ferram4.FARControllableSurface)p.Modules["FARControllableSurface"];
+                    ferram4.FARControllableSurface surface = p.Modules.GetModule<ferram4.FARControllableSurface>();
                     surface.SetDeflection(surface.flapDeflectionLevel + 1);
                 }
             }
@@ -243,9 +243,9 @@ namespace FerramAerospaceResearch
             for(int i = 0; i < v.parts.Count; i++)
             {
                 Part p = v.parts[i];
-                if (p.Modules.Contains("FARControllableSurface"))
+                if (p.Modules.Contains<ferram4.FARControllableSurface>())
                 {
-                    ferram4.FARControllableSurface surface = (ferram4.FARControllableSurface)p.Modules["FARControllableSurface"];
+                    ferram4.FARControllableSurface surface = p.Modules.GetModule<ferram4.FARControllableSurface>();
                     surface.SetDeflection(surface.flapDeflectionLevel - 1);
                 }
             }
@@ -261,10 +261,10 @@ namespace FerramAerospaceResearch
             for (int i = 0; i < v.parts.Count; i++)
             {
                 Part p = v.parts[i];
-                if (p.Modules.Contains("FARControllableSurface"))
+                if (p.Modules.Contains<ferram4.FARControllableSurface>())
                 {
-                    ferram4.FARControllableSurface surface = (ferram4.FARControllableSurface)p.Modules["FARControllableSurface"];
-                    if(surface.isFlap)
+                    ferram4.FARControllableSurface surface = p.Modules.GetModule<ferram4.FARControllableSurface>();
+                    if (surface.isFlap)
                         return surface.flapDeflectionLevel;
                 }
             }
@@ -280,9 +280,9 @@ namespace FerramAerospaceResearch
             for(int i = 0; i < v.parts.Count; i++)
             {
                 Part p = v.parts[i];
-                if(p.Modules.Contains("FARControllableSurface"))
+                if (p.Modules.Contains<ferram4.FARControllableSurface>())
                 {
-                    ferram4.FARControllableSurface surface = (ferram4.FARControllableSurface)p.Modules["FARControllableSurface"];
+                    ferram4.FARControllableSurface surface = p.Modules.GetModule<ferram4.FARControllableSurface>();
                     surface.brake = spoilerActive;
                 }
             }
@@ -298,9 +298,9 @@ namespace FerramAerospaceResearch
             for (int i = 0; i < v.parts.Count; i++)
             {
                 Part p = v.parts[i];
-                if (p.Modules.Contains("FARControllableSurface"))
+                if (p.Modules.Contains<ferram4.FARControllableSurface>())
                 {
-                    ferram4.FARControllableSurface surface = (ferram4.FARControllableSurface)p.Modules["FARControllableSurface"];
+                    ferram4.FARControllableSurface surface = p.Modules.GetModule<ferram4.FARControllableSurface>();
                     if (surface.isSpoiler)
                         return surface.brake;
                 }

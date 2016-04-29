@@ -428,7 +428,7 @@ namespace FerramAerospaceResearch.RealChuteLite
             if (!this.visible)
             {
                 List<RealChuteFAR> parachutes = new List<RealChuteFAR>();
-                if (HighLogic.LoadedSceneIsEditor) { parachutes.AddRange(EditorLogic.SortedShipList.Where(p => p.Modules.Contains("RealChuteFAR")).Select(p => (RealChuteFAR)p.Modules["RealChuteFAR"])); }
+                if (HighLogic.LoadedSceneIsEditor) { parachutes.AddRange(EditorLogic.SortedShipList.Where(p => p.Modules.Contains<RealChuteFAR>()).Select(p => p.Modules.GetModule<RealChuteFAR>())); }
                 else if (HighLogic.LoadedSceneIsFlight) { parachutes.AddRange(this.vessel.FindPartModulesImplementing<RealChuteFAR>()); }
                 if (parachutes.Count > 1 && parachutes.Exists(p => p.visible))
                 {

@@ -276,9 +276,9 @@ namespace ferram4
         public override void Initialization()
         {
             base.Initialization();
-            if (part.Modules.Contains("ModuleControlSurface"))
+            if (part.Modules.GetModule<ModuleControlSurface>())
             {
-                part.RemoveModule(part.Modules["ModuleControlSurface"]);
+                part.RemoveModule(part.Modules.GetModule<ModuleControlSurface>());
             }
 
             OnVesselPartsChange += CalculateSurfaceFunctions;

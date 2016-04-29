@@ -297,17 +297,17 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             {
                 Part p = partsList[i];
                 if(p != null)
-                    if (p.Modules.Contains("FARWingAerodynamicModel"))
+                    if (p.Modules.Contains<FARWingAerodynamicModel>())
                     {
-                        FARWingAerodynamicModel w = (FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
+                        FARWingAerodynamicModel w = p.Modules.GetModule<FARWingAerodynamicModel>();
                         if(updateWingInteractions)
                             w.EditorUpdateWingInteractions();
                         _wingAerodynamicModel.Add(w);
                     }
-                    else if (p.Modules.Contains("FARControllableSurface"))
+                    else if (p.Modules.Contains<FARControllableSurface>())
                     {
-                        FARControllableSurface c = (FARControllableSurface)p.Modules["FARControllableSurface"];
-                        if(updateWingInteractions)
+                        FARControllableSurface c = p.Modules.GetModule<FARControllableSurface>();
+                        if (updateWingInteractions)
                             c.EditorUpdateWingInteractions();
                         _wingAerodynamicModel.Add(c);
                     }
@@ -387,9 +387,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             for (int i = 0; i < partList.Count; i++)
             {
                 Part p = partList[i];
-                if (p.Modules.Contains("GeometryPartModule"))
+                if (p.Modules.Contains<GeometryPartModule>())
                 {
-                    GeometryPartModule g = (GeometryPartModule)p.Modules["GeometryPartModule"];
+                    GeometryPartModule g = p.Modules.GetModule<GeometryPartModule>();
                     if (g != null)
                     {
                         if (g.Ready)
@@ -683,9 +683,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             for(int i = 0; i < partsList.Count; i++)
             {
                 Part p = partsList[i];
-                if (p.Modules.Contains("ModuleWheelDeployment"))
+                if (p.Modules.Contains<ModuleWheelDeployment>())
                 {
-                    ModuleWheelDeployment l = (ModuleWheelDeployment)p.Modules["ModuleWheelDeployment"];
+                    ModuleWheelDeployment l = p.Modules.GetModule<ModuleWheelDeployment>();
                     l.ActionToggle(new KSPActionParam(KSPActionGroup.Gear, gearToggle ? KSPActionType.Activate : KSPActionType.Deactivate));
                 }
                 if(p.Modules.Contains("FSwheel"))

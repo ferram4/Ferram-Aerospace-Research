@@ -241,9 +241,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     Transform.AddRange(p.FindModelComponents<Transform>(transformString));
                 }
             }
-            if (p.Modules.Contains("ModuleParachute"))
+            if (p.Modules.Contains<ModuleParachute>())
             {
-                module = p.Modules["ModuleParachute"];
+                module = p.Modules.GetModule<ModuleParachute>();
                 transformString = (string)module.GetType().GetField("canopyName").GetValue(module);
                 if (transformString != "")
                 {
