@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.6.2 "Kartveli"
+Ferram Aerospace Research v0.15.6.3 "Kindelberger"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -149,9 +149,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if(p.Modules.Contains<KerbalEVA>())
                 {
                     Debug.Log("Handling Stuff for KerbalEVA");
-                    p.AddModule("GeometryPartModule");
-                    g = p.Modules.GetModule<GeometryPartModule>();
-                    p.AddModule("FARAeroPartModule");
+                    g = (GeometryPartModule)p.AddModule("GeometryPartModule");
+                    g.OnStart(StartState());
+                    p.AddModule("FARAeroPartModule").OnStart(StartState());
                     _currentGeoModules.Add(g);
                 }
             }
@@ -178,6 +178,45 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 _vesselIntakeRamDrag = new VesselIntakeRamDrag();
             }
             //Debug.Log("Starting " + _vessel.vesselName + " aero properties");
+        }
+
+        private PartModule.StartState StartState()
+        {
+            PartModule.StartState startState = PartModule.StartState.None;
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                startState |= PartModule.StartState.Editor;
+            }
+            else if (HighLogic.LoadedSceneIsFlight)
+            {
+                switch (_vessel.situation)
+                {
+                    case Vessel.Situations.PRELAUNCH:
+                        startState |= PartModule.StartState.PreLaunch;
+                        startState |= PartModule.StartState.Landed;
+                        break;
+                    case Vessel.Situations.DOCKED:
+                        startState |= PartModule.StartState.Docked;
+                        break;
+                    case Vessel.Situations.ORBITING:
+                    case Vessel.Situations.ESCAPING:
+                        startState |= PartModule.StartState.Orbital;
+                        break;
+                    case Vessel.Situations.SUB_ORBITAL:
+                        startState |= PartModule.StartState.SubOrbital;
+                        break;
+                    case Vessel.Situations.SPLASHED:
+                        startState |= PartModule.StartState.Splashed;
+                        break;
+                    case Vessel.Situations.FLYING:
+                        startState |= PartModule.StartState.Flying;
+                        break;
+                    case Vessel.Situations.LANDED:
+                        startState |= PartModule.StartState.Landed;
+                        break;
+                }
+            }
+            return startState;
         }
 
         private void FixedUpdate()

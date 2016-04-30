@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.6.2 "Kartveli"
+Ferram Aerospace Research v0.15.6.3 "Kindelberger"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -273,7 +273,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
             if (_vessel == FlightGlobals.ActiveVessel && showGUI && showAllGUI)
             {
-                mainGuiRect = GUILayout.Window(this.GetHashCode(), mainGuiRect, MainFlightGUIWindow, "FAR, v0.15.6.2 'Kartveli'", GUILayout.MinWidth(230));
+                mainGuiRect = GUILayout.Window(this.GetHashCode(), mainGuiRect, MainFlightGUIWindow, "FAR, v0.15.6.3 'Kindelberger'", GUILayout.MinWidth(230));
                 GUIUtils.ClampToScreen(mainGuiRect);
 
                 if (showFlightDataWindow)

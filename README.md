@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.15.6.2 "Kartveli"
+Ferram Aerospace Research v0.15.6.3 "Kindelberger"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -65,7 +65,14 @@ Set all the other winglet/control surface values to zero
 CHANGELOG
 =======================================================
 
-0.15.6.1V "Kartveli"------------------------------------
+0.15.6.3V "Kindelberger"------------------------------------
+
+Recompile for KSP 1.1.2 compatibility  
+Bundle ModuleManager 2.6.24 for 1.1.2 compatibility  
+
+Fix a critical error that would cause KerbalEVAs to have no aerodynamic forces applied to them  
+
+0.15.6.2V "Kartveli"------------------------------------
 
 Ensure KSP 1.1.1 compatiblity  
 Upgrade to ModuleManager 2.6.23  
