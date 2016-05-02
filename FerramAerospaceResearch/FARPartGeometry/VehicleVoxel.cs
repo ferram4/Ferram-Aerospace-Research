@@ -385,6 +385,11 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     returnVal = true;
                     break;
                 }
+                if(m is ModuleProceduralFairing)
+                {
+                    returnVal = true;
+                    break;
+                }
             }
             if (g.HasCrossSectionAdjusters)
             {
@@ -1372,7 +1377,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 areas = new VoxelCrossSection.SideAreaValues();
                 partGetsForces = false;
             }
-            if (i + 1 >= xCellLength || (object)GetPartAtVoxelPos(i + 1, j, k) == null)
+            if (i + 1 >= xCellLength || VoxelPointExistsAtPos(i + 1, j, k))
             {
                 areas.iP += elementSize * elementSize;
                 areas.exposedAreaCount++;
@@ -1381,7 +1386,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             else
                 filledPlanes |= VoxelOrientationPlane.X_UP;
 
-            if (i - 1 < 0 || (object)GetPartAtVoxelPos(i - 1, j, k) == null)
+            if (i - 1 < 0 || VoxelPointExistsAtPos(i-1, j, k))
             {
                 areas.iN += elementSize * elementSize;
                 areas.exposedAreaCount++;
@@ -1390,7 +1395,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             else
                 filledPlanes |= VoxelOrientationPlane.X_DOWN;
 
-            if (j + 1 >= yCellLength || (object)GetPartAtVoxelPos(i, j + 1, k) == null)
+            if (j + 1 >= yCellLength || VoxelPointExistsAtPos(i, j+1, k))
             {
                 areas.jP += elementSize * elementSize;
                 areas.exposedAreaCount++;
@@ -1399,7 +1404,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             else
                 filledPlanes |= VoxelOrientationPlane.Y_UP;
 
-            if (j - 1 < 0 || (object)GetPartAtVoxelPos(i, j - 1, k) == null)
+            if (j - 1 < 0 || VoxelPointExistsAtPos(i, j-1, k))
             {
                 areas.jN += elementSize * elementSize;
                 areas.exposedAreaCount++;
@@ -1408,7 +1413,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             else
                 filledPlanes |= VoxelOrientationPlane.Y_DOWN;
 
-            if (k + 1 >= zCellLength || (object)GetPartAtVoxelPos(i, j, k + 1) == null)
+            if (k + 1 >= zCellLength || VoxelPointExistsAtPos(i, j, k+1))
             {
                 areas.kP += elementSize * elementSize;
                 areas.exposedAreaCount++;
@@ -1417,7 +1422,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             else
                 filledPlanes |= VoxelOrientationPlane.Z_UP;
 
-            if (k - 1 < 0 || (object)GetPartAtVoxelPos(i, j, k - 1) == null)
+            if (k - 1 < 0 || VoxelPointExistsAtPos(i,j,k-1))
             {
                 areas.kN += elementSize * elementSize;
                 areas.exposedAreaCount++;

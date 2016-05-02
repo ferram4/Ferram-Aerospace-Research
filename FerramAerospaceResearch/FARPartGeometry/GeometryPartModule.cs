@@ -168,9 +168,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         void FixedUpdate()
         {
-            if (!_started && _sceneSetup &&
-            ((HighLogic.LoadedSceneIsFlight && FlightGlobals.ready) || (HighLogic.LoadedSceneIsEditor && ApplicationLauncher.Ready)) &&      //this is done because it takes a frame for colliders to be set up in the editor
-            (part.collider != null || part.Modules.Contains<ModuleWheel>() || part.Modules.Contains<ModuleWheelBase>() || part.Modules.Contains<KerbalEVA>()))                //waiting prevents changes in physics in flight or in predictions because the voxel switches to colliders rather than meshes
+            if (ReadyToBuildMesh())                //waiting prevents changes in physics in flight or in predictions because the voxel switches to colliders rather than meshes
             {
                 RebuildAllMeshData();
             }
@@ -182,6 +180,17 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (animStates != null && animStates.Count > 0)
                 CheckAnimations();
             //Debug.Log("Geo PM: " + vessel.CoM + " " + Planetarium.GetUniversalTime());
+        }
+
+        bool ReadyToBuildMesh()
+        {
+            bool returnVal = !_started && _sceneSetup;
+            
+            returnVal &= (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready) || (HighLogic.LoadedSceneIsEditor && ApplicationLauncher.Ready);
+
+            returnVal &= part.collider != null || part.Modules.Contains<ModuleWheel>() || part.Modules.Contains<ModuleWheelBase>() || part.Modules.Contains<KerbalEVA>();
+
+            return returnVal;
         }
 
         public void ClearMeshData()
@@ -728,7 +737,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
 
                 //Voxelize Everything
-                if (cantUseColliders || forceUseMeshes || part.Modules.Contains("ProceduralFairingSide"))       //in this case, voxelize _everything_
+                if (cantUseColliders || forceUseMeshes || part.Modules.Contains<ModuleProceduralFairing>() || part.Modules.Contains("ProceduralFairingSide"))       //in this case, voxelize _everything_
                 {
                     foreach (Transform t in meshTransforms)
                     {
