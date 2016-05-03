@@ -146,9 +146,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     if (g.Ready)
                         geoModulesReady++;
                 }
-                if(p.Modules.Contains<KerbalEVA>())
+                if(p.Modules.Contains<KerbalEVA>() || p.Modules.Contains<FlagSite>())
                 {
-                    Debug.Log("Handling Stuff for KerbalEVA");
+                    Debug.Log("Handling Stuff for KerbalEVA / Flag");
                     g = (GeometryPartModule)p.AddModule("GeometryPartModule");
                     g.OnStart(StartState());
                     p.AddModule("FARAeroPartModule").OnStart(StartState());

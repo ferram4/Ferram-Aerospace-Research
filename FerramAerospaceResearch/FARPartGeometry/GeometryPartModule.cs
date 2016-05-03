@@ -188,7 +188,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             
             returnVal &= (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready) || (HighLogic.LoadedSceneIsEditor && ApplicationLauncher.Ready);
 
-            returnVal &= part.collider != null || part.Modules.Contains<ModuleWheel>() || part.Modules.Contains<ModuleWheelBase>() || part.Modules.Contains<KerbalEVA>();
+            returnVal &= part.collider != null || part.Modules.Contains<ModuleWheel>() || part.Modules.Contains<ModuleWheelBase>() || part.Modules.Contains<KerbalEVA>() || part.Modules.Contains<FlagSite>();
 
             return returnVal;
         }
@@ -679,9 +679,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
             List<MeshData> meshList = new List<MeshData>();
             List<Transform> validTransformList = new List<Transform>();
 
-            if (part.Modules.Contains<KerbalEVA>())
+            if (part.Modules.Contains<KerbalEVA>() || part.Modules.Contains<FlagSite>())
             {
-                Debug.Log("Adding vox box to Kerbal");
+                Debug.Log("Adding vox box to Kerbal / Flag");
                 meshList.Add(CreateBoxMeshForKerbalEVA());
                 validTransformList.Add(part.partTransform);
                 meshTransforms = validTransformList;

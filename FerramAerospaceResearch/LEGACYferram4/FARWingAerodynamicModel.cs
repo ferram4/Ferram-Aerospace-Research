@@ -67,6 +67,7 @@ namespace ferram4
         [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
         public float curWingMass = 1;
         private float massDelta = 0f;
+        private float baseMass = 0f;
 
         [KSPField(guiName = "Mass-Strength Multiplier %", isPersistant = true, guiActiveEditor = true, guiActive = false), UI_FloatRange(maxValue = 4.0f, minValue = 0.05f, scene = UI_Scene.Editor, stepIncrement = 0.05f)]
         public float massMultiplier = 1.0f;
@@ -421,6 +422,9 @@ namespace ferram4
         public override void Initialization()
         {
             base.Initialization();
+            b_2_actual = b_2;
+            MAC_actual = MAC;
+            baseMass = part.prefabMass;
             StartInitialization();
             if(HighLogic.LoadedSceneIsEditor)
             {
@@ -813,10 +817,7 @@ namespace ferram4
             curWingMass = supportedArea * (float)FARAeroUtil.massPerWingAreaSupported * massMultiplier;
 
             float tmpPartMass = curWingMass * wingBaseMassMultiplier;
-            massDelta = 0f;
-            if ((object)(part.partInfo) != null)
-                if ((object)(part.partInfo.partPrefab) != null)
-                    massDelta = tmpPartMass - part.partInfo.partPrefab.mass;
+            massDelta = tmpPartMass - baseMass;
 
             oldMassMultiplier = massMultiplier;
         }
@@ -1451,9 +1452,9 @@ namespace ferram4
         {
             base.OnLoad(node);
             if (node.HasValue("b_2"))
-                double.TryParse(node.GetValue("b_2"), out b_2_actual);
+                double.TryParse(node.GetValue("b_2"), out b_2);
             if (node.HasValue("MAC"))
-                double.TryParse(node.GetValue("MAC"), out MAC_actual);
+                double.TryParse(node.GetValue("MAC"), out MAC);
             if (node.HasValue("TaperRatio"))
                 double.TryParse(node.GetValue("TaperRatio"), out TaperRatio);
             if (node.HasValue("nonSideAttach"))
@@ -1466,6 +1467,7 @@ namespace ferram4
         {
             b_2_actual = factor.absolute.linear * b_2;
             MAC_actual = factor.absolute.linear * MAC;
+            baseMass = factor.absolute.cubic * part.prefabMass;
 
             StartInitialization();
         }
