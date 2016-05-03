@@ -66,7 +66,7 @@ namespace ferram4
 
         [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = true)]
         public float curWingMass = 1;
-        private float massDelta = 0f;
+        private float desiredMass = 0f;
         private float baseMass = 0f;
 
         [KSPField(guiName = "Mass-Strength Multiplier %", isPersistant = true, guiActiveEditor = true, guiActive = false), UI_FloatRange(maxValue = 4.0f, minValue = 0.05f, scene = UI_Scene.Editor, stepIncrement = 0.05f)]
@@ -171,6 +171,7 @@ namespace ferram4
         protected double NUFAR_totalExposedAreaFactor = 0;
 
         public bool ready = false;
+        bool massScaleReady = false;
 
         public void NUFAR_ClearExposedAreaFactor()
         {
@@ -466,7 +467,7 @@ namespace ferram4
             }
 
             OnWingAttach();
-
+            massScaleReady = true;
             wingInteraction = new FARWingInteraction(this, this.part, rootMidChordOffsetFromOrig, srfAttachNegative);
             UpdateThisWingInteractions();
         }
@@ -816,8 +817,7 @@ namespace ferram4
                 supportedArea *= 0.66666667f;   //if any supported area has been transfered to another part, we must remove it from here
             curWingMass = supportedArea * (float)FARAeroUtil.massPerWingAreaSupported * massMultiplier;
 
-            float tmpPartMass = curWingMass * wingBaseMassMultiplier;
-            massDelta = tmpPartMass - baseMass;
+            desiredMass = curWingMass * wingBaseMassMultiplier;
 
             oldMassMultiplier = massMultiplier;
         }
@@ -846,7 +846,12 @@ namespace ferram4
 
         public float GetModuleMass(float defaultMass, ModifierStagingSituation sit)
         {
-            return massDelta;
+            Debug.Log("massDelta " + desiredMass);
+
+            if (massScaleReady)
+                return desiredMass - baseMass;
+            else
+                return 0;
         }
 
         public ModifierChangeWhen GetModuleMassChangeWhen()
@@ -1467,7 +1472,14 @@ namespace ferram4
         {
             b_2_actual = factor.absolute.linear * b_2;
             MAC_actual = factor.absolute.linear * MAC;
-            baseMass = factor.absolute.cubic * part.prefabMass;
+            if(part.Modules.Contains("TweakScale"))
+            {
+                PartModule m = part.Modules["TweakScale"];
+                float massScale = (float)m.Fields.GetValue("MassScale");
+                baseMass = part.prefabMass * massScale;
+                Debug.Log("massScale " + massScale);
+            }
+            massScaleReady = false;
 
             StartInitialization();
         }
