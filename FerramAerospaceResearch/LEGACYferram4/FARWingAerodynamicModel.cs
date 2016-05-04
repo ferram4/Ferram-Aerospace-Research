@@ -423,9 +423,12 @@ namespace ferram4
         public override void Initialization()
         {
             base.Initialization();
-            b_2_actual = b_2;
-            MAC_actual = MAC;
-            baseMass = part.prefabMass;
+            if (b_2_actual == 0)
+            {
+                b_2_actual = b_2;
+                MAC_actual = MAC;
+                baseMass = part.prefabMass;
+            }
             StartInitialization();
             if(HighLogic.LoadedSceneIsEditor)
             {
@@ -846,8 +849,6 @@ namespace ferram4
 
         public float GetModuleMass(float defaultMass, ModifierStagingSituation sit)
         {
-            Debug.Log("massDelta " + desiredMass);
-
             if (massScaleReady)
                 return desiredMass - baseMass;
             else
@@ -1476,8 +1477,8 @@ namespace ferram4
             {
                 PartModule m = part.Modules["TweakScale"];
                 float massScale = (float)m.Fields.GetValue("MassScale");
-                baseMass = part.prefabMass * massScale;
-                Debug.Log("massScale " + massScale);
+                baseMass = part.prefabMass + (part.prefabMass * (massScale - 1));
+                Debug.Log("TweakScale massScale for FAR usage: " + massScale);
             }
             massScaleReady = false;
 
