@@ -367,30 +367,16 @@ namespace FerramAerospaceResearch.FARPartGeometry
             PartModuleList modules = g.part.Modules;
             bool returnVal = false;
 
-            for (int i = 0; i < modules.Count; i++)
+            if(modules.Contains<ferram4.FARControllableSurface>() ||
+                modules.Contains<ModuleRCS>() ||
+                modules.Contains<ModuleEngines>() ||
+                modules.Contains<ModuleProceduralFairing>() ||
+                modules.Contains("ProceduralFairingBase") ||
+                modules.Contains("ProceduralFairingSide"))
             {
-                PartModule m = modules[i];
-                if (m is ferram4.FARControllableSurface)
-                {
-                    returnVal = true;
-                    break;
-                }
-                if (m is ModuleRCS)
-                {
-                    returnVal = true;
-                    break;
-                }
-                if (m is ModuleEngines)
-                {
-                    returnVal = true;
-                    break;
-                }
-                if(m is ModuleProceduralFairing)
-                {
-                    returnVal = true;
-                    break;
-                }
+                returnVal = true;
             }
+
             if (g.HasCrossSectionAdjusters)
             {
                 returnVal |= g.MaxCrossSectionAdjusterArea > 0;
