@@ -353,6 +353,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
             double xForce = -skinFrictionForce * Math.Sign(cosAoA) * cosSqrAoA;
             double localVelForce = xForce * pseudoKnudsenNumber;
             xForce -= localVelForce;
+
+            localVelForce = Math.Abs(localVelForce);
             
             float moment = (float)(cosAoA * sinAoA);
 
@@ -489,6 +491,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 double xForce = -skinFrictionForce * Math.Sign(cosAoA) * cosSqrAoA;
                 double localVelForce = xForce * pseudoKnudsenNumber;
                 xForce -= localVelForce;
+
+                localVelForce = Math.Abs(localVelForce);
 
                 float moment = (float)(cosAoA * sinAoA);
                 float dampingMoment = 4f * moment;

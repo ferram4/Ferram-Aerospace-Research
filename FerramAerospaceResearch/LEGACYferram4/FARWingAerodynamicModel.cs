@@ -796,6 +796,7 @@ namespace ferram4
             }
         }
 
+        [KSPEvent]
         public void OnWingAttach()
         {
             if(part.parent)
