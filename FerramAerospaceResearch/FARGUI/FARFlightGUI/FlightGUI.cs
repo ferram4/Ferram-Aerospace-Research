@@ -140,7 +140,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
             activeFlightGUICount++;
 
-            if(_vessel == FlightGlobals.ActiveVessel)
+            if(_vessel == FlightGlobals.ActiveVessel || FlightGlobals.ActiveVessel == null)
                 LoadConfigs();
 
             GameEvents.onShowUI.Add(ShowUI);
