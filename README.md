@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.15.6.3 "Kindelberger"
+Ferram Aerospace Research v0.15.6.4 "Kleinhans"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -64,6 +64,13 @@ Set all the other winglet/control surface values to zero
 
 CHANGELOG
 =======================================================
+
+0.15.6.4V "Kleinhans"------------------------------------  
+
+Fix a physics breaking issue with Tweakscaled wing parts, thanks pellinor  
+Fix GUI window positions not loading on vessel spawn  
+Fix distribution of forces on parts; no change in total force and torque applied to vessel, just to which parts  
+Fix slightly negative drag on rearward-facing vehicles at high Knudsen numbers  
 
 0.15.6.3V "Kindelberger"------------------------------------
 
