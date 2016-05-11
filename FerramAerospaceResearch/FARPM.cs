@@ -1,5 +1,5 @@
 /*
-Ferram Aerospace Research v0.15.6.3 "Kindelberger"
+Ferram Aerospace Research v0.15.6.4 "Kleinhans"
 =========================
 Aerodynamics model for Kerbal Space Program
 
