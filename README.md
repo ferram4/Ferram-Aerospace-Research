@@ -67,6 +67,7 @@ CHANGELOG
 
 0.15.6.4V "Kleinhans"------------------------------------  
 
+Fix a no-drag issue with asteroids  
 Fix a physics breaking issue with Tweakscaled wing parts, thanks pellinor  
 Fix GUI window positions not loading on vessel spawn  
 Fix distribution of forces on parts; no change in total force and torque applied to vessel, just to which parts  
