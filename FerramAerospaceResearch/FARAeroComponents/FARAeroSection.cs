@@ -398,7 +398,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             moment /= normalForceFactor;
 
             Vector3 forceVector = (float)xForce * xRefVector + (float)nForce * localNormalForceVec;
-            forceVector += (float)localVelForce * velLocalNorm;
+            forceVector -= (float)localVelForce * velLocalNorm;
             Vector3 torqueVector = Vector3.Cross(xRefVector, localNormalForceVec) * moment;
 
             Matrix4x4 localToWorld = aeroModule.part.partTransform.localToWorldMatrix;
@@ -542,8 +542,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 rollDampingMoment *= (0.75f + flatnessRatio * 0.25f);     //this is just an approximation for now
 
                 Vector3 forceVector = (float)xForce * xRefVector + (float)nForce * localNormalForceVec;
-                forceVector += (float)localVelForce * velLocalNorm;
-
+                forceVector -= (float)localVelForce * velLocalNorm;
+            
                 Vector3 torqueVector = Vector3.Cross(xRefVector, localNormalForceVec) * moment;
 
                 Vector3 axialAngLocalVel = Vector3.Dot(xRefVector, angVelLocal) * xRefVector;

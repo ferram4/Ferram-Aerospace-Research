@@ -124,84 +124,55 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public void TransformBasis(Matrix4x4 newThisToVesselMatrix)
         {
-            Matrix4x4 tempMatrix = newThisToVesselMatrix * meshLocalToWorld;
-            //Matrix4x4 tempMatrix = thisToVesselMatrix.inverse;
-            //thisToVesselMatrix = newThisToVesselMatrix * meshLocalToWorld;
-
-            //tempMatrix = thisToVesselMatrix * tempMatrix;
-
-            //bounds = TransformBounds(bounds, tempMatrix);
-
-            Vector3 low, high;
-            low = Vector3.one * float.PositiveInfinity;
-            high = Vector3.one * float.NegativeInfinity;
-
-            for (int i = 0; i < vertices.Length; i++)
+            try
             {
-                Vector3 vert = tempMatrix.MultiplyPoint3x4(meshLocalVerts[i]);// = Vector3.zero;
+                Matrix4x4 tempMatrix = newThisToVesselMatrix * meshLocalToWorld;
+                //Matrix4x4 tempMatrix = thisToVesselMatrix.inverse;
+                //thisToVesselMatrix = newThisToVesselMatrix * meshLocalToWorld;
 
-                float tmpTestVert = vert.x + vert.y + vert.z;
-                if (float.IsNaN(tmpTestVert) || float.IsInfinity(tmpTestVert))
+                //tempMatrix = thisToVesselMatrix * tempMatrix;
+
+                //bounds = TransformBounds(bounds, tempMatrix);
+
+                Vector3 low, high;
+                low = Vector3.one * float.PositiveInfinity;
+                high = Vector3.one * float.NegativeInfinity;
+
+                for (int i = 0; i < vertices.Length; i++)
                 {
-                    ThreadSafeDebugLogger.Instance.RegisterMessage("Transform error in " + module.part.partInfo.title);
-                    valid = false;
+                    Vector3 vert = tempMatrix.MultiplyPoint3x4(meshLocalVerts[i]);// = Vector3.zero;
+
+                    float tmpTestVert = vert.x + vert.y + vert.z;
+                    if (float.IsNaN(tmpTestVert) || float.IsInfinity(tmpTestVert))
+                    {
+                        ThreadSafeDebugLogger.Instance.RegisterMessage("Transform error in " + module.part.partInfo.title);
+                        valid = false;
+                    }
+                    else
+                        valid = true;
+
+                    vertices[i] = vert;
+                    low = Vector3.Min(low, vert);
+                    high = Vector3.Max(high, vert);
                 }
-                else
-                    valid = true;
 
-                vertices[i] = vert;
-                low = Vector3.Min(low, vert);
-                high = Vector3.Max(high, vert);
+                bounds = new Bounds(0.5f * (high + low), high - low);
             }
-
-            bounds = new Bounds(0.5f * (high + low), high - low);
-            module.DecrementMeshesToUpdate();
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+            finally
+            {
+                module.DecrementMeshesToUpdate();
+            }
         }
 
         public void MultithreadTransformBasis(object newThisToVesselMatrixObj)
         {
             lock (this)
             {
-                try
-                {
-                    Matrix4x4 tempMatrix = (Matrix4x4)newThisToVesselMatrixObj * meshLocalToWorld;
-                    //Matrix4x4 tempMatrix = thisToVesselMatrix.inverse;
-                    //thisToVesselMatrix = (Matrix4x4)newThisToVesselMatrixObj * meshLocalToWorld;
-
-                    //tempMatrix = thisToVesselMatrix * tempMatrix;
-
-                    Vector3 low, high;
-                    low = Vector3.one * float.PositiveInfinity;
-                    high = Vector3.one * float.NegativeInfinity;
-
-                    for (int i = 0; i < vertices.Length; i++)
-                    {
-                        Vector3 vert = tempMatrix.MultiplyPoint3x4(meshLocalVerts[i]);
-
-                        float tmpTestVert = vert.x + vert.y + vert.z;
-                        if (float.IsNaN(tmpTestVert) || float.IsInfinity(tmpTestVert))
-                        { 
-                            ThreadSafeDebugLogger.Instance.RegisterMessage("Transform error in " + module.part.partInfo.title);
-                            valid = false;
-                        }
-                        else
-                            valid = true;
-
-                        vertices[i] = vert;
-                        low = Vector3.Min(low, vert);
-                        high = Vector3.Max(high, vert);
-                    }
-
-                    bounds = new Bounds(0.5f * (high + low), high - low);
-                }
-                catch (Exception e)
-                {
-                    Debug.LogException(e);
-                }
-                finally
-                {
-                    module.DecrementMeshesToUpdate();
-                }
+                this.TransformBasis((Matrix4x4)newThisToVesselMatrixObj);
             }
         }
 

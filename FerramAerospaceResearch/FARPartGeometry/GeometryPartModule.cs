@@ -356,6 +356,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     geometryUpdaters.Add(fairingUpdater);
                 }
             }
+            if (part.Modules.Contains<ModuleAsteroid>())
+            {
+                ModuleAsteroid asteroidModule = part.Modules.GetModule<ModuleAsteroid>();
+
+                StockProcAsteroidGeoUpdater asteroidUpdater = new StockProcAsteroidGeoUpdater(asteroidModule, this);
+                geometryUpdaters.Add(asteroidUpdater);
+                
+            }
         }
 
         private void SetupICrossSectionAdjusters()
