@@ -181,10 +181,12 @@ namespace ferram4
 
         public void NUFAR_CalculateExposedAreaFactor()
         {
-            FARAeroPartModule a = (FARAeroPartModule)part.Modules["FARAeroPartModule"];
+            FARAeroPartModule a = part.Modules.GetModule<FARAeroPartModule>();
 
             NUFAR_areaExposedFactor = Math.Min(a.ProjectedAreas.kN, a.ProjectedAreas.kP);
             NUFAR_totalExposedAreaFactor = Math.Max(a.ProjectedAreas.kN, a.ProjectedAreas.kP);
+
+            //Debug.Log("kN " + a.ProjectedAreas.kN + " kP " + a.ProjectedAreas.kP + " area " + S);
 
         }
 
@@ -202,9 +204,9 @@ namespace ferram4
                     continue;
                 FARWingAerodynamicModel model;
                 if (this is FARControllableSurface)
-                    model = (FARWingAerodynamicModel)p.Modules["FARControllableSurface"];
+                    model = p.Modules.GetModule<FARControllableSurface>();
                 else
-                    model = (FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
+                    model = p.Modules.GetModule<FARWingAerodynamicModel>();
 
                 ++counterpartsCount;
                 sum += model.NUFAR_areaExposedFactor;
@@ -224,9 +226,9 @@ namespace ferram4
                     continue;
                 FARWingAerodynamicModel model;
                 if (this is FARControllableSurface)
-                    model = (FARWingAerodynamicModel)p.Modules["FARControllableSurface"];
+                    model = p.Modules.GetModule<FARControllableSurface>();
                 else
-                    model = (FARWingAerodynamicModel)p.Modules["FARWingAerodynamicModel"];
+                    model = p.Modules.GetModule<FARWingAerodynamicModel>();
 
                 model.NUFAR_areaExposedFactor = sum;
                 model.NUFAR_totalExposedAreaFactor = totalExposedSum;

@@ -159,7 +159,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public unsafe bool VoxelPointExistsLocalIndex(int zeroBaseIndex)
         {
-            return (voxelPoints[zeroBaseIndex - offset].GetSize() > 0);
+            return (voxelPoints[zeroBaseIndex].GetSize() > 0);
         }
 
         public unsafe bool VoxelPointExistsLocalIndex(int i, int j, int k)
