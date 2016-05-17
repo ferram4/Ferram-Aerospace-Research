@@ -429,8 +429,10 @@ namespace ferram4
             {
                 b_2_actual = b_2;
                 MAC_actual = MAC;
-                baseMass = part.partInfo.partPrefab.mass;       //part.prefabMass is apparently not set until the end of part.Start(), which runs after Start() for PartModules
             }
+            if(baseMass <= 0)
+                baseMass = part.partInfo.partPrefab.mass;       //part.prefabMass is apparently not set until the end of part.Start(), which runs after Start() for PartModules
+
             StartInitialization();
             if(HighLogic.LoadedSceneIsEditor)
             {
