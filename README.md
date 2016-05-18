@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.15.6.4 "Kleinhans"
+Ferram Aerospace Research v0.15.6.5 "Knudsen"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -64,6 +64,13 @@ Set all the other winglet/control surface values to zero
 
 CHANGELOG
 =======================================================
+
+0.15.6.5V "Knudsen"------------------------------------  
+
+Update to ModularFlightIntegrator 1.1.4  
+Fix a serious issue where wings would provide no forces and forces would be distributed incorrectly across vehicles  
+Fix an issue where wing symmetry counterparts would not have equal masses  
+Fix non-zero convective heat flux on shielded parts  
 
 0.15.6.4V "Kleinhans"------------------------------------  
 

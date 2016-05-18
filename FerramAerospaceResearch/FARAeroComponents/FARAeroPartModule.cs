@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.6.4 "Kleinhans"
+Ferram Aerospace Research v0.15.6.5 "Knudsen"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -174,6 +174,11 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 partLocalAngVel = Vector3.zero;
                 partLocalVel = Vector3.zero;
                 partLocalVelNorm = Vector3.zero;
+
+                part.dragVectorMag = 0f;
+                part.dragVectorDir = Vector3.zero;
+                part.dragVectorDirLocal = Vector3.zero;
+                part.dragScalar = 0f;
 
                 UpdateAeroDisplay();
             }

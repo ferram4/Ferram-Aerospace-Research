@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.6.4 "Kleinhans"
+Ferram Aerospace Research v0.15.6.5 "Knudsen"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -104,7 +104,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 {
                     part.dragVector = rb.velocity + Krakensbane.GetFrameVelocity() - FARWind.GetWind(FlightGlobals.currentMainBody, part, rb.position);
                     part.dragVectorSqrMag = part.dragVector.sqrMagnitude;
-                    if (part.dragVectorSqrMag == 0f)
+                    if (part.dragVectorSqrMag == 0f || part.ShieldedFromAirstream)
                     {
                         part.dragVectorMag = 0f;
                         part.dragVectorDir = Vector3.zero;
