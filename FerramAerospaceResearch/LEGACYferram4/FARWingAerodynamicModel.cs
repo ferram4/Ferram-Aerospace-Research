@@ -1482,7 +1482,7 @@ namespace ferram4
             {
                 PartModule m = part.Modules["TweakScale"];
                 float massScale = (float)m.Fields.GetValue("MassScale");
-                baseMass = part.prefabMass + (part.prefabMass * (massScale - 1));
+                baseMass = part.partInfo.partPrefab.mass + (part.partInfo.partPrefab.mass * (massScale - 1));
                 Debug.Log("TweakScale massScale for FAR usage: " + massScale);
             }
             massScaleReady = false;
