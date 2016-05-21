@@ -100,6 +100,9 @@
     <Compile Include="FARPartGeometry\GeometryModification\IntakeCrossSectionAdjuster.cs" />
     <Compile Include="FARPartGeometry\GeometryModification\IntegratedIntakeEngineCrossSectionAdjuster.cs" />
     <Compile Include="FARPartGeometry\GeometryModification\StockProcAsteroidGeoUpdater.cs" />
+    <Compile Include="FARPartGeometry\PartSizePair.cs" />
+    <Compile Include="FARPartGeometry\PartSizePair4Bit.cs" />
+    <Compile Include="FARPartGeometry\PartSizePair8Bit.cs" />
     <Compile Include="FARPartGeometry\PartTransformInfo.cs" />
     <Compile Include="FARSettingsScenarioModule.cs" />
     <Compile Include="FARThreading\ThreadSafeDebugLogger.cs" />

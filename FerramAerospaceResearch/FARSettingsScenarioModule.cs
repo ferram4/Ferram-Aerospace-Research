@@ -190,6 +190,8 @@ namespace FerramAerospaceResearch
                 voxelSettings.numVoxelsDebrisVessel = int.Parse(node.GetValue("numVoxelsDebrisVessel"));
             if (node.HasValue("minPhysTicksPerUpdate"))
                 voxelSettings.minPhysTicksPerUpdate = int.Parse(node.GetValue("minPhysTicksPerUpdate"));
+            if (node.HasValue("useHigherResVoxelPoints"))
+                voxelSettings.useHigherResVoxelPoints = bool.Parse(node.GetValue("useHigherResVoxelPoints"));
 
             if (index == -1)
             {
@@ -309,6 +311,11 @@ namespace FerramAerospaceResearch
             if (voxelSettings.minPhysTicksPerUpdate < 0)
                 voxelSettings.minPhysTicksPerUpdate = 80;
 
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Use Higher Res SubVoxels: ");
+            voxelSettings.useHigherResVoxelPoints = GUILayout.Toggle(voxelSettings.useHigherResVoxelPoints, voxelSettings.useHigherResVoxelPoints ? "High Res SubVoxels" : "Low Res SubVoxels");
+            GUILayout.EndHorizontal();
+
             GUILayout.EndVertical();
         }
     }
@@ -344,14 +351,16 @@ namespace FerramAerospaceResearch
         public int numVoxelsControllableVessel;
         public int numVoxelsDebrisVessel;
         public int minPhysTicksPerUpdate;
+        public bool useHigherResVoxelPoints;
 
-        public FARVoxelSettings() : this(250000, 20000, 80) { }
+        public FARVoxelSettings() : this(250000, 20000, 80, true) { }
 
-        public FARVoxelSettings(int vesselCount, int debrisCount, int minPhysTicks)
+        public FARVoxelSettings(int vesselCount, int debrisCount, int minPhysTicks, bool higherResVoxPoints)
         {
             numVoxelsControllableVessel = vesselCount;
             numVoxelsDebrisVessel = debrisCount;
             minPhysTicksPerUpdate = minPhysTicks;
+            useHigherResVoxelPoints = higherResVoxPoints;
         }
     }
 }

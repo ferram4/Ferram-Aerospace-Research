@@ -59,6 +59,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         static int MAX_CHUNKS_ALLOWED = 0;
         static int chunksInUse = 0;
+
+        static double maxLocation = 255;
+        static byte maxLocationByte = 255;
+        static bool useHigherResVoxels = false;
         
         double elementSize;
         public double ElementSize
@@ -115,6 +119,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             lock (clearedChunks)
             {
+                useHigherResVoxels = FARSettingsScenarioModule.VoxelSettings.useHigherResVoxelPoints;
+                if (useHigherResVoxels)
+                    maxLocation = 255;
+                else
+                    maxLocation = 15;
+
+                maxLocationByte = (byte)maxLocation;
+
                 if (clearedPlanes == null)
                 {
                     clearedPlanes = new Stack<SweepPlanePoint[,]>();
@@ -134,10 +146,12 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                     Debug.Log(MAX_CHUNKS_IN_QUEUE + " " + MAX_CHUNKS_ALLOWED);
                     for (int i = 0; i < MAX_CHUNKS_IN_QUEUE; i++)
-                        clearedChunks.Push(new VoxelChunk(0, Vector3.zero, 0, 0, 0, null));
+                        clearedChunks.Push(new VoxelChunk(0, Vector3.zero, 0, 0, 0, null, useHigherResVoxels));
 
                     clearedChunks.TrimExcess();
                 }
+
+
             }
         }
 
@@ -616,7 +630,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                                         int index = i + 8 * j + 64 * k;
 
-                                        VoxelChunk.PartSizePair pair = sect.GetVoxelPartSizePairGlobalIndex(index);
+                                        PartSizePair pair = sect.GetVoxelPartSizePairGlobalIndex(index);
 
                                         if ((object)pair.part != null)
                                         {
@@ -681,7 +695,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                                         int index = i + 8 * j + 64 * k;
 
-                                        VoxelChunk.PartSizePair pair;
+                                        PartSizePair pair;
 
                                         int jSect = j >> 3;
                                         if (jSect == jSect1 && sect1 != null)
@@ -878,7 +892,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                                         int index = i + 8 * j + 64 * k;
 
-                                        VoxelChunk.PartSizePair pair = sect.GetVoxelPartSizePairGlobalIndex(index);
+                                        PartSizePair pair = sect.GetVoxelPartSizePairGlobalIndex(index);
 
                                         if ((object)pair.part != null)
                                         {
@@ -945,7 +959,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                                         int index = i + 8 * j + 64 * k;
 
-                                        VoxelChunk.PartSizePair pair;
+                                        PartSizePair pair;
 
                                         int iSect = i >> 3;
                                         if (iSect == iSect1 && sect1 != null)
@@ -1147,7 +1161,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                                         int index = i + 8 * j + 64 * k;
 
-                                        VoxelChunk.PartSizePair pair = sect.GetVoxelPartSizePairGlobalIndex(index);
+                                        PartSizePair pair = sect.GetVoxelPartSizePairGlobalIndex(index);
 
                                         if ((object)pair.part != null)
                                         {
@@ -1213,7 +1227,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                                         int index = i + 8 * j + 64 * k;
 
-                                        VoxelChunk.PartSizePair pair;
+                                        PartSizePair pair;
 
                                         int kSect = k >> 3;
                                         if (kSect == kSect1 && sect1 != null)
@@ -1349,7 +1363,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }            
         }
 
-        private void DetermineIfPartGetsForcesAndAreas(Dictionary<Part, VoxelCrossSection.SideAreaValues> partSideAreas, VoxelChunk.PartSizePair voxel, int i, int j, int k)
+        private void DetermineIfPartGetsForcesAndAreas(Dictionary<Part, VoxelCrossSection.SideAreaValues> partSideAreas, PartSizePair voxel, int i, int j, int k)
         {
             VoxelCrossSection.SideAreaValues areas;
             VoxelOrientationPlane filledPlanes = VoxelOrientationPlane.NONE;
@@ -1498,7 +1512,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     }
                 }
                 if (section == null)
-                    section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8, overridingParts);
+                    section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8, overridingParts, useHigherResVoxels);
                 else
                     section.SetChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8, overridingParts);
 
@@ -1507,7 +1521,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             //Debug.Log(i.ToString() + ", " + j.ToString() + ", " + k.ToString() + ", " + part.partInfo.title);
 
-            section.SetVoxelPointGlobalIndexNoLock(i + j * 8 + k * 64);
+            section.SetVoxelPointGlobalIndexNoLock(i + j * 8 + k * 64, maxLocationByte);
         }
 
         //Use when guaranteed that you will not attempt to write to the same section simultaneously
@@ -1533,7 +1547,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     }
                 }
                 if (section == null)
-                    section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8, overridingParts);
+                    section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8, overridingParts, useHigherResVoxels);
                 else
                     section.SetChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8, overridingParts);
 
@@ -1568,7 +1582,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     }
                 }
                 if (section == null)
-                    section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8, overridingParts);
+                    section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8, overridingParts, useHigherResVoxels);
                 else
                     section.SetChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8, overridingParts);
 
@@ -1577,7 +1591,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
            
             //Debug.Log(i.ToString() + ", " + j.ToString() + ", " + k.ToString() + ", " + part.partInfo.title);
 
-            section.SetVoxelPointGlobalIndexNoLock(i + j * 8 + k * 64, part);
+            section.SetVoxelPointGlobalIndexNoLock(i + j * 8 + k * 64, part, maxLocationByte);
         }
 
         private void SetVoxelPoint(int i, int j, int k, Part part, VoxelOrientationPlane plane, byte location)
@@ -1604,7 +1618,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         }
                     }
                     if (section == null)
-                        section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8, overridingParts);
+                        section = new VoxelChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8, overridingParts, useHigherResVoxels);
                     else
                         section.SetChunk(elementSize, lowerRightCorner + new Vector3d(iSec, jSec, kSec) * elementSize * 8, iSec * 8, jSec * 8, kSec * 8, overridingParts);
 
@@ -1614,7 +1628,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             //Debug.Log(i.ToString() + ", " + j.ToString() + ", " + k.ToString() + ", " + part.partInfo.title);
 
-            section.SetVoxelPointGlobalIndex(i + j * 8 + k * 64, part, plane, location);
+            section.SetVoxelPointGlobalIndex(i + j * 8 + k * 64, part, location, plane);
         }
 
         private VoxelChunk GetVoxelChunk(int i, int j, int k)
@@ -1881,10 +1895,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (u >= 0 && v >= 0 && u + v <= 1)
                     {
                         double floatLoc = (i - iFloat) * signW + 0.5;
-                        floatLoc *= 15d;
+                        floatLoc *= maxLocation;
 
-                        if (floatLoc > 15)
-                            floatLoc = 15;
+                        if (floatLoc > maxLocation)
+                            floatLoc = maxLocation;
                         if (floatLoc < 0)
                             floatLoc = 0;
 
@@ -1908,10 +1922,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
 
                         double floatLoc = (i - iFloat) * signW + 0.5;
-                        floatLoc *= 15d * 0.25d;
+                        floatLoc *= maxLocation * 0.25d;
 
-                        if (floatLoc > 15)
-                            floatLoc = 15;
+                        if (floatLoc > maxLocation)
+                            floatLoc = maxLocation;
                         if (floatLoc < 0)
                             floatLoc = 0;
 
@@ -1932,10 +1946,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     {
 
                         double floatLoc = (i - iFloat) * signW + 0.5;
-                        floatLoc *= 15d * 0.5d;
+                        floatLoc *= maxLocation * 0.5d;
 
-                        if (floatLoc > 15)
-                            floatLoc = 15;
+                        if (floatLoc > maxLocation)
+                            floatLoc = maxLocation;
                         if (floatLoc < 0)
                             floatLoc = 0;
 
@@ -2028,10 +2042,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (u >= 0 && v >= 0 && u + v <= 1)
                     {
                         double floatLoc = (j - jFloat) * signW + 0.5;
-                        floatLoc *= 15d;
+                        floatLoc *= maxLocation;
 
-                        if (floatLoc > 15)
-                            floatLoc = 15;
+                        if (floatLoc > maxLocation)
+                            floatLoc = maxLocation;
                         if (floatLoc < 0)
                             floatLoc = 0;
 
@@ -2055,10 +2069,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (p1TestPt.magnitude <= RC || p2TestPt.magnitude <= RC || p3TestPt.magnitude <= RC)
                     {
                         double floatLoc = (j - jFloat) * signW + 0.5;
-                        floatLoc *= 15d * 0.25d;
+                        floatLoc *= maxLocation * 0.25d;
 
-                        if (floatLoc > 15)
-                            floatLoc = 15;
+                        if (floatLoc > maxLocation)
+                            floatLoc = maxLocation;
                         if (floatLoc < 0)
                             floatLoc = 0;
 
@@ -2078,10 +2092,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt))
                     {
                         double floatLoc = (j - jFloat) * signW + 0.5;
-                        floatLoc *= 15d * 0.5d;
+                        floatLoc *= maxLocation * 0.5d;
 
-                        if (floatLoc > 15)
-                            floatLoc = 15;
+                        if (floatLoc > maxLocation)
+                            floatLoc = maxLocation;
                         if (floatLoc < 0)
                             floatLoc = 0;
 
@@ -2172,10 +2186,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (u >= 0 && v >= 0 && u + v <= 1)
                     {
                         double floatLoc = (k - kFloat) * signW + 0.5;
-                        floatLoc *= 15d;
+                        floatLoc *= maxLocation;
 
-                        if (floatLoc > 15)
-                            floatLoc = 15;
+                        if (floatLoc > maxLocation)
+                            floatLoc = maxLocation;
                         if (floatLoc < 0)
                             floatLoc = 0;
 
@@ -2198,10 +2212,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (p1TestPt.magnitude <= RC || p2TestPt.magnitude <= RC || p3TestPt.magnitude <= RC)
                     {
                         double floatLoc = (k - kFloat) * signW + 0.5;
-                        floatLoc *= 15d * 0.25d;
+                        floatLoc *= maxLocation * 0.25d;
 
-                        if (floatLoc > 15)
-                            floatLoc = 15;
+                        if (floatLoc > maxLocation)
+                            floatLoc = maxLocation;
                         if (floatLoc < 0)
                             floatLoc = 0;
 
@@ -2221,10 +2235,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt))
                     {
                         double floatLoc = (k - kFloat) * signW + 0.5;
-                        floatLoc *= 15d * 0.5d;
+                        floatLoc *= maxLocation * 0.5d;
 
-                        if (floatLoc > 15)
-                            floatLoc = 15;
+                        if (floatLoc > maxLocation)
+                            floatLoc = maxLocation;
                         if (floatLoc < 0)
                             floatLoc = 0;
 
