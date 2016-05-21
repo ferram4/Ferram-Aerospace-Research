@@ -156,6 +156,7 @@ namespace FerramAerospaceResearch
             node.AddValue("numVoxelsControllableVessel", voxelSettings.numVoxelsControllableVessel);
             node.AddValue("numVoxelsDebrisVessel", voxelSettings.numVoxelsDebrisVessel);
             node.AddValue("minPhysTicksPerUpdate", voxelSettings.minPhysTicksPerUpdate);
+            node.AddValue("useHigherResVoxelPoints", voxelSettings.useHigherResVoxelPoints);
             node.AddValue("index", settings.index);
 
             FARGUI.FARFlightGUI.FlightGUI.SaveActiveData();
