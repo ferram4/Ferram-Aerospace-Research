@@ -375,6 +375,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 try
                 {
+                    _calculationCompleted = false;      //ensure that the main thread isn't going to try to read the updated section data while it is being worked with
                     //Bunch of voxel setup data
                     _voxelCount = voxelCount;
 
@@ -434,9 +435,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     CalculateVesselAeroProperties();
                     _calculationCompleted = true;
 
-                    //                    voxelizing = false;
                 }
-
                 catch (Exception e)
                 {
                     ThreadSafeDebugLogger.Instance.RegisterException(e);

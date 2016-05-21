@@ -454,6 +454,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
             //Matrix4x4 matrix = partTransform.localToWorldMatrix;
             Rigidbody rb = part.Rigidbody;
 
+            if (!rb)
+                return;
+
             worldSpaceAeroForce = partTransform.TransformDirection(partLocalForce);
             worldSpaceTorque = partTransform.TransformDirection(partLocalTorque);
             UpdateAeroDisplay();
