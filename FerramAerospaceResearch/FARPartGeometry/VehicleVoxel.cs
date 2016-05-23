@@ -406,7 +406,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             //for (int i = 0; i < geoModules.Count; i++)
             //    threadsQueued += geoModules[i].meshDataList.Count;      //Doing this out here allows us to get rid of the lock, which should reduce sync costs for many meshes
-
             if (!multiThreaded)
                 for (int i = 0; i < geoModules.Count; i++)       //Go through it backwards; this ensures that children (and so interior to cargo bay parts) are handled first
                 {
@@ -435,7 +434,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     while (threadsQueued > 0)
                         Monitor.Wait(_locker);
             }
-            
+
             if (solidify)
             {
                 threadsQueued = 2;
@@ -1360,7 +1359,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                 if (crossSections[i].area > maxCrossSectionArea)
                     maxCrossSectionArea = crossSections[i].area;
-            }            
+            }
         }
 
         private void DetermineIfPartGetsForcesAndAreas(Dictionary<Part, VoxelCrossSection.SideAreaValues> partSideAreas, PartSizePair voxel, int i, int j, int k)
@@ -1696,8 +1695,36 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             try
             {
-                List<GeometryMesh> meshes = new List<GeometryMesh>();
-                VoxelizationThreadpool.Instance.RunOnMainThread(() =>
+                if (VoxelizationThreadpool.RunInMainThread)
+                {
+                    List<GeometryMesh> meshes = new List<GeometryMesh>();
+                    VoxelizationThreadpool.Instance.RunOnMainThread(() =>
+                    {
+                        VoxelShellMeshParams meshParams = (VoxelShellMeshParams)meshParamsObject;
+                        for (int i = meshParams.lowerIndex; i < meshParams.upperIndex; i++)
+                        {
+                            GeometryPartModule module = meshParams.modules[i];
+                            if (module == null || !module.Valid)
+                                continue;
+
+                            for (int j = 0; j < module.meshDataList.Count; j++)
+                            {
+                                GeometryMesh mesh = module.meshDataList[j];
+                                lock (mesh)
+                                    if (mesh.meshTransform != null && mesh.meshTransform.gameObject.activeInHierarchy && mesh.valid)
+                                        meshes.Add(mesh);
+                            }
+
+                        }
+                    });
+                    for (int i = 0; i < meshes.Count; i++)
+                    {
+                        GeometryMesh mesh = meshes[i];
+
+                        UpdateFromMesh(mesh, mesh.part);
+                    }
+                }
+                else
                 {
                     VoxelShellMeshParams meshParams = (VoxelShellMeshParams)meshParamsObject;
                     for (int i = meshParams.lowerIndex; i < meshParams.upperIndex; i++)
@@ -1709,18 +1736,16 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         for (int j = 0; j < module.meshDataList.Count; j++)
                         {
                             GeometryMesh mesh = module.meshDataList[j];
+                            bool updateFromMesh = false;
                             lock (mesh)
                                 if (mesh.meshTransform != null && mesh.meshTransform.gameObject.activeInHierarchy && mesh.valid)
-                                    meshes.Add(mesh);
+                                    updateFromMesh = true;
+
+                            if (updateFromMesh)
+                                UpdateFromMesh(mesh, mesh.part);
                         }
 
                     }
-                });
-                for(int i = 0; i < meshes.Count; i++)
-                {
-                    GeometryMesh mesh = meshes[i];
-
-                    UpdateFromMesh(mesh, mesh.part);
                 }
             }
             catch (Exception e)
@@ -1871,8 +1896,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             highJ = Math.Min(highJ, yCellLength - 1);
             highK = Math.Min(highK, zCellLength - 1);*/
 
-            for (int j = lowJ; j <= highJ; j++)
-                for (int k = lowK; k <= highK; k++)
+            double invIndexPlaneX = 1 / indexPlane.x;
+
+            for (int j = lowJ; j <= highJ; ++j)
+                for (int k = lowK; k <= highK; ++k)
                 {
                     Vector3 pt = new Vector3(0, j, k);
                     Vector3 p1TestPt = pt - vert1Proj;
@@ -1887,7 +1914,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     u = (dot13_13 * dot12_test - dot12_13 * dot13_test) * invDenom;
                     v = (dot12_12 * dot13_test - dot12_13 * dot12_test) * invDenom;
 
-                    double iFloat = -(indexPlane.y * j + indexPlane.z * k + indexPlane.w) / indexPlane.x;
+                    double iFloat = -(indexPlane.y * j + indexPlane.z * k + indexPlane.w) * invIndexPlaneX;
                     int i = (int)Math.Round(iFloat);
                     if (i < 0 || i >= xCellLength)
                         continue;
@@ -1918,7 +1945,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                     Vector3 p2TestPt = pt - vert2Proj;
                     Vector3 p3TestPt = pt - vert3Proj;
-                    if (p1TestPt.magnitude <= RC || p2TestPt.magnitude <= RC || p3TestPt.magnitude <= RC)
+                    if ((u + v < 0 && p1TestPt.magnitude <= RC) || 
+                        ((u < 0.2 || u + v > 0.8) && p2TestPt.magnitude <= RC) || 
+                        ((v < 0.2 || u + v > 0.8) && p3TestPt.magnitude <= RC))
                     {
 
                         double floatLoc = (i - iFloat) * signW + 0.5;
@@ -1940,9 +1969,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         continue;
                     }
 
-                    if (IsWithinDistanceFromSide(p1p2, p1TestPt) ||
-                        IsWithinDistanceFromSide(p1p3, p1TestPt) ||
-                        IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt))
+                    if ((u < 0 && IsWithinDistanceFromSide(p1p2, p1TestPt)) ||
+                        (v < 0 && IsWithinDistanceFromSide(p1p3, p1TestPt)) ||
+                        (u + v > 1 && IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt)))
                     {
 
                         double floatLoc = (i - iFloat) * signW + 0.5;
@@ -2017,8 +2046,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             highK = Math.Min(highK, zCellLength - 1);*/
 
 
-            for (int i = lowI; i <= highI; i++)
-                for (int k = lowK; k <= highK; k++)
+            double invIndexPlaneY = 1 / indexPlane.y;
+
+            for (int i = lowI; i <= highI; ++i)
+                for (int k = lowK; k <= highK; ++k)
                 {
                     Vector3 pt = new Vector3(i, 0, k);
                     Vector3 p1TestPt = pt - vert1Proj;
@@ -2033,7 +2064,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     u = (dot13_13 * dot12_test - dot12_13 * dot13_test) * invDenom;
                     v = (dot12_12 * dot13_test - dot12_13 * dot12_test) * invDenom;
 
-                    double jFloat = -(indexPlane.x * i + indexPlane.z * k + indexPlane.w) / indexPlane.y;
+                    double jFloat = -(indexPlane.x * i + indexPlane.z * k + indexPlane.w) * invIndexPlaneY;
                     int j = (int)Math.Round(jFloat);
 
                     if (j < 0 || j >= yCellLength)
@@ -2066,7 +2097,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     Vector3 p2TestPt = pt - vert2Proj;
                     Vector3 p3TestPt = pt - vert3Proj;
 
-                    if (p1TestPt.magnitude <= RC || p2TestPt.magnitude <= RC || p3TestPt.magnitude <= RC)
+                    if ((u + v < 0 && p1TestPt.magnitude <= RC) ||
+                        ((u < 0.2 || u + v > 0.8) && p2TestPt.magnitude <= RC) ||
+                        ((v < 0.2 || u + v > 0.8) && p3TestPt.magnitude <= RC))
                     {
                         double floatLoc = (j - jFloat) * signW + 0.5;
                         floatLoc *= maxLocation * 0.25d;
@@ -2087,9 +2120,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         continue;
                     }
 
-                    if (IsWithinDistanceFromSide(p1p2, p1TestPt) ||
-                        IsWithinDistanceFromSide(p1p3, p1TestPt) ||
-                        IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt))
+                    if ((u < 0 && IsWithinDistanceFromSide(p1p2, p1TestPt)) ||
+                        (v < 0 && IsWithinDistanceFromSide(p1p3, p1TestPt)) ||
+                        (u + v > 1 && IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt)))
                     {
                         double floatLoc = (j - jFloat) * signW + 0.5;
                         floatLoc *= maxLocation * 0.5d;
@@ -2161,8 +2194,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             highI = Math.Min(highI, xCellLength - 1);*/
 
 
-            for (int i = lowI; i <= highI; i++)
-                for (int j = lowJ; j <= highJ; j++)
+            double invIndexPlaneZ = 1 / indexPlane.z;
+
+            for (int i = lowI; i <= highI; ++i)
+                for (int j = lowJ; j <= highJ; ++j)
                 {
                     Vector3 pt = new Vector3(i, j, 0);
                     Vector3 p1TestPt = pt - vert1Proj;
@@ -2177,7 +2212,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     u = (dot13_13 * dot12_test - dot12_13 * dot13_test) * invDenom;
                     v = (dot12_12 * dot13_test - dot12_13 * dot12_test) * invDenom;
 
-                    double kFloat = -(indexPlane.x * i + indexPlane.y * j + indexPlane.w) / indexPlane.z;
+                    double kFloat = -(indexPlane.x * i + indexPlane.y * j + indexPlane.w) * invIndexPlaneZ;
                     int k = (int)Math.Round(kFloat);
                     if (k < 0 || k >= zCellLength)
                         continue;
@@ -2209,7 +2244,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     
                     Vector3 p2TestPt = pt - vert2Proj;
                     Vector3 p3TestPt = pt - vert3Proj;
-                    if (p1TestPt.magnitude <= RC || p2TestPt.magnitude <= RC || p3TestPt.magnitude <= RC)
+                    if ((u + v < 0 && p1TestPt.magnitude <= RC) ||
+                        ((u < 0.2 || u + v > 0.8) && p2TestPt.magnitude <= RC) ||
+                        ((v < 0.2 || u + v > 0.8) && p3TestPt.magnitude <= RC))
                     {
                         double floatLoc = (k - kFloat) * signW + 0.5;
                         floatLoc *= maxLocation * 0.25d;
@@ -2230,9 +2267,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         continue;
                     }
 
-                    if (IsWithinDistanceFromSide(p1p2, p1TestPt)||
-                        IsWithinDistanceFromSide(p1p3, p1TestPt)||
-                        IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt))
+                    if ((u < 0 && IsWithinDistanceFromSide(p1p2, p1TestPt))||
+                        (v < 0 && IsWithinDistanceFromSide(p1p3, p1TestPt))||
+                        (u + v > 1 && IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt)))
                     {
                         double floatLoc = (k - kFloat) * signW + 0.5;
                         floatLoc *= maxLocation * 0.5d;
@@ -2262,12 +2299,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Vector3 perpVector = (sideDot / sideSqMag) * sideVector;
             perpVector = testVec - perpVector;
 
-            if (perpVector.magnitude > RC)
-                return false;
-
-            if (sideDot >= 0 && sideDot <= sideSqMag)
-                return true;
-
+            if (sideDot >= 0 && sideDot <= sideSqMag && perpVector.magnitude <= RC)
+                return true; 
+            
             return false;
         }
 
