@@ -231,14 +231,14 @@ namespace FerramAerospaceResearch.FARPartGeometry
             {
                 worldToVesselMatrix = EditorLogic.RootPart.partTransform.worldToLocalMatrix;
             }
-            for (int i = 0; i < meshTransforms.Count; i++)
+            for (int i = 0; i < meshTransforms.Count; ++i)
             {
                 MeshData m = geometryMeshes[i];
                 if (m.vertices.Length <= 0)
                 {
                     geometryMeshes.RemoveAt(i);
                     meshTransforms.RemoveAt(i);
-                    i--;
+                    --i;
                     continue;
                 } 
                 GeometryMesh geoMesh = new GeometryMesh(m, meshTransforms[i], worldToVesselMatrix, this);
@@ -255,7 +255,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         private Bounds SetBoundsFromMeshes()
         {
             Vector3 upper = Vector3.one * float.NegativeInfinity, lower = Vector3.one * float.PositiveInfinity;
-            for (int i = 0; i < meshDataList.Count; i++)
+            for (int i = 0; i < meshDataList.Count; ++i)
             {
                 GeometryMesh geoMesh = meshDataList[i];
 
@@ -309,7 +309,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (field != null)        //This handles stock and Firespitter deployment animations
             {
                 string animationName = (string)field.GetValue(m);
-                for (int i = 0; i < animations.Length; i++)
+                for (int i = 0; i < animations.Length; ++i)
                 {
                     Animation anim = animations[i];
 
@@ -337,7 +337,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if(part.Modules.Contains<ModuleProceduralFairing>())
             {
                 List<ModuleProceduralFairing> fairings = part.Modules.GetModules<ModuleProceduralFairing>();
-                for (int i = 0; i < fairings.Count; i++)
+                for (int i = 0; i < fairings.Count; ++i)
                 {
                     ModuleProceduralFairing fairing = fairings[i];
 
@@ -348,7 +348,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if(part.Modules.Contains<ModuleJettison>())
             {
                 List<ModuleJettison> engineFairings = part.Modules.GetModules<ModuleJettison>();
-                for (int i = 0; i < engineFairings.Count; i++)
+                for (int i = 0; i < engineFairings.Count; ++i)
                 {
                     ModuleJettison engineFairing = engineFairings[i];
 
@@ -438,7 +438,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 if (engineType == "ModuleEnginesAJEJet")
                     airBreather = true;
                 else
-                    for(int i = 0; i < engines.propellants.Count; i++)
+                    for(int i = 0; i < engines.propellants.Count; ++i)
                     {
                         Propellant p = engines.propellants[i];
                         if (p.name == "IntakeAir")
@@ -461,10 +461,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
         public void RunIGeometryUpdaters()
         {
             if (HighLogic.LoadedSceneIsEditor)
-                for (int i = 0; i < geometryUpdaters.Count; i++)
+                for (int i = 0; i < geometryUpdaters.Count; ++i)
                     geometryUpdaters[i].EditorGeometryUpdate();
             else if (HighLogic.LoadedSceneIsFlight)
-                for (int i = 0; i < geometryUpdaters.Count; i++)
+                for (int i = 0; i < geometryUpdaters.Count; ++i)
                     geometryUpdaters[i].FlightGeometryUpdate();
         }
 
@@ -473,7 +473,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (crossSectionAdjusters == null)
                 return;
 
-            for(int i = 0; i < crossSectionAdjusters.Count;i++)
+            for(int i = 0; i < crossSectionAdjusters.Count; ++i)
             {
                 ICrossSectionAdjuster adjuster = crossSectionAdjusters[i];
                 //adjuster.TransformBasis(basis);
@@ -500,7 +500,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             if (_sendUpdateTick > 30)
             {
                 _sendUpdateTick = 0;
-                for (int i = 0; i < animStates.Count; i++)
+                for (int i = 0; i < animStates.Count; ++i)
                 {
                     AnimationState state = animStates[i];
                     if(state == null)
@@ -590,7 +590,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
             if(crossSectionAdjusters != null)
             {
-                for(int i = 0; i < crossSectionAdjusters.Count; i++)
+                for(int i = 0; i < crossSectionAdjusters.Count; ++i)
                 {
                     ICrossSectionAdjuster adjuster = crossSectionAdjusters[i];
                     adjuster.SetThisToVesselMatrixForTransform();
@@ -700,9 +700,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
             Bounds colliderBounds = this.part.GetPartColliderBoundsInBasis(part.partTransform.worldToLocalMatrix);
 
             bool cantUseColliders = true;
+            bool isFairing = part.Modules.Contains<ModuleProceduralFairing>() || part.Modules.Contains("ProceduralFairingSide");
 
             //Voxelize colliders
-            if ((forceUseColliders || (rendererBounds.size.x * rendererBounds.size.z < colliderBounds.size.x * colliderBounds.size.z * 1.6f && rendererBounds.size.y < colliderBounds.size.y * 1.2f && (rendererBounds.center - colliderBounds.center).magnitude < 0.3f)) && !forceUseMeshes)
+            if ((forceUseColliders || isFairing || (rendererBounds.size.x * rendererBounds.size.z < colliderBounds.size.x * colliderBounds.size.z * 1.6f && rendererBounds.size.y < colliderBounds.size.y * 1.2f && (rendererBounds.center - colliderBounds.center).magnitude < 0.3f)) && !forceUseMeshes)
             {
                 foreach (Transform t in meshTransforms)
                 {
@@ -715,7 +716,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     cantUseColliders = false;
                 }
             }
-
 
 
             if (part.Modules.Contains<ModuleJettison>())
@@ -745,7 +745,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
 
                 //Voxelize Everything
-                if (cantUseColliders || forceUseMeshes || part.Modules.Contains<ModuleProceduralFairing>() || part.Modules.Contains("ProceduralFairingSide"))       //in this case, voxelize _everything_
+                if (cantUseColliders || forceUseMeshes || isFairing)       //in this case, voxelize _everything_
                 {
                     foreach (Transform t in meshTransforms)
                     {
@@ -763,7 +763,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             else
             {
                 //Voxelize Everything
-                if (cantUseColliders || forceUseMeshes)       //in this case, voxelize _everything_
+                if (cantUseColliders || forceUseMeshes || isFairing)       //in this case, voxelize _everything_
                 {
                     foreach (Transform t in meshTransforms)
                     {

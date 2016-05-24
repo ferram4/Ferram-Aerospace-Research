@@ -1946,8 +1946,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     Vector3 p2TestPt = pt - vert2Proj;
                     Vector3 p3TestPt = pt - vert3Proj;
                     if ((u + v < 0 && p1TestPt.magnitude <= RC) || 
-                        ((u < 0.2 || u + v > 0.8) && p2TestPt.magnitude <= RC) || 
-                        ((v < 0.2 || u + v > 0.8) && p3TestPt.magnitude <= RC))
+                        ((u < 0.5 || u + v > 0.5) && p2TestPt.magnitude <= RC) || 
+                        ((v < 0.5 || u + v > 0.5) && p3TestPt.magnitude <= RC))
                     {
 
                         double floatLoc = (i - iFloat) * signW + 0.5;
@@ -1969,9 +1969,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         continue;
                     }
 
-                    if ((u < 0 && IsWithinDistanceFromSide(p1p2, p1TestPt)) ||
-                        (v < 0 && IsWithinDistanceFromSide(p1p3, p1TestPt)) ||
-                        (u + v > 1 && IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt)))
+                    if ((IsWithinDistanceFromSide(p1p2, p1TestPt)) ||
+                        (IsWithinDistanceFromSide(p1p3, p1TestPt)) ||
+                        (IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt)))
                     {
 
                         double floatLoc = (i - iFloat) * signW + 0.5;
@@ -2098,8 +2098,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     Vector3 p3TestPt = pt - vert3Proj;
 
                     if ((u + v < 0 && p1TestPt.magnitude <= RC) ||
-                        ((u < 0.2 || u + v > 0.8) && p2TestPt.magnitude <= RC) ||
-                        ((v < 0.2 || u + v > 0.8) && p3TestPt.magnitude <= RC))
+                        ((u < 0.5 || u + v > 0.5) && p2TestPt.magnitude <= RC) ||
+                        ((v < 0.5 || u + v > 0.5) && p3TestPt.magnitude <= RC))
                     {
                         double floatLoc = (j - jFloat) * signW + 0.5;
                         floatLoc *= maxLocation * 0.25d;
@@ -2120,9 +2120,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         continue;
                     }
 
-                    if ((u < 0 && IsWithinDistanceFromSide(p1p2, p1TestPt)) ||
-                        (v < 0 && IsWithinDistanceFromSide(p1p3, p1TestPt)) ||
-                        (u + v > 1 && IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt)))
+                    if ((IsWithinDistanceFromSide(p1p2, p1TestPt)) ||
+                        (IsWithinDistanceFromSide(p1p3, p1TestPt)) ||
+                        (IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt)))
                     {
                         double floatLoc = (j - jFloat) * signW + 0.5;
                         floatLoc *= maxLocation * 0.5d;
@@ -2245,8 +2245,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     Vector3 p2TestPt = pt - vert2Proj;
                     Vector3 p3TestPt = pt - vert3Proj;
                     if ((u + v < 0 && p1TestPt.magnitude <= RC) ||
-                        ((u < 0.2 || u + v > 0.8) && p2TestPt.magnitude <= RC) ||
-                        ((v < 0.2 || u + v > 0.8) && p3TestPt.magnitude <= RC))
+                        ((u < 0.5 || u + v > 0.5) && p2TestPt.magnitude <= RC) ||
+                        ((v < 0.5 || u + v > 0.5) && p3TestPt.magnitude <= RC))
                     {
                         double floatLoc = (k - kFloat) * signW + 0.5;
                         floatLoc *= maxLocation * 0.25d;
@@ -2267,9 +2267,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         continue;
                     }
 
-                    if ((u < 0 && IsWithinDistanceFromSide(p1p2, p1TestPt))||
-                        (v < 0 && IsWithinDistanceFromSide(p1p3, p1TestPt))||
-                        (u + v > 1 && IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt)))
+                    if ((IsWithinDistanceFromSide(p1p2, p1TestPt)) ||
+                        (IsWithinDistanceFromSide(p1p3, p1TestPt)) ||
+                        (IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt)))
                     {
                         double floatLoc = (k - kFloat) * signW + 0.5;
                         floatLoc *= maxLocation * 0.5d;
@@ -2294,12 +2294,18 @@ namespace FerramAerospaceResearch.FARPartGeometry
         private bool IsWithinDistanceFromSide(Vector3 sideVector, Vector3 testVec)
         {
             float sideDot = Vector3.Dot(sideVector, testVec);
+            if (sideDot < 0)
+                return false;
+
             float sideSqMag = sideVector.sqrMagnitude;
+
+            if (sideDot > sideSqMag)
+                return false;
 
             Vector3 perpVector = (sideDot / sideSqMag) * sideVector;
             perpVector = testVec - perpVector;
 
-            if (sideDot >= 0 && sideDot <= sideSqMag && perpVector.magnitude <= RC)
+            if (perpVector.magnitude <= RC)
                 return true; 
             
             return false;
