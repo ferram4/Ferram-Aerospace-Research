@@ -118,7 +118,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             get { return _valid; }
         }
 
-        static int ignoreLayers = 0;
+        static int ignoreLayer0 = 0;
 
         private float currentScaleFactor = 1;
 
@@ -163,7 +163,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             base.OnStart(state);
             _sceneSetup = true;     //this exists only to ensure that OnStart has occurred first
-            ignoreLayers = LayerMask.NameToLayer("TransparentFX");
+            ignoreLayer0 = LayerMask.NameToLayer("TransparentFX");
         }
 
         void FixedUpdate()
@@ -661,7 +661,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 m = mf.sharedMesh;
 
                 MeshRenderer mr = t.GetComponent<MeshRenderer>();
-                if ((t.gameObject.layer == ignoreLayers))
+                if (part.partInfo.partPrefab.FindModelTransform(t.gameObject.name).gameObject.layer == ignoreLayer0)
                     return null;
 
                 return new MeshData(m.vertices, m.triangles, m.bounds);
