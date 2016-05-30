@@ -252,7 +252,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 _vesselIntakeRamDrag.UpdateAeroData(_currentAeroModules, _unusedAeroModules);
             }
 
-            if (FlightGlobals.ready && _currentAeroSections != null)                
+            if (FlightGlobals.ready && _currentAeroSections != null && _vessel)                
                 CalculateAndApplyVesselAeroProperties();
             
 
