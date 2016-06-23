@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.6.5 "Knudsen"
+Ferram Aerospace Research v0.15.7 "Küchemann"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -755,9 +755,9 @@ namespace ferram4
             Vector3 vesselRelMaxMoment = vessel.ReferenceTransform.worldToLocalMatrix.MultiplyVector(maxMomentVector);
 
             Vector3 resultVector = Vector3.zero;
-            resultVector.x = (float)(vesselRelMaxMoment.x * pitchaxis * PitchLocation * 0.01);
-            resultVector.z = (float)(vesselRelMaxMoment.z * yawaxis * YawLocation * 0.01);
-            resultVector.y = (float)(vesselRelMaxMoment.y * rollaxis * RollLocation * 0.01);
+            resultVector.x = (float)Math.Abs(vesselRelMaxMoment.x * pitchaxis * PitchLocation * 0.01);
+            resultVector.z = (float)Math.Abs(vesselRelMaxMoment.z * yawaxis * YawLocation * 0.01);
+            resultVector.y = (float)Math.Abs(vesselRelMaxMoment.y * rollaxis * RollLocation * 0.01);
 
             return resultVector;
         }
