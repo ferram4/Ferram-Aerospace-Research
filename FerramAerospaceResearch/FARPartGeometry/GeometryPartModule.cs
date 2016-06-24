@@ -118,7 +118,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             get { return _valid; }
         }
 
-        static int ignoreLayer0 = 0;
+        static int ignoreLayer0 = -1;
 
         private float currentScaleFactor = 1;
 
@@ -163,7 +163,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             base.OnStart(state);
             _sceneSetup = true;     //this exists only to ensure that OnStart has occurred first
-            ignoreLayer0 = LayerMask.NameToLayer("TransparentFX");
+            if(ignoreLayer0 < 0)
+                ignoreLayer0 = LayerMask.NameToLayer("TransparentFX");
         }
 
         void FixedUpdate()
