@@ -108,6 +108,7 @@ namespace FerramAerospaceResearch
                 instance = new FARSettingsScenarioModule();
                 Debug.Log("Creating new setting module for tutorial/scenario");
                 instance.OnLoad(new ConfigNode());
+                instance.Start();
             }
         }
 

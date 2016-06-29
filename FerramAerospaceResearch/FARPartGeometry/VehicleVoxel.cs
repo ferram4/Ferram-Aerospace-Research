@@ -1840,12 +1840,18 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
             //Vector4 indexPlane = TransformPlaneToIndices(plane);
 
-            if (x > y && x > z)
-                VoxelShellTrianglePerpX(indexPlane, vert1, vert2, vert3, part, invertXYZ);
-            else if(y > x && y > z)
-                VoxelShellTrianglePerpY(indexPlane, vert1, vert2, vert3, part, invertXYZ);
-            else
+            if (z >= y && z >= x * 0.999)
+            {
                 VoxelShellTrianglePerpZ(indexPlane, vert1, vert2, vert3, part, invertXYZ);
+            }
+            else if (x > z && x >= y)
+            {
+                VoxelShellTrianglePerpX(indexPlane, vert1, vert2, vert3, part, invertXYZ);
+            }
+            else
+            {
+                VoxelShellTrianglePerpY(indexPlane, vert1, vert2, vert3, part, invertXYZ);
+            }
         }
 
         private void VoxelShellTrianglePerpX(Vector4 indexPlane, Vector3 vert1, Vector3 vert2, Vector3 vert3, Part part, int invertTri)
@@ -1919,6 +1925,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (i < 0 || i >= xCellLength)
                         continue;
 
+                    pt.x = i;
+                    p1TestPt.x = pt.x - vert1Proj.x;
+
                     if (u >= 0 && v >= 0 && u + v <= 1)
                     {
                         double floatLoc = (i - iFloat) * signW + 0.5;
@@ -1940,12 +1949,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         continue;
                     }
 
-                    pt.x = i;
-                    p1TestPt = pt - vert1Proj;
-
                     Vector3 p2TestPt = pt - vert2Proj;
                     Vector3 p3TestPt = pt - vert3Proj;
-                    if ((u + v < 0 && p1TestPt.magnitude <= RC) || 
+                    if ((u + v < 0.5 && p1TestPt.magnitude <= RC) || 
                         ((u < 0.5 || u + v > 0.5) && p2TestPt.magnitude <= RC) || 
                         ((v < 0.5 || u + v > 0.5) && p3TestPt.magnitude <= RC))
                     {
@@ -1969,13 +1975,28 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         continue;
                     }
 
-                    if ((IsWithinDistanceFromSide(p1p2, p1TestPt)) ||
-                        (IsWithinDistanceFromSide(p1p3, p1TestPt)) ||
-                        (IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt)))
+                    bool validDistFromSide = false;
+                    double distFromSide = DistanceFromSide(p1p2, p1TestPt);
+                    if (distFromSide <= RC)
+                        validDistFromSide = true;
+                    else
+                    {
+                        distFromSide = DistanceFromSide(p1p3, p1TestPt);
+                        if (distFromSide <= RC)
+                            validDistFromSide = true;
+                        else
+                        {
+                            distFromSide = DistanceFromSide(vert3Proj - vert2Proj, p2TestPt);
+                            if (distFromSide <= RC)
+                                validDistFromSide = true;
+                        }
+                    }
+
+                    if (validDistFromSide)
                     {
 
                         double floatLoc = (i - iFloat) * signW + 0.5;
-                        floatLoc *= maxLocation * 0.5d;
+                        floatLoc *= maxLocation * (RC - distFromSide);
 
                         if (floatLoc > maxLocation)
                             floatLoc = maxLocation;
@@ -2070,6 +2091,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (j < 0 || j >= yCellLength)
                         continue;
 
+                    pt.y = j;
+                    p1TestPt.y = pt.y - vert1Proj.y;
+
                     if (u >= 0 && v >= 0 && u + v <= 1)
                     {
                         double floatLoc = (j - jFloat) * signW + 0.5;
@@ -2091,13 +2115,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         continue;
                     }
 
-                    pt.y = j;
-                    p1TestPt = pt - vert1Proj;
-
                     Vector3 p2TestPt = pt - vert2Proj;
                     Vector3 p3TestPt = pt - vert3Proj;
 
-                    if ((u + v < 0 && p1TestPt.magnitude <= RC) ||
+                    if ((u + v < 0.5 && p1TestPt.magnitude <= RC) ||
                         ((u < 0.5 || u + v > 0.5) && p2TestPt.magnitude <= RC) ||
                         ((v < 0.5 || u + v > 0.5) && p3TestPt.magnitude <= RC))
                     {
@@ -2120,12 +2141,27 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         continue;
                     }
 
-                    if ((IsWithinDistanceFromSide(p1p2, p1TestPt)) ||
-                        (IsWithinDistanceFromSide(p1p3, p1TestPt)) ||
-                        (IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt)))
+                    bool validDistFromSide = false;
+                    double distFromSide = DistanceFromSide(p1p2, p1TestPt);
+                    if (distFromSide <= RC)
+                        validDistFromSide = true;
+                    else
+                    {
+                        distFromSide = DistanceFromSide(p1p3, p1TestPt);
+                        if (distFromSide <= RC)
+                            validDistFromSide = true;
+                        else
+                        {
+                            distFromSide = DistanceFromSide(vert3Proj - vert2Proj, p2TestPt);
+                            if (distFromSide <= RC)
+                                validDistFromSide = true;
+                        }
+                    }
+
+                    if (validDistFromSide)
                     {
                         double floatLoc = (j - jFloat) * signW + 0.5;
-                        floatLoc *= maxLocation * 0.5d;
+                        floatLoc *= maxLocation * (RC - distFromSide);
 
                         if (floatLoc > maxLocation)
                             floatLoc = maxLocation;
@@ -2217,6 +2253,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     if (k < 0 || k >= zCellLength)
                         continue;
 
+                    pt.z = k;
+                    p1TestPt.z = pt.z - vert1Proj.z;
 
                     if (u >= 0 && v >= 0 && u + v <= 1)
                     {
@@ -2238,13 +2276,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         SetVoxelPoint(i, j, k, part, plane, location);
                         continue;
                     }
-
-                    pt.z = k;
-                    p1TestPt = pt - vert1Proj;
                     
                     Vector3 p2TestPt = pt - vert2Proj;
                     Vector3 p3TestPt = pt - vert3Proj;
-                    if ((u + v < 0 && p1TestPt.magnitude <= RC) ||
+                    if ((u + v < 0.5 && p1TestPt.magnitude <= RC) ||
                         ((u < 0.5 || u + v > 0.5) && p2TestPt.magnitude <= RC) ||
                         ((v < 0.5 || u + v > 0.5) && p3TestPt.magnitude <= RC))
                     {
@@ -2267,12 +2302,28 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         continue;
                     }
 
-                    if ((IsWithinDistanceFromSide(p1p2, p1TestPt)) ||
-                        (IsWithinDistanceFromSide(p1p3, p1TestPt)) ||
-                        (IsWithinDistanceFromSide(vert3Proj - vert2Proj, p2TestPt)))
+
+                    bool validDistFromSide = false;
+                    double distFromSide = DistanceFromSide(p1p2, p1TestPt);
+                    if (distFromSide <= RC)
+                        validDistFromSide = true;
+                    else
+                    {
+                        distFromSide = DistanceFromSide(p1p3, p1TestPt);
+                        if (distFromSide <= RC)
+                            validDistFromSide = true;
+                        else
+                        {
+                            distFromSide = DistanceFromSide(vert3Proj - vert2Proj, p2TestPt);
+                            if (distFromSide <= RC)
+                                validDistFromSide = true;
+                        }
+                    }
+
+                    if (validDistFromSide)
                     {
                         double floatLoc = (k - kFloat) * signW + 0.5;
-                        floatLoc *= maxLocation * 0.5d;
+                        floatLoc *= maxLocation * (RC - distFromSide);
 
                         if (floatLoc > maxLocation)
                             floatLoc = maxLocation;
@@ -2291,24 +2342,21 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
         }
 
-        private bool IsWithinDistanceFromSide(Vector3 sideVector, Vector3 testVec)
+        private double DistanceFromSide(Vector3 sideVector, Vector3 testVec)
         {
             float sideDot = Vector3.Dot(sideVector, testVec);
             if (sideDot < 0)
-                return false;
+                return 1;
 
             float sideSqMag = sideVector.sqrMagnitude;
 
             if (sideDot > sideSqMag)
-                return false;
+                return 1;
 
             Vector3 perpVector = (sideDot / sideSqMag) * sideVector;
             perpVector = testVec - perpVector;
 
-            if (perpVector.magnitude <= RC)
-                return true; 
-            
-            return false;
+            return perpVector.magnitude;
         }
 
         private Vector4d CalculateEquationOfSweepPlane(Vector3 normalVector, out double wInc)

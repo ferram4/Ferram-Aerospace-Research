@@ -537,8 +537,10 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         void DebugVisualizationGUI()
         {
+            GUILayout.BeginHorizontal();
             if (GUILayout.Button("Display Debug Voxels"))
                 _vehicleAero.DebugVisualizeVoxels(EditorLogic.RootPart.partTransform.localToWorldMatrix);
+            GUILayout.EndHorizontal();
         }
 
         void CrossSectionAnalysisGUI()
