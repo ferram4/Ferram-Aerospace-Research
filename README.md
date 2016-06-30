@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.15.7 "Küchemann"
+Ferram Aerospace Research v0.15.7.1 "Kutta"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -64,6 +64,15 @@ Set all the other winglet/control surface values to zero
 
 CHANGELOG
 =======================================================
+0.15.7.1V "Kutta"------------------------------------  
+
+Update to MFI 1.1.6 to fix an incompatibility with Kopernicus and the earlier version  
+Update CompatibilityChecker version  
+Update license  
+
+Fix an issue where voxels could be incredibly asymmetric on symmetric crafts  
+
+
 0.15.7V "Küchemann"------------------------------------  
 
 Update to ModuleManager 2.6.25  
