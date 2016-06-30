@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.7 "Küchemann"
+Ferram Aerospace Research v0.15.7.1 "Kutta"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -284,7 +284,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             handledAeroModulesIndexDict.Clear();
         }
         
-        public void PredictionCalculateAeroForces(float atmDensity, float machNumber, float reynoldsPerUnitLength, float pseudoKüchemannNumber, float skinFrictionDrag, Vector3 vel, ferram4.FARCenterQuery center)
+        public void PredictionCalculateAeroForces(float atmDensity, float machNumber, float reynoldsPerUnitLength, float pseudoKuttaNumber, float skinFrictionDrag, Vector3 vel, ferram4.FARCenterQuery center)
         {
             if (partData.Count == 0)
                 return;
@@ -351,7 +351,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             nForce *= normalForceFactor;
 
             double xForce = -skinFrictionForce * Math.Sign(cosAoA) * cosSqrAoA;
-            double localVelForce = xForce * pseudoKüchemannNumber;
+            double localVelForce = xForce * pseudoKuttaNumber;
             xForce -= localVelForce;
 
             localVelForce = Math.Abs(localVelForce);
@@ -430,7 +430,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             center.AddTorque(torqueVector);
         }
 
-        public void FlightCalculateAeroForces(float atmDensity, float machNumber, float reynoldsPerUnitLength, float pseudoKüchemannNumber, float skinFrictionDrag)
+        public void FlightCalculateAeroForces(float atmDensity, float machNumber, float reynoldsPerUnitLength, float pseudoKuttaNumber, float skinFrictionDrag)
         {
 
             double skinFrictionForce = skinFrictionDrag * xForceSkinFriction.Evaluate(machNumber);      //this will be the same for each part, so why recalc it multiple times?
@@ -489,7 +489,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 nForce *= normalForceFactor;
 
                 double xForce = -skinFrictionForce * Math.Sign(cosAoA) * cosSqrAoA;
-                double localVelForce = xForce * pseudoKüchemannNumber;
+                double localVelForce = xForce * pseudoKuttaNumber;
                 xForce -= localVelForce;
 
                 localVelForce = Math.Abs(localVelForce);

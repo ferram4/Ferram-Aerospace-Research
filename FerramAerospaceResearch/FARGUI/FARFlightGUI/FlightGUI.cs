@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.7 "Küchemann"
+Ferram Aerospace Research v0.15.7.1 "Kutta"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -273,7 +273,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
             if (_vessel == FlightGlobals.ActiveVessel && showGUI && showAllGUI)
             {
-                mainGuiRect = GUILayout.Window(this.GetHashCode(), mainGuiRect, MainFlightGUIWindow, "FAR, v0.15.7 'Küchemann'", GUILayout.MinWidth(230));
+                mainGuiRect = GUILayout.Window(this.GetHashCode(), mainGuiRect, MainFlightGUIWindow, "FAR, v0.15.7.1 'Kutta'", GUILayout.MinWidth(230));
                 GUIUtils.ClampToScreen(mainGuiRect);
 
                 if (showFlightDataWindow)

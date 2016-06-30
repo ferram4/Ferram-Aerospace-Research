@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.7 "Küchemann"
+Ferram Aerospace Research v0.15.7.1 "Kutta"
 =========================
 Aerodynamics model for Kerbal Space Program
 
