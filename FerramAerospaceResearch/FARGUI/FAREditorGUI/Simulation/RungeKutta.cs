@@ -1,5 +1,5 @@
 ﻿/*
-<<<<<<< HEAD:FerramAerospaceResearch/FARRungeKutta.cs
+<<<<<<< HEAD:FerramAerospaceResearch/FARRungeLanchester.cs
 Ferram Aerospace Research v0.14.7
 Copyright 2014, Michael Ferrara, aka Ferram4
 
@@ -34,7 +34,7 @@ Copyright 2014, Michael Ferrara, aka Ferram4
  * Toolbar integration powered by blizzy78's Toolbar plugin; used with permission
  *	http://forum.kerbalspaceprogram.com/threads/60863
 =======
-Ferram Aerospace Research v0.15.7.1 "Kutta"
+Ferram Aerospace Research v0.15.7.2 "Lanchester"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -75,7 +75,7 @@ Copyright 2015, Michael Ferrara, aka Ferram4
 
    Toolbar integration powered by blizzy78's Toolbar plugin; used with permission  
 	http://forum.kerbalspaceprogram.com/threads/60863
->>>>>>> 89b2865ff34b6d3d23d7e6860f7820d7aa80af02:FerramAerospaceResearch/FARGUI/FAREditorGUI/Simulation/RungeKutta.cs
+>>>>>>> 89b2865ff34b6d3d23d7e6860f7820d7aa80af02:FerramAerospaceResearch/FARGUI/FAREditorGUI/Simulation/RungeLanchester.cs
  */
 
 using System;
@@ -85,7 +85,7 @@ using UnityEngine;
 
 namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
 {
-    class RungeKutta4
+    class RungeLanchester4
     {
 //        Vector4 a = new Vector4(0, 0.5f, 0.5f, 1);
         Vector4 c = new Vector4(1f / 6, 1f / 3, 1f / 3, 1f / 6);
@@ -101,7 +101,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
         public double[,] soln;
         public double[] time;
 
-        public RungeKutta4(double endTime, double dt, SimMatrix eqns, double[] initCond)
+        public RungeLanchester4(double endTime, double dt, SimMatrix eqns, double[] initCond)
         {
 //            b.Add(0.5f, 0, 1);
 //            b.Add(0.5f, 1, 2);

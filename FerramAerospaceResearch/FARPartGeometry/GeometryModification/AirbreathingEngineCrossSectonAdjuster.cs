@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.7.1 "Kutta"
+Ferram Aerospace Research v0.15.7.2 "Lanchester"
 =========================
 Aerodynamics model for Kerbal Space Program
 

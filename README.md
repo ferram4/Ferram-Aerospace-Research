@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.15.7.1 "Kutta"
+Ferram Aerospace Research v0.15.7.2 "Lanchester"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -64,6 +64,10 @@ Set all the other winglet/control surface values to zero
 
 CHANGELOG
 =======================================================
+0.15.7.2V "Lanchester"------------------------------------  
+
+Fix a serious bug in v0.15.7 and v0.15.7.1 where chutes would not provide any drag  
+
 0.15.7.1V "Kutta"------------------------------------  
 
 Update to MFI 1.1.6 to fix an incompatibility with Kopernicus and the earlier version  

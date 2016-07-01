@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.7.1 "Kutta"
+Ferram Aerospace Research v0.15.7.2 "Lanchester"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -283,7 +283,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             reynoldsNumber = FARAeroUtil.CalculateReynoldsNumber(_vessel.atmDensity, Length, _vessel.srfSpeed, machNumber, FlightGlobals.getExternalTemperature((float)_vessel.altitude, _vessel.mainBody), _vessel.mainBody.atmosphereAdiabaticIndex);
             float skinFrictionDragCoefficient = (float)FARAeroUtil.SkinFrictionDrag(reynoldsNumber, machNumber);
 
-            float pseudoKuttaNumber = (float)(machNumber / (reynoldsNumber + machNumber));
+            float pseudoLanchesterNumber = (float)(machNumber / (reynoldsNumber + machNumber));
 
             Vector3 frameVel = Krakensbane.GetFrameVelocityV3f();
 
@@ -307,7 +307,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }*/
             
             for (int i = 0; i < _currentAeroSections.Count; i++)
-                _currentAeroSections[i].FlightCalculateAeroForces(atmDensity, (float)machNumber, (float)(reynoldsNumber / Length), pseudoKuttaNumber, skinFrictionDragCoefficient);
+                _currentAeroSections[i].FlightCalculateAeroForces(atmDensity, (float)machNumber, (float)(reynoldsNumber / Length), pseudoLanchesterNumber, skinFrictionDragCoefficient);
 
             _vesselIntakeRamDrag.ApplyIntakeRamDrag((float)machNumber, _vessel.srf_velocity.normalized, (float)_vessel.dynamicPressurekPa);
 
@@ -340,10 +340,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
             float reynoldsPerLength = reynoldsNumber / (float)Length;
             float skinFriction = (float)FARAeroUtil.SkinFrictionDrag(reynoldsNumber, machNumber);
 
-            float pseudoKuttaNumber = machNumber / (reynoldsNumber + machNumber);
+            float pseudoLanchesterNumber = machNumber / (reynoldsNumber + machNumber);
 
             for(int i = 0; i < _currentAeroSections.Count; i++)
-                _currentAeroSections[i].PredictionCalculateAeroForces(density, machNumber, reynoldsPerLength, pseudoKuttaNumber, skinFriction, velocityWorldVector, center);
+                _currentAeroSections[i].PredictionCalculateAeroForces(density, machNumber, reynoldsPerLength, pseudoLanchesterNumber, skinFriction, velocityWorldVector, center);
 
             for (int i = 0; i < _legacyWingModels.Count; i++)
                 _legacyWingModels[i].PrecomputeCenterOfLift(velocityWorldVector, machNumber, density, center);

@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.7.1 "Kutta"
+Ferram Aerospace Research v0.15.7.2 "Lanchester"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -135,7 +135,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
              * 
              * 
              */
-            RungeKutta4 transSolve = new RungeKutta4(endTime, initDt, A, InitCond);
+            RungeLanchester4 transSolve = new RungeLanchester4(endTime, initDt, A, InitCond);
             transSolve.Solve();
 
             GraphData lines = new GraphData();
@@ -226,7 +226,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
              * 
              */
 
-            RungeKutta4 transSolve = new RungeKutta4(endTime, initDt, A, InitCond);
+            RungeLanchester4 transSolve = new RungeLanchester4(endTime, initDt, A, InitCond);
             transSolve.Solve();
 
             GraphData lines = new GraphData();
