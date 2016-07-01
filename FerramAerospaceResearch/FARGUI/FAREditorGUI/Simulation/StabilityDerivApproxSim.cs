@@ -135,7 +135,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
              * 
              * 
              */
-            RungeLanchester4 transSolve = new RungeLanchester4(endTime, initDt, A, InitCond);
+            RungeKutta4 transSolve = new RungeKutta4(endTime, initDt, A, InitCond);
             transSolve.Solve();
 
             GraphData lines = new GraphData();
@@ -226,7 +226,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
              * 
              */
 
-            RungeLanchester4 transSolve = new RungeLanchester4(endTime, initDt, A, InitCond);
+            RungeKutta4 transSolve = new RungeKutta4(endTime, initDt, A, InitCond);
             transSolve.Solve();
 
             GraphData lines = new GraphData();
