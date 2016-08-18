@@ -662,10 +662,15 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 m = mf.sharedMesh;
 
                 //MeshRenderer mr = t.GetComponent<MeshRenderer>();
-                
-                if(!part.Modules.Contains<ModuleProceduralFairing>())
-                    if (part.partInfo.partPrefab.FindModelTransform(t.gameObject.name).gameObject.layer == ignoreLayer0)
+
+                if (!part.Modules.Contains<ModuleProceduralFairing>())
+                {
+                    Transform prefabTransform = part.partInfo.partPrefab.FindModelTransform(t.gameObject.name);
+                    if (prefabTransform != null && prefabTransform.gameObject.layer == ignoreLayer0)
+                    {
                         return null;
+                    }
+                }
 
                 return new MeshData(m.vertices, m.triangles, m.bounds);
             }
