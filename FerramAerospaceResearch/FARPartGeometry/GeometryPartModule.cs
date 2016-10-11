@@ -189,7 +189,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             
             returnVal &= (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready) || (HighLogic.LoadedSceneIsEditor && ApplicationLauncher.Ready);
 
-            returnVal &= part.collider != null || part.Modules.Contains<ModuleWheel>() || part.Modules.Contains<ModuleWheelBase>() || part.Modules.Contains<KerbalEVA>() || part.Modules.Contains<FlagSite>();
+            returnVal &= part.collider != null || part.Modules.Contains<ModuleWheelBase>() || part.Modules.Contains<KerbalEVA>() || part.Modules.Contains<FlagSite>();
 
             return returnVal;
         }
