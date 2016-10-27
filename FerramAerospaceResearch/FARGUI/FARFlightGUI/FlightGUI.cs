@@ -105,8 +105,10 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
         }
 
-        void Start()
+        protected override void OnStart()
         {
+            base.OnStart();
+
             if (!CompatibilityChecker.IsAllCompatible())
             {
                 this.enabled = false;

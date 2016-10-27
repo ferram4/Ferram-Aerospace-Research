@@ -100,8 +100,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
         VehicleAerodynamics _vehicleAero;
         VesselIntakeRamDrag _vesselIntakeRamDrag;
 
-        private void Start()
+        protected override void OnStart()
         {
+            base.OnStart();
+
             if (!CompatibilityChecker.IsAllCompatible())
             {
                 this.enabled = false;
