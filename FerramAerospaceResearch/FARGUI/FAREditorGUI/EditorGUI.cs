@@ -200,7 +200,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             GameEvents.onGUIEngineersReportReady.Remove(AddDesignConcerns);
             GameEvents.onGUIEngineersReportDestroy.Remove(AddDesignConcerns);
 
-            EditorLogic.fetch.Unlock("FAREdLock");
+            EditorLogic.fetch?.Unlock("FAREdLock");
 
             if (blizzyEditorGUIButton != null)
             {
@@ -214,7 +214,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             _editorGraph = null;
             _stabDeriv = null;
 
-            if(_vehicleAero != null)
+            if (_vehicleAero != null)
                 _vehicleAero.ForceCleanup();
             _vehicleAero = null;
         }
@@ -227,7 +227,6 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 List<Part> partsList = EditorLogic.SortedShipList;
                 for (int i = 0; i < partsList.Count; i++)
                     UpdateGeometryModule(partsList[i]);
-                
             }
 
             RequestUpdateVoxel();
@@ -248,7 +247,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             //instance._areaRulingOverlay = new EditorAreaRulingOverlay(new Color(0.05f, 0.05f, 0.05f, 0.7f), crossSection, crossSectionDeriv, 10, 5);
             RequestUpdateVoxel();
         }
-       
+
         private void UpdateGeometryEvent(ConstructionEventType type, Part pEvent)
         {
             if (type == ConstructionEventType.PartRotated ||
@@ -350,7 +349,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 }
                 else if (_updateQueued)
                 {
-                    Debug.Log("Updating " + EditorLogic.fetch.ship.shipName);
+                    var shipname = EditorLogic.fetch?.ship?.shipName ?? "unknown ship";
+                    Debug.Log("Updating " + shipname);
                     RecalculateVoxel();
                 }
             }
@@ -468,8 +468,18 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             if (useKSPSkin)
                 GUI.skin = HighLogic.Skin;
 
+            PreventClickThrough();
+        }
+
+        /// <summary> Lock the model if our own window is shown and has cursor focus to prevent click-through. </summary>
+        private void PreventClickThrough()
+        {
             bool cursorInGUI = false;
             EditorLogic EdLogInstance = EditorLogic.fetch;
+            if (!EdLogInstance)
+            {
+                return;
+            }
             if (showGUI)
             {
                 guiRect = GUILayout.Window(this.GetHashCode(), guiRect, OverallSelectionGUI, "FAR Analysis");
@@ -482,7 +492,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 //if (EditorTooltip.Instance)
                 //    EditorTooltip.Instance.HideToolTip();
 
-                if(!CameraMouseLook.GetMouseLook())
+                if (!CameraMouseLook.GetMouseLook())
                     EdLogInstance.Lock(false, false, false, "FAREdLock");
                 else
                     EdLogInstance.Unlock("FAREdLock");
