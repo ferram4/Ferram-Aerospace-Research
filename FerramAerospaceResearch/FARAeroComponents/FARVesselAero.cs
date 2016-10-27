@@ -99,7 +99,6 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         VehicleAerodynamics _vehicleAero;
         VesselIntakeRamDrag _vesselIntakeRamDrag;
-        
 
         private void Start()
         {
@@ -110,14 +109,19 @@ namespace FerramAerospaceResearch.FARAeroComponents
             }
 
             _vessel = gameObject.GetComponent<Vessel>();
-            this.enabled = true;
-
+            if (!_vessel.rootPart)
+            {
+                this.enabled = false;
+                return;
+            }
             if (_vessel.rootPart.Modules.Contains("MissileLauncher") && _vessel.parts.Count == 1)
             {
                 _vessel.rootPart.dragModel = Part.DragModel.CUBE;
                 this.enabled = false;
                 return;
             }
+
+            this.enabled = true;
 
             _currentGeoModules = new List<GeometryPartModule>();
             for (int i = 0; i < _vessel.parts.Count; i++)
@@ -248,13 +252,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
                     a.ForceLegacyAeroUpdates();
                     //Debug.Log(a.part.partInfo.title + " unshielded, area: " + a.ProjectedAreas.totalArea);
                 }
-                
+
                 _vesselIntakeRamDrag.UpdateAeroData(_currentAeroModules, _unusedAeroModules);
             }
 
             if (FlightGlobals.ready && _currentAeroSections != null && _vessel)                
                 CalculateAndApplyVesselAeroProperties();
-            
 
             if (_currentGeoModules.Count > geoModulesReady)
             {
