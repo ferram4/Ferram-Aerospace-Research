@@ -1,14 +1,9 @@
-/FerramAerospaceResearch/bin/Debug/*
-/FerramAerospaceResearch/bin/Release/*
-/FerramAerospaceResearch/obj/Debug/*
-/FerramAerospaceResearch/obj/Release/*
+bin
+obj
 
-/ferramGraph/bin/Debug/*
-/ferramGraph/bin/Release/*
-/ferramGraph/obj/Debug/*
-/ferramGraph/obj/Release/*
-
+*.mdb
 /GameData/FerramAerospaceResearch/Custom*.cfg
 /GameData/FerramAerospaceResearch/FARForceDataUpdate.cfg
 *.suo
 *.DotSettings
+*.user
