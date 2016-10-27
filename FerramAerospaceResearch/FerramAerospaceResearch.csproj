@@ -12,7 +12,7 @@
     <AssemblyName>FerramAerospaceResearch</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <TargetFrameworkProfile>Unity Full v3.5</TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -38,22 +38,19 @@
   <ItemGroup>
     <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Games\KSP 1.2\KSP_x64_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\dependencies\KSP-1.2.0\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Games\KSP 1.2\KSP_x64_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
-    </Reference>
-    <Reference Include="ferramGraph">
-      <HintPath>..\ferramGraph\bin\Release\ferramGraph.dll</HintPath>
+      <HintPath>..\..\dependencies\KSP-1.2.0\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="KSPAssets, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Games\KSP 1.2\KSP_x64_Data\Managed\KSPAssets.dll</HintPath>
+      <HintPath>..\..\dependencies\KSP-1.2.0\KSPAssets.dll</HintPath>
     </Reference>
     <Reference Include="ModularFlightIntegrator, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Games\KSP 1.1.3\GameData\ModularFlightIntegrator\ModularFlightIntegrator.dll</HintPath>
+      <HintPath>..\..\dependencies\ModularFlightIntegrator\ModularFlightIntegrator.dll</HintPath>
     </Reference>
     <Reference Include="Scale_Redist, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -62,11 +59,11 @@
     <Reference Include="System" />
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Games\KSP 1.2\KSP_x64_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>..\..\dependencies\Unity-5.4.0p4\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Games\KSP 1.2\KSP_x64_Data\Managed\UnityEngine.UI.dll</HintPath>
+      <HintPath>..\..\dependencies\Unity-5.4.0p4\UnityEngine.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -164,9 +161,16 @@
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ferramGraph\ferramGraph.csproj">
+      <Project>{0ccfed24-728c-432b-9fdc-30bef1116ede}</Project>
+      <Name>ferramGraph</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /y "$(TargetPath)" "$(SolutionDir)/GameData\FerramAerospaceResearch\Plugins"</PostBuildEvent>
+    <PostBuildEvent>call pdb2mdb "$(TargetPath)"
+xcopy /y "$(TargetPath)*" "$(SolutionDir)/GameData\FerramAerospaceResearch\Plugins"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
