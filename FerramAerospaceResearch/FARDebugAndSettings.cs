@@ -57,15 +57,16 @@ namespace FerramAerospaceResearch
     public class FARDebugAndSettings : MonoBehaviour
     {
         public static KSP.IO.PluginConfiguration config;
+        private static bool hasScenarioChanged = true;
         private IButton FARDebugButtonBlizzy = null;
         private ApplicationLauncherButton FARDebugButtonStock = null;
         private bool debugMenu = false;
         private bool inputLocked = false;
         private Rect debugWinPos = new Rect(50, 50, 700, 250);
-        private static Texture2D cLTexture = new Texture2D(25, 15);
-        private static Texture2D cDTexture = new Texture2D(25, 15);
-        private static Texture2D cMTexture = new Texture2D(25, 15);
-        private static Texture2D l_DTexture = new Texture2D(25, 15);
+        private Texture2D cLTexture = null;
+        private Texture2D cDTexture = null;
+        private Texture2D cMTexture = null;
+        private Texture2D l_DTexture = null;
 
         private enum MenuTab
         {
@@ -94,6 +95,15 @@ namespace FerramAerospaceResearch
         private int aeroStressIndex = 0;
         private int atmBodyIndex = 1;
 
+        #region Unity MonoBehaviour messages
+        void Awake()
+        {
+            cLTexture = new Texture2D(25, 15);
+            cDTexture = new Texture2D(25, 15);
+            cMTexture = new Texture2D(25, 15);
+            l_DTexture = new Texture2D(25, 15);
+        }
+
         void Start()
         {
             if (!CompatibilityChecker.IsAllCompatible())
@@ -112,7 +122,6 @@ namespace FerramAerospaceResearch
 
             if (FARDebugValues.useBlizzyToolbar && FARDebugButtonBlizzy != null)
             {
-                 
                 FARDebugButtonBlizzy = ToolbarManager.Instance.add("FerramAerospaceResearch", "FARDebugButtonBlizzy");
                 FARDebugButtonBlizzy.TexturePath = "FerramAerospaceResearch/Textures/icon_button_blizzy";
                 FARDebugButtonBlizzy.ToolTip = "FAR Debug Options";
@@ -123,20 +132,30 @@ namespace FerramAerospaceResearch
 
         }
 
+        void Update()
+        {
+            if (hasScenarioChanged)
+            {
+                OnScenarioChanged();
+                hasScenarioChanged = false;
+            }
+        }
+        #endregion Unity MonoBehaviour messages
+
         void OnGUIAppLauncherReady()
         {
             if (ApplicationLauncher.Ready && FARDebugButtonStock == null)
             {
-                    FARDebugButtonStock = ApplicationLauncher.Instance.AddModApplication(
-                        onAppLaunchToggleOn,
-                        onAppLaunchToggleOff,
-                        DummyVoid,
-                        DummyVoid,
-                        DummyVoid,
-                        DummyVoid,
-                        ApplicationLauncher.AppScenes.SPACECENTER,
-                        (Texture)GameDatabase.Instance.GetTexture("FerramAerospaceResearch/Textures/icon_button_stock", false));
-                
+                FARDebugButtonStock = ApplicationLauncher.Instance.AddModApplication(
+                    onAppLaunchToggleOn,
+                    onAppLaunchToggleOff,
+                    DummyVoid,
+                    DummyVoid,
+                    DummyVoid,
+                    DummyVoid,
+                    ApplicationLauncher.AppScenes.SPACECENTER,
+                    (Texture)GameDatabase.Instance.GetTexture("FerramAerospaceResearch/Textures/icon_button_stock", false));
+
             }
         }
 
@@ -152,7 +171,6 @@ namespace FerramAerospaceResearch
 
         void DummyVoid() { }
 
-        
         public void OnGUI()
         {
             if (HighLogic.LoadedScene != GameScenes.SPACECENTER)
@@ -282,7 +300,6 @@ namespace FerramAerospaceResearch
             GUILayout.EndVertical();
         }
 
-        
         private void AeroStressTab(GUIStyle buttonStyle, GUIStyle boxStyle)
         {
             int i = 0;
@@ -367,7 +384,7 @@ namespace FerramAerospaceResearch
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
         }
-            
+
         private void StringListUpdateGUI(List<string> stringList, GUIStyle thisStyle, GUIStyle boxStyle)
         {
             int removeIndex = -1;
@@ -395,7 +412,7 @@ namespace FerramAerospaceResearch
 
             GUILayout.EndVertical();
         }
-        
+
         private void DebugAndDataTab(GUIStyle thisStyle)
         {
             GUILayout.BeginHorizontal();
@@ -488,7 +505,7 @@ namespace FerramAerospaceResearch
             GUILayout.EndHorizontal();
 
             if (updateTexture)
-                ReColorTexture(ref input, ref texture);
+                ReColorTexture(input, ref texture);
 
             Rect textRect = GUILayoutUtility.GetRect(25, 15);
             textRect.Set(textRect.x, textRect.y + 10, textRect.width, textRect.height);
@@ -496,7 +513,7 @@ namespace FerramAerospaceResearch
             GUILayout.EndHorizontal();
         }
 
-        public static void ReColorTexture(ref Color color, ref Texture2D texture)
+        private void ReColorTexture(Color color, ref Texture2D texture)
         {
             for (int i = 0; i < texture.width; i++)
                 for (int j = 0; j < texture.height; j++)
@@ -536,21 +553,17 @@ namespace FerramAerospaceResearch
             FARActionGroupConfiguration.LoadConfiguration();
             FARAnimOverrides.LoadAnimOverrides();
 
-            Color tmpColor = GUIColors.Instance[0];
-            ReColorTexture(ref tmpColor, ref cLTexture);
-            GUIColors.Instance[0] = tmpColor;
+            hasScenarioChanged = true;
+        }
 
-            tmpColor = GUIColors.Instance[1];
-            ReColorTexture(ref tmpColor, ref cDTexture);
-            GUIColors.Instance[1] = tmpColor;
-
-            tmpColor = GUIColors.Instance[2];
-            ReColorTexture(ref tmpColor, ref cMTexture);
-            GUIColors.Instance[2] = tmpColor;
-
-            tmpColor = GUIColors.Instance[3];
-            ReColorTexture(ref tmpColor, ref l_DTexture);
-            GUIColors.Instance[3] = tmpColor;
+        /// <summary> Update GUI after a new scenario was loaded. </summary>
+        private void OnScenarioChanged()
+        {
+            var guiColors = GUIColors.Instance;
+            ReColorTexture(guiColors[0], ref cLTexture);
+            ReColorTexture(guiColors[1], ref cDTexture);
+            ReColorTexture(guiColors[2], ref cMTexture);
+            ReColorTexture(guiColors[3], ref l_DTexture);
         }
 
         public static void SaveConfigs(ConfigNode node)
@@ -580,6 +593,7 @@ namespace FerramAerospaceResearch
                 FARDebugButtonBlizzy.Destroy();
         }
     }
+
     public static class FARDebugValues
     {
         //Right-click menu options
@@ -588,7 +602,6 @@ namespace FerramAerospaceResearch
 
         public static bool useBlizzyToolbar = false;
         public static bool aeroFailureExplosions = true;
-    
     }
 }
 
