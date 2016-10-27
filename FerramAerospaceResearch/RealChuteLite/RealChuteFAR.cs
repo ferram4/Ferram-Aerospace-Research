@@ -778,6 +778,15 @@ namespace FerramAerospaceResearch.RealChuteLite
             return false;
         }
 
+        // TODO 1.2: provide actual implementation of this new method
+        public bool IsMultipleCubesActive
+        {
+            get
+            {
+                return true;
+            }
+        }
+
         //Info window
         private void Window(int id)
         {

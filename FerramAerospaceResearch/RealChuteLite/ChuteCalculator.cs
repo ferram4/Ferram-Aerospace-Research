@@ -38,8 +38,9 @@ namespace FerramAerospaceResearch.RealChuteLite
             float area = 0;
             for (int i = 0; i < 6; i++)
             {
+                // TODO 1.2: according to API docs this method should have only 2 arguments but it has 3
                 area += cube.Area[i] * cube.Drag[i]
-                        * PhysicsGlobals.DragCurveValue((Vector3.Dot(Vector3.up, DragCubeList.GetFaceDirection((DragCube.DragFace)i)) + 1) * 0.5f, 0);
+                        * PhysicsGlobals.DragCurveValue(PhysicsGlobals.SurfaceCurves, (Vector3.Dot(Vector3.up, DragCubeList.GetFaceDirection((DragCube.DragFace)i)) + 1) * 0.5f, 0);
 
             }
             return (float)Math.Max(Math.Round(Math.Sqrt((area * 0.1f * PhysicsGlobals.DragMultiplier) / Math.PI) * 2, 1, MidpointRounding.AwayFromZero), 0.1);

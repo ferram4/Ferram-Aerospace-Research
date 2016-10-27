@@ -478,8 +478,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             }
             if (cursorInGUI)
             {
-                if (EditorTooltip.Instance)
-                    EditorTooltip.Instance.HideToolTip();
+                // TODO 1.2: verify what EditorTooltip is/was, it cannot be found
+                //if (EditorTooltip.Instance)
+                //    EditorTooltip.Instance.HideToolTip();
 
                 if(!CameraMouseLook.GetMouseLook())
                     EdLogInstance.Lock(false, false, false, "FAREdLock");

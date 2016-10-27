@@ -196,6 +196,24 @@ namespace ferram4
             }
         }
 
+        // TODO 1.2: provide actual implementation of these new methods
+        #region ILiftProvider
+        public bool DisableBodyLift
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        public bool IsLifting
+        {
+            get
+            {
+                return true;
+            }
+        }
+
         public void OnCenterOfLiftQuery(CenterOfLiftQuery CoLMarker)
         {
             // Compute the actual center ourselves once per frame
@@ -205,6 +223,7 @@ namespace ferram4
             CoLMarker.dir = Vector3.zero;
             CoLMarker.lift = 1;
         }
+        #endregion ILiftProvider
 
         public override void OnLoad(ConfigNode node)
         {

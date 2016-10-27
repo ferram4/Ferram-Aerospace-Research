@@ -59,7 +59,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
         
         public static Bounds GetPartOverallMeshBoundsInBasis(this Part part, Matrix4x4 worldToBasisMatrix)
         {
-            Transform[] transforms = part.FindModelComponents<Transform>();
+            var transforms = part.FindModelComponents<Transform>();
 
             Vector3 lower = Vector3.one * float.PositiveInfinity;
             Vector3 upper = Vector3.one * float.NegativeInfinity;
@@ -67,7 +67,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             int ignoreLayers = ignoreLayers = LayerMask.NameToLayer("TransparentFX");
 
 
-            for (int i = transforms.Length - 1; i >= 0; --i)
+            for (int i = transforms.Count - 1; i >= 0; --i)
             {
                 Transform t = transforms[i];
 
@@ -137,9 +137,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public static Bounds GetPartColliderBoundsInBasis(this Part part, Matrix4x4 worldToBasisMatrix, int excessiveVerts = 2500)
         {
-            Transform[] transforms = part.FindModelComponents<Transform>();
+            var transforms = part.FindModelComponents<Transform>();
             Bounds bounds = new Bounds();
-            for (int i = transforms.Length - 1; i >= 0; --i)
+            for (int i = transforms.Count - 1; i >= 0; --i)
             {
                 Transform t = transforms[i];
 

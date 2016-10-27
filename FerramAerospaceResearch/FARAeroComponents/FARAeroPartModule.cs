@@ -49,6 +49,7 @@ using System.Text;
 using UnityEngine;
 using KSP;
 using FerramAerospaceResearch;
+using FerramAerospaceResearch.FARGUI;
 using FerramAerospaceResearch.FARGUI.FARFlightGUI;
 using ferram4;
 
@@ -573,6 +574,24 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         }
 
+        // TODO 1.2: provide actual implementation of new 1.2 methods
+        #region ILiftProvider
+        public bool DisableBodyLift
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        public bool IsLifting
+        {
+            get
+            {
+                return true;
+            }
+        }
+
         public void OnCenterOfLiftQuery(CenterOfLiftQuery CoLMarker)
         {
             // Compute the actual center ourselves once per frame
@@ -582,6 +601,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             CoLMarker.dir = Vector3.zero;
             CoLMarker.lift = 1;
         }
+        #endregion ILiftProvider
 
         private void CheckAeroStressFailure()
         {
@@ -645,7 +665,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if (PhysicsGlobals.AeroForceDisplay && !part.ShieldedFromAirstream)
             {
                 if (liftArrow == null)
-                    liftArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldLiftArrow, worldLiftArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale, FARGUI.GUIColors.GetColor(0), true);
+                    liftArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldLiftArrow, worldLiftArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale, GUIColors.GetColor(0), true);
                 else
                 {
                     liftArrow.Direction = worldLiftArrow;
@@ -653,7 +673,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 }
 
                 if (dragArrow == null)
-                    dragArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldDragArrow, worldDragArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale, FARGUI.GUIColors.GetColor(1), true);
+                    dragArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldDragArrow, worldDragArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale, GUIColors.GetColor(1), true);
                 else
                 {
                     dragArrow.Direction = worldDragArrow;
@@ -663,7 +683,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (FARDebugValues.showMomentArrows)
                 {
                     if (momentArrow == null)
-                        momentArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldSpaceTorque, worldSpaceTorque.magnitude * PhysicsGlobals.AeroForceDisplayScale, FARGUI.GUIColors.GetColor(2), true);
+                        momentArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldSpaceTorque, worldSpaceTorque.magnitude * PhysicsGlobals.AeroForceDisplayScale, GUIColors.GetColor(2), true);
                     else
                     {
                         momentArrow.Direction = -worldSpaceTorque;

@@ -452,26 +452,27 @@ namespace ferram4
             if (aeroModule == null)
                 Debug.LogError("[FAR] Could not find FARAeroPartModule on same part as FARWingAerodynamicModel!");
 
-            if (part is ControlSurface)
-            {
-                ControlSurface w = part as ControlSurface;
-                w.deflectionLiftCoeff = 0;
-                w.dragCoeff = 0;
-                w.ctrlSurfaceArea = 0;
-                w.ctrlSurfaceRange = 0;
-                w.angularDrag = 0;
-                w.maximum_drag = 0;
-                w.minimum_drag = 0;
-            }
-            if (part is Winglet)
-            {
-                Winglet w = part as Winglet;
-                w.deflectionLiftCoeff = 0;
-                w.dragCoeff = 0;
-                w.angularDrag = 0;
-                w.maximum_drag = 0;
-                w.minimum_drag = 0;
-            }
+            // TODO 1.2: verify if these are renamed or really gone
+            //if (part is ControlSurface)
+            //{
+            //    ControlSurface w = part as ControlSurface;
+            //    w.deflectionLiftCoeff = 0;
+            //    w.dragCoeff = 0;
+            //    w.ctrlSurfaceArea = 0;
+            //    w.ctrlSurfaceRange = 0;
+            //    w.angularDrag = 0;
+            //    w.maximum_drag = 0;
+            //    w.minimum_drag = 0;
+            //}
+            //if (part is Winglet)
+            //{
+            //    Winglet w = part as Winglet;
+            //    w.deflectionLiftCoeff = 0;
+            //    w.dragCoeff = 0;
+            //    w.angularDrag = 0;
+            //    w.maximum_drag = 0;
+            //    w.minimum_drag = 0;
+            //}
 
             OnWingAttach();
             massScaleReady = true;

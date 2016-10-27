@@ -97,7 +97,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         GUIDropDown<int> settingsWindow;
 
-        public override void OnAwake()
+        protected override void OnAwake()
         {
             if (vesselFlightGUI == null)
             {

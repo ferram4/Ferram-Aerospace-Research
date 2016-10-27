@@ -99,10 +99,10 @@ namespace FerramAerospaceResearch
             
             public static Bounds[] GetPartMeshBoundsInPartSpace(this Part part, int excessiveVerts = 2500)
             {
-                Transform[] transforms = part.FindModelComponents<Transform>();
-                Bounds[] bounds = new Bounds[transforms.Length];
+                var transforms = part.FindModelComponents<Transform>();
+                Bounds[] bounds = new Bounds[transforms.Count];
                 Matrix4x4 partMatrix = part.partTransform.worldToLocalMatrix;
-                for(int i = 0; i < transforms.Length; i++)
+                for(int i = 0; i < transforms.Count; i++)
                 {
                     Bounds newBounds = new Bounds();
                     Transform t = transforms[i];

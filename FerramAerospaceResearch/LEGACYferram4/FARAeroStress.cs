@@ -218,7 +218,7 @@ namespace FerramAerospaceResearch
                 {
                     bool cont = true;
                     int numRes = 0;
-                    foreach (PartResource res in p.Resources.list)
+                    foreach (PartResource res in p.Resources)
                     {
                         if (candidate.resources.Contains(res.info.name))
                         {
@@ -238,7 +238,7 @@ namespace FerramAerospaceResearch
                 else
                 {
                     int numRes = 0;
-                    foreach (PartResource res in p.Resources.list)
+                    foreach (PartResource res in p.Resources)
                         if (!candidate.excludeResources.Contains(res.info.name))
                             if(!candidate.flowModeNeeded || res.info.resourceFlowMode == candidate.flowMode)
                                 numRes++;
