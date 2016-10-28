@@ -66,6 +66,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public int invertXYZ;
 
+        /// <summary> cache activity state of gameobject locally as we cannot access it from other threads </summary>
+        public bool gameObjectActiveInHierarchy;
+
         public GeometryMesh(MeshData meshData, Transform meshTransform, Matrix4x4 worldToVesselMatrix, GeometryPartModule module)
         {
             this.meshLocalVerts = meshData.vertices;
@@ -91,6 +94,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
 
             this.meshTransform = meshTransform;
+            this.gameObjectActiveInHierarchy = meshTransform.gameObject.activeInHierarchy;
 
             bounds = TransformBounds(meshBounds, thisToVesselMatrix);
 

@@ -415,7 +415,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         {
                             GeometryMesh mesh = m.meshDataList[j];
 
-                            if(mesh.valid && mesh.meshTransform.gameObject.activeInHierarchy)
+                            if(mesh.valid && mesh.gameObjectActiveInHierarchy)
                                 UpdateFromMesh(mesh, m.part);
                         }
 
@@ -1711,7 +1711,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             {
                                 GeometryMesh mesh = module.meshDataList[j];
                                 lock (mesh)
-                                    if (mesh.meshTransform != null && mesh.meshTransform.gameObject.activeInHierarchy && mesh.valid)
+                                    if (mesh.meshTransform != null && mesh.gameObjectActiveInHierarchy && mesh.valid)
                                         meshes.Add(mesh);
                             }
 
@@ -1738,7 +1738,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                             GeometryMesh mesh = module.meshDataList[j];
                             bool updateFromMesh = false;
                             lock (mesh)
-                                if (mesh.meshTransform != null && mesh.meshTransform.gameObject.activeInHierarchy && mesh.valid)
+                                if (mesh.meshTransform != null && mesh.gameObjectActiveInHierarchy && mesh.valid)
                                     updateFromMesh = true;
 
                             if (updateFromMesh)
