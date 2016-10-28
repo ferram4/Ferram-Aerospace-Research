@@ -137,36 +137,26 @@ namespace FerramAerospaceResearch.FARThreading
 
         public void RunOnMainThread(Action action)
         {
-            if (RunInMainThread)
+            var task = new Task(action);
+            lock (queuedMainThreadTasks)
             {
-                var task = new Task(action);
-                lock (queuedMainThreadTasks)
-                {
-                    queuedMainThreadTasks.Enqueue(task);
-                }
-                lock (task)
-                {
-                    while (!task.Executed)
-                    {
-                        Monitor.Wait(task);
-                    }
-                }
+                queuedMainThreadTasks.Enqueue(task);
             }
-            else
+            lock (task)
             {
-                action();
+                while (!task.Executed)
+                {
+                    Monitor.Wait(task);
+                }
             }
         }
 
         public void ExecuteMainThreadTasks()
         {
-            if (!RunInMainThread)
-                return;
-
-            while(true)
+            while (true)
             {
                 Task task;
-                lock(queuedMainThreadTasks)
+                lock (queuedMainThreadTasks)
                 {
                     if (queuedMainThreadTasks.Count == 0)
                         break;
