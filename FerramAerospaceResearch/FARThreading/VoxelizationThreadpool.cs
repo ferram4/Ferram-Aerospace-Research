@@ -52,17 +52,12 @@ namespace FerramAerospaceResearch.FARThreading
     //This class only exists to ensure that the ThreadPool is not choked with requests to start running voxels, which will deadlock the entire voxelization process when the MaxThread limit is reached because they will be unable to start up their various worker threads
     class VoxelizationThreadpool
     {
-        static VoxelizationThreadpool _instance;
-        public static VoxelizationThreadpool Instance
+        // Explicit static constructor to tell C# compiler not to mark type as beforefieldinit
+        static VoxelizationThreadpool()
         {
-            get
-            {
-                if (_instance == null)
-                    _instance = new VoxelizationThreadpool();
-
-                return _instance;
-            }
         }
+
+        public static readonly VoxelizationThreadpool Instance = new VoxelizationThreadpool();
 
         public class Task
         {
@@ -84,7 +79,7 @@ namespace FerramAerospaceResearch.FARThreading
 
         public static bool RunInMainThread = false;
 
-        VoxelizationThreadpool()
+        private VoxelizationThreadpool()
         {
             _threads = new Thread[THREAD_COUNT];
             queuedVoxelizations = new Queue<Action>();
