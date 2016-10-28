@@ -58,6 +58,11 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             _instantCondition = instantConditionSim;
         }
 
+        public bool IsReady()
+        {
+            return _instantCondition.Ready;
+        }
+
         public GraphData MachNumberSweep(double aoAdegrees, double pitch, double lowerBound, double upperBound, int numPoints, int flapSetting, bool spoilers, CelestialBody body)
         {
             FARAeroUtil.UpdateCurrentActiveBody(body);

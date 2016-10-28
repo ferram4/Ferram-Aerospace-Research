@@ -237,18 +237,22 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
                 GraphData data;
 
-                if (isMachMode)
+                var sim = simManager.SweepSim;
+                if (sim.IsReady())
                 {
-                    data = simManager.SweepSim.MachNumberSweep(otherInput, pitchSetting, lowerBound, upperBound, (int)numPts, input.flapSetting, input.spoilers, bodySettingDropdown.ActiveSelection);
-                    SetAngleVectors(pitchSetting, pitchSetting);
-                }
-                else
-                {
-                    data = simManager.SweepSim.AngleOfAttackSweep(otherInput, pitchSetting, lowerBound, upperBound, (int)numPts, input.flapSetting, input.spoilers, bodySettingDropdown.ActiveSelection);
-                    SetAngleVectors(lowerBound, upperBound);
-                }
+                    if (isMachMode)
+                    {
+                        data = sim.MachNumberSweep(otherInput, pitchSetting, lowerBound, upperBound, (int)numPts, input.flapSetting, input.spoilers, bodySettingDropdown.ActiveSelection);
+                        SetAngleVectors(pitchSetting, pitchSetting);
+                    }
+                    else
+                    {
+                        data = sim.AngleOfAttackSweep(otherInput, pitchSetting, lowerBound, upperBound, (int)numPts, input.flapSetting, input.spoilers, bodySettingDropdown.ActiveSelection);
+                        SetAngleVectors(lowerBound, upperBound);
+                    }
 
-                UpdateGraph(data, isMachMode ? "Mach Number" : "Angle of Attack, degrees", "Cl\nCd\nCm\nL/D / 10", lowerBound, upperBound);
+                    UpdateGraph(data, isMachMode ? "Mach Number" : "Angle of Attack, degrees", "Cl\nCd\nCm\nL/D / 10", lowerBound, upperBound);
+                }
             }
             GUILayout.EndHorizontal();
         }
