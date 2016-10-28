@@ -93,11 +93,6 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         private EditorAreaRulingOverlay() { }
 
-        ~EditorAreaRulingOverlay()
-        {
-            Cleanup();
-        }
-
         private void Initialize()
         {
             //Based on Kronal Vessel Viewer CoM axes rendering
@@ -127,7 +122,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             _markingRenderers.Add(CreateNewRenderer(_axisColor, 0.1f, _rendererMaterial));
         }
 
-        private void Cleanup()
+        public void Cleanup()
         {
             if (_areaRenderer)
                 GameObject.Destroy(_areaRenderer.gameObject);

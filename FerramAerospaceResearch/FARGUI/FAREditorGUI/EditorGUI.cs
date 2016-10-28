@@ -210,6 +210,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             _stabDerivLinSim = null;
             _instantSim = null;
+            _areaRulingOverlay?.Cleanup();
             _areaRulingOverlay = null;
             _editorGraph = null;
             _stabDeriv = null;
