@@ -200,7 +200,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             GameEvents.onGUIEngineersReportReady.Remove(AddDesignConcerns);
             GameEvents.onGUIEngineersReportDestroy.Remove(AddDesignConcerns);
 
-            EditorLogic.fetch?.Unlock("FAREdLock");
+            EditorLogic.fetch.Unlock("FAREdLock");
 
             if (blizzyEditorGUIButton != null)
             {
@@ -210,7 +210,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             _stabDerivLinSim = null;
             _instantSim = null;
-            _areaRulingOverlay?.Cleanup();
+            _areaRulingOverlay.Cleanup();
             _areaRulingOverlay = null;
             _editorGraph = null;
             _stabDeriv = null;
@@ -350,7 +350,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 }
                 else if (_updateQueued)
                 {
-                    var shipname = EditorLogic.fetch?.ship?.shipName ?? "unknown ship";
+                    var shipname = EditorLogic.fetch.ship.shipName ?? "unknown ship";
                     Debug.Log("Updating " + shipname);
                     RecalculateVoxel();
                 }
