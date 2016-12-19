@@ -133,6 +133,9 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             if (FlightGlobals.speedDisplayMode != FlightGlobals.SpeedDisplayModes.Surface || _vessel.atmDensity <= 0)
                 return;
 
+            if (SpeedDisplay.Instance == null)
+                return;
+
             double unitConversion = 1;
             string unitString = "m/s";
             string caption;

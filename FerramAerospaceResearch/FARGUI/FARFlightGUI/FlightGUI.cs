@@ -365,7 +365,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         public void OnGUIAppLauncherReady()
         {
-            if (ApplicationLauncher.Ready && flightGUIAppLauncherButton == null)
+            if (ApplicationLauncher.Ready && (object)flightGUIAppLauncherButton == null)
             {
                 flightGUIAppLauncherButton = ApplicationLauncher.Instance.AddModApplication(
                     onAppLaunchToggleOn,

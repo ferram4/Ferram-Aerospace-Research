@@ -200,7 +200,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             GameEvents.onGUIEngineersReportReady.Remove(AddDesignConcerns);
             GameEvents.onGUIEngineersReportDestroy.Remove(AddDesignConcerns);
 
-            EditorLogic.fetch.Unlock("FAREdLock");
+            //EditorLogic.fetch.Unlock("FAREdLock");
 
             if (blizzyEditorGUIButton != null)
             {

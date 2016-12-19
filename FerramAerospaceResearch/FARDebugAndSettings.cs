@@ -59,7 +59,7 @@ namespace FerramAerospaceResearch
         public static KSP.IO.PluginConfiguration config;
         private static bool hasScenarioChanged = true;
         private IButton FARDebugButtonBlizzy = null;
-        private ApplicationLauncherButton FARDebugButtonStock = null;
+        private static ApplicationLauncherButton FARDebugButtonStock = null;
         private bool debugMenu = false;
         private bool inputLocked = false;
         private Rect debugWinPos = new Rect(50, 50, 700, 250);
@@ -144,7 +144,7 @@ namespace FerramAerospaceResearch
 
         void OnGUIAppLauncherReady()
         {
-            if (ApplicationLauncher.Ready && FARDebugButtonStock == null)
+            if (ApplicationLauncher.Ready && (object)FARDebugButtonStock == null)
             {
                 FARDebugButtonStock = ApplicationLauncher.Instance.AddModApplication(
                     onAppLaunchToggleOn,
@@ -445,8 +445,8 @@ namespace FerramAerospaceResearch
             FARDebugValues.showMomentArrows = GUILayout.Toggle(FARDebugValues.showMomentArrows, "Show Torque Arrows in Aero Overlay", thisStyle);
             if (ToolbarManager.ToolbarAvailable)
             {
-                FARDebugValues.useBlizzyToolbar = GUILayout.Toggle(FARDebugValues.useBlizzyToolbar, "Use Blizzy78 Toolbar instead of Stock AppManager", thisStyle);
                 bool tmp = FARDebugValues.useBlizzyToolbar;
+                FARDebugValues.useBlizzyToolbar = GUILayout.Toggle(FARDebugValues.useBlizzyToolbar, "Use Blizzy78 Toolbar instead of Stock AppManager", thisStyle);
 
                 if (tmp != FARDebugValues.useBlizzyToolbar)
                 {
@@ -585,9 +585,9 @@ namespace FerramAerospaceResearch
                 return;
 
             //SaveConfigs();
-            GameEvents.onGUIApplicationLauncherReady.Remove(OnGUIAppLauncherReady);
-            if (FARDebugButtonStock != null)
-                ApplicationLauncher.Instance.RemoveModApplication(FARDebugButtonStock);
+            //GameEvents.onGUIApplicationLauncherReady.Remove(OnGUIAppLauncherReady);
+            //if (FARDebugButtonStock != null)
+            //    ApplicationLauncher.Instance.RemoveModApplication(FARDebugButtonStock);
 
             if (FARDebugButtonBlizzy != null)
                 FARDebugButtonBlizzy.Destroy();
