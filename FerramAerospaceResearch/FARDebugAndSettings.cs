@@ -156,6 +156,7 @@ namespace FerramAerospaceResearch
                     ApplicationLauncher.AppScenes.SPACECENTER,
                     (Texture)GameDatabase.Instance.GetTexture("FerramAerospaceResearch/Textures/icon_button_stock", false));
 
+                GameEvents.onGUIApplicationLauncherReady.Remove(OnGUIAppLauncherReady);
             }
         }
 

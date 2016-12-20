@@ -138,7 +138,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 GenerateBlizzyToolbarButton();
             }
             else
-                OnGUIAppLauncherReady();
+                GameEvents.onGUIApplicationLauncherReady.Add(OnGUIAppLauncherReady);
 
             activeFlightGUICount++;
 
@@ -244,7 +244,6 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         void LateUpdate()
         {
-            OnGUIAppLauncherReady();
             if (_airSpeedGUI != null)
                 _airSpeedGUI.ChangeSurfVelocity();
             else if (_vessel != null)
@@ -376,6 +375,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                     DummyVoid,
                     ApplicationLauncher.AppScenes.FLIGHT,
                     (Texture)GameDatabase.Instance.GetTexture("FerramAerospaceResearch/Textures/icon_button_stock", false));
+                GameEvents.onGUIApplicationLauncherReady.Remove(OnGUIAppLauncherReady);
             }
         }
 

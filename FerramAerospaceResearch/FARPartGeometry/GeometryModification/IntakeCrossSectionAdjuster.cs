@@ -103,6 +103,8 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
             this.part = intake.part;
             intakeModule = intake as ModuleResourceIntake;
             intakeTrans = intakeModule.intakeTransform;
+            if (intakeTrans == null)
+                intakeTrans = intake.part.partTransform;
 
             if (!string.IsNullOrEmpty(intakeModule.occludeNode))
                 node = intakeModule.node; 
@@ -139,6 +141,8 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
             this.part = intake.part;
             intakeModule = intake as ModuleResourceIntake;
             intakeTrans = intakeModule.intakeTransform;
+            if (intakeTrans == null)
+                intakeTrans = intake.part.partTransform;
 
             if(!string.IsNullOrEmpty(intakeModule.occludeNode))
                 node = intakeModule.node;

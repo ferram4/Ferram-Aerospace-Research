@@ -318,6 +318,10 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         void Awake()
         {
             FARThreading.VoxelizationThreadpool.RunInMainThread = Debug.isDebugBuild;
+            if (FARDebugValues.useBlizzyToolbar)
+                GenerateBlizzyToolbarButton();
+            else
+                GameEvents.onGUIApplicationLauncherReady.Add(OnGUIAppLauncherReady);
         }
         void Update()
         {
@@ -360,11 +364,6 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 _updateQueued = true;
                 _updateRateLimiter = FARSettingsScenarioModule.VoxelSettings.minPhysTicksPerUpdate - 2;
             }
-
-            if (FARDebugValues.useBlizzyToolbar)
-                GenerateBlizzyToolbarButton();
-            else
-                OnGUIAppLauncherReady();
         }
 
         #region voxel
@@ -670,7 +669,9 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                         (Texture)GameDatabase.Instance.GetTexture("FerramAerospaceResearch/Textures/icon_button_stock", false));
                 }
 
+                GameEvents.onGUIApplicationLauncherReady.Remove(OnGUIAppLauncherReady);
             }
+
         }
 
         void onAppLaunchToggleOn()
