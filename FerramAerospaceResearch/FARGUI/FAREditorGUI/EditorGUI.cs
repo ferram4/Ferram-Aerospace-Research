@@ -207,6 +207,12 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 blizzyEditorGUIButton.Destroy();
                 blizzyEditorGUIButton = null;
             }
+            
+            if (editorGUIAppLauncherButton != null)
+            {
+                ApplicationLauncher.Instance.RemoveModApplication(editorGUIAppLauncherButton);
+                editorGUIAppLauncherButton = null;
+            }
 
             _stabDerivLinSim = null;
             _instantSim = null;
@@ -644,6 +650,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         {
             if (ApplicationLauncher.Ready && editorGUIAppLauncherButton == null)
             {
+                Debug.Log("Added FAR Editor GUI Button");
                 if (EditorDriver.editorFacility == EditorFacility.VAB)
                 {
                     editorGUIAppLauncherButton = ApplicationLauncher.Instance.AddModApplication(

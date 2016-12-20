@@ -244,6 +244,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         void LateUpdate()
         {
+            //OnGUIAppLauncherReady();
             if (_airSpeedGUI != null)
                 _airSpeedGUI.ChangeSurfVelocity();
             else if (_vessel != null)
@@ -366,6 +367,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         {
             if (ApplicationLauncher.Ready && (object)flightGUIAppLauncherButton == null)
             {
+                Debug.Log("Added FAR Flight GUI Button");
                 flightGUIAppLauncherButton = ApplicationLauncher.Instance.AddModApplication(
                     onAppLaunchToggleOn,
                     onAppLaunchToggleOff,
