@@ -977,7 +977,9 @@ namespace ferram4
             piARe = effective_AR * e * Math.PI;
 
             double CosAoA = Math.Cos(AoA);
-            //            Debug.Log("Part: " + part.partInfo.title + " AoA: " + AoA);
+
+            //Debug.Log("Part: " + part.partInfo.title + " Liftslope: " + liftslope);
+
             if (MachNumber <= 0.8)
             {
                 double Cn = liftslope;
@@ -1269,7 +1271,7 @@ namespace ferram4
             if (Math.Abs(CosPartAngle) > Math.Abs(tmp))                //Based on perp vector find which line is the right one
                 sweepHalfChord = CosPartAngle;//Math.Acos(CosPartAngle);       //keep as cos to make things right
             else
-                sweepHalfChord = CosPartAngle;//Math.Acos(tmp);
+                sweepHalfChord = tmp;//Math.Acos(tmp);
 
             //if (sweepHalfChord > Math.PI * 0.5)
             //    sweepHalfChord -= Math.PI;
