@@ -117,10 +117,26 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
             {
                 Debug.Log("Update fairing event");
                 FieldInfo[] fields = fairing.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
-                deployEvent = (KFSMEvent)fields[33].GetValue(fairing);
-                deployEvent.OnEvent += delegate { FairingDeployGeometryUpdate(); };
-                breakEvent = (KFSMEvent)fields[34].GetValue(fairing);
-                breakEvent.OnEvent += delegate { FairingDeployGeometryUpdate(); };
+                bool deployBool = false, breakBool = false;
+
+                for (int i = 0; i < fields.Length; ++i)
+                {
+                    FieldInfo field = fields[i];
+                    if (field.Name.ToLowerInvariant() == "on_deploy")
+                    {
+                        deployEvent = (KFSMEvent)field.GetValue(fairing);
+                        deployEvent.OnEvent += delegate { FairingDeployGeometryUpdate(); };
+                        deployBool = true;
+                    }
+                    else if (field.Name.ToLowerInvariant() == "on_breakoff")
+                    {
+                        breakEvent = (KFSMEvent)field.GetValue(fairing);
+                        breakEvent.OnEvent += delegate { FairingDeployGeometryUpdate(); };
+                        breakBool = true;
+                    }
+                    if (deployBool && breakBool)
+                        break;
+                }
             }
         }
 
