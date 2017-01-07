@@ -1498,19 +1498,19 @@ namespace ferram4
             if (PhysicsGlobals.AeroForceDisplay)
             {
                 if (liftArrow == null)
-                    liftArrow = ArrowPointer.Create(part_transform, localWingCentroid, lift, lift.magnitude * PhysicsGlobals.AeroForceDisplayScale, FerramAerospaceResearch.FARGUI.GUIColors.GetColor(0), true);
+                    liftArrow = ArrowPointer.Create(part_transform, localWingCentroid, lift, lift.magnitude * FARKSPAddonFlightScene.FARAeroForceDisplayScale, FerramAerospaceResearch.FARGUI.GUIColors.GetColor(0), true);
                 else
                 {
                     liftArrow.Direction = lift;
-                    liftArrow.Length = lift.magnitude * PhysicsGlobals.AeroForceDisplayScale;
+                    liftArrow.Length = lift.magnitude * FARKSPAddonFlightScene.FARAeroForceDisplayScale;
                 }
 
                 if (dragArrow == null)
-                    dragArrow = ArrowPointer.Create(part_transform, localWingCentroid, drag, drag.magnitude * PhysicsGlobals.AeroForceDisplayScale, FerramAerospaceResearch.FARGUI.GUIColors.GetColor(1), true);
+                    dragArrow = ArrowPointer.Create(part_transform, localWingCentroid, drag, drag.magnitude * FARKSPAddonFlightScene.FARAeroForceDisplayScale, FerramAerospaceResearch.FARGUI.GUIColors.GetColor(1), true);
                 else
                 {
                     dragArrow.Direction = drag;
-                    dragArrow.Length = drag.magnitude * PhysicsGlobals.AeroForceDisplayScale;
+                    dragArrow.Length = drag.magnitude * FARKSPAddonFlightScene.FARAeroForceDisplayScale;
                 }
             }
             else

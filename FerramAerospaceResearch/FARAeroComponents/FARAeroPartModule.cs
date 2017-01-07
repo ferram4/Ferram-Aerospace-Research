@@ -665,29 +665,29 @@ namespace FerramAerospaceResearch.FARAeroComponents
             if (PhysicsGlobals.AeroForceDisplay && !part.ShieldedFromAirstream)
             {
                 if (liftArrow == null)
-                    liftArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldLiftArrow, worldLiftArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale, GUIColors.GetColor(0), true);
+                    liftArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldLiftArrow, worldLiftArrow.magnitude * FARKSPAddonFlightScene.FARAeroForceDisplayScale, GUIColors.GetColor(0), true);
                 else
                 {
                     liftArrow.Direction = worldLiftArrow;
-                    liftArrow.Length = worldLiftArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale;
+                    liftArrow.Length = worldLiftArrow.magnitude * FARKSPAddonFlightScene.FARAeroForceDisplayScale;
                 }
 
                 if (dragArrow == null)
-                    dragArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldDragArrow, worldDragArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale, GUIColors.GetColor(1), true);
+                    dragArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldDragArrow, worldDragArrow.magnitude * FARKSPAddonFlightScene.FARAeroForceDisplayScale, GUIColors.GetColor(1), true);
                 else
                 {
                     dragArrow.Direction = worldDragArrow;
-                    dragArrow.Length = worldDragArrow.magnitude * PhysicsGlobals.AeroForceDisplayScale;
+                    dragArrow.Length = worldDragArrow.magnitude * FARKSPAddonFlightScene.FARAeroForceDisplayScale;
                 }
 
                 if (FARDebugValues.showMomentArrows)
                 {
                     if (momentArrow == null)
-                        momentArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldSpaceTorque, worldSpaceTorque.magnitude * PhysicsGlobals.AeroForceDisplayScale, GUIColors.GetColor(2), true);
+                        momentArrow = ArrowPointer.Create(partTransform, Vector3.zero, worldSpaceTorque, worldSpaceTorque.magnitude * FARKSPAddonFlightScene.FARAeroForceDisplayScale, GUIColors.GetColor(2), true);
                     else
                     {
                         momentArrow.Direction = -worldSpaceTorque;
-                        momentArrow.Length = worldSpaceTorque.magnitude * PhysicsGlobals.AeroForceDisplayScale;
+                        momentArrow.Length = worldSpaceTorque.magnitude * FARKSPAddonFlightScene.FARAeroForceDisplayScale;
                     }
                 }
             }

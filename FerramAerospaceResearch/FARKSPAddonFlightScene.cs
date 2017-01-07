@@ -57,6 +57,8 @@ namespace FerramAerospaceResearch
     public class FARKSPAddonFlightScene : MonoBehaviour
     {
 
+        public static float FARAeroForceDisplayScale;
+
         private void Awake()
         {
             VoxelizationThreadpool.RunInMainThread = Debug.isDebugBuild;
@@ -65,11 +67,20 @@ namespace FerramAerospaceResearch
             FARAeroStress.LoadStressTemplates();
             FARAeroUtil.LoadAeroDataFromConfig();
             FARAnimOverrides.LoadAnimOverrides();
+
+            FARAeroForceDisplayScale = PhysicsGlobals.AeroForceDisplayScale;
+            PhysicsGlobals.AeroForceDisplayScale = 0;
         }
 
         private void Update()
         {
             VoxelizationThreadpool.Instance.ExecuteMainThreadTasks();
+
+        }
+
+        private void OnDestroy()
+        {
+            PhysicsGlobals.AeroForceDisplayScale = FARAeroForceDisplayScale;
         }
     }
 }
