@@ -133,12 +133,8 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
             this.enabled = true;
 
-            if (FARDebugValues.useBlizzyToolbar)
-            {
+            if(FARDebugValues.useBlizzyToolbar)
                 GenerateBlizzyToolbarButton();
-            }
-            else
-                GameEvents.onGUIApplicationLauncherReady.Add(OnGUIAppLauncherReady);
 
             activeFlightGUICount++;
 
@@ -363,35 +359,10 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
         }
 
-        public void OnGUIAppLauncherReady()
+        public static void onAppLaunchToggle()
         {
-            if (ApplicationLauncher.Ready && (object)flightGUIAppLauncherButton == null)
-            {
-                Debug.Log("Added FAR Flight GUI Button");
-                flightGUIAppLauncherButton = ApplicationLauncher.Instance.AddModApplication(
-                    onAppLaunchToggleOn,
-                    onAppLaunchToggleOff,
-                    DummyVoid,
-                    DummyVoid,
-                    DummyVoid,
-                    DummyVoid,
-                    ApplicationLauncher.AppScenes.FLIGHT,
-                    (Texture)GameDatabase.Instance.GetTexture("FerramAerospaceResearch/Textures/icon_button_stock", false));
-                GameEvents.onGUIApplicationLauncherReady.Remove(OnGUIAppLauncherReady);
-            }
+            showGUI = !showGUI;
         }
-
-        void onAppLaunchToggleOn()
-        {
-            showGUI = true;
-        }
-
-        void onAppLaunchToggleOff()
-        {
-            showGUI = false;
-        }
-
-        void DummyVoid() { }
 
         private void HideUI()
         {

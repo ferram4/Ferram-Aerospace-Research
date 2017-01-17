@@ -78,7 +78,6 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         {
             get { return instance.guiRect; }
         }
-        static ApplicationLauncherButton editorGUIAppLauncherButton;
         static IButton blizzyEditorGUIButton;
 
         VehicleAerodynamics _vehicleAero;
@@ -208,12 +207,6 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 blizzyEditorGUIButton = null;
             }
             
-            if (editorGUIAppLauncherButton != null)
-            {
-                ApplicationLauncher.Instance.RemoveModApplication(editorGUIAppLauncherButton);
-                editorGUIAppLauncherButton = null;
-            }
-
             _stabDerivLinSim = null;
             _instantSim = null;
             _areaRulingOverlay.Cleanup();
@@ -326,8 +319,6 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             FARThreading.VoxelizationThreadpool.RunInMainThread = Debug.isDebugBuild;
             if (FARDebugValues.useBlizzyToolbar)
                 GenerateBlizzyToolbarButton();
-            else
-                GameEvents.onGUIApplicationLauncherReady.Add(OnGUIAppLauncherReady);
         }
         void Update()
         {
@@ -646,52 +637,11 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             }
         }
 
-        private void OnGUIAppLauncherReady()
+        public static void onAppLaunchToggle()
         {
-            if (ApplicationLauncher.Ready && editorGUIAppLauncherButton == null)
-            {
-                Debug.Log("Added FAR Editor GUI Button");
-                if (EditorDriver.editorFacility == EditorFacility.VAB)
-                {
-                    editorGUIAppLauncherButton = ApplicationLauncher.Instance.AddModApplication(
-                        onAppLaunchToggleOn,
-                        onAppLaunchToggleOff,
-                        DummyVoid,
-                        DummyVoid,
-                        DummyVoid,
-                        DummyVoid,
-                        ApplicationLauncher.AppScenes.VAB,
-                        (Texture)GameDatabase.Instance.GetTexture("FerramAerospaceResearch/Textures/icon_button_stock", false));
-                }
-                else
-                {
-                    editorGUIAppLauncherButton = ApplicationLauncher.Instance.AddModApplication(
-                        onAppLaunchToggleOn,
-                        onAppLaunchToggleOff,
-                        DummyVoid,
-                        DummyVoid,
-                        DummyVoid,
-                        DummyVoid,
-                        ApplicationLauncher.AppScenes.SPH,
-                        (Texture)GameDatabase.Instance.GetTexture("FerramAerospaceResearch/Textures/icon_button_stock", false));
-                }
-
-                GameEvents.onGUIApplicationLauncherReady.Remove(OnGUIAppLauncherReady);
-            }
-
+            showGUI = !showGUI;
         }
 
-        void onAppLaunchToggleOn()
-        {
-            showGUI = true;
-        }
-
-        void onAppLaunchToggleOff()
-        {
-            showGUI = false;
-        }
-
-        void DummyVoid() { }
         #endregion
 
         #region UtilFuncs

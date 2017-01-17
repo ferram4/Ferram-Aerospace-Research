@@ -60,6 +60,7 @@ namespace FerramAerospaceResearch
         private static bool hasScenarioChanged = true;
         private static IButton FARDebugButtonBlizzy = null;
         private static ApplicationLauncherButton FARDebugButtonStock = null;
+        public static Callback Toggle = delegate { };
         private static bool debugMenu = false;
         private static bool inputLocked = false;
         private Rect debugWinPos = new Rect(50, 50, 700, 250);
@@ -103,6 +104,7 @@ namespace FerramAerospaceResearch
             cMTexture = new Texture2D(25, 15);
             l_DTexture = new Texture2D(25, 15);
             GameEvents.onGameSceneSwitchRequested.Add(OnSceneChange);
+            GameEvents.onGUIApplicationLauncherReady.Add(OnAppLauncherReadySetup);
         }
 
         void Start()
@@ -147,51 +149,46 @@ namespace FerramAerospaceResearch
                         FARDebugButtonBlizzy.OnClick += (e) => debugMenu = !debugMenu;
                     }
                 }
-                else
-                    GameEvents.onGUIApplicationLauncherReady.Add(OnGUIAppLauncherReady);
             }
             else
             {
-                if (FARDebugButtonStock != null)
-                {
-                    ApplicationLauncher.Instance.RemoveModApplication(FARDebugButtonStock);
-                    FARDebugButtonStock = null;
-                }
-
                 if (FARDebugButtonBlizzy != null)
                     FARDebugButtonBlizzy.Destroy();
             }
         }
 
+        void OnAppLauncherReadySetup()
+        {
+            OnGUIAppLauncherReady();
+            GameEvents.onGUIApplicationLauncherReady.Remove(OnAppLauncherReadySetup);
+            Toggle += onAppLaunchToggle;
+            Toggle += FerramAerospaceResearch.FARGUI.FAREditorGUI.EditorGUI.onAppLaunchToggle;
+            Toggle += FerramAerospaceResearch.FARGUI.FARFlightGUI.FlightGUI.onAppLaunchToggle;
+        }
+
+        void ToggleGUI()
+        {
+            Toggle();
+        }
+
         void OnGUIAppLauncherReady()
         {
-            if (ApplicationLauncher.Ready && FARDebugButtonStock == null)
-            {
-                Debug.Log("Adding Debug Button");
-                FARDebugButtonStock = ApplicationLauncher.Instance.AddModApplication(
-                    onAppLaunchToggleOn,
-                    onAppLaunchToggleOff,
-                    DummyVoid,
-                    DummyVoid,
-                    DummyVoid,
-                    DummyVoid,
-                    ApplicationLauncher.AppScenes.SPACECENTER,
-                    (Texture)GameDatabase.Instance.GetTexture("FerramAerospaceResearch/Textures/icon_button_stock", false));
-                GameEvents.onGUIApplicationLauncherReady.Remove(OnGUIAppLauncherReady);
-            }
+            Debug.Log("Adding Debug Button");
+            FARDebugButtonStock = ApplicationLauncher.Instance.AddModApplication(
+                ToggleGUI,
+                ToggleGUI,
+                null,
+                null,
+                null,
+                null,
+                ApplicationLauncher.AppScenes.SPACECENTER | ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH | ApplicationLauncher.AppScenes.FLIGHT,
+                (Texture)GameDatabase.Instance.GetTexture("FerramAerospaceResearch/Textures/icon_button_stock", false));
         }
 
-        void onAppLaunchToggleOn()
+        void onAppLaunchToggle()
         {
-            debugMenu = true;
+            debugMenu = !debugMenu;
         }
-
-        void onAppLaunchToggleOff()
-        {
-            debugMenu = false;
-        }
-
-        void DummyVoid() { }
 
         public void OnGUI()
         {
@@ -472,9 +469,6 @@ namespace FerramAerospaceResearch
 
                 if (tmp != FARDebugValues.useBlizzyToolbar)
                 {
-                    if (FARDebugButtonStock != null)
-                        ApplicationLauncher.Instance.RemoveModApplication(FARDebugButtonStock);
-
                     if (FARDebugButtonBlizzy != null)
                         FARDebugButtonBlizzy.Destroy();
 
@@ -485,8 +479,6 @@ namespace FerramAerospaceResearch
                         FARDebugButtonBlizzy.ToolTip = "FAR Debug Options";
                         FARDebugButtonBlizzy.OnClick += (e) => debugMenu = !debugMenu;
                     }
-                    else
-                        GameEvents.onGUIApplicationLauncherReady.Add(OnGUIAppLauncherReady);
                 }
             }
             GUILayout.EndVertical();
@@ -608,11 +600,6 @@ namespace FerramAerospaceResearch
 
             //SaveConfigs();
             GameEvents.onGameSceneSwitchRequested.Remove(OnSceneChange);
-            if (FARDebugButtonStock != null)
-            {
-                ApplicationLauncher.Instance.RemoveModApplication(FARDebugButtonStock);
-                FARDebugButtonStock = null;
-            }
 
             if (FARDebugButtonBlizzy != null)
                 FARDebugButtonBlizzy.Destroy();
