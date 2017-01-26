@@ -52,6 +52,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
 {
     public static class PartGeometryExtensions
     {
+        public static List<List<string>> ignorePartModuleTransforms;
+
         public static Bounds GetPartOverallLocalMeshBound(this Part part)
         {
             return GetPartOverallMeshBoundsInBasis(part, part.partTransform.worldToLocalMatrix);
@@ -186,75 +188,27 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         private static List<Transform> IgnoreModelTransformList(this Part p)
         {
-            PartModule module;
-            string transformString;
             List<Transform> Transform = new List<Transform>();
+            if (ignorePartModuleTransforms == null)
+                LoadPartModuleTransformStrings();
 
-            if (p.Modules.Contains("FSplanePropellerSpinner"))
+            for (int i = 0; i < ignorePartModuleTransforms.Count; ++i)
             {
-                module = p.Modules["FSplanePropellerSpinner"];
-                transformString = (string)module.GetType().GetField("propellerName").GetValue(module);
-                if (transformString != "")
-                {
-                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
-                }
-                transformString = (string)module.GetType().GetField("rotorDiscName").GetValue(module);
-                if (transformString != "")
-                {
-                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
-                }
+                List<string> currentPartModuleTransforms = ignorePartModuleTransforms[i];
 
-                transformString = (string)module.GetType().GetField("blade1").GetValue(module);
-                if (transformString != "")
+                //The first index of each list is the name of the part module; the rest are the transforms
+                if(p.Modules.Contains(currentPartModuleTransforms[0]))
                 {
-                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
-                }
+                    PartModule module = p.Modules[currentPartModuleTransforms[0]];
 
-                transformString = (string)module.GetType().GetField("blade2").GetValue(module);
-                if (transformString != "")
-                {
-                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
+                    for (int j = 1; j < currentPartModuleTransforms.Count; ++j)
+                    {
+                        string transformString = "";
+                        transformString = (string)module.GetType().GetField(currentPartModuleTransforms[1]).GetValue(module);
+                        if(transformString != "")
+                            Transform.AddRange(p.FindModelComponents<Transform>(transformString));
+                    }
                 }
-
-                transformString = (string)module.GetType().GetField("blade3").GetValue(module);
-                if (transformString != "")
-                {
-                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
-                }
-
-                transformString = (string)module.GetType().GetField("blade4").GetValue(module);
-                if (transformString != "")
-                {
-                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
-                }
-                transformString = (string)module.GetType().GetField("blade5").GetValue(module);
-                if (transformString != "")
-                {
-                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
-                }
-            }
-            if (p.Modules.Contains("FScopterThrottle"))
-            {
-                module = p.Modules["FScopterThrottle"];
-                transformString = (string)module.GetType().GetField("rotorparent").GetValue(module);
-                if (transformString != "")
-                {
-                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
-                }
-            }
-            if (p.Modules.Contains<ModuleParachute>())
-            {
-                module = p.Modules.GetModule<ModuleParachute>();
-                transformString = (string)module.GetType().GetField("canopyName").GetValue(module);
-                if (transformString != "")
-                {
-                    Transform.AddRange(p.FindModelComponents<Transform>(transformString));
-                }
-            }
-            if(p.Modules.Contains("USI_ModuleWarpEngine"))      //come up with more proper solution
-            {
-                Transform.AddRange(p.FindModelComponents<Transform>("Torus_001"));
-                Transform.AddRange(p.FindModelComponents<Transform>("EditorWarpBubble"));
             }
             foreach (Transform t in p.FindModelComponents<Transform>())
             {
@@ -272,6 +226,28 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
 
             return Transform;
+        }
+
+        private static void LoadPartModuleTransformStrings()
+        {
+            ignorePartModuleTransforms = new List<List<string>>();
+            foreach (ConfigNode node in GameDatabase.Instance.GetConfigNodes("FARPartModuleTransformExceptions"))
+                if((object)node != null)
+                    foreach(ConfigNode template in node.GetNodes("FARPartModuleException"))
+                    {
+                        if(!template.HasValue("PartModuleName"))
+                            continue;
+                        List<string> transformExceptions = new List<string>();
+
+                        transformExceptions.Add(template.GetValue("PartModuleName"));
+
+
+                        foreach(string value in node.GetValues("TransformException"))
+                            transformExceptions.Add(value);
+
+                        ignorePartModuleTransforms.Add(transformExceptions);
+                    }
+
         }
     }
 }
