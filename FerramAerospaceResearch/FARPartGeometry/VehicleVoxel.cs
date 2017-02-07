@@ -531,6 +531,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 double angleSizeIncreaseFactor = Math.Sqrt((x + y + z) / y);
                 elementArea *= angleSizeIncreaseFactor;       //account for different angles effects on voxel cube's projected area
 
+                ThreadSafeDebugLogger.Instance.RegisterMessage("Voxel Element CrossSection Area: " + elementArea);
+
                 double invMag = 1 / Math.Sqrt(x * x + y * y + z * z);
 
                 sectionThickness *= y * invMag;
@@ -783,6 +785,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                     crossSections[m].centroid = centroid * elementSize + lowerRightCorner;
 
+                    if (double.IsNaN(areaCount))
+                        ThreadSafeDebugLogger.Instance.RegisterMessage("FAR VOXEL ERROR: areacount is NaN at section " + m);
+
                     crossSections[m].area = areaCount * elementArea;
                     crossSections[m].flatnessRatio = flatnessRatio;
                     crossSections[m].flatNormalVector = principalAxis;
@@ -796,6 +801,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 sectionCount = Math.Min(sectionCount, crossSections.Length);
                 double angleSizeIncreaseFactor = Math.Sqrt((x + y + z) / x);
                 elementArea *= angleSizeIncreaseFactor;       //account for different angles effects on voxel cube's projected area
+
+                ThreadSafeDebugLogger.Instance.RegisterMessage("Voxel Element CrossSection Area: " + elementArea);
 
                 double invMag = 1 / Math.Sqrt(x * x + y * y + z * z);
 
@@ -1048,6 +1055,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
                     crossSections[m].centroid = centroid * elementSize + lowerRightCorner;
                     //crossSections[m].additonalUnshadowedCentroid = unshadowedCentroid * elementSize + lowerRightCorner;
 
+                    if (double.IsNaN(areaCount))
+                        ThreadSafeDebugLogger.Instance.RegisterMessage("FAR VOXEL ERROR: areacount is NaN at section " + m);
+
                     crossSections[m].area = areaCount * elementArea;
                     crossSections[m].flatnessRatio = flatnessRatio;
                     crossSections[m].flatNormalVector = principalAxis;
@@ -1062,6 +1072,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 sectionCount = Math.Min(sectionCount, crossSections.Length);
                 double angleSizeIncreaseFactor = Math.Sqrt((x + y + z) / z);       //account for different angles effects on voxel cube's projected area
                 elementArea *= angleSizeIncreaseFactor;       //account for different angles effects on voxel cube's projected area
+
+                ThreadSafeDebugLogger.Instance.RegisterMessage("Voxel Element CrossSection Area: " + elementArea);
 
                 double invMag = 1 / Math.Sqrt(x * x + y * y + z * z);
 
@@ -1315,6 +1327,9 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                     crossSections[m].centroid = centroid * elementSize + lowerRightCorner;
                     //crossSections[m].additonalUnshadowedCentroid = unshadowedCentroid * elementSize + lowerRightCorner;
+
+                    if (double.IsNaN(areaCount))
+                        ThreadSafeDebugLogger.Instance.RegisterMessage("FAR VOXEL ERROR: areacount is NaN at section " + m);
 
                     crossSections[m].area = areaCount * elementArea;
                     crossSections[m].flatnessRatio = flatnessRatio;

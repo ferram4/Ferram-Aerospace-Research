@@ -134,6 +134,10 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 return;
             }
 
+            showGUI = false;
+            if (FARDebugAndSettings.FARDebugButtonStock)
+                    FARDebugAndSettings.FARDebugButtonStock.SetFalse(false);
+
             _vehicleAero = new VehicleAerodynamics();
 
             guiRect = new Rect(Screen.width / 4, Screen.height / 6, 10, 10);

@@ -547,6 +547,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 axis += candVector * size.x * size.y * size.z;// *(1 + p.symmetryCounterparts.Count);    //scale part influence by approximate size
             }
 
+            if (axis == Vector3.zero)
+                axis = Vector3.up;      //something in case things fall through somehow
+
             if (hasPartsForAxis)
             {
                 float dotProdX, dotProdY, dotProdZ;
@@ -1066,7 +1069,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
             double filledVolume = 0;
             for (int i = front; i <= back; i++)
+            {
+                if(double.IsNaN(_vehicleCrossSection[i].area))
+                    ThreadSafeDebugLogger.Instance.RegisterMessage("FAR VOXEL ERROR: Voxel CrossSection Area is NaN at section " + i);
+
                 filledVolume += _vehicleCrossSection[i].area;
+            }
 
             filledVolume *= _sectionThickness;      //total volume taken up by the filled voxel
 

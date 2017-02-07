@@ -59,7 +59,7 @@ namespace FerramAerospaceResearch
         public static KSP.IO.PluginConfiguration config;
         private static bool hasScenarioChanged = true;
         private static IButton FARDebugButtonBlizzy = null;
-        private static ApplicationLauncherButton FARDebugButtonStock = null;
+        public static ApplicationLauncherButton FARDebugButtonStock = null;
         public static Callback Toggle = delegate { };
         private static bool debugMenu = false;
         private static bool inputLocked = false;
@@ -188,6 +188,13 @@ namespace FerramAerospaceResearch
         void onAppLaunchToggle()
         {
             debugMenu = !debugMenu;
+        }
+
+        public static void ForceCloseDebugWindow()
+        {
+            if(FARDebugButtonStock)
+                FARDebugButtonStock.SetFalse(false);
+            debugMenu = false;
         }
 
         public void OnGUI()

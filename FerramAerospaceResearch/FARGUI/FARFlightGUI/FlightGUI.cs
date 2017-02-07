@@ -60,10 +60,10 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         static bool showGUI = false;
         public static bool showAllGUI = true;
+        public static bool savedShowGUI = true;
         static Rect mainGuiRect;
         static Rect dataGuiRect;
         static Rect settingsGuiRect;
-        static ApplicationLauncherButton flightGUIAppLauncherButton;
         static IButton blizzyFlightGUIButton;
         static int activeFlightGUICount = 0;
         public static Dictionary<Vessel, FlightGUI> vesselFlightGUI;
@@ -114,6 +114,15 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 this.enabled = false;
                 return;
             }
+
+            showAllGUI = savedShowGUI;
+            //since we're sharing the button, we need these shenanigans now
+            if (FARDebugAndSettings.FARDebugButtonStock)
+                if (showAllGUI)
+                    FARDebugAndSettings.FARDebugButtonStock.SetTrue(false);
+                else
+                    FARDebugAndSettings.FARDebugButtonStock.SetFalse(false);
+
 
             _vessel = GetComponent<Vessel>();
             _vesselAero = GetComponent<FARVesselAero>();
@@ -182,7 +191,8 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 if (blizzyFlightGUIButton != null)
                     ClearBlizzyToolbarButton();
             }
-            
+
+            savedShowGUI = showAllGUI;
         }
 
         public void SaveData()

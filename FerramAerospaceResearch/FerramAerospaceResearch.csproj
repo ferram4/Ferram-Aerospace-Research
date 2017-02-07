@@ -82,6 +82,7 @@
     <Compile Include="FARGUI\FARFlightGUI\VesselFlightInfo.cs" />
     <Compile Include="FARGUI\FARFlightGUI\PhysicsCalcs.cs" />
     <Compile Include="FARKSPAddonMainMenuSetup.cs" />
+    <Compile Include="FARKSPAddonSpaceCenterScene.cs" />
     <Compile Include="FARPartExtensions.cs" />
     <Compile Include="FARPartGeometry\FARAnimOverrides.cs" />
     <Compile Include="FARPartGeometry\GeometryModification\AirbreathingEngineCrossSectonAdjuster.cs" />
