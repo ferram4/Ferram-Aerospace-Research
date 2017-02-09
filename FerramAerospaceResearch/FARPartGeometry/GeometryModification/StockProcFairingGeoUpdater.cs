@@ -66,6 +66,8 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
             if (HighLogic.LoadedSceneIsEditor)
                 prevPanelBounds = new List<Bounds>();
+            else if (HighLogic.LoadedSceneIsFlight)
+                SetupFlightEvents();
         }
 
         public void EditorGeometryUpdate()
@@ -111,7 +113,15 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
         }
 
-        public void FlightGeometryUpdate()
+        public void FlightGeometryUpdate() { }  //use the fairing events instead
+
+        private void FairingDeployGeometryUpdate()
+        {
+            FARThreading.ThreadSafeDebugLogger.Instance.RegisterMessage("Fairing Geometry Update");
+            geoModule.GeometryPartModuleRebuildMeshData();
+        }
+
+        private void SetupFlightEvents()
         {
             if (deployEvent == null)
             {
@@ -137,13 +147,12 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
                     if (deployBool && breakBool)
                         break;
                 }
+                if (!deployBool)
+                    Debug.LogError("FAR could not find Stock Procedural Fairing deploy event");
+                if (!breakBool)
+                    Debug.LogError("FAR could not find Stock Procedural Fairing break event");
             }
-        }
 
-        private void FairingDeployGeometryUpdate()
-        {
-            Debug.Log("Fairing Geometry Update");
-            geoModule.GeometryPartModuleRebuildMeshData();
         }
     }
 }
