@@ -129,7 +129,15 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
                 FieldInfo[] fields = fairing.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
                 bool deployBool = false, breakBool = false;
 
-                for (int i = 0; i < fields.Length; ++i)
+                deployEvent = (KFSMEvent)fields[32].GetValue(fairing);
+                deployEvent.OnEvent += delegate { FairingDeployGeometryUpdate(); };
+                deployBool = true;
+
+                breakEvent = (KFSMEvent)fields[33].GetValue(fairing);
+                breakEvent.OnEvent += delegate { FairingDeployGeometryUpdate(); };
+                breakBool = true;
+
+                /*for (int i = 0; i < fields.Length; ++i)
                 {
                     FieldInfo field = fields[i];
                     if (field.Name.ToLowerInvariant() == "on_deploy")
@@ -137,16 +145,18 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
                         deployEvent = (KFSMEvent)field.GetValue(fairing);
                         deployEvent.OnEvent += delegate { FairingDeployGeometryUpdate(); };
                         deployBool = true;
+                        Debug.Log("Deploy event field index " + i);
                     }
                     else if (field.Name.ToLowerInvariant() == "on_breakoff")
                     {
                         breakEvent = (KFSMEvent)field.GetValue(fairing);
                         breakEvent.OnEvent += delegate { FairingDeployGeometryUpdate(); };
                         breakBool = true;
+                        Debug.Log("Break event field index " + i);
                     }
                     if (deployBool && breakBool)
                         break;
-                }
+                }*/
                 if (!deployBool)
                     Debug.LogError("FAR could not find Stock Procedural Fairing deploy event");
                 if (!breakBool)
