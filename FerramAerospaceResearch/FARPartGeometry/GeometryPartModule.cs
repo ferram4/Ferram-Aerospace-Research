@@ -663,7 +663,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
                 //MeshRenderer mr = t.GetComponent<MeshRenderer>();
 
-                if (!part.Modules.Contains<ModuleProceduralFairing>())
+                if (!part.Modules.Contains<ModuleProceduralFairing>() && !part.Modules.Contains<ModuleAsteroid>())
                 {
                     Transform prefabTransform = part.partInfo.partPrefab.FindModelTransform(t.gameObject.name);
                     if ((object)prefabTransform != null && prefabTransform.gameObject.layer == ignoreLayer0)

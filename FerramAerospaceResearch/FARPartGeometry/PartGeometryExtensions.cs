@@ -44,8 +44,7 @@ Copyright 2015, Michael Ferrara, aka Ferram4
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Reflection;
 using UnityEngine;
 
 namespace FerramAerospaceResearch.FARPartGeometry
@@ -176,12 +175,16 @@ namespace FerramAerospaceResearch.FARPartGeometry
         {
             List<Transform> returnList = new List<Transform>();
 
-            List<Transform> propellersToIgnore = IgnoreModelTransformList(p);
+            List<Transform> ignoredModelTransforms = IgnoreModelTransformList(p);
 
             returnList.AddRange(p.FindModelComponents<Transform>());
 
-            foreach (Transform t in propellersToIgnore)
+            if (p.Modules.Contains<ModuleAsteroid>())
+                ProceduralAsteroidTransforms(p, returnList);
+
+            foreach (Transform t in ignoredModelTransforms)
                 returnList.Remove(t);
+
 
             return returnList;
         }
@@ -226,6 +229,43 @@ namespace FerramAerospaceResearch.FARPartGeometry
             }
 
             return Transform;
+        }
+
+        private static void ProceduralAsteroidTransforms(Part p, List<Transform> transformList)
+        {
+            ModuleAsteroid asteroid = (ModuleAsteroid)p.Modules["ModuleAsteroid"];
+            FieldInfo[] fields = asteroid.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
+
+            PAsteroid procAsteroid = null;
+
+            /*for (int i = 0; i < fields.Length; ++i)
+            {
+                FieldInfo field = fields[i];
+
+                if (field.Name.ToLowerInvariant() == "pagenerated")
+                {
+                    procAsteroid = (PAsteroid)field.GetValue(asteroid);
+                    Debug.Log("procAsteroid index " + i);
+                    break;
+                }
+            }*/
+            procAsteroid = (PAsteroid)fields[2].GetValue(asteroid);
+            int count = transformList.Count;
+            GetChildTransforms(transformList, procAsteroid.gameObject.transform.FindChild(""));
+            count = transformList.Count - count;
+
+            //Debug.Log("New transforms: " + count);
+        }
+
+        private static void GetChildTransforms(List<Transform> transformList, Transform parent)
+        {
+            if (parent == null)
+                return;
+            transformList.Add(parent);
+            for(int i = 0; i < parent.childCount; ++i)
+            {
+                GetChildTransforms(transformList, parent.GetChild(i));
+            }
         }
 
         private static void LoadPartModuleTransformStrings()
