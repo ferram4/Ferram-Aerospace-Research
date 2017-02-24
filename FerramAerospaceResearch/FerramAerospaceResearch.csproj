@@ -81,6 +81,7 @@
     <Compile Include="FARGUI\FARFlightGUI\StabilityAugmentation.cs" />
     <Compile Include="FARGUI\FARFlightGUI\VesselFlightInfo.cs" />
     <Compile Include="FARGUI\FARFlightGUI\PhysicsCalcs.cs" />
+    <Compile Include="FARGUI\FARFlightGUI\StringBuilderExtNumeric.cs" />
     <Compile Include="FARKSPAddonMainMenuSetup.cs" />
     <Compile Include="FARKSPAddonSpaceCenterScene.cs" />
     <Compile Include="FARPartExtensions.cs" />
