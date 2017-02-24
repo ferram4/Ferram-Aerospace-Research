@@ -52,6 +52,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
     class FlightDataGUI
     {
         bool[] activeFlightDataSections = new bool[9] { true, true, true, true, true, true, true, true, true };
+        bool[] oldFlightDataSections = new bool[9] { false, false, false, false, false, false, false, false, false };
         string[] flightDataOptionLabels = new string[9]{
             "PYR Angles",
             "AoA + Sideslip",
@@ -65,9 +66,12 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         };
 
         VesselFlightInfo infoParameters;
-        string labelString, dataString;
+        private string labelString, dataString;
+	StringBuilder dataReadoutString = new StringBuilder();
         GUIStyle buttonStyle;
         GUIStyle boxStyle;
+
+	int thisFrame = 0;
 
         public FlightDataGUI()
         {
@@ -77,14 +81,24 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         public void UpdateInfoParameters(VesselFlightInfo info)
         {
             infoParameters = info;
-            CreateLabelString();
-            CreateDataString();
         }
 
 
         void CreateLabelString()
         {
-            StringBuilder dataReadoutString = new StringBuilder();
+            bool change = false;
+            for(int i=0; i<activeFlightDataSections.Length;++i)
+            {
+                change |= (oldFlightDataSections[i] == activeFlightDataSections[i]);
+            }
+            if(!change && labelString != null &&labelString.Length!=0)
+                return;
+            for(int i=0; i<activeFlightDataSections.Length;++i)
+            {
+               oldFlightDataSections[i] = activeFlightDataSections[i];
+            }
+
+            dataReadoutString.Length = 0;
             dataReadoutString.AppendLine();
             if (activeFlightDataSections[0])        //PYR angles
             {
@@ -137,7 +151,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         void CreateDataString()
         {
-            StringBuilder dataReadoutString = new StringBuilder();
+            dataReadoutString.Length = 0;
             dataReadoutString.AppendLine();
             if (activeFlightDataSections[0])        //PYR angles
             {
@@ -224,8 +238,13 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         {
             if (boxStyle == null)
                 boxStyle = FlightGUI.boxStyle;
+            if(Time.frameCount != thisFrame)
+            {
+                thisFrame = Time.frameCount;
+                CreateLabelString();
+                CreateDataString();
+            }
             
-
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();
             GUILayout.Box(labelString, boxStyle, GUILayout.Width(140));
