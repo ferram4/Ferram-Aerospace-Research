@@ -67,8 +67,9 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         };
 
         VesselFlightInfo infoParameters;
-        private string labelString, dataString;
-	StringBuilder dataReadoutString = new StringBuilder();
+	StringBuilder dataStringBuilder = new StringBuilder();
+	StringBuilder labelStringBuilder = new StringBuilder();
+
         GUIStyle buttonStyle;
         GUIStyle boxStyle;
 
@@ -92,145 +93,148 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             {
                 change |= (oldFlightDataSections[i] == activeFlightDataSections[i]);
             }
-            if(!change && labelString != null &&labelString.Length!=0)
+            if(!change && labelStringBuilder.Length != 0) //no need to recreate string, we still have one, and the settings have not been changed.
                 return;
             for(int i=0; i<activeFlightDataSections.Length;++i)
             {
                oldFlightDataSections[i] = activeFlightDataSections[i];
             }
 
-            dataReadoutString.Length = 0;
-            dataReadoutString.AppendLine();
+            labelStringBuilder.Length = 0;
+            labelStringBuilder.AppendLine();
             if (activeFlightDataSections[0])        //PYR angles
             {
-                dataReadoutString.AppendLine("Pitch Angle: \n\rHeading: \n\rRoll Angle: ");
-                dataReadoutString.AppendLine();
+                labelStringBuilder.AppendLine("Pitch Angle: \n\rHeading: \n\rRoll Angle: ");
+                labelStringBuilder.AppendLine();
             }
             if (activeFlightDataSections[1])        //AoA and sidelip
             {
-                dataReadoutString.AppendLine("Angle of Attack: \n\rSideslip Angle: ");
-                dataReadoutString.AppendLine();
+                labelStringBuilder.AppendLine("Angle of Attack: \n\rSideslip Angle: ");
+                labelStringBuilder.AppendLine();
             }
             if (activeFlightDataSections[2])        //Dyn pres
             {
-                dataReadoutString.AppendLine("Dyn Pres: ");
-                dataReadoutString.AppendLine();
+                labelStringBuilder.AppendLine("Dyn Pres: ");
+                labelStringBuilder.AppendLine();
             }
             if (activeFlightDataSections[3])        //Raw Forces
             {
-                dataReadoutString.AppendLine("Lift: \n\rDrag: \n\rSideForce: ");
-                dataReadoutString.AppendLine();
+                labelStringBuilder.AppendLine("Lift: \n\rDrag: \n\rSideForce: ");
+                labelStringBuilder.AppendLine();
             }
             if (activeFlightDataSections[4])        //Coeffs + refArea
             {
-                dataReadoutString.AppendLine("Cl: \n\rCd: \n\rCy: \n\rRef Area: ");
-                dataReadoutString.AppendLine();
+                labelStringBuilder.AppendLine("Cl: \n\rCd: \n\rCy: \n\rRef Area: ");
+                labelStringBuilder.AppendLine();
             }
             if (activeFlightDataSections[5])        //L/D and VL/D
             {
-                dataReadoutString.AppendLine("L/D: \n\rV*L/D: ");
-                dataReadoutString.AppendLine();
+                labelStringBuilder.AppendLine("L/D: \n\rV*L/D: ");
+                labelStringBuilder.AppendLine();
             }
             if (activeFlightDataSections[6])        //Engine and intake data
             {
 
-                dataReadoutString.AppendLine("Fuel Fraction: \n\rTSFC: \n\rAir Req Met: \n\rSpec. Excess Pwr:");
-                dataReadoutString.AppendLine();
+                labelStringBuilder.AppendLine("Fuel Fraction: \n\rTSFC: \n\rAir Req Met: \n\rSpec. Excess Pwr:");
+                labelStringBuilder.AppendLine();
             }
             if (activeFlightDataSections[7])        //Range, Endurance est
             {
-                dataReadoutString.AppendLine("Est. Endurance: \n\rEst. Range: ");
-                dataReadoutString.AppendLine();
+                labelStringBuilder.AppendLine("Est. Endurance: \n\rEst. Range: ");
+                labelStringBuilder.AppendLine();
             }
             if (activeFlightDataSections[8])        //Ballistic Coeff and Term Vel
             {
-                dataReadoutString.AppendLine("BC: \n\rTerminal V: ");
-                dataReadoutString.AppendLine();
+                labelStringBuilder.AppendLine("BC: \n\rTerminal V: ");
+                labelStringBuilder.AppendLine();
             }
-            labelString = dataReadoutString.ToString();
         }
 
         void CreateDataString()
         {
-            dataReadoutString.Length = 0;
-            dataReadoutString.AppendLine();
+            dataStringBuilder.Length = 0;
+            dataStringBuilder.AppendLine();
             if (activeFlightDataSections[0])        //PYR angles
             {
-                dataReadoutString.Concat((float)(infoParameters.pitchAngle),1);
-                dataReadoutString.AppendLine("°");
-		dataReadoutString.Concat((float)(infoParameters.headingAngle),1);
-                dataReadoutString.AppendLine("°");
-		dataReadoutString.Concat((float)(infoParameters.rollAngle),1);
-                dataReadoutString.AppendLine("°");
-                dataReadoutString.AppendLine();
+                dataStringBuilder.Concat((float)(infoParameters.pitchAngle),1);
+                dataStringBuilder.AppendLine("°");
+		dataStringBuilder.Concat((float)(infoParameters.headingAngle),1);
+                dataStringBuilder.AppendLine("°");
+		dataStringBuilder.Concat((float)(infoParameters.rollAngle),1);
+                dataStringBuilder.AppendLine("°");
+                dataStringBuilder.AppendLine();
             }
             if (activeFlightDataSections[1])        //AoA and sidelip
             {
-                dataReadoutString.Concat((float)(infoParameters.aoA),1);
-                dataReadoutString.AppendLine("°");
-                dataReadoutString.Concat((float)(infoParameters.sideslipAngle),1);
-                dataReadoutString.AppendLine("°");
-                dataReadoutString.AppendLine();
+                dataStringBuilder.Concat((float)(infoParameters.aoA),1);
+                dataStringBuilder.AppendLine("°");
+                dataStringBuilder.Concat((float)(infoParameters.sideslipAngle),1);
+                dataStringBuilder.AppendLine("°");
+                dataStringBuilder.AppendLine();
             }
             if (activeFlightDataSections[2])        //Dyn pres
             {
-                dataReadoutString.Concat((float)(infoParameters.dynPres),3);
-                dataReadoutString.AppendLine(" kPa");
-                dataReadoutString.AppendLine();
+                dataStringBuilder.Concat((float)(infoParameters.dynPres),3);
+                dataStringBuilder.AppendLine(" kPa");
+                dataStringBuilder.AppendLine();
             }
             if (activeFlightDataSections[3])        //Raw Forces
             {
-                dataReadoutString.Concat((float)(infoParameters.liftForce),3);
-                dataReadoutString.AppendLine(" kN");
-                dataReadoutString.Concat((float)(infoParameters.dragForce),3);
-                dataReadoutString.AppendLine(" kN");
-                dataReadoutString.Concat((float)(infoParameters.sideForce),3);
-                dataReadoutString.AppendLine(" kN");
-                dataReadoutString.AppendLine();
+                dataStringBuilder.Concat((float)(infoParameters.liftForce),3);
+                dataStringBuilder.AppendLine(" kN");
+                dataStringBuilder.Concat((float)(infoParameters.dragForce),3);
+                dataStringBuilder.AppendLine(" kN");
+                dataStringBuilder.Concat((float)(infoParameters.sideForce),3);
+                dataStringBuilder.AppendLine(" kN");
+                dataStringBuilder.AppendLine();
             }
             if (activeFlightDataSections[4])        //Coeffs + refArea
             {
-                dataReadoutString.Concat((float)(infoParameters.liftCoeff),4).AppendLine();
-                dataReadoutString.Concat((float)(infoParameters.dragCoeff),4).AppendLine();
-                dataReadoutString.Concat((float)(infoParameters.sideCoeff),4).AppendLine();
-                dataReadoutString.Concat((float)(infoParameters.refArea),3);
-                dataReadoutString.AppendLine(" m²");
-                dataReadoutString.AppendLine();
+                dataStringBuilder.Concat((float)(infoParameters.liftCoeff),4).AppendLine();
+                dataStringBuilder.Concat((float)(infoParameters.dragCoeff),4).AppendLine();
+                dataStringBuilder.Concat((float)(infoParameters.sideCoeff),4).AppendLine();
+                dataStringBuilder.Concat((float)(infoParameters.refArea),3);
+                dataStringBuilder.AppendLine(" m²");
+                dataStringBuilder.AppendLine();
             }
             if (activeFlightDataSections[5])        //L/D and VL/D
             {
-                dataReadoutString.Concat((float)(infoParameters.liftToDragRatio),3).AppendLine();
-                dataReadoutString.Concat((float)(infoParameters.velocityLiftToDragRatio),3).AppendLine();
-                dataReadoutString.AppendLine();
+                dataStringBuilder.Concat((float)(infoParameters.liftToDragRatio),3).AppendLine();
+                dataStringBuilder.Concat((float)(infoParameters.velocityLiftToDragRatio),3).AppendLine();
+                dataStringBuilder.AppendLine();
             }
             if (activeFlightDataSections[6])        //Engine and intake data
             {
-                dataReadoutString.Concat((float)((infoParameters.fullMass - infoParameters.dryMass) / infoParameters.fullMass),2).AppendLine();
-                dataReadoutString.Concat((float)(infoParameters.tSFC),3);
-                dataReadoutString.AppendLine(" hr⁻¹");
-                dataReadoutString.Concat((float)(infoParameters.intakeAirFrac * 100),1); //Note: Originally this was output using P1 format, leading to an effective factor of 100*100.
-                dataReadoutString.AppendLine("%");
-                dataReadoutString.Concat((float)(infoParameters.specExcessPower),2); //this is a noticable change to original code: Here N2 format was used...
-                dataReadoutString.AppendLine(" W/kg");
-                dataReadoutString.AppendLine();
+                dataStringBuilder.Concat((float)((infoParameters.fullMass - infoParameters.dryMass) / infoParameters.fullMass),2).AppendLine();
+                dataStringBuilder.Concat((float)(infoParameters.tSFC),3);
+                dataStringBuilder.AppendLine(" hr⁻¹");
+                if(double.IsInfinity(infoParameters.intakeAirFrac))
+                    dataStringBuilder.AppendLine("Infinity");
+                else
+                {
+                    dataStringBuilder.Concat((float)(infoParameters.intakeAirFrac * 100),1); //Note: Originally this was output using P1 format, leading to an effective factor of 100*100.
+                    dataStringBuilder.AppendLine("%");
+                }
+                dataStringBuilder.Concat((float)(infoParameters.specExcessPower),2); //this is a noticable change to original code: Here N2 format was used...
+                dataStringBuilder.AppendLine(" W/kg");
+                dataStringBuilder.AppendLine();
             }
             if (activeFlightDataSections[7])        //Range, Endurance est
             {
-                dataReadoutString.Concat((float)(infoParameters.endurance),2);
-                dataReadoutString.AppendLine(" hr");
-                dataReadoutString.Concat((float)(infoParameters.range),2); //also here: originall N2 format.
-                dataReadoutString.AppendLine(" km");
-                dataReadoutString.AppendLine();
+                dataStringBuilder.Concat((float)(infoParameters.endurance),2);
+                dataStringBuilder.AppendLine(" hr");
+                dataStringBuilder.Concat((float)(infoParameters.range),2); //also here: originall N2 format.
+                dataStringBuilder.AppendLine(" km");
+                dataStringBuilder.AppendLine();
             }
             if (activeFlightDataSections[8])        //Ballistic Coeff and Term Vel
             {
-                dataReadoutString.Concat((float)(infoParameters.ballisticCoeff),2);
-                dataReadoutString.AppendLine(" kg/m²");
-                dataReadoutString.Concat((float)(infoParameters.termVelEst),2);
-                dataReadoutString.AppendLine(" m/s");
-                dataReadoutString.AppendLine();
+                dataStringBuilder.Concat((float)(infoParameters.ballisticCoeff),2);
+                dataStringBuilder.AppendLine(" kg/m²");
+                dataStringBuilder.Concat((float)(infoParameters.termVelEst),2);
+                dataStringBuilder.AppendLine(" m/s");
+                dataStringBuilder.AppendLine();
             }
-            dataString = dataReadoutString.ToString();
         }
 
         public void DataDisplay()
@@ -246,10 +250,10 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();
-            GUILayout.Box(labelString, boxStyle, GUILayout.Width(140));
+            GUILayout.Box(labelStringBuilder.ToString(), boxStyle, GUILayout.Width(140));
             GUILayout.EndVertical();
             GUILayout.BeginVertical();
-            GUILayout.Box(dataString, boxStyle, GUILayout.Width(140));
+            GUILayout.Box(dataStringBuilder.ToString(), boxStyle, GUILayout.Width(140));
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
         }

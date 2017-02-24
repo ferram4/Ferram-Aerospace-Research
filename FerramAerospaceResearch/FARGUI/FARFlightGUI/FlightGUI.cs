@@ -48,6 +48,7 @@ using System.Text;
 using UnityEngine;
 using KSP;
 using KSP.UI.Screens;
+using StringLeakTest;
 using FerramAerospaceResearch.FARAeroComponents;
 using ferram4;
 
@@ -305,12 +306,15 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             GUILayout.BeginVertical(GUILayout.Height(100));
             GUILayout.BeginHorizontal();
             _strBuilder.Length = 0;
-            _strBuilder.AppendFormat("Mach: {0:F3}\n\rReynolds: {1:e2}", _vesselAero.MachNumber,_vesselAero.ReynoldsNumber);
+            _strBuilder.Append("Mach: ");
+            _strBuilder.Concat((float)(_vesselAero.MachNumber),3).AppendLine();
+            _strBuilder.AppendFormat("Reynolds: {1:e2}", _vesselAero.MachNumber,_vesselAero.ReynoldsNumber);
             GUILayout.Box(_strBuilder.ToString(), boxStyle, GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
 
             _strBuilder.Length = 0;
-            _strBuilder.AppendFormat("ATM Density: {0:F3}",_vessel.atmDensity);
+            _strBuilder.Append("ATM Density: ");
+            _strBuilder.Concat((float)(vessel.atmDensity),3);
 
             GUILayout.Box(_strBuilder.ToString(), boxStyle, GUILayout.ExpandWidth(true));
 
