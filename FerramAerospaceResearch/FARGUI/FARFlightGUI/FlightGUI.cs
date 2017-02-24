@@ -68,6 +68,8 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         static int activeFlightGUICount = 0;
         public static Dictionary<Vessel, FlightGUI> vesselFlightGUI;
 
+        private StringBuilder _strBuilder = new StringBuilder();
+
         PhysicsCalcs _physicsCalcs;
         VesselFlightInfo infoParameters;
         public VesselFlightInfo InfoParameters
@@ -302,10 +304,15 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         {
             GUILayout.BeginVertical(GUILayout.Height(100));
             GUILayout.BeginHorizontal();
-            GUILayout.Box("Mach: " + _vesselAero.MachNumber.ToString("F3") + " \n\rReynolds: " + _vesselAero.ReynoldsNumber.ToString("e2"), boxStyle, GUILayout.ExpandWidth(true));
+            _strBuilder.Length = 0;
+            _strBuilder.AppendFormat("Mach: {0:F3}\n\rReynolds: {1:e2}", _vesselAero.MachNumber,_vesselAero.ReynoldsNumber);
+            GUILayout.Box(_strBuilder.ToString(), boxStyle, GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
 
-            GUILayout.Box("ATM Density: " + _vessel.atmDensity.ToString("F3"), boxStyle, GUILayout.ExpandWidth(true));
+            _strBuilder.Length = 0;
+            _strBuilder.AppendFormat("ATM Density: {0:F3}",_vessel.atmDensity);
+
+            GUILayout.Box(_strBuilder.ToString(), boxStyle, GUILayout.ExpandWidth(true));
 
             _flightStatusGUI.Display();
             showFlightDataWindow = GUILayout.Toggle(showFlightDataWindow, "Flt Data", buttonStyle, GUILayout.ExpandWidth(true));

@@ -45,6 +45,7 @@ Copyright 2015, Michael Ferrara, aka Ferram4
 using System;
 using System.Collections.Generic;
 using System.Text;
+using StringLeakTest;
 using UnityEngine;
 
 namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
@@ -155,79 +156,77 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             dataReadoutString.AppendLine();
             if (activeFlightDataSections[0])        //PYR angles
             {
-                dataReadoutString.Append(infoParameters.pitchAngle.ToString("N1"));
+                dataReadoutString.Concat((float)(infoParameters.pitchAngle),1);
                 dataReadoutString.AppendLine("°");
-                dataReadoutString.Append(infoParameters.headingAngle.ToString("N1"));
+		dataReadoutString.Concat((float)(infoParameters.headingAngle),1);
                 dataReadoutString.AppendLine("°");
-                dataReadoutString.Append(infoParameters.rollAngle.ToString("N1"));
+		dataReadoutString.Concat((float)(infoParameters.rollAngle),1);
                 dataReadoutString.AppendLine("°");
                 dataReadoutString.AppendLine();
             }
             if (activeFlightDataSections[1])        //AoA and sidelip
             {
-                dataReadoutString.Append(infoParameters.aoA.ToString("N1"));
+                dataReadoutString.Concat((float)(infoParameters.aoA),1);
                 dataReadoutString.AppendLine("°");
-                dataReadoutString.Append(infoParameters.sideslipAngle.ToString("N1"));
+                dataReadoutString.Concat((float)(infoParameters.sideslipAngle),1);
                 dataReadoutString.AppendLine("°");
                 dataReadoutString.AppendLine();
             }
             if (activeFlightDataSections[2])        //Dyn pres
             {
-                dataReadoutString.Append(infoParameters.dynPres.ToString("F3"));
+                dataReadoutString.Concat((float)(infoParameters.dynPres),3);
                 dataReadoutString.AppendLine(" kPa");
                 dataReadoutString.AppendLine();
             }
             if (activeFlightDataSections[3])        //Raw Forces
             {
-                dataReadoutString.Append(infoParameters.liftForce.ToString("F3"));
+                dataReadoutString.Concat((float)(infoParameters.liftForce),3);
                 dataReadoutString.AppendLine(" kN");
-                dataReadoutString.Append(infoParameters.dragForce.ToString("F3"));
+                dataReadoutString.Concat((float)(infoParameters.dragForce),3);
                 dataReadoutString.AppendLine(" kN");
-                dataReadoutString.Append(infoParameters.sideForce.ToString("F3"));
+                dataReadoutString.Concat((float)(infoParameters.sideForce),3);
                 dataReadoutString.AppendLine(" kN");
                 dataReadoutString.AppendLine();
             }
             if (activeFlightDataSections[4])        //Coeffs + refArea
             {
-                dataReadoutString.AppendLine(infoParameters.liftCoeff.ToString("F4"));
-                dataReadoutString.AppendLine(infoParameters.dragCoeff.ToString("F4"));
-                dataReadoutString.AppendLine(infoParameters.sideCoeff.ToString("F4"));
-                dataReadoutString.Append(infoParameters.refArea.ToString("F3"));
+                dataReadoutString.Concat((float)(infoParameters.liftCoeff),4).AppendLine();
+                dataReadoutString.Concat((float)(infoParameters.dragCoeff),4).AppendLine();
+                dataReadoutString.Concat((float)(infoParameters.sideCoeff),4).AppendLine();
+                dataReadoutString.Concat((float)(infoParameters.refArea),3);
                 dataReadoutString.AppendLine(" m²");
                 dataReadoutString.AppendLine();
             }
             if (activeFlightDataSections[5])        //L/D and VL/D
             {
-                dataReadoutString.AppendLine(infoParameters.liftToDragRatio.ToString("F3"));
-                dataReadoutString.AppendLine(infoParameters.velocityLiftToDragRatio.ToString("F3"));
+                dataReadoutString.Concat((float)(infoParameters.liftToDragRatio),3).AppendLine();
+                dataReadoutString.Concat((float)(infoParameters.velocityLiftToDragRatio),3).AppendLine();
                 dataReadoutString.AppendLine();
             }
             if (activeFlightDataSections[6])        //Engine and intake data
             {
-
-                dataReadoutString.AppendLine(((infoParameters.fullMass - infoParameters.dryMass) / infoParameters.fullMass).ToString("N2"));
-                dataReadoutString.Append(infoParameters.tSFC.ToString("N3"));
+                dataReadoutString.Concat((float)((infoParameters.fullMass - infoParameters.dryMass) / infoParameters.fullMass),2).AppendLine();
+                dataReadoutString.Concat((float)(infoParameters.tSFC),3);
                 dataReadoutString.AppendLine(" hr⁻¹");
-                dataReadoutString.AppendLine((infoParameters.intakeAirFrac * 100).ToString("P1"));
-                dataReadoutString.Append(infoParameters.specExcessPower.ToString("N2"));
+                dataReadoutString.Concat((float)(infoParameters.intakeAirFrac * 100),1); //Note: Originally this was output using P1 format, leading to an effective factor of 100*100.
+                dataReadoutString.AppendLine("%");
+                dataReadoutString.Concat((float)(infoParameters.specExcessPower),2); //this is a noticable change to original code: Here N2 format was used...
                 dataReadoutString.AppendLine(" W/kg");
                 dataReadoutString.AppendLine();
             }
             if (activeFlightDataSections[7])        //Range, Endurance est
             {
-
-                dataReadoutString.Append(infoParameters.endurance.ToString("N2"));
+                dataReadoutString.Concat((float)(infoParameters.endurance),2);
                 dataReadoutString.AppendLine(" hr");
-                dataReadoutString.Append(infoParameters.range.ToString("N2"));
+                dataReadoutString.Concat((float)(infoParameters.range),2); //also here: originall N2 format.
                 dataReadoutString.AppendLine(" km");
                 dataReadoutString.AppendLine();
             }
             if (activeFlightDataSections[8])        //Ballistic Coeff and Term Vel
             {
-
-                dataReadoutString.Append(infoParameters.ballisticCoeff.ToString("N2"));
+                dataReadoutString.Concat((float)(infoParameters.ballisticCoeff),2);
                 dataReadoutString.AppendLine(" kg/m²");
-                dataReadoutString.Append(infoParameters.termVelEst.ToString("N2"));
+                dataReadoutString.Concat((float)(infoParameters.termVelEst),2);
                 dataReadoutString.AppendLine(" m/s");
                 dataReadoutString.AppendLine();
             }
