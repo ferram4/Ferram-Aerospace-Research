@@ -159,6 +159,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         void OnDestroy()
         {
+            FlightGUIDrawer.SetGUIActive(this,false);
             GameEvents.onShowUI.Remove(ShowUI);
             GameEvents.onHideUI.Remove(HideUI);
             SaveConfigs();
@@ -248,6 +249,11 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             _flightStatusGUI.UpdateInfoParameters(infoParameters);
             _flightDataGUI.UpdateInfoParameters(infoParameters);
         }
+        
+        void Update()
+        {
+            FlightGUIDrawer.SetGUIActive(this,(_vessel == FlightGlobals.ActiveVessel && showGUI && showAllGUI));
+        }
 
         #endregion
 
@@ -262,8 +268,9 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         #region GUI Functions
 
-        void OnGUI()
+        public void DrawGUI()
         {
+//Debug.LogError("DrawGui called for "+_vessel.name);
             GUI.skin = HighLogic.Skin;
             if(boxStyle == null)
             {
