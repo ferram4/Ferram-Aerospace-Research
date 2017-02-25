@@ -270,7 +270,6 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         public void DrawGUI()
         {
-//Debug.LogError("DrawGui called for "+_vessel.name);
             GUI.skin = HighLogic.Skin;
             if(boxStyle == null)
             {
