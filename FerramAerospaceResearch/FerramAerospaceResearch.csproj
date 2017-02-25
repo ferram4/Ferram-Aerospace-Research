@@ -76,6 +76,7 @@
     <Compile Include="FARGUI\FARFlightGUI\AeroVisualizationGUI.cs" />
     <Compile Include="FARGUI\FARFlightGUI\AirspeedSettingsGUI.cs" />
     <Compile Include="FARGUI\FARFlightGUI\FlightStatusGUI.cs" />
+    <Compile Include="FARGUI\FARFlightGUI\FlightGUIDrawer.cs" />
     <Compile Include="FARGUI\FARFlightGUI\FlightDataGUI.cs" />
     <Compile Include="FARGUI\FARFlightGUI\InternalSpeedFAR.cs" />
     <Compile Include="FARGUI\FARFlightGUI\StabilityAugmentation.cs" />
