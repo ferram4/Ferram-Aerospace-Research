@@ -105,7 +105,6 @@ namespace ferram4
             {
                 agTypes[i] = (KSPActionGroup)Enum.Parse(typeof(KSPActionGroup), names[i]);
             }
-
             // straight forward, reading the (action name, action group) tuples
             KSP.IO.PluginConfiguration config = FARDebugAndSettings.config;
             for (int i = 0; i < ACTION_COUNT; ++i)

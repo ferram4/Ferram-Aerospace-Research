@@ -387,17 +387,15 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         void SaveConfigs()
         {
-            KSP.IO.PluginConfiguration config = KSP.IO.PluginConfiguration.CreateForType<FlightGUI>();
+            KSP.IO.PluginConfiguration config = FARDebugAndSettings.config;
             config.SetValue("flight_mainGuiRect", mainGuiRect);
             config.SetValue("flight_dataGuiRect", dataGuiRect);
             config.SetValue("flight_settingsGuiRect", settingsGuiRect);
-            config.save();
         }
 
         void LoadConfigs()
         {
-            KSP.IO.PluginConfiguration config = KSP.IO.PluginConfiguration.CreateForType<FlightGUI>();
-            config.load();
+            KSP.IO.PluginConfiguration config = FARDebugAndSettings.config;
             mainGuiRect = config.GetValue("flight_mainGuiRect", new Rect());
             dataGuiRect = config.GetValue("flight_dataGuiRect", new Rect());
             settingsGuiRect = config.GetValue("flight_settingsGuiRect", new Rect());
