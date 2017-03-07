@@ -97,7 +97,13 @@ namespace ferram4
 
         public static void LoadConfiguration()
         {
-            string[] names = Enum.GetNames(typeof(KSPActionGroup));
+            string[] namesTmp = Enum.GetNames(typeof(KSPActionGroup));
+            string[] names = new string[namesTmp.Length - 1];
+            
+            for(int i = 0; i < namesTmp.Length - 1; ++i)
+            {
+                names[i] = namesTmp[i];
+            }
             KSPActionGroup[] agTypes = new KSPActionGroup[names.Length];
             actionGroupDropDown = new GUIDropDown<KSPActionGroup>[3];
 
