@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using UnityEngine;
 
 namespace FerramAerospaceResearch
 {
     [KSPAddon(KSPAddon.Startup.SpaceCentre, false)]
-    class FARKSPAddonSpaceCenterScene
+    class FARKSPAddonSpaceCenterScene : MonoBehaviour
     {
         void Awake()
         {

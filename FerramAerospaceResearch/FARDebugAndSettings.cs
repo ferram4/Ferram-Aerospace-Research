@@ -192,8 +192,10 @@ namespace FerramAerospaceResearch
 
         public static void ForceCloseDebugWindow()
         {
-            if(FARDebugButtonStock)
+            if (FARDebugButtonStock)
+            {
                 FARDebugButtonStock.SetFalse(false);
+            }
             debugMenu = false;
         }
 

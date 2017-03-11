@@ -117,7 +117,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
             showAllGUI = savedShowGUI;
             //since we're sharing the button, we need these shenanigans now
-            if (FARDebugAndSettings.FARDebugButtonStock)
+            if (FARDebugAndSettings.FARDebugButtonStock && HighLogic.LoadedSceneIsFlight)
                 if (showAllGUI)
                     FARDebugAndSettings.FARDebugButtonStock.SetTrue(false);
                 else
@@ -387,10 +387,13 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         void SaveConfigs()
         {
-            KSP.IO.PluginConfiguration config = FARDebugAndSettings.config;
-            config.SetValue("flight_mainGuiRect", mainGuiRect);
-            config.SetValue("flight_dataGuiRect", dataGuiRect);
-            config.SetValue("flight_settingsGuiRect", settingsGuiRect);
+            if (FARDebugAndSettings.config != null)
+            {
+                KSP.IO.PluginConfiguration config = FARDebugAndSettings.config;
+                config.SetValue("flight_mainGuiRect", mainGuiRect);
+                config.SetValue("flight_dataGuiRect", dataGuiRect);
+                config.SetValue("flight_settingsGuiRect", settingsGuiRect);
+            }
         }
 
         void LoadConfigs()
