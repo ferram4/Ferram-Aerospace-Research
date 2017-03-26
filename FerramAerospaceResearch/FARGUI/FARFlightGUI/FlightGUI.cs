@@ -48,6 +48,7 @@ using System.Text;
 using UnityEngine;
 using KSP;
 using KSP.UI.Screens;
+using StringLeakTest;
 using FerramAerospaceResearch.FARAeroComponents;
 using ferram4;
 
@@ -67,6 +68,8 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         static IButton blizzyFlightGUIButton;
         static int activeFlightGUICount = 0;
         public static Dictionary<Vessel, FlightGUI> vesselFlightGUI;
+
+        private StringBuilder _strBuilder = new StringBuilder();
 
         PhysicsCalcs _physicsCalcs;
         VesselFlightInfo infoParameters;
@@ -156,6 +159,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         void OnDestroy()
         {
+            FlightGUIDrawer.SetGUIActive(this,false);
             GameEvents.onShowUI.Remove(ShowUI);
             GameEvents.onHideUI.Remove(HideUI);
             SaveConfigs();
@@ -245,6 +249,11 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             _flightStatusGUI.UpdateInfoParameters(infoParameters);
             _flightDataGUI.UpdateInfoParameters(infoParameters);
         }
+        
+        void Update()
+        {
+            FlightGUIDrawer.SetGUIActive(this,(_vessel == FlightGlobals.ActiveVessel && showGUI && showAllGUI));
+        }
 
         #endregion
 
@@ -259,7 +268,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         #region GUI Functions
 
-        void OnGUI()
+        public void DrawGUI()
         {
             GUI.skin = HighLogic.Skin;
             if(boxStyle == null)
@@ -302,10 +311,18 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         {
             GUILayout.BeginVertical(GUILayout.Height(100));
             GUILayout.BeginHorizontal();
-            GUILayout.Box("Mach: " + _vesselAero.MachNumber.ToString("F3") + " \n\rReynolds: " + _vesselAero.ReynoldsNumber.ToString("e2"), boxStyle, GUILayout.ExpandWidth(true));
+            _strBuilder.Length = 0;
+            _strBuilder.Append("Mach: ");
+            _strBuilder.Concat((float)(_vesselAero.MachNumber),3).AppendLine();
+            _strBuilder.AppendFormat("Reynolds: {1:e2}", _vesselAero.MachNumber,_vesselAero.ReynoldsNumber);
+            GUILayout.Box(_strBuilder.ToString(), boxStyle, GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
 
-            GUILayout.Box("ATM Density: " + _vessel.atmDensity.ToString("F3"), boxStyle, GUILayout.ExpandWidth(true));
+            _strBuilder.Length = 0;
+            _strBuilder.Append("ATM Density: ");
+            _strBuilder.Concat((float)(vessel.atmDensity),3);
+
+            GUILayout.Box(_strBuilder.ToString(), boxStyle, GUILayout.ExpandWidth(true));
 
             _flightStatusGUI.Display();
             showFlightDataWindow = GUILayout.Toggle(showFlightDataWindow, "Flt Data", buttonStyle, GUILayout.ExpandWidth(true));
