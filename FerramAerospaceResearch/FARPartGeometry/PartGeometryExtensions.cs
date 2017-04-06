@@ -202,16 +202,22 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 //The first index of each list is the name of the part module; the rest are the transforms
                 if(p.Modules.Contains(currentPartModuleTransforms[0]))
                 {
+                 //   Debug.Log("Part " + p.partInfo.title + " has module " + currentPartModuleTransforms[0] + ".  Getting exempt transforms");
                     PartModule module = p.Modules[currentPartModuleTransforms[0]];
 
                     for (int j = 1; j < currentPartModuleTransforms.Count; ++j)
                     {
                         string transformString = "";
-                        transformString = (string)module.GetType().GetField(currentPartModuleTransforms[1]).GetValue(module);
-                        if(transformString != "")
+                        transformString = (string)module.GetType().GetField(currentPartModuleTransforms[j]).GetValue(module);
+                        if (transformString != "")
                             Transform.AddRange(p.FindModelComponents<Transform>(transformString));
+                        else
+                            Transform.AddRange(p.FindModelComponents<Transform>(currentPartModuleTransforms[j]));
+                       
                     }
                 }
+                //if (Transform.Count > 0)
+                //    Debug.Log("Total exempt transforms: " + Transform.Count);
             }
             foreach (Transform t in p.FindModelComponents<Transform>())
             {
@@ -282,7 +288,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                         transformExceptions.Add(template.GetValue("PartModuleName"));
 
 
-                        foreach(string value in node.GetValues("TransformException"))
+                        foreach(string value in template.GetValues("TransformException"))
                             transformExceptions.Add(value);
 
                         ignorePartModuleTransforms.Add(transformExceptions);
