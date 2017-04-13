@@ -709,9 +709,10 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             bool cantUseColliders = true;
             bool isFairing = part.Modules.Contains<ModuleProceduralFairing>() || part.Modules.Contains("ProceduralFairingSide");
+            bool isDrill = part.Modules.Contains<ModuleAsteroidDrill>() || part.Modules.Contains<ModuleResourceHarvester>();
 
             //Voxelize colliders
-            if ((forceUseColliders || isFairing || (rendererBounds.size.x * rendererBounds.size.z < colliderBounds.size.x * colliderBounds.size.z * 1.6f && rendererBounds.size.y < colliderBounds.size.y * 1.2f && (rendererBounds.center - colliderBounds.center).magnitude < 0.3f)) && !forceUseMeshes)
+            if ((forceUseColliders || isFairing || isDrill || (rendererBounds.size.x * rendererBounds.size.z < colliderBounds.size.x * colliderBounds.size.z * 1.6f && rendererBounds.size.y < colliderBounds.size.y * 1.2f && (rendererBounds.center - colliderBounds.center).magnitude < 0.3f)) && !forceUseMeshes)
             {
                 foreach (Transform t in meshTransforms)
                 {
@@ -753,7 +754,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
                 }
 
                 //Voxelize Everything
-                if (cantUseColliders || forceUseMeshes || isFairing)       //in this case, voxelize _everything_
+                if ((cantUseColliders || forceUseMeshes || isFairing) && !isDrill)       //in this case, voxelize _everything_
                 {
                     foreach (Transform t in meshTransforms)
                     {
@@ -771,7 +772,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
             else
             {
                 //Voxelize Everything
-                if (cantUseColliders || forceUseMeshes || isFairing)       //in this case, voxelize _everything_
+                if ((cantUseColliders || forceUseMeshes || isFairing) && !isDrill)       //in this case, voxelize _everything_
                 {
                     foreach (Transform t in meshTransforms)
                     {
