@@ -861,7 +861,8 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
         public void Rescale(Vector3 relativeRescaleFactor)
         {
-            Matrix4x4 transformMatrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, relativeRescaleFactor);
+            RebuildAllMeshData();
+            /*Matrix4x4 transformMatrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, relativeRescaleFactor);
             if (HighLogic.LoadedSceneIsFlight)
                 transformMatrix = vessel.vesselTransform.worldToLocalMatrix * transformMatrix;
             else
@@ -869,7 +870,7 @@ namespace FerramAerospaceResearch.FARPartGeometry
 
             currentScaleFactor *= relativeRescaleFactor.x;
 
-            UpdateTransformMatrixList(transformMatrix);
+            UpdateTransformMatrixList(transformMatrix);*/
         }
 
         public override void OnLoad(ConfigNode node)
