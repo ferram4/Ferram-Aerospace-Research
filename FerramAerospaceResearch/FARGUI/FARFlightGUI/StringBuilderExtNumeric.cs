@@ -1,11 +1,11 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // File:	StringBuilderExtNumeric.cs
-// Date:	9th March 2010
-// Author:	Gavin Pugh
+// Date:	2017
+// Author:	Virindi, modified from original byu Gavin Pugh
 // Details:	Extension methods for the 'StringBuilder' standard .NET class, to allow garbage-free concatenation of
 //			a selection of simple numeric types.  
 //
-// Copyright (c) Gavin Pugh 2010 - Released under the zlib license: http://www.opensource.org/licenses/zlib-license.php
+// Copyright (c) Virindi 2017, modified from Gavin Pugh 2010 - Released under the zlib license: http://www.opensource.org/licenses/zlib-license.php
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using System;

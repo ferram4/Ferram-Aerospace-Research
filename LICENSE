@@ -2,7 +2,7 @@ All shaders, images, and asset bundles of the filetypes .png, .dds, .shader, and
 
 ----------------------------------------------
 
-FerramAerospaceResearch/FARGUI/FARFlightGUI/StringBuilderExtNumeric.cs is copyright (c) 2010 Gavin Pugh under the zlib license, reproduced below:
+FerramAerospaceResearch/FARGUI/FARFlightGUI/StringBuilderExtNumeric.cs is copyright (c) 2017 Virindi, modified from the original by Gavin Pugh, (c) 2010 under the zlib license, reproduced below:
 
 This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
 
