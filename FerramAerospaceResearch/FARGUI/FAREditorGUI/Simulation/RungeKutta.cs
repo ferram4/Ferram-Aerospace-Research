@@ -1,4 +1,4 @@
-﻿/*Ferram Aerospace Research v0.15.7.2 "Lanchester"
+﻿/*Ferram Aerospace Research v0.15.8 "de Laval"
 =========================
 Aerodynamics model for Kerbal Space Program
 
