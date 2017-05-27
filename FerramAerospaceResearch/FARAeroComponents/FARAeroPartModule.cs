@@ -499,7 +499,8 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 hackWaterDragVal += Math.Abs(waterDragForce.magnitude / (rb.mass * rb.velocity.magnitude));
                 //rb.drag += waterDragForce.magnitude / (rb.mass * rb.velocity.magnitude);
 
-                rb.AddForce(worldSpaceDragForce + worldSpaceLiftForce + waterLiftForce);
+                if(!float.IsNaN(worldSpaceDragForce.x))
+                    rb.AddForce(worldSpaceDragForce + worldSpaceLiftForce + waterLiftForce);
 
                 worldSpaceAeroForce = worldSpaceDragForce + worldSpaceLiftForce + waterDragForce + waterLiftForce;
             }
