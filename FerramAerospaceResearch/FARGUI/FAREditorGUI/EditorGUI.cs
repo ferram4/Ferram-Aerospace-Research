@@ -48,6 +48,7 @@ using System.Reflection;
 using System.Diagnostics;
 using UnityEngine;
 using KSP.UI.Screens;
+using KSP.Localization;
 using ModuleWheels;
 using PreFlightTests;
 using FerramAerospaceResearch.FARAeroComponents;
@@ -118,10 +119,10 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         private static string[] FAReditorMode_str = 
         {
-            "Static Analysis",
-            "Data + Stability Derivatives",
-            "Stability Deriv Simulation",
-            "Transonic Design"
+            Localizer.Format("FAREditorModeStatic"),
+            Localizer.Format("FAREditorModeDataStab"),
+            Localizer.Format("FAREditorModeDerivSim"),
+            Localizer.Format("FAREditorModeTrans")
         };
 
         void Start()
@@ -143,7 +144,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             guiRect = new Rect(Screen.width / 4, Screen.height / 6, 10, 10);
 
             _instantSim = new InstantConditionSim();
-            GUIDropDown<int> flapSettingDropDown = new GUIDropDown<int>(new string[] { "0 (up)", "1 (init climb)", "2 (takeoff)", "3 (landing)" }, new int[] { 0, 1, 2, 3 }, 0);
+            GUIDropDown<int> flapSettingDropDown = new GUIDropDown<int>(new string[] { Localizer.Format("FARFlapSetting0"), Localizer.Format("FARFlapSetting1"), Localizer.Format("FARFlapSetting2"), Localizer.Format("FARFlapSetting3") }, new int[] { 0, 1, 2, 3 }, 0);
             GUIDropDown<CelestialBody> celestialBodyDropdown = CreateBodyDropdown();
 
             modeDropdown = new GUIDropDown<FAREditorMode>(FAReditorMode_str, new FAREditorMode[] {FAREditorMode.STATIC, FAREditorMode.STABILITY, FAREditorMode.SIMULATION, FAREditorMode.AREA_RULING});
@@ -483,7 +484,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             }
             if (showGUI)
             {
-                guiRect = GUILayout.Window(this.GetHashCode(), guiRect, OverallSelectionGUI, "FAR Analysis");
+                guiRect = GUILayout.Window(this.GetHashCode(), guiRect, OverallSelectionGUI, Localizer.Format("FAREditorTitle"));
                 guiRect = GUIUtils.ClampToScreen(guiRect);
                 cursorInGUI = guiRect.Contains(GUIUtils.GetMousePos());
             }
@@ -511,12 +512,12 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             currentMode = modeDropdown.ActiveSelection;
 
             GUILayout.BeginVertical();
-            if (GUILayout.Button(gearToggle ? "Lower Gear" : "Raise Gear"))
+            if (GUILayout.Button(gearToggle ? Localizer.Format("FARGearToggleLower") : Localizer.Format("FARGearToggleRaise")))
                 ToggleGear();
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical();
-            if (GUILayout.Button(showAoAArrow ? "Hide Vel Indicator" : "Show Vel Indicator"))
+            if (GUILayout.Button(showAoAArrow ? Localizer.Format("FARVelIndHide") : Localizer.Format("FARVelIndShow")))
                 showAoAArrow = !showAoAArrow;
             GUILayout.EndVertical();
 
@@ -550,7 +551,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         void DebugVisualizationGUI()
         {
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Display Debug Voxels"))
+            if (GUILayout.Button(Localizer.Format("FARDebugVoxels")))
                 _vehicleAero.DebugVisualizeVoxels(EditorLogic.RootPart.partTransform.localToWorldMatrix);
             GUILayout.EndHorizontal();
         }
@@ -558,7 +559,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         void CrossSectionAnalysisGUI()
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Transonic Area Ruling Analysis", GUILayout.Width(350));
+            GUILayout.Label(Localizer.Format("FAREditorTitleTransonic"), GUILayout.Width(350));
             GUILayout.EndHorizontal();
 
             GUIStyle BackgroundStyle = new GUIStyle(GUI.skin.box);
@@ -566,27 +567,27 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical(BackgroundStyle, GUILayout.Width(350), GUILayout.ExpandHeight(true));
-            GUILayout.Label("Max Cross-Section Area: " + _vehicleAero.MaxCrossSectionArea.ToString("G6") + " m²");
-            GUILayout.Label("Mach 1 Wave Drag-Area: " + _vehicleAero.SonicDragArea.ToString("G6") + " m²");
-            GUILayout.Label("Critical Mach Number: " + _vehicleAero.CriticalMach.ToString("G6"));
+            GUILayout.Label(Localizer.Format("FAREditorTransMaxArea") + _vehicleAero.MaxCrossSectionArea.ToString("G6") + " m²");
+            GUILayout.Label(Localizer.Format("FAREditorTransMach1DragArea") + _vehicleAero.SonicDragArea.ToString("G6") + " m²");
+            GUILayout.Label(Localizer.Format("FAREditorTransCritMach") + _vehicleAero.CriticalMach.ToString("G6"));
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical(BackgroundStyle, GUILayout.ExpandHeight(true));
-            GUILayout.Label("Minimal wave drag is achieved by maintaining a\n\rsmooth, minimal curvature cross-section curve, including the\n\reffects of intake -> engine ducting.");
+            GUILayout.Label(Localizer.Format("FAREditorTransMinDragExp1"));
             bool areaVisible  = _areaRulingOverlay.IsVisible(EditorAreaRulingOverlay.OverlayType.AREA);
             bool derivVisible = _areaRulingOverlay.IsVisible(EditorAreaRulingOverlay.OverlayType.DERIV);
             bool coeffVisible = _areaRulingOverlay.IsVisible(EditorAreaRulingOverlay.OverlayType.COEFF);
 
-            if (GUILayout.Toggle(areaVisible, "Show cross-sectional area curve (green)") != areaVisible)
+            if (GUILayout.Toggle(areaVisible, Localizer.Format("FAREditorTransAreaCurve")) != areaVisible)
                 _areaRulingOverlay.SetVisibility(EditorAreaRulingOverlay.OverlayType.AREA, !areaVisible);
 
-            if (GUILayout.Toggle(derivVisible, "Show curvature cross-sectional area curve (yellow)") != derivVisible)
+            if (GUILayout.Toggle(derivVisible, Localizer.Format("FAREditorTransCurvCurve")) != derivVisible)
                 _areaRulingOverlay.SetVisibility(EditorAreaRulingOverlay.OverlayType.DERIV, !derivVisible);
 
-            if (GUILayout.Toggle(coeffVisible, "Show avg pressure coefficient curve (blue)") != coeffVisible)
+            if (GUILayout.Toggle(coeffVisible, Localizer.Format("FAREditorTransPresCurve")) != coeffVisible)
                 _areaRulingOverlay.SetVisibility(EditorAreaRulingOverlay.OverlayType.COEFF, !coeffVisible);
 
-            GUILayout.Label("Minimize curvature to minimize wave drag");
+            GUILayout.Label(Localizer.Format("FAREditorTransMinDragExp2"));
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
         }

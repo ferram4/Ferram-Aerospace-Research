@@ -45,6 +45,7 @@ Copyright 2017, Michael Ferrara, aka Ferram4
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using KSP.Localization;
 using ferram4;
 
 namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
@@ -96,10 +97,10 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
 
             GraphData data = new GraphData();
             data.xValues = AlphaValues;
-            data.AddData(ClValues, GUIColors.GetColor(0), "Cl", true);
-            data.AddData(CdValues, GUIColors.GetColor(1), "Cd", true);
-            data.AddData(CmValues, GUIColors.GetColor(2), "Cm", true);
-            data.AddData(LDValues, GUIColors.GetColor(3), "L/D", true);
+            data.AddData(ClValues, GUIColors.GetColor(0), Localizer.Format("FARAbbrevCl"), true);
+            data.AddData(CdValues, GUIColors.GetColor(1), Localizer.Format("FARAbbrevCd"), true);
+            data.AddData(CmValues, GUIColors.GetColor(2), Localizer.Format("FARAbbrevCm"), true);
+            data.AddData(LDValues, GUIColors.GetColor(3), Localizer.Format("FARAbbrevL_D"), true);
 
             return data;
         }
@@ -161,16 +162,16 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation
             GraphData data = new GraphData();
             data.xValues = AlphaValues;
             data.AddData(ClValues2, GUIColors.GetColor(0) * 0.5f, "Cl2", false);
-            data.AddData(ClValues, GUIColors.GetColor(0), "Cl", true);
+            data.AddData(ClValues, GUIColors.GetColor(0), Localizer.Format("FARAbbrevCl"), true);
 
             data.AddData(CdValues2, GUIColors.GetColor(1) * 0.5f, "Cd2", false);
-            data.AddData(CdValues, GUIColors.GetColor(1), "Cd", true);
+            data.AddData(CdValues, GUIColors.GetColor(1), Localizer.Format("FARAbbrevCd"), true);
 
             data.AddData(CmValues2, GUIColors.GetColor(2) * 0.5f, "Cm2", false);
-            data.AddData(CmValues, GUIColors.GetColor(2), "Cm", true);
+            data.AddData(CmValues, GUIColors.GetColor(2), Localizer.Format("FARAbbrevCm"), true);
 
             data.AddData(LDValues2, GUIColors.GetColor(3) * 0.5f, "L/D2", false);
-            data.AddData(LDValues, GUIColors.GetColor(3), "L/D", true);
+            data.AddData(LDValues, GUIColors.GetColor(3), Localizer.Format("FARAbbrevL_D"), true);
 
 
             return data;

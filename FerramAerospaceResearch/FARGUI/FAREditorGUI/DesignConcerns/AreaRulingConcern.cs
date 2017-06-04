@@ -45,6 +45,7 @@ Copyright 2017, Michael Ferrara, aka Ferram4
 using System;
 using System.Collections.Generic;
 using PreFlightTests;
+using KSP.Localization;
 using FerramAerospaceResearch.FARAeroComponents;
 
 namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.DesignConcerns
@@ -75,11 +76,11 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.DesignConcerns
         }
         public override string GetConcernTitle()
         {
-            return "High Transonic / Supersonic Drag!";
+            return Localizer.Format("FARDesignConcernAreaRuleTitle");
         }
         public override string GetConcernDescription()
         {
-            return "Cross-sectional area distribution is insufficiently smooth and/or contains very large instantaneous changes in area";
+            return Localizer.Format("FARDesignConcernAreaRuleDesc");
         }
         public override DesignConcernSeverity GetSeverity()
         {

@@ -48,6 +48,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using KSP;
+using KSP.Localization;
 using FerramAerospaceResearch;
 using FerramAerospaceResearch.FARGUI;
 using FerramAerospaceResearch.FARGUI.FARFlightGUI;
@@ -642,7 +643,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 if (vessel)
                 {
                     vessel.SendMessage("AerodynamicFailureStatus");
-                    string msg = String.Format("[{0}] {1} failed due to aerodynamic stresses.", KSPUtil.PrintTimeStamp(FlightLogger.met), part.partInfo.title);
+                    string msg = Localizer.Format("FARFlightLogAeroFailure", KSPUtil.PrintTimeStamp(FlightLogger.met), part.partInfo.title);
                     FlightLogger.eventLog.Add(msg); 
                     if (FARDebugValues.aeroFailureExplosions)
                     {

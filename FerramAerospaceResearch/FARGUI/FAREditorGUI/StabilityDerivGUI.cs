@@ -46,6 +46,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using KSP.Localization;
 using FerramAerospaceResearch.FARAeroComponents;
 using FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation;
 using ferram4;
@@ -101,27 +102,27 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         {
             //stabDerivHelp = GUILayout.Toggle(stabDerivHelp, "?", ButtonStyle, GUILayout.Width(200));
 
-            GUILayout.Label("Flight Condition:");
+            GUILayout.Label(Localizer.Format("FAREditorStabDerivFlightCond"));
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Planet:");
+            GUILayout.Label(Localizer.Format("FAREditorStabDerivPlanet"));
             _bodySettingDropdown.GUIDropDownDisplay();
 
-            GUILayout.Label("Altitude (km):");
+            GUILayout.Label(Localizer.Format("FAREditorStabDerivAlt"));
             altitude = GUILayout.TextField(altitude, GUILayout.ExpandWidth(true));
 
-            GUILayout.Label("Mach Number: ");
+            GUILayout.Label(Localizer.Format("FAREditorStabDerivMach"));
             machNumber = GUILayout.TextField(machNumber, GUILayout.ExpandWidth(true));
 
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Flap Setting: ");
+            GUILayout.Label(Localizer.Format("FAREditorStabDerivFlap"));
             _flapSettingDropdown.GUIDropDownDisplay();
-            GUILayout.Label("Spoilers:");
-            spoilersDeployed = GUILayout.Toggle(spoilersDeployed, spoilersDeployed ? "Deployed" : "Retracted", GUILayout.Width(100));
+            GUILayout.Label(Localizer.Format("FAREditorStabDerivSpoiler"));
+            spoilersDeployed = GUILayout.Toggle(spoilersDeployed, spoilersDeployed ? Localizer.Format("FAREditorStabDerivSDeploy") : Localizer.Format("FAREditorStabDerivSRetract"), GUILayout.Width(100));
             GUILayout.EndHorizontal();
 
-            if (GUILayout.Button("Calculate Stability Derivatives", GUILayout.Width(250.0F), GUILayout.Height(25.0F)))
+            if (GUILayout.Button(Localizer.Format("FAREditorStabDerivSpoiler"), GUILayout.Width(250.0F), GUILayout.Height(25.0F)))
             {
                 CelestialBody body = _bodySettingDropdown.ActiveSelection;
                 FARAeroUtil.UpdateCurrentActiveBody(body);
@@ -157,43 +158,43 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 }
                 else
                 {
-                    PopupDialog.SpawnPopupDialog(new Vector2(0, 0), new Vector2(0, 0), "Error!", "Altitude was above atmosphere", "OK", true, HighLogic.UISkin);
+                    PopupDialog.SpawnPopupDialog(new Vector2(0, 0), new Vector2(0, 0), "FARStabDerivError", Localizer.Format("FAREditorStabDerivError"), Localizer.Format("FAREditorStabDerivErrorExp"), Localizer.Format("FARGUIOKButton "), true, HighLogic.UISkin);
                 }
             }
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Aircraft Properties", GUILayout.Width(180));
-            GUILayout.Label("Moments of Inertia", GUILayout.Width(160));
-            GUILayout.Label("Products of Inertia", GUILayout.Width(160));
-            GUILayout.Label("Level Flight", GUILayout.Width(140));
+            GUILayout.Label(Localizer.Format("FAREditorStabDerivAirProp"), GUILayout.Width(180));
+            GUILayout.Label(Localizer.Format("FAREditorStabDerivMoI"), GUILayout.Width(160));
+            GUILayout.Label(Localizer.Format("FAREditorStabDerivPoI"), GUILayout.Width(160));
+            GUILayout.Label(Localizer.Format("FAREditorStabDerivLvlFl"), GUILayout.Width(140));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical(GUILayout.Width(180));
-            GUILayout.Label("Ref Area: " + stabDerivOutput.area.ToString("G3") + " m²");
-            GUILayout.Label("Scaled Chord: " + stabDerivOutput.MAC.ToString("G3") + " m");
-            GUILayout.Label("Scaled Span: " + stabDerivOutput.b.ToString("G3") + " m");
+            GUILayout.Label(Localizer.Format("FAREditorStabDerivRefArea") + stabDerivOutput.area.ToString("G3") + " m²");
+            GUILayout.Label(Localizer.Format("FAREditorStabDerivScaledChord") + stabDerivOutput.MAC.ToString("G3") + " m");
+            GUILayout.Label(Localizer.Format("FAREditorStabDerivScaledSpan") + stabDerivOutput.b.ToString("G3") + " m");
             GUILayout.EndVertical();
 
 
             GUILayout.BeginVertical(GUILayout.Width(160));
-            GUILayout.Label(new GUIContent("Ixx: " + stabDerivOutput.stabDerivs[0].ToString("G6") + " kg * m²", "Inertia about X-axis due to rotation about X-axis"));
-            GUILayout.Label(new GUIContent("Iyy: " + stabDerivOutput.stabDerivs[1].ToString("G6") + " kg * m²", "Inertia about Y-axis due to rotation about Y-axis"));
-            GUILayout.Label(new GUIContent("Izz: " + stabDerivOutput.stabDerivs[2].ToString("G6") + " kg * m²", "Inertia about Z-axis due to rotation about Z-axis"));
+            GUILayout.Label(new GUIContent(Localizer.Format("FAREditorStabDerivIxx") + stabDerivOutput.stabDerivs[0].ToString("G6") + " kg * m²", Localizer.Format("FAREditorStabDerivIxxExp")));
+            GUILayout.Label(new GUIContent(Localizer.Format("FAREditorStabDerivIyy") + stabDerivOutput.stabDerivs[1].ToString("G6") + " kg * m²", Localizer.Format("FAREditorStabDerivIyyExp")));
+            GUILayout.Label(new GUIContent(Localizer.Format("FAREditorStabDerivIzz") + stabDerivOutput.stabDerivs[2].ToString("G6") + " kg * m²", Localizer.Format("FAREditorStabDerivIzzExp")));
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical(GUILayout.Width(160));
-            GUILayout.Label(new GUIContent("Ixy: " + stabDerivOutput.stabDerivs[24].ToString("G6") + " kg * m²", "Inertia about X-axis due to rotation about Y-axis; is equal to inertia about Y-axis due to rotation about X-axis"));
-            GUILayout.Label(new GUIContent("Iyz: " + stabDerivOutput.stabDerivs[25].ToString("G6") + " kg * m²", "Inertia about Y-axis due to rotation about Z-axis; is equal to inertia about Z-axis due to rotation about Y-axis"));
-            GUILayout.Label(new GUIContent("Ixz: " + stabDerivOutput.stabDerivs[26].ToString("G6") + " kg * m²", "Inertia about X-axis due to rotation about Z-axis; is equal to inertia about Z-axis due to rotation about X-axis"));
+            GUILayout.Label(new GUIContent(Localizer.Format("FAREditorStabDerivIxy") + stabDerivOutput.stabDerivs[24].ToString("G6") + " kg * m²", Localizer.Format("FAREditorStabDerivIxyExp")));
+            GUILayout.Label(new GUIContent(Localizer.Format("FAREditorStabDerivIyz") + stabDerivOutput.stabDerivs[25].ToString("G6") + " kg * m²", Localizer.Format("FAREditorStabDerivIyzExp")));
+            GUILayout.Label(new GUIContent(Localizer.Format("FAREditorStabDerivIxz") + stabDerivOutput.stabDerivs[26].ToString("G6") + " kg * m²", Localizer.Format("FAREditorStabDerivIxzExp")));
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical(GUILayout.Width(140));
-            GUILayout.Label(new GUIContent("u0: " + stabDerivOutput.nominalVelocity.ToString("G6") + " m/s", "Air speed based on this mach number and temperature."));
+            GUILayout.Label(new GUIContent(Localizer.Format("FAREditorStabDerivu0") + stabDerivOutput.nominalVelocity.ToString("G6") + " m/s", Localizer.Format("FAREditorStabDerivu0Exp")));
             GUILayout.BeginHorizontal();
-            GUILayout.Label(new GUIContent("Cl: " + stabDerivOutput.stableCl.ToString("G3"), "Required lift coefficient at this mass, speed and air density."));
-            GUILayout.Label(new GUIContent("Cd: " + stabDerivOutput.stableCd.ToString("G3"), "Resulting drag coefficient at this mass, speed and air density."));
+            GUILayout.Label(new GUIContent(Localizer.Format("FARAbbrevCl") + ": " + stabDerivOutput.stableCl.ToString("G3"), Localizer.Format("FAREditorStabDerivClExp")));
+            GUILayout.Label(new GUIContent(Localizer.Format("FARAbbrevCd") + ": " + stabDerivOutput.stableCd.ToString("G3"), Localizer.Format("FAREditorStabDerivCdExp")));
             GUILayout.EndHorizontal();
-            GUILayout.Label(new GUIContent("AoA: " + stabDerivOutput.stableAoAState + stabDerivOutput.stableAoA.ToString("G6") + " deg", "Angle of attack required to achieve the necessary lift force."));
+            GUILayout.Label(new GUIContent(Localizer.Format("FARAbbrevAoA") + ": " + stabDerivOutput.stableAoAState + stabDerivOutput.stableAoA.ToString("G6") + " deg", Localizer.Format("FAREditorStabDerivAoAExp")));
             GUILayout.EndVertical();
 
             GUILayout.EndHorizontal();

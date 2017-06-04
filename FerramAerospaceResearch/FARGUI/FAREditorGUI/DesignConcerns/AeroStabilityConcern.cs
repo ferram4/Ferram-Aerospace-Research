@@ -44,6 +44,7 @@ Copyright 2017, Michael Ferrara, aka Ferram4
 
 using System;
 using System.Collections.Generic;
+using KSP.Localization;
 using PreFlightTests;
 using FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation;
 
@@ -87,17 +88,13 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI.DesignConcerns
         }
         public override string GetConcernTitle()
         {
-            return "Vehicle is aerodynamically unstable!";
+            return Localizer.Format("FARDesignConcernStabTitle");
         }
         public override string GetConcernDescription()
         {
-            if (_editorFacility == EditorFacilities.VAB)
-                return "The aerodynamic center is ahead of the center of mass; the rocket will require sufficient thrust vectoring to maintain forward flight.";
-            else if (_editorFacility == EditorFacilities.SPH)
-                return "The aerodynamic center is ahead of the center of mass; the plane will require sufficient control surfaces to maintain forward flight.";
-            else
-                return "";
+            return Localizer.Format("FARDesignConcernDesc");
         }
+
         public override DesignConcernSeverity GetSeverity()
         {
             if (_editorFacility == EditorFacilities.VAB)
