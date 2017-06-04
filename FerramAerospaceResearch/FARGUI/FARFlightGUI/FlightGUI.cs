@@ -118,10 +118,10 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 return;
             }
 
-            showAllGUI = savedShowGUI;
+            showGUI = savedShowGUI;
             //since we're sharing the button, we need these shenanigans now
             if (FARDebugAndSettings.FARDebugButtonStock && HighLogic.LoadedSceneIsFlight)
-                if (showAllGUI)
+                if (showGUI)
                     FARDebugAndSettings.FARDebugButtonStock.SetTrue(false);
                 else
                     FARDebugAndSettings.FARDebugButtonStock.SetFalse(false);
@@ -196,7 +196,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                     ClearBlizzyToolbarButton();
             }
 
-            savedShowGUI = showAllGUI;
+            savedShowGUI = showGUI;
         }
 
         public void SaveData()
