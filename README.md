@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.15.8 "de Laval"
+Ferram Aerospace Research v0.15.8.1 "Lewis"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -64,6 +64,14 @@ Set all the other winglet/control surface values to zero
 
 CHANGELOG
 =======================================================
+0.15.8.1V "Lewis"------------------------------------  
+
+Bugfix patch for KSP 1.2.2  
+
+Fix Flight GUI button activated/not activated being backwards  
+Don't revoxelize for several B9 and AJE animation modules to reduce lag, thanks blowfish  
+Fix game crashing when a vessel landed in water is loaded  
+
 0.15.8V "de Laval"------------------------------------  
 
 Compatibility for KSP 1.2.2 (finally)  

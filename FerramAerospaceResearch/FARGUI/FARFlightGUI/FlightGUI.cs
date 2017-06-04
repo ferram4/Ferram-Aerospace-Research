@@ -1,9 +1,9 @@
 ﻿/*
-Ferram Aerospace Research v0.15.8 "de Laval"
+Ferram Aerospace Research v0.15.8.1 "Lewis"
 =========================
 Aerodynamics model for Kerbal Space Program
 
-Copyright 2015, Michael Ferrara, aka Ferram4
+Copyright 2017, Michael Ferrara, aka Ferram4
 
    This file is part of Ferram Aerospace Research.
 
@@ -290,7 +290,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
             if (_vessel == FlightGlobals.ActiveVessel && showGUI && showAllGUI)
             {
-                mainGuiRect = GUILayout.Window(this.GetHashCode(), mainGuiRect, MainFlightGUIWindow, "FAR, v0.15.8 'de Laval'", GUILayout.MinWidth(230));
+                mainGuiRect = GUILayout.Window(this.GetHashCode(), mainGuiRect, MainFlightGUIWindow, "FAR, v0.15.8.1 'Lewis'", GUILayout.MinWidth(230));
                 GUIUtils.ClampToScreen(mainGuiRect);
 
                 if (showFlightDataWindow)
