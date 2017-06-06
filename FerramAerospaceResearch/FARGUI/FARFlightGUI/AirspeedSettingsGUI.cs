@@ -45,6 +45,7 @@ Copyright 2017, Michael Ferrara, aka Ferram4
 using System;
 using System.Collections.Generic;
 using KSP.UI.Screens.Flight;
+using KSP.Localization;
 using UnityEngine;
 
 
@@ -71,10 +72,10 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         private string[] surfModel_str = 
         {
-            "Surface",
-            "IAS",
-            "EAS",
-            "Mach"
+            Localizer.Format("FARFlightAirspeedGroundspeed"),
+            Localizer.Format("FARFlightAirspeedIndicated"),
+            Localizer.Format("FARFlightAirspeedEquivalent"),
+            Localizer.Format("FARAbbrevMach")
         };
 
         public enum SurfaceVelUnit
@@ -87,10 +88,10 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         private string[] surfUnit_str = 
         {
-            "m/s",
-            "knots",
-            "mph",
-            "km/h"
+            Localizer.Format("FARFlightAirspeedMeterPerSec"),
+            Localizer.Format("FARFlightAirspeedKnots"),
+            Localizer.Format("FARFlightAirspeedMPH"),
+            Localizer.Format("FARFlightAirspeedKMH")
         };
 
         SurfaceVelMode velMode = SurfaceVelMode.TAS;
@@ -105,7 +106,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 buttonStyle = FlightGUI.buttonStyle;
 
             GUILayout.BeginVertical();
-            GUILayout.Label("Select Surface Velocity Settings");
+            Localizer.Format("FARFlightAirspeedLabel");
             GUILayout.Space(10);
             GUILayout.EndVertical();
             GUILayout.BeginHorizontal();
@@ -137,33 +138,37 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 return;
 
             double unitConversion = 1;
-            string unitString = "m/s";
+            string unitString;// = "m/s";
             string caption;
             if (unitMode == SurfaceVelUnit.KNOTS)
             {
                 unitConversion = 1.943844492440604768413343347219;
-                unitString = "knots";
+                unitString = surfUnit_str[1];
             }
             else if (unitMode == SurfaceVelUnit.KM_H)
             {
                 unitConversion = 3.6;
-                unitString = "km/h";
+                unitString = surfUnit_str[3];
             }
             else if (unitMode == SurfaceVelUnit.MPH)
             {
                 unitConversion = 2.236936;
-                unitString = "mph";
+                unitString = surfUnit_str[2];
+            }
+            else
+            {
+                unitString = surfUnit_str[0];
             }
             if (velMode == SurfaceVelMode.TAS)
             {
-                caption = "Surface";
+                caption = surfModel_str[0];
                 velString = (_vessel.srfSpeed * unitConversion).ToString("F1") + unitString;
             }
             else
             {
                 if (velMode == SurfaceVelMode.IAS)
                 {
-                    caption = "IAS";
+                    caption = surfModel_str[1];
                     //double densityRatio = (FARAeroUtil.GetCurrentDensity(_vessel) / 1.225);
                     double pressureRatio = FARAeroUtil.RayleighPitotTubeStagPressure(_vessel.mach);     //stag pressure at pitot tube face / ambient pressure
 
@@ -176,13 +181,13 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
                 }
                 else if (velMode == SurfaceVelMode.EAS)
                 {
-                    caption = "EAS";
+                    caption = surfModel_str[2];
                     double densityRatio = (FARAeroUtil.GetCurrentDensity(_vessel) / 1.225);
                     velString = (_vessel.srfSpeed * Math.Sqrt(densityRatio) * unitConversion).ToString("F1") + unitString;
                 }
                 else// if (velMode == SurfaceVelMode.MACH)
                 {
-                    caption = "Mach";
+                    caption = surfModel_str[3];
                     velString = _vessel.mach.ToString("F3");
                 }
             }

@@ -45,6 +45,7 @@ Copyright 2017, Michael Ferrara, aka Ferram4
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using KSP.Localization;
 using ferram4;
 
 namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
@@ -52,8 +53,21 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
     class StabilityAugmentation
     {
         Vessel _vessel;
-        static string[] systemLabel = new string[] { "Roll", "Yaw", "Pitch", "AoA", "DPCR" };
-        static string[] systemLabelLong = new string[] { "Roll System", "Yaw System", "Pitch System", "AoA Limiter", "Dynamic Pressure Control Reduction" };
+        static string[] systemLabel = new string[] {
+            Localizer.Format("FARFlightStabAugLabel0"),
+            Localizer.Format("FARFlightStabAugLabel1"),
+            Localizer.Format("FARFlightStabAugLabel2"),
+            Localizer.Format("FARFlightStabAugLabel3"),
+            Localizer.Format("FARFlightStabAugLabel4")
+        };
+        
+        static string[] systemLabelLong = new string[] {
+            Localizer.Format("FARFlightStabAugLabelLong0"),
+            Localizer.Format("FARFlightStabAugLabelLong1"),
+            Localizer.Format("FARFlightStabAugLabelLong2"),
+            Localizer.Format("FARFlightStabAugLabelLong3"),
+            Localizer.Format("FARFlightStabAugLabelLong4")
+        };
         static ControlSystem[] systemTemplates;
         ControlSystem[] systemInstances;
 
@@ -111,7 +125,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             if (boxStyle == null)
                 boxStyle = FlightGUI.boxStyle;
 
-            GUILayout.Label("Control System Tweaking");
+            GUILayout.Label(Localizer.Format("FARFlightStabLabel"));
             systemDropdown.GUIDropDownDisplay(GUILayout.Width(120));
             int selectedItem = systemDropdown.ActiveSelection;
 
@@ -119,20 +133,20 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             GUILayout.BeginVertical(boxStyle);
             if (selectedItem != 4)
             {
-                sys.kP = GUIUtils.TextEntryForDouble("Proportional Gain:", 120, sys.kP);
-                sys.kD = GUIUtils.TextEntryForDouble("Derivative Gain:", 120, sys.kD);
-                sys.kI = GUIUtils.TextEntryForDouble("Integral Gain:", 120, sys.kI);
+                sys.kP = GUIUtils.TextEntryForDouble(Localizer.Format("FARFlightStabPropGain"), 120, sys.kP);
+                sys.kD = GUIUtils.TextEntryForDouble(Localizer.Format("FARFlightStabDerivGain"), 120, sys.kD);
+                sys.kI = GUIUtils.TextEntryForDouble(Localizer.Format("FARFlightStabIntGain"), 120, sys.kI);
 
                 if (selectedItem == 3)
                 {
-                    aoALowLim = GUIUtils.TextEntryForDouble("Min AoA Lim:", 120, aoALowLim);
-                    aoAHighLim = GUIUtils.TextEntryForDouble("Min AoA Lim:", 120, aoAHighLim);
+                    aoALowLim = GUIUtils.TextEntryForDouble(Localizer.Format("FARFlightStabAoALow"), 120, aoALowLim);
+                    aoAHighLim = GUIUtils.TextEntryForDouble(Localizer.Format("FARFlightStabAoAHigh"), 120, aoAHighLim);
                 }
                 else
-                    sys.zeroPoint = GUIUtils.TextEntryForDouble("Desired Point:", 120, sys.zeroPoint);
+                    sys.zeroPoint = GUIUtils.TextEntryForDouble(Localizer.Format("FARFlightStabOffset"), 120, sys.zeroPoint);
             }
             else
-                scalingDynPres = GUIUtils.TextEntryForDouble("Dyn Pres For Control Scaling:", 150, scalingDynPres);
+                scalingDynPres = GUIUtils.TextEntryForDouble(Localizer.Format("FARFlightStabQScaling"), 150, scalingDynPres);
 
             GUILayout.EndVertical();
 

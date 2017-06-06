@@ -47,6 +47,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using KSP.Localization;
 using FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation;
 using FerramAerospaceResearch.FARAeroComponents;
 using ferram4;
@@ -94,8 +95,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             _graph.SetBoundaries(0, 25, 0, 2);
             _graph.SetGridScaleUsingValues(5, 0.5);
-            _graph.horizontalLabel = "Angle of Attack, degrees";
-            _graph.verticalLabel = "Cl\nCd\nCm\nL/D / 10";
+            _graph.horizontalLabel = Localizer.Format("FAREditorStaticGraphAoA");
+            _graph.verticalLabel = Localizer.Format("FAREditorStaticGraphCoeff");
             _graph.Update();
         }
 
@@ -146,8 +147,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             GUILayout.BeginVertical();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label(isMachMode ? "Mach Number Sweep Analysis" : "Angle of Attack Sweep Analysis", GUILayout.Width(250));
-            if (GUILayout.Button(isMachMode ? "Switch To AoA Sweep" : "Switch To Mach Sweep"))
+            GUILayout.Label(isMachMode ? Localizer.Format("FAREditorStaticMachSweep") : Localizer.Format("FAREditorStaticAoASweep"), GUILayout.Width(250));
+            if (GUILayout.Button(isMachMode ? Localizer.Format("FAREditorStaticSwitchAoA") : Localizer.Format("FAREditorStaticSwitchMach")))
                 isMachMode = !isMachMode;
             GUILayout.EndHorizontal();
 
@@ -179,17 +180,17 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         private void RightGraphInputsGUI(GraphInputs input)
         {
             GUILayout.BeginVertical();
-            GUILayout.Label("Celestial Body:");
+            GUILayout.Label(Localizer.Format("FAREditorStabDerivPlanet"));
             bodySettingDropdown.GUIDropDownDisplay();
 
-            GUILayout.Label("Flap Setting:");
+            GUILayout.Label(Localizer.Format("FAREditorStabDerivFlap"));
             flapSettingDropdown.GUIDropDownDisplay();
             input.flapSetting = flapSettingDropdown.ActiveSelection;
-            GUILayout.Label("Pitch Setting:");
+            GUILayout.Label(Localizer.Format("FAREditorStaticPitchSetting"));
             input.pitchSetting = GUILayout.TextField(input.pitchSetting, GUILayout.ExpandWidth(true));
             input.pitchSetting = Regex.Replace(input.pitchSetting, @"[^-?[0-9]*(\.[0-9]*)?]", "");
-            GUILayout.Label("Spoilers:");
-            input.spoilers = GUILayout.Toggle(input.spoilers, input.spoilers ? "Deployed" : "Retracted");
+            GUILayout.Label(Localizer.Format("FAREditorStabDerivSpoiler"));
+            input.spoilers = GUILayout.Toggle(input.spoilers, input.spoilers ? Localizer.Format("FAREditorStabDerivSDeploy") : Localizer.Format("FAREditorStabDerivSRetract"));
 
             GUILayout.EndVertical();
         }
@@ -198,16 +199,16 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
         {
             GUILayout.BeginHorizontal();
 
-            GUILayout.Label("Lower: ", GUILayout.Width(50.0F), GUILayout.Height(25.0F));
+            GUILayout.Label(Localizer.Format("FAREditorStaticGraphLowLim"), GUILayout.Width(50.0F), GUILayout.Height(25.0F));
             input.lowerBound = GUILayout.TextField(input.lowerBound, GUILayout.ExpandWidth(true));
-            GUILayout.Label("Upper: ", GUILayout.Width(50.0F), GUILayout.Height(25.0F));
+            GUILayout.Label(Localizer.Format("FAREditorStaticGraphUpLim"), GUILayout.Width(50.0F), GUILayout.Height(25.0F));
             input.upperBound = GUILayout.TextField(input.upperBound, GUILayout.ExpandWidth(true));
-            GUILayout.Label("Num Pts: ", GUILayout.Width(70.0F), GUILayout.Height(25.0F));
+            GUILayout.Label(Localizer.Format("FAREditorStaticGraphPtCount"), GUILayout.Width(70.0F), GUILayout.Height(25.0F));
             input.numPts = GUILayout.TextField(input.numPts, GUILayout.ExpandWidth(true));
-            GUILayout.Label(isMachMode ? "AoA" : "Mach", GUILayout.Width(50.0F), GUILayout.Height(25.0F));
+            GUILayout.Label(isMachMode ? Localizer.Format("FARAbbrevAoA") : Localizer.Format("FARAbbrevMach"), GUILayout.Width(50.0F), GUILayout.Height(25.0F));
             input.otherInput = GUILayout.TextField(input.otherInput, GUILayout.ExpandWidth(true));
 
-            if (GUILayout.Button(isMachMode ? "Sweep Mach" : "Sweep AoA", GUILayout.Width(100.0F), GUILayout.Height(25.0F)))
+            if (GUILayout.Button(isMachMode ? Localizer.Format("FAREditorStaticSweepMach") : Localizer.Format("FAREditorStaticSweepAoA"), GUILayout.Width(100.0F), GUILayout.Height(25.0F)))
             {
                 input.lowerBound = Regex.Replace(input.lowerBound, @"[^-?[0-9]*(\.[0-9]*)?]", "");
                 input.upperBound = Regex.Replace(input.upperBound, @"[^-?[0-9]*(\.[0-9]*)?]", "");
@@ -251,7 +252,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                         SetAngleVectors(lowerBound, upperBound);
                     }
 
-                    UpdateGraph(data, isMachMode ? "Mach Number" : "Angle of Attack, degrees", "Cl\nCd\nCm\nL/D / 10", lowerBound, upperBound);
+                    UpdateGraph(data, isMachMode ? Localizer.Format("FAREditorStaticGraphMach") : Localizer.Format("FAREditorStaticGraphAoA"), Localizer.Format("FAREditorStaticGraphCoeff"), lowerBound, upperBound);
                 }
             }
             GUILayout.EndHorizontal();

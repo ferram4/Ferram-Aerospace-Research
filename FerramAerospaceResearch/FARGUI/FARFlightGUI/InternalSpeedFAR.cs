@@ -44,6 +44,7 @@ Copyright 2017, Michael Ferrara, aka Ferram4
 
 using System;
 using UnityEngine;
+using KSP.Localization;
 
 namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 {
@@ -55,10 +56,10 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
     public class InternalSpeedFAR : InternalSpeed
     {
         private string[] shortCaptions = {
-            "Srf.: ",
-            "IAS: ",
-            "EAS: ",
-            "Mach: "
+            Localizer.Format("FARFlightInternalAirspeedGroundspeed"),
+            Localizer.Format("FARFlightInternalAirspeedIndicated"),
+            Localizer.Format("FARFlightInternalAirspeedEquivalent"),
+            Localizer.Format("FARFlightInternalAirspeedMach")
         };
 
         public override void OnUpdate()

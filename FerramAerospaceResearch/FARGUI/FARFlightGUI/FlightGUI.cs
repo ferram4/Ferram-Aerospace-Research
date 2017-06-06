@@ -48,6 +48,7 @@ using System.Text;
 using UnityEngine;
 using KSP;
 using KSP.UI.Screens;
+using KSP.Localization;
 using StringLeakTest;
 using FerramAerospaceResearch.FARAeroComponents;
 using ferram4;
@@ -135,7 +136,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             _flightDataGUI = new FlightDataGUI();
             _aeroVizGUI = new AeroVisualizationGUI();
 
-            settingsWindow = new GUIDropDown<int>(new string[4]{"Flt Data","Stab Aug", "Air Spd","Aero Viz"}, new int[4]{0,1,2,3}, 0);
+            settingsWindow = new GUIDropDown<int>(new string[4] { Localizer.Format("FARFlightGUIWindowSelect0"), Localizer.Format("FARFlightGUIWindowSelect1"), Localizer.Format("FARFlightGUIWindowSelect2"), Localizer.Format("FARFlightGUIWindowSelect3") }, new int[4] { 0, 1, 2, 3 }, 0);
             //boxStyle.padding = new RectOffset(4, 4, 4, 4);
 
             if (vesselFlightGUI.ContainsKey(_vessel))
@@ -295,13 +296,13 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
                 if (showFlightDataWindow)
                 {
-                    dataGuiRect = GUILayout.Window(this.GetHashCode() + 1, dataGuiRect, FlightDataWindow, "FAR Flight Data", GUILayout.MinWidth(150));
+                    dataGuiRect = GUILayout.Window(this.GetHashCode() + 1, dataGuiRect, FlightDataWindow, Localizer.Format("FARFlightDataTitle"), GUILayout.MinWidth(150));
                     GUIUtils.ClampToScreen(dataGuiRect);
                 }
 
                 if (showSettingsWindow)
                 {
-                    settingsGuiRect = GUILayout.Window(this.GetHashCode() + 2, settingsGuiRect, SettingsWindow, "FAR Settings", GUILayout.MinWidth(200));
+                    settingsGuiRect = GUILayout.Window(this.GetHashCode() + 2, settingsGuiRect, SettingsWindow, Localizer.Format("FARFlightSettings"), GUILayout.MinWidth(200));
                     GUIUtils.ClampToScreen(settingsGuiRect);
                 }
             }
@@ -312,23 +313,24 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             GUILayout.BeginVertical(GUILayout.Height(100));
             GUILayout.BeginHorizontal();
             _strBuilder.Length = 0;
-            _strBuilder.Append("Mach: ");
+            _strBuilder.Append(Localizer.Format("FARAbbrevMach"));
+            _strBuilder.Append(": ");
             _strBuilder.Concat((float)(_vesselAero.MachNumber),3).AppendLine();
-            _strBuilder.AppendFormat("Reynolds: {1:e2}", _vesselAero.MachNumber,_vesselAero.ReynoldsNumber);
+            _strBuilder.AppendFormat(Localizer.Format("FARFlightGUIReynolds",_vesselAero.ReynoldsNumber));
             GUILayout.Box(_strBuilder.ToString(), boxStyle, GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
 
             _strBuilder.Length = 0;
-            _strBuilder.Append("ATM Density: ");
+            _strBuilder.Append(Localizer.Format("FARFlightGUIAtmDens"));
             _strBuilder.Concat((float)(vessel.atmDensity),3);
 
             GUILayout.Box(_strBuilder.ToString(), boxStyle, GUILayout.ExpandWidth(true));
 
             _flightStatusGUI.Display();
-            showFlightDataWindow = GUILayout.Toggle(showFlightDataWindow, "Flt Data", buttonStyle, GUILayout.ExpandWidth(true));
-            showSettingsWindow = GUILayout.Toggle(showSettingsWindow, "Flt Settings", buttonStyle, GUILayout.ExpandWidth(true));
+            showFlightDataWindow = GUILayout.Toggle(showFlightDataWindow, Localizer.Format("FARFlightGUIFltDataBtn"), buttonStyle, GUILayout.ExpandWidth(true));
+            showSettingsWindow = GUILayout.Toggle(showSettingsWindow, Localizer.Format("FARFlightGUIFltSettings"), buttonStyle, GUILayout.ExpandWidth(true));
 
-            GUILayout.Label("Flight Assistance Toggles:");
+            GUILayout.Label(Localizer.Format("FARFlightGUIFltAssistance"));
 
             _stabilityAugmentation.Display();
 
@@ -344,7 +346,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         void SettingsWindow(int windowId)
         {
-            GUILayout.Label("Current Settings Group:");
+            GUILayout.Label(Localizer.Format("FARFlightSettingsLabel"));
             settingsWindow.GUIDropDownDisplay();
             int selection = settingsWindow.ActiveSelection;
             switch (selection)
