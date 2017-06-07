@@ -143,22 +143,22 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             GUILayout.BeginVertical(BackgroundStyle);
             GUILayout.BeginHorizontal();
-            StabilityLabel(Localizer.Format("FAREditorZw"), vehicleData.stabDerivs[3], " s⁻¹", Localizer.Format("FAREditorZwExp"), 160, -1);
-            StabilityLabel(Localizer.Format("FAREditorZu"), vehicleData.stabDerivs[6], " s⁻¹", Localizer.Format("FAREditorZuExp"), 160, -1);
-            StabilityLabel(Localizer.Format("FAREditorZq"), vehicleData.stabDerivs[9], " m/s", Localizer.Format("FAREditorZqExp"), 160, 0);
-            StabilityLabel(Localizer.Format("FAREditorZDeltae"), vehicleData.stabDerivs[12], " m/s²", Localizer.Format("FAREditorZDeltaeExp"), 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorZw"), vehicleData.stabDerivs[3], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorZwExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorZu"), vehicleData.stabDerivs[6], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorZuExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorZq"), vehicleData.stabDerivs[9], " " + Localizer.Format("FARUnitMPerSec"), Localizer.Format("FAREditorZqExp"), 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorZDeltae"), vehicleData.stabDerivs[12], " " + Localizer.Format("FARUnitMPerSecSq"), Localizer.Format("FAREditorZDeltaeExp"), 160, 0);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            StabilityLabel(Localizer.Format("FAREditorXw"), vehicleData.stabDerivs[4], " s⁻¹", Localizer.Format("FAREditorXwExp"), 160, 0);
-            StabilityLabel(Localizer.Format("FAREditorXu"), vehicleData.stabDerivs[7], " s⁻¹", Localizer.Format("FAREditorXuExp"), 160, -1);
-            StabilityLabel(Localizer.Format("FAREditorXq"), vehicleData.stabDerivs[10], " m/s", Localizer.Format("FAREditorXqExp"), 160, 0);
-            StabilityLabel(Localizer.Format("FAREditorXDeltae"), vehicleData.stabDerivs[13], " m/s²", Localizer.Format("FAREditorXDeltaeExp"), 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorXw"), vehicleData.stabDerivs[4], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorXwExp"), 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorXu"), vehicleData.stabDerivs[7], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorXuExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorXq"), vehicleData.stabDerivs[10], " " + Localizer.Format("FARUnitMPerSec"), Localizer.Format("FAREditorXqExp"), 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorXDeltae"), vehicleData.stabDerivs[13], " " + Localizer.Format("FARUnitMPerSecSq"), Localizer.Format("FAREditorXDeltaeExp"), 160, 0);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            StabilityLabel(Localizer.Format("FAREditorMw"), vehicleData.stabDerivs[5], " (m * s)⁻¹", Localizer.Format("FAREditorMwExp"), 160, -1);
-            StabilityLabel(Localizer.Format("FAREditorMu"), vehicleData.stabDerivs[8], " (m * s)⁻¹", Localizer.Format("FAREditorMuExp"), 160, 0);
-            StabilityLabel(Localizer.Format("FAREditorMq"), vehicleData.stabDerivs[11], " s⁻¹", Localizer.Format("FAREditorMqExp"), 160, -1);
-            StabilityLabel(Localizer.Format("FAREditorMDeltae"), vehicleData.stabDerivs[14], " s⁻²", Localizer.Format("FAREditorMDeltaeExp"), 160, 1);
+            StabilityLabel(Localizer.Format("FAREditorMw"), vehicleData.stabDerivs[5], " " + Localizer.Format("FARUnitInvMSec"), Localizer.Format("FAREditorMwExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorMu"), vehicleData.stabDerivs[8], " " + Localizer.Format("FARUnitInvMSec"), Localizer.Format("FAREditorMuExp"), 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorMq"), vehicleData.stabDerivs[11], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorMqExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorMDeltae"), vehicleData.stabDerivs[14], " " + Localizer.Format("FARUnitInvSecSq"), Localizer.Format("FAREditorMDeltaeExp"), 160, 1);
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
             GUILayout.EndVertical();
@@ -182,20 +182,21 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             GUILayout.BeginVertical(BackgroundStyle);
             GUILayout.BeginHorizontal();
-            StabilityLabel(Localizer.Format("FAREditorYβ"), vehicleData.stabDerivs[15], " m/s²", Localizer.Format("FAREditorYβExp"), 160, -1);
-            StabilityLabel(Localizer.Format("FAREditorYp"), vehicleData.stabDerivs[18], " m/s", Localizer.Format("FAREditorYpExp"), 160, 0);
-            StabilityLabel(Localizer.Format("FAREditorYr"), vehicleData.stabDerivs[21], " m/s", Localizer.Format("FAREditorYrExp"), 160, 1);
+            StabilityLabel(Localizer.Format("FAREditorYβ"), vehicleData.stabDerivs[15], " " + Localizer.Format("FARUnitMPerSecSq"), Localizer.Format("FAREditorYβExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorYp"), vehicleData.stabDerivs[18], " " + Localizer.Format("FARUnitMPerSec"), Localizer.Format("FAREditorYpExp"), 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorYr"), vehicleData.stabDerivs[21], " " + Localizer.Format("FARUnitMPerSec"), Localizer.Format("FAREditorYrExp"), 160, 1);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            StabilityLabel(Localizer.Format("FAREditorLβ"), vehicleData.stabDerivs[16], " s⁻²", Localizer.Format("FAREditorLβExp"), 160, -1);
-            StabilityLabel(Localizer.Format("FAREditorLp"), vehicleData.stabDerivs[19], " s⁻¹", Localizer.Format("FAREditorLpExp"), 160, -1);
-            StabilityLabel(Localizer.Format("FAREditorLr"), vehicleData.stabDerivs[22], " s⁻¹", Localizer.Format("FAREditorLrExp"), 160, 1);
+            StabilityLabel(Localizer.Format("FAREditorLβ"), vehicleData.stabDerivs[16], " " + Localizer.Format("FARUnitInvSecSq"), Localizer.Format("FAREditorLβExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorLp"), vehicleData.stabDerivs[19], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorLpExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorLr"), vehicleData.stabDerivs[22], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorLrExp"), 160, 1);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            StabilityLabel(Localizer.Format("FAREditorNβ"), vehicleData.stabDerivs[17], " s⁻²", Localizer.Format("FAREditorNβExp"), 160, 1);
-            StabilityLabel(Localizer.Format("FAREditorNp"), vehicleData.stabDerivs[20], " s⁻¹", Localizer.Format("FAREditorNpExp"), 160, 0);
-            StabilityLabel(Localizer.Format("FAREditorNr"), vehicleData.stabDerivs[23], " s⁻¹", Localizer.Format("FAREditorNrExp"), 160, -1);
-            GUILayout.EndHorizontal(); GUILayout.EndVertical();
+            StabilityLabel(Localizer.Format("FAREditorNβ"), vehicleData.stabDerivs[17], " " + Localizer.Format("FARUnitInvSecSq"), Localizer.Format("FAREditorNβExp"), 160, 1);
+            StabilityLabel(Localizer.Format("FAREditorNp"), vehicleData.stabDerivs[20], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorNpExp"), 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorNr"), vehicleData.stabDerivs[23], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorNrExp"), 160, -1);
+            GUILayout.EndHorizontal(); 
+            GUILayout.EndVertical();
             GUILayout.EndVertical();
 
 

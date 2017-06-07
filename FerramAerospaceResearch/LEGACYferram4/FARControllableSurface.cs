@@ -46,6 +46,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using KSP;
+using KSP.Localization;
 using FerramAerospaceResearch;
 
 namespace ferram4
@@ -98,44 +99,44 @@ namespace ferram4
         private bool MovableOrigReady = false;
 
 //        protected int MovableSectionFlip = 1;
-        [KSPField(guiName = "Std. Ctrl", guiActiveEditor = true, guiActive = true), UI_Toggle(affectSymCounterparts = UI_Scene.All, scene = UI_Scene.All, disabledText = "Settings", enabledText = "Settings")]
+        [KSPField(guiName = "FARCtrlSurfStdTitle", guiActiveEditor = true, guiActive = true), UI_Toggle(affectSymCounterparts = UI_Scene.All, scene = UI_Scene.All, disabledText = "FARCtrlSurfStdText", enabledText = "FARCtrlSurfStdText")]
         bool showStdCtrl = false;
         bool prevStdCtrl = true;
 
-        [KSPField(guiName = "Pitch %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(affectSymCounterparts = UI_Scene.All, maxValue = 100.0f, minValue = -100f, scene = UI_Scene.All, stepIncrement = 5f)]
+        [KSPField(guiName = "FARCtrlSurfPitch", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(affectSymCounterparts = UI_Scene.All, maxValue = 100.0f, minValue = -100f, scene = UI_Scene.All, stepIncrement = 5f)]
         public float pitchaxis = 100.0f;
 
-        [KSPField(guiName = "Yaw %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(affectSymCounterparts = UI_Scene.All, maxValue = 100.0f, minValue = -100f, scene = UI_Scene.All, stepIncrement = 5f)]
+        [KSPField(guiName = "FARCtrlSurfYaw", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(affectSymCounterparts = UI_Scene.All, maxValue = 100.0f, minValue = -100f, scene = UI_Scene.All, stepIncrement = 5f)]
 		public float yawaxis = 100.0f;
 
-        [KSPField(guiName = "Roll %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(affectSymCounterparts = UI_Scene.All, maxValue = 100.0f, minValue = -100f, scene = UI_Scene.All, stepIncrement = 5f)]
+        [KSPField(guiName = "FARCtrlSurfRoll", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(affectSymCounterparts = UI_Scene.All, maxValue = 100.0f, minValue = -100f, scene = UI_Scene.All, stepIncrement = 5f)]
         public float rollaxis = 100.0f;
 
-        [KSPField(guiName = "AoA %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(affectSymCounterparts = UI_Scene.All, maxValue = 200.0f, minValue = -200f, scene = UI_Scene.All, stepIncrement = 5f)]
+        [KSPField(guiName = "FARCtrlSurfAoA", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(affectSymCounterparts = UI_Scene.All, maxValue = 200.0f, minValue = -200f, scene = UI_Scene.All, stepIncrement = 5f)]
 		public float pitchaxisDueToAoA = 0.0f;
 
-        [KSPField(guiName = "BrakeRudder %", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(affectSymCounterparts = UI_Scene.All, maxValue = 100.0f, minValue = -100f, scene = UI_Scene.All, stepIncrement = 5f)]
+        [KSPField(guiName = "FARCtrlSurfBrakeRudder", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_FloatRange(affectSymCounterparts = UI_Scene.All, maxValue = 100.0f, minValue = -100f, scene = UI_Scene.All, stepIncrement = 5f)]
         public float brakeRudder = 0.0f;
 
-        [KSPField(guiName = "Ctrl Dflct", guiActiveEditor = false, isPersistant = true), UI_FloatRange(affectSymCounterparts = UI_Scene.All, maxValue = 40, minValue = -40, scene = UI_Scene.All, stepIncrement = 0.5f)]
+        [KSPField(guiName = "FARCtrlSurfCtrlDeflect", guiActiveEditor = false, isPersistant = true), UI_FloatRange(affectSymCounterparts = UI_Scene.All, maxValue = 40, minValue = -40, scene = UI_Scene.All, stepIncrement = 0.5f)]
         public float maxdeflect = 15;
 
-        [KSPField(guiName = "Flp/splr", guiActiveEditor = true, guiActive = true), UI_Toggle(affectSymCounterparts = UI_Scene.All, scene = UI_Scene.All, disabledText = "Settings", enabledText = "Settings")]
+        [KSPField(guiName = "FARCtrlSurfFlapSpoiler", guiActiveEditor = true, guiActive = true), UI_Toggle(affectSymCounterparts = UI_Scene.All, scene = UI_Scene.All, disabledText = "FARCtrlSurfStdText", enabledText = "FARCtrlSurfStdText")]
         bool showFlpCtrl = false;
         bool prevFlpCtrl = true;
 
-        [KSPField(guiName = "Flap", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_Toggle(affectSymCounterparts = UI_Scene.All, enabledText = "Active", scene = UI_Scene.All, disabledText = "Inactive")]
+        [KSPField(guiName = "FARCtrlSurfFlap", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_Toggle(affectSymCounterparts = UI_Scene.All, enabledText = "FARCtrlSurfFlapActive", scene = UI_Scene.All, disabledText = "FARCtrlSurfFlapInActive")]
         public bool isFlap;
         bool prevIsFlap;
 
-        [KSPField(guiName = "Spoiler", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_Toggle(affectSymCounterparts = UI_Scene.All, enabledText = "Active", scene = UI_Scene.All, disabledText = "Inactive")]
+        [KSPField(guiName = "FARCtrlSurfSpoiler", isPersistant = true, guiActiveEditor = false, guiActive = false), UI_Toggle(affectSymCounterparts = UI_Scene.All, enabledText = "FARCtrlSurfFlapActive", scene = UI_Scene.All, disabledText = "FARCtrlSurfFlapInActive")]
         public bool isSpoiler;
         bool prevIsSpoiler;
 
-        [KSPField(isPersistant = true, guiName = "Flap setting")]
+        [KSPField(isPersistant = true, guiName = "FARCtrlSurfFlapSetting")]
         public int flapDeflectionLevel = 2;
 
-        [KSPField(guiName = "Flp/splr Dflct", guiActiveEditor = false, isPersistant = true), UI_FloatRange(affectSymCounterparts = UI_Scene.All, maxValue = 85, minValue = -85, scene = UI_Scene.All, stepIncrement = 0.5f)]
+        [KSPField(guiName = "FARCtrlSurfFlapDeflect", guiActiveEditor = false, isPersistant = true), UI_FloatRange(affectSymCounterparts = UI_Scene.All, maxValue = 85, minValue = -85, scene = UI_Scene.All, stepIncrement = 0.5f)]
         public float maxdeflectFlap = 15; 
         
         protected double PitchLocation = 0;
@@ -165,34 +166,34 @@ namespace ferram4
         private Transform lastReferenceTransform = null;
 
 
-        [FARAction("Activate Spoiler", FARActionGroupConfiguration.ID_SPOILER)] // use our new FARAction for configurable action group assignemnt
+        [FARAction("FARCtrlActionSpoiler", FARActionGroupConfiguration.ID_SPOILER)] // use our new FARAction for configurable action group assignemnt
         public void ActivateSpoiler(KSPActionParam param)
         {
             brake = !(param.type > 0);
         }
 
-        [FARAction("Increase Flap Deflection", FARActionGroupConfiguration.ID_INCREASE_FLAP_DEFLECTION)] // use our new FARAction for configurable action group assignemnt
+        [FARAction("FARCtrlActionIncFlap", FARActionGroupConfiguration.ID_INCREASE_FLAP_DEFLECTION)] // use our new FARAction for configurable action group assignemnt
         public void IncreaseDeflect(KSPActionParam param)
         {
             param.Cooldown = 0.25f;
             SetDeflection(flapDeflectionLevel + 1);
         }
 
-        [KSPEvent(name = "DeflectMore", active = false, guiActive = true, guiName = "Deflect more")]
+        [KSPEvent(name = "DeflectMore", active = false, guiActive = true, guiName = "FARCtrlEventIncFlap")]
         public void DeflectMore()
         {
             SetDeflection(flapDeflectionLevel + 1);
             UpdateFlapDeflect();
         }
 
-        [FARAction("Decrease Flap Deflection", FARActionGroupConfiguration.ID_DECREASE_FLAP_DEFLECTION)] // use our new FARAction for configurable action group assignemnt
+        [FARAction("FARCtrlActionDecFlap", FARActionGroupConfiguration.ID_DECREASE_FLAP_DEFLECTION)] // use our new FARAction for configurable action group assignemnt
         public void DecreaseDeflect(KSPActionParam param)
         {
             param.Cooldown = 0.25f;
             SetDeflection(flapDeflectionLevel - 1);
         }
 
-        [KSPEvent(name = "DeflectLess", active = false, guiActive = true, guiName = "Deflect less")]
+        [KSPEvent(name = "DeflectLess", active = false, guiActive = true, guiName = "FARCtrlEventDecFlap")]
         public void DeflectLess()
         {
             SetDeflection(flapDeflectionLevel - 1);

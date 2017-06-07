@@ -46,16 +46,17 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using FerramAerospaceResearch;
+using KSP.Localization;
 
 namespace ferram4
 {
     public class FARBaseAerodynamics : FARPartModule, ILiftProvider
     {
-        [KSPField(isPersistant = false, guiActive = false)]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "FARAbbrevCl")]
         public double Cl;
-        [KSPField(isPersistant = false, guiActive = false)]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "FARAbbrevCd")]
         public double Cd;
-        [KSPField(isPersistant = false, guiActive = false)]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "FARAbbrevCm")]
         public double Cm;
 
                 //protected float MachNumber = 0;
