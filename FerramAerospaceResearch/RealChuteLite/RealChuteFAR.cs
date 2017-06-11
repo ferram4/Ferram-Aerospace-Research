@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using KSP.UI.Screens;
+using KSP.Localization;
 using FerramAerospaceResearch.PartExtensions;
 using Random = System.Random;
 
@@ -40,14 +41,14 @@ namespace FerramAerospaceResearch.RealChuteLite
 
         #region Constants
         //Material constants
-        public const string materialName = "Nylon";
+        public static string materialName = Localizer.Format("RCLMatNylon");
         public const float areaDensity = 5.65E-5f, areaCost = 0.075f, staticCd = 1;     //t/m², and F/m² for the first two
         public const double startTemp = 300, maxTemp = 493.15;                          //In °K
         public const double specificHeat = 1700, absoluteZero = -273.15;                //Specific heat in J/kg*K
 
         //More useful constants
         public const int maxSpares = 5;
-        public const string stowed = "STOWED", predeployed = "PREDEPLOYED", deployed = "DEPLOYED", cut = "CUT";
+        public static string stowed = Localizer.Format("RCLStatusStowed"), predeployed = Localizer.Format("RCLStatusPreDep"), deployed = Localizer.Format("RCLStatusDep"), cut = Localizer.Format("RCLStatusCut");
         public static readonly string[] cubeNames = { "STOWED", "RCDEPLOYED", "DEPLOYED", "SEMIDEPLOYED", "PACKED" };
 
         //Quick enum parsing/tostring dictionaries
@@ -77,9 +78,9 @@ namespace FerramAerospaceResearch.RealChuteLite
         //Stealing values from the stock module
         [KSPField]
         public float autoCutSpeed = 0.5f;
-        [KSPField(guiName = "Min pressure", isPersistant = true, guiActive = true, guiActiveEditor = true), UI_FloatRange(stepIncrement = 0.01f, maxValue = 0.5f, minValue = 0.01f)]
+        [KSPField(guiName = "RCLSettingMinPres", isPersistant = true, guiActive = true, guiActiveEditor = true), UI_FloatRange(stepIncrement = 0.01f, maxValue = 0.5f, minValue = 0.01f)]
         public float minAirPressureToOpen = 0.01f;
-        [KSPField(guiName = "Altitude", isPersistant = true, guiActive = true, guiActiveEditor = true), UI_FloatRange(stepIncrement = 50f, maxValue = 5000f, minValue = 50f)]
+        [KSPField(guiName = "RCLSettingAlt", isPersistant = true, guiActive = true, guiActiveEditor = true), UI_FloatRange(stepIncrement = 50f, maxValue = 5000f, minValue = 50f)]
         public float deployAltitude = 700;
         [KSPField]
         public string capName = "cap", canopyName = "canopy";
@@ -97,17 +98,17 @@ namespace FerramAerospaceResearch.RealChuteLite
         public float caseMass, time;
         [KSPField(isPersistant = true)]
         public bool armed, staged, initiated;
-        [KSPField(isPersistant = true, guiActive = true, guiName = "Spare chutes")]
+        [KSPField(isPersistant = true, guiActive = true, guiName = "RCLStatusSpare")]
         public int chuteCount = 5;
         [KSPField(isPersistant = true)]
-        public string depState = "STOWED";
+        public string depState = Localizer.Format("RCLStatusStowed");
         [KSPField(isPersistant = true)]
         public float currentArea;
         [KSPField(isPersistant = true)]
         public double chuteTemperature = 300;
-        [KSPField(isPersistant = true, guiActive = false, guiName = "Chute temp", guiFormat = "0.00", guiUnits = "°C")]
+        [KSPField(isPersistant = true, guiActive = false, guiName = "RCLStatusChuteTemp", guiFormat = "0.00", guiUnits = "RCLTempUnit")]
         public float currentTemp = 20;
-        [KSPField(guiActive = false, guiName = "Max temp", guiFormat = "0.00", guiUnits = "°C")]
+        [KSPField(guiActive = false, guiName = "RCLStatusMaxTemp", guiFormat = "0.00", guiUnits = "RCLTempUnit")]
         public float chuteDisplayMaxTemp = (float)(maxTemp + absoluteZero);
         #endregion
 
@@ -373,20 +374,20 @@ namespace FerramAerospaceResearch.RealChuteLite
 
         #region Part GUI
         //Deploys the parachutes if possible
-        [KSPEvent(guiActive = true, active = true, externalToEVAOnly = true, guiActiveUnfocused = true, guiName = "Deploy Chute", unfocusedRange = 5)]
+        [KSPEvent(guiActive = true, active = true, externalToEVAOnly = true, guiActiveUnfocused = true, guiName = "RCLEventDeploy", unfocusedRange = 5)]
         public void GUIDeploy()
         {
             ActivateRC();
         }
 
         //Cuts main chute chute
-        [KSPEvent(guiActive = true, active = true, externalToEVAOnly = true, guiActiveUnfocused = true, guiName = "Cut chute", unfocusedRange = 5)]
+        [KSPEvent(guiActive = true, active = true, externalToEVAOnly = true, guiActiveUnfocused = true, guiName = "RCLEventCut", unfocusedRange = 5)]
         public void GUICut()
         {
             Cut();
         }
 
-        [KSPEvent(guiActive = true, active = true, externalToEVAOnly = true, guiActiveUnfocused = true, guiName = "Disarm chute", unfocusedRange = 5)]
+        [KSPEvent(guiActive = true, active = true, externalToEVAOnly = true, guiActiveUnfocused = true, guiName = "RCLEventDisarm", unfocusedRange = 5)]
         public void GUIDisarm()
         {
             this.armed = false;
@@ -397,14 +398,14 @@ namespace FerramAerospaceResearch.RealChuteLite
         }
 
         //Repacks chute from EVA if in space or on the ground
-        [KSPEvent(guiActive = false, active = true, externalToEVAOnly = true, guiActiveUnfocused = true, guiName = "Repack chute", unfocusedRange = 5)]
+        [KSPEvent(guiActive = false, active = true, externalToEVAOnly = true, guiActiveUnfocused = true, guiName = "RCLEventRepack", unfocusedRange = 5)]
         public void GUIRepack()
         {
             if (this.CanRepack)
             {
                 if (!this.CanRepackCareer)
                 {
-                    ScreenMessages.PostScreenMessage("Only a level 1 and higher engineer can repack a parachute", 5, ScreenMessageStyle.UPPER_CENTER);
+                    ScreenMessages.PostScreenMessage(Localizer.Format("RCLRepackErrorMessage"), 5, ScreenMessageStyle.UPPER_CENTER);
                     return;
                 }
 
@@ -422,7 +423,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         }
 
         //Shows the info window
-        [KSPEvent(guiActive = true, active = true, guiActiveEditor = true, guiName = "Toggle info")]
+        [KSPEvent(guiActive = true, active = true, guiActiveEditor = true, guiName = "RCLEventToggleInfo")]
         public void GUIToggleWindow()
         {
             if (!this.visible)
@@ -444,20 +445,20 @@ namespace FerramAerospaceResearch.RealChuteLite
 
         #region Action groups
         //Deploys the parachutes if possible
-        [KSPAction("Deploy chute")]
+        [KSPAction("Deploy chute", guiName = "RCLEventDeploy")]
         public void ActionDeploy(KSPActionParam param)
         {
             ActivateRC();
         }
 
         //Cuts main chute
-        [KSPAction("Cut chute")]
+        [KSPAction("Cut chute", guiName = "RCLEventCut")]
         public void ActionCut(KSPActionParam param)
         {
             if (this.IsDeployed) { Cut(); }
         }
 
-        [KSPAction("Disarm chute")]
+        [KSPAction("Disarm chute", guiName = "RCLEventDisarm")]
         public void ActionDisarm(KSPActionParam param)
         {
             if (this.armed) { GUIDisarm(); }
@@ -551,6 +552,11 @@ namespace FerramAerospaceResearch.RealChuteLite
         public string GetModuleTitle()
         {
             return "RealChute";
+        }
+
+        public override string GetModuleDisplayName()
+        {
+            return Localizer.Format("RCLModuleTitle");
         }
 
         //Sets part info field
@@ -675,7 +681,8 @@ namespace FerramAerospaceResearch.RealChuteLite
             this.chuteTemperature = Math.Max(PhysicsGlobals.SpaceTemperature, this.chuteTemperature + ((this.convFlux - emissiveFlux) * 0.001 * this.ConvectionArea * this.InvThermalMass * TimeWarp.fixedDeltaTime));
             if (this.chuteTemperature > maxTemp)
             {
-                ScreenMessages.PostScreenMessage("<color=orange>[RealChute]: " + this.part.partInfo.title + "'s parachute has been destroyed due to aero forces and heat.</color>", 6f, ScreenMessageStyle.UPPER_LEFT);
+                
+                ScreenMessages.PostScreenMessage(Localizer.Format("RCLDestroyMessage", this.part.partInfo.title), 6f, ScreenMessageStyle.UPPER_LEFT);
                 Cut();
                 return false;
             }
@@ -795,54 +802,54 @@ namespace FerramAerospaceResearch.RealChuteLite
             GUILayout.BeginVertical();
 
             //Top info labels
-            StringBuilder b = new StringBuilder("Part name: ").AppendLine(this.part.partInfo.title);
-            b.Append("Symmetry counterparts: ").AppendLine(this.part.symmetryCounterparts.Count.ToString());
-            b.Append("Part mass: ").Append(this.part.TotalMass().ToString("0.###")).AppendLine("t");
+            StringBuilder b = new StringBuilder(Localizer.Format("RCLGUI0", this.part.partInfo.title)).AppendLine();
+            b.AppendLine(Localizer.Format("RCLGUI0", this.part.symmetryCounterparts.Count));
+            b.AppendLine(Localizer.Format("RCLGUI2", this.part.TotalMass()));
             GUILayout.Label(b.ToString());
 
             //Beggining scroll
             this.scroll = GUILayout.BeginScrollView(this.scroll, false, false, GUI.skin.horizontalScrollbar, GUI.skin.verticalScrollbar, GUI.skin.box);
             GUILayout.Space(5);
-            GUILayout.Label("General:", BoldLabel, GUILayout.Width(120));
+            GUILayout.Label(Localizer.Format("RCLGUI3"), BoldLabel, GUILayout.Width(120));
 
             //General labels
-            b = new StringBuilder("Autocut speed: ").Append(this.autoCutSpeed).AppendLine("m/s");
-            b.Append("Spare chutes: ").Append(this.chuteCount);
+            b = new StringBuilder(Localizer.Format("RCLGUI4", this.autoCutSpeed)).AppendLine();
+            b.Append(Localizer.Format("RCLGUI5", this.chuteCount));
             GUILayout.Label(b.ToString());
 
             //Specific labels
             GUILayout.Label("___________________________________________", BoldLabel);
             GUILayout.Space(3);
-            GUILayout.Label("Main chute:", BoldLabel, GUILayout.Width(120));
+            GUILayout.Label(Localizer.Format("RCLGUI6"), BoldLabel, GUILayout.Width(120));
             //Initial label
             b = new StringBuilder();
-            b.AppendLine("Material: " + materialName);
-            b.AppendLine("Drag coefficient: " + staticCd.ToString("0.0"));
-            b.Append("Predeployed diameter: ").Append(this.preDeployedDiameter).Append("m\nArea: ").Append(this.PreDeployedArea.ToString("0.###")).AppendLine("m²");
-            b.Append("Deployed diameter: ").Append(this.deployedDiameter).Append("m\nArea: ").Append(this.DeployedArea.ToString("0.###")).Append("m²");
+            b.AppendLine(Localizer.Format("RCLGUI7", materialName));
+            b.AppendLine(Localizer.Format("RCLGUI8", staticCd.ToString("0.0")));
+            b.AppendLine(Localizer.Format("RCLGUI9", this.preDeployedDiameter, this.PreDeployedArea.ToString("0.###")));
+            b.AppendLine(Localizer.Format("RCLGUI10", this.deployedDiameter, this.DeployedArea.ToString("0.###")));
             GUILayout.Label(b.ToString());
 
             //DeploymentSafety
             switch (this.safeState)
             {
                 case SafeState.SAFE:
-                    GUILayout.Label("Deployment safety: safe"); break;
+                    GUILayout.Label(Localizer.Format("RCLGUISafe")); break;
 
                 case SafeState.RISKY:
-                    GUILayout.Label("Deployment safety: risky", YellowLabel); break;
+                    GUILayout.Label(Localizer.Format("RCLGUIRisky"), YellowLabel); break;
 
                 case SafeState.DANGEROUS:
-                    GUILayout.Label("Deployment safety: dangerous", RedLabel); break;
+                    GUILayout.Label(Localizer.Format("RCLGUIDang"), RedLabel); break;
             }
 
             //Temperature info
             b = new StringBuilder();
-            b.Append("Chute max temperature: ").Append(maxTemp + absoluteZero).AppendLine("°C");
-            b.Append("Current chute temperature: ").Append(Math.Round(this.chuteTemperature + absoluteZero, 1, MidpointRounding.AwayFromZero)).Append("°C");
+            b.AppendLine(Localizer.Format("RCLGUI11", maxTemp + absoluteZero));
+            b.AppendLine(Localizer.Format("RCLGUI12", Math.Round(this.chuteTemperature + absoluteZero, 1, MidpointRounding.AwayFromZero)));
             GUILayout.Label(b.ToString(), this.chuteTemperature / maxTemp > 0.85 ? RedLabel : GUI.skin.label);
 
             //Predeployment pressure selection
-            GUILayout.Label("Predeployment pressure: " + this.minAirPressureToOpen + "atm");
+            GUILayout.Label(Localizer.Format("RCLGUI13", this.minAirPressureToOpen));
             if (HighLogic.LoadedSceneIsFlight)
             {
                 //Predeployment pressure slider
@@ -850,7 +857,7 @@ namespace FerramAerospaceResearch.RealChuteLite
             }
 
             //Deployment altitude selection
-            GUILayout.Label("Deployment altitude: " + this.deployAltitude + "m");
+            GUILayout.Label(Localizer.Format("RCLGUI14", this.deployAltitude));
             if (HighLogic.LoadedSceneIsFlight)
             {
                 //Deployment altitude slider
@@ -859,8 +866,8 @@ namespace FerramAerospaceResearch.RealChuteLite
 
             //Other labels
             b = new StringBuilder();
-            b.Append("Predeployment speed: ").Append(Math.Round(1 / this.semiDeploymentSpeed, 1, MidpointRounding.AwayFromZero)).AppendLine("s");
-            b.Append("Deployment speed: ").Append(Math.Round(1 / this.deploymentSpeed, 1, MidpointRounding.AwayFromZero)).Append("s");
+            b.AppendLine(Localizer.Format("RCLGUI15", Math.Round(1 / this.semiDeploymentSpeed, 1, MidpointRounding.AwayFromZero)));
+            b.AppendLine(Localizer.Format("RCLGUI16",Math.Round(1 / this.deploymentSpeed, 1, MidpointRounding.AwayFromZero)));
             GUILayout.Label(b.ToString());
 
             //End scroll
@@ -869,11 +876,11 @@ namespace FerramAerospaceResearch.RealChuteLite
             //Copy button if in flight
             if (HighLogic.LoadedSceneIsFlight && this.part.symmetryCounterparts.Count > 0)
             {
-                CenteredButton("Copy to others chutes", CopyToCouterparts);
+                CenteredButton(Localizer.Format("RCLGUICopy"), CopyToCouterparts);
             }
 
             //Close button
-            CenteredButton("Close", () => this.visible = false);
+            CenteredButton(Localizer.Format("RCLGUIClose"), () => this.visible = false);
 
             //Closer
             GUILayout.EndVertical();
@@ -908,11 +915,11 @@ namespace FerramAerospaceResearch.RealChuteLite
                 {
                     if (!this.displayed)
                     {
-                        ScreenMessages.PostScreenMessage("Parachute deployment failed.", 2.5f, ScreenMessageStyle.UPPER_CENTER);
-                        if (this.part.ShieldedFromAirstream) { ScreenMessages.PostScreenMessage("Reason: parachute is shielded from airstream.", 2.5f, ScreenMessageStyle.UPPER_CENTER);}
-                        else if (this.GroundStop) { ScreenMessages.PostScreenMessage("Reason: stopped on the ground.", 2.5f, ScreenMessageStyle.UPPER_CENTER); }
-                        else if (this.atmPressure == 0) { ScreenMessages.PostScreenMessage("Reason: in space.", 2.5f, ScreenMessageStyle.UPPER_CENTER); }
-                        else { ScreenMessages.PostScreenMessage("Reason: too high.", 2.5f, ScreenMessageStyle.UPPER_CENTER); }
+                        ScreenMessages.PostScreenMessage(Localizer.Format("RCLFailDeploy"), 2.5f, ScreenMessageStyle.UPPER_CENTER);
+                        if (this.part.ShieldedFromAirstream) { ScreenMessages.PostScreenMessage(Localizer.Format("RCLFailShielded"), 2.5f, ScreenMessageStyle.UPPER_CENTER); }
+                        else if (this.GroundStop) { ScreenMessages.PostScreenMessage(Localizer.Format("RCLFailGround"), 2.5f, ScreenMessageStyle.UPPER_CENTER); }
+                        else if (this.atmPressure == 0) { ScreenMessages.PostScreenMessage(Localizer.Format("RCLFailPres"), 2.5f, ScreenMessageStyle.UPPER_CENTER); }
+                        else { ScreenMessages.PostScreenMessage(Localizer.Format("RCLFailOther"), 2.5f, ScreenMessageStyle.UPPER_CENTER); }
                         this.displayed = true;
                     }
                     if (time < 0.5 || time >= 1 && time < 1.5 || time >= 2) { this.part.stackIcon.SetIconColor(XKCDColors.Red); }
@@ -1019,7 +1026,7 @@ namespace FerramAerospaceResearch.RealChuteLite
             if (CompatibilityChecker.IsAllCompatible() && (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor) && this.visible && !this.hid)
             {
                 GUI.skin = HighLogic.Skin;
-                this.window = GUILayout.Window(this.id, this.window, Window, "RealChute Info Window");
+                this.window = GUILayout.Window(this.id, this.window, Window, Localizer.Format("RCLGUITitle"));
             }
         }
 
@@ -1159,18 +1166,19 @@ namespace FerramAerospaceResearch.RealChuteLite
             }
 
             StringBuilder b = new StringBuilder();
-            b.AppendFormat("<b>Case mass</b>: {0}\n", this.caseMass);
-            b.AppendFormat("<b>Spare chutes</b>: {0}\n", maxSpares);
-            b.AppendFormat("<b>Autocut speed</b>: {0}m/s\n", this.autoCutSpeed);
-            b.AppendLine("<b>Parachute material</b>: " + materialName);
-            b.AppendFormat("<b>Drag coefficient</b>: {0:0.0}\n", staticCd);
-            b.AppendFormat("<b>Chute max temperature</b>: {0}°C\n", maxTemp + absoluteZero);
-            b.AppendFormat("<b>Predeployed diameter</b>: {0}m\n", this.preDeployedDiameter);
-            b.AppendFormat("<b>Deployed diameter</b>: {0}m\n", this.deployedDiameter);
-            b.AppendFormat("<b>Minimum deployment pressure</b>: {0}atm\n", this.minAirPressureToOpen);
-            b.AppendFormat("<b>Deployment altitude</b>: {0}m\n", this.deployAltitude);
-            b.AppendFormat("<b>Predeployment speed</b>: {0}s\n", Math.Round(1 / this.semiDeploymentSpeed, 1, MidpointRounding.AwayFromZero));
-            b.AppendFormat("<b>Deployment speed</b>: {0}s\n", Math.Round(1 / this.deploymentSpeed, 1, MidpointRounding.AwayFromZero));
+            b.AppendLine(Localizer.Format("RCLModuleInfo0", this.caseMass));
+            b.AppendLine(Localizer.Format("RCLModuleInfo1", maxSpares));
+            b.AppendLine(Localizer.Format("RCLModuleInfo2", this.autoCutSpeed));
+            b.AppendLine(Localizer.Format("RCLModuleInfo3", materialName));
+            b.AppendLine(Localizer.Format("RCLModuleInfo4", staticCd));
+            b.AppendLine(Localizer.Format("RCLModuleInfo5", maxTemp + absoluteZero));
+            b.AppendLine(Localizer.Format("RCLModuleInfo6", this.preDeployedDiameter));
+            b.AppendLine(Localizer.Format("RCLModuleInfo7", this.deployedDiameter));
+            b.AppendLine(Localizer.Format("RCLModuleInfo8", this.minAirPressureToOpen));
+            b.AppendLine(Localizer.Format("RCLModuleInfo9", this.deployAltitude));
+            b.AppendLine(Localizer.Format("RCLModuleInfo10", Math.Round(1 / this.semiDeploymentSpeed, 1, MidpointRounding.AwayFromZero)));
+            b.AppendLine(Localizer.Format("RCLModuleInfo11", Math.Round(1 / this.deploymentSpeed, 1, MidpointRounding.AwayFromZero)));
+
             return b.ToString();
         }
 
