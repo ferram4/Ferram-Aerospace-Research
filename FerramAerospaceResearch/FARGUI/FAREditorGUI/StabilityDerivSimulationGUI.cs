@@ -47,6 +47,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using FerramAerospaceResearch.FARGUI.FAREditorGUI.Simulation;
+using KSP.Localization;
 using UnityEngine;
 using ferram4;
 
@@ -69,8 +70,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
         private static string[] SimMode_str = 
         {
-            "Longitudinal Sim",
-            "Lateral Sim",
+            Localizer.Format("FAREditorSimModeLong"),
+            Localizer.Format("FAREditorSimModeLat"),
         };
 
         public StabilityDerivSimulationGUI(EditorSimManager simManager)
@@ -82,8 +83,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             _graph.SetBoundaries(0, 10, 0, 2);
             _graph.SetGridScaleUsingValues(1, 0.25);
-            _graph.horizontalLabel = "time";
-            _graph.verticalLabel = "params";
+            _graph.horizontalLabel = Localizer.Format("FAREditorSimGraphTime");
+            _graph.verticalLabel = Localizer.Format("FAREditorSimGraphParams");
             _graph.Update();
         }
 
@@ -129,35 +130,35 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             BackgroundStyle.hover = BackgroundStyle.active = BackgroundStyle.normal;
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Longitudinal Derivatives", GUILayout.Width(160));
+            GUILayout.Label(Localizer.Format("FAREditorLongDeriv"), GUILayout.Width(160));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginVertical();
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Down Vel Derivatives", GUILayout.Width(160));
-            GUILayout.Label("Fwd Vel Derivatives", GUILayout.Width(160));
-            GUILayout.Label("Pitch Rate Derivatives", GUILayout.Width(160));
-            GUILayout.Label("Pitch Ctrl Derivatives", GUILayout.Width(160));
+            GUILayout.Label(Localizer.Format("FAREditorDownVelDeriv"), GUILayout.Width(160));
+            GUILayout.Label(Localizer.Format("FAREditorFwdVelDeriv"), GUILayout.Width(160));
+            GUILayout.Label(Localizer.Format("FAREditorPitchRateDeriv"), GUILayout.Width(160));
+            GUILayout.Label(Localizer.Format("FAREditorPitchCtrlDeriv"), GUILayout.Width(160));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginVertical(BackgroundStyle);
             GUILayout.BeginHorizontal();
-            StabilityLabel("Zw: ", vehicleData.stabDerivs[3], " s⁻¹", "Change in Z-direction acceleration with respect to Z-direction velocity; should be negative", 160, -1);
-            StabilityLabel("Zu: ", vehicleData.stabDerivs[6], " s⁻¹", "Change in Z-direction acceleration with respect to X-direction velocity; should be negative", 160, -1);
-            StabilityLabel("Zq: ", vehicleData.stabDerivs[9], " m/s", "Change in Z-direction acceleration with respect to pitch-up rate; sign unimportant", 160, 0);
-            StabilityLabel("Zδe: ", vehicleData.stabDerivs[12], " m/s²", "Change in Z-direction acceleration with respect to pitch control input; should be negative", 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorZw"), vehicleData.stabDerivs[3], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorZwExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorZu"), vehicleData.stabDerivs[6], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorZuExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorZq"), vehicleData.stabDerivs[9], " " + Localizer.Format("FARUnitMPerSec"), Localizer.Format("FAREditorZqExp"), 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorZDeltae"), vehicleData.stabDerivs[12], " " + Localizer.Format("FARUnitMPerSecSq"), Localizer.Format("FAREditorZDeltaeExp"), 160, 0);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            StabilityLabel("Xw: ", vehicleData.stabDerivs[4], " s⁻¹", "Change in X-direction acceleration with respect to Z-direction velocity; sign unimportant", 160, 0);
-            StabilityLabel("Xu: ", vehicleData.stabDerivs[7], " s⁻¹", "Change in X-direction acceleration with respect to X-direction velocity; should be negative", 160, -1);
-            StabilityLabel("Xq: ", vehicleData.stabDerivs[10], " m/s", "Change in X-direction acceleration with respect to pitch-up rate; sign unimportant", 160, 0);
-            StabilityLabel("Xδe: ", vehicleData.stabDerivs[13], " m/s²", "Change in X-direction acceleration with respect to pitch control input; sign unimportant", 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorXw"), vehicleData.stabDerivs[4], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorXwExp"), 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorXu"), vehicleData.stabDerivs[7], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorXuExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorXq"), vehicleData.stabDerivs[10], " " + Localizer.Format("FARUnitMPerSec"), Localizer.Format("FAREditorXqExp"), 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorXDeltae"), vehicleData.stabDerivs[13], " " + Localizer.Format("FARUnitMPerSecSq"), Localizer.Format("FAREditorXDeltaeExp"), 160, 0);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            StabilityLabel("Mw: ", vehicleData.stabDerivs[5], " (m * s)⁻¹", "Change in pitch-up angular acceleration with respect to Z-direction velocity; should be negative", 160, -1);
-            StabilityLabel("Mu: ", vehicleData.stabDerivs[8], " (m * s)⁻¹", "Change in pitch-up angular acceleration acceleration with respect to X-direction velocity; sign unimportant", 160, 0);
-            StabilityLabel("Mq: ", vehicleData.stabDerivs[11], " s⁻¹", "Change in pitch-up angular acceleration acceleration with respect to pitch-up rate; should be negative", 160, -1);
-            StabilityLabel("Mδe: ", vehicleData.stabDerivs[14], " s⁻²", "Change in pitch-up angular acceleration acceleration with respect to pitch control input; should be positive", 160, 1);
+            StabilityLabel(Localizer.Format("FAREditorMw"), vehicleData.stabDerivs[5], " " + Localizer.Format("FARUnitInvMSec"), Localizer.Format("FAREditorMwExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorMu"), vehicleData.stabDerivs[8], " " + Localizer.Format("FARUnitInvMSec"), Localizer.Format("FAREditorMuExp"), 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorMq"), vehicleData.stabDerivs[11], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorMqExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorMDeltae"), vehicleData.stabDerivs[14], " " + Localizer.Format("FARUnitInvSecSq"), Localizer.Format("FAREditorMDeltaeExp"), 160, 1);
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
             GUILayout.EndVertical();
@@ -169,32 +170,32 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             BackgroundStyle.hover = BackgroundStyle.active = BackgroundStyle.normal;
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Lateral Derivatives", GUILayout.Width(160));
+            GUILayout.Label(Localizer.Format("FAREditorLatDeriv"), GUILayout.Width(160));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginVertical();
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Sideslip Derivatives", GUILayout.Width(160));
-            GUILayout.Label("Roll Rate Derivatives", GUILayout.Width(160));
-            GUILayout.Label("Yaw Rate Derivatives", GUILayout.Width(160));
+            GUILayout.Label(Localizer.Format("FAREditorSideslipDeriv"), GUILayout.Width(160));
+            GUILayout.Label(Localizer.Format("FAREditorRollRateDeriv"), GUILayout.Width(160));
+            GUILayout.Label(Localizer.Format("FAREditorYawRateDeriv"), GUILayout.Width(160));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginVertical(BackgroundStyle);
             GUILayout.BeginHorizontal();
-            StabilityLabel("Yβ: ", vehicleData.stabDerivs[15], " m/s²", "Change in Y-direction acceleration with respect to sideslip angle β; should be negative", 160, -1);
-            StabilityLabel("Yp: ", vehicleData.stabDerivs[18], " m/s", "Change in Y-direction acceleration with respect to roll-right rate; sign unimportant", 160, 0);
-            StabilityLabel("Yr: ", vehicleData.stabDerivs[21], " m/s", "Change in Y-direction acceleration with respect to yaw-right rate; should be positive", 160, 1);
+            StabilityLabel(Localizer.Format("FAREditorYβ"), vehicleData.stabDerivs[15], " " + Localizer.Format("FARUnitMPerSecSq"), Localizer.Format("FAREditorYβExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorYp"), vehicleData.stabDerivs[18], " " + Localizer.Format("FARUnitMPerSec"), Localizer.Format("FAREditorYpExp"), 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorYr"), vehicleData.stabDerivs[21], " " + Localizer.Format("FARUnitMPerSec"), Localizer.Format("FAREditorYrExp"), 160, 1);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            StabilityLabel("Lβ: ", vehicleData.stabDerivs[16], " s⁻²", "Change in roll-right angular acceleration with respect to sideslip angle β; should be negative", 160, -1);
-            StabilityLabel("Lp: ", vehicleData.stabDerivs[19], " s⁻¹", "Change in roll-right angular acceleration with respect to roll-right rate; should be negative", 160, -1);
-            StabilityLabel("Lr: ", vehicleData.stabDerivs[22], " s⁻¹", "Change in roll-right angular acceleration with respect to yaw-right rate; should be positive", 160, 1);
+            StabilityLabel(Localizer.Format("FAREditorLβ"), vehicleData.stabDerivs[16], " " + Localizer.Format("FARUnitInvSecSq"), Localizer.Format("FAREditorLβExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorLp"), vehicleData.stabDerivs[19], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorLpExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorLr"), vehicleData.stabDerivs[22], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorLrExp"), 160, 1);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            StabilityLabel("Nβ: ", vehicleData.stabDerivs[17], " s⁻²", "Change in yaw-right angular acceleration with respect to sideslip angle β; should be positive", 160, 1);
-            StabilityLabel("Np: ", vehicleData.stabDerivs[20], " s⁻¹", "Change in yaw-right angular acceleration with respect to roll-right rate; sign unimportant", 160, 0);
-            StabilityLabel("Nr: ", vehicleData.stabDerivs[23], " s⁻¹", "Change in yaw-right angular acceleration with respect to yaw-right rate; should be negative", 160, -1);
-            GUILayout.EndHorizontal();
+            StabilityLabel(Localizer.Format("FAREditorNβ"), vehicleData.stabDerivs[17], " " + Localizer.Format("FARUnitInvSecSq"), Localizer.Format("FAREditorNβExp"), 160, 1);
+            StabilityLabel(Localizer.Format("FAREditorNp"), vehicleData.stabDerivs[20], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorNpExp"), 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorNr"), vehicleData.stabDerivs[23], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorNrExp"), 160, -1);
+            GUILayout.EndHorizontal(); 
             GUILayout.EndVertical();
             GUILayout.EndVertical();
 
@@ -206,17 +207,17 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             GUILayout.BeginHorizontal();
             for (int i = 0; i < inits.inits.Length; i++)
             {
-                GUILayout.Label("Init " + inits.names[i] +": ");
+                GUILayout.Label(Localizer.Format("FAREditorSimInit") + inits.names[i] +": ");
                 inits.inits[i] = GUILayout.TextField(inits.inits[i], GUILayout.ExpandWidth(true));
             }
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("End Time: ");
+            GUILayout.Label(Localizer.Format("FAREditorSimEndTime"));
             inits.maxTime = GUILayout.TextField(inits.maxTime, GUILayout.ExpandWidth(true));
-            GUILayout.Label("dt: ");
+            GUILayout.Label(Localizer.Format("FAREditorSimTimestep"));
             inits.dt = GUILayout.TextField(inits.dt, GUILayout.ExpandWidth(true));
-            if (GUILayout.Button("Run Simulation", GUILayout.Width(150.0F), GUILayout.Height(25.0F)))
+            if (GUILayout.Button(Localizer.Format("FAREditorSimRunButton"), GUILayout.Width(150.0F), GUILayout.Height(25.0F)))
             {
                 for (int i = 0; i < inits.inits.Length; i++)
                 {
@@ -238,7 +239,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                 else
                     data = simManager.StabDerivLinearSim.RunTransientSimLateral(vehicleData, Convert.ToDouble(inits.maxTime), Convert.ToDouble(inits.dt), initCond);
 
-                UpdateGraph(data, "time", "params", 0, Convert.ToDouble(inits.maxTime), 50);
+                UpdateGraph(data, Localizer.Format("FAREditorSimGraphTime"), Localizer.Format("FAREditorSimGraphParams"), 0, Convert.ToDouble(inits.maxTime), 50);
             }
             GUILayout.EndHorizontal();
         }

@@ -47,6 +47,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using KSP.Localization;
 
 namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 {
@@ -70,7 +71,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         public void AerodynamicFailureStatus()
         {
-            statusString = "Aerodynamic Failure";
+            statusString = Localizer.Format("FARFlightStatus5");
             statusColor = Color.yellow;
             statusOverrideTimer = 5;
             statusBlinker = true;
@@ -85,37 +86,37 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
             if (infoParameters.dynPres < 0.01)
             {
-                statusString = "Nominal";
+                statusString = Localizer.Format("FARFlightStatus0");
                 statusColor = Color.green;
                 statusBlinker = false;
             }
             else if (infoParameters.stallFraction > 0.5)
             {
-                statusString = "Large-Scale Stall";
+                statusString = Localizer.Format("FARFlightStatus1");
                 statusColor = Color.yellow;
                 statusBlinker = true;
             }
             else if (infoParameters.stallFraction > 0.005)
             {
-                statusString = "Minor Stalling";
+                statusString = Localizer.Format("FARFlightStatus2");
                 statusColor = Color.yellow;
                 statusBlinker = false;
             }
             else if ((Math.Abs(infoParameters.aoA) > 20 && Math.Abs(infoParameters.aoA) < 160) || (Math.Abs(infoParameters.sideslipAngle) > 20 && Math.Abs(infoParameters.sideslipAngle) < 160))
             {
-                statusString = "Large AoA / Sideslip";
+                statusString = Localizer.Format("FARFlightStatus3");
                 statusColor = Color.yellow;
                 statusBlinker = false;
             }
             else if (infoParameters.dynPres > 40)
             {
-                statusString = "High Dyn Pressure";
+                statusString = Localizer.Format("FARFlightStatus4");
                 statusColor = Color.yellow;
                 statusBlinker = false;
             }
             else
             {
-                statusString = "Nominal";
+                statusString = Localizer.Format("FARFlightStatus0");
                 statusColor = Color.green;
                 statusBlinker = false;
             }
@@ -130,7 +131,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             if (stallStyle == null)
                 stallStyle = new GUIStyle(FlightGUI.boxStyle);
 
-            GUILayout.Label("Flight Status", minorTitle, GUILayout.ExpandWidth(true));
+            GUILayout.Label(Localizer.Format("FARFlightStatusLabel"), minorTitle, GUILayout.ExpandWidth(true));
             GUILayout.BeginHorizontal();
             if (statusBlinker)
             {

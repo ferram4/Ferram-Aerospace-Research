@@ -46,6 +46,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using KSP;
+using KSP.Localization;
 using FerramAerospaceResearch;
 using FerramAerospaceResearch.FARGUI;
 
@@ -81,9 +82,9 @@ namespace ferram4
                                         "actionGroupIncreaseFlapDeflection",
                                         "actionGroupDecreaseFlapDeflection" };
         // for the gui
-        static string[] guiLabels = { "Spoilers",
-                                      "Increase Flap Deflection",
-                                      "Decrease Flap Deflection" };
+        static string[] guiLabels = { Localizer.Format("FARActionSpoilers"),
+                                      Localizer.Format("FARActionIncreaseFlap"),
+                                      Localizer.Format("FARActionDecreaseFlap") };
         static string[] currentGuiStrings = { id2actionGroup[0].ToString(), 
                                               id2actionGroup[1].ToString(),
                                               id2actionGroup[2].ToString() };
@@ -153,7 +154,7 @@ namespace ferram4
         {
             GUIStyle label = new GUIStyle(GUI.skin.label);
             label.normal.textColor = GUI.skin.toggle.normal.textColor;
-            GUILayout.Label("Default Action Group Assignments");
+            GUILayout.Label(Localizer.Format("FARActionDefaultLabel"));
             GUILayout.BeginHorizontal(); // left column: label, right column: text field
             GUILayout.BeginVertical();
             for (int i = 0; i < FARActionGroupConfiguration.ACTION_COUNT; ++i)

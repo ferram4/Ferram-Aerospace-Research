@@ -122,7 +122,7 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
             spoilersDeployed = GUILayout.Toggle(spoilersDeployed, spoilersDeployed ? Localizer.Format("FAREditorStabDerivSDeploy") : Localizer.Format("FAREditorStabDerivSRetract"), GUILayout.Width(100));
             GUILayout.EndHorizontal();
 
-            if (GUILayout.Button(Localizer.Format("FAREditorStabDerivSpoiler"), GUILayout.Width(250.0F), GUILayout.Height(25.0F)))
+            if (GUILayout.Button(Localizer.Format("FAREditorStabDerivCalcButton"), GUILayout.Width(250.0F), GUILayout.Height(25.0F)))
             {
                 CelestialBody body = _bodySettingDropdown.ActiveSelection;
                 FARAeroUtil.UpdateCurrentActiveBody(body);
@@ -170,37 +170,37 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical(GUILayout.Width(180));
-            GUILayout.Label(Localizer.Format("FAREditorStabDerivRefArea") + stabDerivOutput.area.ToString("G3") + " m²");
-            GUILayout.Label(Localizer.Format("FAREditorStabDerivScaledChord") + stabDerivOutput.MAC.ToString("G3") + " m");
-            GUILayout.Label(Localizer.Format("FAREditorStabDerivScaledSpan") + stabDerivOutput.b.ToString("G3") + " m");
+            GUILayout.Label(Localizer.Format("FAREditorStabDerivRefArea") + stabDerivOutput.area.ToString("G3") + " " + Localizer.Format("FARUnitMSq"));
+            GUILayout.Label(Localizer.Format("FAREditorStabDerivScaledChord") + stabDerivOutput.MAC.ToString("G3") + " " + Localizer.Format("FARUnitM"));
+            GUILayout.Label(Localizer.Format("FAREditorStabDerivScaledSpan") + stabDerivOutput.b.ToString("G3") + " " + Localizer.Format("FARUnitM"));
             GUILayout.EndVertical();
 
 
             GUILayout.BeginVertical(GUILayout.Width(160));
-            GUILayout.Label(new GUIContent(Localizer.Format("FAREditorStabDerivIxx") + stabDerivOutput.stabDerivs[0].ToString("G6") + " kg * m²", Localizer.Format("FAREditorStabDerivIxxExp")));
-            GUILayout.Label(new GUIContent(Localizer.Format("FAREditorStabDerivIyy") + stabDerivOutput.stabDerivs[1].ToString("G6") + " kg * m²", Localizer.Format("FAREditorStabDerivIyyExp")));
-            GUILayout.Label(new GUIContent(Localizer.Format("FAREditorStabDerivIzz") + stabDerivOutput.stabDerivs[2].ToString("G6") + " kg * m²", Localizer.Format("FAREditorStabDerivIzzExp")));
+            GUILayout.Label(new GUIContent(Localizer.Format("FAREditorStabDerivIxx") + stabDerivOutput.stabDerivs[0].ToString("G6") + " " + Localizer.Format("FARUnitKgMSq"), Localizer.Format("FAREditorStabDerivIxxExp")));
+            GUILayout.Label(new GUIContent(Localizer.Format("FAREditorStabDerivIyy") + stabDerivOutput.stabDerivs[1].ToString("G6") + " " + Localizer.Format("FARUnitKgMSq"), Localizer.Format("FAREditorStabDerivIyyExp")));
+            GUILayout.Label(new GUIContent(Localizer.Format("FAREditorStabDerivIzz") + stabDerivOutput.stabDerivs[2].ToString("G6") + " " + Localizer.Format("FARUnitKgMSq"), Localizer.Format("FAREditorStabDerivIzzExp")));
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical(GUILayout.Width(160));
-            GUILayout.Label(new GUIContent(Localizer.Format("FAREditorStabDerivIxy") + stabDerivOutput.stabDerivs[24].ToString("G6") + " kg * m²", Localizer.Format("FAREditorStabDerivIxyExp")));
-            GUILayout.Label(new GUIContent(Localizer.Format("FAREditorStabDerivIyz") + stabDerivOutput.stabDerivs[25].ToString("G6") + " kg * m²", Localizer.Format("FAREditorStabDerivIyzExp")));
-            GUILayout.Label(new GUIContent(Localizer.Format("FAREditorStabDerivIxz") + stabDerivOutput.stabDerivs[26].ToString("G6") + " kg * m²", Localizer.Format("FAREditorStabDerivIxzExp")));
+            GUILayout.Label(new GUIContent(Localizer.Format("FAREditorStabDerivIxy") + stabDerivOutput.stabDerivs[24].ToString("G6") + " " + Localizer.Format("FARUnitKgMSq"), Localizer.Format("FAREditorStabDerivIxyExp")));
+            GUILayout.Label(new GUIContent(Localizer.Format("FAREditorStabDerivIyz") + stabDerivOutput.stabDerivs[25].ToString("G6") + " " + Localizer.Format("FARUnitKgMSq"), Localizer.Format("FAREditorStabDerivIyzExp")));
+            GUILayout.Label(new GUIContent(Localizer.Format("FAREditorStabDerivIxz") + stabDerivOutput.stabDerivs[26].ToString("G6") + " " + Localizer.Format("FARUnitKgMSq"), Localizer.Format("FAREditorStabDerivIxzExp")));
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical(GUILayout.Width(140));
-            GUILayout.Label(new GUIContent(Localizer.Format("FAREditorStabDerivu0") + stabDerivOutput.nominalVelocity.ToString("G6") + " m/s", Localizer.Format("FAREditorStabDerivu0Exp")));
+            GUILayout.Label(new GUIContent(Localizer.Format("FAREditorStabDerivu0") + stabDerivOutput.nominalVelocity.ToString("G6") + " " + Localizer.Format("FARUnitMPerSec"), Localizer.Format("FAREditorStabDerivu0Exp")));
             GUILayout.BeginHorizontal();
             GUILayout.Label(new GUIContent(Localizer.Format("FARAbbrevCl") + ": " + stabDerivOutput.stableCl.ToString("G3"), Localizer.Format("FAREditorStabDerivClExp")));
             GUILayout.Label(new GUIContent(Localizer.Format("FARAbbrevCd") + ": " + stabDerivOutput.stableCd.ToString("G3"), Localizer.Format("FAREditorStabDerivCdExp")));
             GUILayout.EndHorizontal();
-            GUILayout.Label(new GUIContent(Localizer.Format("FARAbbrevAoA") + ": " + stabDerivOutput.stableAoAState + stabDerivOutput.stableAoA.ToString("G6") + " deg", Localizer.Format("FAREditorStabDerivAoAExp")));
+            GUILayout.Label(new GUIContent(Localizer.Format("FARAbbrevAoA") + ": " + stabDerivOutput.stableAoAState + stabDerivOutput.stableAoA.ToString("G6") + " " + Localizer.Format("FARUnitDeg"), Localizer.Format("FAREditorStabDerivAoAExp")));
             GUILayout.EndVertical();
 
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Longitudinal Derivatives", GUILayout.Width(160));
+            GUILayout.Label(Localizer.Format("FAREditorLongDeriv"), GUILayout.Width(160));
             GUILayout.EndHorizontal();
 
             GUIStyle BackgroundStyle = new GUIStyle(GUI.skin.box);
@@ -208,54 +208,54 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             GUILayout.BeginVertical(BackgroundStyle);
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Down Vel Derivatives", GUILayout.Width(160));
-            GUILayout.Label("Fwd Vel Derivatives", GUILayout.Width(160));
-            GUILayout.Label("Pitch Rate Derivatives", GUILayout.Width(160));
-            GUILayout.Label("Pitch Ctrl Derivatives", GUILayout.Width(160));
+            GUILayout.Label(Localizer.Format("FAREditorDownVelDeriv"), GUILayout.Width(160));
+            GUILayout.Label(Localizer.Format("FAREditorFwdVelDeriv"), GUILayout.Width(160));
+            GUILayout.Label(Localizer.Format("FAREditorPitchRateDeriv"), GUILayout.Width(160));
+            GUILayout.Label(Localizer.Format("FAREditorPitchCtrlDeriv"), GUILayout.Width(160));
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            StabilityLabel("Zw: ", stabDerivOutput.stabDerivs[3], " s⁻¹", "Change in Z-direction acceleration with respect to Z-direction velocity; should be negative", 160, -1);
-            StabilityLabel("Zu: ", stabDerivOutput.stabDerivs[6], " s⁻¹", "Change in Z-direction acceleration with respect to X-direction velocity; should be negative", 160, -1);
-            StabilityLabel("Zq: ", stabDerivOutput.stabDerivs[9], " m/s", "Change in Z-direction acceleration with respect to pitch-up rate; sign unimportant", 160, 0);
-            StabilityLabel("Zδe: ", stabDerivOutput.stabDerivs[12], " m/s²", "Change in Z-direction acceleration with respect to pitch control input; should be negative", 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorZw"), stabDerivOutput.stabDerivs[3], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorZwExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorZu"), stabDerivOutput.stabDerivs[6], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorZuExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorZq"), stabDerivOutput.stabDerivs[9], " " + Localizer.Format("FARUnitMPerSec"), Localizer.Format("FAREditorZqExp"), 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorZDeltae"), stabDerivOutput.stabDerivs[12], " " + Localizer.Format("FARUnitMPerSecSq"), Localizer.Format("FAREditorZDeltaeExp"), 160, 0);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            StabilityLabel("Xw: ", stabDerivOutput.stabDerivs[4], " s⁻¹", "Change in X-direction acceleration with respect to Z-direction velocity; sign unimportant", 160, 0);
-            StabilityLabel("Xu: ", stabDerivOutput.stabDerivs[7], " s⁻¹", "Change in X-direction acceleration with respect to X-direction velocity; should be negative", 160, -1);
-            StabilityLabel("Xq: ", stabDerivOutput.stabDerivs[10], " m/s", "Change in X-direction acceleration with respect to pitch-up rate; sign unimportant", 160, 0);
-            StabilityLabel("Xδe: ", stabDerivOutput.stabDerivs[13], " m/s²", "Change in X-direction acceleration with respect to pitch control input; sign unimportant", 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorXw"), stabDerivOutput.stabDerivs[4], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorXwExp"), 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorXu"), stabDerivOutput.stabDerivs[7], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorXuExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorXq"), stabDerivOutput.stabDerivs[10], " " + Localizer.Format("FARUnitMPerSec"), Localizer.Format("FAREditorXqExp"), 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorXDeltae"), stabDerivOutput.stabDerivs[13], " " + Localizer.Format("FARUnitMPerSecSq"), Localizer.Format("FAREditorXDeltaeExp"), 160, 0);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            StabilityLabel("Mw: ", stabDerivOutput.stabDerivs[5], " (m * s)⁻¹", "Change in pitch-up angular acceleration with respect to Z-direction velocity; should be negative", 160, -1);
-            StabilityLabel("Mu: ", stabDerivOutput.stabDerivs[8], " (m * s)⁻¹", "Change in pitch-up angular acceleration acceleration with respect to X-direction velocity; sign unimportant", 160, 0);
-            StabilityLabel("Mq: ", stabDerivOutput.stabDerivs[11], " s⁻¹", "Change in pitch-up angular acceleration acceleration with respect to pitch-up rate; should be negative", 160, -1);
-            StabilityLabel("Mδe: ", stabDerivOutput.stabDerivs[14], " s⁻²", "Change in pitch-up angular acceleration acceleration with respect to pitch control input; should be positive", 160, 1);
+            StabilityLabel(Localizer.Format("FAREditorMw"), stabDerivOutput.stabDerivs[5], " " + Localizer.Format("FARUnitInvMSec"), Localizer.Format("FAREditorMwExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorMu"), stabDerivOutput.stabDerivs[8], " " + Localizer.Format("FARUnitInvMSec"), Localizer.Format("FAREditorMuExp"), 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorMq"), stabDerivOutput.stabDerivs[11], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorMqExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorMDeltae"), stabDerivOutput.stabDerivs[14], " " + Localizer.Format("FARUnitInvSecSq"), Localizer.Format("FAREditorMDeltaeExp"), 160, 1);
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Lateral Derivatives", GUILayout.Width(160));
+            GUILayout.Label(Localizer.Format("FAREditorLatDeriv"), GUILayout.Width(160));
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Sideslip Derivatives", GUILayout.Width(160));
-            GUILayout.Label("Roll Rate Derivatives", GUILayout.Width(160));
-            GUILayout.Label("Yaw Rate Derivatives", GUILayout.Width(160));
+            GUILayout.Label(Localizer.Format("FAREditorSideslipDeriv"), GUILayout.Width(160));
+            GUILayout.Label(Localizer.Format("FAREditorRollRateDeriv"), GUILayout.Width(160));
+            GUILayout.Label(Localizer.Format("FAREditorYawRateDeriv"), GUILayout.Width(160));
             GUILayout.EndHorizontal();
             GUILayout.BeginVertical(BackgroundStyle);
             GUILayout.BeginHorizontal();
-            StabilityLabel("Yβ: ", stabDerivOutput.stabDerivs[15], " m/s²", "Change in Y-direction acceleration with respect to sideslip angle β; should be negative", 160, -1);
-            StabilityLabel("Yp: ", stabDerivOutput.stabDerivs[18], " m/s", "Change in Y-direction acceleration with respect to roll-right rate; sign unimportant", 160, 0);
-            StabilityLabel("Yr: ", stabDerivOutput.stabDerivs[21], " m/s", "Change in Y-direction acceleration with respect to yaw-right rate; should be positive", 160, 1);
+            StabilityLabel(Localizer.Format("FAREditorYβ"), stabDerivOutput.stabDerivs[15], " " + Localizer.Format("FARUnitMPerSecSq"), Localizer.Format("FAREditorYβExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorYp"), stabDerivOutput.stabDerivs[18], " " + Localizer.Format("FARUnitMPerSec"), Localizer.Format("FAREditorYpExp"), 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorYr"), stabDerivOutput.stabDerivs[21], " " + Localizer.Format("FARUnitMPerSec"), Localizer.Format("FAREditorYrExp"), 160, 1);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            StabilityLabel("Lβ: ", stabDerivOutput.stabDerivs[16], " s⁻²", "Change in roll-right angular acceleration with respect to sideslip angle β; should be negative", 160, -1);
-            StabilityLabel("Lp: ", stabDerivOutput.stabDerivs[19], " s⁻¹", "Change in roll-right angular acceleration with respect to roll-right rate; should be negative", 160, -1);
-            StabilityLabel("Lr: ", stabDerivOutput.stabDerivs[22], " s⁻¹", "Change in roll-right angular acceleration with respect to yaw-right rate; should be positive", 160, 1);
+            StabilityLabel(Localizer.Format("FAREditorLβ"), stabDerivOutput.stabDerivs[16], " " + Localizer.Format("FARUnitInvSecSq"), Localizer.Format("FAREditorLβExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorLp"), stabDerivOutput.stabDerivs[19], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorLpExp"), 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorLr"), stabDerivOutput.stabDerivs[22], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorLrExp"), 160, 1);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            StabilityLabel("Nβ: ", stabDerivOutput.stabDerivs[17], " s⁻²", "Change in yaw-right angular acceleration with respect to sideslip angle β; should be positive", 160, 1);
-            StabilityLabel("Np: ", stabDerivOutput.stabDerivs[20], " s⁻¹", "Change in yaw-right angular acceleration with respect to roll-right rate; sign unimportant", 160, 0);
-            StabilityLabel("Nr: ", stabDerivOutput.stabDerivs[23], " s⁻¹", "Change in yaw-right angular acceleration with respect to yaw-right rate; should be negative", 160, -1);
+            StabilityLabel(Localizer.Format("FAREditorNβ"), stabDerivOutput.stabDerivs[17], " " + Localizer.Format("FARUnitInvSecSq"), Localizer.Format("FAREditorNβExp"), 160, 1);
+            StabilityLabel(Localizer.Format("FAREditorNp"), stabDerivOutput.stabDerivs[20], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorNpExp"), 160, 0);
+            StabilityLabel(Localizer.Format("FAREditorNr"), stabDerivOutput.stabDerivs[23], " " + Localizer.Format("FARUnitInvSec"), Localizer.Format("FAREditorNrExp"), 160, -1);
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
 

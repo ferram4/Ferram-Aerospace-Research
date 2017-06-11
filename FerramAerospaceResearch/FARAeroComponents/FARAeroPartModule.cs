@@ -89,10 +89,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         bool fieldsVisible = false;
 
-        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = false, guiFormat = "F3", guiUnits = "kN")]
+        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = false, guiFormat = "F3", guiUnits = "FARUnitKN")]
         public float dragForce;
 
-        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = false, guiFormat = "F3", guiUnits = "kN")]
+        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = false, guiFormat = "F3", guiUnits = "FARUnitKN")]
         public float liftForce;
 
         //[KSPField(isPersistant = false, guiActive = true)]

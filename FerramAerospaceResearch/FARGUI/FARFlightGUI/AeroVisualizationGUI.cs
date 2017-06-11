@@ -45,6 +45,7 @@ Copyright 2017, Michael Ferrara, aka Ferram4
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using KSP.Localization;
 
 namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 {
@@ -115,27 +116,27 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
 
         public void SettingsDisplay()
         {
-            GUILayout.Label("Aero Visualization Settings");
+            GUILayout.Label(Localizer.Format("FARFlightAeroVizTitle"));
 
             GUILayout.BeginVertical(FlightGUI.boxStyle);
-            _tintForCl = GUILayout.Toggle(_tintForCl, "Tint Cl");
-            _fullySaturatedCl = GUIUtils.TextEntryForDouble("Full Tint Cl (wings):", 125, _fullySaturatedCl);
-            _fullySaturatedClBody = GUIUtils.TextEntryForDouble("Full Tint Cl (body):", 125, _fullySaturatedClBody);
+            _tintForCl = GUILayout.Toggle(_tintForCl, Localizer.Format("FARFlightAeroVizTintCl"));
+            _fullySaturatedCl = GUIUtils.TextEntryForDouble(Localizer.Format("FARFlightAeroVizTintClSatWing"), 125, _fullySaturatedCl);
+            _fullySaturatedClBody = GUIUtils.TextEntryForDouble(Localizer.Format("FARFlightAeroVizTintClSatBody"), 125, _fullySaturatedClBody);
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical(FlightGUI.boxStyle);
-            _tintForCd = GUILayout.Toggle(_tintForCd, "Tint Cd");
-            _fullySaturatedCd = GUIUtils.TextEntryForDouble("Full Tint Cd (wings):", 125, _fullySaturatedCd);
-            _fullySaturatedCdBody = GUIUtils.TextEntryForDouble("Full Tint Cd (body):", 125, _fullySaturatedCdBody);
+            _tintForCd = GUILayout.Toggle(_tintForCd, Localizer.Format("FARFlightAeroVizTintCd"));
+            _fullySaturatedCd = GUIUtils.TextEntryForDouble(Localizer.Format("FARFlightAeroVizTintCdSatWing"), 125, _fullySaturatedCd);
+            _fullySaturatedCdBody = GUIUtils.TextEntryForDouble(Localizer.Format("FARFlightAeroVizTintCdSatBody"), 125, _fullySaturatedCdBody);
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical(FlightGUI.boxStyle);
-            _tintForStall = GUILayout.Toggle(_tintForStall, "Tint Stall");
-            _fullySaturatedStall = GUIUtils.TextEntryForDouble("Full Tint Stalled %:", 125, _fullySaturatedStall);
+            _tintForStall = GUILayout.Toggle(_tintForStall, Localizer.Format("FARFlightAeroVizTintStall"));
+            _fullySaturatedStall = GUIUtils.TextEntryForDouble(Localizer.Format("FARFlightAeroVizTintStallSat"), 125, _fullySaturatedStall);
             GUILayout.EndVertical();
 
             // Allowing toggling arrows here because why not...
-            PhysicsGlobals.AeroForceDisplay = GUILayout.Toggle(PhysicsGlobals.AeroForceDisplay, "Show Aero Arrows");
+            PhysicsGlobals.AeroForceDisplay = GUILayout.Toggle(PhysicsGlobals.AeroForceDisplay, Localizer.Format("FARFlightAeroVizToggleArrows"));
         }
 
         public void SaveSettings()

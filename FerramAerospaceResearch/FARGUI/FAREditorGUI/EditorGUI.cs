@@ -567,8 +567,8 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
 
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical(BackgroundStyle, GUILayout.Width(350), GUILayout.ExpandHeight(true));
-            GUILayout.Label(Localizer.Format("FAREditorTransMaxArea") + _vehicleAero.MaxCrossSectionArea.ToString("G6") + " m²");
-            GUILayout.Label(Localizer.Format("FAREditorTransMach1DragArea") + _vehicleAero.SonicDragArea.ToString("G6") + " m²");
+            GUILayout.Label(Localizer.Format("FAREditorTransMaxArea") + _vehicleAero.MaxCrossSectionArea.ToString("G6") + " " + Localizer.Format("FARUnitMSq"));
+            GUILayout.Label(Localizer.Format("FAREditorTransMach1DragArea") + _vehicleAero.SonicDragArea.ToString("G6") + " " + Localizer.Format("FARUnitMSq"));
             GUILayout.Label(Localizer.Format("FAREditorTransCritMach") + _vehicleAero.CriticalMach.ToString("G6"));
             GUILayout.EndVertical();
 

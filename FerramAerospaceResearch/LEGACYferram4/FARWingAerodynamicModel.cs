@@ -47,6 +47,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using FerramAerospaceResearch;
 using FerramAerospaceResearch.FARAeroComponents;
+using KSP.Localization;
 
 /// <summary>
 /// This calculates the lift and drag on a wing in the atmosphere
@@ -69,7 +70,7 @@ namespace ferram4
         private float desiredMass = 0f;
         private float baseMass = 0f;
 
-        [KSPField(guiName = "Mass-Strength Multiplier %", isPersistant = true, guiActiveEditor = true, guiActive = false), UI_FloatRange(maxValue = 4.0f, minValue = 0.05f, scene = UI_Scene.Editor, stepIncrement = 0.05f)]
+        [KSPField(guiName = "FARWingMassStrength", isPersistant = true, guiActiveEditor = true, guiActive = false), UI_FloatRange(maxValue = 4.0f, minValue = 0.05f, scene = UI_Scene.Editor, stepIncrement = 0.05f)]
         public float massMultiplier = 1.0f;
 
         public float oldMassMultiplier = -1f;
@@ -88,7 +89,7 @@ namespace ferram4
         [KSPField(isPersistant = false)]
         public double TaperRatio;
 
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Stalled %")]
+        [KSPField(isPersistant = false, guiActive = true, guiName = "FARWingStalled")]
         protected double stall = 0;
 
         private double minStall = 0;
@@ -118,10 +119,10 @@ namespace ferram4
 
         bool fieldsVisible = false;
 
-        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = false, guiFormat = "F3", guiUnits = "kN")]
+        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = false, guiFormat = "F3", guiUnits = "FARUnitKN")]
         public float dragForceWing;
 
-        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = false, guiFormat = "F3", guiUnits = "kN")]
+        [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = false, guiFormat = "F3", guiUnits = "FARUnitKN")]
         public float liftForceWing;
 
         private double rawLiftSlope = 0;
@@ -440,6 +441,8 @@ namespace ferram4
                 part.OnEditorDetach += OnWingDetach;
             }
 
+
+
             OnVesselPartsChange += UpdateThisWingInteractions;
             ready = true;
         }
@@ -659,8 +662,8 @@ namespace ferram4
                             if (part.parent && !vessel.packed)
                             {
                                 vessel.SendMessage("AerodynamicFailureStatus");
-                                string msg = String.Format("[{0}] Joint between {1} and {2} failed due to aerodynamic stresses on the wing structure.",
-                                                           KSPUtil.PrintTimeStamp(FlightLogger.met), part.partInfo.title, part.parent.partInfo.title);
+                                string msg = String.Format(Localizer.Format("FARFlightLogAeroFailure"),
+                                                           KSPUtil.PrintTimeStamp(FlightLogger.met), part.partInfo.title);
                                 FlightLogger.eventLog.Add(msg);
                                 part.decouple(25);
                                 if (FARDebugValues.aeroFailureExplosions)
