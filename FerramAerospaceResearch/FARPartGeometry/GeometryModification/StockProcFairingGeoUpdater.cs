@@ -55,19 +55,29 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
     {
         ModuleProceduralFairing fairing;
         GeometryPartModule geoModule;
+        static Dictionary<Part, GeometryPartModule> validParts;
         List<Bounds> prevPanelBounds;
-        KFSMEvent deployEvent;
-        KFSMEvent breakEvent;
+        //KFSMEvent deployEvent;
+        //KFSMEvent breakEvent;
 
         public StockProcFairingGeoUpdater(ModuleProceduralFairing fairing, GeometryPartModule geoModule)
         {
             this.fairing = fairing;
             this.geoModule = geoModule;
 
+            if (validParts == null)
+            {
+                Debug.Log("Fairing event setup");
+                validParts = new Dictionary<Part, GeometryPartModule>();
+                GameEvents.onFairingsDeployed.Add(FairingDeployGeometryUpdate);
+            }
+
+            validParts.Add(geoModule.part, geoModule);
+
             if (HighLogic.LoadedSceneIsEditor)
                 prevPanelBounds = new List<Bounds>();
-            else if (HighLogic.LoadedSceneIsFlight)
-                SetupFlightEvents();
+            //else if (HighLogic.LoadedSceneIsFlight)
+            //    SetupFlightEvents();
         }
 
         public void EditorGeometryUpdate()
@@ -115,18 +125,19 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
 
         public void FlightGeometryUpdate() { }  //use the fairing events instead
 
-        private void FairingDeployGeometryUpdate()
+        private void FairingDeployGeometryUpdate(Part p)
         {
             FARThreading.ThreadSafeDebugLogger.Instance.RegisterMessage("Fairing Geometry Update");
-            geoModule.GeometryPartModuleRebuildMeshData();
+            validParts[p].GeometryPartModuleRebuildMeshData();
         }
 
-        private void SetupFlightEvents()
+        /*private void SetupFlightEvents()
         {
-            if (deployEvent == null)
+            if (ready == false)
             {
                 Debug.Log("Update fairing event");
-                FieldInfo[] fields = fairing.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
+                GameEvents.onFairingsDeployed.Add(FairingDeployGeometryUpdate);
+                /*FieldInfo[] fields = fairing.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
                 bool deployBool = false, breakBool = false;
 
                 deployEvent = (KFSMEvent)fields[32].GetValue(fairing);
@@ -137,32 +148,12 @@ namespace FerramAerospaceResearch.FARPartGeometry.GeometryModification
                 breakEvent.OnEvent += delegate { FairingDeployGeometryUpdate(); };
                 breakBool = true;
 
-                /*for (int i = 0; i < fields.Length; ++i)
-                {
-                    FieldInfo field = fields[i];
-                    if (field.Name.ToLowerInvariant() == "on_deploy")
-                    {
-                        deployEvent = (KFSMEvent)field.GetValue(fairing);
-                        deployEvent.OnEvent += delegate { FairingDeployGeometryUpdate(); };
-                        deployBool = true;
-                        Debug.Log("Deploy event field index " + i);
-                    }
-                    else if (field.Name.ToLowerInvariant() == "on_breakoff")
-                    {
-                        breakEvent = (KFSMEvent)field.GetValue(fairing);
-                        breakEvent.OnEvent += delegate { FairingDeployGeometryUpdate(); };
-                        breakBool = true;
-                        Debug.Log("Break event field index " + i);
-                    }
-                    if (deployBool && breakBool)
-                        break;
-                }*/
                 if (!deployBool)
                     Debug.LogError("FAR could not find Stock Procedural Fairing deploy event");
                 if (!breakBool)
                     Debug.LogError("FAR could not find Stock Procedural Fairing break event");
             }
 
-        }
+        }*/
     }
 }
