@@ -177,7 +177,7 @@ namespace FerramAerospaceResearch
 
             if (incompatible.Length > 0 || incompatibleUnity.Length > 0)
             {
-                PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), "CompatibilityChecker", Localizer.Format("FARCompatCheckTitle"), message, Localizer.Format("FARGUIOKButton "), true, HighLogic.UISkin);
+                PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), "CompatibilityChecker", Localizer.Format("FARCompatCheckTitle"), message, Localizer.Format("FARGUIOKButton"), true, HighLogic.UISkin);
             }
         }
 
