@@ -340,7 +340,7 @@ namespace ferram4
             {
                 double AoA = CalculateAoA(velocity);
 
-                Vector3d force = CalculateForces(velocity, MachNumber, AoA, density, double.PositiveInfinity);
+                Vector3d force = CalculateForces(velocity, MachNumber, AoA, density, double.PositiveInfinity, false);
                 center.AddForce(AerodynamicCenter, force);
 
                 return force;
@@ -705,21 +705,21 @@ namespace ferram4
         }
 
         //This version also updates the wing centroid
-        public Vector3d CalculateForces(Vector3d velocity, double MachNumber, double AoA, double rho)
+        public Vector3d CalculateForces(Vector3d velocity, double MachNumber, double AoA, double rho, bool updateAeroArrows = true)
         {
             CurWingCentroid = WingCentroid();
 
-            return DoCalculateForces(velocity, MachNumber, AoA, rho, 1);
+            return DoCalculateForces(velocity, MachNumber, AoA, rho, 1, updateAeroArrows);
         }
 
-        public Vector3d CalculateForces(Vector3d velocity, double MachNumber, double AoA, double rho, double failureForceScaling)
+        public Vector3d CalculateForces(Vector3d velocity, double MachNumber, double AoA, double rho, double failureForceScaling, bool updateAeroArrows = true)
         {
             CurWingCentroid = WingCentroid();
 
-            return DoCalculateForces(velocity, MachNumber, AoA, rho, failureForceScaling);
+            return DoCalculateForces(velocity, MachNumber, AoA, rho, failureForceScaling, updateAeroArrows);
         }
 
-        private Vector3d DoCalculateForces(Vector3d velocity, double MachNumber, double AoA, double rho, double failureForceScaling)
+        private Vector3d DoCalculateForces(Vector3d velocity, double MachNumber, double AoA, double rho, double failureForceScaling, bool updateAeroArrows = true)
         {
             //This calculates the angle of attack, adjusting the part's orientation for any deflection
             //CalculateAoA();
@@ -769,7 +769,9 @@ namespace ferram4
                 D = -velocity_normalized * (Cd * S) * q;                         //drag is parallel to velocity vector
             }
 
-            UpdateAeroDisplay(L, D);
+            if(updateAeroArrows)
+                UpdateAeroDisplay(L, D);
+
             Vector3d force = (L + D);
             if (double.IsNaN(force.sqrMagnitude) || double.IsNaN(AerodynamicCenter.sqrMagnitude))// || float.IsNaN(moment.magnitude))
             {
