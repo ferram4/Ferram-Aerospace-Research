@@ -321,6 +321,12 @@ namespace FerramAerospaceResearch.FARAeroComponents
             density = (float)body.GetDensity(pressure, temperature);
             speedOfSound = (float)body.GetSpeedOfSound(pressure, density);
 
+            if(pressure <= 0 || temperature <= 0 || density <= 0 || speedOfSound <= 0)
+            {
+                aeroForce = Vector3.zero;
+                aeroTorque = Vector3.zero;
+            }
+
             float velocityMag = velocityWorldVector.magnitude;
             float machNumber = velocityMag / speedOfSound;
             float reynoldsNumber = (float)FARAeroUtil.CalculateReynoldsNumber(density, Length, velocityMag, machNumber, temperature, body.atmosphereAdiabaticIndex);
@@ -340,7 +346,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             for (int i = 0; i < _legacyWingModels.Count; i++)
             {
                 FARWingAerodynamicModel curWing = _legacyWingModels[i];
-                if (curWing != null)
+                if ((object)curWing != null)
                     curWing.PrecomputeCenterOfLift(velocityWorldVector, machNumber, density, center);
             }
 
