@@ -325,6 +325,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             {
                 aeroForce = Vector3.zero;
                 aeroTorque = Vector3.zero;
+                return;
             }
 
             float velocityMag = velocityWorldVector.magnitude;
