@@ -1675,7 +1675,10 @@ namespace FerramAerospaceResearch.FARAeroComponents
             avgArea *= 0.5;*/
 
             cP *= Math.Sqrt(0.5 * sectionThickness / (beta * Math.Sqrt(Math.PI * avgArea)));
-            
+
+            if (cP > 2 || double.IsNaN(cP) || double.IsInfinity(cP))
+                cP = 2;                     //2 is highest cP possible under any circumstances, so we clamp it here if there is an issue
+
             return cP;
         }
 
@@ -1711,6 +1714,9 @@ namespace FerramAerospaceResearch.FARAeroComponents
             avgArea *= 0.5;*/
 
             cP *= Math.Sqrt(0.5 * sectionThickness / (beta * Math.Sqrt(Math.PI * avgArea)));
+
+            if (cP > 2 || double.IsNaN(cP) || double.IsInfinity(cP))
+                cP = 2;                     //2 is highest cP possible under any circumstances, so we clamp it here if there is an issue
 
             return cP;
         }
