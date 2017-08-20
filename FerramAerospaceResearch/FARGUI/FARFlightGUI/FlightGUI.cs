@@ -68,6 +68,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         static Rect settingsGuiRect;
         static IButton blizzyFlightGUIButton;
         static int activeFlightGUICount = 0;
+        static int frameCountForSaving = 0;
         public static Dictionary<Vessel, FlightGUI> vesselFlightGUI;
 
         private StringBuilder _strBuilder = new StringBuilder();
@@ -254,6 +255,13 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
         void Update()
         {
             FlightGUIDrawer.SetGUIActive(this,(_vessel == FlightGlobals.ActiveVessel && showGUI && showAllGUI));
+            if (frameCountForSaving >= 120)
+            {
+                SaveActiveData();
+                frameCountForSaving = 0;
+            }
+            else
+                frameCountForSaving++;
         }
 
         #endregion
