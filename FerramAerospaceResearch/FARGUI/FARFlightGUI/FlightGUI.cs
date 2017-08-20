@@ -316,7 +316,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             _strBuilder.Append(Localizer.Format("FARAbbrevMach"));
             _strBuilder.Append(": ");
             _strBuilder.Concat((float)(_vesselAero.MachNumber),3).AppendLine();
-            _strBuilder.AppendFormat(Localizer.Format("FARFlightGUIReynolds",_vesselAero.ReynoldsNumber));
+            _strBuilder.AppendFormat(Localizer.Format("FARFlightGUIReynolds"),_vesselAero.ReynoldsNumber);
             GUILayout.Box(_strBuilder.ToString(), boxStyle, GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
 
