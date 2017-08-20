@@ -685,6 +685,19 @@ namespace FerramAerospaceResearch.FARGUI.FAREditorGUI
                     MethodInfo method = m.GetType().GetMethod("animate", BindingFlags.Instance | BindingFlags.NonPublic);
                     method.Invoke(m, gearToggle ? new object[] { "Deploy" } : new object[] { "Retract" });
                 }
+                if (p.Modules.Contains("KSPWheelAdjustableGear"))
+                {
+                    PartModule m = p.Modules["KSPWheelAdjustableGear"];
+                    MethodInfo method = m.GetType().GetMethod("deploy", BindingFlags.Instance | BindingFlags.Public);
+                    try
+                    {
+                        method.Invoke(m, null);
+                    }
+                    catch(Exception e)
+                    {
+                        Debug.LogException(e);      //we just catch and print this ourselves to allow things to continue working, since there seems to be a bug in KSPWheels as of this writing
+                    }
+                }
             }
             gearToggle = !gearToggle;
         }
