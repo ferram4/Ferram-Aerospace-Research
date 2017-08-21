@@ -185,7 +185,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
             foreach (Transform t in ignoredModelTransforms)
                 returnList.Remove(t);
 
-
             return returnList;
         }
 

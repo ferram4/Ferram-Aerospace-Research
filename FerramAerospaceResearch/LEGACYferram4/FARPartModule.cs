@@ -130,7 +130,8 @@ namespace ferram4
         {
             base.OnLoad(node);
             if(HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor)
-                TriggerPartColliderUpdate();
+                if(!(part is CompoundPart))
+                    TriggerPartColliderUpdate();
         }
 
         //public override void OnSave(ConfigNode node)
