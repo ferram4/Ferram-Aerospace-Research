@@ -1,5 +1,5 @@
 /*
-Ferram Aerospace Research v0.15.8.1 "Lewis"
+Ferram Aerospace Research v0.15.9 "Liebe"
 =========================
 Aerodynamics model for Kerbal Space Program
 

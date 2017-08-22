@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.15.8.1 "Lewis"
+Ferram Aerospace Research v0.15.9 "Liebe"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -64,6 +64,18 @@ Set all the other winglet/control surface values to zero
 
 CHANGELOG
 =======================================================
+0.15.9V "Liebe"------------------------------------  
+
+Update for KSP 1.3  
+Update to MM 2.8.1  
+
+Include support for localization  
+Include German (by terorie), Russian (by pand5461), and Chinese (by Nigh) translations
+
+Fix NaN errors with Trajectories  
+Fix some issues with identifying KSPWheel Adjustable Landing Gear as gear  
+
+
 0.15.8.1V "Lewis"------------------------------------  
 
 Bugfix patch for KSP 1.2.2  
