@@ -995,14 +995,16 @@ namespace FerramAerospaceResearch.RealChuteLite
 
                             case DeploymentStates.PREDEPLOYED:
                                 {
-                                    this.rigidbody.AddForceAtPosition(DragForce(0, this.preDeployedDiameter, 1f / this.semiDeploymentSpeed), this.ForcePosition, ForceMode.Force);
+                                    part.AddForceAtPosition(DragForce(0, this.preDeployedDiameter, 1f / this.semiDeploymentSpeed), this.ForcePosition);
+                                    //this.rigidbody.AddForceAtPosition(DragForce(0, this.preDeployedDiameter, 1f / this.semiDeploymentSpeed), this.ForcePosition, ForceMode.Force);
                                     if (this.trueAlt <= this.deployAltitude && this.dragTimer.Elapsed.TotalSeconds >= 1f / this.semiDeploymentSpeed) { Deploy(); }
                                     break;
                                 }
 
                             case DeploymentStates.DEPLOYED:
                                 {
-                                    this.rigidbody.AddForceAtPosition(DragForce(this.preDeployedDiameter, this.deployedDiameter, 1f / this.deploymentSpeed), this.ForcePosition, ForceMode.Force);
+                                    part.AddForceAtPosition(DragForce(this.preDeployedDiameter, this.deployedDiameter, 1f / this.deploymentSpeed), this.ForcePosition);
+                                    //this.rigidbody.AddForceAtPosition(DragForce(this.preDeployedDiameter, this.deployedDiameter, 1f / this.deploymentSpeed), this.ForcePosition, ForceMode.Force);
                                     break;
                                 }
                         }

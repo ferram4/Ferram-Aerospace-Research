@@ -669,8 +669,8 @@ namespace ferram4
                                 if (FARDebugValues.aeroFailureExplosions)
                                     FXMonger.Explode(part, AerodynamicCenter, 1);
                             }
-
-                        rb.AddForceAtPosition(force, AerodynamicCenter);            //and apply force
+                        part.AddForceAtPosition(force, AerodynamicCenter);
+                        //rb.AddForceAtPosition(force, AerodynamicCenter);            //and apply force
                     }
                     else
                     {
