@@ -548,5 +548,17 @@ namespace FerramAerospaceResearch.FARAeroComponents
             //GameEvents.onVesselCreate.Remove(VesselUpdateEvent);
             //GameEvents.onVesselStandardModification.Remove(VesselUpdateEvent);
         }
+
+        #region Outside State Checkers
+        public bool HasEverValidVoxelization()
+        {
+            return FlightGlobals.ready && _currentAeroSections != null && vessel;
+        }
+
+        public bool HasValidVoxelizationCurrently()
+        {
+            return (FlightGlobals.ready && _currentAeroSections != null && vessel) && (!_updateQueued);
+        }
+        #endregion
     }
 }

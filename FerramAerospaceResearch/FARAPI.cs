@@ -347,5 +347,62 @@ namespace FerramAerospaceResearch
             Instance.InstanceCalcVesselAeroForces(vessel, out aeroForce, out aeroTorque, velocityWorldVector, altitude);
         }
         #endregion
+
+        #region Misc State
+        /// <summary>
+        /// Method to determine if the given vessel has been successfully voxelized at any time after being loaded
+        /// </summary>
+        /// <param name="vessel"></param>
+        /// <returns>True if vessel has ever been successfully voxelized, returns false if not or if the vessel is null and/or destroyed</returns>
+        public static bool VesselVoxelizationCompletedEver(Vessel vessel)
+        {
+            if (vessel == null)
+                return false;
+
+            FARVesselAero vesselAeroModule = null;
+            for(int i =0; i < vessel.vesselModules.Count; ++i)
+            {
+                VesselModule vM = vessel.vesselModules[i];
+                if(vM is FARVesselAero)
+                {
+                    vesselAeroModule = (FARVesselAero)vM;
+                    break;
+                }
+            }
+
+            if ((object)vesselAeroModule == null)       //if this is true, then the vessel has not been initialized yet and so must be false
+                return false;
+
+            return vesselAeroModule.HasEverValidVoxelization();
+        }
+
+        
+        /// <summary>
+        /// Method to determine if the given vessel has been successfully voxelized nd currently has valid voxelization
+        /// </summary>
+        /// <param name="vessel"></param>
+        /// <returns>True if vessel has valid voxelization currently, returns false if not or if the vessel is null and/or destroyed</returns>
+        public static bool VesselVoxelizationCompletedAndValid(Vessel vessel)
+        {
+            if (vessel == null)
+                return false;
+
+            FARVesselAero vesselAeroModule = null;
+            for(int i =0; i < vessel.vesselModules.Count; ++i)
+            {
+                VesselModule vM = vessel.vesselModules[i];
+                if(vM is FARVesselAero)
+                {
+                    vesselAeroModule = (FARVesselAero)vM;
+                    break;
+                }
+            }
+
+            if ((object)vesselAeroModule == null)       //if this is true, then the vessel has not been initialized yet and so must be false
+                return false;
+
+            return vesselAeroModule.HasValidVoxelizationCurrently();
+        }
+        #endregion
     }
 }
