@@ -78,6 +78,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
 
         ProjectedArea projectedArea;
 
+        private bool partStressOverride = false;
         private double partStressMaxY = double.MaxValue;
         private double partStressMaxXZ = double.MaxValue;
         private double partForceMaxY = double.MaxValue;
@@ -296,7 +297,7 @@ namespace FerramAerospaceResearch.FARAeroComponents
             //if (!part.Modules.Contains("ModuleAeroSurface"))
             //    part.dragModel = Part.DragModel.CYLINDRICAL;
 
-            if(FARDebugValues.allowStructuralFailures)
+            if (FARDebugValues.allowStructuralFailures && !partStressOverride)
             {
                 FARPartStressTemplate template = FARAeroStress.DetermineStressTemplate(this.part);
                 partStressMaxY = template.YmaxStress;
@@ -735,6 +736,28 @@ namespace FerramAerospaceResearch.FARAeroComponents
                 fieldsVisible = false;
             }
 
+        }
+
+        public override void OnLoad(ConfigNode node)
+        {
+            base.OnLoad(node);
+
+            if(FARDebugValues.allowStructuralFailures && node.HasNode("FARPartStressTemplate"))
+            {
+                ConfigNode stressTemplate = node.GetNode("FARPartStressTemplate");
+                FARPartStressTemplate defaultTemplate = FARAeroStress.DetermineStressTemplate(this.part);
+                if(stressTemplate.HasValue("YmaxStress"))
+                {
+                    if (!double.TryParse(stressTemplate.GetValue("YmaxStress"), out partStressMaxY))
+                        partStressMaxY = defaultTemplate.YmaxStress;
+                }
+                if (stressTemplate.HasValue("XZmaxStress"))
+                {
+                    if (!double.TryParse(stressTemplate.GetValue("XZmaxStress"), out partStressMaxXZ))
+                        partStressMaxXZ = defaultTemplate.XZmaxStress;
+                }
+
+            }
         }
 
         private void OnDestroy()

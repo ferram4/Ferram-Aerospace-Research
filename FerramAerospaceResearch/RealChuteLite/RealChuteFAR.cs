@@ -1168,18 +1168,18 @@ namespace FerramAerospaceResearch.RealChuteLite
             }
 
             StringBuilder b = new StringBuilder();
-            b.AppendLine(Localizer.Format("RCLModuleInfo0", this.caseMass));
-            b.AppendLine(Localizer.Format("RCLModuleInfo1", maxSpares));
-            b.AppendLine(Localizer.Format("RCLModuleInfo2", this.autoCutSpeed));
+            b.Append(Localizer.Format("RCLModuleInfo0", this.caseMass));
+            b.Append(Localizer.Format("RCLModuleInfo1", maxSpares));
+            b.Append(Localizer.Format("RCLModuleInfo2", this.autoCutSpeed));
             b.AppendLine(Localizer.Format("RCLModuleInfo3", materialName));
-            b.AppendLine(Localizer.Format("RCLModuleInfo4", staticCd));
-            b.AppendLine(Localizer.Format("RCLModuleInfo5", maxTemp + absoluteZero));
-            b.AppendLine(Localizer.Format("RCLModuleInfo6", this.preDeployedDiameter));
-            b.AppendLine(Localizer.Format("RCLModuleInfo7", this.deployedDiameter));
-            b.AppendLine(Localizer.Format("RCLModuleInfo8", this.minAirPressureToOpen));
-            b.AppendLine(Localizer.Format("RCLModuleInfo9", this.deployAltitude));
-            b.AppendLine(Localizer.Format("RCLModuleInfo10", Math.Round(1 / this.semiDeploymentSpeed, 1, MidpointRounding.AwayFromZero)));
-            b.AppendLine(Localizer.Format("RCLModuleInfo11", Math.Round(1 / this.deploymentSpeed, 1, MidpointRounding.AwayFromZero)));
+            b.Append(Localizer.Format("RCLModuleInfo4", staticCd));
+            b.Append(Localizer.Format("RCLModuleInfo5", maxTemp + absoluteZero));
+            b.Append(Localizer.Format("RCLModuleInfo6", this.preDeployedDiameter));
+            b.Append(Localizer.Format("RCLModuleInfo7", this.deployedDiameter));
+            b.Append(Localizer.Format("RCLModuleInfo8", this.minAirPressureToOpen));
+            b.Append(Localizer.Format("RCLModuleInfo9", this.deployAltitude));
+            b.Append(Localizer.Format("RCLModuleInfo10", Math.Round(1 / this.semiDeploymentSpeed, 1, MidpointRounding.AwayFromZero)));
+            b.Append(Localizer.Format("RCLModuleInfo11", Math.Round(1 / this.deploymentSpeed, 1, MidpointRounding.AwayFromZero)));
 
             return b.ToString();
         }
