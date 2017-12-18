@@ -13,7 +13,8 @@ namespace FerramAerospaceResearch.RealChuteLite
         #region Initialization
         private void Start()
         {
-            foreach (AvailablePart part in PartLoader.Instance.parts)
+            Debug.Log("Initiating RealChuteLite Chute Property Calculation");
+            foreach (AvailablePart part in PartLoader.Instance.loadedParts)
             {
                 Part prefab = part.partPrefab;
                 if (prefab != null && prefab.Modules.Contains<RealChuteFAR>())
