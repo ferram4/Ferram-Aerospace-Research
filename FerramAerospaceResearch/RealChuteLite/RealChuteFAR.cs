@@ -804,7 +804,7 @@ namespace FerramAerospaceResearch.RealChuteLite
             //Top info labels
             StringBuilder b = new StringBuilder(Localizer.Format("RCLGUI0", this.part.partInfo.title)).AppendLine();
             b.AppendLine(Localizer.Format("RCLGUI0", this.part.symmetryCounterparts.Count));
-            b.AppendLine(Localizer.Format("RCLGUI2", this.part.TotalMass()));
+            b.AppendLine(Localizer.Format("RCLGUI2", this.part.TotalMass().ToString("F3")));
             GUILayout.Label(b.ToString());
 
             //Beggining scroll
@@ -844,7 +844,7 @@ namespace FerramAerospaceResearch.RealChuteLite
 
             //Temperature info
             b = new StringBuilder();
-            b.AppendLine(Localizer.Format("RCLGUI11", maxTemp + absoluteZero));
+            b.AppendLine(Localizer.Format("RCLGUI11", (maxTemp + absoluteZero).ToString()));
             b.AppendLine(Localizer.Format("RCLGUI12", Math.Round(this.chuteTemperature + absoluteZero, 1, MidpointRounding.AwayFromZero)));
             GUILayout.Label(b.ToString(), this.chuteTemperature / maxTemp > 0.85 ? RedLabel : GUI.skin.label);
 
