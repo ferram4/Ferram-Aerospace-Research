@@ -92,7 +92,7 @@ namespace FerramAerospaceResearch.RealChuteLite
         public bool invertCanopy = true;
 
         //Persistant fields
-        [KSPField(isPersistant = true)]    //this cannot be persistent to ensure that bad values aren't saved, and since these chutes aren't customizable there's no reason to save this
+        [KSPField(isPersistant = false)]    //this cannot be persistent to ensure that bad values aren't saved, and since these chutes aren't customizable there's no reason to save this
         public float preDeployedDiameter = 1, deployedDiameter = 25;
         [KSPField(isPersistant = true)]
         public float caseMass, time;
