@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.9 "Liebe"
+Ferram Aerospace Research v0.15.9.1 "Liepmann"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -216,7 +216,7 @@ namespace FerramAerospaceResearch
             if (debugMenu)
             {
 
-                debugWinPos = GUILayout.Window("FARDebug".GetHashCode(), debugWinPos, debugWindow, "FAR Debug Options, v0.15.9", GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+                debugWinPos = GUILayout.Window("FARDebug".GetHashCode(), debugWinPos, debugWindow, "FAR Debug Options, v0.15.9.1", GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
                 if (!inputLocked && debugWinPos.Contains(GUIUtils.GetMousePos()))
                 {
                     InputLockManager.SetControlLock(ControlTypes.KSC_ALL, "FARDebugLock");

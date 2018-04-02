@@ -1,5 +1,5 @@
 ﻿/*
-Ferram Aerospace Research v0.15.9 "Liebe"
+Ferram Aerospace Research v0.15.9.1 "Liepmann"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -299,7 +299,7 @@ namespace FerramAerospaceResearch.FARGUI.FARFlightGUI
             }
             if (_vessel == FlightGlobals.ActiveVessel && showGUI && showAllGUI)
             {
-                mainGuiRect = GUILayout.Window(this.GetHashCode(), mainGuiRect, MainFlightGUIWindow, "FAR, v0.15.9 'Liebe'", GUILayout.MinWidth(230));
+                mainGuiRect = GUILayout.Window(this.GetHashCode(), mainGuiRect, MainFlightGUIWindow, "FAR, v0.15.9.1 'Liepmann'", GUILayout.MinWidth(230));
                 GUIUtils.ClampToScreen(mainGuiRect);
 
                 if (showFlightDataWindow)
