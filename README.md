@@ -1,4 +1,4 @@
-Ferram Aerospace Research v0.15.9 "Liebe"
+Ferram Aerospace Research v0.15.9.1 "Liepmann"
 =========================
 Aerodynamics model for Kerbal Space Program
 
@@ -64,6 +64,19 @@ Set all the other winglet/control surface values to zero
 
 CHANGELOG
 =======================================================
+0.15.9.1V "Liepmann"------------------------------------  
+
+Update for KSP 1.3.1 (though not strictly necessary)  
+Update to MM 3.0.4 for KSP 1.3.1  
+
+Added ability to override structural stress values for aerodynamic failures on a per-part basis  
+Switch to applying forces through part.AddForce rather than rb.AddForce to allow Principia to handle gravity within atmospheres  
+Added functions to KSPAPI to check the status of any vessel's voxelization  
+
+Fix issues with all RealChuteLite chutes having the same exact drag properties  
+Fix RealChuteLite GUI not displaying any information  
+Remove unnecessary stock lifting body effects on pods  
+
 0.15.9V "Liebe"------------------------------------  
 
 Update for KSP 1.3  
