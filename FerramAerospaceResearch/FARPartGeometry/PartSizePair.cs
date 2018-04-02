@@ -54,7 +54,6 @@ namespace FerramAerospaceResearch.FARPartGeometry
     public abstract class PartSizePair
     {
         public Part part;
-
         //byte xPlaneDown, yPlaneDown, zPlaneDown;
 
         protected PartSizePair() { }
